@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.BlockDetailedDoor;
+import com.vandorlabs.blocks.BlockConnectingDetailedDoor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
@@ -46,6 +47,7 @@ final class DoorRuntimeChecks {
         checkIncompletePair(world, player, origin, hingedA, hingedB);
         checkPlacement(world, player, origin, hingedA, hingedB, sliding);
         checkMotionPairMatrix(world, player, origin);
+        checkConnectingDetailedDoors(world, origin);
         checkRedstoneEdges(world, player, origin, hingedA);
         checkBreakPair(world, origin, hingedA);
         clear(world, origin);
@@ -258,6 +260,78 @@ final class DoorRuntimeChecks {
                     default:
                         throw new AssertionError("non-horizontal door facing");
                 }
+            }
+        }
+    }
+
+    private static void checkConnectingDetailedDoors(World world, BlockPos pos) {
+        String[][] families = {
+                {"detail_engineering_rotating_single",
+                        "detail_engineering_rotating_double"},
+                {"detail_engineering_sliding_single",
+                        "detail_engineering_sliding_double"},
+                {"detail_observation_rotating_single",
+                        "detail_observation_rotating_double"},
+                {"detail_observation_sliding_single",
+                        "detail_observation_sliding_double"}
+        };
+        for (String[] family : families) {
+            BlockVandorDoor rawSingle = door(family[0]);
+            require(rawSingle instanceof BlockConnectingDetailedDoor,
+                    family[0] + " is not connection-aware");
+            Block removed = Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs", family[1]));
+            require(removed == null || removed == Blocks.AIR,
+                    family[1] + " is still registered as a block");
+            BlockConnectingDetailedDoor single =
+                    (BlockConnectingDetailedDoor) rawSingle;
+
+            for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+                BlockPos matePos = pos.offset(facing.rotateY());
+                clear(world, pos);
+                clear(world, matePos);
+                place(world, pos, single, facing,
+                        BlockDoor.EnumHingePosition.LEFT);
+                IBlockState standalone = single.getActualState(
+                        world.getBlockState(pos), world, pos);
+                require(!standalone.getValue(BlockConnectingDetailedDoor.PAIRED)
+                                && single.getVisualModel(standalone) == single,
+                        family[0] + " selected paired art while standalone");
+
+                place(world, matePos, single, facing,
+                        BlockDoor.EnumHingePosition.RIGHT);
+                IBlockState first = single.getActualState(
+                        world.getBlockState(pos), world, pos);
+                IBlockState second = single.getActualState(
+                        world.getBlockState(matePos), world, matePos);
+                BlockDetailedDoor visual = single.getVisualModel(first);
+                require(first.getValue(BlockConnectingDetailedDoor.PAIRED)
+                                && second.getValue(BlockConnectingDetailedDoor.PAIRED)
+                                && visual != single && visual.isDoubleModel()
+                                && family[1].equals(visual.getRegistryName()
+                                        .getResourcePath())
+                                && single.getLeafMetadata(false, first) == 3
+                                && single.getLeafMetadata(true, first) == 4,
+                        family[0] + " did not select its paired frame/leaves for "
+                                + facing);
+
+                clear(world, matePos);
+                place(world, matePos, single, facing,
+                        BlockDoor.EnumHingePosition.LEFT);
+                IBlockState sameHinge = single.getActualState(
+                        world.getBlockState(pos), world, pos);
+                require(!sameHinge.getValue(BlockConnectingDetailedDoor.PAIRED),
+                        family[0] + " paired same-direction leaves for " + facing);
+
+                clear(world, matePos);
+                place(world, matePos, single, facing.rotateY(),
+                        BlockDoor.EnumHingePosition.RIGHT);
+                IBlockState misaligned = single.getActualState(
+                        world.getBlockState(pos), world, pos);
+                require(!misaligned.getValue(BlockConnectingDetailedDoor.PAIRED),
+                        family[0] + " paired perpendicular doors for " + facing);
+                clear(world, pos);
+                clear(world, matePos);
             }
         }
     }

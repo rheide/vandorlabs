@@ -642,20 +642,20 @@ public class ReproLab {
         placeDoor(world, MODEL_HINGED,
                 "detail_observation_rotating_single", false);
         placeDoor(world, MODEL_OBSERVATION_LEFT,
-                "detail_observation_rotating_double", false);
+                "detail_observation_rotating_single", false);
         setDoorHinge(world, MODEL_OBSERVATION_LEFT,
                 BlockDoor.EnumHingePosition.LEFT);
         placeDoor(world, MODEL_OBSERVATION_RIGHT,
-                "detail_observation_rotating_double", false);
+                "detail_observation_rotating_single", false);
         setDoorHinge(world, MODEL_OBSERVATION_RIGHT,
                 BlockDoor.EnumHingePosition.RIGHT);
         placeDoor(world, MODEL_SLIDE_LEFT,
-                "detail_engineering_sliding_double", false);
+                "detail_engineering_sliding_single", false);
         // For NORTH the west column is the pack's visual right. Minecraft's
         // hinge labels are mirrored from that literal model hand.
         setDoorHinge(world, MODEL_SLIDE_LEFT, BlockDoor.EnumHingePosition.LEFT);
         placeDoor(world, MODEL_SLIDE_RIGHT,
-                "detail_engineering_sliding_double", false);
+                "detail_engineering_sliding_single", false);
         setDoorHinge(world, MODEL_SLIDE_RIGHT, BlockDoor.EnumHingePosition.RIGHT);
         placeDoor(world, MODEL_SPLIT, "detail_split_rotating_single", false);
         placeChair(world, CHAIR_COMMAND, "bridge_chair_simple_command");
@@ -959,8 +959,10 @@ public class ReproLab {
         int x = GALLERY_X - 9;
         for (String theme : new String[] {"engineering", "observation", "split"}) {
             String doubleId = "detail_" + theme + "_" + motion + "_double";
-            placeDoor(world, new BlockPos(x, GALLERY_Y, -18), doubleId, false);
-            placeDoor(world, new BlockPos(x + 1, GALLERY_Y, -18), doubleId, false);
+            String pairedId = "split".equals(theme)
+                    ? doubleId : "detail_" + theme + "_" + motion + "_single";
+            placeDoor(world, new BlockPos(x, GALLERY_Y, -18), pairedId, false);
+            placeDoor(world, new BlockPos(x + 1, GALLERY_Y, -18), pairedId, false);
             setDoorHinge(world, new BlockPos(x, GALLERY_Y, -18), BlockDoor.EnumHingePosition.LEFT);
             setDoorHinge(world, new BlockPos(x + 1, GALLERY_Y, -18), BlockDoor.EnumHingePosition.RIGHT);
             x += 3;

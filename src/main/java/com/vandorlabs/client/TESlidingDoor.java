@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.BlockDetailedDoor;
+import com.vandorlabs.blocks.BlockConnectingDetailedDoor;
 import com.vandorlabs.animation.DoorAnimation;
 import com.vandorlabs.render.DoorLeaf;
 import com.vandorlabs.render.DoorLeafTransform;
@@ -175,7 +176,13 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 float p = animPose(te.getWorld(), doorKey,
                         state.getValue(BlockVandorDoor.OPEN),
                         te.getWorld().getTotalWorldTime() + partialTicks);
-                renderDetailedDoor(te, state, (BlockDetailedDoor) state.getBlock(),
+                BlockDetailedDoor placedDoor = (BlockDetailedDoor) state.getBlock();
+                BlockDetailedDoor visualDoor = placedDoor;
+                if (visualDoor instanceof BlockConnectingDetailedDoor) {
+                    visualDoor = ((BlockConnectingDetailedDoor) visualDoor)
+                            .getVisualModel(state);
+                }
+                renderDetailedDoor(te, state, placedDoor, visualDoor,
                         facing, p, x, y, z);
             }
             return;
@@ -261,25 +268,34 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
      * JSONs participate in the 1.12 model bake without registering fake
      * blocks or exposing extra creative-tab entries. */
     private static void renderDetailedDoor(TileEntitySlidingDoor te, IBlockState state,
-            BlockDetailedDoor door, EnumFacing facing, float progress,
+            BlockDetailedDoor placedDoor, BlockDetailedDoor visualDoor,
+            EnumFacing facing, float progress,
             double x, double y, double z) {
         // BlockDoor's enum is mirrored relative to the visual hand names in
         // the SOUTH-authored model pack: vanilla hinge=LEFT rests on the
         // visual right and hinge=RIGHT rests on the visual left.
         boolean right = state.getValue(BlockVandorDoor.HINGE)
                 == BlockDoor.EnumHingePosition.LEFT;
-        if (door.isSplitInsideOneBlock()) {
-            renderDetailedLeaf(te, door, facing, false, progress, x, y, z);
-            renderDetailedLeaf(te, door, facing, true, progress, x, y, z);
+        if (visualDoor.isSplitInsideOneBlock()) {
+            renderDetailedLeaf(te, state, placedDoor, visualDoor, facing,
+                    false, progress, x, y, z);
+            renderDetailedLeaf(te, state, placedDoor, visualDoor, facing,
+                    true, progress, x, y, z);
         } else {
-            renderDetailedLeaf(te, door, facing, right, progress, x, y, z);
+            renderDetailedLeaf(te, state, placedDoor, visualDoor, facing,
+                    right, progress, x, y, z);
         }
     }
 
     private static void renderDetailedLeaf(TileEntitySlidingDoor te,
-            BlockDetailedDoor door, EnumFacing facing, boolean right,
+            IBlockState state, BlockDetailedDoor placedDoor,
+            BlockDetailedDoor visualDoor, EnumFacing facing, boolean right,
             float progress, double x, double y, double z) {
-        ItemStack leaf = new ItemStack(door,1,DoorLeaf.fromRight(right).legacyMetadata);
+        int metadata = placedDoor instanceof BlockConnectingDetailedDoor
+                ? ((BlockConnectingDetailedDoor) placedDoor)
+                        .getLeafMetadata(right, state)
+                : DoorLeaf.fromRight(right).legacyMetadata;
+        ItemStack leaf = new ItemStack(placedDoor, 1, metadata);
         RenderItem renderer = Minecraft.getMinecraft().getRenderItem();
 
         int combined = te.getWorld().getCombinedLight(te.getPos(), 0);
@@ -288,7 +304,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, z);
         orientDetailedDoor(facing);
-        moveDetailedDoorLeaf(door, right, progress);
+        moveDetailedDoorLeaf(visualDoor, right, progress);
         // RenderItem internally shifts baked coordinates by -0.5 on every
         // axis; cancel that so model [0..16]/16 begins at the block origin.
         GlStateManager.translate(0.5F, 0.5F, 0.5F);

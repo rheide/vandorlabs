@@ -52,7 +52,9 @@ def main():
 
     catalog = json.loads((ROOT / "generated-resources/assets/vandorlabs/data/blocks.json").read_text())
     expected = {entry["id"] for entry in catalog
-                if not entry.get("retired") and not entry.get("programmable_only")}
+                if not entry.get("retired")
+                and not entry.get("programmable_only")
+                and not entry.get("internal_model")}
     expected.update({
         "industrial_lever", "compact_lever", "animated_screen_selector",
         "programmable_console", "programmable_diagonal_screen",

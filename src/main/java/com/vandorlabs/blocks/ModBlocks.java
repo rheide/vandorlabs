@@ -100,12 +100,18 @@ public class ModBlocks {
             }
             String cls = e.get("class").getAsString();
             Block block = create(cls, e, byId);
+            byId.put(id, block);
+            // Paired detailed-door assets retain their authored geometry and
+            // motion parameters without registering a redundant block/item.
+            if (e.has("internal_model")
+                    && e.get("internal_model").getAsBoolean()) {
+                continue;
+            }
             if (e.has("item") && !e.get("item").getAsBoolean()) {
                 addNoItem(block);
             } else {
                 add(block);
             }
-            byId.put(id, block);
             if ("tritanium_hull".equals(id)) {
                 TRITANIUM_HULL = block;
             }
@@ -229,6 +235,26 @@ public class ModBlocks {
                         e.get("right_angle").getAsFloat(),
                         e.get("left_slide").getAsFloat(),
                         e.get("right_slide").getAsFloat());
+            case "BlockConnectingDetailedDoor": {
+                Block paired = byId.get(e.get("paired_model").getAsString());
+                if (!(paired instanceof BlockDetailedDoor)) {
+                    throw new IllegalStateException("vandorlabs: paired detailed door missing for "
+                            + id + ": " + e.get("paired_model").getAsString());
+                }
+                return new BlockConnectingDetailedDoor(id,
+                        BlockVandorDoor.DoorMotion.fromId(e.get("motion").getAsString()),
+                        e.get("sliding").getAsBoolean(),
+                        "double".equals(e.get("door_layout").getAsString()),
+                        e.get("split_inside_one_block").getAsBoolean(),
+                        e.get("left_pivot").getAsFloat(),
+                        e.get("right_pivot").getAsFloat(),
+                        e.get("pivot_z").getAsFloat(),
+                        e.get("left_angle").getAsFloat(),
+                        e.get("right_angle").getAsFloat(),
+                        e.get("left_slide").getAsFloat(),
+                        e.get("right_slide").getAsFloat(),
+                        (BlockDetailedDoor) paired);
+            }
             case "BlockBridgeChair":
                 return new BlockBridgeChair(id,
                         e.get("height_units").getAsFloat(),
@@ -278,7 +304,7 @@ public class ModBlocks {
     public static void onMissingDisplayBlocks(RegistryEvent.MissingMappings<Block> event) {
         for (RegistryEvent.MissingMappings.Mapping<Block> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
-            String replacement = replacementPropulsionId(mapping.key.getResourcePath());
+            String replacement = replacementBlockId(mapping.key.getResourcePath());
             if (replacement != null) {
                 Block block = Block.REGISTRY.getObject(
                         new ResourceLocation(VandorLabs.MODID, replacement));
@@ -291,7 +317,7 @@ public class ModBlocks {
     public static void onMissingDisplayItems(RegistryEvent.MissingMappings<Item> event) {
         for (RegistryEvent.MissingMappings.Mapping<Item> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
-            String replacement = replacementPropulsionId(mapping.key.getResourcePath());
+            String replacement = replacementBlockId(mapping.key.getResourcePath());
             if (replacement != null) {
                 Item item = Item.REGISTRY.getObject(
                         new ResourceLocation(VandorLabs.MODID, replacement));
@@ -304,9 +330,17 @@ public class ModBlocks {
         return DISPLAY_SCREEN_IDS.contains(id) || RETIRED_SCREEN_IDS.contains(id);
     }
 
-    private static String replacementPropulsionId(String id) {
+    private static String replacementBlockId(String id) {
         if ("plasma_thruster".equals(id)) return "plasma_thruster_full";
         if ("impulse_engine".equals(id)) return "impulse_engine_full";
+        if ("detail_engineering_rotating_double".equals(id))
+            return "detail_engineering_rotating_single";
+        if ("detail_engineering_sliding_double".equals(id))
+            return "detail_engineering_sliding_single";
+        if ("detail_observation_rotating_double".equals(id))
+            return "detail_observation_rotating_single";
+        if ("detail_observation_sliding_double".equals(id))
+            return "detail_observation_sliding_single";
         return null;
     }
 
@@ -342,6 +376,20 @@ public class ModBlocks {
                     ModelLoader.setCustomModelResourceLocation(item, DoorLeaf.RIGHT.legacyMetadata,
                             new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
                                     + id + "_"+DoorLeaf.RIGHT.modelSuffix, "inventory"));
+                    if (block instanceof BlockConnectingDetailedDoor) {
+                        String paired = ((BlockConnectingDetailedDoor) block)
+                                .getPairedModelId();
+                        ModelLoader.setCustomModelResourceLocation(item, 3,
+                                new ModelResourceLocation(VandorLabs.MODID
+                                        + ":detailed_doors/" + paired
+                                        + "_" + DoorLeaf.LEFT.modelSuffix,
+                                        "inventory"));
+                        ModelLoader.setCustomModelResourceLocation(item, 4,
+                                new ModelResourceLocation(VandorLabs.MODID
+                                        + ":detailed_doors/" + paired
+                                        + "_" + DoorLeaf.RIGHT.modelSuffix,
+                                        "inventory"));
+                    }
                 }
             }
         }
