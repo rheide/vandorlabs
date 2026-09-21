@@ -56,7 +56,27 @@ final class MaterialRuntimeChecks {
                             == (direction.getAxis() == EnumFacing.Axis.X),
                     "side-click glass placement is perpendicular for " + direction);
         }
+        checkGlassConnections(player,glass,pos,false,EnumFacing.EAST);
+        checkGlassConnections(player,glass,pos,true,EnumFacing.SOUTH);
         player.world.setBlockToAir(pos);
+    }
+
+    private static void checkGlassConnections(EntityPlayer player,BlockGlassWall glass,
+            BlockPos first,boolean rotated,EnumFacing right) {
+        BlockPos second=first.offset(right);
+        IBlockState base=glass.getDefaultState().withProperty(BlockGlassWall.ROTATED,rotated);
+        player.world.setBlockState(first,base,2);
+        player.world.setBlockState(second,base,2);
+        IBlockState firstActual=glass.getActualState(base,player.world,first);
+        IBlockState secondActual=glass.getActualState(base,player.world,second);
+        require(firstActual.getValue(BlockGlassWall.LEFT)
+                        &&!firstActual.getValue(BlockGlassWall.RIGHT),
+                "first connected glass panel framed the joining side");
+        require(!secondActual.getValue(BlockGlassWall.LEFT)
+                        &&secondActual.getValue(BlockGlassWall.RIGHT),
+                "second connected glass panel framed the joining side");
+        player.world.setBlockToAir(first);
+        player.world.setBlockToAir(second);
     }
 
     private static void require(boolean condition, String message) {

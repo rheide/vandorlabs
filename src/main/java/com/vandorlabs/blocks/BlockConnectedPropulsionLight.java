@@ -3,6 +3,7 @@ package com.vandorlabs.blocks;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
+import com.vandorlabs.render.ConnectedSquare;
 import net.minecraft.block.properties.PropertyHelper;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -132,50 +133,10 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         EnumFacing right = localRight(facing);
         EnumFacing up = localUp(facing);
         int mode = renderMode(source, pos);
-        int negativeX = matchingDistance(source, pos, state, mode, right, -1);
-        int positiveX = matchingDistance(source, pos, state, mode, right, 1);
-        int negativeY = matchingDistance(source, pos, state, mode, up, -1);
-        int positiveY = matchingDistance(source, pos, state, mode, up, 1);
-        if (negativeX < 0 || positiveX < 0 || negativeY < 0 || positiveY < 0)
-            return state.withProperty(PART, ConnectedPart.SINGLE);
-        int width = negativeX + 1 + positiveX;
-        int height = negativeY + 1 + positiveY;
-        if (width != height || width < 2 || width > MAX_CONNECTED_SIZE)
-            return state.withProperty(PART, ConnectedPart.SINGLE);
-        BlockPos anchor = move(move(pos, right, -negativeX), up, -negativeY);
-        if (!isCompleteIsolatedSquare(source, anchor, state, mode, width, right, up))
-            return state.withProperty(PART, ConnectedPart.SINGLE);
-        return state.withProperty(PART, ConnectedPart.at(width, negativeX, negativeY));
-    }
-
-    /** Returns -1 if matching blocks continue beyond the supported bound. */
-    private int matchingDistance(IBlockAccess source, BlockPos pos, IBlockState state,
-            int mode, EnumFacing axis, int sign) {
-        int distance = 0;
-        for (int step = 1; step <= MAX_CONNECTED_SIZE; step++) {
-            if (!matches(source, move(pos, axis, step * sign), state, mode)) break;
-            if (step == MAX_CONNECTED_SIZE) return -1;
-            distance = step;
-        }
-        return distance;
-    }
-
-    private boolean isCompleteIsolatedSquare(IBlockAccess source, BlockPos anchor,
-            IBlockState state, int mode, int size, EnumFacing right, EnumFacing up) {
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                if (!matches(source, move(move(anchor, right, x), up, y), state, mode))
-                    return false;
-            }
-        }
-        for (int x = -1; x <= size; x++) {
-            for (int y = -1; y <= size; y++) {
-                if (x >= 0 && x < size && y >= 0 && y < size) continue;
-                if (matches(source, move(move(anchor, right, x), up, y), state, mode))
-                    return false;
-            }
-        }
-        return true;
+        final IBlockState expected=state;
+        ConnectedSquare.Part part=ConnectedSquare.find(MAX_CONNECTED_SIZE,(x,y)->
+                matches(source,move(move(pos,right,x),up,y),expected,mode));
+        return state.withProperty(PART,ConnectedPart.at(part.size,part.x,part.y));
     }
 
     private boolean matches(IBlockAccess source, BlockPos pos, IBlockState expected, int mode) {

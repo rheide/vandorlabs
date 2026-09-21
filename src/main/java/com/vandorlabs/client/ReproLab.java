@@ -853,8 +853,7 @@ public class ReproLab {
             }
         } else if (shot.equals("gallery_doors_standard")) {
             String[] ids = {"door_airlock_glass", "door_security",
-                    "sliding_airlock_glass", "sliding_hangar_door",
-                    "sliding_security_door"};
+                    "sliding_airlock_glass", "sliding_security_door"};
             for (int i = 0; i < ids.length; i++)
                 placeDoor(world, new BlockPos(GALLERY_X - 8 + i * 4,
                                 GALLERY_Y, -18),

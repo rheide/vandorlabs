@@ -1,6 +1,11 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.VandorLabs;
+import com.vandorlabs.animation.CompactAnimationDecoder;
+import com.vandorlabs.animation.AnimationFrames;
+import com.vandorlabs.render.ScreenSurface;
+import com.vandorlabs.render.InputSurfaceLayout;
+import com.vandorlabs.render.ScreenHousingMesh;
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.blocks.BlockProgrammableConsole;
@@ -29,11 +34,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.InflaterInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,9 +64,6 @@ public class TEAnimatedScreenSelector
     private static final String TEX_ROOT = "textures/blocks/";
     private static final String OFF_PLAIN = "screen_off";
     private static final String OFF_FRAMED = "sequence_border_off";
-
-    private static final int ANIM_MAGIC = 0x564C5441; // "VLTA"
-    private static final int ANIM_VERSION = 2;
 
     /** Reconstructed animation texture, loaded once on first use. */
     private static class AnimData {
@@ -155,50 +154,8 @@ public class TEAnimatedScreenSelector
         BufferedImage base = TextureUtil.readBufferedImage(
                 manager.getResource(baseLocation).getInputStream());
         InputStream resource = manager.getResource(packed).getInputStream();
-        try (DataInputStream in = new DataInputStream(resource)) {
-                if (in.readInt() != ANIM_MAGIC || in.readUnsignedByte() != ANIM_VERSION) {
-                    throw new IllegalArgumentException("unsupported compact animation header");
-                }
-                int width = in.readUnsignedShort();
-                int height = in.readUnsignedShort();
-                int frames = in.readUnsignedShort();
-                int expected = in.readInt();
-                if (width != base.getWidth() || height != base.getHeight()
-                        || frames < 2 || expected != (frames - 1) * width * height * 3) {
-                    throw new IllegalArgumentException("animation dimensions do not match base");
-                }
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream(expected);
-                try (InflaterInputStream inflated = new InflaterInputStream(in)) {
-                    byte[] chunk = new byte[16384];
-                    int count;
-                    while ((count = inflated.read(chunk)) >= 0) bytes.write(chunk, 0, count);
-                }
-                byte[] delta = bytes.toByteArray();
-                if (delta.length != expected) {
-                    throw new IllegalArgumentException("truncated animation payload");
-                }
-                BufferedImage strip = new BufferedImage(width, height * frames,
-                        BufferedImage.TYPE_INT_ARGB);
-                int[] basePixels = base.getRGB(0, 0, width, height, null, 0, width);
-                strip.setRGB(0, 0, width, height, basePixels, 0, width);
-                int cursor = 0;
-                int[] previous = basePixels;
-                int[] pixels = new int[width * height];
-                for (int frame = 1; frame < frames; frame++) {
-                    for (int pixel = 0; pixel < pixels.length; pixel++) {
-                        int original = previous[pixel];
-                        int red = (((original >> 16) & 255) + (delta[cursor++] & 255)) & 255;
-                        int green = (((original >> 8) & 255) + (delta[cursor++] & 255)) & 255;
-                        int blue = ((original & 255) + (delta[cursor++] & 255)) & 255;
-                        pixels[pixel] = 0xFF000000 | red << 16 | green << 8 | blue;
-                    }
-                    strip.setRGB(0, frame * height, width, height, pixels, 0, width);
-                    int[] reusable = previous;
-                    previous = pixels;
-                    pixels = reusable;
-                }
-                return new DecodedAnimation(strip, frames);
-        }
+        CompactAnimationDecoder.Result decoded = CompactAnimationDecoder.decode(base, resource);
+        return new DecodedAnimation(decoded.strip, decoded.frameCount);
     }
 
     @Override
@@ -274,12 +231,12 @@ public class TEAnimatedScreenSelector
             long tick = te.getWorld().getTotalWorldTime();
             // Global phase is intentional: adjacent L/R halves of a 2x1
             // display must always select the same authored animation frame.
-            int frame = (int) ((tick / Math.max(1, ticks)) % data.frameCount);
+            int frame = AnimationFrames.frame(tick,ticks,data.frameCount);
             // TextureUtil uploads the PNG's first scanline at V=0. The strip
             // stores frame zero at the top, so frame UVs advance downward.
             // The old 1-frame/n calculation sampled the reserved black tail.
-            vTop = (float) frame / data.frameCount;
-            vBottom = (float) (frame + 1) / data.frameCount;
+            vTop = (float)AnimationFrames.top(frame,data.frameCount);
+            vBottom = (float)AnimationFrames.bottom(frame,data.frameCount);
         } else {
             texture = new ResourceLocation(VandorLabs.MODID,
                     TEX_ROOT + screenId + "_static.png");
@@ -335,46 +292,14 @@ public class TEAnimatedScreenSelector
         // (U=0 sits east), matching BlockDisplaySequenced art. Offset ~6mm
         // out: kills z-fighting flicker against the dark housing front
         // behind it without a visible gap.
-        if (state.getBlock() instanceof BlockProgrammableConsole) {
-            // Inset into the full-height wedge: its lower edge starts behind
-            // the controls and its upper edge reaches the block's back/top.
-            // A small outward normal offset prevents z-fighting with the wall
-            // backing while leaving a half-pixel wall-panel border.
-            double x0 = 0.5D;
-            double x1 = 15.5D;
-            double bottomY = 1.46D;
-            double bottomZ = 7.70D;
-            double topY = 15.59D;
-            double topZ = 15.71D;
-            buf.pos(x0, topY, topZ).tex(1.0D, vTop).endVertex();
-            buf.pos(x1, topY, topZ).tex(0.0D, vTop).endVertex();
-            buf.pos(x1, bottomY, bottomZ).tex(0.0D, vBottom).endVertex();
-            buf.pos(x0, bottomY, bottomZ).tex(1.0D, vBottom).endVertex();
-        } else if (state.getBlock() instanceof BlockProgrammableDiagonalScreen) {
-            // The full diagonal is sqrt(2)*16px long. A centered 15px run
-            // matches the 15px screen width instead of stretching square art
-            // by ~41%, leaving a 2.7px wall-panel border at each sloped end.
-            // A tiny outward-normal offset prevents z-fighting.
-            double x0 = 0.5D;
-            double x1 = 15.5D;
-            // Bias the inset toward the visually important end: high/back
-            // for a floor placement, low/back for a ceiling placement. The
-            // diagonal span stays constant, so neither variant stretches.
-            double bottomY = diagonalInverted ? 1.15D : 4.25D;
-            double bottomZ = diagonalInverted ? 14.75D : 4.15D;
-            double topY = diagonalInverted ? 11.75D : 14.85D;
-            double topZ = diagonalInverted ? 4.15D : 14.75D;
-            buf.pos(x0, topY, topZ).tex(1.0D, vTop).endVertex();
-            buf.pos(x1, topY, topZ).tex(0.0D, vTop).endVertex();
-            buf.pos(x1, bottomY, bottomZ).tex(0.0D, vBottom).endVertex();
-            buf.pos(x0, bottomY, bottomZ).tex(1.0D, vBottom).endVertex();
-        } else {
-            float faceZ = -0.1F;
-            buf.pos(0.0D, 16.0D, faceZ).tex(1.0D, vTop).endVertex();
-            buf.pos(16.0D, 16.0D, faceZ).tex(0.0D, vTop).endVertex();
-            buf.pos(16.0D, 0.0D, faceZ).tex(0.0D, vBottom).endVertex();
-            buf.pos(0.0D, 0.0D, faceZ).tex(1.0D, vBottom).endVertex();
-        }
+        ScreenSurface.Kind surface=state.getBlock() instanceof BlockProgrammableConsole
+                ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
+                ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
+        ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
+        buf.pos(quad.topLeft.x,quad.topLeft.y,quad.topLeft.z).tex(1,vTop).endVertex();
+        buf.pos(quad.topRight.x,quad.topRight.y,quad.topRight.z).tex(0,vTop).endVertex();
+        buf.pos(quad.bottomRight.x,quad.bottomRight.y,quad.bottomRight.z).tex(0,vBottom).endVertex();
+        buf.pos(quad.bottomLeft.x,quad.bottomLeft.y,quad.bottomLeft.z).tex(1,vBottom).endVertex();
         tess.draw();
         GlStateManager.enableLighting();
 
@@ -405,35 +330,11 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
-        double scale = small ? BlockProgrammableInput.SMALL_SCALE : 1.0D;
-        double x0 = (16.0D - 16.0D * scale) / 2.0D;
-        double x1 = 16.0D - x0;
-        if (keyboard) {
-            double y0 = upper ? 15 : 7;
-            double z0 = 16.0D - 8.0D * scale;
-            renderWallBox(wall, x0, y0, z0, x1, y0 + 1, 16);
-            double[] uv = bindInput(te, te.getInputPanel());
-            Tessellator tess = Tessellator.getInstance();
-            BufferBuilder buf = tess.getBuffer();
-            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-            inputQuadHorizontal(buf, x0 + 0.25D, x1 - 0.25D,
-                    z0 + 0.25D, 15.75D, y0 + 1.02D, uv[0], uv[1]);
-            tess.draw();
-        } else {
-            double height = 8.0D * scale;
-            double y0 = wallPosition == 0 ? 0.0D
-                    : wallPosition == 2 ? 16.0D - height : (16.0D - height) / 2.0D;
-            renderWallBox(wall, x0, y0, 15, x1, y0 + height, 16);
-            double[] uv = bindInput(te, te.getInputPanel());
-            Tessellator tess = Tessellator.getInstance();
-            BufferBuilder buf = tess.getBuffer();
-            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-            buf.pos(x0 + 0.25, y0 + height - 0.25, 14.98).tex(0, uv[0]).endVertex();
-            buf.pos(x1 - 0.25, y0 + height - 0.25, 14.98).tex(1, uv[0]).endVertex();
-            buf.pos(x1 - 0.25, y0 + 0.25, 14.98).tex(1, uv[1]).endVertex();
-            buf.pos(x0 + 0.25, y0 + 0.25, 14.98).tex(0, uv[1]).endVertex();
-            tess.draw();
-        }
+        InputSurfaceLayout.Mounted layout=InputSurfaceLayout.halfInput(keyboard,upper,
+                wallPosition,small);
+        renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
+                layout.housing.x1,layout.housing.y1,layout.housing.z1);
+        drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
     }
 
     /** Full-square screen surface using the half-input's mount/fold state. */
@@ -444,30 +345,13 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
-        double[] uv = bindScreenSurface(te);
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-        if (keyboard) {
-            double y0 = upper ? 15 : 7;
-            bindAtlas();
-            renderWallBox(wall, 0, y0, 0, 16, y0 + 1, 16);
-            bindScreenSurface(te);
-            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-            buf.pos(0.25, y0 + 1.02, 15.75).tex(0, uv[0]).endVertex();
-            buf.pos(15.75, y0 + 1.02, 15.75).tex(1, uv[0]).endVertex();
-            buf.pos(15.75, y0 + 1.02, 0.25).tex(1, uv[1]).endVertex();
-            buf.pos(0.25, y0 + 1.02, 0.25).tex(0, uv[1]).endVertex();
-        } else {
-            bindAtlas();
-            renderWallBox(wall, 0, 0, 15, 16, 16, 16);
-            bindScreenSurface(te);
-            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-            buf.pos(0.25, 15.75, 14.98).tex(0, uv[0]).endVertex();
-            buf.pos(15.75, 15.75, 14.98).tex(1, uv[0]).endVertex();
-            buf.pos(15.75, 0.25, 14.98).tex(1, uv[1]).endVertex();
-            buf.pos(0.25, 0.25, 14.98).tex(0, uv[1]).endVertex();
-        }
-        tess.draw();
+        double[] uv=bindScreenSurface(te);
+        InputSurfaceLayout.Mounted layout=InputSurfaceLayout.fullInput(keyboard,upper);
+        bindAtlas();
+        renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
+                layout.housing.x1,layout.housing.y1,layout.housing.z1);
+        bindScreenSurface(te);
+        drawInputSurface(layout.surface,uv);
     }
 
     /** Bind a regular full-height programmable animation and return its V range. */
@@ -485,10 +369,10 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
         } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED) {
             AnimData data = animData(id);
-            int frame = (int) ((te.getWorld().getTotalWorldTime()
-                    / Math.max(1, te.getAnimationSpeedTicks())) % data.frameCount);
-            vTop = (double) frame / data.frameCount;
-            vBottom = (double) (frame + 1) / data.frameCount;
+            int frame=AnimationFrames.frame(te.getWorld().getTotalWorldTime(),
+                    te.getAnimationSpeedTicks(),data.frameCount);
+            vTop=AnimationFrames.top(frame,data.frameCount);
+            vBottom=AnimationFrames.bottom(frame,data.frameCount);
             texture = data.texture;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         } else {
@@ -507,44 +391,24 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(buf, wall, 0, 8, 16, 16, 8, 16, 16, 1, 16, 0, 1, 16,
-                0, 16, 16, 0);
-        tess.draw();
-        buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX);
-        spriteTriangle(buf, wall, 0, 1, 7.5, 0, 8, 16, 0, 1, 16);
-        spriteTriangle(buf, wall, 16, 1, 16, 16, 8, 16, 16, 1, 7.5);
-        tess.draw();
+        drawWallMesh(wall,ScreenHousingMesh.halfConsole());
 
         double[] frontUv = bindInput(te, te.getInputPanel());
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        inputQuadHorizontal(buf, 1.02, true, frontUv[0], frontUv[1]);
-        tess.draw();
+        drawInputSurface(InputSurfaceLayout.halfConsoleFront(),frontUv);
 
         double[] rearUv = bindInput(te, te.getSecondaryInputPanel());
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        buf.pos(0.25, 7.75, 15.70).tex(0, rearUv[0]).endVertex();
-        buf.pos(15.75, 7.75, 15.70).tex(1, rearUv[0]).endVertex();
-        buf.pos(15.75, 1.25, 7.70).tex(1, rearUv[1]).endVertex();
-        buf.pos(0.25, 1.25, 7.70).tex(0, rearUv[1]).endVertex();
+        drawInputSurface(InputSurfaceLayout.halfConsoleRear(),rearUv);
+    }
+
+    private static void drawInputSurface(InputSurfaceLayout.Quad quad,double[] uv) {
+        Tessellator tess=Tessellator.getInstance();
+        BufferBuilder buf=tess.getBuffer();
+        buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+        for (InputSurfaceLayout.Vertex vertex:quad.vertices) {
+            double v=uv[0]+vertex.v*(uv[1]-uv[0]);
+            buf.pos(vertex.x,vertex.y,vertex.z).tex(vertex.u,v).endVertex();
+        }
         tess.draw();
-    }
-
-    private static void inputQuadHorizontal(BufferBuilder buf, double y, boolean frontHalf,
-            double vTop, double vBottom) {
-        double z0 = frontHalf ? 0.25 : 8.25;
-        double z1 = frontHalf ? 7.25 : 15.75;
-        inputQuadHorizontal(buf, 0.25, 15.75, z0, z1, y, vTop, vBottom);
-    }
-
-    private static void inputQuadHorizontal(BufferBuilder buf, double x0, double x1,
-            double z0, double z1, double y, double vTop, double vBottom) {
-        buf.pos(x0, y, z1).tex(0, vTop).endVertex();
-        buf.pos(x1, y, z1).tex(1, vTop).endVertex();
-        buf.pos(x1, y, z0).tex(1, vBottom).endVertex();
-        buf.pos(x0, y, z0).tex(0, vBottom).endVertex();
     }
 
     private static double[] bindInput(TileEntityAnimatedScreenSelector te, String id) {
@@ -557,10 +421,10 @@ public class TEAnimatedScreenSelector
             suffix = "_off";
         } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED && frames > 1) {
             AnimData data = inputAnimData(id);
-            int frame = (int) ((te.getWorld().getTotalWorldTime()
-                    / Math.max(1, te.getAnimationSpeedTicks())) % data.frameCount);
-            vTop = (double) frame / data.frameCount;
-            vBottom = (double) (frame + 1) / data.frameCount;
+            int frame=AnimationFrames.frame(te.getWorld().getTotalWorldTime(),
+                    te.getAnimationSpeedTicks(),data.frameCount);
+            vTop=AnimationFrames.top(frame,data.frameCount);
+            vBottom=AnimationFrames.bottom(frame,data.frameCount);
             Minecraft.getMinecraft().getTextureManager().bindTexture(data.texture);
             return new double[] {vTop, vBottom};
         } else {
@@ -601,37 +465,13 @@ public class TEAnimatedScreenSelector
 
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-
-        // Full-width triangular prism behind the screen: inclined front,
-        // filled west/east triangles and a vertical back face.
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(buf, wall,
-                0, 1, 7.5, 16, 1, 7.5, 16, 16, 16, 0, 16, 16,
-                0, 16, 16, 0);
-        spriteQuad(buf, wall,
-                0, 16, 16, 16, 16, 16, 16, 1, 16, 0, 1, 16,
-                0, 16, 16, 0);
-        tess.draw();
-
-        buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX);
-        spriteTriangle(buf, wall,
-                0, 1, 7.5, 0, 16, 16, 0, 1, 16);
-        spriteTriangle(buf, wall,
-                16, 1, 16, 16, 16, 16, 16, 1, 7.5);
-        tess.draw();
+        drawWallMesh(wall,ScreenHousingMesh.console());
 
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
         // fills the deck without cropping or atlas-induced aspect changes.
         double[] inputUv = bindInput(te, te.getInputPanel());
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        buf.pos(0.25, 1.02, 7.25).tex(0.0D, inputUv[0]).endVertex();
-        buf.pos(15.75, 1.02, 7.25).tex(1.0D, inputUv[0]).endVertex();
-        buf.pos(15.75, 1.02, 0.25).tex(1.0D, inputUv[1]).endVertex();
-        buf.pos(0.25, 1.02, 0.25).tex(0.0D, inputUv[1]).endVertex();
-        tess.draw();
+        drawInputSurface(InputSurfaceLayout.halfConsoleFront(),inputUv);
     }
 
     /** Full solid half-cube wedge used by the standalone diagonal display. */
@@ -644,45 +484,9 @@ public class TEAnimatedScreenSelector
                 (float) (combined % 65536), (float) (combined / 65536));
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder buf = tess.getBuffer();
-
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         // Explicit upper/lower geometry keeps the artwork upright. Reflecting
-        // the model matrix also reflected the texture, producing an upside-
-        // down screen on the ceiling-style placement.
-        if (inverted) {
-            spriteQuad(buf, wall,
-                    0, 16, 0, 16, 16, 0, 16, 0, 16, 0, 0, 16,
-                    0, 16, 16, 0);
-            spriteQuad(buf, wall,
-                    0, 0, 16, 16, 0, 16, 16, 16, 16, 0, 16, 16,
-                    0, 16, 16, 0);
-            spriteQuad(buf, wall,
-                    0, 16, 0, 16, 16, 0, 16, 16, 16, 0, 16, 16,
-                    0, 0, 16, 16);
-        } else {
-            spriteQuad(buf, wall,
-                    0, 0, 0, 16, 0, 0, 16, 16, 16, 0, 16, 16,
-                    0, 16, 16, 0);
-            spriteQuad(buf, wall,
-                    0, 16, 16, 16, 16, 16, 16, 0, 16, 0, 0, 16,
-                    0, 16, 16, 0);
-            spriteQuad(buf, wall,
-                    0, 0, 16, 16, 0, 16, 16, 0, 0, 0, 0, 0,
-                    0, 0, 16, 16);
-        }
-        tess.draw();
-
-        buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX);
-        if (inverted) {
-            spriteTriangle(buf, wall, 0, 16, 0, 0, 0, 16, 0, 16, 16);
-            spriteTriangle(buf, wall, 16, 16, 16, 16, 0, 16, 16, 16, 0);
-        } else {
-            spriteTriangle(buf, wall, 0, 0, 0, 0, 16, 16, 0, 0, 16);
-            spriteTriangle(buf, wall, 16, 0, 16, 16, 16, 16, 16, 0, 0);
-        }
-        tess.draw();
+        // the model matrix would also reflect the texture.
+        drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted));
     }
 
     private static void bindAtlas() {
@@ -703,16 +507,27 @@ public class TEAnimatedScreenSelector
         buf.pos(x3, y3, z3).tex(ua, vb).endVertex();
     }
 
-    private static void spriteTriangle(BufferBuilder buf, TextureAtlasSprite sprite,
-            double x0, double y0, double z0, double x1, double y1, double z1,
-            double x2, double y2, double z2) {
-        double u0 = sprite.getInterpolatedU(0);
-        double u1 = sprite.getInterpolatedU(16);
-        double v0 = sprite.getInterpolatedV(0);
-        double v1 = sprite.getInterpolatedV(16);
-        buf.pos(x0, y0, z0).tex(u0, v1).endVertex();
-        buf.pos(x1, y1, z1).tex(u1, v0).endVertex();
-        buf.pos(x2, y2, z2).tex(u1, v1).endVertex();
+    private static void drawWallMesh(TextureAtlasSprite sprite,ScreenHousingMesh mesh) {
+        Tessellator tess=Tessellator.getInstance();
+        BufferBuilder buf=tess.getBuffer();
+        if (mesh.quads.length>0) {
+            buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+            drawWallFaces(buf,sprite,mesh.quads);
+            tess.draw();
+        }
+        if (mesh.triangles.length>0) {
+            buf.begin(GL11.GL_TRIANGLES,DefaultVertexFormats.POSITION_TEX);
+            drawWallFaces(buf,sprite,mesh.triangles);
+            tess.draw();
+        }
+    }
+
+    private static void drawWallFaces(BufferBuilder buf,TextureAtlasSprite sprite,
+            ScreenHousingMesh.Face[] faces) {
+        for (ScreenHousingMesh.Face face:faces) for (ScreenHousingMesh.Vertex vertex:face.vertices)
+            buf.pos(vertex.x,vertex.y,vertex.z)
+                    .tex(sprite.getInterpolatedU(vertex.u),sprite.getInterpolatedV(vertex.v))
+                    .endVertex();
     }
 
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */

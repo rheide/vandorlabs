@@ -1,5 +1,6 @@
 package com.vandorlabs.blocks;
 
+import com.vandorlabs.render.InputSurfaceLayout;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -10,21 +11,16 @@ import net.minecraft.world.IBlockAccess;
 public class BlockProgrammableFullInput extends BlockProgrammableInput {
 
     public static final String NAME = "programmable_full_input";
-    private static final AxisAlignedBB WALL =
-            new AxisAlignedBB(0, 0, 15.0 / 16.0, 1, 1, 1);
-    private static final AxisAlignedBB FLOOR =
-            new AxisAlignedBB(0, 7.0 / 16.0, 0, 1, 0.5, 1);
-    private static final AxisAlignedBB TOP =
-            new AxisAlignedBB(0, 15.0 / 16.0, 0, 1, 1, 1);
-
     public BlockProgrammableFullInput() {
         super(NAME);
     }
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        AxisAlignedBB local = state.getValue(KEYBOARD)
-                ? (state.getValue(UPPER) ? TOP : FLOOR) : WALL;
+        InputSurfaceLayout.Box box=InputSurfaceLayout.fullInput(
+                state.getValue(KEYBOARD),state.getValue(UPPER)).housing;
+        AxisAlignedBB local=new AxisAlignedBB(box.x0/16,box.y0/16,box.z0/16,
+                box.x1/16,box.y1/16,box.z1/16);
         return rotateFromNorth(local, state.getValue(FACING));
     }
 }

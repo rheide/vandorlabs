@@ -20,7 +20,7 @@ THRUSTER = re.compile(
 
 FALLBACK_IDS = {
     "glass_wall", "sliding_security_door", "door_airlock_glass",
-    "door_security", "sliding_hangar_door", "sliding_airlock_glass",
+    "door_security", "sliding_airlock_glass",
     "programmable_input", "programmable_full_input",
     "programmable_diagonal_screen",
 }
@@ -41,8 +41,6 @@ EXTRA_TEXTURES = {
     "dynmap_door_airlock_glass_upper": "blocks/door_airlock_glass_upper.png",
     "dynmap_sliding_security_lower": "blocks/door_security_lower.png",
     "dynmap_sliding_security_upper": "blocks/door_security_upper.png",
-    "dynmap_sliding_hangar_lower": "blocks/sliding_hangar_door_lower.png",
-    "dynmap_sliding_hangar_upper": "blocks/sliding_hangar_door_upper.png",
     "dynmap_sliding_airlock_lower": "blocks/sliding_airlock_glass_lower.png",
     "dynmap_sliding_airlock_upper": "blocks/sliding_airlock_glass_upper.png",
     "dynmap_detail_split": "blocks/detailed_doors/split.png",
@@ -136,7 +134,6 @@ def fallback_texture(block_id, state):
         "door_security": "dynmap_door_security_",
         "door_airlock_glass": "dynmap_door_airlock_glass_",
         "sliding_security_door": "dynmap_sliding_security_",
-        "sliding_hangar_door": "dynmap_sliding_hangar_",
         "sliding_airlock_glass": "dynmap_sliding_airlock_",
     }[block_id]
     return stem + half

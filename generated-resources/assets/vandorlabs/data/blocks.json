@@ -1230,15 +1230,6 @@
     "art": "vandorlabs:blocks/door_airlock_glass"
   },
   {
-    "id": "sliding_hangar_door",
-    "type": "sliding_split_door",
-    "class": "BlockVandorDoor",
-    "item": true,
-    "motion": "sliding_split_door",
-    "panel": "split",
-    "art": "vandorlabs:blocks/sliding_hangar_door"
-  },
-  {
     "id": "sliding_security_door",
     "type": "sliding_door",
     "class": "BlockVandorDoor",

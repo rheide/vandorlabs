@@ -17,21 +17,70 @@ version = '1.0'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 
-task compileRampTests(type: JavaCompile) {
-    source = files('src/main/java/com/vandorlabs/ramp/ControllerPlatform.java',
-            'src/test/java/com/vandorlabs/ramp/ControllerPlatformTest.java')
+task compilePortableTests(type: JavaCompile) {
+    group = 'verification'
+    description = 'Compile shared code and tests without any Minecraft or Forge classes'
+    source = files(fileTree('src/portable/java') {
+                include '**/*.java'
+            },
+            fileTree('src/portableTest/java') {
+                include '**/*.java'
+            })
     classpath = files()
-    destinationDir = file("$buildDir/ramp-tests")
+    destinationDir = file("$buildDir/portable-tests")
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
+    options.compilerArgs += ['-Xlint:all', '-Werror']
 }
 
 task testRamps(type: JavaExec) {
-    dependsOn compileRampTests
-    classpath = files("$buildDir/ramp-tests")
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.ramp.ControllerPlatformTest'
 }
+task testCompactAnimation(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.animation.CompactAnimationDecoderTest'
+}
+task testSaveSchema(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.SaveSchemaTest'
+}
+task testScreenData(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.ScreenDataTest'
+}
+task testRedstoneData(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.RedstoneDataTest'
+}
+task testRampCellData(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.RampCellDataTest'
+}
+task testRampControllerData(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.RampControllerDataTest'
+}
+task testBlockStateReference(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.BlockStateReferenceTest'
+}
 check.dependsOn testRamps
+check.dependsOn testCompactAnimation
+check.dependsOn testSaveSchema
+check.dependsOn testScreenData
+check.dependsOn testRedstoneData
+check.dependsOn testRampCellData
+check.dependsOn testRampControllerData
+check.dependsOn testBlockStateReference
 
 task testDynmapSupport(type: Exec) {
     workingDir projectDir
@@ -56,6 +105,10 @@ task testCopyCompatibility(type: Exec) {
 
 sourceSets {
     main {
+        java {
+            // Shared unchanged by every Minecraft/Forge adapter project.
+            srcDir 'src/portable/java'
+        }
         resources {
             srcDir 'generated-resources'
         }

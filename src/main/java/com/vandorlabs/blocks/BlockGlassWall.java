@@ -18,6 +18,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import com.vandorlabs.render.GlassConnections;
 
 /** Thin observation-glass wall whose perimeter frame joins in one wall plane. */
 public class BlockGlassWall extends Block {
@@ -116,23 +117,15 @@ public class BlockGlassWall extends Block {
             BlockPos pos) {
         EnumFacing left = state.getValue(ROTATED)
                 ? EnumFacing.NORTH : EnumFacing.WEST;
-        EnumFacing right = left.getOpposite();
-        boolean top = connects(world, pos.up(), state);
-        boolean bottom = connects(world, pos.down(), state);
-        boolean leftConnected = connects(world, pos.offset(left), state);
-        boolean rightConnected = connects(world, pos.offset(right), state);
-        return state.withProperty(TOP, !top)
-                .withProperty(BOTTOM, !bottom)
-                .withProperty(LEFT, !leftConnected)
-                .withProperty(RIGHT, !rightConnected)
-                .withProperty(INNER_TL, top && leftConnected
-                        && !connects(world, pos.up().offset(left), state))
-                .withProperty(INNER_TR, top && rightConnected
-                        && !connects(world, pos.up().offset(right), state))
-                .withProperty(INNER_BL, bottom && leftConnected
-                        && !connects(world, pos.down().offset(left), state))
-                .withProperty(INNER_BR, bottom && rightConnected
-                        && !connects(world, pos.down().offset(right), state));
+        final IBlockState expected=state;
+        GlassConnections c=GlassConnections.calculate((horizontal,vertical)->
+                // Portable coordinates use -1 for left and +1 for right;
+                // offset(left, -horizontal) preserves that handedness.
+                connects(world,pos.offset(left,-horizontal).up(vertical),expected));
+        return state.withProperty(TOP,c.top).withProperty(BOTTOM,c.bottom)
+                .withProperty(LEFT,c.left).withProperty(RIGHT,c.right)
+                .withProperty(INNER_TL,c.innerTopLeft).withProperty(INNER_TR,c.innerTopRight)
+                .withProperty(INNER_BL,c.innerBottomLeft).withProperty(INNER_BR,c.innerBottomRight);
     }
 
     private void refresh(World world, BlockPos pos) {

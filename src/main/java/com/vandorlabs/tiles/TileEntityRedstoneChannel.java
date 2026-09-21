@@ -4,6 +4,8 @@ import com.vandorlabs.blocks.BlockIndustrialLever;
 import com.vandorlabs.blocks.BlockVandorSwitch;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
+import com.vandorlabs.persistence.NbtPrimitiveData;
+import com.vandorlabs.persistence.RedstoneData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -81,18 +83,17 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        tag.setInteger("RedstoneChannel", channel);
-        tag.setBoolean("LocalOn", localOn);
-        tag.setBoolean("ChannelInitialized", initialized);
+        new RedstoneData.Source(channel,localOn,initialized).write(new NbtPrimitiveData(tag));
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         int oldChannel = channel;
         super.readFromNBT(tag);
-        channel = Math.max(0, tag.getInteger("RedstoneChannel"));
-        localOn = tag.getBoolean("LocalOn");
-        initialized = tag.getBoolean("ChannelInitialized");
+        RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
+        channel=data.channel;
+        localOn=data.localOn;
+        initialized=data.initialized;
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

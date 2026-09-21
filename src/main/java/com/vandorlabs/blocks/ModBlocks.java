@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.vandorlabs.VandorLabs;
+import com.vandorlabs.render.DoorLeaf;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -335,12 +336,12 @@ public class ModBlocks {
                     ModelLoader.setCustomStateMapper(block,
                             new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
                     String id = block.getRegistryName().getResourcePath();
-                    ModelLoader.setCustomModelResourceLocation(item, 1,
+                    ModelLoader.setCustomModelResourceLocation(item, DoorLeaf.LEFT.legacyMetadata,
                             new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
-                                    + id + "_left_leaf", "inventory"));
-                    ModelLoader.setCustomModelResourceLocation(item, 2,
+                                    + id + "_"+DoorLeaf.LEFT.modelSuffix, "inventory"));
+                    ModelLoader.setCustomModelResourceLocation(item, DoorLeaf.RIGHT.legacyMetadata,
                             new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
-                                    + id + "_right_leaf", "inventory"));
+                                    + id + "_"+DoorLeaf.RIGHT.modelSuffix, "inventory"));
                 }
             }
         }

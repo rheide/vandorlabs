@@ -22,7 +22,7 @@ public class BlockProgrammableHalfConsole extends BlockAnimatedScreenSelector {
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         return getDefaultState().withProperty(FACING,
-                placer.getHorizontalFacing().getOpposite());
+                placementFacing(world, pos, side, placer));
     }
 
     @Override

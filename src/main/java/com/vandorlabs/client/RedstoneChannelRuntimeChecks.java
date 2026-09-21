@@ -7,6 +7,7 @@ import com.vandorlabs.blocks.BlockLamp;
 import com.vandorlabs.blocks.BlockPropulsionLight;
 import com.vandorlabs.blocks.BlockConnectedPropulsionLight;
 import com.vandorlabs.blocks.BlockTrianglePropulsionLight;
+import com.vandorlabs.blocks.BlockIndustrialLever;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.tiles.TileEntityRedstoneChannel;
 import com.vandorlabs.tiles.TileEntitySlidingDoor;
@@ -31,6 +32,7 @@ final class RedstoneChannelRuntimeChecks {
 
     static void run(World world, EntityPlayer player) {
         checkTrianglePlacement(world, player);
+        checkLeverPlacement(world,player);
         Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_rocker"));
         Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "door_security"));
         Block rawLight = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "wall_lightbar_unlit"));
@@ -180,6 +182,26 @@ final class RedstoneChannelRuntimeChecks {
         world.setBlockToAir(lightPos);
         world.setBlockToAir(propulsionPos);
         System.out.println("[vandorlabs][reprolab] redstone-channel-runtime PASS");
+    }
+
+    private static void checkLeverPlacement(World world,EntityPlayer player) {
+        BlockPos pos=new BlockPos(20,25,20);
+        world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
+        for (String id:new String[]{"industrial_lever","compact_lever"}) {
+            Block raw=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
+            require(raw instanceof BlockIndustrialLever,id+" is missing");
+            BlockIndustrialLever lever=(BlockIndustrialLever)raw;
+            require(lever.canPlaceBlockOnSide(world,pos,EnumFacing.UP),
+                    id+" cannot mount on a solid floor");
+            IBlockState floor=lever.getStateForPlacement(world,pos,EnumFacing.UP,
+                    .5F,.5F,.5F,0,player);
+            require(floor.getValue(BlockIndustrialLever.FLOOR),
+                    id+" floor placement did not retain its mount");
+            require(lever.getStateFromMeta(lever.getMetaFromState(floor)).equals(floor),
+                    id+" floor placement does not survive metadata");
+        }
+        world.setBlockToAir(pos);
+        world.setBlockToAir(pos.down());
     }
 
     private static void checkTrianglePlacement(World world, EntityPlayer player) {

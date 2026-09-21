@@ -237,7 +237,6 @@ tile.vandorlabs.ship_view_8.name=Ship View 8
 tile.vandorlabs.shipyard_1.name=Shipyard Schematic 1
 tile.vandorlabs.shipyard_2.name=Shipyard Schematic 2
 tile.vandorlabs.sliding_airlock_glass.name=Glass Sliding Airlock Door
-tile.vandorlabs.sliding_hangar_door.name=Sliding Hangar Door
 tile.vandorlabs.sliding_security_door.name=Sliding Security Door
 tile.vandorlabs.specialist_bare_biology.name=Specialist Bare Biology
 tile.vandorlabs.specialist_bare_medical.name=Specialist Bare Medical

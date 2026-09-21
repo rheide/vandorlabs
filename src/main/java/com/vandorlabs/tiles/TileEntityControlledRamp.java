@@ -4,6 +4,11 @@ import com.vandorlabs.blocks.BlockControlledRamp;
 import com.vandorlabs.blocks.BlockVandorDirectional;
 import com.vandorlabs.ramp.ControllerPlatform;
 import com.vandorlabs.ramp.ControllerRecovery;
+import com.vandorlabs.ramp.RampGeometry;
+import com.vandorlabs.persistence.NbtPrimitiveData;
+import com.vandorlabs.persistence.RampCellData;
+import com.vandorlabs.persistence.SaveSchema;
+import com.vandorlabs.persistence.LegacyBlockStates;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
@@ -41,30 +46,31 @@ public class TileEntityControlledRamp extends TileEntity {
     }
     public List<AxisAlignedBB> boxes(double partial) {
         List<AxisAlignedBB> boxes=new ArrayList<>();
+        for (RampGeometry.Box box:geometry(partial))
+            boxes.add(new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ));
+        return boxes;
+    }
+    public List<RampGeometry.Box> geometry(double partial) {
+        List<RampGeometry.Box> boxes=new ArrayList<>();
         IBlockState state=world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockControlledRamp)) return boxes;
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
-        int count=elevator?1:segments;
-        for (int i=0;i<count;i++) {
-            double offset=ControllerPlatform.offset(row,i,length,segments,drop,pose(partial),top,elevator);
-            double y0=Math.max(0,sourceY+low+offset-pos.getY());
-            double y1=Math.min(1,sourceY+high+offset-pos.getY());
-            if (y1-y0<1e-8) continue;
-            double a=(double)i/count,b=(double)(i+1)/count;
-            boxes.add(new AxisAlignedBB(face==EnumFacing.EAST?a:face==EnumFacing.WEST?1-b:0,y0,
-                    face==EnumFacing.SOUTH?a:face==EnumFacing.NORTH?1-b:0,
-                    face==EnumFacing.EAST?b:face==EnumFacing.WEST?1-a:1,y1,
-                    face==EnumFacing.SOUTH?b:face==EnumFacing.NORTH?1-a:1));
-        }
-        return boxes;
+        return RampGeometry.boxes(direction(face),pos.getY(),sourceY,low,high,
+                row,length,drop,segments,pose(partial),top,elevator);
     }
     public double sideTextureV(AxisAlignedBB box,double localY,double partial) {
+        return sideTextureV(new RampGeometry.Box(box.minX,box.minY,box.minZ,
+                box.maxX,box.maxY,box.maxZ),localY,partial);
+    }
+    public double sideTextureV(RampGeometry.Box box,double localY,double partial) {
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
-        double along=face.getAxis()==EnumFacing.Axis.X?(box.minX+box.maxX)/2:(box.minZ+box.maxZ)/2;
-        if (face==EnumFacing.NORTH || face==EnumFacing.WEST) along=1-along;
-        int step=elevator?0:Math.max(0,Math.min(segments-1,(int)(along*segments)));
+        RampGeometry.Box portable=new RampGeometry.Box(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);
+        int step=RampGeometry.segmentAt(direction(face),portable,segments,elevator);
         double offset=ControllerPlatform.offset(row,step,length,segments,drop,pose(partial),top,elevator);
         return ControllerPlatform.sideTextureV(pos.getY(),localY,sourceY,offset);
+    }
+    private static RampGeometry.Direction direction(EnumFacing face) {
+        return RampGeometry.Direction.valueOf(face.getName().toUpperCase(java.util.Locale.ROOT));
     }
     public boolean belongsTo(BlockPos owner) { return controller.equals(owner); }
     public void restore() {
@@ -92,27 +98,31 @@ public class TileEntityControlledRamp extends TileEntity {
     @Override public void onChunkUnload() { ControllerRecovery.unregister(this); super.onChunkUnload(); }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        tag.setLong("Controller",controller.toLong());
-        tag.setTag("Source",NBTUtil.writeBlockState(new NBTTagCompound(),source));
-        tag.setInteger("SourceY",sourceY); tag.setInteger("Row",row); tag.setInteger("Length",length);
-        tag.setInteger("Drop",drop); tag.setInteger("Segments",segments); tag.setInteger("Duration",duration);
-        tag.setDouble("Low",low); tag.setDouble("High",high);
-        tag.setBoolean("Top",top); tag.setBoolean("Elevator",elevator);
-        tag.setBoolean("Open",open); tag.setBoolean("Moving",moving);
-        tag.setDouble("StartPose",startPose); tag.setLong("StartTick",startTick);
+        new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
+                elevator,open,moving,startPose,startTick).write(new NbtPrimitiveData(tag));
+        tag.setLong(SaveSchema.Ramp.CONTROLLER,controller.toLong());
+        tag.setInteger(SaveSchema.Ramp.CONTROLLER_X,controller.getX());
+        tag.setInteger(SaveSchema.Ramp.CONTROLLER_Y,controller.getY());
+        tag.setInteger(SaveSchema.Ramp.CONTROLLER_Z,controller.getZ());
+        tag.setTag(SaveSchema.Ramp.SOURCE,NBTUtil.writeBlockState(new NBTTagCompound(),source));
+        tag.setString(SaveSchema.Ramp.SOURCE_STATE,LegacyBlockStates.encode(source));
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
-        controller=BlockPos.fromLong(tag.getLong("Controller")); source=NBTUtil.readBlockState(tag.getCompoundTag("Source"));
-        sourceY=tag.getInteger("SourceY"); length=Math.max(1,Math.min(128,tag.getInteger("Length")));
-        row=Math.max(0,Math.min(length-1,tag.getInteger("Row"))); drop=Math.max(1,Math.min(16,tag.getInteger("Drop")));
-        segments=tag.getInteger("Segments")==8?8:2; duration=Math.max(1,tag.getInteger("Duration"));
-        low=tag.getDouble("Low"); high=tag.getDouble("High");
-        top=!tag.hasKey("Top") || tag.getBoolean("Top"); elevator=tag.getBoolean("Elevator");
-        open=tag.getBoolean("Open"); moving=tag.getBoolean("Moving");
-        double p=tag.getDouble("StartPose"); startPose=Double.isFinite(p)?Math.max(0,Math.min(1,p)):0;
-        startTick=tag.getLong("StartTick");
+        controller=tag.hasKey(SaveSchema.Ramp.CONTROLLER_X)
+                ?new BlockPos(tag.getInteger(SaveSchema.Ramp.CONTROLLER_X),
+                        tag.getInteger(SaveSchema.Ramp.CONTROLLER_Y),
+                        tag.getInteger(SaveSchema.Ramp.CONTROLLER_Z))
+                :BlockPos.fromLong(tag.getLong(SaveSchema.Ramp.CONTROLLER));
+        source=tag.hasKey(SaveSchema.Ramp.SOURCE_STATE)
+                ?LegacyBlockStates.decode(tag.getString(SaveSchema.Ramp.SOURCE_STATE)):null;
+        if (source==null) source=NBTUtil.readBlockState(tag.getCompoundTag(SaveSchema.Ramp.SOURCE));
+        RampCellData data=RampCellData.read(new NbtPrimitiveData(tag));
+        sourceY=data.sourceY; row=data.row; length=data.length; drop=data.drop;
+        segments=data.segments; duration=data.duration; low=data.low; high=data.high;
+        top=data.top; elevator=data.elevator; open=data.open; moving=data.moving;
+        startPose=data.startPose; startTick=data.startTick;
     }
     @Override public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }
     @Override public SPacketUpdateTileEntity getUpdatePacket() { return new SPacketUpdateTileEntity(pos,0,getUpdateTag()); }

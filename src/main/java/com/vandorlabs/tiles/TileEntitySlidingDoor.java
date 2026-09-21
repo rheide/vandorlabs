@@ -3,6 +3,8 @@ package com.vandorlabs.tiles;
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
+import com.vandorlabs.persistence.NbtPrimitiveData;
+import com.vandorlabs.persistence.RedstoneData;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -82,16 +84,16 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        tag.setInteger("RedstoneChannel", channel);
-        tag.setBoolean("ChannelSignal", channelSignal);
+        new RedstoneData.Member(channel,channelSignal).write(new NbtPrimitiveData(tag));
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         int oldChannel = channel;
         super.readFromNBT(tag);
-        channel = Math.max(0, tag.getInteger("RedstoneChannel"));
-        channelSignal = tag.getBoolean("ChannelSignal");
+        RedstoneData.Member data=RedstoneData.Member.read(new NbtPrimitiveData(tag));
+        channel=data.channel;
+        channelSignal=data.signal;
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

@@ -2,6 +2,9 @@ package com.vandorlabs.tiles;
 
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
+import com.vandorlabs.persistence.NbtPrimitiveData;
+import com.vandorlabs.persistence.ScreenData;
+import com.vandorlabs.animation.ScreenBehavior;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -21,9 +24,9 @@ import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
 
-    public static final int MODE_OFF = 0;
-    public static final int MODE_STATIC = 1;
-    public static final int MODE_ANIMATED = 2;
+    public static final int MODE_OFF = ScreenBehavior.OFF;
+    public static final int MODE_STATIC = ScreenBehavior.STATIC;
+    public static final int MODE_ANIMATED = ScreenBehavior.ANIMATED;
 
     public static final String[] ANIMATION_SPEEDS = {"slow", "normal", "fast"};
     public static final int[] ANIMATION_SPEED_TICKS = {20, 10, 5};
@@ -173,7 +176,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setDisplayMode(int displayMode) {
-        this.displayMode = Math.max(MODE_OFF, Math.min(MODE_ANIMATED, displayMode));
+        this.displayMode = ScreenBehavior.clampMode(displayMode);
         markDirty();
     }
 
@@ -191,13 +194,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setAnimationSpeedIndex(int animationSpeedIndex) {
-        this.animationSpeedIndex = Math.max(0, Math.min(ANIMATION_SPEEDS.length - 1, animationSpeedIndex));
+        this.animationSpeedIndex = ScreenBehavior.clampSpeedIndex(animationSpeedIndex);
         markDirty();
     }
 
     public int getAnimationSpeedTicks() {
-        return ANIMATION_SPEED_TICKS[Math.max(0,
-                Math.min(ANIMATION_SPEED_TICKS.length - 1, animationSpeedIndex))];
+        return ScreenBehavior.animationTicks(animationSpeedIndex);
     }
 
     /**
@@ -208,13 +210,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
      */
     public int getEffectiveMode() {
         boolean powered = (world != null && pos != null && world.isBlockPowered(pos)) || channelSignal;
-        if (redstoneEnabled && !powered) {
-            return MODE_OFF;
-        }
-        if (displayMode == MODE_OFF) {
-            return powered ? MODE_ANIMATED : MODE_OFF;
-        }
-        return displayMode;
+        return ScreenBehavior.effectiveMode(displayMode,redstoneEnabled,powered);
     }
 
     public boolean isUsableByPlayer(EntityPlayer player) {
@@ -230,19 +226,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
-        compound.setString("selectedScreen", selectedScreen);
-        compound.setBoolean("redstoneEnabled", redstoneEnabled);
-        compound.setInteger("displayMode", displayMode);
-        compound.setBoolean("framed", framed);
-        compound.setInteger("animationSpeedIndex", animationSpeedIndex);
-        compound.setString("inputPanel", inputPanel);
-        compound.setString("secondaryInputPanel", secondaryInputPanel);
-        if (wallPosition >= 0) {
-            compound.setInteger("wallPosition", wallPosition);
-        }
-        compound.setBoolean("smallInput", smallInput);
-        compound.setInteger("RedstoneChannel", redstoneChannel);
-        compound.setBoolean("ChannelSignal", channelSignal);
+        new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
+                animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
+                smallInput, redstoneChannel, channelSignal)
+                .write(new NbtPrimitiveData(compound));
         return compound;
     }
 
@@ -250,25 +237,22 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void readFromNBT(NBTTagCompound compound) {
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
-        // NBT is world data, never trust it blindly.
-        selectedScreen = compound.getString("selectedScreen");
-        if (selectedScreen == null || selectedScreen.isEmpty()) {
-            selectedScreen = "engineering_screen";
-        }
-        redstoneEnabled = compound.getBoolean("redstoneEnabled");
-        displayMode = Math.max(MODE_OFF,
-                Math.min(MODE_ANIMATED, compound.getInteger("displayMode")));
-        framed = !compound.hasKey("framed") || compound.getBoolean("framed");
-        animationSpeedIndex = Math.max(0, Math.min(ANIMATION_SPEEDS.length - 1,
-                compound.getInteger("animationSpeedIndex")));
-        setInputPanel(compound.getString("inputPanel"));
-        setSecondaryInputPanel(compound.hasKey("secondaryInputPanel")
-                ? compound.getString("secondaryInputPanel") : inputPanel);
-        wallPosition = compound.hasKey("wallPosition")
-                ? Math.max(0, Math.min(2, compound.getInteger("wallPosition"))) : -1;
-        smallInput = compound.getBoolean("smallInput");
-        redstoneChannel = Math.max(0, compound.getInteger("RedstoneChannel"));
-        channelSignal = compound.getBoolean("ChannelSignal");
+        // NBT is world data, never trust it blindly. The portable codec keeps
+        // these defaults identical in every version-specific block entity.
+        ScreenData data = ScreenData.read(new NbtPrimitiveData(compound),
+                "engineering_screen", INPUT_PANELS[0],
+                TileEntityAnimatedScreenSelector::isValidInputPanel);
+        selectedScreen = data.selectedScreen;
+        redstoneEnabled = data.redstoneEnabled;
+        displayMode = data.displayMode;
+        framed = data.framed;
+        animationSpeedIndex = data.animationSpeedIndex;
+        inputPanel = data.inputPanel;
+        secondaryInputPanel = data.secondaryInputPanel;
+        wallPosition = data.wallPosition;
+        smallInput = data.smallInput;
+        redstoneChannel = data.redstoneChannel;
+        channelSignal = data.channelSignal;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

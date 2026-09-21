@@ -6,6 +6,8 @@ import com.vandorlabs.blocks.BlockPropulsionLight;
 import com.vandorlabs.blocks.BlockConnectedPropulsionLight;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
+import com.vandorlabs.persistence.NbtPrimitiveData;
+import com.vandorlabs.persistence.RedstoneData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
@@ -260,22 +262,20 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        tag.setInteger("RedstoneChannel", channel);
-        tag.setBoolean("ChannelSignal", channelSignal);
-        tag.setBoolean("ManualOn", manualOn);
-        tag.setBoolean("ParticleStream", particleStreamSelected);
-        tag.setBoolean("LightInitialized", initialized);
+        new RedstoneData.Light(channel,channelSignal,manualOn,particleStreamSelected,
+                initialized).write(new NbtPrimitiveData(tag));
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         int oldChannel = channel;
         super.readFromNBT(tag);
-        channel = Math.max(0, tag.getInteger("RedstoneChannel"));
-        channelSignal = tag.getBoolean("ChannelSignal");
-        manualOn = tag.getBoolean("ManualOn");
-        particleStreamSelected = tag.getBoolean("ParticleStream");
-        initialized = tag.getBoolean("LightInitialized");
+        RedstoneData.Light data=RedstoneData.Light.read(new NbtPrimitiveData(tag));
+        channel=data.channel;
+        channelSignal=data.signal;
+        manualOn=data.manualOn;
+        particleStreamSelected=data.particleStream;
+        initialized=data.initialized;
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

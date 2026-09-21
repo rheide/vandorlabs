@@ -20,7 +20,7 @@ import com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;
 import com.vandorlabs.blocks.BlockProgrammableInput;
 import com.vandorlabs.blocks.BlockProgrammableFullInput;
 
-/** Serialization and six-way placement contracts for programmable displays. */
+/** Serialization and placement contracts for programmable displays. */
 final class ScreenRuntimeChecks {
 
     private ScreenRuntimeChecks() {}
@@ -30,6 +30,7 @@ final class ScreenRuntimeChecks {
         checkSurvivalDropRoundTrip(player);
         checkPacketRoundTrip();
         checkFacings(ModBlocks.ANIMATED_SCREEN_SELECTOR);
+        checkViewscreenPlacement(player);
         checkDiagonalPlacement(player);
         checkInputPlacement(player);
         checkInputScrollbar();
@@ -200,6 +201,41 @@ final class ScreenRuntimeChecks {
             require(restored.getValue(BlockAnimatedScreenSelector.FACING) == facing,
                     "facing metadata failed for " + block.getRegistryName() + " " + facing);
         }
+    }
+
+    private static void checkViewscreenPlacement(EntityPlayer player) {
+        require(ModBlocks.ANIMATED_SCREEN_SELECTOR
+                        instanceof BlockAnimatedScreenSelector,
+                "programmable viewscreen block missing");
+        BlockAnimatedScreenSelector block = (BlockAnimatedScreenSelector)
+                ModBlocks.ANIMATED_SCREEN_SELECTOR;
+        BlockPos pos = new BlockPos(0, 250, 0);
+        for (EnumFacing side : EnumFacing.values()) {
+            player.world.setBlockToAir(pos.offset(side));
+        }
+        for (EnumFacing playerFacing : EnumFacing.HORIZONTALS) {
+            player.rotationYaw = playerFacing.getHorizontalAngle();
+            EnumFacing expected = playerFacing.getOpposite();
+            for (EnumFacing clickedFace : EnumFacing.values()) {
+                IBlockState placed = block.getStateForPlacement(player.world,
+                        pos, clickedFace, 0.5F, 0.5F, 0.5F, 0, player);
+                require(placed.getValue(BlockAnimatedScreenSelector.FACING)
+                                == expected,
+                        "view screen orientation followed clicked face instead of player: "
+                                + playerFacing + " / " + clickedFace);
+            }
+        }
+
+        IBlockState neighbor = block.getDefaultState().withProperty(
+                BlockAnimatedScreenSelector.FACING, EnumFacing.WEST);
+        player.world.setBlockState(pos.down(), neighbor, 2);
+        player.rotationYaw = EnumFacing.NORTH.getHorizontalAngle();
+        IBlockState extended = block.getStateForPlacement(player.world, pos,
+                EnumFacing.UP, 0.5F, 0.5F, 0.5F, 0, player);
+        require(extended.getValue(BlockAnimatedScreenSelector.FACING)
+                        == EnumFacing.WEST,
+                "view screen did not inherit the orientation of an extended panel");
+        player.world.setBlockToAir(pos.down());
     }
 
     private static void checkDiagonalPlacement(EntityPlayer player) {

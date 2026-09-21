@@ -29,6 +29,12 @@ def mean_chroma(path, box=SAMPLE_BOX):
     return sum(chroma) / len(chroma)
 
 
+def mean_detail(path, box=SAMPLE_BOX):
+    """Mean per-channel standard deviation, used for intentionally subdued art."""
+    image = Image.open(path).convert("RGB").crop(box)
+    return sum(ImageStat.Stat(image).stddev) / 3.0
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("shots", type=Path)
@@ -70,6 +76,7 @@ def main():
     console_screen = mean_chroma(console, (600, 320, 680, 400))
     console_keyboard = mean_chroma(console, (595, 442, 685, 458))
     console_housing = mean_chroma(console, (565, 463, 715, 472))
+    console_housing_detail = mean_detail(console, (565, 463, 715, 472))
     print("console regions: screen %.2f, keyboard %.2f, housing %.2f"
           % (console_screen, console_keyboard, console_housing))
     if console_screen < console_housing + 12.0:
@@ -108,11 +115,14 @@ def main():
             failures.append("missing console input screenshot %s" % input_id)
             continue
         chroma = mean_chroma(path, (595, 442, 685, 458))
-        print("console input %-20s mean chroma %.2f" % (input_id, chroma))
+        detail = mean_detail(path, (595, 442, 685, 458))
+        print("console input %-20s mean chroma %.2f, detail %.2f"
+              % (input_id, chroma, detail))
         # Some authored control faces (especially the framed starmap) are
-        # intentionally dark and subdued; they still need to differ visibly
-        # from the neutral console housing.
-        if chroma < console_housing + 2.0:
+        # intentionally dark and subdued. Accept either color separation or
+        # visible fine detail relative to the neutral console housing.
+        if (chroma < console_housing + 2.0
+                and detail < console_housing_detail + 3.0):
             failures.append("console input %s did not render" % input_id)
 
     gui_path = args.shots / "shot_console_gui.png"

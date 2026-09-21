@@ -2,6 +2,10 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.BlockDetailedDoor;
+import com.vandorlabs.animation.DoorAnimation;
+import com.vandorlabs.render.DoorLeaf;
+import com.vandorlabs.render.DoorLeafTransform;
+import com.vandorlabs.render.DoorPanelLayout;
 import com.vandorlabs.tiles.TileEntitySlidingDoor;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
@@ -117,42 +121,28 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 System.err.println("[vandorlabs] WARNING: using fallback sliding-door art map");
                 panels.put("vandorlabs:sliding_airlock_glass", new PanelInfo("single", "vandorlabs:blocks/door_airlock_glass"));
                 panels.put("vandorlabs:sliding_security_door", new PanelInfo("single", "vandorlabs:blocks/door_security"));
-                panels.put("vandorlabs:sliding_hangar_door", new PanelInfo("split", "vandorlabs:blocks/sliding_hangar_door"));
             }
         }
         return panels;
     }
 
-    private static class Anim {
-        boolean lastOpen;
-        double startTime;
-        float startPose;
-        /** Pose actually returned last render; retargets seat on this so a
-         * world-time glitch (pause, tick hiccup) can never jump the leaf. */
-        float lastPose;
-    }
-
     private static final float ANIM_TICKS = 9.0F;
     private static final int ANIMS_CAP = 1024;
-    private static final Map<World, LinkedHashMap<net.minecraft.util.math.BlockPos, Anim>>
+    private static final Map<World, LinkedHashMap<net.minecraft.util.math.BlockPos, DoorAnimation>>
             ANIMS_BY_WORLD = new WeakHashMap<>();
 
     /** Eased open pose driven by the live blockstate: needs no ticking. */
     private static float animPose(World world, net.minecraft.util.math.BlockPos key,
             boolean open, double now) {
-        LinkedHashMap<net.minecraft.util.math.BlockPos, Anim> animations =
+        LinkedHashMap<net.minecraft.util.math.BlockPos, DoorAnimation> animations =
                 ANIMS_BY_WORLD.get(world);
         if (animations == null) {
             animations = new LinkedHashMap<>(32, 0.75F, true);
             ANIMS_BY_WORLD.put(world, animations);
         }
-        Anim a = animations.get(key);
+        DoorAnimation a = animations.get(key);
         if (a == null) {
-            a = new Anim();
-            a.lastOpen = open;
-            a.startTime = now - ANIM_TICKS;
-            a.startPose = open ? 1.0F : 0.0F;
-            a.lastPose = a.startPose;
+            a = new DoorAnimation(ANIM_TICKS);
             animations.put(key, a);
             if (animations.size() > ANIMS_CAP) {
                 // Access-ordered map: evict the genuinely least-recently used
@@ -160,27 +150,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 animations.remove(animations.keySet().iterator().next());
             }
         }
-        float target = open ? 1.0F : 0.0F;
-        if (open != a.lastOpen) {
-            a.startPose = a.lastPose;
-            a.lastOpen = open;
-            a.startTime = now;
-        }
-        float pose = poseAt(a, now, target);
-        a.lastPose = pose;
-        return pose;
-    }
-
-    private static float poseAt(Anim a, double now, float target) {
-        float t = (float) ((now - a.startTime) / ANIM_TICKS);
-        if (t >= 1.0F) {
-            return target;
-        }
-        if (t <= 0.0F) {
-            return a.startPose;
-        }
-        float e = t * t * (3.0F - 2.0F * t);
-        return a.startPose + (target - a.startPose) * e;
+        return (float) a.sample(open, now);
     }
 
     @Override
@@ -257,78 +227,28 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         GlStateManager.disableLighting();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
         boolean hingeLeft = state.getValue(BlockVandorDoor.HINGE) == BlockDoor.EnumHingePosition.LEFT;
-        if (hingeSplit) {
-            // Double/hangar doors: two 8px leaves, each swinging inward about
-            // its own side and parked fully inside the block (west leaf
-            // x[0,2], east x[14,16], both z[7,15]).
-            drawSwungLeaf(buf, sprite, wall, null,
-                    0.0F, 8.0F, 8.0F, 0.0F, 7.0F, 9.0F,
-                    -90.0F * p, 1.0F, 8.0F);
-            drawSwungLeaf(buf, sprite, wall, null,
-                    8.0F, 8.0F, 16.0F, 8.0F, 7.0F, 9.0F,
-                    90.0F * p, 15.0F, 8.0F);
-        } else if (info != null) {
-            // Sliding doors have leaf-free statics too: the TESR owns the
-            // leaves at every pose, so paint and light stay consistent with
-            // the animation (no parked static leaf doubles behind the sweep,
-            // and nothing turns AO-dark at rest).
+        DoorPanelLayout.Kind layoutKind=hingeSplit?DoorPanelLayout.Kind.HINGE_SPLIT
+                :info==null?DoorPanelLayout.Kind.HINGED
+                :"single".equals(info.kind)?DoorPanelLayout.Kind.SLIDING_SINGLE
+                :DoorPanelLayout.Kind.SLIDING_SPLIT;
+        DoorPanelLayout.Panel[] panels=DoorPanelLayout.calculate(layoutKind,hingeLeft,reverseGlassPaint,p);
+        if (panels[0].swung) {
+            for (DoorPanelLayout.Panel panel:panels) drawSwungLeaf(buf,sprite,wall,
+                    panel.usesWindow?window:null,(float)panel.x,(float)panel.width,
+                    (float)panel.u0,(float)panel.u1,(float)panel.z0,(float)panel.z1,
+                    (float)panel.angle,(float)panel.pivotX,(float)panel.pivotZ);
+        } else {
             buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-            boolean singlePanel = "single".equals(info.kind);
-            if (!singlePanel) {
-                // Split sliders part a pair of 8px halves; paint is
-                // position-locked (west leaf always shows u[8,16] with u8 at
-                // its jamb edge, east leaf u[0,8]) and never mirrored.
-                drawPanel(buf, sprite, wall, null, -7.0F * p, 8, 8, 16, 7, 9);
-                drawPanel(buf, sprite, wall, null,
-                        8.0F + 7.0F * p, 8, 0, 8, 7, 9);
-            } else {
-                // Single slider glides to one jamb. West-resting panels keep
-                // the base orientation (u0 at the panel's east/doorway edge),
-                // east-resting panels read the mirrored texture, matching the
-                // approved static open poses for each handedness.
-                float x0 = (hingeLeft ? -15.0F : 15.0F) * p;
-                float panelU0 = hingeLeft ? 0.0F : 16.0F;
-                float panelU1 = hingeLeft ? 16.0F : 0.0F;
-                if (reverseGlassPaint) {
-                    float swap = panelU0;
-                    panelU0 = panelU1;
-                    panelU1 = swap;
-                }
-                drawPanel(buf, sprite, wall, window, x0, 16,
-                        panelU0, panelU1, 7, 9);
-            }
+            for (DoorPanelLayout.Panel panel:panels) drawPanel(buf,sprite,wall,
+                    panel.usesWindow?window:null,(float)panel.x,(float)panel.width,
+                    (float)panel.u0,(float)panel.u1,(float)panel.z0,(float)panel.z1);
             tess.draw();
             GlStateManager.disableTexture2D();
             buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-            if (!singlePanel) {
-                drawEdges(buf, -7.0F * p, 8, 7, 9);
-                drawEdges(buf, 8.0F + 7.0F * p, 8, 7, 9);
-            } else {
-                drawEdges(buf, (hingeLeft ? -15.0F : 15.0F) * p, 16, 7, 9);
-            }
+            for (DoorPanelLayout.Panel panel:panels) drawEdges(buf,(float)panel.x,
+                    (float)panel.width,(float)panel.z0,(float)panel.z1);
             tess.draw();
             GlStateManager.enableTexture2D();
-        } else {
-            // Hinged doors: statics are leaf-free frames, so the TESR owns
-            // the rotating leaf at every pose (rest poses included). The leaf
-            // is drawn in its closed pose and GL swings it inward about the
-            // pivot (1,1) for LEFT and (15,1) for RIGHT, both fully inside
-            // the block. The rotation direction ensures both parked leaves
-            // occupy the block's own footprint (no protrusion over neighbors)
-            // and that the doorway-facing broad face matches the approved
-            // door_open_west/east static UVs. The texture is read flipped
-            // (u0/u1 swapped) so the handle lands on the correct side.
-            float panelU0 = hingeLeft ? 0.0F : 16.0F;
-            float panelU1 = hingeLeft ? 16.0F : 0.0F;
-            if (reverseGlassPaint) {
-                float swap = panelU0;
-                panelU0 = panelU1;
-                panelU1 = swap;
-            }
-            drawSwungLeaf(buf, sprite, wall, window, 0.0F, 16.0F,
-                    panelU0, panelU1, 0.0F, 2.0F,
-                    (hingeLeft ? -90.0F : 90.0F) * p,
-                    hingeLeft ? 1.0F : 15.0F, 1.0F);
         }
         GlStateManager.enableLighting();
 
@@ -359,7 +279,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
     private static void renderDetailedLeaf(TileEntitySlidingDoor te,
             BlockDetailedDoor door, EnumFacing facing, boolean right,
             float progress, double x, double y, double z) {
-        ItemStack leaf = new ItemStack(door, 1, right ? 2 : 1);
+        ItemStack leaf = new ItemStack(door,1,DoorLeaf.fromRight(right).legacyMetadata);
         RenderItem renderer = Minecraft.getMinecraft().getRenderItem();
 
         int combined = te.getWorld().getCombinedLight(te.getPos(), 0);
@@ -400,17 +320,14 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void moveDetailedDoorLeaf(BlockDetailedDoor door, boolean right,
             float progress) {
-        float p = Math.max(0.0F, Math.min(1.0F, progress));
+        DoorLeafTransform transform=DoorLeafTransform.calculate(door.isSlidingModel(),
+                door.getSlide(right),door.getPivot(right),door.getPivotZ(),door.getAngle(right),progress);
         if (door.isSlidingModel()) {
-            GlStateManager.translate(door.getSlide(right) * p / 16.0F,
-                    0.0F, 0.0F);
+            GlStateManager.translate(transform.translateX,0,0);
         } else {
-            float pivotX = door.getPivot(right) / 16.0F;
-            float pivotZ = door.getPivotZ() / 16.0F;
-            GlStateManager.translate(pivotX, 0.0F, pivotZ);
-            GlStateManager.rotate(door.getAngle(right) * p,
-                    0.0F, 1.0F, 0.0F);
-            GlStateManager.translate(-pivotX, 0.0F, -pivotZ);
+            GlStateManager.translate(transform.pivotX,0,transform.pivotZ);
+            GlStateManager.rotate((float)transform.angleDegrees,0,1,0);
+            GlStateManager.translate(-transform.pivotX,0,-transform.pivotZ);
         }
     }
 

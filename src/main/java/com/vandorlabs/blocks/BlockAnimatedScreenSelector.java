@@ -37,9 +37,11 @@ import javax.annotation.Nullable;
 /**
  * A full-cube housing block whose front face is painted by
  * {@link com.vandorlabs.client.TEAnimatedScreenSelector} from the configured
- * animated screen. Mounts on all six sides like a switch plate: the face
- * points along the clicked block face (top-click = faces up). Right-click
- * opens the selector GUI (stored in
+ * animated screen. Placement follows the observation-glass convention: an
+ * isolated display faces the player, while extending an existing display
+ * inherits its direction. This lets a wall display be placed from the floor
+ * or a neighboring block instead of requiring a support directly behind it.
+ * Right-click opens the selector GUI (stored in
  * {@link TileEntityAnimatedScreenSelector}); redstone behavior follows the
  * tile configuration.
  */
@@ -95,7 +97,19 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing,
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return getDefaultState().withProperty(facingProperty(), facing);
+        return getDefaultState().withProperty(facingProperty(),
+                placementFacing(worldIn, pos, facing, placer));
+    }
+
+    /** Shared player-facing placement policy for the programmable family. */
+    protected EnumFacing placementFacing(World world, BlockPos pos,
+            EnumFacing clickedFace, EntityLivingBase placer) {
+        IBlockState clicked = world.getBlockState(
+                pos.offset(clickedFace.getOpposite()));
+        if (clicked.getBlock() == this) {
+            return clicked.getValue(facingProperty());
+        }
+        return placer.getHorizontalFacing().getOpposite();
     }
 
     @Override

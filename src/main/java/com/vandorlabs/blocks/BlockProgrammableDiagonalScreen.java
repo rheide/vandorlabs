@@ -49,7 +49,7 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
         boolean inverted = side == EnumFacing.DOWN
                 || (side.getAxis().isHorizontal() && hitY > 0.5F);
         return getDefaultState()
-                .withProperty(FACING, placer.getHorizontalFacing().getOpposite())
+                .withProperty(FACING, placementFacing(world, pos, side, placer))
                 .withProperty(INVERTED, inverted);
     }
 

@@ -25,7 +25,7 @@ public class BlockProgrammableConsole extends BlockAnimatedScreenSelector {
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         // Like the existing consoles, face the player and remain floor-oriented.
         return getDefaultState().withProperty(FACING,
-                placer.getHorizontalFacing().getOpposite());
+                placementFacing(worldIn, pos, side, placer));
     }
 
     @Override

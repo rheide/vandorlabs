@@ -1,5 +1,6 @@
 package com.vandorlabs.blocks;
 
+import com.vandorlabs.render.InputSurfaceLayout;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
@@ -28,17 +29,7 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
     public static final PropertyBool KEYBOARD = PropertyBool.create("keyboard");
     public static final PropertyBool UPPER = PropertyBool.create("upper");
 
-    private static final AxisAlignedBB WALL_LOWER =
-            new AxisAlignedBB(0, 0, 15.0 / 16.0, 1, 0.5, 1);
-    private static final AxisAlignedBB WALL_MIDDLE =
-            new AxisAlignedBB(0, 0.25, 15.0 / 16.0, 1, 0.75, 1);
-    private static final AxisAlignedBB WALL_UPPER =
-            new AxisAlignedBB(0, 0.5, 15.0 / 16.0, 1, 1, 1);
-    private static final AxisAlignedBB KEYBOARD_LOWER =
-            new AxisAlignedBB(0, 7.0 / 16.0, 0.5, 1, 0.5, 1);
-    private static final AxisAlignedBB KEYBOARD_UPPER =
-            new AxisAlignedBB(0, 15.0 / 16.0, 0.5, 1, 1, 1);
-    public static final double SMALL_SCALE = 0.7D;
+    public static final double SMALL_SCALE = InputSurfaceLayout.SMALL_SCALE;
 
     public BlockProgrammableInput() {
         this(NAME);
@@ -67,7 +58,11 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         boolean sideFace = side.getAxis().isHorizontal();
         boolean keyboard = !sideFace || placer.isSneaking();
-        EnumFacing facing = sideFace ? side : placer.getHorizontalFacing().getOpposite();
+        // Wall panels still use the supporting face because it defines their
+        // mount. Horizontal keyboard placement uses the same player-facing
+        // convention as the rest of the programmable family.
+        EnumFacing facing = sideFace ? side
+                : placementFacing(world, pos, side, placer);
         // UPPER remains the legacy/fallback wall position. The exact
         // bottom/middle/top wall slot is recorded by ItemProgrammableInput
         // in the tile entity because all four metadata bits are already in
@@ -103,34 +98,12 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
             selector = (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector) tile;
         }
         boolean small = selector != null && selector.isSmallInput();
-        AxisAlignedBB local;
-        if (state.getValue(KEYBOARD)) {
-            if (small) {
-                double inset = (1.0D - SMALL_SCALE) / 2.0D;
-                double minZ = 1.0D - 0.5D * SMALL_SCALE;
-                double y = state.getValue(UPPER) ? 15.0D / 16.0D : 7.0D / 16.0D;
-                local = new AxisAlignedBB(inset, y, minZ,
-                        1.0D - inset, y + 1.0D / 16.0D, 1.0D);
-            } else {
-                local = state.getValue(UPPER) ? KEYBOARD_UPPER : KEYBOARD_LOWER;
-            }
-        } else {
-            int wallPosition = state.getValue(UPPER) ? 2 : 0;
-            if (selector != null) {
-                wallPosition = selector.getWallPosition(wallPosition);
-            }
-            if (small) {
-                double widthInset = (1.0D - SMALL_SCALE) / 2.0D;
-                double height = 0.5D * SMALL_SCALE;
-                double minY = wallPosition == 0 ? 0.0D
-                        : wallPosition == 2 ? 1.0D - height : (1.0D - height) / 2.0D;
-                local = new AxisAlignedBB(widthInset, minY, 15.0D / 16.0D,
-                        1.0D - widthInset, minY + height, 1.0D);
-            } else {
-                local = wallPosition == 1 ? WALL_MIDDLE
-                        : wallPosition == 2 ? WALL_UPPER : WALL_LOWER;
-            }
-        }
+        int wallPosition=state.getValue(UPPER)?2:0;
+        if (selector!=null) wallPosition=selector.getWallPosition(wallPosition);
+        InputSurfaceLayout.Box box=InputSurfaceLayout.halfInput(state.getValue(KEYBOARD),
+                state.getValue(UPPER),wallPosition,small).housing;
+        AxisAlignedBB local=new AxisAlignedBB(box.x0/16,box.y0/16,box.z0/16,
+                box.x1/16,box.y1/16,box.z1/16);
         return rotateFromNorth(local, state.getValue(FACING));
     }
 

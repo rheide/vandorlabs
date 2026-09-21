@@ -32,6 +32,7 @@ import net.minecraft.tileentity.TileEntity;
  */
 public class BlockIndustrialLever extends BlockHorizontal {
     public static final PropertyBool POWERED = PropertyBool.create("powered");
+    public static final PropertyBool FLOOR = PropertyBool.create("floor");
 
     public BlockIndustrialLever() {
         this("industrial_lever");
@@ -45,23 +46,25 @@ public class BlockIndustrialLever extends BlockHorizontal {
         setHardness(0.5F);
         setSoundType(SoundType.METAL);
         setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH)
-                .withProperty(POWERED, false));
+                .withProperty(POWERED, false).withProperty(FLOOR,false));
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, POWERED);
+        return new BlockStateContainer(this, FACING, POWERED, FLOOR);
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta & 3))
-                .withProperty(POWERED, (meta & 4) != 0);
+                .withProperty(POWERED, (meta & 4) != 0)
+                .withProperty(FLOOR,(meta & 8)!=0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getHorizontalIndex() | (state.getValue(POWERED) ? 4 : 0);
+        return state.getValue(FACING).getHorizontalIndex()
+                |(state.getValue(POWERED)?4:0)|(state.getValue(FLOOR)?8:0);
     }
 
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
@@ -86,11 +89,12 @@ public class BlockIndustrialLever extends BlockHorizontal {
 
     @Override
     public boolean canPlaceBlockOnSide(World world, BlockPos pos, EnumFacing side) {
-        return side.getAxis().isHorizontal() && hasSupport(world, pos, side);
+        return (side==EnumFacing.UP||side.getAxis().isHorizontal())&&hasSupport(world,pos,side);
     }
 
     @Override
     public boolean canPlaceBlockAt(World world, BlockPos pos) {
+        if (hasSupport(world,pos,EnumFacing.UP)) return true;
         for (EnumFacing face : EnumFacing.Plane.HORIZONTAL) {
             if (hasSupport(world, pos, face)) return true;
         }
@@ -100,13 +104,20 @@ public class BlockIndustrialLever extends BlockHorizontal {
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        EnumFacing outward = facing.getAxis().isHorizontal() ? facing : placer.getHorizontalFacing().getOpposite();
-        return getDefaultState().withProperty(FACING, outward).withProperty(POWERED, false);
+        boolean floor=facing==EnumFacing.UP;
+        EnumFacing outward=floor?placer.getHorizontalFacing().getOpposite()
+                :facing.getAxis().isHorizontal()?facing:placer.getHorizontalFacing().getOpposite();
+        return getDefaultState().withProperty(FACING,outward).withProperty(POWERED,false)
+                .withProperty(FLOOR,floor);
     }
 
     private void notifyPower(World world, BlockPos pos, IBlockState state) {
         world.notifyNeighborsOfStateChange(pos, this, false);
-        world.notifyNeighborsOfStateChange(pos.offset(state.getValue(FACING).getOpposite()), this, false);
+        world.notifyNeighborsOfStateChange(pos.offset(supportDirection(state)), this, false);
+    }
+
+    private EnumFacing supportDirection(IBlockState state) {
+        return state.getValue(FLOOR)?EnumFacing.DOWN:state.getValue(FACING).getOpposite();
     }
 
     @Override
@@ -134,7 +145,8 @@ public class BlockIndustrialLever extends BlockHorizontal {
 
     @Override
     public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos) {
-        if (!world.isRemote && !hasSupport(world, pos, state.getValue(FACING))) {
+        EnumFacing outward=state.getValue(FLOOR)?EnumFacing.UP:state.getValue(FACING);
+        if (!world.isRemote && !hasSupport(world,pos,outward)) {
             dropBlockAsItem(world, pos, state, 0);
             world.setBlockToAir(pos);
         }
@@ -171,6 +183,7 @@ public class BlockIndustrialLever extends BlockHorizontal {
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
         // Conservative union of both handle positions, including rear wall feet.
         double a = 1.0 / 16.0, b = 15.0 / 16.0, front = 7.0 / 16.0;
+        if (state.getValue(FLOOR)) return new AxisAlignedBB(a,0,a,b,9.0/16,b);
         switch (state.getValue(FACING)) {
             case SOUTH: return new AxisAlignedBB(a, 2.0/16, 0, b, 14.0/16, 1-front);
             case EAST:  return new AxisAlignedBB(0, 2.0/16, a, 1-front, 14.0/16, b);

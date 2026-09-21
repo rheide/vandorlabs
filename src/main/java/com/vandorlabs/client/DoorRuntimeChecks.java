@@ -265,7 +265,7 @@ final class DoorRuntimeChecks {
     private static void checkMotionPairMatrix(World world, EntityPlayer player, BlockPos pos) {
         BlockVandorDoor[] modes = {
                 door("door_security"),
-                door("sliding_security_door"), door("sliding_hangar_door")
+                door("sliding_security_door")
         };
         for (BlockVandorDoor first : modes) {
             for (BlockVandorDoor second : modes) {
