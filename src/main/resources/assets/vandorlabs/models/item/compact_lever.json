@@ -1,0 +1,10 @@
+{
+  "parent": "vandorlabs:block/compact_lever_off",
+  "display": {
+    "gui": {
+      "rotation": [0, 180, 0],
+      "translation": [0, 0, 0],
+      "scale": [1.05, 1.05, 1.05]
+    }
+  }
+}

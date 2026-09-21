@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north,keyboard=false,upper=false": { "model": "vandorlabs:programmable_full_input" },
+    "facing=north,keyboard=false,upper=true":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=north,keyboard=true,upper=false":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=north,keyboard=true,upper=true":   { "model": "vandorlabs:programmable_full_input" },
+    "facing=east,keyboard=false,upper=false": { "model": "vandorlabs:programmable_full_input" },
+    "facing=east,keyboard=false,upper=true":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=east,keyboard=true,upper=false":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=east,keyboard=true,upper=true":   { "model": "vandorlabs:programmable_full_input" },
+    "facing=south,keyboard=false,upper=false": { "model": "vandorlabs:programmable_full_input" },
+    "facing=south,keyboard=false,upper=true":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=south,keyboard=true,upper=false":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=south,keyboard=true,upper=true":   { "model": "vandorlabs:programmable_full_input" },
+    "facing=west,keyboard=false,upper=false": { "model": "vandorlabs:programmable_full_input" },
+    "facing=west,keyboard=false,upper=true":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=west,keyboard=true,upper=false":  { "model": "vandorlabs:programmable_full_input" },
+    "facing=west,keyboard=true,upper=true":   { "model": "vandorlabs:programmable_full_input" }
+  }
+}

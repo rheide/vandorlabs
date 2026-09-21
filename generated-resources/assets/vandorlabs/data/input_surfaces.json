@@ -1,0 +1,252 @@
+[
+  {
+    "id": "console_controls_biology_controls",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "console_controls_communications_keyboard",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "console_controls_engineering_keyboard",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "console_controls_medical_keyboard",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "console_controls_navigation_controls",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "console_controls_sensor_controls",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "input_surfaces_command_keypad",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "input_surfaces_engineering_faders",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "input_surfaces_keyboard",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "input_surfaces_keyboard_touchpad",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "input_surfaces_pilot_controls",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "input_surfaces_science_touchpad",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "sliders_buttons_button_clusters_sliders",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "sliders_buttons_button_matrix_sliders",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "sliders_buttons_environment_controls",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "sliders_buttons_pilot_faders",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "sliders_buttons_six_faders",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "sliders_buttons_twin_faders_transport",
+    "animated": false,
+    "frames": 1
+  },
+  {
+    "id": "analysis_framed_gas_giant",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "analysis_framed_ice_planet",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "analysis_framed_surface_map",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "analysis_framed_terrestrial",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_bare_engineering",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_bare_pilot",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_bare_sensors",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_bare_ship_status",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_framed_engineering",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_framed_pilot",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_framed_sensors",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "bridge_framed_ship_status",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_bare_door_controller",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_bare_engineering_charts",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_bare_personal_terminal",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_bare_viewscreen",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_framed_door_controller",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_framed_engineering_charts",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_framed_personal_terminal",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "extra_framed_viewscreen",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_bare_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_bare_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_bare_science",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_bare_sensors",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_bare_starmap",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_bare_weapons",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_framed_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_framed_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_framed_science",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_framed_sensors",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_framed_starmap",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "specialist_framed_weapons",
+    "animated": true,
+    "frames": 6
+  }
+]

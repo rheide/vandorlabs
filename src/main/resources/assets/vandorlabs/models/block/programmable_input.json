@@ -1,0 +1,5 @@
+{
+  "ambientocclusion": false,
+  "textures": { "particle": "vandorlabs:blocks/wall_panel_dark" },
+  "elements": []
+}

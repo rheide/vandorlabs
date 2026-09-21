@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vandorlabs:tritanium_hull",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vandorlabs:tritanium_hull"
+    },
+    "facing=south": {
+      "model": "vandorlabs:tritanium_hull",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:tritanium_hull",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "vertical=false": {
+      "model": "vandorlabs:material_amber_strip"
+    },
+    "vertical=true": {
+      "model": "vandorlabs:material_amber_strip_vertical"
+    }
+  }
+}

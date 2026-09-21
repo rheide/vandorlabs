@@ -1,0 +1,191 @@
+{
+  "parent": "block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "face": "vandorlabs:blocks/glass_wall/wall_03",
+    "side": "vandorlabs:blocks/glass_wall/metal_side",
+    "particle": "vandorlabs:blocks/glass_wall/metal_side"
+  },
+  "elements": [
+    {
+      "name": "glass",
+      "from": [
+        0,
+        1.5,
+        7.75
+      ],
+      "to": [
+        16,
+        14.5,
+        8.25
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#face",
+          "uv": [
+            16,
+            1.5,
+            0,
+            14.5
+          ]
+        },
+        "south": {
+          "texture": "#face",
+          "uv": [
+            0,
+            1.5,
+            16,
+            14.5
+          ]
+        }
+      }
+    },
+    {
+      "name": "top_frame",
+      "from": [
+        0,
+        14.5,
+        6
+      ],
+      "to": [
+        16,
+        16,
+        10
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#face",
+          "uv": [
+            16,
+            0,
+            0,
+            1.5
+          ]
+        },
+        "south": {
+          "texture": "#face",
+          "uv": [
+            0,
+            0,
+            16,
+            1.5
+          ]
+        },
+        "up": {
+          "texture": "#side",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ],
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#side",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "east": {
+          "texture": "#side",
+          "uv": [
+            6,
+            0,
+            10,
+            1.5
+          ],
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#side",
+          "uv": [
+            6,
+            0,
+            10,
+            1.5
+          ],
+          "cullface": "west"
+        }
+      }
+    },
+    {
+      "name": "bottom_frame",
+      "from": [
+        0,
+        0,
+        6
+      ],
+      "to": [
+        16,
+        1.5,
+        10
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#face",
+          "uv": [
+            16,
+            14.5,
+            0,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#face",
+          "uv": [
+            0,
+            14.5,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#side",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ]
+        },
+        "down": {
+          "texture": "#side",
+          "uv": [
+            0,
+            6,
+            16,
+            10
+          ],
+          "cullface": "down"
+        },
+        "east": {
+          "texture": "#side",
+          "uv": [
+            6,
+            14.5,
+            10,
+            16
+          ],
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#side",
+          "uv": [
+            6,
+            14.5,
+            10,
+            16
+          ],
+          "cullface": "west"
+        }
+      }
+    }
+  ]
+}

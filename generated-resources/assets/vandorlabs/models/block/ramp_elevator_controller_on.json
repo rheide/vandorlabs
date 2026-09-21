@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "vandorlabs:block/ramp_elevator_controller_front_on",
+    "north": "vandorlabs:block/ramp_elevator_controller_front_on",
+    "south": "vandorlabs:block/ramp_elevator_controller_back_on",
+    "west": "vandorlabs:block/ramp_elevator_controller_left_on",
+    "east": "vandorlabs:block/ramp_elevator_controller_right_on",
+    "up": "vandorlabs:block/ramp_elevator_controller_top_on",
+    "down": "vandorlabs:block/ramp_elevator_controller_bottom_on"
+  }
+}

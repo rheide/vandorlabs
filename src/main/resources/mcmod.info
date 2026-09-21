@@ -1,0 +1,16 @@
+[
+{
+  "modid": "vandorlabs",
+  "name": "Vandor Labs",
+  "description": "Sci-fi related blocks. Boldly build what no one has built before.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Vandor Labs contributors"],
+  "credits": "The Forge and FML guys",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

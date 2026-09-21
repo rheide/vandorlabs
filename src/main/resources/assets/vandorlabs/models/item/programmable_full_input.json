@@ -1,0 +1,19 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "screen": "vandorlabs:blocks/engineering_screen_static",
+    "wall": "vandorlabs:blocks/wall_panel_dark",
+    "particle": "vandorlabs:blocks/wall_panel_dark"
+  },
+  "display": {
+    "gui": { "rotation": [18, 205, 0], "scale": [0.72, 0.72, 0.72] }
+  },
+  "elements": [{
+    "from": [0, 0, 15], "to": [16, 16, 16],
+    "faces": {
+      "north": { "texture": "#screen" }, "south": { "texture": "#wall" },
+      "up": { "texture": "#wall" }, "down": { "texture": "#wall" },
+      "east": { "texture": "#wall" }, "west": { "texture": "#wall" }
+    }
+  }]
+}

@@ -1,0 +1,14 @@
+{
+  "vandorlabs:sliding_airlock_glass": {
+    "panel": "single",
+    "art": "vandorlabs:blocks/door_airlock_glass"
+  },
+  "vandorlabs:sliding_hangar_door": {
+    "panel": "split",
+    "art": "vandorlabs:blocks/sliding_hangar_door"
+  },
+  "vandorlabs:sliding_security_door": {
+    "panel": "single",
+    "art": "vandorlabs:blocks/door_security"
+  }
+}

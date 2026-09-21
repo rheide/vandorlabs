@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,inverted=false": { "model": "vandorlabs:programmable_diagonal_screen", "y": 0 },
+    "facing=north,inverted=true":  { "model": "vandorlabs:programmable_diagonal_screen", "y": 0 },
+    "facing=east,inverted=false":  { "model": "vandorlabs:programmable_diagonal_screen", "y": 90 },
+    "facing=east,inverted=true":   { "model": "vandorlabs:programmable_diagonal_screen", "y": 90 },
+    "facing=south,inverted=false": { "model": "vandorlabs:programmable_diagonal_screen", "y": 180 },
+    "facing=south,inverted=true":  { "model": "vandorlabs:programmable_diagonal_screen", "y": 180 },
+    "facing=west,inverted=false":  { "model": "vandorlabs:programmable_diagonal_screen", "y": 270 },
+    "facing=west,inverted=true":   { "model": "vandorlabs:programmable_diagonal_screen", "y": 270 }
+  }
+}

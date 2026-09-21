@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vandorlabs:wall_panel_dark",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vandorlabs:wall_panel_dark"
+    },
+    "facing=south": {
+      "model": "vandorlabs:wall_panel_dark",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:wall_panel_dark",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "variants": {
+    "facing=south,half=lower,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed"
+    },
+    "facing=south,half=lower,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed"
+    },
+    "facing=south,half=lower,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed"
+    },
+    "facing=south,half=lower,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed"
+    },
+    "facing=south,half=upper,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=south,half=upper,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=south,half=upper,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=south,half=upper,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=west,half=lower,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed",
+      "y": 90
+    },
+    "facing=west,half=lower,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed",
+      "y": 90
+    },
+    "facing=west,half=lower,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed",
+      "y": 90
+    },
+    "facing=west,half=lower,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed",
+      "y": 90
+    },
+    "facing=west,half=upper,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=west,half=upper,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=west,half=upper,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=west,half=upper,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=north,half=lower,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed",
+      "y": 180
+    },
+    "facing=north,half=lower,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed",
+      "y": 180
+    },
+    "facing=north,half=lower,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed",
+      "y": 180
+    },
+    "facing=north,half=lower,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed",
+      "y": 180
+    },
+    "facing=north,half=upper,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=north,half=upper,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=north,half=upper,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=north,half=upper,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=east,half=lower,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed",
+      "y": 270
+    },
+    "facing=east,half=lower,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_right_fixed",
+      "y": 270
+    },
+    "facing=east,half=lower,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed",
+      "y": 270
+    },
+    "facing=east,half=lower,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/detail_split_sliding_double_left_fixed",
+      "y": 270
+    },
+    "facing=east,half=upper,hinge=left,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=east,half=upper,hinge=left,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=east,half=upper,hinge=right,open=false": {
+      "model": "vandorlabs:detailed_doors/empty"
+    },
+    "facing=east,half=upper,hinge=right,open=true": {
+      "model": "vandorlabs:detailed_doors/empty"
+    }
+  }
+}

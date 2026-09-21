@@ -1,0 +1,244 @@
+{
+  "variants": {
+    "facing=east,half=lower,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_m",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_m",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e",
+      "y": 90
+    },
+    "facing=east,half=lower,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_m",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_m",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e",
+      "y": 90
+    },
+    "facing=east,half=upper,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e",
+      "y": 90
+    },
+    "facing=north,half=lower,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower"
+    },
+    "facing=north,half=lower,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower"
+    },
+    "facing=north,half=lower,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open"
+    },
+    "facing=north,half=lower,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open"
+    },
+    "facing=north,half=lower,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_m"
+    },
+    "facing=north,half=lower,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_m"
+    },
+    "facing=north,half=lower,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e"
+    },
+    "facing=north,half=lower,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e"
+    },
+    "facing=north,half=upper,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper"
+    },
+    "facing=north,half=upper,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper"
+    },
+    "facing=north,half=upper,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open"
+    },
+    "facing=north,half=upper,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open"
+    },
+    "facing=north,half=upper,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_m"
+    },
+    "facing=north,half=upper,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_m"
+    },
+    "facing=north,half=upper,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e"
+    },
+    "facing=north,half=upper,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e"
+    },
+    "facing=south,half=lower,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_m",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_m",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e",
+      "y": 180
+    },
+    "facing=south,half=lower,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_m",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_m",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e",
+      "y": 180
+    },
+    "facing=south,half=upper,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e",
+      "y": 180
+    },
+    "facing=west,half=lower,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_m",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_m",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e",
+      "y": 270
+    },
+    "facing=west,half=lower,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_lower_open_e",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=left,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=left,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=left,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=left,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=right,open=false,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_m",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=right,open=false,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_m",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=right,open=true,powered=false": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e",
+      "y": 270
+    },
+    "facing=west,half=upper,hinge=right,open=true,powered=true": {
+      "model": "vandorlabs:sliding_security_door_upper_open_e",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,2107 @@
+[
+  {
+    "id": "analysis_bare_gas_giant",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_bare_ice_planet",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_bare_station",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_bare_surface_map",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_bare_targeting",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_bare_terrestrial",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_framed_gas_giant",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_framed_ice_planet",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_framed_station",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_framed_surface_map",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_framed_targeting",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "analysis_framed_terrestrial",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "border_base_left",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "border_base_right",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "border_corner_left",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "border_corner_right",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "border_light",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "border_light_vertical",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "bridge_bare_engineering",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "bridge_bare_pilot",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "bridge_bare_sensors",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "bridge_bare_ship_status",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "bridge_framed_pilot",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "bridge_framed_sensors",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "bridge_framed_ship_status",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "console_bare_1",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_bare_2",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_bare_3",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_bare_4",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_bare_5",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_bare_6",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "console_controls",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_engineering",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "console_keyboard",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "console_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "console_panel_1",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_panel_2",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_panel_3",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_panel_4",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_panel_5",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_panel_6",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_sensors",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "console_signals",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "console_wide_left",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "console_wide_right",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_bare_1",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_bare_2",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_bare_3",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_bare_4",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_bare_5",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_bare_6",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_keyboard_1",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_keyboard_2",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_keyboard_3",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_keyboard_4",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_keyboard_5",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_keyboard_6",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_sliders_1",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_sliders_2",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_sliders_3",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_sliders_4",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_sliders_5",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "control_sliders_6",
+    "type": "retired_console",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "cruiser_command_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "cruiser_command",
+    "pair_side": "left"
+  },
+  {
+    "id": "cruiser_command_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "cruiser_command",
+    "pair_side": "right"
+  },
+  {
+    "id": "cruiser_patrol_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "cruiser_patrol",
+    "pair_side": "left"
+  },
+  {
+    "id": "cruiser_patrol_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "cruiser_patrol",
+    "pair_side": "right"
+  },
+  {
+    "id": "cruiser_science_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "cruiser_science",
+    "pair_side": "left"
+  },
+  {
+    "id": "cruiser_science_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "cruiser_science",
+    "pair_side": "right"
+  },
+  {
+    "id": "cruiser_three_views_left",
+    "type": "retired_display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "cruiser_three_views_right",
+    "type": "retired_display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "dockyard",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "door_airlock_glass",
+    "type": "door",
+    "class": "BlockVandorDoor",
+    "item": true,
+    "motion": "door",
+    "cutout": true
+  },
+  {
+    "id": "door_security",
+    "type": "door",
+    "class": "BlockVandorDoor",
+    "item": true,
+    "motion": "door"
+  },
+  {
+    "id": "empty_screen",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "engineering_screen",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_bare_door_controller",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_bare_engineering_charts",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_bare_personal_terminal",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_bare_viewscreen",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_framed_door_controller",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_framed_engineering_charts",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_framed_personal_terminal",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "extra_framed_viewscreen",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "framed_wall_pipes",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "freighter_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "freighter_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "freighter_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "lab_display_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "lab_display_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "lamp_slats",
+    "type": "light",
+    "class": "BlockLamp",
+    "item": true
+  },
+  {
+    "id": "lamp_slats_unlit",
+    "type": "light_off",
+    "class": "BlockLampOff",
+    "item": false,
+    "pair": "lamp_slats"
+  },
+  {
+    "id": "lamp_window",
+    "type": "light",
+    "class": "BlockLamp",
+    "item": true
+  },
+  {
+    "id": "lamp_window_unlit",
+    "type": "light_off",
+    "class": "BlockLampOff",
+    "item": false,
+    "pair": "lamp_window"
+  },
+  {
+    "id": "planet_bare_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_bare_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_bare_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_bare_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_bare_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_bare_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_framed_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_framed_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_framed_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_framed_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_framed_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "planet_framed_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_bare_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_bare_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_bare_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_bare_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_bare_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_bare_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_biology_wide_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "science_biology_wide",
+    "pair_side": "left"
+  },
+  {
+    "id": "science_biology_wide_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "science_biology_wide",
+    "pair_side": "right"
+  },
+  {
+    "id": "science_panel_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_panel_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_panel_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_panel_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_panel_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "science_panel_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "screen_off",
+    "type": "retired_regular",
+    "class": "BlockVandor",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "screen_off_framed",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_bare_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_bare_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_bare_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_bare_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_bare_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_bare_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_chamfered_square_1",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "ship_chamfered_square_2",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "ship_chamfered_wide_1_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_chamfered_wide_1",
+    "pair_side": "left"
+  },
+  {
+    "id": "ship_chamfered_wide_1_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_chamfered_wide_1",
+    "pair_side": "right"
+  },
+  {
+    "id": "ship_chamfered_wide_2_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_chamfered_wide_2",
+    "pair_side": "left"
+  },
+  {
+    "id": "ship_chamfered_wide_2_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_chamfered_wide_2",
+    "pair_side": "right"
+  },
+  {
+    "id": "ship_crescent_explorer",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "ship_freighter",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "ship_panel_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_panel_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_panel_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_panel_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_panel_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_panel_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_research_cruiser_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_research_cruiser",
+    "pair_side": "left"
+  },
+  {
+    "id": "ship_research_cruiser_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_research_cruiser",
+    "pair_side": "right"
+  },
+  {
+    "id": "ship_rounded_square_1",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "ship_rounded_square_2",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "ship_rounded_wide_1_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_rounded_wide_1",
+    "pair_side": "left"
+  },
+  {
+    "id": "ship_rounded_wide_1_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_rounded_wide_1",
+    "pair_side": "right"
+  },
+  {
+    "id": "ship_rounded_wide_2_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_rounded_wide_2",
+    "pair_side": "left"
+  },
+  {
+    "id": "ship_rounded_wide_2_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "wide_pair": "ship_rounded_wide_2",
+    "pair_side": "right"
+  },
+  {
+    "id": "ship_view_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_3",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_4",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_5",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_6",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_7",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "ship_view_8",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "shipyard_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "shipyard_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "sliding_airlock_glass",
+    "type": "sliding_door",
+    "class": "BlockVandorDoor",
+    "item": true,
+    "motion": "sliding_door",
+    "cutout": true,
+    "panel": "single",
+    "art": "vandorlabs:blocks/door_airlock_glass"
+  },
+  {
+    "id": "sliding_hangar_door",
+    "type": "sliding_split_door",
+    "class": "BlockVandorDoor",
+    "item": true,
+    "motion": "sliding_split_door",
+    "panel": "split",
+    "art": "vandorlabs:blocks/sliding_hangar_door"
+  },
+  {
+    "id": "sliding_security_door",
+    "type": "sliding_door",
+    "class": "BlockVandorDoor",
+    "item": true,
+    "motion": "sliding_door",
+    "panel": "single",
+    "art": "vandorlabs:blocks/door_security"
+  },
+  {
+    "id": "specialist_bare_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_bare_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_bare_science",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_bare_sensors",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_bare_starmap",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_bare_weapons",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_framed_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_framed_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_framed_science",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_framed_sensors",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_framed_starmap",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "specialist_framed_weapons",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": true,
+    "programmable_only": true
+  },
+  {
+    "id": "star_chart",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "station_view_1",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "station_view_2",
+    "type": "screen",
+    "class": "BlockVandorDirectional",
+    "item": false,
+    "retired": true
+  },
+  {
+    "id": "switch_button",
+    "type": "switch",
+    "class": "BlockVandorSwitch",
+    "item": true,
+    "momentary": true
+  },
+  {
+    "id": "switch_rocker",
+    "type": "switch",
+    "class": "BlockVandorSwitch",
+    "item": true,
+    "momentary": false
+  },
+  {
+    "id": "tactical_starmap",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "tritanium_hull",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "wall_light_columns",
+    "type": "light",
+    "class": "BlockLamp",
+    "item": true
+  },
+  {
+    "id": "wall_light_columns_unlit",
+    "type": "light_off",
+    "class": "BlockLampOff",
+    "item": false,
+    "pair": "wall_light_columns"
+  },
+  {
+    "id": "wall_lightbar",
+    "type": "light",
+    "class": "BlockLamp",
+    "item": true
+  },
+  {
+    "id": "wall_lightbar_unlit",
+    "type": "light_off",
+    "class": "BlockLampOff",
+    "item": false,
+    "pair": "wall_lightbar"
+  },
+  {
+    "id": "wall_panel_dark",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "wall_panel_light",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "wall_pipes",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "wall_plate",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "wall_porthole",
+    "type": "light",
+    "class": "BlockLamp",
+    "item": true
+  },
+  {
+    "id": "wall_porthole_unlit",
+    "type": "light_off",
+    "class": "BlockLampOff",
+    "item": false,
+    "pair": "wall_porthole"
+  },
+  {
+    "id": "wall_ribs",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "wall_vent",
+    "type": "regular",
+    "class": "BlockVandorDirectional",
+    "item": true
+  },
+  {
+    "id": "cruiser_three_views_top_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "grid_group": "cruiser_three_views",
+    "grid_row": 0,
+    "grid_column": 0
+  },
+  {
+    "id": "cruiser_three_views_top_center",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "grid_group": "cruiser_three_views",
+    "grid_row": 0,
+    "grid_column": 1
+  },
+  {
+    "id": "cruiser_three_views_top_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "grid_group": "cruiser_three_views",
+    "grid_row": 0,
+    "grid_column": 2
+  },
+  {
+    "id": "cruiser_three_views_bottom_left",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "grid_group": "cruiser_three_views",
+    "grid_row": 1,
+    "grid_column": 0
+  },
+  {
+    "id": "cruiser_three_views_bottom_center",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "grid_group": "cruiser_three_views",
+    "grid_row": 1,
+    "grid_column": 1
+  },
+  {
+    "id": "cruiser_three_views_bottom_right",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true,
+    "grid_group": "cruiser_three_views",
+    "grid_row": 1,
+    "grid_column": 2
+  },
+  {
+    "id": "detail_engineering_rotating_double",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "split_door",
+    "door_style": "engineering",
+    "door_layout": "double",
+    "sliding": false,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 1.375,
+    "right_pivot": 14.625,
+    "pivot_z": 11.240000000000002,
+    "left_angle": 90,
+    "right_angle": -90,
+    "left_slide": -14.745,
+    "right_slide": 14.745
+  },
+  {
+    "id": "detail_engineering_rotating_single",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "door",
+    "door_style": "engineering",
+    "door_layout": "single",
+    "sliding": false,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 1.375,
+    "right_pivot": 14.625,
+    "pivot_z": 11.240000000000002,
+    "left_angle": 90,
+    "right_angle": -90,
+    "left_slide": -13.3075,
+    "right_slide": 13.3075
+  },
+  {
+    "id": "detail_engineering_sliding_double",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "sliding_split_door",
+    "door_style": "engineering",
+    "door_layout": "double",
+    "sliding": true,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 1.375,
+    "right_pivot": 14.625,
+    "pivot_z": 10.1,
+    "left_angle": -90,
+    "right_angle": 90,
+    "left_slide": -14.745,
+    "right_slide": 14.745
+  },
+  {
+    "id": "detail_engineering_sliding_single",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "sliding_door",
+    "door_style": "engineering",
+    "door_layout": "single",
+    "sliding": true,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 1.375,
+    "right_pivot": 14.625,
+    "pivot_z": 10.1,
+    "left_angle": -90,
+    "right_angle": 90,
+    "left_slide": -13.3075,
+    "right_slide": 13.3075
+  },
+  {
+    "id": "detail_observation_rotating_double",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "split_door",
+    "door_style": "observation",
+    "door_layout": "double",
+    "sliding": false,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 2.34375,
+    "right_pivot": 13.65625,
+    "pivot_z": 11.240000000000002,
+    "left_angle": 90,
+    "right_angle": -90,
+    "left_slide": -13.495,
+    "right_slide": 13.495
+  },
+  {
+    "id": "detail_observation_rotating_single",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "door",
+    "door_style": "observation",
+    "door_layout": "single",
+    "sliding": false,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 2.34375,
+    "right_pivot": 13.65625,
+    "pivot_z": 11.240000000000002,
+    "left_angle": 90,
+    "right_angle": -90,
+    "left_slide": -11.87,
+    "right_slide": 11.87
+  },
+  {
+    "id": "detail_observation_sliding_double",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "sliding_split_door",
+    "door_style": "observation",
+    "door_layout": "double",
+    "sliding": true,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 2.34375,
+    "right_pivot": 13.65625,
+    "pivot_z": 10.1,
+    "left_angle": -90,
+    "right_angle": 90,
+    "left_slide": -13.495,
+    "right_slide": 13.495
+  },
+  {
+    "id": "detail_observation_sliding_single",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "sliding_door",
+    "door_style": "observation",
+    "door_layout": "single",
+    "sliding": true,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 2.34375,
+    "right_pivot": 13.65625,
+    "pivot_z": 10.1,
+    "left_angle": -90,
+    "right_angle": 90,
+    "left_slide": -11.87,
+    "right_slide": 11.87
+  },
+  {
+    "id": "detail_split_rotating_double",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "split_door",
+    "door_style": "split",
+    "door_layout": "double",
+    "sliding": false,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 1.25,
+    "right_pivot": 14.75,
+    "pivot_z": 11.240000000000002,
+    "left_angle": 90,
+    "right_angle": -90,
+    "left_slide": -14.801712962962963,
+    "right_slide": 14.801712962962963
+  },
+  {
+    "id": "detail_split_rotating_single",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "split_door",
+    "door_style": "split",
+    "door_layout": "single",
+    "sliding": false,
+    "split_inside_one_block": true,
+    "cutout": true,
+    "left_pivot": 1.25,
+    "right_pivot": 14.75,
+    "pivot_z": 11.240000000000002,
+    "left_angle": 90,
+    "right_angle": -90,
+    "left_slide": -6.83875,
+    "right_slide": 6.83875
+  },
+  {
+    "id": "detail_split_sliding_double",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "sliding_split_door",
+    "door_style": "split",
+    "door_layout": "double",
+    "sliding": true,
+    "split_inside_one_block": false,
+    "cutout": true,
+    "left_pivot": 1.25,
+    "right_pivot": 14.75,
+    "pivot_z": 10.1,
+    "left_angle": -90,
+    "right_angle": 90,
+    "left_slide": -14.801712962962963,
+    "right_slide": 14.801712962962963
+  },
+  {
+    "id": "detail_split_sliding_single",
+    "type": "detailed_door",
+    "class": "BlockDetailedDoor",
+    "item": true,
+    "motion": "sliding_split_door",
+    "door_style": "split",
+    "door_layout": "single",
+    "sliding": true,
+    "split_inside_one_block": true,
+    "cutout": true,
+    "left_pivot": 1.25,
+    "right_pivot": 14.75,
+    "pivot_z": 10.1,
+    "left_angle": -90,
+    "right_angle": 90,
+    "left_slide": -6.83875,
+    "right_slide": 6.83875
+  },
+  {
+    "id": "bridge_chair_simple_command",
+    "type": "bridge_chair",
+    "class": "BlockBridgeChair",
+    "item": true,
+    "height_units": 22,
+    "seat_y_units": 10
+  },
+  {
+    "id": "bridge_chair_simple_companion",
+    "type": "bridge_chair",
+    "class": "BlockBridgeChair",
+    "item": true,
+    "height_units": 20,
+    "seat_y_units": 10
+  },
+  {
+    "id": "bridge_chair_simple_operator",
+    "type": "bridge_chair",
+    "class": "BlockBridgeChair",
+    "item": true,
+    "height_units": 21,
+    "seat_y_units": 10
+  },
+  {
+    "id": "bridge_chair_simple_conference",
+    "type": "bridge_chair",
+    "class": "BlockBridgeChair",
+    "item": true,
+    "height_units": 22.5,
+    "seat_y_units": 10
+  },
+  {
+    "id": "bridge_chair_simple_mess_hall",
+    "type": "bridge_chair",
+    "class": "BlockBridgeChair",
+    "item": true,
+    "height_units": 18.5,
+    "seat_y_units": 10
+  },
+  {
+    "id": "material_stitched_pad",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "material_seamed_pad",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "material_ribbed_pad",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "material_cushion",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "material_cyan_strip",
+    "type": "regular",
+    "class": "BlockLightStrip",
+    "item": true
+  },
+  {
+    "id": "material_control_buttons",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "material_vent_grille",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "material_amber_strip",
+    "type": "regular",
+    "class": "BlockLightStrip",
+    "item": true
+  },
+  {
+    "id": "material_rubber_studs",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "hull_light_alloy",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "hull_dark_gunmetal",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "hull_midnight_matte",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "hull_midnight_satin",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "floor_carpet_bluegray",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "floor_carpet_warm_burgundy",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "floor_metal_nonslip",
+    "type": "regular",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "cockpit_glass_clear",
+    "type": "cockpit_glass",
+    "class": "BlockCockpitGlass",
+    "item": true
+  },
+  {
+    "id": "cockpit_glass_cyan",
+    "type": "cockpit_glass",
+    "class": "BlockCockpitGlass",
+    "item": true
+  },
+  {
+    "id": "cockpit_glass_smoked",
+    "type": "cockpit_glass",
+    "class": "BlockCockpitGlass",
+    "item": true
+  },
+  {
+    "id": "rocket_thruster",
+    "type": "propulsion_light",
+    "class": "BlockConnectedPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "ion_thruster",
+    "type": "propulsion_light",
+    "class": "BlockConnectedPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "plasma_thruster_full",
+    "type": "propulsion_light",
+    "class": "BlockConnectedPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "impulse_engine_full",
+    "type": "propulsion_light",
+    "class": "BlockConnectedPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "rocket_thruster_hex",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "ion_thruster_hex",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "plasma_thruster_hex",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "impulse_engine_hex",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true
+  },
+  {
+    "id": "rocket_thruster_triangle",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "rocket_thruster_triangle",
+    "item": true
+  },
+  {
+    "id": "rocket_thruster_triangle_bottom_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "rocket_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "rocket_thruster_triangle_top_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "rocket_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "rocket_thruster_triangle_top_left",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "rocket_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "ion_thruster_triangle",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "ion_thruster_triangle",
+    "item": true
+  },
+  {
+    "id": "ion_thruster_triangle_bottom_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "ion_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "ion_thruster_triangle_top_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "ion_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "ion_thruster_triangle_top_left",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "ion_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "plasma_thruster_triangle",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "plasma_thruster_triangle",
+    "item": true
+  },
+  {
+    "id": "plasma_thruster_triangle_bottom_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "plasma_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "plasma_thruster_triangle_top_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "plasma_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "plasma_thruster_triangle_top_left",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "plasma_thruster_triangle",
+    "item": false
+  },
+  {
+    "id": "impulse_engine_triangle",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "impulse_engine_triangle",
+    "item": true
+  },
+  {
+    "id": "impulse_engine_triangle_bottom_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "impulse_engine_triangle",
+    "item": false
+  },
+  {
+    "id": "impulse_engine_triangle_top_right",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "impulse_engine_triangle",
+    "item": false
+  },
+  {
+    "id": "impulse_engine_triangle_top_left",
+    "type": "propulsion_light",
+    "class": "BlockTrianglePropulsionLight",
+    "triangle_base": "impulse_engine_triangle",
+    "item": false
+  },
+  {
+    "id": "antigravity_plate",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true,
+    "points_up": true,
+    "depth": 0.25
+  },
+  {
+    "id": "repulsor_array",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true,
+    "points_up": true,
+    "depth": 0.5
+  },
+  {
+    "id": "vertical_hover_thruster",
+    "type": "propulsion_light",
+    "class": "BlockPropulsionLight",
+    "item": true,
+    "points_up": true
+  },
+  {
+    "id": "glass_wall",
+    "type": "connected_glass_wall",
+    "class": "BlockGlassWall",
+    "item": true
+  }
+]

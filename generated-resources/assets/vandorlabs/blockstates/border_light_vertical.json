@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vandorlabs:border_light_vertical",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vandorlabs:border_light_vertical"
+    },
+    "facing=south": {
+      "model": "vandorlabs:border_light_vertical",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:border_light_vertical",
+      "y": 270
+    }
+  }
+}

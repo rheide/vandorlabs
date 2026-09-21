@@ -1,0 +1,31 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "wall": "vandorlabs:blocks/wall_panel_dark",
+    "front": "vandorlabs:blocks/console_inputs/input_surfaces_keyboard_touchpad_item",
+    "rear": "vandorlabs:blocks/console_inputs/sliders_buttons_pilot_faders_item",
+    "particle": "vandorlabs:blocks/wall_panel_dark"
+  },
+  "display": {
+    "gui": { "rotation": [30, 225, 0], "translation": [0, 1, 0], "scale": [0.7, 0.7, 0.7] }
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0], "to": [16, 1, 8],
+      "faces": {
+        "up": { "texture": "#front" }, "down": { "texture": "#wall" },
+        "north": { "texture": "#wall" }, "south": { "texture": "#wall" },
+        "east": { "texture": "#wall" }, "west": { "texture": "#wall" }
+      }
+    },
+    {
+      "from": [0, 1, 7], "to": [16, 2, 13],
+      "rotation": { "origin": [8, 1, 8], "axis": "x", "angle": -45, "rescale": false },
+      "faces": {
+        "up": { "texture": "#rear" }, "down": { "texture": "#wall" },
+        "north": { "texture": "#wall" }, "south": { "texture": "#wall" },
+        "east": { "texture": "#wall" }, "west": { "texture": "#wall" }
+      }
+    }
+  ]
+}

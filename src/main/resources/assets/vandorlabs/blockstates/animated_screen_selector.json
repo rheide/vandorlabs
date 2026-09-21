@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:animated_screen_selector",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "vandorlabs:animated_screen_selector",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "vandorlabs:animated_screen_selector",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:animated_screen_selector",
+      "y": 270
+    },
+    "facing=up": {
+      "model": "vandorlabs:animated_screen_selector",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "vandorlabs:animated_screen_selector",
+      "x": 90
+    }
+  }
+}

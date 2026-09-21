@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": {
+      "model": "vandorlabs:material_seamed_pad"
+    }
+  }
+}

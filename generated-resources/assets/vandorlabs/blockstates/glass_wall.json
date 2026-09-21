@@ -1,0 +1,2052 @@
+{
+  "variants": {
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c02",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c02",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c03",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c03",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c06",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c06",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c07",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c07",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c10",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c10",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c11",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c11",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c14",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c14",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c15",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_00_c15",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_01_c12",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_02_c03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_03",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c02",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_04_c10",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_05_c08",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_06_c02",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=false,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_07",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c01",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_08_c05",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_09_c04",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_10_c01",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=false,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_11",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_12",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 0
+    },
+    "bottom=false,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_13",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=false": {
+      "model": "vandorlabs:glass_wall/wall_14",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=false,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=false,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=false,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=false,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=false,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 0
+    },
+    "bottom=true,inner_bl=true,inner_br=true,inner_tl=true,inner_tr=true,left=true,right=true,rotated=true,top=true": {
+      "model": "vandorlabs:glass_wall/wall_15",
+      "y": 90
+    }
+  }
+}

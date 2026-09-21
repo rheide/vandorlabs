@@ -1,0 +1,222 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.197'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+version = '1.0'
+group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'vandorlabs'
+
+task compileRampTests(type: JavaCompile) {
+    source = files('src/main/java/com/vandorlabs/ramp/ControllerPlatform.java',
+            'src/test/java/com/vandorlabs/ramp/ControllerPlatformTest.java')
+    classpath = files()
+    destinationDir = file("$buildDir/ramp-tests")
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+task testRamps(type: JavaExec) {
+    dependsOn compileRampTests
+    classpath = files("$buildDir/ramp-tests")
+    main = 'com.vandorlabs.ramp.ControllerPlatformTest'
+}
+check.dependsOn testRamps
+
+// Verify the exact copy pathways in the supported external mod builds. The
+// live-client suite then exercises Vandor Labs state/NBT through those boundaries.
+task testCopyCompatibility(type: Exec) {
+    workingDir projectDir
+    commandLine 'python3', 'tools/test_copy_compat.py'
+    inputs.file('tools/test_copy_compat.py')
+    outputs.upToDateWhen { false }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir 'generated-resources'
+        }
+    }
+}
+
+processResources.dependsOn testCopyCompatibility
+
+// Install the chosen runtime texture tree after static resources are copied.
+// Exact path matching against the archived original set prevents an incomplete
+// default pack from silently dropping textures.
+task installDefaultTextures {
+    dependsOn processResources
+    inputs.dir('texture-packs/default/assets/vandorlabs/textures')
+    inputs.dir('texture-packs/original/assets/vandorlabs/textures')
+    outputs.upToDateWhen { false }
+    doLast {
+        def target = file("$buildDir/resources/main/assets/vandorlabs/textures")
+        def replacement = file('texture-packs/default/assets/vandorlabs/textures')
+        def original = file('texture-packs/original/assets/vandorlabs/textures')
+        def relativeNames = { root ->
+            fileTree(root).files.collect {
+                root.toPath().relativize(it.toPath()).toString().replace('\\', '/')
+            } as Set
+        }
+        def expected = relativeNames(original)
+        def supplied = relativeNames(replacement)
+        if (expected != supplied) {
+            def missing = (expected - supplied).sort().take(10)
+            def unexpected = (supplied - expected).sort().take(10)
+            throw new GradleException("default texture tree mismatch: " +
+                    "${(expected - supplied).size()} missing, " +
+                    "${(supplied - expected).size()} unexpected; " +
+                    "missing=${missing}; unexpected=${unexpected}")
+        }
+        delete target
+        copy {
+            from replacement
+            into target
+        }
+        logger.lifecycle("Installed ${supplied.size()} default runtime textures")
+    }
+}
+
+jar.dependsOn installDefaultTextures
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+
+minecraft {
+    // The mappings can be changed at any time, and must be in the following format.
+    // snapshot_YYYYMMDD   Snapshot are built nightly.
+    // stable_#            Stables are built at the discretion of the MCP team.
+    // Use non-default mappings at your own risk. they may not always work.
+    // Simply re-run your setup task after changing the mappings to update your workspace.
+    mappings channel: 'snapshot', version: '20171003-1.12'
+    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    // Default run configurations.
+    // These can be tweaked, removed, or duplicated as needed.
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+        }
+
+        server {
+
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
+}
+
+dependencies {
+    // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
+    // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
+    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+
+    // You may put jars on which you depend on in ./libs or you may define them like so..
+    // compile "some.group:artifact:version:classifier"
+    // compile "some.group:artifact:version"
+
+    // Real examples
+    // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
+    // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+
+    // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
+    // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // These dependencies get remapped to your current MCP mappings
+    // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // For more info...
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", "1.12.2"
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version': project.version, 'mcversion': "1.12.2"
+    }
+
+    // copy everything else except the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+// The archived original texture set remains available as a one-off build.
+task buildOriginalTextures(type: Exec) {
+    group = 'build'
+    description = 'Build vandorlabs-1.0-original-textures.jar with the archived original textures'
+    dependsOn build
+    workingDir projectDir
+    commandLine 'python3', 'tools/build_texture_variant.py',
+            '--base', "$buildDir/libs/vandorlabs-1.0.jar",
+            '--textures', 'texture-packs/original/assets/vandorlabs/textures',
+            '--output', "$buildDir/libs/vandorlabs-1.0-original-textures.jar",
+            '--name', 'original-textures'
+    inputs.file("$buildDir/libs/vandorlabs-1.0.jar")
+    inputs.dir('texture-packs/original/assets/vandorlabs/textures')
+    inputs.file('tools/build_texture_variant.py')
+    outputs.file("$buildDir/libs/vandorlabs-1.0-original-textures.jar")
+}
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "Vandor Labs",
+            "Specification-Vendor": "Vandor Labs",
+            "Specification-Version": "1", // We are version 1 of ourselves
+            "Implementation-Title": "Vandor Labs",
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor" :"Vandor Labs",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+// Example configuration to allow publishing using the maven-publish task
+// This is the preferred method to reobfuscate your jar file
+jar.finalizedBy('reobfJar')
+// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
+//publish.dependsOn('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/mcmodsrepo"
+        }
+    }
+}

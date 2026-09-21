@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "vandorlabs:blocks/floor_carpet_warm_burgundy"
+  }
+}

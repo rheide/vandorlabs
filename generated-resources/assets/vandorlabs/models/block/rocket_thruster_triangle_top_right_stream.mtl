@@ -1,0 +1,35 @@
+newmtl cavity
+Ka 1 1 1
+Kd 1 1 1
+d 1
+map_Kd vandorlabs:blocks/thrusters/cavity
+
+newmtl dark_trim
+Ka 1 1 1
+Kd 1 1 1
+d 1
+map_Kd vandorlabs:blocks/thrusters/dark_trim
+
+newmtl rear
+Ka 1 1 1
+Kd 1 1 1
+d 1
+map_Kd vandorlabs:blocks/thrusters/rear
+
+newmtl rocket_on
+Ka 1 1 1
+Kd 1 1 1
+d 1
+map_Kd vandorlabs:blocks/thrusters/rocket_stream
+
+newmtl side
+Ka 1 1 1
+Kd 1 1 1
+d 1
+map_Kd vandorlabs:blocks/thrusters/side
+
+newmtl trim
+Ka 1 1 1
+Kd 1 1 1
+d 1
+map_Kd vandorlabs:blocks/thrusters/trim

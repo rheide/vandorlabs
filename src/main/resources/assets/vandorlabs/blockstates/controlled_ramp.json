@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:controlled_ramp"
+    },
+    "facing=east": {
+      "model": "vandorlabs:controlled_ramp"
+    },
+    "facing=south": {
+      "model": "vandorlabs:controlled_ramp"
+    },
+    "facing=west": {
+      "model": "vandorlabs:controlled_ramp"
+    }
+  }
+}

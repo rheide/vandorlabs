@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+
+# Gradle caches and all reproducible build output.
+/.gradle/
+/build/
+
+# Forge development-client state (configs, logs, crashes and worlds).
+/run/
+
+# The live-client harness source is tracked, but downloaded runtimes and
+# screenshot/log output from individual runs are local test artifacts.
+/testclient/runtime/
+/testclient/render-run.*/
+/testclient/gallery-run.*/
+/testclient/console-run.*/
+/testclient/shots/
+/testclient/archive/
+/testclient/*.log

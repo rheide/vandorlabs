@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "vertical=false": {
+      "model": "vandorlabs:material_cyan_strip"
+    },
+    "vertical=true": {
+      "model": "vandorlabs:material_cyan_strip_vertical"
+    }
+  }
+}

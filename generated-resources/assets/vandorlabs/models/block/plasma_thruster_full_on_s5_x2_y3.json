@@ -1,0 +1,176 @@
+{
+  "parent": "block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "side": "vandorlabs:blocks/thrusters/side",
+    "top": "vandorlabs:blocks/thrusters/top",
+    "rear": "vandorlabs:blocks/thrusters/rear",
+    "trim": "vandorlabs:blocks/thrusters/trim",
+    "cavity": "vandorlabs:blocks/thrusters/cavity",
+    "rocket_on": "vandorlabs:blocks/thrusters/rocket_on",
+    "ion_on": "vandorlabs:blocks/thrusters/ion_on",
+    "plasma_on": "vandorlabs:blocks/thrusters/plasma_on",
+    "impulse_on": "vandorlabs:blocks/thrusters/impulse_on",
+    "rocket_off": "vandorlabs:blocks/thrusters/rocket_off",
+    "ion_off": "vandorlabs:blocks/thrusters/ion_off",
+    "plasma_off": "vandorlabs:blocks/thrusters/plasma_off",
+    "impulse_off": "vandorlabs:blocks/thrusters/impulse_off",
+    "vent": "vandorlabs:blocks/thrusters/vent",
+    "dark_trim": "vandorlabs:blocks/thrusters/dark_trim",
+    "light_trim": "vandorlabs:blocks/thrusters/light_trim",
+    "particle": "vandorlabs:blocks/thrusters/side"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.625,
+        0.625,
+        0.625
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        3
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#cavity",
+          "uv": [
+            6.4,
+            3.2,
+            9.6,
+            6.4
+          ]
+        },
+        "south": {
+          "texture": "#rear",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        0,
+        0,
+        2.75
+      ],
+      "to": [
+        16,
+        16,
+        3
+      ],
+      "faces": {
+        "north": {
+          "texture": "#plasma_on",
+          "uv": [
+            6.577778,
+            0.944444,
+            9.422222,
+            1.181481
+          ]
+        },
+        "south": {
+          "texture": "#cavity",
+          "uv": [
+            1.25,
+            1.25,
+            14.75,
+            14.75
+          ]
+        }
+      }
+    }
+  ]
+}
