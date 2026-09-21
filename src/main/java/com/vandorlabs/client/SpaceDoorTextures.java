@@ -23,7 +23,7 @@ public final class SpaceDoorTextures {
                 "door_cargo","door_ventilation","door_viewport_metal","door_viewport_glass",
                 "door_laboratory_metal","door_laboratory_glass","lift_cargo_lift","lift_blast_shield",
                 "lift_glazed_hangar","lift_glazed_hangar_metal","lift_glazed_hangar_glass",
-                "lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter"}) {
+                "lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","double_frame_metal"}) {
             event.getMap().setTextureEntry(new RectangularSprite(
                     "vandorlabs:blocks/space_doors/" + level + name));
         }
@@ -114,6 +114,8 @@ public final class SpaceDoorTextures {
                     pixels[0][y * size + x] = image.getRGB(
                             Math.min(x, image.getWidth()-1), Math.min(y, image.getHeight()-1));
                 }
+                if (getIconName().endsWith("/double_frame_metal"))
+                    com.vandorlabs.render.SpaceFramePixels.repair(pixels[0], size, size);
                 setFramesTextureData(Collections.singletonList(pixels));
                 // Forge 1.12's caller stitches custom sprites when load returns false.
                 return false;

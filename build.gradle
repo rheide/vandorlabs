@@ -105,6 +105,13 @@ task testSpaceDoorData(type: JavaExec) {
     main = 'com.vandorlabs.persistence.SpaceDoorDataTest'
 }
 check.dependsOn testSpaceDoorData
+task testSpaceFramePixels(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.SpaceFramePixelsTest'
+    workingDir projectDir
+}
+check.dependsOn testSpaceFramePixels
 
 // Verify the exact copy pathways in the supported external mod builds. The
 // live-client suite then exercises Vandor Labs state/NBT through those boundaries.

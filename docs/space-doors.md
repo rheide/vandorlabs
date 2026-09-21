@@ -3,7 +3,10 @@
 The Space family is independent of the Detailed doors. The creative menu has
 two door items: Space Rotating Door and Space Sliding Door. Shift-right-click
 either half to choose the design, Small/Medium/Large texture detail, framed/bare
-appearance, and redstone channel. Click Done to apply. Choices are saved in the
+appearance, and redstone channel. Door types use a scrollable list with mouse-wheel,
+scrollbar and up/down-key navigation. Each option change applies immediately,
+including valid channel edits, like the programmable-screen selector. Done or
+Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
 lower tile entity and synchronized by the server. Configuring a pair applies
 to both leaves; a newly placed matching mate inherits the existing appearance.
 Sliding doors also offer Sideways / Up / Down motion. Vertical travel is 31/16
@@ -78,7 +81,23 @@ the requested test build skips the slow in-game overview. Offline checks cover
 all design/detail model references and hinge clearance at every integer angle.
 Dynmap has static simplified door/glass fallbacks, not animated joined geometry.
 
-The original medium frame artwork contains noisy pixels near its borders and
-residual cyan glow inside `double_frame_metal.png`; source PNGs are retained
-byte-for-byte. An additional importer artifact used to come from sampling the
-hinge atlas on extruded frame sides. Those sides now sample the frame material.
+The supplied medium/high `double_frame_metal.png` has damaged opaque outer
+pixels, consistent with previously transparent RGB data exposed by an alpha
+conversion. This is present in the ZIP, not introduced by this importer. The
+medium outermost row includes pure cyan, green, red and black pixels at alpha
+255; high detail has a wider damaged gutter. No original conversion script was
+found, so its exact origin cannot be proven. Interior cyan glow is also present,
+but the frame geometry does not sample that opening.
+
+`SpaceFramePixels` extends intact steel into the outer 1 source-pixel gutter of
+medium and 8-source-pixel gutter of high, before mipmap generation. It copies
+both RGB and alpha, never just forces opacity. The small texture and all pixels
+inside these gutters remain unchanged. Both doors and Space Glass use this
+corrected atlas sprite. CRC checks scope the repair to the exact supplied images,
+leaving resource-pack replacements untouched. Original PNGs are retained
+byte-for-byte. `testSpaceFramePixels` verifies recognition, every repaired pixel,
+unchanged interiors and resource-pack overrides against the actual source PNGs.
+There is no per-frame/tick repair cost; it runs only on texture loading/reloading.
+
+An earlier, separate importer artifact came from sampling the hinge atlas on
+extruded frame sides. Those sides now sample the frame material.
