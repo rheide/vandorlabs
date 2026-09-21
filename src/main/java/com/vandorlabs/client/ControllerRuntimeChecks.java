@@ -404,4 +404,22 @@ public final class ControllerRuntimeChecks {
         }
         player.setPosition(px,py,pz);
     }
+
+    /** Build and fully deploy one isolated documentation fixture using the real controller path. */
+    public static void buildGalleryFixture(World world,EntityPlayerMP player,BlockPos root,
+            boolean upper,boolean smooth) {
+        double px=player.posX,py=player.posY,pz=player.posZ;
+        player.setPosition(root.getX()+.5,root.getY()+1,root.getZ()+.5);
+        TileEntityRampController controller=place(world,root,EnumFacing.SOUTH);
+        for (int row=1;row<=4;row++) for (int width=-1;width<=1;width++)
+            world.setBlockState(root.south(row).west(width),
+                    Blocks.STONE_SLAB.getDefaultState(),3);
+        if (!controller.configure(player,3,smooth?8:2,upper,true,false,false,
+                EnumFacing.SOUTH))
+            throw new IllegalStateException("gallery ramp configuration failed: "+controller.status);
+        world.setBlockState(root.north(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+        controller.updatePower();
+        elapsed(controller,controller.durationTicks()+1);
+        player.setPosition(px,py,pz);
+    }
 }

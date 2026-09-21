@@ -279,8 +279,15 @@ public class ReproLab {
                 -28.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("gallery_chairs", GALLERY_X, galleryFeet + 0.4D,
                 -27.0D, 0.0F, 4.0F));
-        SHOTS.add(new Shot("gallery_ramp", GALLERY_X, galleryFeet + 2.5D,
-                -27.0D, 0.0F, 18.0F));
+        for (String direction : new String[] {"up", "down"}) {
+            for (String tread : new String[] {"smooth", "stairs"}) {
+                boolean down = direction.equals("down");
+                SHOTS.add(new Shot("gallery_ramp_" + direction + "_" + tread,
+                        GALLERY_X + 5.0D, galleryFeet + 7.0D,
+                        down ? -10.0D : -29.0D, down ? 145.0F : 45.0F,
+                        down ? 40.0F : 35.0F));
+            }
+        }
     }
 
     private final File outDir;
@@ -869,28 +876,20 @@ public class ReproLab {
             for (int i = 0; i < chairs.length; i++)
                 placeChair(world, new BlockPos(GALLERY_X - 6 + i * 3,
                         GALLERY_Y, -18), chairs[i]);
-        } else if (shot.equals("gallery_ramp")) {
-            IBlockState controller = block("ramp_controller").getDefaultState()
-                    .withProperty(BlockVandorDirectional.FACING, EnumFacing.NORTH)
-                    .withProperty(com.vandorlabs.blocks.BlockRampController.ACTIVE, true);
-            world.setBlockState(new BlockPos(GALLERY_X, GALLERY_Y + 3, -16),
-                    controller, 2);
-            for (int y = GALLERY_Y; y < GALLERY_Y + 3; y++)
-                world.setBlockState(new BlockPos(GALLERY_X, y, -16),
-                        Blocks.STONE.getDefaultState(), 2);
-            for (int row = 0; row < 3; row++) {
-                for (int width = -1; width <= 1; width++) {
-                    world.setBlockState(new BlockPos(GALLERY_X + width,
-                            GALLERY_Y + 2 - row, -17 - row),
-                            Blocks.STONE_SLAB.getDefaultState(), 2);
-                    for (int supportY = GALLERY_Y;
-                            supportY < GALLERY_Y + 2 - row; supportY++) {
-                        world.setBlockState(new BlockPos(GALLERY_X + width,
-                                supportY, -17 - row),
-                                Blocks.STONE.getDefaultState(), 2);
-                    }
+        } else if (shot.startsWith("gallery_ramp_") && !world.isRemote) {
+            EntityPlayerMP player = null;
+            for (EntityPlayer candidate : world.playerEntities) {
+                if (candidate instanceof EntityPlayerMP) {
+                    player = (EntityPlayerMP) candidate;
+                    break;
                 }
             }
+            if (player == null) throw new IllegalStateException("gallery ramp player unavailable");
+            boolean upper = shot.contains("_down_");
+            boolean smooth = shot.endsWith("_smooth");
+            ControllerRuntimeChecks.buildGalleryFixture(world, player,
+                    new BlockPos(GALLERY_X, upper ? GALLERY_Y + 3 : GALLERY_Y, -21),
+                    upper, smooth);
         }
     }
 

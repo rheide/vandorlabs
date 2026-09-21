@@ -4,6 +4,11 @@
 > It is provided as-is, with no warranty of any kind and no guarantee of
 > correctness, compatibility, maintenance, future updates, or support.
 
+> **Creative-only:** Vandor Labs currently provides no recipes, loot, trading,
+> or other survival acquisition path. None of its blocks are obtainable in
+> Survival mode without commands or another mod; use the `vandorlabs` Creative
+> tab to access them.
+
 A Minecraft Forge 1.12.2 mod (Forge `1.12.2-14.23.5.2860`) adding
 science-fiction ship blocks: hull and wall panels, animated bridge/engineering
 displays, planet and ship viewscreens, consoles, toggleable lamps, hinged and
@@ -105,8 +110,8 @@ This produces `build/libs/vandorlabs-1.0-original-textures.jar`. The normal
 
 ## Texture dimensions
 
-The default pack contains 461 texture resources. Its predominant size is
-**128x128**: 208 resources (131 PNG files and 77 VLTA animations) use that
+The default pack contains 465 texture resources. Its predominant size is
+**128x128**: 212 resources (135 PNG files and 77 VLTA animations) use that
 canvas. The pack deliberately mixes resolutions according to the job each
 texture performs; 128x128 is not a blanket requirement for every block.
 
@@ -165,6 +170,38 @@ To rebuild the documentation gallery, run `testclient/generate_gallery.sh`.
 It performs the build and live client contracts, captures all curated scenes,
 and publishes the stable images used by the Markdown pages under
 `docs/images/gallery`.
+
+## Dynmap compatibility
+
+The normal Vandor Labs jar includes `assets/vandorlabs/dynmap-models.txt` and
+`assets/vandorlabs/dynmap-texture.txt`. Dynmap 3.7 discovers these resources
+directly from the mod jar, so Vandor Labs does not compile against or require
+Dynmap and continues to load normally when Dynmap is absent.
+
+The definitions cover all 104 world-rendered block types and 21,670 block
+states. Ordinary JSON models retain their scanned shape, orientation, texture,
+power state, and connected square-thruster variant. Dynmap 1.12 cannot parse
+Forge OBJ models or execute tile-entity renderers, so the bundled data supplies
+static Dynmap-native approximations for hexagonal and triangular thrusters,
+chairs, doors, connected glass, and programmable input housings. Their correct
+textures and orientation are retained, but animated door travel, selected
+programmable-screen content, particles, and moving ramp interpolation do not
+appear on the map. Deployed `controlled_ramp` cells are transient renderer-only
+placeholders and therefore have no independent map model; the source platform
+is rendered normally whenever it is retracted.
+
+To refresh the definitions after adding block models, run the matching
+DynmapBlockScan 3.7 tool once against a built jar in an isolated Forge 1.12.2
+instance, then import its `dynmap/renderdata/modsupport` output:
+
+```bash
+python3 tools/import_dynmap_scan.py /path/to/dynmap/renderdata/modsupport
+python3 tools/test_dynmap_support.py
+```
+
+The importer deterministically repairs the model categories unsupported by the
+scanner. The normal Gradle `check`/`build` also validates block coverage,
+state/model pairing, and every referenced texture file.
 
 ## License
 

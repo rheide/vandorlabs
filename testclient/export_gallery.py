@@ -26,8 +26,11 @@ SHOTS = {
     "gallery_lighting_controls": "systems/lighting-controls.png",
     "gallery_structure": "systems/structure-catalog.png",
     "gallery_chairs": "systems/bridge-chairs.png",
-    "gallery_ramp": "systems/ramp.png",
     "ramp_controller_gui": "systems/ramp-controller-config.png",
+    "gallery_ramp_up_smooth": "ramp-controller/up-smooth.png",
+    "gallery_ramp_up_stairs": "ramp-controller/up-stairs.png",
+    "gallery_ramp_down_smooth": "ramp-controller/down-smooth.png",
+    "gallery_ramp_down_stairs": "ramp-controller/down-stairs.png",
 }
 
 

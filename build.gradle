@@ -33,6 +33,18 @@ task testRamps(type: JavaExec) {
 }
 check.dependsOn testRamps
 
+task testDynmapSupport(type: Exec) {
+    workingDir projectDir
+    commandLine 'python3', 'tools/test_dynmap_support.py'
+    inputs.file('tools/test_dynmap_support.py')
+    inputs.file('src/main/resources/assets/vandorlabs/dynmap-models.txt')
+    inputs.file('src/main/resources/assets/vandorlabs/dynmap-texture.txt')
+    inputs.file('generated-resources/assets/vandorlabs/data/blocks.json')
+    inputs.dir('texture-packs/default/assets/vandorlabs/textures')
+    outputs.upToDateWhen { false }
+}
+check.dependsOn testDynmapSupport
+
 // Verify the exact copy pathways in the supported external mod builds. The
 // live-client suite then exercises Vandor Labs state/NBT through those boundaries.
 task testCopyCompatibility(type: Exec) {

@@ -1,4 +1,4 @@
-# Controls, lighting, ramps, furniture, and building blocks
+# Controls, lighting, furniture, and building blocks
 
 ## Lighting and controls
 
@@ -8,16 +8,6 @@ local redstone power; all supported devices can also participate in virtual
 redstone channels.
 
 ![Lighting and control catalog](../images/gallery/systems/lighting-controls.png)
-
-## Ramp and elevator controller
-
-The controller discovers a matching platform, animates it as a ramp or lift,
-locks its travel space, and restores the source blocks when retracted. Its GUI
-configures travel, direction, speed, redstone polarity, and platform selection.
-
-![Extended ramp and controller](../images/gallery/systems/ramp.png)
-
-![Ramp controller configuration](../images/gallery/systems/ramp-controller-config.png)
 
 ## Bridge furniture
 
