@@ -1,0 +1,242 @@
+{
+  "namespace": "scifidoors",
+  "minecraft": "1.12.2",
+  "kind": "additive door expansion",
+  "base_pack_modified": false,
+  "door_types": [
+    "viewport",
+    "laboratory",
+    "cargo",
+    "ventilation"
+  ],
+  "assets": [
+    {
+      "name": "door_viewport",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 1,
+      "window_pixels": 3554,
+      "glass_phase": [
+        240,
+        240
+      ],
+      "reflection_fraction": 0.1064,
+      "amber_button_bounds": [
+        103,
+        111,
+        109,
+        117
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_laboratory",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 2,
+      "window_pixels": 3176,
+      "glass_phase": [
+        192,
+        176
+      ],
+      "reflection_fraction": 0.0831,
+      "amber_button_bounds": [
+        111,
+        126,
+        115,
+        130
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_cargo",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 0,
+      "amber_button_bounds": [
+        90,
+        102,
+        95,
+        107
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_ventilation",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 0,
+      "amber_button_bounds": [
+        113,
+        118,
+        117,
+        123
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_viewport",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 1,
+      "window_pixels": 16324,
+      "glass_phase": [
+        0,
+        320
+      ],
+      "reflection_fraction": 0.1099,
+      "amber_button_bounds": [
+        211,
+        203,
+        222,
+        214
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_laboratory",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 2,
+      "window_pixels": 12411,
+      "glass_phase": [
+        96,
+        64
+      ],
+      "reflection_fraction": 0.1207,
+      "amber_button_bounds": [
+        218,
+        226,
+        227,
+        236
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_cargo",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 0,
+      "amber_button_bounds": [
+        226,
+        203,
+        235,
+        212
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_ventilation",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 0,
+      "amber_button_bounds": [
+        192,
+        230,
+        202,
+        240
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_viewport",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 1,
+      "window_pixels": 49240,
+      "glass_phase": [
+        960,
+        512
+      ],
+      "reflection_fraction": 0.1096,
+      "amber_button_bounds": [
+        392,
+        394,
+        418,
+        420
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_laboratory",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 2,
+      "window_pixels": 47658,
+      "glass_phase": [
+        768,
+        320
+      ],
+      "reflection_fraction": 0.1098,
+      "amber_button_bounds": [
+        404,
+        477,
+        421,
+        498
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_cargo",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 0,
+      "amber_button_bounds": [
+        408,
+        380,
+        430,
+        403
+      ],
+      "right_crop_safe": true
+    },
+    {
+      "name": "door_ventilation",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 0,
+      "amber_button_bounds": [
+        402,
+        468,
+        423,
+        492
+      ],
+      "right_crop_safe": true
+    }
+  ]
+}

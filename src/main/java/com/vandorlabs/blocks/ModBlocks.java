@@ -100,6 +100,7 @@ public class ModBlocks {
             }
             String cls = e.get("class").getAsString();
             Block block = create(cls, e, byId);
+            if (e.has("hidden") && e.get("hidden").getAsBoolean()) block.setCreativeTab(null);
             byId.put(id, block);
             // Paired detailed-door assets retain their authored geometry and
             // motion parameters without registering a redundant block/item.
@@ -201,6 +202,15 @@ public class ModBlocks {
     private static Block create(String cls, JsonObject e, Map<String, Block> byId) {
         String id = e.get("id").getAsString();
         switch (cls) {
+            case "BlockConfigurableSpaceDoor":
+                return new BlockConfigurableSpaceDoor(id,e.get("sliding").getAsBoolean(),
+                        (BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
+            case "BlockSpaceGlass":
+                return new BlockSpaceGlass(id);
+            case "BlockSpaceDoor":
+                return new BlockSpaceDoor(id, e.get("sliding").getAsBoolean(),
+                        e.get("framed").getAsBoolean(),
+                        (BlockDetailedDoor) byId.get(e.get("paired_model").getAsString()));
             case "BlockVandor":
                 return new BlockVandor(id);
             case "BlockCockpitGlass":
@@ -366,6 +376,10 @@ public class ModBlocks {
                         item,
                         0,
                         new ModelResourceLocation(block.getRegistryName(), "inventory"));
+                if (block instanceof BlockConfigurableSpaceDoor) {
+                    registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
+                    continue;
+                }
                 if (block instanceof BlockDetailedDoor) {
                     ModelLoader.setCustomStateMapper(block,
                             new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
@@ -389,9 +403,38 @@ public class ModBlocks {
                                         + ":detailed_doors/" + paired
                                         + "_" + DoorLeaf.RIGHT.modelSuffix,
                                         "inventory"));
+                        if (block instanceof BlockSpaceDoor && ((BlockSpaceDoor) block).hasGlass()) {
+                            for (int meta = 5; meta <= 8; meta++) {
+                                String base = meta >= 7 ? paired : id;
+                                String hand = meta % 2 == 1 ? "left" : "right";
+                                ModelLoader.setCustomModelResourceLocation(item, meta,
+                                        new ModelResourceLocation(VandorLabs.MODID
+                                                + ":detailed_doors/" + base + "_" + hand
+                                                + "_glass", "inventory"));
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerSpaceDoorModels(BlockConfigurableSpaceDoor block,Item item) {
+        ModelLoader.setCustomStateMapper(block,new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
+        String motion=block.isSlidingModel()?"sliding":"rotating";
+        String[] designs=com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS;
+        String[] details=com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS;
+        for (int d=0;d<designs.length;d++) for (int l=0;l<details.length;l++)
+            for (boolean framed:new boolean[]{false,true}) for (boolean paired:new boolean[]{false,true})
+                for (boolean right:new boolean[]{false,true}) for (int part=0;part<3;part++) {
+                    if (part==2 && !com.vandorlabs.tiles.TileEntitySpaceDoor.hasGlassDesign(d)) continue;
+                    String name="space_"+designs[d]+"_"+motion+(framed?"_framed":"_bare")
+                            +(paired?"_paired":"")+(right?"_right_":"_left_")
+                            +(part==0?"fixed":part==1?"leaf":"glass");
+                    int meta=com.vandorlabs.tiles.TileEntitySpaceDoor.metadata(d,l,framed,paired,right,part);
+                    ModelLoader.setCustomModelResourceLocation(item,meta,new ModelResourceLocation(
+                            VandorLabs.MODID+":detailed_doors/"+details[l]+"/"+name,"inventory"));
+                }
     }
 }

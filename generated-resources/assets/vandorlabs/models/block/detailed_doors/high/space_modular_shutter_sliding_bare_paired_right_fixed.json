@@ -1,0 +1,13 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "leaf": "vandorlabs:blocks/space_doors/high/lift_modular_shutter",
+    "frame": "vandorlabs:blocks/space_doors/high/double_frame_metal",
+    "edge": "vandorlabs:blocks/space_doors/high/hinge",
+    "hinge": "vandorlabs:blocks/space_doors/high/hinge",
+    "glass": "vandorlabs:blocks/space_doors/high/observation_glass",
+    "pane": "vandorlabs:blocks/space_doors/high/glass_tile",
+    "particle": "vandorlabs:blocks/space_doors/high/lift_modular_shutter"
+  },
+  "elements": []
+}

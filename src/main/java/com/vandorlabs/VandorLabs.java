@@ -40,6 +40,8 @@ public class VandorLabs {
         proxy.preInit(event);
         logger = event.getModLog();
         GameRegistry.registerTileEntity(TileEntitySlidingDoor.class, "vandorlabs:sliding_door");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceGlass.class, "vandorlabs:space_glass");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:space_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRampController.class, "vandorlabs:ramp_controller");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityControlledRamp.class, "vandorlabs:controlled_ramp");
         GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class, "vandorlabs:animated_screen_selector");

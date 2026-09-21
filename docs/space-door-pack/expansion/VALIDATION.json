@@ -1,0 +1,145 @@
+{
+  "status": "passed",
+  "main_door_textures": 12,
+  "independently_generated_variants": 12,
+  "checks": [
+    {
+      "name": "door_viewport",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 1,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_laboratory",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 2,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_cargo",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 0,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_ventilation",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "transparent_windows": 0,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_viewport",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 1,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_laboratory",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 2,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_cargo",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 0,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_ventilation",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "transparent_windows": 0,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_viewport",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 1,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_laboratory",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 2,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_cargo",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 0,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    },
+    {
+      "name": "door_ventilation",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "transparent_windows": 0,
+      "alpha_valid": true,
+      "controls_crop_safe": true
+    }
+  ],
+  "original_files_verified_unchanged": 198,
+  "resource_name_collisions": 0,
+  "glass_matches_corrected_base_pack": true,
+  "not_performed": [
+    "Minecraft client integration test"
+  ]
+}

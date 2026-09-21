@@ -170,6 +170,15 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         if (key == null) {
             return;
         }
+        if (te instanceof com.vandorlabs.tiles.TileEntitySpaceDoor
+                && state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor) {
+            if (!upper) {
+                float progress=animPose(te.getWorld(),te.getPos(),state.getValue(BlockVandorDoor.OPEN),
+                        te.getWorld().getTotalWorldTime()+partialTicks);
+                renderSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)te,state,facing,progress,x,y,z);
+            }
+            return;
+        }
         if (state.getBlock() instanceof BlockDetailedDoor) {
             if (!upper) {
                 net.minecraft.util.math.BlockPos doorKey = te.getPos();
@@ -315,9 +324,71 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         // lighting on top of the world lightmap, making the animated leaf
         // visibly darker than its shade=false baked frame.
         GlStateManager.disableLighting();
-        renderer.renderItem(leaf, ItemCameraTransforms.TransformType.NONE);
+        if (placedDoor instanceof com.vandorlabs.blocks.BlockSpaceDoor
+                && net.minecraftforge.client.MinecraftForgeClient.getRenderPass() == 1) {
+            // The normal item entry point forces alpha >= 0.1 and loses the
+            // pack's faint reflections. Draw the isolated glass in pass 1.
+            ItemStack glass = new ItemStack(placedDoor, 1, metadata + 4);
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            GlStateManager.color(1, 1, 1, 1);
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003F);
+            GlStateManager.depthMask(false);
+            renderer.renderItem(glass, renderer.getItemModelWithOverrides(glass, te.getWorld(), null));
+            GlStateManager.depthMask(true);
+            GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
+            GlStateManager.disableBlend();
+        } else {
+            renderer.renderItem(leaf, ItemCameraTransforms.TransformType.NONE);
+        }
         GlStateManager.enableLighting();
         GlStateManager.popMatrix();
+    }
+
+    private static void renderSpaceDoor(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
+            EnumFacing facing,float progress,double x,double y,double z) {
+        boolean sliding=((BlockDetailedDoor)state.getBlock()).isSlidingModel();
+        BlockDetailedDoor motion=tile.model(sliding).getVisualModel(state);
+        boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);
+        boolean right=state.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.LEFT;
+        boolean glass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
+        if (glass && !tile.hasGlass()) return;
+        RenderItem renderer=Minecraft.getMinecraft().getRenderItem();
+        int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
+        for (int part=glass?2:0;part<=(glass?2:1);part++) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(x,y,z);
+            orientDetailedDoor(facing);
+            if (!sliding && tile.isMiddle())
+                GlStateManager.translate(0,0,com.vandorlabs.tiles.TileEntitySpaceDoor.MIDDLE_OFFSET);
+            if (part!=0) {
+                if (sliding && tile.getSlideDirection()!=0)
+                    GlStateManager.translate(0,tile.verticalTravel()*progress,0);
+                else moveDetailedDoorLeaf(motion,right,progress);
+            }
+            GlStateManager.translate(.5,.5,.5);
+            GlStateManager.disableLighting();
+            ItemStack item=new ItemStack(state.getBlock(),1,tile.metadata(paired,right,part));
+            if (glass) {
+                Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                GlStateManager.color(1,1,1,1);
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
+                GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
+                GlStateManager.depthMask(false);
+                renderer.renderItem(item,renderer.getItemModelWithOverrides(item,tile.getWorld(),null));
+                GlStateManager.depthMask(true);
+                GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
+                GlStateManager.disableBlend();
+            } else renderer.renderItem(item,ItemCameraTransforms.TransformType.NONE);
+            GlStateManager.enableLighting();
+            GlStateManager.popMatrix();
+        }
     }
 
     private static void orientDetailedDoor(EnumFacing facing) {

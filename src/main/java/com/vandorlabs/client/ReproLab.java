@@ -277,6 +277,19 @@ public class ReproLab {
                 -28.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("gallery_doors_sliding", GALLERY_X, galleryFeet,
                 -28.0D, 0.0F, 0.0F));
+        for (String motion : new String[]{"sliding", "rotating"}) {
+            for (String trim : new String[]{"bare", "framed"}) {
+                for (String pose : new String[]{"closed", "open"}) {
+                    SHOTS.add(new Shot("gallery_space_" + motion + "_" + trim + "_" + pose,
+                            GALLERY_X, galleryFeet, -31.0D, 0, 0));
+                }
+            }
+        }
+        SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
+        for (String pose : new String[]{"closed","open"}) {
+            SHOTS.add(new Shot("gallery_space_hinges_"+pose,
+                    GALLERY_X-2.5D,galleryFeet+.4D,-21,-36,5));
+        }
         SHOTS.add(new Shot("gallery_chairs", GALLERY_X, galleryFeet + 0.4D,
                 -27.0D, 0.0F, 4.0F));
         for (String direction : new String[] {"up", "down"}) {
@@ -741,11 +754,11 @@ public class ReproLab {
         for (Entity entity : new ArrayList<Entity>(world.loadedEntityList)) {
             if (!(entity instanceof EntityPlayer)) entity.setDead();
         }
-        BlockPos.getAllInBox(new BlockPos(GALLERY_X - 11, GALLERY_Y, -22),
-                new BlockPos(GALLERY_X + 11, GALLERY_Y + 9, -14))
+        BlockPos.getAllInBox(new BlockPos(GALLERY_X - 14, GALLERY_Y, -22),
+                new BlockPos(GALLERY_X + 14, GALLERY_Y + 9, -14))
                 .forEach(world::setBlockToAir);
-        BlockPos.getAllInBox(new BlockPos(GALLERY_X - 11, GALLERY_Y - 1, -22),
-                new BlockPos(GALLERY_X + 11, GALLERY_Y - 1, -14))
+        BlockPos.getAllInBox(new BlockPos(GALLERY_X - 14, GALLERY_Y - 1, -22),
+                new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
         if (shot.equals("gallery_programmable_displays")) {
@@ -868,6 +881,32 @@ public class ReproLab {
             placeDetailedDoorRow(world, "rotating");
         } else if (shot.equals("gallery_doors_sliding")) {
             placeDetailedDoorRow(world, "sliding");
+        } else if (shot.equals("gallery_space_glass")) {
+            for (int x=0; x<3; x++) for (int y=0; y<2; y++) {
+                if (x==2 && y==1) continue;
+                world.setBlockState(new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18),
+                        block("space_glass").getDefaultState(),3);
+            }
+        } else if (shot.startsWith("gallery_space_hinges_")) {
+            for (int i=0;i<3;i++) {
+                BlockPos p=new BlockPos(GALLERY_X-1+(i==2?3:i),GALLERY_Y,-18);
+                placeDoor(world,p,i==2?"space_standard_rotating_bare":"space_standard_rotating_framed",
+                        shot.endsWith("_open"));
+                setDoorHinge(world,p,i==1?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT);
+            }
+        } else if (shot.startsWith("gallery_space_")) {
+            String[] bits=shot.split("_");
+            int index=0;
+            for (String family : new String[]{"observation","airlock","standard","security","reactor"}) {
+                String id="space_"+family+"_"+bits[2]+"_"+bits[3];
+                int x=GALLERY_X-11+index++*5;
+                for (int column : new int[]{0,1,3}) {
+                    BlockPos p=new BlockPos(x+column,GALLERY_Y,-18);
+                    placeDoor(world,p,id,shot.endsWith("_open"));
+                    setDoorHinge(world,p,column==1 ? BlockDoor.EnumHingePosition.RIGHT
+                            : BlockDoor.EnumHingePosition.LEFT);
+                }
+            }
         } else if (shot.equals("gallery_chairs")) {
             String[] chairs = {"bridge_chair_simple_command",
                     "bridge_chair_simple_companion", "bridge_chair_simple_operator",

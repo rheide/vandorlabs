@@ -22,9 +22,15 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_ANIMATED_SCREEN_SELECTOR = 0;
     public static final int GUI_RAMP_CONTROLLER = 1;
     public static final int GUI_REDSTONE_CHANNEL = 2;
+    public static final int GUI_SPACE_DOOR = 3;
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID==GUI_SPACE_DOOR) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
+                return new com.vandorlabs.container.ContainerSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)tile);
+        }
         if (ID == GUI_REDSTONE_CHANNEL) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
             if (te instanceof RedstoneChannelMember)
@@ -46,6 +52,11 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID==GUI_SPACE_DOOR) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
+                return new com.vandorlabs.client.GuiSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)tile);
+        }
         if (ID == GUI_REDSTONE_CHANNEL) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
             if (te instanceof RedstoneChannelMember)

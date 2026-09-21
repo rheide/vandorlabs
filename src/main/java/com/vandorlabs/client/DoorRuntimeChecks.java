@@ -48,6 +48,7 @@ final class DoorRuntimeChecks {
         checkPlacement(world, player, origin, hingedA, hingedB, sliding);
         checkMotionPairMatrix(world, player, origin);
         checkConnectingDetailedDoors(world, origin);
+        checkSpaceDoors(world, player, origin);
         checkRedstoneEdges(world, player, origin, hingedA);
         checkBreakPair(world, origin, hingedA);
         clear(world, origin);
@@ -220,6 +221,47 @@ final class DoorRuntimeChecks {
                 }
             }
         }
+    }
+
+    private static void checkSpaceDoors(World world, EntityPlayer player, BlockPos pos) {
+        int count = 0;
+        for (BlockVandorDoor raw : allDoors()) {
+            if (!(raw instanceof com.vandorlabs.blocks.BlockSpaceDoor)) continue;
+            count++;
+            com.vandorlabs.blocks.BlockSpaceDoor door =
+                    (com.vandorlabs.blocks.BlockSpaceDoor) raw;
+            require(door.getPivot(false) == 2.5F && door.getPivot(true) == 13.5F
+                    && door.getPivotZ() == 13.5F, "Space pin axis differs from mesh");
+            if (door.isSlidingModel() && door.getRegistryName().getResourcePath().endsWith("_bare")) {
+                require(door.getSlide(false) == -15 && door.getSlide(true) == 15,
+                        "bare slider must retain a one-pixel reveal");
+            }
+            for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+                BlockPos mate = pos.offset(facing.rotateY());
+                clear(world, pos); clear(world, mate);
+                place(world, pos, door, facing, BlockDoor.EnumHingePosition.LEFT);
+                require(!door.getActualState(world.getBlockState(pos), world, pos)
+                        .getValue(BlockConnectingDetailedDoor.PAIRED), "Space door paired alone");
+                place(world, mate, door, facing, BlockDoor.EnumHingePosition.RIGHT);
+                for (BlockPos p : new BlockPos[]{pos, mate, pos.up(), mate.up()}) {
+                    require(door.getActualState(world.getBlockState(p), world, p)
+                            .getValue(BlockConnectingDetailedDoor.PAIRED), "Space pair missing: " + p);
+                }
+                player.setSneaking(false);
+                door.onBlockActivated(world, pos, world.getBlockState(pos), player,
+                        EnumHand.MAIN_HAND, facing, .5F, .5F, .5F);
+                require(world.getBlockState(mate).getValue(BlockVandorDoor.OPEN),
+                        "Space mate did not open");
+                AxisAlignedBB bounds=door.getBoundingBox(world.getBlockState(pos),world,pos);
+                require(bounds.minX>=0 && bounds.maxX<=1 && bounds.minZ>=0 && bounds.maxZ<=1,
+                        "open Space door bounds spill into neighboring block");
+                clear(world, mate);
+                require(!door.getActualState(world.getBlockState(pos), world, pos)
+                        .getValue(BlockConnectingDetailedDoor.PAIRED), "Space pair did not revert");
+                clear(world, pos);
+            }
+        }
+        require(count == 22, "expected 20 legacy IDs and two configurable Space doors, got " + count);
     }
 
     private static void checkDetailedBounds(World world, BlockPos pos,

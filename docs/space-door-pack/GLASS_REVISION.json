@@ -1,0 +1,82 @@
+{
+  "revision": 2,
+  "method": "Built-in image generation for each independent glass LOD; deterministic registration and RGBA compositing preserve original metalwork.",
+  "changes": [
+    "Transparent Observation portholes using the same shared glass tile as the frame.",
+    "Distributed borderless repeating glass, not corner-only glints."
+  ],
+  "levels": [
+    {
+      "lod": "low",
+      "tile_size": [
+        256,
+        256
+      ],
+      "frame_interior_size": [
+        240,
+        240
+      ],
+      "window_texture_size": [
+        128,
+        256
+      ],
+      "window_mask_pixels": 3278,
+      "window_glint_fraction": 0.0866,
+      "window_tile_phase": [
+        144,
+        72
+      ],
+      "max_alpha": 51,
+      "clear_gutter_px": 2,
+      "prompt": "Use case: precise-object-edit. The supplied image is the existing low LOD industrial Minecraft window frame; use its cyan translucent glass treatment as the material reference. Produce ONLY the revised BORDERLESS GLASS MATERIAL TEXTURE for it. Remove ALL gray rails, screws, corner blocks and borders. Redistribute the glass shimmer across the WHOLE square tile, including the center and middle of all four quadrants. No concentration at corners. Genuine transparent RGBA PNG: 85-90% clear invisible glass, with sparse faint translucent pale-cyan pixel-stepped diagonal reflection strokes, alpha about 12-20% in reflection strokes, completely clear elsewhere. This is glass viewed through, never an opaque cyan panel or a checkerboard background. Make a seamless repeatable surface in both X and Y, equally usable as a standalone glass pane or inside an observation door porthole. NO border, NO frame, NO corner highlights, NO shadows, NO blue backdrop, NO labels, NO star sparkles, NO noise. Reflective strokes should be widely and evenly distributed, each short bold 45-degree slash or pair of slashes, all oriented bottom-left to top-right, spacious gaps. Serious restrained blocky pixel art. Requested 256x256. Low detail: 8-12 simple chunky reflection strokes, 2 shade values. Independently draw this LOD. Keep a small transparent gutter at the outer edge so repeating tiles meet without visible borders."
+    },
+    {
+      "lod": "medium",
+      "tile_size": [
+        512,
+        512
+      ],
+      "frame_interior_size": [
+        480,
+        480
+      ],
+      "window_texture_size": [
+        256,
+        512
+      ],
+      "window_mask_pixels": 12012,
+      "window_glint_fraction": 0.1207,
+      "window_tile_phase": [
+        80,
+        48
+      ],
+      "max_alpha": 48,
+      "clear_gutter_px": 4,
+      "prompt": "Use case: precise-object-edit. The supplied image is the existing medium LOD industrial Minecraft window frame; use its cyan translucent glass treatment as the material reference. Produce ONLY the revised BORDERLESS GLASS MATERIAL TEXTURE for it. Remove ALL gray rails, screws, corner blocks and borders. Redistribute the glass shimmer across the WHOLE square tile, including the center and middle of all four quadrants. No concentration at corners. Genuine transparent RGBA PNG: 85-90% clear invisible glass, with sparse faint translucent pale-cyan pixel-stepped diagonal reflection strokes, alpha about 12-20% in reflection strokes, completely clear elsewhere. This is glass viewed through, never an opaque cyan panel or a checkerboard background. Make a seamless repeatable surface in both X and Y, equally usable as a standalone glass pane or inside an observation door porthole. NO border, NO frame, NO corner highlights, NO shadows, NO blue backdrop, NO labels, NO star sparkles, NO noise. Reflective strokes should be widely and evenly distributed, each short bold 45-degree slash or pair of slashes, all oriented bottom-left to top-right, spacious gaps. Serious restrained blocky pixel art. Requested 512x512. Medium detail: 10-14 broad stepped reflection strokes, some paired, 3 shade values. Independently draw this LOD. Keep a small transparent gutter at the outer edge so repeating tiles meet without visible borders."
+    },
+    {
+      "lod": "high",
+      "tile_size": [
+        1024,
+        1024
+      ],
+      "frame_interior_size": [
+        960,
+        960
+      ],
+      "window_texture_size": [
+        512,
+        1024
+      ],
+      "window_mask_pixels": 50150,
+      "window_glint_fraction": 0.12,
+      "window_tile_phase": [
+        256,
+        0
+      ],
+      "max_alpha": 47,
+      "clear_gutter_px": 8,
+      "prompt": "Use case: precise-object-edit. The supplied image is the existing high LOD industrial Minecraft window frame; use its cyan translucent glass treatment as the material reference. Produce ONLY the revised BORDERLESS GLASS MATERIAL TEXTURE for it. Remove ALL gray rails, screws, corner blocks and borders. Redistribute the glass shimmer across the WHOLE square tile, including the center and middle of all four quadrants. No concentration at corners. Genuine transparent RGBA PNG: 85-90% clear invisible glass, with sparse faint translucent pale-cyan pixel-stepped diagonal reflection strokes, alpha about 12-20% in reflection strokes, completely clear elsewhere. This is glass viewed through, never an opaque cyan panel or a checkerboard background. Make a seamless repeatable surface in both X and Y, equally usable as a standalone glass pane or inside an observation door porthole. NO border, NO frame, NO corner highlights, NO shadows, NO blue backdrop, NO labels, NO star sparkles, NO noise. Reflective strokes should be widely and evenly distributed, each short bold 45-degree slash or pair of slashes, all oriented bottom-left to top-right, spacious gaps. Serious restrained blocky pixel art. Requested 1024x1024. High detail: 12-16 restrained chunky reflection pairs, 3-4 shade values, never fine grain. Independently draw this LOD. Keep a small transparent gutter at the outer edge so repeating tiles meet without visible borders."
+    }
+  ]
+}

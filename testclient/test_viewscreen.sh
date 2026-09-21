@@ -22,6 +22,7 @@ if [[ "${VANDOR_LABS_TEXTURE_VARIANT:-default}" == "original" ]]; then
     ANALYZE_ARGS=("$RUN_OUT")
 fi
 python3 testclient/analyze_viewscreen.py "${ANALYZE_ARGS[@]}"
+python3 testclient/analyze_space_doors.py "$RUN_OUT"
 grep -q '\[vandorlabs\]\[reprolab\] door-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: live door state, pairing, and collision contracts"
 grep -q '\[vandorlabs\]\[reprolab\] redstone-channel-runtime PASS' "$RUN_OUT/client.log"

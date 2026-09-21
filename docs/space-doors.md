@@ -1,0 +1,84 @@
+# Space doors and glass
+
+The Space family is independent of the Detailed doors. The creative menu has
+two door items: Space Rotating Door and Space Sliding Door. Shift-right-click
+either half to choose the design, Small/Medium/Large texture detail, framed/bare
+appearance, and redstone channel. Click Done to apply. Choices are saved in the
+lower tile entity and synchronized by the server. Configuring a pair applies
+to both leaves; a newly placed matching mate inherits the existing appearance.
+Sliding doors also offer Sideways / Up / Down motion. Vertical travel is 31/16
+block: framed leaves retract one pixel beyond the inner frame edge, while bare
+leaves preserve their one-pixel open-edge reveal. Sideways travel is 15/16 for
+single framed leaves and 16/16 for paired framed leaves; bare leaves retain 15/16.
+Frames remain fixed and glazed panes move with their leaf. The renderer's
+bounds cover the full vertical travel; the tile still has no tick loop.
+Rotating doors offer Edge (default) / Middle placement. Middle shifts the whole
+assembly inward by 5.24/16 block, including the frame, pins and collision bounds;
+it does not change the leaf's pivot relative to its frame. A middle-positioned
+open leaf can naturally extend beyond the back of the door block during its swing.
+
+Fifteen designs are available: Observation, Airlock, Standard, Security, Reactor
+Service, Viewport, Laboratory, Cargo, Ventilation, Cargo Lift, Blast Shield,
+Glazed Hangar, Quarantine Seal, Reactor Barrier and Modular Shutter. Observation,
+Viewport, Laboratory and Glazed Hangar retain their translucent windows.
+Select Up on the sliding block for lift-style motion; selecting artwork does not
+override the current motion setting. All designs also support rotating doors.
+Modular Shutter uses the existing door/pair sizes, not arbitrary-sized assemblies.
+Place matching motion types with
+outer hinges to join them; the inner frame rails disappear. Breaking either
+restores the standalone frame. The previous twenty block IDs are hidden from
+creative but remain registered to preserve old worlds and inventories. Existing
+legacy doors remain fixed-design; use the new two items for the selector.
+
+Assets come from `scifi_industrial_door_pack_v2.zip`,
+`scifi_industrial_door_expansion.zip` and `scifi_industrial_lift_doors.zip`.
+Medium detail is the new-door default:
+256x512 door leaves, 512x512 frame and repeating glass, 64x64 hinge atlas.
+All three independently authored sets are preserved unchanged under
+`texture-packs/space-doors/{low,medium,high}`. Door sizes are respectively
+128x256, 256x512 and 512x1024. All three sets ship together and are selectable
+per door without rebuilding. `--detail` on the importer changes only the legacy
+fixed-design artwork and item defaults. It does not remove the selectable sets.
+Framed geometry crops UVs at the native texel density. It never rescales or
+rewrites a PNG. Rails use nine-slice sampling of the supplied square frame.
+Right leaves mirror the same texture; there are no separate double-door textures.
+The client uses custom atlas sprites because vanilla 1.12 assumes non-animated
+sprites are square. Native pixels occupy square atlas slots with edge padding;
+UV accessors expose only the original rectangle. PNGs are never resized.
+Glass mipmaps preserve low alpha instead of using vanilla's cutout threshold.
+Texture reloads use the same loader.
+
+Rotating leaves occupy the player-facing block edge, like Detailed doors.
+Hinges mount on the interior rebate, with their shared pin axis at X=2.5/Z=13.5
+(mirrored X=13.5 on the right). The inset keeps the open leaf inside its own block.
+A 0.26-model-pixel free-edge clearance prevents the corner clipping the opposite
+jamb during its circular sweep; artwork is cropped, never stretched.
+Fixed mounts/pins stay stationary. Hinges sit at heights 6/16 and 26/16.
+Bare sliders travel 15/16 block, retaining a one-model-pixel reveal when open.
+Door and Space Glass frames are 4.45/16 block deep, matching Detailed Engineering.
+Rotating leaf bodies are also 4.45/16 block deep, with a narrower hinge-edge
+rebate to clear the jamb. Sliding leaves are 4.25/16 deep for track clearance.
+Their supplied one-model-pixel border width stays unchanged. Sliding models have no hinges.
+Observation metal and glass use separate opaque/cutout and translucent passes.
+
+Space Glass uses the existing connection rules, including inner corners and
+both wall orientations. Its metal frame is solid-pass geometry. A non-ticking
+tile draws the repeating glass in the translucent pass with the pack's faint
+alpha preserved. Glass has a per-visible-block render call but no server ticks.
+Doors reuse existing animation and channel handling; pairing examines only
+immediate neighbors, with no world scans or added ticking logic.
+
+`tools/import_space_doors.py <zip> --expansion <expansion.zip> --lift <lift.zip> --detail medium` refreshes all three source
+sets and regenerates the selected runtime assets. Pack instructions are archived in
+`docs/space-door-pack/`. `tools/test_space_doors.py [zip]` checks density,
+frame seams, hinge separation and optionally exact texture byte preservation.
+The ReproLab retains the legacy door galleries and an L-shaped glass fixture.
+The configurable menu has not been verified in a live client in this revision;
+the requested test build skips the slow in-game overview. Offline checks cover
+all design/detail model references and hinge clearance at every integer angle.
+Dynmap has static simplified door/glass fallbacks, not animated joined geometry.
+
+The original medium frame artwork contains noisy pixels near its borders and
+residual cyan glow inside `double_frame_metal.png`; source PNGs are retained
+byte-for-byte. An additional importer artifact used to come from sampling the
+hinge atlas on extruded frame sides. Those sides now sample the frame material.

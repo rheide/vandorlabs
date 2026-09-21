@@ -50,7 +50,7 @@ public class GuiRedstoneChannel extends GuiContainer {
                 212, 20, "Done"));
     }
 
-    private int channel() {
+    protected int channel() {
         try {
             long value = Long.parseLong(channelField.getText());
             return value > Integer.MAX_VALUE ? -1 : (int) value;
@@ -59,7 +59,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
-    private void submit() {
+    protected void submit() {
         int value = channel();
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,

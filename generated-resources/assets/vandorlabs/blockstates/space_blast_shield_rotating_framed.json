@@ -1,0 +1,196 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "facing": "south",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_left_fixed",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_left_fixed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_left_fixed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_left_fixed",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_right_fixed",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_right_fixed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_right_fixed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_right_fixed",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_left_fixed",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_left_fixed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_left_fixed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "half": "lower",
+        "hinge": "right",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_left_fixed",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_right_fixed",
+        "y": 0
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_right_fixed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_right_fixed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "half": "lower",
+        "hinge": "left",
+        "paired": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:detailed_doors/space_blast_shield_rotating_framed_paired_right_fixed",
+        "y": 270
+      }
+    }
+  ]
+}

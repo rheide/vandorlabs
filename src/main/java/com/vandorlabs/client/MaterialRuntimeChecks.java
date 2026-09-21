@@ -34,6 +34,10 @@ final class MaterialRuntimeChecks {
                     id + " vertical state does not survive metadata");
         }
         checkGlassPlacement(player);
+        BlockGlassWall space = (BlockGlassWall) Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "space_glass"));
+        checkGlassConnections(player,space,new BlockPos(24,4,24),false,EnumFacing.EAST);
+        checkGlassConnections(player,space,new BlockPos(24,4,24),true,EnumFacing.SOUTH);
         System.out.println("[vandorlabs][reprolab] material-runtime PASS");
     }
 

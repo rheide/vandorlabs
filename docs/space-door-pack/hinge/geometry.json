@@ -1,0 +1,115 @@
+{
+  "units": "1/16 Minecraft block",
+  "pivot": [
+    0,
+    0,
+    1
+  ],
+  "cuboids": [
+    {
+      "name": "frame_mount",
+      "part": "fixed",
+      "from": [
+        -1.5,
+        -2.5,
+        0
+      ],
+      "to": [
+        0,
+        2.5,
+        0.5
+      ],
+      "material_tile": 0
+    },
+    {
+      "name": "pin",
+      "part": "fixed",
+      "from": [
+        -0.35,
+        -3,
+        0.65
+      ],
+      "to": [
+        0.35,
+        3,
+        1.35
+      ],
+      "material_tile": 1
+    },
+    {
+      "name": "upper_cap",
+      "part": "fixed",
+      "from": [
+        -0.75,
+        1.85,
+        0.25
+      ],
+      "to": [
+        0.75,
+        2.6,
+        1.75
+      ],
+      "material_tile": 2
+    },
+    {
+      "name": "lower_cap",
+      "part": "fixed",
+      "from": [
+        -0.75,
+        -2.6,
+        0.25
+      ],
+      "to": [
+        0.75,
+        -1.85,
+        1.75
+      ],
+      "material_tile": 2
+    },
+    {
+      "name": "door_mount",
+      "part": "moving",
+      "from": [
+        0,
+        -1.65,
+        0
+      ],
+      "to": [
+        2.5,
+        1.65,
+        0.5
+      ],
+      "material_tile": 0
+    },
+    {
+      "name": "rotating_sleeve",
+      "part": "moving",
+      "from": [
+        -0.65,
+        -1.75,
+        0.35
+      ],
+      "to": [
+        0.65,
+        1.75,
+        1.65
+      ],
+      "material_tile": 1
+    },
+    {
+      "name": "cyan_inset",
+      "part": "moving",
+      "from": [
+        -0.25,
+        -1.25,
+        1.65
+      ],
+      "to": [
+        0.25,
+        1.25,
+        1.7
+      ],
+      "material_tile": 3
+    }
+  ]
+}

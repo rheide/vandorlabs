@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 public class ClientProxy extends CommonProxy {
     @Override public void preInit(FMLPreInitializationEvent event) {
         OBJLoader.INSTANCE.addDomain(VandorLabs.MODID);
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.SpaceDoorTextures());
     }
 
     @Override public void spawnThrusterParticle(World world, BlockPos pos,
@@ -51,6 +52,9 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class,
                 RenderChairSeat::new);
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntitySlidingDoor.class, new TESlidingDoor());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntitySpaceDoor.class, new TESlidingDoor());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntitySpaceGlass.class,
+                new com.vandorlabs.client.TESpaceGlass());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityControlledRamp.class, new TEControlledRamp());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityAnimatedScreenSelector.class, new TEAnimatedScreenSelector());
         if (System.getProperty("vandorlabs.reprolab") != null) {

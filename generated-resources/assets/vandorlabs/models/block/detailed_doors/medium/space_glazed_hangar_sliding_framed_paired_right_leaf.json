@@ -1,0 +1,83 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "leaf": "vandorlabs:blocks/space_doors/medium/lift_glazed_hangar_metal",
+    "frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "edge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "glass": "vandorlabs:blocks/space_doors/medium/lift_glazed_hangar_glass",
+    "pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
+    "particle": "vandorlabs:blocks/space_doors/medium/lift_glazed_hangar_metal"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        1,
+        6.1
+      ],
+      "to": [
+        15,
+        31,
+        10.35
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#leaf",
+          "uv": [
+            1,
+            0.5,
+            16,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#leaf",
+          "uv": [
+            16,
+            0.5,
+            1,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "down": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    }
+  ]
+}

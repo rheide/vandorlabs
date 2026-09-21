@@ -408,12 +408,16 @@ public class BlockVandorDoor extends BlockVandorDirectional {
         }
         BlockVandorDoor door = (BlockVandorDoor) lower.getBlock();
         IBlockState upper = world.getBlockState(candidate.up());
-        if (door.motion != motion || upper.getBlock() != door
+        if (!canPairWith(door) || !door.canPairWith(this) || upper.getBlock() != door
                 || upper.getValue(HALF) != BlockDoor.EnumDoorHalf.UPPER
                 || lower.getValue(FACING) != facing) {
             return null;
         }
         return door;
+    }
+
+    protected boolean canPairWith(BlockVandorDoor other) {
+        return other.motion == motion;
     }
 
     @Override

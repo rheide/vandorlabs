@@ -105,6 +105,15 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         BlockPos pos = getPos();
-        return new AxisAlignedBB(pos.add(-1, 0, -1), pos.add(2, 1, 2));
+        return new AxisAlignedBB(pos.add(-1, 0, -1), pos.add(2, 2, 2));
+    }
+
+    @Override
+    public boolean shouldRenderInPass(int pass) {
+        if (pass == 0) return true;
+        if (pass != 1 || world == null) return false;
+        net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
+        return block instanceof com.vandorlabs.blocks.BlockSpaceDoor
+                && ((com.vandorlabs.blocks.BlockSpaceDoor) block).hasGlass();
     }
 }

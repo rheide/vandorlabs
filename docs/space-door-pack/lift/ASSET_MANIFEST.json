@@ -1,0 +1,278 @@
+{
+  "namespace": "scifidoors",
+  "door_types": 6,
+  "main_textures": 18,
+  "frame_included": false,
+  "existing_packs_modified": false,
+  "frame_overlap_fraction_each_edge": 0.0625,
+  "native_leaf_aspect_ratio": "1:2",
+  "assets": [
+    {
+      "id": "cargo_lift",
+      "title": "Cargo Lift",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "file": "low/assets/scifidoors/textures/blocks/lift_cargo_lift.png",
+      "atlas_source_column": 0,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "cargo_lift",
+      "title": "Cargo Lift",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "file": "medium/assets/scifidoors/textures/blocks/lift_cargo_lift.png",
+      "atlas_source_column": 1,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "cargo_lift",
+      "title": "Cargo Lift",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "file": "high/assets/scifidoors/textures/blocks/lift_cargo_lift.png",
+      "atlas_source_column": 2,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "blast_shield",
+      "title": "Blast Shield",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "file": "low/assets/scifidoors/textures/blocks/lift_blast_shield.png",
+      "atlas_source_column": 0,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "blast_shield",
+      "title": "Blast Shield",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "file": "medium/assets/scifidoors/textures/blocks/lift_blast_shield.png",
+      "atlas_source_column": 1,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "blast_shield",
+      "title": "Blast Shield",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "file": "high/assets/scifidoors/textures/blocks/lift_blast_shield.png",
+      "atlas_source_column": 2,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "glazed_hangar",
+      "title": "Glazed Hangar",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "file": "low/assets/scifidoors/textures/blocks/lift_glazed_hangar.png",
+      "atlas_source_column": 0,
+      "tileable_xy": false,
+      "alpha_window": true,
+      "window_bounds": [
+        14,
+        51,
+        112,
+        90
+      ],
+      "reflection_fraction": 0.11028659160696008,
+      "glass_phase": [
+        192,
+        64
+      ]
+    },
+    {
+      "id": "glazed_hangar",
+      "title": "Glazed Hangar",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "file": "medium/assets/scifidoors/textures/blocks/lift_glazed_hangar.png",
+      "atlas_source_column": 1,
+      "tileable_xy": false,
+      "alpha_window": true,
+      "window_bounds": [
+        29,
+        101,
+        226,
+        182
+      ],
+      "reflection_fraction": 0.12100356628918225,
+      "glass_phase": [
+        384,
+        448
+      ]
+    },
+    {
+      "id": "glazed_hangar",
+      "title": "Glazed Hangar",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "file": "high/assets/scifidoors/textures/blocks/lift_glazed_hangar.png",
+      "atlas_source_column": 2,
+      "tileable_xy": false,
+      "alpha_window": true,
+      "window_bounds": [
+        63,
+        203,
+        456,
+        365
+      ],
+      "reflection_fraction": 0.1272207570708905,
+      "glass_phase": [
+        832,
+        192
+      ]
+    },
+    {
+      "id": "quarantine_seal",
+      "title": "Quarantine Seal",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "file": "low/assets/scifidoors/textures/blocks/lift_quarantine_seal.png",
+      "atlas_source_column": 0,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "quarantine_seal",
+      "title": "Quarantine Seal",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "file": "medium/assets/scifidoors/textures/blocks/lift_quarantine_seal.png",
+      "atlas_source_column": 1,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "quarantine_seal",
+      "title": "Quarantine Seal",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "file": "high/assets/scifidoors/textures/blocks/lift_quarantine_seal.png",
+      "atlas_source_column": 2,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "reactor_barrier",
+      "title": "Reactor Barrier",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "file": "low/assets/scifidoors/textures/blocks/lift_reactor_barrier.png",
+      "atlas_source_column": 0,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "reactor_barrier",
+      "title": "Reactor Barrier",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "file": "medium/assets/scifidoors/textures/blocks/lift_reactor_barrier.png",
+      "atlas_source_column": 1,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "reactor_barrier",
+      "title": "Reactor Barrier",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "file": "high/assets/scifidoors/textures/blocks/lift_reactor_barrier.png",
+      "atlas_source_column": 2,
+      "tileable_xy": false,
+      "alpha_window": false
+    },
+    {
+      "id": "modular_shutter",
+      "title": "Modular Shutter",
+      "lod": "low",
+      "size": [
+        128,
+        256
+      ],
+      "file": "low/assets/scifidoors/textures/blocks/lift_modular_shutter.png",
+      "atlas_source_column": 0,
+      "tileable_xy": true,
+      "alpha_window": false
+    },
+    {
+      "id": "modular_shutter",
+      "title": "Modular Shutter",
+      "lod": "medium",
+      "size": [
+        256,
+        512
+      ],
+      "file": "medium/assets/scifidoors/textures/blocks/lift_modular_shutter.png",
+      "atlas_source_column": 1,
+      "tileable_xy": true,
+      "alpha_window": false
+    },
+    {
+      "id": "modular_shutter",
+      "title": "Modular Shutter",
+      "lod": "high",
+      "size": [
+        512,
+        1024
+      ],
+      "file": "high/assets/scifidoors/textures/blocks/lift_modular_shutter.png",
+      "atlas_source_column": 2,
+      "tileable_xy": true,
+      "alpha_window": false
+    }
+  ]
+}

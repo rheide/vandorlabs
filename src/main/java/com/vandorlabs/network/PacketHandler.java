@@ -15,5 +15,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageRampController.Handler.class, MessageRampController.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessagePlatformMotion.Handler.class, MessagePlatformMotion.class, id++, Side.CLIENT);
         INSTANCE.registerMessage(MessageRedstoneChannel.Handler.class, MessageRedstoneChannel.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageSpaceDoor.Handler.class, MessageSpaceDoor.class, id++, Side.SERVER);
     }
 }

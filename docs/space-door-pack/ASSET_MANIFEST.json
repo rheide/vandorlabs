@@ -1,0 +1,73 @@
+{
+  "namespace": "scifidoors",
+  "minecraft": "1.12.2",
+  "door_types": [
+    "observation",
+    "airlock",
+    "standard",
+    "security",
+    "reactor"
+  ],
+  "levels": {
+    "low": {
+      "door": [
+        128,
+        256
+      ],
+      "frame": [
+        256,
+        256
+      ],
+      "hinge": [
+        32,
+        32
+      ],
+      "frame_rail_px": 8
+    },
+    "medium": {
+      "door": [
+        256,
+        512
+      ],
+      "frame": [
+        512,
+        512
+      ],
+      "hinge": [
+        64,
+        64
+      ],
+      "frame_rail_px": 16
+    },
+    "high": {
+      "door": [
+        512,
+        1024
+      ],
+      "frame": [
+        1024,
+        1024
+      ],
+      "hinge": [
+        128,
+        128
+      ],
+      "frame_rail_px": 32
+    }
+  },
+  "hinge_cuboids": 7,
+  "hinge_quads": 42,
+  "hinge_triangles": 84,
+  "alpha": "Observation porthole and all glass layers transparent with subtle translucent shimmer; all metal and other doors opaque.",
+  "lod_authoring": "Each door/frame LOD independently image-generated; each source separately sampled to exact target size with nearest-neighbor export. No LOD is derived from another LOD. Hinge atlases authored natively at each size.",
+  "revision": 2,
+  "glass_repeat_assets": [
+    "glass_tile.png",
+    "glass_interior.png"
+  ],
+  "observation_render_layers": [
+    "observation_metal.png",
+    "observation_glass.png",
+    "observation_window_mask.png"
+  ]
+}
