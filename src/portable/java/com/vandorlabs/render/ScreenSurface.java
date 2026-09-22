@@ -16,7 +16,9 @@ public final class ScreenSurface {
     }
     private static final Quad FLAT=new Quad(0,16,0,-.1,16,-.1);
     private static final Quad CONSOLE=new Quad(.5,15.5,1.46,7.70,15.59,14.75);
-    private static final Quad DIAGONAL=new Quad(.5,15.5,4.25,4.0,15.85,14.75);
+    // The floor housing's diagonal is y=z from (1,1) to (15,15).
+    // Keep the whole image 0.35px in front of that plane, including both ends.
+    private static final Quad DIAGONAL=new Quad(.5,15.5,4.25,3.9,14.85,14.5);
     // The inverted face needs a little more clearance from the housing than
     // the old 0.1px gap; at oblique angles its background z-fought the image.
     private static final Quad DIAGONAL_INVERTED=new Quad(.5,15.5,1.15,14.5,11.75,3.9);

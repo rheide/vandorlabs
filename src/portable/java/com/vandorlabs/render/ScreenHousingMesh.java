@@ -53,7 +53,7 @@ public final class ScreenHousingMesh {
                 quad(0,15,0,16,15,0,16,16,0,0,16,0,0,15,16,16),
                 // Leave the screen aperture open. A full sloped wall behind
                 // the image could win the depth test as the camera moved.
-                invertedSlope(0,16,15,11.75),
+                invertedSlopeQuiet(0,16,15,11.75),
                 invertedSlope(0,.5,11.75,1.15),
                 invertedSlope(15.5,16,11.75,1.15),
                 invertedSlope(0,16,1.15,1),
@@ -70,14 +70,18 @@ public final class ScreenHousingMesh {
                 quad(0,0,0,16,0,0,16,0,16,0,0,16,0,16,16,0),
                 quad(0,0,16,16,0,16,16,16,16,0,16,16,0,16,16,0),
                 quad(0,0,0,16,0,0,16,1,0,0,1,0,0,15,16,16),
-                quad(0,1,1,16,1,1,16,16,15,0,16,15,0,16,16,0),
+                // The visible diagonal terminates at the same one-pixel
+                // corner inset as the side profile, rather than running into
+                // the top edge while its side texture stops short.
+                quad(0,1,1,16,1,1,16,15,15,0,15,15,0,15,16,1),
+                quad(0,15,15,16,15,15,16,16,15,0,16,15,0,1,16,0),
                 quad(0,1,0,16,1,0,16,1,1,0,1,1,0,15,16,16),
                 quad(0,16,15,16,16,15,16,16,16,0,16,16,0,15,16,16),
                 sideQuad(0,0,0,1,0,1,1,0,1),
-                sideQuad(0,0,1,1,1,16,15,0,15),
+                sideQuad(0,0,1,1,1,15,15,0,15),
                 sideQuad(0,0,15,16,15,16,16,0,16),
                 sideQuad(16,0,0,0,1,1,1,1,0),
-                sideQuad(16,0,1,0,15,16,15,1,1),
+                sideQuad(16,0,1,0,15,15,15,1,1),
                 sideQuad(16,0,15,0,16,16,16,16,15)},
                 new Face[0]);
     }
@@ -93,6 +97,17 @@ public final class ScreenHousingMesh {
                 new Vertex(x1,topY,topZ,x1,topV),
                 new Vertex(x1,bottomY,bottomZ,x1,bottomV),
                 new Vertex(x0,bottomY,bottomZ,x0,bottomV));
+    }
+    /** The broad ceiling-facing strip is nearly edge-on to the viewer. A
+     * high-resolution wall pattern there aliases as the camera moves; sample
+     * one neutral wall texel so the housing remains visually stationary. */
+    private static Face invertedSlopeQuiet(double x0,double x1,double topY,double bottomY) {
+        double topZ=16-topY,bottomZ=16-bottomY;
+        double u=7.125,v=8.875;
+        return new Face(new Vertex(x0,topY,topZ,u,v),
+                new Vertex(x1,topY,topZ,u,v),
+                new Vertex(x1,bottomY,bottomZ,u,v),
+                new Vertex(x0,bottomY,bottomZ,u,v));
     }
     private static Face sideQuad(double x,double y0,double z0,double y1,double z1,
             double y2,double z2,double y3,double z3) {
