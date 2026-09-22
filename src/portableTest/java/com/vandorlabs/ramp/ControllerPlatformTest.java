@@ -27,20 +27,58 @@ public final class ControllerPlatformTest {
         return result;
     }
     public static void main(String[] args) {
+        for (int start=-8;start<=8;start++) for (int end=-8;end<=8;end++) {
+            for (boolean lift:new boolean[]{false,true}) {
+                close(ControllerPlatform.offset(2,7,3,8,start,end,0,lift),start,"signed start endpoint");
+                close(ControllerPlatform.offset(2,7,3,8,start,end,1,lift),end,"signed end endpoint");
+                close(ControllerPlatform.offset(2,7,3,8,start,end,.5,lift),(start+end)/2.0,"crossing midpoint");
+                if (!lift) close(ControllerPlatform.offset(0,0,3,8,start,end,.4,false),0,"hinge remains fixed");
+            }
+        }
+        for (int pixels=1;pixels<=16;pixels++) for (int length=1;length<=16;length++) {
+            int count=ControllerPlatform.treadCount(pixels);
+            close(ControllerPlatform.offsetPixels(length-1,count-1,length,pixels,2,-3,0,false),2,"pixel tread start endpoint");
+            close(ControllerPlatform.offsetPixels(length-1,count-1,length,pixels,2,-3,1,false),-3,"pixel tread end endpoint");
+            if (length*count>1) close(ControllerPlatform.offsetPixels(0,0,length,pixels,2,-3,.4,false),0,"pixel hinge remains fixed");
+            for (RampGeometry.Direction face:RampGeometry.Direction.values()) for (int row=0;row<length;row++) {
+                double volume=0;
+                for (int y=36;y<=44;y++) for (RampGeometry.Box box:RampGeometry.boxesPixels(face,y,40,0,.5,row,length,2,-3,pixels,.37,false)) {
+                    volume+=(box.maxX-box.minX)*(box.maxY-box.minY)*(box.maxZ-box.minZ);
+                    int step=RampGeometry.segmentAtPixels(face,box,pixels,false);
+                    double offset=ControllerPlatform.offsetPixels(row,step,length,pixels,2,-3,.37,false);
+                    close(ControllerPlatform.sideTextureV(y,box.minY,40,offset)
+                            -ControllerPlatform.sideTextureV(y,box.maxY,40,offset),box.maxY-box.minY,"pixel tread UVs match clipped geometry");
+                }
+                close(volume,.5,"all pixel sizes cover slab without gaps or overlaps");
+            }
+        }
+        for (int pixels=-1;pixels<=17;pixels++)
+            check(ControllerPlatform.validTreadPixels(pixels)==(pixels==1 || pixels==2 || pixels==4 || pixels==8 || pixels==16),"only five tread sizes accepted");
+        for (int pixels=1;pixels<=16;pixels*=2) {
+            check(ControllerPlatform.stepTreadPixels(pixels,true)==Math.min(16,pixels*2),"increase doubles tread size and clamps");
+            check(ControllerPlatform.stepTreadPixels(pixels,false)==Math.max(1,pixels/2),"decrease halves tread size and clamps");
+        }
+        check(ControllerPlatform.stepTreadPixels(3,true)==4 && ControllerPlatform.stepTreadPixels(3,false)==2,"old intermediate sizes step to supported values");
         ControllerPlatform.Cell seed=new ControllerPlatform.Cell(0,0,0);
         Set<ControllerPlatform.Cell> platform=cells(4,3);
         platform.add(seed.offset(0,1,0)); platform.add(seed.offset(8,0,8));
         check(ControllerPlatform.discover(seed,platform::contains).size()==12,"plane and face adjacency");
         check(ControllerPlatform.discover(seed,cells(8,8)::contains).size()==64,"exact eight-by-eight footprint");
         check(ControllerPlatform.discover(seed,cells(17,8)::contains).equals(cells(8,8)),"oversized matching floor clipped without rejection");
-        check(ControllerPlatform.discover(seed,cells(1,40)::contains).equals(cells(1,8)),"length capped independently of area");
+        check(ControllerPlatform.discover(seed,cells(1,40)::contains).equals(cells(1,16)),"length capped independently of area");
         check(ControllerPlatform.discover(seed,cells(40,1)::contains).equals(cells(8,1)),"width capped independently of area");
         int[] reads={0};
         Set<ControllerPlatform.Cell> infinite=ControllerPlatform.discover(seed,c->{reads[0]++;return true;});
-        check(infinite.size()==64 && reads[0]==64,"unbounded floor stops querying beyond footprint");
+        check(infinite.size()==128 && reads[0]==128,"unbounded floor stops querying beyond footprint");
         check(infinite.equals(ControllerPlatform.discover(seed,c->true)),"centered seed clipping deterministic");
         check(infinite.stream().mapToInt(c->c.x).max().getAsInt()-infinite.stream().mapToInt(c->c.x).min().getAsInt()==7,"centered width at most eight");
-        check(infinite.stream().mapToInt(c->c.z).max().getAsInt()-infinite.stream().mapToInt(c->c.z).min().getAsInt()==7,"centered length at most eight");
+        check(infinite.stream().mapToInt(c->c.z).max().getAsInt()-infinite.stream().mapToInt(c->c.z).min().getAsInt()==15,"centered length at most sixteen");
+        for (RampGeometry.Direction direction:RampGeometry.Direction.values()) {
+            boolean alongX=direction==RampGeometry.Direction.EAST || direction==RampGeometry.Direction.WEST;
+            check(ControllerPlatform.discover(seed,direction,cells(20,20)::contains)
+                    .equals(cells(alongX?16:8,alongX?8:16)),"length limit follows ramp direction "+direction);
+        }
+        check(ControllerPlatform.discover(seed,cells(8,16)::contains).size()==128,"full eight-by-sixteen footprint");
         platform.remove(seed.offset(1,0,0));
         // A painted point must keep its UV as the segment crosses cell boundaries,
         // for whole blocks, both slab halves, both travel signs and every tread.

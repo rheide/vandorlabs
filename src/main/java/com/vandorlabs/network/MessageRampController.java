@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageRampController implements IMessage {
     private BlockPos pos;
-    private int drop,segments,direction,channel;
+    private int treadPixels,startOffset,drop,segments,direction,channel;
     private boolean top,powerOn,slow,elevator;
     public MessageRampController() { }
     public MessageRampController(BlockPos pos,int drop,int segments,boolean top,boolean powerOn,boolean slow,boolean elevator,
@@ -21,22 +21,30 @@ public class MessageRampController implements IMessage {
     }
     public MessageRampController(BlockPos pos,int drop,int segments,boolean top,boolean powerOn,boolean slow,boolean elevator,
             net.minecraft.util.EnumFacing direction,int channel) {
+        this.treadPixels=segments==8?2:8;
         this.pos=pos; this.drop=drop; this.segments=segments;
         this.top=top; this.powerOn=powerOn; this.slow=slow; this.elevator=elevator;
         this.direction=direction.getHorizontalIndex();
         this.channel=channel;
+    }
+    public MessageRampController(BlockPos pos,int start,int end,int pixels,boolean powerOn,
+            boolean slow,boolean elevator,net.minecraft.util.EnumFacing direction,int channel) {
+        this(pos,Math.abs(end),com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels),end<0,powerOn,slow,elevator,direction,channel);
+        startOffset=start; treadPixels=pixels;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos=BlockPos.fromLong(buf.readLong()); drop=buf.readInt(); segments=buf.readInt();
         top=buf.readBoolean(); powerOn=buf.readBoolean(); slow=buf.readBoolean(); elevator=buf.readBoolean();
         direction=buf.readInt();
         channel=buf.readableBytes()>=4?buf.readInt():0;
+        startOffset=buf.readableBytes()>=4?buf.readInt():0;
+        treadPixels=buf.readableBytes()>=4?buf.readInt():(segments==8?2:8);
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong()); buf.writeInt(drop); buf.writeInt(segments);
         buf.writeBoolean(top); buf.writeBoolean(powerOn); buf.writeBoolean(slow); buf.writeBoolean(elevator);
         buf.writeInt(direction);
-        buf.writeInt(channel);
+        buf.writeInt(channel); buf.writeInt(startOffset); buf.writeInt(treadPixels);
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
@@ -48,7 +56,7 @@ public class MessageRampController implements IMessage {
                 TileEntityRampController te=(TileEntityRampController)raw;
                 if (((ContainerRampController)player.openContainer).controller!=te || !te.usable(player)) return;
                 if (message.direction<0 || message.direction>3 || message.channel<0) return;
-                te.configure(player,message.drop,message.segments,message.top,message.powerOn,message.slow,message.elevator,
+                te.configureTreads(player,message.startOffset,message.top?-message.drop:message.drop,message.treadPixels,message.powerOn,message.slow,message.elevator,
                         net.minecraft.util.EnumFacing.getHorizontal(message.direction));
                 te.setRedstoneChannel(message.channel);
                 player.connection.sendPacket(te.getUpdatePacket());

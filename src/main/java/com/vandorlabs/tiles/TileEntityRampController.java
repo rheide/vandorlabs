@@ -38,6 +38,9 @@ import java.util.LinkedHashMap;
 
 /** Event-driven controller. Only active animation schedules subsequent block ticks. */
 public class TileEntityRampController extends TileEntity implements RedstoneChannelMember {
+    public int startOffset,treadPixels=8;
+    // Keep the legacy magnitude/sign fields for old saves and integrations.
+    public int endOffset() { return top?-drop:drop; }
     public int drop=3,segments=2;
     public boolean top=true,activateOnPower=true,slow,elevator;
     public String status="Retracted";
@@ -95,9 +98,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
     private BlockPos reserved(BlockPos source,int distance) { return source.up(top?-distance:distance); }
     public boolean owns(TileEntityControlledRamp part) {
-        int distance=top?part.sourceY-part.getPos().getY():part.getPos().getY()-part.sourceY;
+        int distance=part.getPos().getY()-part.sourceY;
         return cells.contains(part.getPos()) && sources.contains(new BlockPos(part.getPos().getX(),part.sourceY,part.getPos().getZ()))
-                && distance>=0 && distance<=drop;
+                && distance>=Math.min(0,Math.min(startOffset,endOffset())) && distance<=Math.max(0,Math.max(startOffset,endOffset()));
     }
     public boolean usable(EntityPlayer player) {
         return world.getTileEntity(pos)==this && player.getDistanceSq(pos)<=64
@@ -125,9 +128,19 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
     public boolean configure(EntityPlayer player,int height,int treadCount,boolean upper,
             boolean powerOn,boolean slower,boolean lift,EnumFacing direction) {
+        return configureOffsets(player,0,upper?-height:height,treadCount,powerOn,slower,lift,direction);
+    }
+    public boolean configureOffsets(EntityPlayer player,int start,int end,int treadCount,
+            boolean powerOn,boolean slower,boolean lift,EnumFacing direction) {
+        if (treadCount!=2 && treadCount!=8) return fail("Choose a valid legacy tread count");
+        return configureTreads(player,start,end,16/treadCount,powerOn,slower,lift,direction);
+    }
+    public boolean configureTreads(EntityPlayer player,int start,int end,int pixels,
+            boolean powerOn,boolean slower,boolean lift,EnumFacing direction) {
         if (world.isRemote || !usable(player)) return false;
         if (direction==null || !direction.getAxis().isHorizontal()) return fail("Choose a horizontal ramp direction");
-        if (height<1 || height>ControllerPlatform.MAX_DROP || (treadCount!=2 && treadCount!=8)) return fail("Travel must be 1–8 blocks");
+        if (Math.abs((long)start)>8 || Math.abs((long)end)>8) return fail("Offsets must be -8 to 8 blocks");
+        if (!ControllerPlatform.validTreadPixels(pixels)) return fail("Tread size must be 1, 2, 4, 8 or 16 pixels");
         // Reset using the old geometry and journal before installing new settings.
         if (attached()) {
             for (BlockPos source:sources) {
@@ -137,10 +150,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         && ((TileEntityControlledRamp)te).belongsTo(pos)))
                     return hold("Reset blocked: clear the original platform position");
             }
-            if (!carryRiders(pose(0),0)) return hold("Reset blocked: a rider is obstructed");
+            if (!carryRiders(pose(0),0,false,true)) return hold("Reset blocked: a rider is obstructed");
             if (!recover(false)) return false;
         }
-        drop=height; segments=treadCount; top=upper; activateOnPower=powerOn; slow=slower; elevator=lift;
+        startOffset=start; drop=Math.abs(end); treadPixels=pixels; segments=ControllerPlatform.treadCount(pixels); top=end<0; activateOnPower=powerOn; slow=slower; elevator=lift;
         configuredFacing=direction;
         owner=player.getUniqueID();
         sync();
@@ -164,7 +177,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if (world.isRemote || changing) return false;
         if (recoveryPending && !recover(false)) return false;
         if (!attached()) {
-            if (!deploy) { open=false; moving=false; error=false; status="Retracted"; sync(); return true; }
+            if (!deploy && startOffset==0) { open=false; moving=false; error=false; status="Retracted"; sync(); return true; }
             if (!capture()) return false;
         }
         String problem=validateParts();
@@ -176,10 +189,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         }
         startPose=pose(0); startTick=world.getTotalWorldTime(); lastStepTick=startTick;
         open=deploy; moving=Math.abs(startPose-(deploy?1:0))>1e-8;
-        duration=ControllerPlatform.duration(length,drop,slow);
+        duration=ControllerPlatform.duration(length,Math.abs(endOffset()-startOffset),slow);
         error=false; status=moving?(deploy?"Deploying":"Retracting"):(deploy?"Deployed":"Retracted");
         syncParts(); sync();
-        if (!deploy && !moving) return recover(false);
+        if (!deploy && !moving && startOffset==0) return recover(false);
         if (moving && !reserveStep(startPose,pose(1))) {
             moving=false; syncParts(); sync(); return false;
         }
@@ -200,13 +213,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             return fail("Front block must be a slab or ordinary solid block");
         boolean[] loaded={true};
         Set<ControllerPlatform.Cell> platform=ControllerPlatform.discover(
-                new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),c->{
+                new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->{
             BlockPos p=new BlockPos(c.x,c.y,c.z);
             if (!world.isBlockLoaded(p)) { loaded[0]=false; return false; }
             return world.getBlockState(p).equals(material);
         });
         if (!loaded[0]) return fail("Load all platform chunks first");
-        if (platform.isEmpty() || !VerticalBounds.legacy(world.getHeight()).contains(reserved(seed,drop).getY()))
+        if (platform.isEmpty() || (!VerticalBounds.legacy(world.getHeight()).contains(seed.getY()+Math.min(startOffset,endOffset()))
+                || !VerticalBounds.legacy(world.getHeight()).contains(seed.getY()+Math.max(startOffset,endOffset()))))
             return fail("Travel exceeds world height");
         EntityPlayer actor=owner==null?null:world.getPlayerEntityByUUID(owner);
         int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE;
@@ -216,12 +230,12 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             selected.add(source);
             int along=c.x*facing.getFrontOffsetX()+c.z*facing.getFrontOffsetZ();
             min=Math.min(min,along); max=Math.max(max,along);
-            for (int distance=0;distance<=drop;distance++) {
-                BlockPos p=reserved(source,distance);
+            for (int distance=Math.min(0,Math.min(startOffset,endOffset()));distance<=Math.max(0,Math.max(startOffset,endOffset()));distance++) {
+                BlockPos p=source.up(distance);
                 if (!world.isBlockLoaded(p)) return fail("Load all platform chunks first");
                 if (actor!=null && (!actor.canPlayerEdit(p,EnumFacing.UP,actor.getHeldItemMainhand())
                         || !world.isBlockModifiable(actor,p))) return fail("No permission to move this platform");
-                if (distance>0 && !world.isAirBlock(p)) return fail("Movement path is obstructed");
+                if (distance!=0 && !world.isAirBlock(p)) return fail("Movement path is obstructed");
             }
         }
         AxisAlignedBB bounds=material.getBoundingBox(world,seed);
@@ -229,11 +243,16 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             return fail("Only full-width slabs and cubes are supported");
         // Journal the whole transaction before replacing its first source.
         sources.addAll(selected); original=material; low=bounds.minY; high=bounds.maxY;
-        length=max-min+1; minAlong=min; duration=ControllerPlatform.duration(length,drop,slow);
+        length=max-min+1; minAlong=min; duration=ControllerPlatform.duration(length,Math.abs(endOffset()-startOffset),slow);
         startPose=0; moving=false; open=false; startTick=world.getTotalWorldTime();
         changing=true; markDirty();
         try {
             for (BlockPos source:sources) install(source);
+            if (!reserveStep(0,0) || !carryRiders(0,0,true,false)) {
+                recover(false);
+                return fail("Starting position blocked");
+            }
+            releaseExcept(occupied(0,0));
         } catch (RuntimeException exception) {
             recover(false);
             return fail("Deployment failed; original blocks restored");
@@ -250,7 +269,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         TileEntityControlledRamp te=(TileEntityControlledRamp)world.getTileEntity(p);
         te.controller=pos; te.source=original; te.sourceY=sources.get(0).getY();
         te.row=p.getX()*facing.getFrontOffsetX()+p.getZ()*facing.getFrontOffsetZ()-minAlong;
-        te.length=length; te.drop=drop; te.segments=segments; te.top=top; te.elevator=elevator;
+        te.treadPixels=treadPixels; te.startOffset=startOffset; te.length=length; te.drop=drop; te.segments=segments; te.top=top; te.elevator=elevator;
         te.low=low; te.high=high; te.move(open,startPose,startTick,duration,moving);
     }
 
@@ -259,9 +278,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         Set<BlockPos> result=new HashSet<>();
         for (BlockPos source:sources) {
             int row=source.getX()*facing.getFrontOffsetX()+source.getZ()*facing.getFrontOffsetZ()-minAlong;
-            for (int step=0;step<(elevator?1:segments);step++) {
-                double a=ControllerPlatform.offset(row,step,length,segments,drop,from,top,elevator);
-                double b=ControllerPlatform.offset(row,step,length,segments,drop,to,top,elevator);
+            for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
+                double a=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffset,endOffset(),from,elevator);
+                double b=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffset,endOffset(),to,elevator);
                 int first=RampGeometry.firstOccupiedY(source.getY(),low,a,b);
                 int last=RampGeometry.lastOccupiedY(source.getY(),high,a,b);
                 for (int y=first;y<=last;y++) result.add(new BlockPos(source.getX(),y,source.getZ()));
@@ -382,35 +401,38 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         releaseExcept(occupied(current,next));
         if (Math.abs(current-(open?1:0))<1e-8) {
             startPose=open?1:0; moving=false; syncParts();
-            if (!open) recover(false);
+            if (!open && startOffset==0) recover(false);
             else {
                 // Completion is a single validation boundary, not a per-tick world scan.
                 String problem=validateParts();
                 if (problem!=null) { recover(false); fail(problem); }
-                else { error=false; status="Deployed"; sync(); }
+                else { error=false; status=open?"Deployed":"Retracted"; sync(); }
             }
         } else schedule();
     }
     private boolean carryRiders(double previous,double current) {
+        return carryRiders(previous,current,false,false);
+    }
+    private boolean carryRiders(double previous,double current,boolean fromOriginal,boolean toOriginal) {
         Map<Entity,Double> targets=new LinkedHashMap<>();
         for (BlockPos source:sources) {
             int row=source.getX()*facing.getFrontOffsetX()+source.getZ()*facing.getFrontOffsetZ()-minAlong;
-            double minY=source.getY()+high-drop-0.2,maxY=source.getY()+high+drop+0.2;
+            double minY=source.getY()+high+Math.min(0,Math.min(startOffset,endOffset()))-0.2,maxY=source.getY()+high+Math.max(0,Math.max(startOffset,endOffset()))+0.2;
             for (Entity entity:world.getEntitiesWithinAABB(Entity.class,
                     new AxisAlignedBB(source.getX(),minY,source.getZ(),source.getX()+1,maxY,source.getZ()+1))) {
                 if (entity.isDead || entity.noClip || entity.isRiding() || entity.motionY>0.1
                         || (entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.isFlying)) continue;
                 AxisAlignedBB body=entity.getEntityBoundingBox();
                 // A rider straddling treads is supported by the highest overlapping surface.
-                for (int step=0;step<(elevator?1:segments);step++) {
-                RampGeometry.Box local=RampGeometry.footprint(rampDirection(facing),step,
-                        elevator?1:segments,minY,maxY);
+                for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
+                RampGeometry.Box local=RampGeometry.footprintPixels(rampDirection(facing),step,
+                        elevator?16:treadPixels,minY,maxY);
                 AxisAlignedBB tread=new AxisAlignedBB(source.getX()+local.minX,local.minY,
                         source.getZ()+local.minZ,source.getX()+local.maxX,local.maxY,
                         source.getZ()+local.maxZ);
                 if (!body.shrink(1e-7).intersects(tread)) continue;
-                double before=source.getY()+high+ControllerPlatform.offset(row,step,length,segments,drop,previous,top,elevator);
-                double after=source.getY()+high+ControllerPlatform.offset(row,step,length,segments,drop,current,top,elevator);
+                double before=source.getY()+high+(fromOriginal?0:ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffset,endOffset(),previous,elevator));
+                double after=source.getY()+high+(toOriginal?0:ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffset,endOffset(),current,elevator));
                 double feet=entity.getEntityBoundingBox().minY;
                 double tolerance=entity instanceof EntityPlayer?.5:.15;
                 double target=RampGeometry.riderTarget(before,after,feet,tolerance);
@@ -459,8 +481,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 if (saved.getBlock()==Blocks.AIR && sourceTile instanceof TileEntityControlledRamp
                         && ((TileEntityControlledRamp)sourceTile).belongsTo(pos))
                     saved=((TileEntityControlledRamp)sourceTile).source;
-                for (int d=drop;d>=0;d--) {
-                    BlockPos p=reserved(source,d);
+                for (int d=Math.max(0,Math.max(startOffset,endOffset()));d>=Math.min(0,Math.min(startOffset,endOffset()));d--) {
+                    BlockPos p=source.up(d);
                     TileEntity te=world.getTileEntity(p);
                     boolean owned=te instanceof TileEntityControlledRamp && ((TileEntityControlledRamp)te).belongsTo(pos);
                     // An interrupted install may have created the block before its tile was initialized.
@@ -490,7 +512,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 top,activateOnPower,slow,elevator,error,open,moving,startPose,startTick,
                 lastStepTick,duration,length,minAlong,facing.getHorizontalIndex(),
                 configuredFacing!=null,configuredFacing==null?0:configuredFacing.getHorizontalIndex(),
-                low,high,latched,signalKnown,recoveryPending,redstoneChannel,channelSignal)
+                low,high,latched,signalKnown,recoveryPending,redstoneChannel,channelSignal,startOffset,endOffset(),treadPixels)
                 .write(new NbtPrimitiveData(tag));
         tag.setTag(SaveSchema.Ramp.ORIGINAL,NBTUtil.writeBlockState(new NBTTagCompound(),original));
         tag.setString(SaveSchema.Ramp.ORIGINAL_STATE,LegacyBlockStates.encode(original));
@@ -520,6 +542,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         low=data.low; high=data.high; latched=data.latched; signalKnown=data.signalKnown;
         recoveryPending=data.recoveryPending; redstoneChannel=data.redstoneChannel;
         channelSignal=data.channelSignal;
+        treadPixels=data.treadPixels; segments=ControllerPlatform.treadCount(treadPixels);
+        startOffset=data.startOffset; drop=Math.abs(data.endOffset); top=data.endOffset<0;
         if (world!=null && !world.isRemote && oldChannel!=redstoneChannel)
             RedstoneChannels.channelChanged(this,oldChannel);
         original=tag.hasKey(SaveSchema.Ramp.ORIGINAL_STATE)

@@ -26,6 +26,9 @@ import java.util.List;
 public class TileEntityControlledRamp extends TileEntity {
     public BlockPos controller=BlockPos.ORIGIN;
     public IBlockState source=Blocks.STONE.getDefaultState();
+    public int startOffset,treadPixels=8;
+    // Keep the legacy magnitude/sign fields for old saves and integrations.
+    public int endOffset() { return top?-drop:drop; }
     public int sourceY,row,length=1,drop=3,segments=2,duration=60;
     public double low,high=1;
     public boolean top=true,elevator;
@@ -55,8 +58,8 @@ public class TileEntityControlledRamp extends TileEntity {
         IBlockState state=world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockControlledRamp)) return boxes;
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
-        return RampGeometry.boxes(direction(face),pos.getY(),sourceY,low,high,
-                row,length,drop,segments,pose(partial),top,elevator);
+        return RampGeometry.boxesPixels(direction(face),pos.getY(),sourceY,low,high,
+                row,length,startOffset,endOffset(),treadPixels,pose(partial),elevator);
     }
     public double sideTextureV(AxisAlignedBB box,double localY,double partial) {
         return sideTextureV(new RampGeometry.Box(box.minX,box.minY,box.minZ,
@@ -65,8 +68,8 @@ public class TileEntityControlledRamp extends TileEntity {
     public double sideTextureV(RampGeometry.Box box,double localY,double partial) {
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
         RampGeometry.Box portable=new RampGeometry.Box(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);
-        int step=RampGeometry.segmentAt(direction(face),portable,segments,elevator);
-        double offset=ControllerPlatform.offset(row,step,length,segments,drop,pose(partial),top,elevator);
+        int step=RampGeometry.segmentAtPixels(direction(face),portable,treadPixels,elevator);
+        double offset=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffset,endOffset(),pose(partial),elevator);
         return ControllerPlatform.sideTextureV(pos.getY(),localY,sourceY,offset);
     }
     private static RampGeometry.Direction direction(EnumFacing face) {
@@ -99,7 +102,7 @@ public class TileEntityControlledRamp extends TileEntity {
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
-                elevator,open,moving,startPose,startTick).write(new NbtPrimitiveData(tag));
+                elevator,open,moving,startPose,startTick,startOffset,endOffset(),treadPixels).write(new NbtPrimitiveData(tag));
         tag.setLong(SaveSchema.Ramp.CONTROLLER,controller.toLong());
         tag.setInteger(SaveSchema.Ramp.CONTROLLER_X,controller.getX());
         tag.setInteger(SaveSchema.Ramp.CONTROLLER_Y,controller.getY());
@@ -123,6 +126,8 @@ public class TileEntityControlledRamp extends TileEntity {
         segments=data.segments; duration=data.duration; low=data.low; high=data.high;
         top=data.top; elevator=data.elevator; open=data.open; moving=data.moving;
         startPose=data.startPose; startTick=data.startTick;
+        treadPixels=data.treadPixels; segments=ControllerPlatform.treadCount(treadPixels);
+        startOffset=data.startOffset; drop=Math.abs(data.endOffset); top=data.endOffset<0;
     }
     @Override public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }
     @Override public SPacketUpdateTileEntity getUpdatePacket() { return new SPacketUpdateTileEntity(pos,0,getUpdateTag()); }

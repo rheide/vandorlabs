@@ -55,11 +55,11 @@ lighting, furniture, ramps, glass, and building materials.
   and Mess Hall chairs; right-click to sit and sneak to dismount. Includes all
   sixteen buildable materials from their independent 4x4 source sheet.
 - **Ramp / Elevator Controller**: turns matching existing slabs or blocks into
-  a ramp or moving lift. Configure top/bottom travel, redstone polarity and
-  fast/slow animation; activation selects the platform automatically and
-  retraction restores the original blocks. Travel-space locks follow the moving
+  a ramp or moving lift. Configure signed start/end offsets, redstone polarity and
+  fast/slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and
+  a zero start offset restores the original blocks on retraction. Travel-space locks follow the moving
   platform, and setting edits reset it automatically. Uses the supplied HD-2 art.
-  Footprint/travel are capped at 8 blocks per axis; matching extras are ignored.
+  Footprints are capped at 8 wide × 16 long; each offset ranges from -8 to +8 blocks.
   Ramp direction is independent of the controller's platform-selection arrow.
   See [placement, geometry and tests](docs/landing-ramps.md).
 - **Hull materials**: Dark Gunmetal Hull and Light Alloy Hull blocks from the
@@ -188,7 +188,7 @@ textures and orientation are retained, but animated door travel, selected
 programmable-screen content, particles, and moving ramp interpolation do not
 appear on the map. Deployed `controlled_ramp` cells are transient renderer-only
 placeholders and therefore have no independent map model; the source platform
-is rendered normally whenever it is retracted.
+is rendered normally when restored at a zero start offset.
 
 To refresh the definitions after adding block models, run the matching
 DynmapBlockScan 3.7 tool once against a built jar in an isolated Forge 1.12.2

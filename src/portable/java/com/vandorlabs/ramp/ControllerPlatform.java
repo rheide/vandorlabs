@@ -7,8 +7,9 @@ import java.util.function.Predicate;
 
 /** Horizontal same-material selection and downhill translation for controllers. */
 public final class ControllerPlatform {
-    public static final int MAX_SPAN = 8;
-    public static final int MAX_AREA = MAX_SPAN * MAX_SPAN;
+    public static final int MAX_WIDTH = 8;
+    public static final int MAX_LENGTH = 16;
+    public static final int MAX_AREA = MAX_WIDTH * MAX_LENGTH;
     public static final int MAX_DROP = 8;
     private ControllerPlatform() { }
 
@@ -24,10 +25,15 @@ public final class ControllerPlatform {
         @Override public int hashCode() { return (x*31+y)*31+z; }
     }
 
-    /** Connected growth from the front seed, clipped to an eight-by-eight footprint.
+    /** Connected growth from the front seed, clipped to an eight-wide, sixteen-long footprint.
      * Fixed neighbor order makes clipping repeatable, including seeds in the middle.
      * Out-of-bounds cells are ignored without querying the world. */
     public static Set<Cell> discover(Cell seed, Predicate<Cell> matches) {
+        return discover(seed,RampGeometry.Direction.SOUTH,matches);
+    }
+    public static Set<Cell> discover(Cell seed,RampGeometry.Direction direction,Predicate<Cell> matches) {
+        boolean alongX=direction==RampGeometry.Direction.EAST || direction==RampGeometry.Direction.WEST;
+        int spanX=alongX?MAX_LENGTH:MAX_WIDTH,spanZ=alongX?MAX_WIDTH:MAX_LENGTH;
         Set<Cell> found = new HashSet<>(), seen = new HashSet<>();
         ArrayDeque<Cell> queue = new ArrayDeque<>();
         int minX=seed.x,maxX=seed.x,minZ=seed.z,maxZ=seed.z;
@@ -37,7 +43,7 @@ public final class ControllerPlatform {
             if (!seen.add(c)) continue;
             int x0=Math.min(minX,c.x),x1=Math.max(maxX,c.x);
             int z0=Math.min(minZ,c.z),z1=Math.max(maxZ,c.z);
-            if (x1-x0>=MAX_SPAN || z1-z0>=MAX_SPAN || !matches.test(c)) continue;
+            if (x1-x0>=spanX || z1-z0>=spanZ || !matches.test(c)) continue;
             minX=x0; maxX=x1; minZ=z0; maxZ=z1;
             found.add(c);
             queue.add(c.offset(1,0,0)); queue.add(c.offset(-1,0,0));
@@ -58,6 +64,36 @@ public final class ControllerPlatform {
         double p=Math.max(0,Math.min(1,pose));
         double travel=elevator?height*p*p*(3-2*p):drop(row,segment,length,segments,height,p);
         return top?-travel:travel;
+    }
+    /** Signed endpoint heights relative to the original platform, with a fixed ramp hinge. */
+    public static double offset(int row,int segment,int length,int segments,int start,int end,
+            double pose,boolean elevator) {
+        double p=Math.max(0,Math.min(1,pose));
+        double height=start+(end-start)*p*p*(3-2*p);
+        return elevator?height:height*(row*segments+segment)/(double)(length*segments-1);
+    }
+    public static boolean validTreadPixels(int pixels) {
+        return pixels>=1 && pixels<=16 && (pixels & (pixels-1))==0;
+    }
+    /** Step to an allowed size, including when editing an older intermediate-size save. */
+    public static int stepTreadPixels(int pixels,boolean increase) {
+        if (increase) {
+            for (int size=1;size<=16;size*=2) if (size>pixels) return size;
+            return 16;
+        }
+        for (int size=16;size>=1;size/=2) if (size<pixels) return size;
+        return 1;
+    }
+    public static int treadCount(int pixels) { return (16+pixels-1)/pixels; }
+    public static double treadStart(int step,int pixels) { return step*pixels/16.0; }
+    public static double treadEnd(int step,int pixels) { return Math.min(1,(step+1)*pixels/16.0); }
+    public static double offsetPixels(int row,int step,int length,int pixels,int start,int end,
+            double pose,boolean elevator) {
+        double p=Math.max(0,Math.min(1,pose));
+        double height=start+(end-start)*p*p*(3-2*p);
+        double last=length-1+treadStart(treadCount(pixels)-1,pixels);
+        // A one-block ramp with one full-block tread has no separate hinge tread.
+        return elevator || last==0?height:height*(row+treadStart(step,pixels))/last;
     }
     public static int duration(int length,int height,boolean slow) {
         return (slow?20:10)*Math.max(1,Math.max(length,height));

@@ -20,14 +20,16 @@ public final class SaveSchema {
     }
 
     public static final class Ramp {
-        public static final int CONTROLLER_VERSION=5;
-        public static final int CELL_VERSION=3;
+        public static final int CONTROLLER_VERSION=6;
+        public static final int CELL_VERSION=4;
         public static final String CONTROLLER_VERSION_KEY="ControllerVersion";
         public static final String CONTROLLER="Controller",SOURCE="Source",SOURCE_STATE="SourceState",SOURCE_Y="SourceY";
         public static final String CONTROLLER_X="ControllerX",CONTROLLER_Y="ControllerY",CONTROLLER_Z="ControllerZ";
         public static final String ROW="Row",LENGTH="Length",DROP="Drop",SEGMENTS="Segments";
         public static final String DURATION="Duration",LOW="Low",HIGH="High",TOP="Top";
         public static final String ELEVATOR="Elevator",OPEN="Open",MOVING="Moving";
+        public static final String TREAD_PIXELS="TreadPixels";
+        public static final String START_OFFSET="StartOffset",END_OFFSET="EndOffset";
         public static final String START_POSE="StartPose",START_TICK="StartTick";
         public static final String LAST_STEP_TICK="LastStepTick",STATUS="Status";
         public static final String ACTIVATE_ON_POWER="ActivateOnPower",SLOW="Slow",ERROR="Error";

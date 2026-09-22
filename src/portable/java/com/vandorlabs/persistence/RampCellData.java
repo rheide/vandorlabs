@@ -2,6 +2,7 @@ package com.vandorlabs.persistence;
 
 /** Portable scalar state for one moving ramp cell; block-state NBT stays in adapters. */
 public final class RampCellData {
+    public final int startOffset,endOffset,treadPixels;
     public final int sourceY;
     public final int row;
     public final int length;
@@ -20,11 +21,26 @@ public final class RampCellData {
     public RampCellData(int sourceY, int row, int length, int drop, int segments,
             int duration, double low, double high, boolean top, boolean elevator,
             boolean open, boolean moving, double startPose, long startTick) {
+        this(sourceY,row,length,drop,segments,duration,low,high,top,elevator,open,moving,startPose,startTick,0,top?-Math.max(1,Math.min(16,drop)):Math.max(1,Math.min(16,drop)));
+    }
+
+    public RampCellData(int sourceY, int row, int length, int drop, int segments,
+            int duration, double low, double high, boolean top, boolean elevator,
+            boolean open, boolean moving, double startPose, long startTick,int startOffset,int endOffset) {
+        this(sourceY,row,length,drop,segments,duration,low,high,top,elevator,open,moving,startPose,startTick,startOffset,endOffset,segments==8?2:8);
+    }
+
+    public RampCellData(int sourceY, int row, int length, int drop, int segments,
+            int duration, double low, double high, boolean top, boolean elevator,
+            boolean open, boolean moving, double startPose, long startTick,int startOffset,int endOffset,int treadPixels) {
+        this.treadPixels=Math.max(1,Math.min(16,treadPixels));
+        this.startOffset=Math.max(-8,Math.min(8,startOffset));
+        this.endOffset=Math.max(-16,Math.min(16,endOffset));
         this.sourceY = sourceY;
         this.length = Math.max(1, Math.min(128, length));
         this.row = Math.max(0, Math.min(this.length - 1, row));
         this.drop = Math.max(1, Math.min(16, drop));
-        this.segments = segments == 8 ? 8 : 2;
+        this.segments = (16+this.treadPixels-1)/this.treadPixels;
         this.duration = Math.max(1, duration);
         this.low = low;
         this.high = high;
@@ -38,6 +54,9 @@ public final class RampCellData {
     }
 
     public void write(PrimitiveData data) {
+        data.putInt(SaveSchema.Ramp.TREAD_PIXELS,treadPixels);
+        data.putInt(SaveSchema.Ramp.START_OFFSET,startOffset);
+        data.putInt(SaveSchema.Ramp.END_OFFSET,endOffset);
         data.putInt(SaveSchema.DATA_VERSION, SaveSchema.Ramp.CELL_VERSION);
         data.putInt(SaveSchema.Ramp.SOURCE_Y, sourceY);
         data.putInt(SaveSchema.Ramp.ROW, row);
@@ -66,6 +85,11 @@ public final class RampCellData {
                 data.getBoolean(SaveSchema.Ramp.OPEN),
                 data.getBoolean(SaveSchema.Ramp.MOVING),
                 data.getDouble(SaveSchema.Ramp.START_POSE),
-                data.getLong(SaveSchema.Ramp.START_TICK));
+                data.getLong(SaveSchema.Ramp.START_TICK),
+                data.getInt(SaveSchema.Ramp.START_OFFSET),
+                data.contains(SaveSchema.Ramp.END_OFFSET)?data.getInt(SaveSchema.Ramp.END_OFFSET)
+                        :(!data.contains(SaveSchema.Ramp.TOP)||data.getBoolean(SaveSchema.Ramp.TOP)?-1:1)*Math.max(1,Math.min(16,data.getInt(SaveSchema.Ramp.DROP))),
+                data.contains(SaveSchema.Ramp.TREAD_PIXELS)?data.getInt(SaveSchema.Ramp.TREAD_PIXELS)
+                        :(data.getInt(SaveSchema.Ramp.SEGMENTS)==8?2:8));
     }
 }

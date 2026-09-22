@@ -38,7 +38,7 @@ public final class SaveSchemaTest {
                 "ControllerVersion", "Controller", "ControllerX", "ControllerY",
                 "ControllerZ", "Source", "SourceState", "SourceY", "Row",
                 "Length", "Drop", "Segments", "Duration", "Low", "High", "Top",
-                "Elevator", "Open", "Moving", "StartPose", "StartTick",
+                "Elevator", "Open", "Moving", "StartPose", "StartTick", "StartOffset", "EndOffset", "TreadPixels",
                 "LastStepTick", "Status", "ActivateOnPower", "Slow", "Error",
                 "MinAlong", "Facing", "RampDirection", "Latched", "SignalKnown",
                 "RecoveryPending", "Original", "OriginalState", "Owner", "OwnerId", "Sources", "Cells",
@@ -46,8 +46,8 @@ public final class SaveSchemaTest {
         expect(SaveSchema.Redstone.class,
                 "RedstoneChannel", "ChannelSignal", "LocalOn", "ChannelInitialized",
                 "ManualOn", "ParticleStream", "LightInitialized");
-        if (SaveSchema.Screen.VERSION != 1 || SaveSchema.Ramp.CONTROLLER_VERSION != 5
-                || SaveSchema.Ramp.CELL_VERSION != 3 || SaveSchema.Redstone.VERSION != 1) {
+        if (SaveSchema.Screen.VERSION != 1 || SaveSchema.Ramp.CONTROLLER_VERSION != 6
+                || SaveSchema.Ramp.CELL_VERSION != 4 || SaveSchema.Redstone.VERSION != 1) {
             throw new AssertionError("save schema version changed without updating its contract test");
         }
         System.out.println("Save schema compatibility PASS");

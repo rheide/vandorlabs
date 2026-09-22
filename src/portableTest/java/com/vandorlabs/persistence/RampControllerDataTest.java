@@ -28,6 +28,29 @@ public final class RampControllerDataTest {
                 "controller animation state round trip");
         check(!decoded.top&&!decoded.activateOnPower&&decoded.slow&&decoded.elevator
                 &&decoded.error&&decoded.open&&decoded.moving,"controller flags round trip");
+        for (boolean top:new boolean[]{true,false}) {
+            MemoryPrimitiveData old=new MemoryPrimitiveData();
+            old.putInt(SaveSchema.Ramp.CONTROLLER_VERSION_KEY,5);
+            old.putInt(SaveSchema.Ramp.DROP,3); old.putBoolean(SaveSchema.Ramp.TOP,top);
+            RampControllerData migrated=RampControllerData.read(old);
+            check(migrated.startOffset==0 && migrated.endOffset==(top?-3:3),"old top and bottom saves preserve motion");
+        }
+        for (int start=-8;start<=8;start++) for (int end=-8;end<=8;end++) {
+            MemoryPrimitiveData signed=new MemoryPrimitiveData();
+            signed.putInt(SaveSchema.Ramp.START_OFFSET,start);
+            signed.putInt(SaveSchema.Ramp.END_OFFSET,end);
+            RampControllerData value=RampControllerData.read(signed);
+            MemoryPrimitiveData roundTrip=new MemoryPrimitiveData(); value.write(roundTrip);
+            RampControllerData saved=RampControllerData.read(roundTrip);
+            check(saved.startOffset==start && saved.endOffset==end,"signed endpoints including zero round trip");
+        }
+        for (int pixels=1;pixels<=16;pixels++) {
+            MemoryPrimitiveData data=new MemoryPrimitiveData();
+            data.putInt(SaveSchema.Ramp.TREAD_PIXELS,pixels);
+            RampControllerData value=RampControllerData.read(data);
+            MemoryPrimitiveData copy=new MemoryPrimitiveData(); value.write(copy);
+            check(RampControllerData.read(copy).treadPixels==pixels,"every pixel tread size round trips");
+        }
         System.out.println("Ramp controller save codec PASS");
     }
 }

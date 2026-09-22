@@ -46,8 +46,8 @@ public final class ControllerRuntimeChecks {
         NBTTagList cells=tag.getTagList("Sources",10);
         for (int i=0;i<cells.tagCount();i++) {
             BlockPos source=BlockPos.fromLong(cells.getCompoundTagAt(i).getLong("Pos"));
-            for (int d=0;d<=controller.drop;d++) {
-                BlockPos p=source.up(controller.top?-d:d);
+            for (int d=Math.min(0,Math.min(controller.startOffset,controller.endOffset()));d<=Math.max(0,Math.max(controller.startOffset,controller.endOffset()));d++) {
+                BlockPos p=source.up(d);
                 if (world.getTileEntity(p) instanceof TileEntityControlledRamp)
                     ((TileEntityControlledRamp)world.getTileEntity(p)).move(controller.isOpen(),
                             tag.getDouble("StartPose"),tag.getLong("StartTick"),controller.durationTicks(),controller.isMoving());
@@ -343,18 +343,88 @@ public final class ControllerRuntimeChecks {
         clear(world,pos);
         controller=place(world,pos,EnumFacing.SOUTH);
         List<BlockPos> large=new ArrayList<>();
-        for (int x=0;x<10;x++) for (int z=1;z<=10;z++) {
+        for (int x=0;x<10;x++) for (int z=1;z<=18;z++) {
             BlockPos p=pos.add(x,0,z); world.setBlockState(p,Blocks.STONE_SLAB.getDefaultState(),3); large.add(p);
         }
         require(controller.configure(player,8,2,false,true,false,true),"eight block travel accepted");
-        require(controller.request(true) && controller.area()==64,"large floor selects only eight-by-eight");
-        for (BlockPos p:large) if (p.getX()>=pos.getX()+8 || p.getZ()>pos.getZ()+8)
+        require(controller.request(true) && controller.area()==128,"large floor selects only eight-by-sixteen");
+        for (BlockPos p:large) if (p.getX()>=pos.getX()+8 || p.getZ()>pos.getZ()+16)
             require(world.getBlockState(p).equals(Blocks.STONE_SLAB.getDefaultState()),"matching blocks beyond bounds untouched");
+        finish(controller);
+        require(!controller.error,"full 128-block lift moves");
+        TileEntityRampController largeSave=new TileEntityRampController();
+        largeSave.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+        require(largeSave.area()==128,"all 128 sources survive saving");
         require(controller.recover(false),"bounded floor restores");
+        require(controller.configureTreads(player,2,-3,1,true,false,false,EnumFacing.SOUTH),"sixteen-long fine ramp config");
+        require(controller.area()==128 && controller.request(true),"sixteen-long fine ramp deploys");
+        finish(controller);
+        require(!controller.error,"sixteen-long ramp reaches end"); checkSideTextures(controller);
+        require(controller.request(false),"sixteen-long ramp retracts"); finish(controller);
+        require(!controller.error && controller.attached(),"sixteen-long ramp retains raised start");
+        require(controller.recover(false),"sixteen-long ramp restores");
         for (BlockPos p:large) {
             require(world.getBlockState(p).equals(Blocks.STONE_SLAB.getDefaultState()),"all clipped and ignored floor blocks preserved");
             world.setBlockToAir(p);
         }
+        for (boolean lift:new boolean[]{false,true}) {
+            clear(world,pos);
+            controller=place(world,pos,EnumFacing.SOUTH);
+            List<BlockPos> signedSources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+            EntityArmorStand signedRider=null;
+            if (lift) {
+                signedRider=new EntityArmorStand(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+1.5);
+                signedRider.setNoGravity(true); world.spawnEntity(signedRider); signedRider.onGround=true;
+            }
+            require(controller.configureOffsets(player,2,-3,8,true,false,lift,EnumFacing.SOUTH),"signed offsets configure while off");
+            require(controller.attached() && !controller.isMoving() && !controller.isOpen(),"raised off position stays attached and idle");
+            TileEntityRampController saved=new TileEntityRampController();
+            saved.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+            require(saved.startOffset==2 && saved.endOffset()==-3,"signed endpoints survive save");
+            if (lift) require(Math.abs(signedRider.posY-(pos.getY()+2.5))<.05,"initial raised position carries rider");
+            require(controller.request(true),"signed deployment starts");
+            for (int tick=1;tick<=controller.durationTicks();tick++) elapsed(controller,tick);
+            if (lift) require(Math.abs(signedRider.posY-(pos.getY()-2.5))<.05,"rider crosses original height downward");
+            require(!controller.error && controller.isOpen(),"signed deployment finishes");
+            checkSideTextures(controller);
+            require(controller.request(false),"return to raised start");
+            for (int tick=1;tick<=controller.durationTicks();tick++) elapsed(controller,tick);
+            if (lift) {
+                require(Math.abs(signedRider.posY-(pos.getY()+2.5))<.05,"rider crosses original height upward");
+                signedRider.setDead();
+            }
+            require(controller.attached() && !controller.error && !controller.isMoving(),"raised start retained after retraction");
+            checkSideTextures(controller);
+            require(controller.recover(false),"signed recovery");
+            cleanOriginals(world,signedSources,Blocks.STONE_SLAB.getDefaultState(),3);
+            require(controller.configureOffsets(player,2,2,2,true,false,lift,EnumFacing.SOUTH),"equal endpoints accepted");
+            require(controller.request(true) && !controller.error,"equal endpoints switch safely"); finish(controller);
+            require(controller.configureOffsets(player,0,0,2,true,false,lift,EnumFacing.SOUTH),"zero endpoints accepted");
+            require(!controller.attached(),"zero off restores editable originals");
+        }
+        for (int pixels=1;pixels<=16;pixels*=2) {
+            clear(world,pos);
+            controller=place(world,pos,EnumFacing.SOUTH);
+            List<BlockPos> pixelSources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+            require(controller.configureTreads(player,2,-3,pixels,true,false,false,EnumFacing.SOUTH),"pixel tread config");
+            require(!controller.configureTreads(player,2,-3,3,true,false,false,EnumFacing.SOUTH)
+                    && controller.treadPixels==pixels,"unsupported tread size rejected without changing settings");
+            require(controller.request(true),"pixel tread deployment"); finish(controller);
+            require(!controller.error,"pixel tread deployment finishes"); checkSideTextures(controller);
+            TileEntityRampController pixelCopy=new TileEntityRampController();
+            pixelCopy.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+            require(pixelCopy.treadPixels==pixels,"pixel tread size survives controller NBT");
+            require(controller.request(false),"pixel tread returns to start"); finish(controller);
+            require(!controller.error,"pixel tread retraction finishes"); checkSideTextures(controller);
+            require(controller.recover(false),"pixel tread restoration");
+            cleanOriginals(world,pixelSources,Blocks.STONE_SLAB.getDefaultState(),3);
+        }
+        clear(world,pos); controller=place(world,pos,EnumFacing.SOUTH);
+        world.setBlockState(pos.south(),Blocks.STONE_SLAB.getDefaultState(),3);
+        require(controller.configureTreads(player,0,-3,16,true,false,false,EnumFacing.SOUTH),"single full-block tread config");
+        require(controller.request(true),"single full-block tread deployment"); finish(controller);
+        require(!controller.error && world.getTileEntity(pos.south().down(3)) instanceof TileEntityControlledRamp,"single full-block tread reaches endpoint without division by zero");
+        require(controller.recover(false),"single full-block tread recovery");
         player.capabilities.isFlying=flying; player.noClip=noClip;
         clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);

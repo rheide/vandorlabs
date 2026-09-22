@@ -10,17 +10,27 @@ no Apply button. An edit resets the platform to its original position, then
 evaluates the redstone signal using the new settings:
 
 - **Mode:** ramp (hinged first tread) or elevator (whole platform translates).
-- **Top / Bottom:** top lowers from the original platform; bottom raises from it.
+- **Start / off offset** and **End / on offset:** signed integers from -8 to +8,
+  measured from the original platform. Positive raises, negative lowers, zero is
+  flat. Type a value or use the adjacent minus/plus buttons; valid edits apply
+  immediately. For example, start `2`, end `-3` travels from two blocks up to
+  three blocks down. Equal endpoints are allowed. Trigger polarity still decides
+  which redstone signal selects the end position.
 - **Ramp direction:** north, east, south or west, independent of the controller's
   arrow. The arrow still selects the adjacent platform, so the controller may
   sit alongside the ramp. The chosen direction points toward the far treads
-  (lower for Top, higher for Bottom).
-- **Vertical travel:** 1–8 blocks. The far ramp tread, or the entire elevator,
-  travels exactly this distance.
+  (the hinge stays at the original height at both endpoints).
 - **Deploy when redstone is ON / OFF:** choose either signal polarity.
 - **Base speed:** fast or slow. Slow takes twice as long.
-- **Treads:** stairs (two per block) or smooth (eight per block), used in ramp mode.
+- **Tread px:** tread width along the ramp, choose **1, 2, 4, 8 or 16 pixels** (16 pixels =
+  one block). Type an allowed value or use minus/plus to step through the choices;
+  edits apply immediately. `1` is
+  finest, `8` is half-block stairs, and `16` is a full-block step. This setting is
+  disabled for elevators. Existing stairs retain 8px treads; existing smooth
+  ramps retain their actual 2px treads. A one-block ramp with a single 16px tread
+  moves that entire tread because it has no separate hinge tread.
 
+Travel is the absolute difference between the two offsets (up to 16 blocks).
 Full-stroke time is `max(platform length, travel) × 10 ticks` on fast, or
 `× 20 ticks` on slow (the previous fast speed). For example, a four-long platform
 with three-block travel takes two seconds on fast and four on slow. Reversing redstone mid-animation
@@ -37,11 +47,12 @@ small difference between player and platform update times at block boundaries.
 There is no connect/disconnect operation. Each deployment scans face-connected
 blocks matching the type **and complete blockstate** of the block directly in
 front, on that same horizontal layer. Different slab halves/material variants
-remain separate. Maximum footprint: **8 blocks wide × 8 blocks long** (64 source
-blocks), with **8 blocks maximum vertical travel**. Matching blocks beyond those
+remain separate. Maximum footprint: **8 blocks wide × 16 blocks long** (128 source
+blocks), with **each endpoint within 8 blocks of the original height**. Matching blocks beyond those
 bounds are ignored, not treated as an error. Selection grows from the arrow's
 front block using a repeatable connected flood fill; sideways/backward growth
-also counts toward the eight-block spans. Diagonal contact does not connect;
+also counts toward these spans. Length follows the configured ramp direction;
+width is perpendicular to it, independently of the controller’s selection arrow. Diagonal contact does not connect;
 holes remain holes. Bounds are shown in the dialog. Previously deployed larger
 platforms retain their saved blocks until restored; new deployments use these limits.
 
@@ -58,13 +69,15 @@ the next step while animating and stops safely if new construction blocks it.
 Remove the obstruction and toggle redstone to retry. The platform blocks themselves
 remain protected while deployed.
 
-On completing retraction, the exact original blocks are
-restored and every reservation is removed. The platform can then be edited
-normally; the next activation discovers the new footprint. Remove the controller
+When the start offset is zero, completing retraction restores the exact original
+blocks and removes every reservation. The restored platform can then be edited
+normally; the next activation discovers the new footprint. A nonzero start offset
+keeps the platform attached at that height, including while off; configuring it
+initially positions it there immediately. Remove the controller
 to restore immediately. All settings may change while deployed: the old platform
 is reset before the new configuration is used. If its original position or a
 rider's reset path is blocked, the reset is rejected and the saved blocks and old
-settings are retained. A valid travel value is submitted as it is typed; blank or
+settings are retained. A valid offset value is submitted as it is typed; blank or
 out-of-range intermediate text is not submitted.
 
 Validation errors persist in the dialog. A failed scan changes no blocks.
