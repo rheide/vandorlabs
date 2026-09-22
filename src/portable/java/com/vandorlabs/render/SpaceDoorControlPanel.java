@@ -15,8 +15,8 @@ public final class SpaceDoorControlPanel {
         if (paired && !hingeOnVisualLeft) return Side.NONE;
         return hingeOnVisualLeft?Side.LEFT:Side.RIGHT;
     }
-    public static double x0(Side side) { return side==Side.RIGHT?14:1; }
-    public static double x1(Side side) { return side==Side.RIGHT?15:2; }
+    public static double x0(Side side) { return side==Side.RIGHT?15:0; }
+    public static double x1(Side side) { return side==Side.RIGHT?16:1; }
     // Both models face local +Z. Mount the pad against the rear of the jamb,
     // clear of the moving leaf and within the placed block after offsets.
     public static double z0(boolean sliding) { return sliding?3:8.24; }

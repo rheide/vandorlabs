@@ -4,6 +4,7 @@
     "leaf": "vandorlabs:blocks/space_doors/low/door_ventilation",
     "frame": "vandorlabs:blocks/space_doors/low/double_frame_metal",
     "edge": "vandorlabs:blocks/space_doors/low/hinge",
+    "leaf_side": "vandorlabs:blocks/wall_panel_dark",
     "hinge": "vandorlabs:blocks/space_doors/low/hinge",
     "glass": "vandorlabs:blocks/space_doors/low/observation_glass",
     "pane": "vandorlabs:blocks/space_doors/low/glass_tile",
@@ -42,39 +43,39 @@
           ]
         },
         "east": {
-          "texture": "#edge",
+          "texture": "#leaf_side",
           "uv": [
+            7,
             0,
-            0,
-            1,
-            1
+            9,
+            16
           ]
         },
         "west": {
-          "texture": "#edge",
+          "texture": "#leaf_side",
           "uv": [
+            7,
             0,
-            0,
-            1,
-            1
+            9,
+            16
           ]
         },
         "up": {
-          "texture": "#edge",
+          "texture": "#leaf_side",
           "uv": [
-            0,
-            0,
             1,
-            1
+            7,
+            16,
+            9
           ]
         },
         "down": {
-          "texture": "#edge",
+          "texture": "#leaf_side",
           "uv": [
-            0,
-            0,
             1,
-            1
+            7,
+            16,
+            9
           ]
         }
       }

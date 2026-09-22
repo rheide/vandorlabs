@@ -44,7 +44,11 @@ def plate(x0,y0,x1,y1, texture, uv, z0=8,z1=9):
 def leaf_parts(x0,y0,x1,y1,sliding,texture='leaf'):
     # One rectangular slab, including the hinge side. No rebate or internal wall.
     z0,z1=(7,9) if sliding else (LEAF_FRONT,LEAF_BACK)
-    return [plate(x0,y0,x1,y1,texture,[x0,(32-y1)/2,x1,(32-y0)/2],z0,z1)]
+    slab=plate(x0,y0,x1,y1,texture,[x0,(32-y1)/2,x1,(32-y0)/2],z0,z1)
+    for side in ('east','west','up','down'):
+        slab['faces'][side]['texture']='#leaf_side'
+        slab['faces'][side]['uv']=[z0,0,z1,16] if side in ('east','west') else [x0,z0,x1,z1]
+    return [slab]
 
 def mirror(elements):
     result = copy.deepcopy(elements)
@@ -119,6 +123,7 @@ def model(elements, family='standard'):
     if glass_family not in GLASS_FAMILIES: glass_family='observation'
     return {'ambientocclusion':False,'textures':{'leaf':TEX+texture_name(family),
             'frame':TEX+'double_frame_metal','edge':TEX+'hinge',
+            'leaf_side':'vandorlabs:blocks/wall_panel_dark',
             'hinge':TEX+'hinge','glass':TEX+texture_name(glass_family)+'_glass',
             'pane':TEX+'glass_tile','particle':TEX+texture_name(family)},'elements':elements}
 

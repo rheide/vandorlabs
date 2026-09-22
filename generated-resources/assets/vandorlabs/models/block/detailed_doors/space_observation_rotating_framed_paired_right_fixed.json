@@ -4,6 +4,7 @@
     "leaf": "vandorlabs:blocks/space_doors/observation_metal",
     "frame": "vandorlabs:blocks/space_doors/double_frame_metal",
     "edge": "vandorlabs:blocks/space_doors/hinge",
+    "leaf_side": "vandorlabs:blocks/wall_panel_dark",
     "hinge": "vandorlabs:blocks/space_doors/hinge",
     "glass": "vandorlabs:blocks/space_doors/observation_glass",
     "pane": "vandorlabs:blocks/space_doors/glass_tile",
