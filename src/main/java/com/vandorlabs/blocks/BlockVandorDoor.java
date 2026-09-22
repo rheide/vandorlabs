@@ -317,26 +317,35 @@ public class BlockVandorDoor extends BlockVandorDirectional {
         if (powered != wasPowered) setPowered(world, pos, state, powered);
     }
 
-    private void setPowered(World world, BlockPos pos, IBlockState state, boolean powered) {
+    protected void setPowered(World world, BlockPos pos, IBlockState state, boolean powered, boolean open) {
         boolean changed = false;
+        boolean openChanged = false;
         BlockPos lowerPos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
         BlockPos upperPos = lowerPos.up();
         IBlockState lower = world.getBlockState(lowerPos);
         if (lower.getBlock() == this
-                && (lower.getValue(OPEN) != powered || getActualState(lower, world, lowerPos).getValue(POWERED) != powered)) {
-            world.setBlockState(lowerPos, lower.withProperty(OPEN, powered).withProperty(POWERED, powered), 2);
+                && (lower.getValue(OPEN) != open || getActualState(lower, world, lowerPos).getValue(POWERED) != powered)) {
+            openChanged |= lower.getValue(OPEN) != open;
+            world.setBlockState(lowerPos, lower.withProperty(OPEN, open).withProperty(POWERED, powered), 2);
             changed = true;
         }
         IBlockState upper = world.getBlockState(upperPos);
         if (upper.getBlock() == this
-                && (upper.getValue(OPEN) != powered || upper.getValue(POWERED) != powered)) {
-            world.setBlockState(upperPos, upper.withProperty(OPEN, powered).withProperty(POWERED, powered), 2);
+                && (upper.getValue(OPEN) != open || upper.getValue(POWERED) != powered)) {
+            openChanged |= upper.getValue(OPEN) != open;
+            world.setBlockState(upperPos, upper.withProperty(OPEN, open).withProperty(POWERED, powered), 2);
             changed = true;
         }
-        if (changed) {
-            world.playSound(null, pos, powered ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        if (changed && openChanged) {
+            world.playSound(null, pos, open ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
     }
+
+    private void setPowered(World world, BlockPos pos, IBlockState state, boolean powered) {
+        setPowered(world,pos,state,powered,powered);
+    }
+
+    protected boolean canToggleByHand(World world,BlockPos lowerPos) { return true; }
 
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
@@ -347,6 +356,7 @@ public class BlockVandorDoor extends BlockVandorDirectional {
                         world, lower.getX(), lower.getY(), lower.getZ());
             return true;
         }
+        if (!canToggleByHand(world,lowerPos(state,pos))) return true;
         if (!world.isRemote) {
             boolean open = !state.getValue(OPEN);
             setOpen(world, pos, state, open);
@@ -364,7 +374,8 @@ public class BlockVandorDoor extends BlockVandorDirectional {
                     IBlockState nstate = world.getBlockState(npos);
                     BlockDoor.EnumHingePosition neighborHinge = neighbor
                             .getActualState(nstate, world, npos).getValue(HINGE);
-                    if (neighborHinge != myHinge && nstate.getValue(OPEN) != open) {
+                    if (neighborHinge != myHinge && nstate.getValue(OPEN) != open
+                            && neighbor.canToggleByHand(world,npos)) {
                         neighbor.setOpen(world, npos, nstate, open);
                     }
                 }

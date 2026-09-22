@@ -7,6 +7,7 @@ import com.vandorlabs.animation.DoorAnimation;
 import com.vandorlabs.render.DoorLeaf;
 import com.vandorlabs.render.DoorLeafTransform;
 import com.vandorlabs.render.DoorPanelLayout;
+import com.vandorlabs.render.SpaceDoorControlPanel;
 import com.vandorlabs.tiles.TileEntitySlidingDoor;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
@@ -388,6 +389,63 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             GlStateManager.enableLighting();
             GlStateManager.popMatrix();
         }
+        if (!glass) {
+            SpaceDoorControlPanel.Side side=com.vandorlabs.blocks.BlockConfigurableSpaceDoor
+                    .panelSide(tile.getWorld(),tile.getPos(),state);
+            if (side!=SpaceDoorControlPanel.Side.NONE)
+                renderSpaceDoorControlPanel(tile,facing,side,x,y,z);
+        }
+    }
+
+    private static void renderSpaceDoorControlPanel(com.vandorlabs.tiles.TileEntitySpaceDoor tile,
+            EnumFacing facing,SpaceDoorControlPanel.Side side,double x,double y,double z) {
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x,y,z);
+        orientDetailedDoor(facing);
+        GlStateManager.translate(0,0,tile.positionOffset());
+        GlStateManager.scale(1F/16,1F/16,1F/16);
+        GlStateManager.disableLighting();
+        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        TextureAtlasSprite buttons=Minecraft.getMinecraft().getTextureMapBlocks()
+                .getAtlasSprite("vandorlabs:blocks/material_control_buttons");
+        TextureAtlasSprite wall=Minecraft.getMinecraft().getTextureMapBlocks()
+                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+        float x0=(float)SpaceDoorControlPanel.x0(side),x1=(float)SpaceDoorControlPanel.x1(side);
+        float y0=(float)SpaceDoorControlPanel.Y0,y1=(float)SpaceDoorControlPanel.Y1;
+        float z0=(float)SpaceDoorControlPanel.z0(tile.isSliding()),
+                z1=(float)SpaceDoorControlPanel.z1(tile.isSliding());
+        float u0=buttons.getInterpolatedU(0),u1=buttons.getInterpolatedU(16);
+        float v0=buttons.getInterpolatedV(0),v1=buttons.getInterpolatedV(16);
+        // Match the Programmable Console's deck-side housing: U follows
+        // depth and V follows the local height, using the native atlas pixels.
+        float sideU0=wall.getInterpolatedU(z0),sideU1=wall.getInterpolatedU(z1);
+        float sideV0=wall.getInterpolatedV(32-y1),sideV1=wall.getInterpolatedV(32-y0);
+        float topV0=wall.getInterpolatedV(z0),topV1=wall.getInterpolatedV(z1);
+        float wallX0=wall.getInterpolatedU(x0),wallX1=wall.getInterpolatedU(x1);
+        BufferBuilder buf=Tessellator.getInstance().getBuffer();
+        buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+        if (side==SpaceDoorControlPanel.Side.LEFT) {
+            quad(buf,x1,y1,z1,x1,y0,z1,x1,y0,z0,x1,y1,z0,
+                    u0,v0,u0,v1,u1,v1,u1,v0);
+            quad(buf,x0,y1,z0,x0,y0,z0,x0,y0,z1,x0,y1,z1,
+                    sideU0,sideV0,sideU0,sideV1,sideU1,sideV1,sideU1,sideV0);
+        } else {
+            quad(buf,x0,y1,z0,x0,y0,z0,x0,y0,z1,x0,y1,z1,
+                    u0,v0,u0,v1,u1,v1,u1,v0);
+            quad(buf,x1,y1,z1,x1,y0,z1,x1,y0,z0,x1,y1,z0,
+                    sideU1,sideV0,sideU1,sideV1,sideU0,sideV1,sideU0,sideV0);
+        }
+        quad(buf,x0,y1,z0,x0,y1,z1,x1,y1,z1,x1,y1,z0,
+                wallX0,topV0,wallX0,topV1,wallX1,topV1,wallX1,topV0);
+        quad(buf,x0,y0,z1,x0,y0,z0,x1,y0,z0,x1,y0,z1,
+                wallX0,topV1,wallX0,topV0,wallX1,topV0,wallX1,topV1);
+        quad(buf,x0,y1,z1,x0,y0,z1,x1,y0,z1,x1,y1,z1,
+                wallX0,sideV0,wallX0,sideV1,wallX1,sideV1,wallX1,sideV0);
+        quad(buf,x1,y1,z0,x1,y0,z0,x0,y0,z0,x0,y1,z0,
+                wallX1,sideV0,wallX1,sideV1,wallX0,sideV1,wallX0,sideV0);
+        Tessellator.getInstance().draw();
+        GlStateManager.enableLighting();
+        GlStateManager.popMatrix();
     }
 
     private static void orientDetailedDoor(EnumFacing facing) {

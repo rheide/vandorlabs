@@ -193,6 +193,12 @@ public class ReproLab {
                 DIAGONAL_UP.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
         SHOTS.add(new Shot("diagonal_down", DIAGONAL_DOWN.getX() + 0.5D, eyeLevelFeet,
                 DIAGONAL_DOWN.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
+        SHOTS.add(new Shot("diagonal_down_oblique", DIAGONAL_DOWN.getX() + 1.5D, eyeLevelFeet,
+                DIAGONAL_DOWN.getZ() + 0.5D - SIDE_DIST, 20.0F, 0.0F));
+        SHOTS.add(new Shot("diagonal_down_close_low", DIAGONAL_DOWN.getX() + 0.5D,
+                Y + .45D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("diagonal_down_close_high", DIAGONAL_DOWN.getX() + 0.5D,
+                Y + .65D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 5.0F));
         double doorFeet = Y + 1.0D - 1.62D;
         SHOTS.add(new Shot("door_closed", DOOR.getX() + 0.5D, doorFeet,
                 DOOR.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
@@ -288,6 +294,10 @@ public class ReproLab {
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
         for (String hinges:new String[]{"on","off"}) SHOTS.add(new Shot("gallery_space_config_hinges_"+hinges,
                 GALLERY_X-2.5D,galleryFeet+.4D,-21,-36,5));
+        SHOTS.add(new Shot("gallery_space_panel_sliding_edge",GALLERY_X-2.0D,
+                galleryFeet+.3D,-20.5D,-32,4));
+        SHOTS.add(new Shot("gallery_space_panel_rotating_edge",GALLERY_X+2.0D,
+                galleryFeet+.3D,-20.5D,32,4));
         // Stand inside the opening and inspect both jambs obliquely from both
         // depth edges. Missing step shoulders expose the magenta backing wall.
         for (String side : new String[]{"east","west"}) for (int edge : new int[]{-1,1}) {
@@ -588,6 +598,7 @@ public class ReproLab {
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         placeDiagonal(world, DIAGONAL_UP, false);
         placeDiagonal(world, DIAGONAL_DOWN, true);
+        world.setBlockState(DIAGONAL_DOWN.up(),Blocks.STONE.getDefaultState(),2);
         IBlockState inputWall = ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
                 .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
                         EnumFacing.NORTH)
@@ -918,6 +929,17 @@ public class ReproLab {
                 ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
                         .configure(2,1,true,0,false,false,shot.endsWith("_on"));
             }
+        } else if (shot.startsWith("gallery_space_panel_")) {
+            BlockPos p=new BlockPos(GALLERY_X,GALLERY_Y,-18);
+            placeDoor(world,p,"space_door",false);
+            for (BlockPos part:new BlockPos[]{p,p.up()}) {
+                IBlockState state=world.getBlockState(part);
+                world.setBlockState(part,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH),2);
+            }
+            setDoorHinge(world,p,BlockDoor.EnumHingePosition.RIGHT);
+            boolean sliding=shot.contains("sliding");
+            ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
+                    .configure(2,1,true,0,false,sliding,true);
         } else if (shot.startsWith("gallery_space_jamb_")) {
             placeDoor(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),"space_standard_rotating_framed",true);
             IBlockState backing=Blocks.CONCRETE.getDefaultState().withProperty(
@@ -1365,7 +1387,7 @@ public class ReproLab {
         if (name.startsWith("control")) return CONTROL;
         if (name.startsWith("console")) return CONSOLE;
         if (name.equals("diagonal_up")) return DIAGONAL_UP;
-        if (name.equals("diagonal_down")) return DIAGONAL_DOWN;
+        if (name.startsWith("diagonal_down")) return DIAGONAL_DOWN;
         if (name.startsWith("diagonal")) return DIAGONAL;
         if (name.startsWith("door")) return DOOR;
         if (name.startsWith("detailed_doors")) return MODEL_HINGED;

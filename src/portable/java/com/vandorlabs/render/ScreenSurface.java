@@ -15,9 +15,11 @@ public final class ScreenSurface {
         }
     }
     private static final Quad FLAT=new Quad(0,16,0,-.1,16,-.1);
-    private static final Quad CONSOLE=new Quad(.5,15.5,1.46,7.70,15.59,15.71);
-    private static final Quad DIAGONAL=new Quad(.5,15.5,4.25,4.15,14.85,14.75);
-    private static final Quad DIAGONAL_INVERTED=new Quad(.5,15.5,1.15,14.75,11.75,4.15);
+    private static final Quad CONSOLE=new Quad(.5,15.5,1.46,7.70,15.59,14.75);
+    private static final Quad DIAGONAL=new Quad(.5,15.5,4.25,4.0,15.85,14.75);
+    // The inverted face needs a little more clearance from the housing than
+    // the old 0.1px gap; at oblique angles its background z-fought the image.
+    private static final Quad DIAGONAL_INVERTED=new Quad(.5,15.5,1.15,14.5,11.75,3.9);
     private ScreenSurface() { }
     public static Quad quad(Kind kind,boolean inverted) {
         if (kind==Kind.CONSOLE) return CONSOLE;

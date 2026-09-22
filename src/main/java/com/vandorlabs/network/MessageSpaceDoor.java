@@ -2,6 +2,7 @@ package com.vandorlabs.network;
 
 import com.vandorlabs.container.ContainerSpaceDoor;
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
+import com.vandorlabs.persistence.SpaceDoorData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
@@ -10,17 +11,19 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 
 public class MessageSpaceDoor implements IMessage {
     private BlockPos pos;
-    private int design,detail,channel,slideDirection;
+    private int design,detail,channel,slideDirection,trigger;
     private boolean framed;
     private boolean middle;
-    private boolean sliding,hinges;
+    private boolean sliding,hinges,panel;
     public MessageSpaceDoor() {}
-    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,boolean middle,boolean sliding,boolean hinges) {
+    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
         this.pos=pos; this.design=design; this.detail=detail; this.framed=framed; this.channel=channel;
         this.slideDirection=slideDirection;
         this.middle=middle;
         this.sliding=sliding;
         this.hinges=hinges;
+        this.trigger=trigger;
+        this.panel=panel;
     }
     @Override public void fromBytes(ByteBuf b) {
         pos=BlockPos.fromLong(b.readLong()); design=b.readInt(); detail=b.readInt(); framed=b.readBoolean(); channel=b.readInt();
@@ -28,6 +31,8 @@ public class MessageSpaceDoor implements IMessage {
         middle=b.readBoolean();
         sliding=b.readBoolean();
         hinges=b.readBoolean();
+        trigger=b.readInt();
+        panel=b.readBoolean();
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
@@ -35,12 +40,15 @@ public class MessageSpaceDoor implements IMessage {
         b.writeBoolean(middle);
         b.writeBoolean(sliding);
         b.writeBoolean(hinges);
+        b.writeInt(trigger);
+        b.writeBoolean(panel);
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
                 if (!TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
+                        || !SpaceDoorData.validTrigger(m.trigger)
                         || m.channel<0 || m.pos==null
                         || !player.world.isBlockLoaded(m.pos) || !(player.openContainer instanceof ContainerSpaceDoor)) return;
                 TileEntity raw=player.world.getTileEntity(m.pos);
@@ -54,8 +62,8 @@ public class MessageSpaceDoor implements IMessage {
                     other=(TileEntitySpaceDoor)player.world.getTileEntity(mate);
                     if (!other.usable(player)) return;
                 }
-                tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding,m.hinges); tile.setRedstoneChannel(m.channel);
-                if (other!=null) { other.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding,m.hinges); other.setRedstoneChannel(m.channel); }
+                tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding,m.hinges,m.trigger,m.panel); tile.setRedstoneChannel(m.channel);
+                if (other!=null) { other.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding,m.hinges,m.trigger,m.panel); other.setRedstoneChannel(m.channel); }
             });
             return null;
         }

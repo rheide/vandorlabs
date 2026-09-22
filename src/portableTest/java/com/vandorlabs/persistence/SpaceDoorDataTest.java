@@ -23,7 +23,22 @@ public final class SpaceDoorDataTest {
             }
         SpaceDoorData empty=SpaceDoorData.read(new MemoryPrimitiveData());
         check(empty.design==2 && empty.detail==1 && empty.framed && empty.direction==0
-                && !empty.middle && !empty.sliding && empty.hinges,"legacy defaults");
+                && !empty.middle && !empty.sliding && empty.hinges && empty.panel
+                && empty.trigger==SpaceDoorData.TRIGGER_DISABLED,"legacy defaults");
+        MemoryPrimitiveData panelOff=new MemoryPrimitiveData();
+        new SpaceDoorData(2,1,true,0,false,false,true,0,false).write(panelOff);
+        check(!SpaceDoorData.read(panelOff).panel,"disabled panel survives save and copy");
+        for (int trigger=0;trigger<=2;trigger++) {
+            MemoryPrimitiveData tag=new MemoryPrimitiveData();
+            new SpaceDoorData(2,1,true,0,false,false,true,trigger).write(tag);
+            check(SpaceDoorData.read(tag).trigger==trigger,"trigger survives save and copy");
+        }
+        check(SpaceDoorData.openForSignal(SpaceDoorData.TRIGGER_REDSTONE_ON,true)
+                && !SpaceDoorData.openForSignal(SpaceDoorData.TRIGGER_REDSTONE_ON,false),"open on signal");
+        check(!SpaceDoorData.openForSignal(SpaceDoorData.TRIGGER_REDSTONE_OFF,true)
+                && SpaceDoorData.openForSignal(SpaceDoorData.TRIGGER_REDSTONE_OFF,false),"open without signal");
+        check(new SpaceDoorData(2,1,true,0,false,false,true,99).trigger
+                ==SpaceDoorData.TRIGGER_DISABLED,"invalid trigger fallback");
         SpaceDoorData bad=new SpaceDoorData(-1,9,false,90);
         check(bad.design==2 && bad.detail==1 && bad.direction==0,"invalid settings fallback");
         check(new SpaceDoorData(15,1,true,0).design==2,"unknown design fallback");

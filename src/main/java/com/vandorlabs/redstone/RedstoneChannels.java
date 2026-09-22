@@ -67,9 +67,16 @@ public final class RedstoneChannels {
         network(tile.getWorld()).inputChanged(member);
     }
 
+    public static void latchChanged(RedstoneChannelLatch source,boolean on) {
+        TileEntity tile=source.channelTile();
+        if (tile.getWorld()==null || tile.getWorld().isRemote || source.getRedstoneChannel()<=0) return;
+        network(tile.getWorld()).latchChanged(source,on);
+    }
+
     private static final class Network {
         private final Map<Integer, Set<RedstoneChannelMember>> members = new java.util.HashMap<>();
         private final Map<Integer, Integer> poweredMembers = new java.util.HashMap<>();
+        private final Map<Integer, Boolean> latchStates = new java.util.HashMap<>();
 
         void register(RedstoneChannelMember member) {
             int channel = member.getRedstoneChannel();
@@ -83,6 +90,13 @@ public final class RedstoneChannels {
                 members.put(channel, set);
             }
             if (!set.add(member)) return;
+            if (member instanceof RedstoneChannelLatch
+                    && ((RedstoneChannelLatch)member).isChannelLatch()) {
+                RedstoneChannelLatch latch=(RedstoneChannelLatch)member;
+                Boolean shared=latchStates.get(channel);
+                if (shared==null) latchStates.put(channel,latch.latchOn());
+                else latch.applyLinkedLatch(shared);
+            }
             int before = poweredMembers.containsKey(channel) ? poweredMembers.get(channel) : 0;
             int after = reconcile(channel, set);
             if ((before > 0) != (after > 0)) notifyChannel(channel, after > 0);
@@ -100,7 +114,15 @@ public final class RedstoneChannels {
                 if (set.isEmpty()) {
                     members.remove(channel);
                     poweredMembers.remove(channel);
+                    latchStates.remove(channel);
                 } else {
+                    boolean hasLatch=false;
+                    for (RedstoneChannelMember remaining:set)
+                        if (remaining instanceof RedstoneChannelLatch
+                                && ((RedstoneChannelLatch)remaining).isChannelLatch()) {
+                            hasLatch=true; break;
+                        }
+                    if (!hasLatch) latchStates.remove(channel);
                     int after = reconcile(channel, set);
                     if ((before > 0) != (after > 0)) notifyChannel(channel, after > 0);
                 }
@@ -115,6 +137,20 @@ public final class RedstoneChannels {
             int before = poweredMembers.containsKey(channel) ? poweredMembers.get(channel) : 0;
             int after = reconcile(channel, set);
             if ((before > 0) != (after > 0)) notifyChannel(channel, after > 0);
+        }
+
+        void latchChanged(RedstoneChannelLatch source,boolean on) {
+            int channel=source.getRedstoneChannel();
+            Set<RedstoneChannelMember> set=members.get(channel);
+            if (set==null || !set.contains(source)) return;
+            int before=poweredMembers.containsKey(channel)?poweredMembers.get(channel):0;
+            latchStates.put(channel,on);
+            for (RedstoneChannelMember member:new ArrayList<>(set))
+                if (member!=source && member instanceof RedstoneChannelLatch
+                        && ((RedstoneChannelLatch)member).isChannelLatch())
+                    ((RedstoneChannelLatch)member).applyLinkedLatch(on);
+            int after=reconcile(channel,set);
+            if ((before>0)!=(after>0)) notifyChannel(channel,after>0);
         }
 
         /**

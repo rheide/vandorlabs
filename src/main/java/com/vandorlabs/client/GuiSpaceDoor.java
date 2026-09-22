@@ -5,6 +5,7 @@ import com.vandorlabs.network.MessageSpaceDoor;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
 import com.vandorlabs.render.SpaceDoorMotion;
+import com.vandorlabs.persistence.SpaceDoorData;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -19,8 +20,9 @@ public class GuiSpaceDoor extends GuiContainer {
     private static final int ROW_H=14, LIST_ROWS=10, LIST_H=ROW_H*LIST_ROWS;
     private final TileEntitySpaceDoor tile;
     private int design,detail,scrollIndex,lastValidChannel;
+    private int trigger;
     private SpaceDoorMotion motion;
-    private boolean framed,middle,hinges,draggingScrollbar;
+    private boolean framed,middle,hinges,panel,draggingScrollbar;
     private int listLeft,listTop,listRight,listBottom;
     private GuiTextField channelField;
     private GuiButton done,motionButton,hingeButton;
@@ -40,9 +42,11 @@ public class GuiSpaceDoor extends GuiContainer {
         motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
         middle=tile.isMiddle();
         hinges=tile.hasHinges();
+        panel=tile.hasPanel();
+        trigger=tile.getTrigger();
         lastValidChannel=tile.getRedstoneChannel();
         scrollIndex=Math.max(0,Math.min(maxScroll(),design-LIST_ROWS/2));
-        xSize=430; ySize=270;
+        xSize=420; ySize=240;
     }
     @Override public void initGui() {
         String channelText=channelField==null?Integer.toString(lastValidChannel):channelField.getText();
@@ -55,14 +59,16 @@ public class GuiSpaceDoor extends GuiContainer {
         buttonList.add(new GuiButton(11,guiLeft+168,guiTop+66,154,20,SIZES[detail]));
         buttonList.add(new GuiButton(12,guiLeft+168,guiTop+92,154,20,framed?"Frame: Framed":"Frame: Bare"));
         buttonList.add(new GuiButton(14,guiLeft+168,guiTop+118,154,20,middle?"Position: Middle":"Position: Edge"));
-        hingeButton=new GuiButton(15,guiLeft+338,guiTop+208,80,20,"");
+        buttonList.add(new GuiButton(16,guiLeft+168,guiTop+144,154,20,triggerLabel()));
+        hingeButton=new GuiButton(15,guiLeft+338,guiTop+190,80,20,"");
         buttonList.add(hingeButton);
         updateHingeButton();
-        channelField=new GuiTextField(0,fontRenderer,guiLeft+168,guiTop+164,154,18);
+        buttonList.add(new GuiButton(17,guiLeft+338,guiTop+216,80,20,panel?"Panel: On":"Panel: Off"));
+        channelField=new GuiTextField(0,fontRenderer,guiLeft+168,guiTop+190,154,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(channelText);
-        done=new GuiButton(1,guiLeft+109,guiTop+242,212,20,"Done");
+        done=new GuiButton(1,guiLeft+109,guiTop+216,212,20,"Done");
         buttonList.add(done);
         updateChannelValidity();
     }
@@ -76,6 +82,11 @@ public class GuiSpaceDoor extends GuiContainer {
         hingeButton.enabled=!motion.sliding;
         hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
     }
+    private String triggerLabel() {
+        return trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?"Trigger: Redstone ON"
+                :trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Trigger: Redstone OFF"
+                :"Trigger: Disabled";
+    }
     private void updateChannelValidity() {
         done.enabled=channel()>=0;
         channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);
@@ -84,7 +95,7 @@ public class GuiSpaceDoor extends GuiContainer {
         if (channel()>=0) lastValidChannel=channel();
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,middle,motion.sliding,hinges));
+                lastValidChannel,motion.direction,middle,motion.sliding,hinges,trigger,panel));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
@@ -97,6 +108,8 @@ public class GuiSpaceDoor extends GuiContainer {
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
         else if (button.id==14) { middle=!middle; button.displayString=middle?"Position: Middle":"Position: Edge"; }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
+        else if (button.id==16) { trigger=(trigger+1)%3; button.displayString=triggerLabel(); }
+        else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }
         else return;
         sendUpdate();
     }
@@ -167,8 +180,8 @@ public class GuiSpaceDoor extends GuiContainer {
         int thumb=Math.max(12,LIST_H*LIST_ROWS/LABELS.length);
         int top=listTop+(maxScroll()==0?0:(LIST_H-thumb)*scrollIndex/maxScroll());
         drawRect(listRight+1,top,listRight+7,top+thumb,0xFF7895A8);
-        drawRect(previewX-2,previewY-2,previewX+82,previewY+162,0xFF070E14);
-        drawRect(previewX,previewY,previewX+80,previewY+160,0xFF26343D);
+        drawRect(previewX-2,previewY-2,previewX+72,previewY+142,0xFF070E14);
+        drawRect(previewX,previewY,previewX+70,previewY+140,0xFF26343D);
         int nativeWidth=128<<detail;
         ResourceLocation preview=new ResourceLocation("vandorlabs","textures/blocks/space_doors/"
                 +TileEntitySpaceDoor.DETAILS[detail]+"/"+TEXTURES[design]+".png");
@@ -176,7 +189,7 @@ public class GuiSpaceDoor extends GuiContainer {
         GlStateManager.color(1,1,1,1);
         GlStateManager.enableBlend();
         drawScaledCustomSizeModalRect(previewX,previewY,0,0,nativeWidth,nativeWidth*2,
-                80,160,nativeWidth,nativeWidth*2);
+                70,140,nativeWidth,nativeWidth*2);
         GlStateManager.disableBlend();
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
@@ -184,9 +197,9 @@ public class GuiSpaceDoor extends GuiContainer {
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
         fontRenderer.drawString("Options",168,28,0xDAE8F0);
         fontRenderer.drawString("Preview",338,28,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",168,150,0xDAE8F0);
-        if (channel()<0) fontRenderer.drawString("Invalid channel",168,187,0xFF7777);
-        fontRenderer.drawString("Changes apply live to both paired leaves",12,224,0xDAE8F0);
+        fontRenderer.drawString("Channel (0 = none)",168,178,0xDAE8F0);
+        if (channel()<0) fontRenderer.drawString("Invalid channel",168,212,0xFF7777);
+        fontRenderer.drawString("Changes apply live",12,196,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground(); super.drawScreen(x,y,partial); channelField.drawTextBox();

@@ -17,6 +17,8 @@ import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -33,6 +35,8 @@ final class RedstoneChannelRuntimeChecks {
     static void run(World world, EntityPlayer player) {
         checkTrianglePlacement(world, player);
         checkLeverPlacement(world,player);
+        checkPickedChannels(world,player);
+        checkLinkedLatches(world,player);
         Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_rocker"));
         Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "door_security"));
         Block rawLight = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "wall_lightbar_unlit"));
@@ -97,6 +101,8 @@ final class RedstoneChannelRuntimeChecks {
                 EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
         require(world.getBlockState(doorPos).getValue(BlockVandorDoor.OPEN),
                 "switch high did not propagate to door");
+        require(world.getBlockState(secondSwitchPos).getValue(BlockVandorSwitch.ON),
+                "linked rocker did not mirror the first switch");
         require(world.getBlockState(lightPos).getBlock() instanceof BlockLamp,
                 "switch high kept unlit block variant: "
                         + world.getBlockState(lightPos).getBlock().getRegistryName());
@@ -107,17 +113,21 @@ final class RedstoneChannelRuntimeChecks {
         channelSwitch.onBlockActivated(world, secondSwitchPos,
                 world.getBlockState(secondSwitchPos), player,
                 EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
+        require(!world.getBlockState(switchPos).getValue(BlockVandorSwitch.ON)
+                        && !world.getBlockState(secondSwitchPos).getValue(BlockVandorSwitch.ON)
+                        && !world.getBlockState(doorPos).getValue(BlockVandorDoor.OPEN),
+                "switch OFF did not release linked controls and receivers");
         channelSwitch.onBlockActivated(world, switchPos, world.getBlockState(switchPos), player,
                 EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
         require(world.getBlockState(doorPos).getValue(BlockVandorDoor.OPEN),
-                "first switch low released channel while second switch remained high");
+                "switch ON did not re-power channel");
         require(world.getBlockState(lightPos).getBlock() instanceof BlockLamp,
-                "first switch low extinguished light while second switch remained high");
+                "switch ON did not re-light channel fixture");
         channelSwitch.onBlockActivated(world, secondSwitchPos,
                 world.getBlockState(secondSwitchPos), player,
                 EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
         require(!world.getBlockState(doorPos).getValue(BlockVandorDoor.OPEN),
-                "last of two switches low did not release door");
+                "linked switch OFF did not release door");
         require(world.getBlockState(lightPos).getBlock() instanceof BlockLampOff,
                 "last of two switches low kept lit block variant: "
                         + world.getBlockState(lightPos).getBlock().getRegistryName());
@@ -182,6 +192,93 @@ final class RedstoneChannelRuntimeChecks {
         world.setBlockToAir(lightPos);
         world.setBlockToAir(propulsionPos);
         System.out.println("[vandorlabs][reprolab] redstone-channel-runtime PASS");
+    }
+
+    private static void checkPickedChannels(World world,EntityPlayer player) {
+        BlockPos source=new BlockPos(20,25,28),target=source.east(2);
+        world.setBlockState(source.down(),Blocks.STONE.getDefaultState(),3);
+        world.setBlockState(target.down(),Blocks.STONE.getDefaultState(),3);
+        for (String id:new String[]{"switch_rocker","switch_button","industrial_lever","compact_lever"}) {
+            Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
+            require(block instanceof BlockVandorSwitch || block instanceof BlockIndustrialLever,
+                    "missing channel source "+id);
+            world.setBlockToAir(source); world.setBlockToAir(target);
+            IBlockState state=block.getDefaultState();
+            if (block instanceof BlockVandorSwitch)
+                state=state.withProperty(BlockVandorSwitch.FACING,EnumFacing.UP);
+            else state=state.withProperty(BlockIndustrialLever.FLOOR,true);
+            world.setBlockState(source,state,3);
+            ((TileEntityRedstoneChannel)world.getTileEntity(source)).setRedstoneChannel(4271);
+            ItemStack picked=block.getPickBlock(world.getBlockState(source),null,world,source,player);
+            require(picked.getSubCompound("RedstoneChannelSettings")!=null
+                            && picked.getSubCompound("RedstoneChannelSettings").getInteger("Channel")==4271,
+                    id+" creative pick lost channel");
+            require(picked.getItem() instanceof ItemBlock && ((ItemBlock)picked.getItem()).placeBlockAt(
+                    picked.copy(),player,world,target,EnumFacing.UP,.5F,.5F,.5F,state),
+                    id+" picked item did not place");
+            TileEntityRedstoneChannel copy=(TileEntityRedstoneChannel)world.getTileEntity(target);
+            require(copy.getRedstoneChannel()==4271 && !copy.isLocalOn(),
+                    id+" picked item did not restore channel alone");
+        }
+        world.setBlockToAir(source); world.setBlockToAir(target);
+        world.setBlockToAir(source.down()); world.setBlockToAir(target.down());
+    }
+
+    private static void checkLinkedLatches(World world,EntityPlayer player) {
+        BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs","industrial_lever"));
+        BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs","switch_rocker"));
+        BlockVandorSwitch button=(BlockVandorSwitch)Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs","switch_button"));
+        BlockPos leverPos=new BlockPos(20,25,32),rockerPos=leverPos.east(2),buttonPos=leverPos.east(4);
+        for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos})
+            world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
+        world.setBlockState(leverPos,lever.getDefaultState()
+                .withProperty(BlockIndustrialLever.FLOOR,true),3);
+        world.setBlockState(rockerPos,rocker.getDefaultState()
+                .withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
+        world.setBlockState(buttonPos,button.getDefaultState()
+                .withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
+        TileEntityRedstoneChannel leverTile=(TileEntityRedstoneChannel)world.getTileEntity(leverPos);
+        TileEntityRedstoneChannel rockerTile=(TileEntityRedstoneChannel)world.getTileEntity(rockerPos);
+        TileEntityRedstoneChannel buttonTile=(TileEntityRedstoneChannel)world.getTileEntity(buttonPos);
+        leverTile.setRedstoneChannel(8107);
+        lever.onBlockActivated(world,leverPos,world.getBlockState(leverPos),player,
+                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        rockerTile.setRedstoneChannel(8107);
+        require(world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON)
+                        && rockerTile.isLocalOn(),"joining rocker did not adopt active lever");
+        rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
+                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        require(!world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
+                        && !leverTile.isLocalOn(),"rocker OFF did not turn lever OFF");
+        buttonTile.setRedstoneChannel(8107);
+        button.onBlockActivated(world,buttonPos,world.getBlockState(buttonPos),player,
+                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        require(world.getBlockState(buttonPos).getValue(BlockVandorSwitch.ON)
+                        && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON)
+                        && !world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED),
+                "momentary button changed linked latch state");
+        rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
+                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        require(world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED),
+                "rocker ON did not turn lever ON while button was active");
+        rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
+                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        require(!world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
+                        && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON),
+                "latches stayed ON because momentary input kept channel powered");
+        leverTile.setRedstoneChannel(0);
+        lever.onBlockActivated(world,leverPos,world.getBlockState(leverPos),player,
+                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        require(world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
+                        && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON),
+                "channel-zero lever should remain independent");
+        for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos}) {
+            world.setBlockToAir(pos);
+            world.setBlockToAir(pos.down());
+        }
     }
 
     private static void checkLeverPlacement(World world,EntityPlayer player) {

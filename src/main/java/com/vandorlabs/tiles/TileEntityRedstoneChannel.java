@@ -3,6 +3,7 @@ package com.vandorlabs.tiles;
 import com.vandorlabs.blocks.BlockIndustrialLever;
 import com.vandorlabs.blocks.BlockVandorSwitch;
 import com.vandorlabs.redstone.RedstoneChannelMember;
+import com.vandorlabs.redstone.RedstoneChannelLatch;
 import com.vandorlabs.redstone.RedstoneChannels;
 import com.vandorlabs.persistence.NbtPrimitiveData;
 import com.vandorlabs.persistence.RedstoneData;
@@ -14,7 +15,7 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
 /** Channel and local latch state for switches whose visible state stays in metadata. */
-public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelMember {
+public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelLatch {
     private int channel;
     private boolean localOn;
     private boolean initialized;
@@ -38,19 +39,43 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
 
     public boolean isLocalOn() { return localOn; }
+    @Override public boolean latchOn() { return localOn; }
+    @Override public boolean isChannelLatch() {
+        if (world==null) return false;
+        net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
+        return block instanceof BlockIndustrialLever
+                || block instanceof BlockVandorSwitch
+                && !((BlockVandorSwitch)block).isMomentary();
+    }
+
+    @Override public void applyLinkedLatch(boolean on) {
+        if (world==null || world.isRemote || !isChannelLatch()) return;
+        IBlockState state=world.getBlockState(pos);
+        if (localOn!=on || !initialized) {
+            localOn=on;
+            initialized=true;
+            markDirty();
+            sync();
+        }
+        if (state.getBlock() instanceof BlockIndustrialLever)
+            ((BlockIndustrialLever)state.getBlock()).applyLinkedState(world,pos,state,on);
+        else if (state.getBlock() instanceof BlockVandorSwitch)
+            ((BlockVandorSwitch)state.getBlock()).applyLinkedState(world,pos,state,on);
+    }
 
     public void setLocalOn(boolean value) {
         if (localOn == value && initialized) return;
         localOn = value;
         initialized = true;
         markDirty();
-        RedstoneChannels.inputChanged(this);
+        if (isChannelLatch() && channel>0) RedstoneChannels.latchChanged(this,value);
+        else RedstoneChannels.inputChanged(this);
         sync();
     }
 
     @Override public boolean hasLocalRedstoneSignal() { return localOn; }
 
-    /** Switches transmit to a channel; their handles do not follow remote inputs. */
+    /** Receivers consume aggregate power; linked latches mirror through applyLinkedLatch. */
     @Override public void setChannelSignal(boolean powered) { }
 
     public boolean usable(EntityPlayer player) {

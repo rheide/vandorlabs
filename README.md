@@ -73,9 +73,13 @@ lighting, furniture, ramps, glass, and building materials.
   switch, lever, Lightbar Wall, Light Column Wall, Porthole, Window Lamp or
   Slatted Lamp, engine or hover fixture to set its channel. Channel `0` leaves
   a block unlinked.
-  Switches and levers transmit their local state, while doors, screens,
+  Levers and Rocker Switches on the same nonzero channel mirror each other's
+  ON state; push buttons remain momentary inputs. These controls transmit
+  their local state, while doors, screens,
   controllers and lights react when any loaded member on their channel has a
-  local redstone signal. Unlinked lights retain their normal right-click
+  local redstone signal. Creative pick-block on a switch or lever copies its
+  channel to the new item; placing that item restores the channel without
+  copying the ON state. Unlinked lights retain their normal right-click
   toggle; linked lights use their authored lit/unlit variants to follow
   redstone power. Thrusters remember whether their active state uses a particle
   stream, so a channel switches between Off and the selected active mode.

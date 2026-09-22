@@ -4,7 +4,7 @@ The Space family is independent of the Detailed doors. The creative menu has one
 Space Door item, defaulting to Sliding Sideways in the Middle position.
 Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
 the design, Small/Medium/Large texture detail, framed/bare appearance, placement
-position, and redstone channel. Door types use a scrollable list with mouse-wheel,
+position, Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
 scrollbar and up/down-key navigation. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
 Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
@@ -15,8 +15,21 @@ The Hinges button below the preview toggles both fixed and moving hardware for
 rotating doors without changing their leaf, pivot or frame. It is disabled for
 sliding motion, preserving the last rotating choice. Existing doors default to
 hinges on. This preference is saved, synchronized to paired leaves, inherited
-by new mates and included in creative pick-block items. The channel label and
-field have moved up one option row.
+by new mates and included in creative pick-block items. Trigger cycles through
+Disabled, Redstone ON and Redstone OFF. Disabled preserves manual right-click
+control and ignores redstone for opening. ON opens while signaled; OFF opens
+while unsignaled. In either redstone mode, right-click does not toggle the door.
+The selected mode applies immediately, including to paired leaves, and is
+saved and copied with creative pick-block. Older doors default to Disabled.
+A three-pixel Control Buttons pad sits on the inward face of a jamb,
+between the hinge positions. It stays inside its own block at every door
+position and opens this dialog when clicked without sneaking. Rotating doors
+use the hinge jamb; sliding doors use the opposite jamb. A paired rotating
+door has one pad on the visual-left outer jamb; a paired sliding door has one
+on the visual-right outer jamb. A door with neighbors on both sides has no pad.
+The dialog's Panel: On/Off button sits
+below Hinges and applies immediately to both leaves. Existing doors default
+to Panel: On; the choice is saved and included in creative pick-block items.
 Creative pick-block on either half copies all selector settings, including the
 channel, into the item. Placement restores these settings before considering
 neighbor inheritance; it does not copy coordinates, power or open state, or

@@ -13,6 +13,9 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -72,6 +75,28 @@ public class BlockIndustrialLever extends BlockHorizontal {
         return new TileEntityRedstoneChannel();
     }
 
+    @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,
+            World world,BlockPos pos,EntityPlayer player) {
+        ItemStack stack=new ItemStack(this);
+        TileEntity raw=world.getTileEntity(pos);
+        if (raw instanceof TileEntityRedstoneChannel
+                && ((TileEntityRedstoneChannel)raw).getRedstoneChannel()!=0) {
+            NBTTagCompound settings=new NBTTagCompound();
+            settings.setInteger("Channel",((TileEntityRedstoneChannel)raw).getRedstoneChannel());
+            stack.setTagInfo("RedstoneChannelSettings",settings);
+        }
+        return stack;
+    }
+
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,
+            EntityLivingBase placer,ItemStack stack) {
+        super.onBlockPlacedBy(world,pos,state,placer,stack);
+        NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");
+        TileEntity raw=world.getTileEntity(pos);
+        if (!world.isRemote && settings!=null && raw instanceof TileEntityRedstoneChannel)
+            ((TileEntityRedstoneChannel)raw).setRedstoneChannel(Math.max(0,settings.getInteger("Channel")));
+    }
+
     @Override
     public IBlockState withRotation(IBlockState state, Rotation rot) {
         return state.withProperty(FACING, rot.rotate(state.getValue(FACING)));
@@ -114,6 +139,14 @@ public class BlockIndustrialLever extends BlockHorizontal {
     private void notifyPower(World world, BlockPos pos, IBlockState state) {
         world.notifyNeighborsOfStateChange(pos, this, false);
         world.notifyNeighborsOfStateChange(pos.offset(supportDirection(state)), this, false);
+    }
+
+    public void applyLinkedState(World world,BlockPos pos,IBlockState state,boolean on) {
+        if (state.getValue(POWERED)==on) return;
+        IBlockState next=state.withProperty(POWERED,on);
+        world.setBlockState(pos,next,3);
+        world.checkLight(pos);
+        notifyPower(world,pos,next);
     }
 
     private EnumFacing supportDirection(IBlockState state) {

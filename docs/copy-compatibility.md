@@ -14,6 +14,14 @@ NBT coordinates, and recreates the tile entity. Vandor Labs therefore remains
 compatible by keeping its metadata codecs lossless and all programmable
 settings in `TileEntityAnimatedScreenSelector.writeToNBT/readFromNBT`.
 
+WorldEdit 6.1.10 uses its own vanilla-only direction registry for `//rotate`.
+When WorldEdit is installed, Vandor Labs adds the facing metadata for every
+Vandor Labs door and propulsion block to that registry after block registration.
+The upper half of a door keeps its hinge, open, and power bits; its facing comes
+from the rotated lower half. Triangular thrusters also rotate their corner block
+variant on floors and ceilings. WorldEdit is optional: the integration loads only
+when that mod is present and does not modify its jar or other installed files.
+
 A WorldEdit selection must contain every cell of a multi-cell block. In
 particular, copy both the lower and upper cell of a door or chair; copying one
 cell is invalid for the same reason that half of a vanilla door is invalid.
@@ -42,6 +50,9 @@ GUI would otherwise consume the interaction.
   external metadata/NBT and destination-journal contracts used above.
 - `CopyCompatibilityRuntimeChecks` validates every Vandor Labs metadata codec, then
   runs representative programmable-block and two-cell door copies through the
-  WorldEdit adapter and BBW compatibility boundary in the live client.
+  WorldEdit adapter and BBW compatibility boundary in the live client. It also
+  runs WorldEdit's actual 90-degree clipboard block transform for every door and
+  propulsion ID, including floor/ceiling triangle corners, and pastes
+  representative rotated blocks through the WorldEdit adapter.
 - `testclient/test_viewscreen.sh` installs both test jars into its isolated
   client and requires the `copy-compat-runtime PASS` marker.

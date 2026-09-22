@@ -2,6 +2,8 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.BlockVandorDoor;
+import com.vandorlabs.blocks.BlockPropulsionLight;
+import com.vandorlabs.blocks.BlockTrianglePropulsionLight;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.compat.BetterBuildersWandsCompat;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
@@ -232,8 +234,119 @@ final class CopyCompatibilityRuntimeChecks {
                             + "expected " + sourceLowerActual + " / "
                             + sourceUpperActual + ", got " + targetLowerActual
                             + " / " + targetUpperActual);
+            checkWorldEditRotation(world,forgeWorld,forgeWorldClass,vectorClass,baseBlockClass);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("WorldEdit integration failed", e);
+        }
+    }
+
+    /** Exercise the same metadata transform invoked by //rotate before paste. */
+    private static void checkWorldEditRotation(World world,Object forgeWorld,Class<?> forgeWorldClass,
+            Class<?> vectorClass,Class<?> baseBlockClass) throws ReflectiveOperationException {
+        Object worldData=forgeWorldClass.getMethod("getWorldData").invoke(forgeWorld);
+        Object registry=worldData.getClass().getMethod("getBlockRegistry").invoke(worldData);
+        Object rotation=Class.forName("com.sk89q.worldedit.math.transform.AffineTransform")
+                .getMethod("rotateY",double.class)
+                .invoke(Class.forName("com.sk89q.worldedit.math.transform.AffineTransform")
+                        .newInstance(),90.0);
+        Method transform=Class.forName("com.sk89q.worldedit.extent.transform.BlockTransformExtent")
+                .getMethod("transform",baseBlockClass,
+                        Class.forName("com.sk89q.worldedit.math.transform.Transform"),
+                        Class.forName("com.sk89q.worldedit.world.registry.BlockRegistry"));
+        Constructor<?> base=baseBlockClass.getConstructor(int.class,int.class);
+        Method data=baseBlockClass.getMethod("getData"),id=baseBlockClass.getMethod("getId");
+        Method get=forgeWorldClass.getMethod("getBlock",vectorClass);
+        Method set=forgeWorldClass.getMethod("setBlock",vectorClass,baseBlockClass,boolean.class);
+        Object reference=transform.invoke(null,base.newInstance(Block.getIdFromBlock(Blocks.CHEST),2),rotation,registry);
+        EnumFacing rotated=Blocks.CHEST.getStateFromMeta((Integer)data.invoke(reference))
+                .getValue(net.minecraft.block.BlockChest.FACING);
+        require(rotated!=EnumFacing.NORTH,"WorldEdit test rotation actually turns blocks");
+        BlockPos from=new BlockPos(13,21,-12),to=new BlockPos(15,21,-12);
+        Constructor<?> vector=vectorClass.getConstructor(int.class,int.class,int.class);
+        Object fromVector=vector.newInstance(from.getX(),from.getY(),from.getZ());
+        Object toVector=vector.newInstance(to.getX(),to.getY(),to.getZ());
+        int checked=0;
+        for (Block block:Block.REGISTRY) {
+            if (!(block instanceof BlockVandorDoor) && !(block instanceof BlockPropulsionLight)) continue;
+            IBlockState state=block.getDefaultState();
+            if (block instanceof BlockVandorDoor)
+                state=state.withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH)
+                        .withProperty(BlockVandorDoor.OPEN,true);
+            else state=state.withProperty(BlockPropulsionLight.FACING,EnumFacing.NORTH)
+                    .withProperty(BlockPropulsionLight.POWERED,false);
+            Object rotatedBlock=transform.invoke(null,base.newInstance(Block.getIdFromBlock(block),
+                    block.getMetaFromState(state)),rotation,registry);
+            IBlockState placed=block.getStateFromMeta((Integer)data.invoke(rotatedBlock));
+            EnumFacing actual=block instanceof BlockVandorDoor
+                    ?placed.getValue(BlockVandorDoor.FACING):placed.getValue(BlockPropulsionLight.FACING);
+            require(actual==rotated && ((Integer)id.invoke(rotatedBlock))==Block.getIdFromBlock(block),
+                    "WorldEdit //rotate left facing unchanged for "+block.getRegistryName());
+            if (block instanceof BlockVandorDoor)
+                require(placed.getValue(BlockVandorDoor.OPEN),"rotated door lost open state");
+            else require(!placed.getValue(BlockPropulsionLight.POWERED),"rotated thruster lost power state");
+            if (block instanceof BlockTrianglePropulsionLight) for (EnumFacing face:new EnumFacing[]{EnumFacing.UP,EnumFacing.DOWN}) {
+                IBlockState floor=block.getDefaultState().withProperty(BlockPropulsionLight.FACING,face);
+                Object corner=transform.invoke(null,base.newInstance(Block.getIdFromBlock(block),
+                        block.getMetaFromState(floor)),rotation,registry);
+                Block changed=Block.getBlockById((Integer)id.invoke(corner));
+                require(changed instanceof BlockTrianglePropulsionLight && changed!=block
+                        && ((Integer)data.invoke(corner)&7)==face.getIndex(),
+                        "WorldEdit //rotate lost floor/ceiling triangle corner for "+block.getRegistryName());
+            }
+            checked++;
+        }
+        require(checked>20,"WorldEdit rotation did not cover all doors and thrusters");
+        BlockVandorDoor spaceDoor=(BlockVandorDoor)Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs","space_door"));
+        require(spaceDoor!=null,"Space Door is unavailable");
+        BlockPos doorFrom=new BlockPos(13,21,-15),doorTo=new BlockPos(15,21,-15);
+        IBlockState lower=spaceDoor.getDefaultState()
+                .withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH);
+        IBlockState upper=lower.withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.UPPER)
+                .withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.RIGHT);
+        world.setBlockState(doorFrom.down(),Blocks.STONE.getDefaultState(),2);
+        world.setBlockState(doorTo.down(),Blocks.STONE.getDefaultState(),2);
+        world.setBlockState(doorFrom,lower,2);
+        world.setBlockState(doorFrom.up(),upper,2);
+        for (int dy=0;dy<2;dy++) {
+            Object source=vector.newInstance(doorFrom.getX(),doorFrom.getY()+dy,doorFrom.getZ());
+            Object destination=vector.newInstance(doorTo.getX(),doorTo.getY()+dy,doorTo.getZ());
+            set.invoke(forgeWorld,destination,
+                    transform.invoke(null,get.invoke(forgeWorld,source),rotation,registry),true);
+        }
+        IBlockState pastedLower=world.getBlockState(doorTo);
+        IBlockState pastedUpper=world.getBlockState(doorTo.up());
+        require(pastedLower.getBlock()==spaceDoor && pastedUpper.getBlock()==spaceDoor
+                && pastedLower.getValue(BlockVandorDoor.FACING)==rotated
+                && !pastedLower.getValue(BlockVandorDoor.OPEN)
+                && pastedUpper.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.RIGHT
+                && !pastedUpper.getValue(BlockVandorDoor.POWERED)
+                && spaceDoor.getActualState(pastedUpper,world,doorTo.up()).getValue(BlockVandorDoor.FACING)==rotated,
+                "WorldEdit rotated Space Door lost orientation or upper-half metadata: expected facing "
+                +rotated+", lower="+pastedLower+", upper="+pastedUpper
+                +", upper actual="+spaceDoor.getActualState(pastedUpper,world,doorTo.up()));
+
+        // Representative ForgeWorld pastes verify the transformed data crosses the adapter.
+        for (Block block:new Block[]{detailedObservationDoor(),
+                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster")),
+                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_triangle"))}) {
+            IBlockState source=block.getDefaultState();
+            source=block instanceof BlockVandorDoor
+                    ?source.withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH)
+                    :source.withProperty(BlockPropulsionLight.FACING,EnumFacing.NORTH);
+            world.setBlockState(from,source,2);
+            Object rotatedBlock=transform.invoke(null,get.invoke(forgeWorld,fromVector),rotation,registry);
+            set.invoke(forgeWorld,toVector,rotatedBlock,true);
+            IBlockState target=world.getBlockState(to);
+            EnumFacing actual=block instanceof BlockVandorDoor
+                    ?target.getValue(BlockVandorDoor.FACING):target.getValue(BlockPropulsionLight.FACING);
+            require(actual==rotated && target.getBlock()==block,
+                    "WorldEdit paste lost rotated orientation for "+block.getRegistryName());
+        }
+        for (int upperMeta:new int[]{8,9,10,11,12,13,14,15}) {
+            Object rotatedUpper=transform.invoke(null,
+                    base.newInstance(Block.getIdFromBlock(detailedObservationDoor()),upperMeta),rotation,registry);
+            require((Integer)data.invoke(rotatedUpper)==upperMeta,"WorldEdit changed upper door hinge or power metadata");
         }
     }
 

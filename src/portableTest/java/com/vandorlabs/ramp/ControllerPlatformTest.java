@@ -132,7 +132,7 @@ public final class ControllerPlatformTest {
         close(AnimationFrames.top(1,4),.25,"animation UV top");
         close(AnimationFrames.bottom(1,4),.5,"animation UV bottom");
         ScreenSurface.Quad surface=ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false);
-        close(surface.topLeft.x,.5,"screen surface inset"); close(surface.topLeft.y,14.85,"screen surface top");
+        close(surface.topLeft.x,.5,"screen surface inset"); close(surface.topLeft.y,15.85,"screen surface top");
         check(RampGeometry.firstOccupiedY(10,.5,-1.0,-.25)==9,"occupied range floor");
         check(RampGeometry.lastOccupiedY(10,1,-1.0,-.25)==10,"occupied range ceiling");
         close(RampGeometry.riderTarget(10,10.25,10,.5),10.25,"rider follows surface");
@@ -163,15 +163,43 @@ public final class ControllerPlatformTest {
         close(InputSurfaceLayout.halfConsoleRear().vertices[2].z,7.70,
                 "half-console rear slope");
         ScreenHousingMesh consoleMesh=ScreenHousingMesh.console();
-        check(consoleMesh.quads.length==2&&consoleMesh.triangles.length==2,
+        check(consoleMesh.quads.length==5&&consoleMesh.triangles.length==0,
                 "console housing mesh topology");
         close(consoleMesh.quads[0].vertices[0].z,7.5,"console housing wedge depth");
+        close(consoleMesh.quads[0].vertices[2].z,15,"console slope ends before back edge");
+        close(consoleMesh.quads[1].vertices[2].z,16,"console has a one-pixel back ledge");
+        close(consoleMesh.quads[1].vertices[0].v,15,"console ledge uses the base edge texture strip");
+        check(ScreenSurface.quad(ScreenSurface.Kind.CONSOLE,false).topLeft.z<15,
+                "console artwork sits in front of the back ledge");
         ScreenHousingMesh diagonal=ScreenHousingMesh.diagonal(false);
         ScreenHousingMesh invertedDiagonal=ScreenHousingMesh.diagonal(true);
-        check(diagonal.quads.length==3&&diagonal.triangles.length==2,
+        check(diagonal.quads.length==12&&diagonal.triangles.length==0,
                 "diagonal housing mesh topology");
-        close(diagonal.quads[0].vertices[0].y,0,"floor diagonal starts low");
+        close(diagonal.quads[3].vertices[0].y,1,"floor diagonal starts one pixel above base");
+        close(diagonal.quads[3].vertices[0].z,1,"floor diagonal starts one pixel from front");
+        close(diagonal.quads[3].vertices[2].y,16,"floor diagonal reaches the block top");
+        close(diagonal.quads[3].vertices[2].z,15,"floor diagonal ends one pixel from back");
+        close(diagonal.quads[5].vertices[0].v,15,"diagonal ledge uses the base edge texture strip");
         close(invertedDiagonal.quads[0].vertices[0].y,16,"ceiling diagonal starts high");
+        check(invertedDiagonal.quads.length==15,"ceiling diagonal has a screen aperture");
+        close(invertedDiagonal.quads[3].vertices[0].y,15,"ceiling diagonal starts below top");
+        close(invertedDiagonal.quads[6].vertices[2].y,1,"ceiling diagonal ends above base");
+        close(invertedDiagonal.quads[3].vertices[0].v,1,"ceiling slope uses native wall UVs");
+        close(invertedDiagonal.quads[3].vertices[2].v,4.25,"ceiling slope tracks its pixel height");
+        for (int i=3;i<=6;i++) {
+            ScreenHousingMesh.Face frame=invertedDiagonal.quads[i];
+            double minX=16,maxX=0,minY=16,maxY=0;
+            for (ScreenHousingMesh.Vertex v:frame.vertices) {
+                minX=Math.min(minX,v.x); maxX=Math.max(maxX,v.x);
+                minY=Math.min(minY,v.y); maxY=Math.max(maxY,v.y);
+            }
+            check(maxX<=.5 || minX>=15.5 || minY>=11.75 || maxY<=1.15,
+                    "ceiling housing covers the screen aperture");
+        }
+        ScreenSurface.Quad ceilingImage=ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,true);
+        check(16-(ceilingImage.topLeft.y+ceilingImage.topLeft.z)>=.3
+                && 16-(ceilingImage.bottomLeft.y+ceilingImage.bottomLeft.z)>=.3,
+                "ceiling diagonal image must clear the housing at both edges");
         check(ScreenBehavior.effectiveMode(ScreenBehavior.ANIMATED,true,false)==ScreenBehavior.OFF,"unpowered redstone screen sleeps");
         check(ScreenBehavior.effectiveMode(ScreenBehavior.OFF,false,true)==ScreenBehavior.ANIMATED,"powered off screen wakes animated");
         check(ScreenBehavior.animationTicks(-3)==20&&ScreenBehavior.animationTicks(99)==5,"screen speed clamps");

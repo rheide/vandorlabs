@@ -46,6 +46,23 @@ Issues:
 
 ----------
 
+Doors to delete:
+- Glass Airlock Door
+- Security Door
+- Glass Sliding Airlock Door
+- Sliding Security Door
+- Detailed Engineering Rotating Door
+- Detailed Engineering Sliding Door
+- Detailed Observation Sliding Door
+- Detailed Observation Rotating Door
+- Detailed Split Rotating Double Door
+- Detailed Split Rotating Door
+- Detailed Split Sliding Double Door
+- Detailed Split Sliding Door
+
+
+
+
 
 
 

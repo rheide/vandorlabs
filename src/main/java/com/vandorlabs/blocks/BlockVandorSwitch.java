@@ -10,6 +10,9 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
@@ -33,6 +36,14 @@ public class BlockVandorSwitch extends BlockVandor {
     /** Rocker switches latch open/closed on click; buttons (push buttons)
      * turn ON for a short moment, then release like a vanilla button. */
     protected final boolean momentary;
+    public boolean isMomentary() { return momentary; }
+
+    public void applyLinkedState(World world,BlockPos pos,IBlockState state,boolean on) {
+        if (momentary || state.getValue(ON)==on) return;
+        world.setBlockState(pos,state.withProperty(ON,on),3);
+        world.checkLight(pos);
+        world.notifyNeighborsOfStateChange(pos.offset(state.getValue(FACING).getOpposite()),this,false);
+    }
 
     // 6px plates (50% smaller), hugging the support side: horizontal boxes sit
     // against the clicked block; UP (floor mount) sits on the floor, DOWN
@@ -122,6 +133,27 @@ public class BlockVandorSwitch extends BlockVandor {
     private TileEntityRedstoneChannel channelTile(World world, BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
         return tile instanceof TileEntityRedstoneChannel ? (TileEntityRedstoneChannel) tile : null;
+    }
+
+    @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,
+            World world,BlockPos pos,EntityPlayer player) {
+        ItemStack stack=new ItemStack(this);
+        TileEntityRedstoneChannel tile=channelTile(world,pos);
+        if (tile!=null && tile.getRedstoneChannel()!=0) {
+            NBTTagCompound settings=new NBTTagCompound();
+            settings.setInteger("Channel",tile.getRedstoneChannel());
+            stack.setTagInfo("RedstoneChannelSettings",settings);
+        }
+        return stack;
+    }
+
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,
+            EntityLivingBase placer,ItemStack stack) {
+        super.onBlockPlacedBy(world,pos,state,placer,stack);
+        NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");
+        TileEntityRedstoneChannel tile=channelTile(world,pos);
+        if (!world.isRemote && settings!=null && tile!=null)
+            tile.setRedstoneChannel(Math.max(0,settings.getInteger("Channel")));
     }
 
     @Override

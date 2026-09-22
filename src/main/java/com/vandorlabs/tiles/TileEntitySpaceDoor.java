@@ -18,8 +18,11 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     private int design=2, detail=1;
     private int slideDirection;
     private boolean framed=true, sliding;
-    private boolean middle, hinges=true;
+    private boolean middle, hinges=true, panel=true;
+    private int trigger=com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED;
+    public int getTrigger() { return trigger; }
     public boolean hasHinges() { return hinges; }
+    public boolean hasPanel() { return panel; }
     private boolean migrateLegacyMotion;
     public boolean isMiddle() { migrateLegacyMotion(); return middle; }
     public static final double MIDDLE_OFFSET = -5.24/16.0;
@@ -73,21 +76,32 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         configure(design,detail,framed,direction,middle,sliding,hinges);
     }
     public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges) {
-        if (!valid(design,detail) || !validSlideDirection(direction)) return;
+        configure(design,detail,framed,direction,middle,sliding,hinges,trigger);
+    }
+    public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger) {
+        configure(design,detail,framed,direction,middle,sliding,hinges,trigger,panel);
+    }
+    public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
+        if (!valid(design,detail) || !validSlideDirection(direction)
+                || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
         this.design=design; this.detail=detail; this.framed=framed;
         this.slideDirection=direction;
         this.middle=middle; this.sliding=sliding; this.migrateLegacyMotion=false;
         this.hinges=hinges;
+        this.trigger=trigger;
+        this.panel=panel;
         markDirty();
         if (world!=null) {
             IBlockState state=world.getBlockState(pos);
+            if (!world.isRemote && state.getBlock() instanceof BlockSpaceDoor)
+                ((BlockSpaceDoor)state.getBlock()).updateRedstoneState(world,pos,state);
             world.notifyBlockUpdate(pos,state,state,2);
         }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         migrateLegacyMotion();
         super.writeToNBT(tag);
-        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges)
+        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         return tag;
     }
@@ -95,7 +109,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public NBTTagCompound itemSettings() {
         migrateLegacyMotion();
         NBTTagCompound tag=new NBTTagCompound();
-        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges)
+        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("SpaceDoorChannel",getRedstoneChannel());
         return tag;
@@ -103,7 +117,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public void applyItemSettings(NBTTagCompound tag) {
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
-        configure(data.design,data.detail,data.framed,data.direction,data.middle,data.sliding,data.hinges);
+        configure(data.design,data.detail,data.framed,data.direction,data.middle,data.sliding,data.hinges,data.trigger,data.panel);
         setRedstoneChannel(Math.max(0,tag.getInteger("SpaceDoorChannel")));
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
@@ -113,6 +127,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         design=data.design; detail=data.detail; framed=data.framed; slideDirection=data.direction;
         middle=data.middle; sliding=data.sliding;
         hinges=data.hinges;
+        trigger=data.trigger;
+        panel=data.panel;
         migrateLegacyMotion=!tag.hasKey("SpaceDoorSchema");
     }
     private void migrateLegacyMotion() {
