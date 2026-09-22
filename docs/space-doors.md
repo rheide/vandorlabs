@@ -1,37 +1,42 @@
 # Space doors and glass
 
-The Space family is independent of the Detailed doors. The creative menu has
-two door items: Space Rotating Door and Space Sliding Door. Shift-right-click
-either half to choose the design, Small/Medium/Large texture detail, framed/bare
-appearance, and redstone channel. Door types use a scrollable list with mouse-wheel,
+The Space family is independent of the Detailed doors. The creative menu has one
+Space Door item. Shift-right-click either half to choose Rotating/Sliding motion,
+the design, Small/Medium/Large texture detail, framed/bare appearance, placement
+position, and redstone channel. Door types use a scrollable list with mouse-wheel,
 scrollbar and up/down-key navigation. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
 Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
 lower tile entity and synchronized by the server. Configuring a pair applies
 to both leaves; a newly placed matching mate inherits the existing appearance.
+An 80x160 native-aspect artwork preview updates with design and detail choices;
+the adjacent hinge label reflects the selected motion.
 Sliding doors also offer Sideways / Up / Down motion. Vertical travel is 31/16
 block: framed leaves retract one pixel beyond the inner frame edge, while bare
 leaves preserve their one-pixel open-edge reveal. Sideways travel is 15/16 for
 single framed leaves and 16/16 for paired framed leaves; bare leaves retain 15/16.
 Frames remain fixed and glazed panes move with their leaf. The renderer's
 bounds cover the full vertical travel; the tile still has no tick loop.
-Rotating doors offer Edge (default) / Middle placement. Middle shifts the whole
-assembly inward by 5.24/16 block, including the frame, pins and collision bounds;
-it does not change the leaf's pivot relative to its frame. A middle-positioned
-open leaf can naturally extend beyond the back of the door block during its swing.
+Both motions offer Edge / Middle placement. Rotating art is edge-native and
+sliding art is middle-native, so the renderer applies the corresponding 5.24/16
+offset to the whole assembly, including frame, hinge geometry and collision.
+Existing sliding-block saves migrate to Middle; rotating saves retain their
+previous position. A middle-positioned open rotating leaf can naturally extend
+beyond the back of the door block during its swing.
 
 Fifteen designs are available: Observation, Airlock, Standard, Security, Reactor
 Service, Viewport, Laboratory, Cargo, Ventilation, Cargo Lift, Blast Shield,
 Glazed Hangar, Quarantine Seal, Reactor Barrier and Modular Shutter. Observation,
 Viewport, Laboratory and Glazed Hangar retain their translucent windows.
-Select Up on the sliding block for lift-style motion; selecting artwork does not
+Select Sliding and Up for lift-style motion; selecting artwork does not
 override the current motion setting. All designs also support rotating doors.
 Modular Shutter uses the existing door/pair sizes, not arbitrary-sized assemblies.
 Place matching motion types with
 outer hinges to join them; the inner frame rails disappear. Breaking either
-restores the standalone frame. The previous twenty block IDs are hidden from
-creative but remain registered to preserve old worlds and inventories. Existing
-legacy doors remain fixed-design; use the new two items for the selector.
+restores the standalone frame. The old Space Rotating Door and Space Sliding
+Door IDs, plus the previous fixed-design IDs, remain registered but hidden from
+creative to preserve old worlds and inventories. Existing
+legacy doors remain fixed-design; use the unified Space Door for the selector.
 
 Assets come from `scifi_industrial_door_pack_v2.zip`,
 `scifi_industrial_door_expansion.zip` and `scifi_industrial_lift_doors.zip`.
@@ -54,9 +59,13 @@ Texture reloads use the same loader.
 Rotating leaves occupy the player-facing block edge, like Detailed doors.
 Hinges mount on the interior rebate, with their shared pin axis at X=2.5/Z=13.5
 (mirrored X=13.5 on the right). The inset keeps the open leaf inside its own block.
-A 0.26-model-pixel free-edge clearance prevents the corner clipping the opposite
-jamb during its circular sweep; artwork is cropped, never stretched.
-Fixed mounts/pins stay stationary. Hinges sit at heights 6/16 and 26/16.
+A 0.26-model-pixel free-edge clearance on standalone leaves prevents the corner
+clipping the opposite jamb during its circular sweep; paired leaves omit that
+crop and meet exactly at the centre seam. Artwork is cropped, never stretched.
+Fixed mounts/pins stay stationary; the door mounts and sleeves rotate with the
+leaf. All hinge cuboids are depth-scaled 2.5x around the pin axis to match the
+thick leaf/frame assembly. Hinges sit at heights 6/16 and 26/16 and are included
+only when Rotating motion is selected.
 Bare sliders travel 15/16 block, retaining a one-model-pixel reveal when open.
 Door and Space Glass frames are 4.45/16 block deep, matching Detailed Engineering.
 Rotating leaf bodies are also 4.45/16 block deep, with a narrower hinge-edge

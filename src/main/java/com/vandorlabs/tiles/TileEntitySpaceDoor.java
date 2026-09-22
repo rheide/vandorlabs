@@ -17,17 +17,23 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DETAILS={"low","medium","high"};
     private int design=2, detail=1;
     private int slideDirection;
-    private boolean framed=true;
+    private boolean framed=true, sliding;
     private boolean middle;
+    private boolean migrateLegacyMotion;
     public boolean isMiddle() { return middle; }
     public static final double MIDDLE_OFFSET = -5.24/16.0;
     public int getDesign() { return design; }
     public int getDetail() { return detail; }
     public boolean isFramed() { return framed; }
+    public boolean isSliding() { migrateLegacyMotion(); return sliding; }
     public int getSlideDirection() { return slideDirection; }
     public static boolean validSlideDirection(int value) { return value>=0 && value<=2; }
     public double verticalTravel() {
         return com.vandorlabs.persistence.SpaceDoorData.verticalTravel(framed,slideDirection);
+    }
+    /** Model-space depth offset: rotating art is edge-native, sliding art is centre-native. */
+    public double positionOffset() {
+        return com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(),middle);
     }
     public static boolean valid(int design,int detail) { return design>=0 && design<DESIGNS.length && detail>=0 && detail<DETAILS.length; }
 
@@ -38,8 +44,11 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part) {
         return 1+((design*3+detail)*2+(framed?1:0))*12+(paired?6:0)+part*2+(right?1:0);
     }
+    public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part,boolean sliding) {
+        return metadata(design,detail,framed,paired,right,part)+(sliding?1080:0);
+    }
     public int metadata(boolean paired,boolean right,int part) {
-        return metadata(design,detail,framed,paired,right,part);
+        return metadata(design,detail,framed,paired,right,part,isSliding());
     }
     public BlockPos mate() {
         if (world==null) return null;
@@ -57,10 +66,13 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         configure(design,detail,framed,direction,middle);
     }
     public void configure(int design,int detail,boolean framed,int direction,boolean middle) {
+        configure(design,detail,framed,direction,middle,sliding);
+    }
+    public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding) {
         if (!valid(design,detail) || !validSlideDirection(direction)) return;
         this.design=design; this.detail=detail; this.framed=framed;
         this.slideDirection=direction;
-        this.middle=middle;
+        this.middle=middle; this.sliding=sliding; this.migrateLegacyMotion=false;
         markDirty();
         if (world!=null) {
             IBlockState state=world.getBlockState(pos);
@@ -69,7 +81,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle)
+        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         return tag;
     }
@@ -78,8 +90,21 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         design=data.design; detail=data.detail; framed=data.framed; slideDirection=data.direction;
-        middle=data.middle;
+        middle=data.middle; sliding=data.sliding;
+        migrateLegacyMotion=!tag.hasKey("SpaceDoorSchema");
     }
+    private void migrateLegacyMotion() {
+        if (!migrateLegacyMotion || world==null) return;
+        net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
+        if (block instanceof com.vandorlabs.blocks.BlockDetailedDoor) {
+            sliding=((com.vandorlabs.blocks.BlockDetailedDoor)block).isSlidingModel();
+            // The old sliding block's native placement was the centre track.
+            if (sliding) middle=true;
+        }
+        migrateLegacyMotion=false;
+        if (!world.isRemote) markDirty();
+    }
+    @Override public void onLoad() { super.onLoad(); migrateLegacyMotion(); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11; }
     public boolean hasGlass() { return hasGlassDesign(design); }
     @Override public boolean shouldRenderInPass(int pass) { return pass==0 || pass==1 && hasGlass(); }

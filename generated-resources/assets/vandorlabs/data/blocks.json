@@ -3854,6 +3854,7 @@
     "type": "space_door",
     "class": "BlockConfigurableSpaceDoor",
     "item": true,
+    "hidden": true,
     "sliding": false,
     "paired_model": "space_standard_rotating_framed_paired"
   },
@@ -3862,7 +3863,16 @@
     "type": "space_door",
     "class": "BlockConfigurableSpaceDoor",
     "item": true,
+    "hidden": true,
     "sliding": true,
     "paired_model": "space_standard_sliding_framed_paired"
+  },
+  {
+    "id": "space_door",
+    "type": "space_door",
+    "class": "BlockConfigurableSpaceDoor",
+    "item": true,
+    "sliding": false,
+    "paired_model": "space_standard_rotating_framed_paired"
   }
 ]

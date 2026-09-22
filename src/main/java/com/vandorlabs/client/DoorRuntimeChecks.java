@@ -261,7 +261,7 @@ final class DoorRuntimeChecks {
                 clear(world, pos);
             }
         }
-        require(count == 22, "expected 20 legacy IDs and two configurable Space doors, got " + count);
+        require(count == 23, "expected 20 fixed IDs, two hidden compatibility IDs and one unified Space door, got " + count);
     }
 
     private static void checkDetailedBounds(World world, BlockPos pos,

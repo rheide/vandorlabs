@@ -21636,3 +21636,4 @@ block:id=%space_reactor_sliding_framed,state=*,transparency=TRANSPARENT,stdrot=t
 block:id=%space_glass,state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_glass_tile
 block:id=%space_rotating_door,state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_standard
 block:id=%space_sliding_door,state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_standard
+block:id=%space_door,state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_standard

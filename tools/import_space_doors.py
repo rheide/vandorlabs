@@ -15,6 +15,7 @@ FAMILIES = ('observation', 'airlock', 'standard', 'security', 'reactor', 'viewpo
 GLASS_FAMILIES = ('observation','viewport','laboratory','glazed_hangar')
 FRAME_DEPTH = 4.45  # Detailed Engineering frame extrusion, in model pixels.
 HINGE_X, HINGE_Z = 2.5, 13.5
+HINGE_DEPTH_SCALE = 2.5
 SWING_GAP = .26
 WRITTEN_MODELS = []
 
@@ -95,8 +96,13 @@ def hinges(geometry, part, framed):
             # Mount on the interior hinge rebate at z=14.5, with pin z=13.5.
             # The slight X inset keeps even the bare full-width leaf inside
             # its own block at 90 degrees. Reversing Z swaps face winding too.
-            elements.append(box(a[0]+HINGE_X,a[1]+height,14.5-b[2],
-                                b[0]+HINGE_X,b[1]+height,14.5-a[2],
+            # The supplied hinge was authored for the original thin panel.
+            # Scale every fixed/moving cuboid about its pin axis so mounts,
+            # sleeve and caps span the thicker rotating leaf/frame assembly.
+            az=HINGE_Z+(14.5-b[2]-HINGE_Z)*HINGE_DEPTH_SCALE
+            bz=HINGE_Z+(14.5-a[2]-HINGE_Z)*HINGE_DEPTH_SCALE
+            elements.append(box(a[0]+HINGE_X,a[1]+height,az,
+                                b[0]+HINGE_X,b[1]+height,bz,
                                 'hinge',[u,v,u+7.5,v+7.5]))
     return elements
 
@@ -198,7 +204,10 @@ def main(archive, detail, expansion, lift):
                     base=paired if is_pair else id
                     x0=1 if framed else 0
                     x1=16 if is_pair or not framed else 15
-                    if not sliding: x1-=SWING_GAP
+                    # Standalone leaves need free-edge jamb clearance through
+                    # their swing. Paired leaves have no inner jamb and must
+                    # meet exactly at the centre seam when closed.
+                    if not sliding and not is_pair: x1-=SWING_GAP
                     y0,y1=(1,31) if framed else (0,32)
                     # Sliding slabs have front/back clearance within the frame.
                     leaf=leaf_parts(x0,y0,x1,y1,sliding)
@@ -289,10 +298,16 @@ def main(archive, detail, expansion, lift):
     for motion in ('rotating','sliding'):
         id='space_'+motion+'_door'
         catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
-                            item=True,sliding=motion=='sliding',paired_model=f'space_standard_{motion}_framed_paired'))
+                            item=True,hidden=True,sliding=motion=='sliding',paired_model=f'space_standard_{motion}_framed_paired'))
         names.append((id,'Space '+motion.title()+' Door'))
         write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
         write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_framed'})
+    id='space_door'
+    catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
+                        item=True,sliding=False,paired_model='space_standard_rotating_framed_paired'))
+    names.append((id,'Space Door'))
+    write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
+    write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/space_standard_rotating_framed'})
     emit_model('space_empty',[])
     write(catalog_path,catalog)
     lang=OUT/'lang/en_us.lang'
@@ -307,13 +322,13 @@ def main(archive, detail, expansion, lift):
                 lines.append(f'texture:id=space_{family},filename=assets/vandorlabs/textures/blocks/space_doors/{texture_name(family)}.png,xcount=1,ycount=1')
         for id,_ in names:
             if any(e['id']==id and e.get('internal_model') for e in catalog): continue
-            texture='glass_tile' if id=='space_glass' else 'standard' if id in ('space_rotating_door','space_sliding_door') else id.split('_')[1]
+            texture='glass_tile' if id=='space_glass' else 'standard' if id in ('space_door','space_rotating_door','space_sliding_door') else id.split('_')[1]
             if filename=='dynmap-texture.txt':
                 lines.append(f'block:id=%{id},state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_{texture}')
             else:
                 lines.append(f'modellist:id=%{id},state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0')
         path.write_text('\n'.join(lines)+'\n')
-    print('Generated two configurable Space doors, three native detail sets, and legacy-compatible models.')
+    print('Generated one unified Space door, hidden legacy ids, three native detail sets, and compatibility models.')
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)

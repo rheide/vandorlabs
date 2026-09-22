@@ -422,9 +422,10 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     private static void registerSpaceDoorModels(BlockConfigurableSpaceDoor block,Item item) {
         ModelLoader.setCustomStateMapper(block,new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
-        String motion=block.isSlidingModel()?"sliding":"rotating";
         String[] designs=com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS;
         String[] details=com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS;
+        for (boolean sliding:new boolean[]{false,true}) {
+        String motion=sliding?"sliding":"rotating";
         for (int d=0;d<designs.length;d++) for (int l=0;l<details.length;l++)
             for (boolean framed:new boolean[]{false,true}) for (boolean paired:new boolean[]{false,true})
                 for (boolean right:new boolean[]{false,true}) for (int part=0;part<3;part++) {
@@ -432,9 +433,10 @@ public class ModBlocks {
                     String name="space_"+designs[d]+"_"+motion+(framed?"_framed":"_bare")
                             +(paired?"_paired":"")+(right?"_right_":"_left_")
                             +(part==0?"fixed":part==1?"leaf":"glass");
-                    int meta=com.vandorlabs.tiles.TileEntitySpaceDoor.metadata(d,l,framed,paired,right,part);
+                    int meta=com.vandorlabs.tiles.TileEntitySpaceDoor.metadata(d,l,framed,paired,right,part,sliding);
                     ModelLoader.setCustomModelResourceLocation(item,meta,new ModelResourceLocation(
                             VandorLabs.MODID+":detailed_doors/"+details[l]+"/"+name,"inventory"));
                 }
+        }
     }
 }

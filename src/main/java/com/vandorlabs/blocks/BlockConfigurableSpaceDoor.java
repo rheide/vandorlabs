@@ -18,7 +18,11 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     public BlockConfigurableSpaceDoor(String name,boolean sliding,BlockDetailedDoor paired) {
         super(name,sliding,true,paired);
     }
-    @Override public TileEntity createTileEntity(World world,IBlockState state) { return new TileEntitySpaceDoor(); }
+    @Override public TileEntity createTileEntity(World world,IBlockState state) {
+        TileEntitySpaceDoor tile=new TileEntitySpaceDoor();
+        if (isSlidingModel()) tile.configure(tile.getDesign(),tile.getDetail(),tile.isFramed(),0,true,true);
+        return tile;
+    }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,
             EnumHand hand,EnumFacing face,float x,float y,float z) {
         if (!player.isSneaking()) return super.onBlockActivated(world,pos,state,player,hand,face,x,y,z);
@@ -35,20 +39,41 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
             BlockPos mate=tile.mate();
             if (mate!=null && world.isBlockLoaded(mate) && world.getTileEntity(mate) instanceof TileEntitySpaceDoor) {
                 TileEntitySpaceDoor other=(TileEntitySpaceDoor)world.getTileEntity(mate);
-                tile.configure(other.getDesign(),other.getDetail(),other.isFramed(),other.getSlideDirection(),other.isMiddle());
+                tile.configure(other.getDesign(),other.getDetail(),other.isFramed(),other.getSlideDirection(),
+                        other.isMiddle(),other.isSliding());
+            } else if (isSlidingModel()) {
+                // Newly placed copies of the hidden legacy sliding id retain
+                // their old centre-track default. The unified block starts rotating/edge.
+                tile.configure(tile.getDesign(),tile.getDetail(),tile.isFramed(),
+                        tile.getSlideDirection(),true,true);
             }
         }
     }
-    @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,
-            net.minecraft.world.IBlockAccess world,BlockPos pos) {
-        net.minecraft.util.math.AxisAlignedBB box=super.getBoundingBox(state,world,pos);
+    private TileEntitySpaceDoor settings(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos) {
         BlockPos lower=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
         TileEntity raw=world.getTileEntity(lower);
-        if (!isSlidingModel() && raw instanceof TileEntitySpaceDoor && ((TileEntitySpaceDoor)raw).isMiddle()) {
+        return raw instanceof TileEntitySpaceDoor?(TileEntitySpaceDoor)raw:null;
+    }
+    @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,
+            net.minecraft.world.IBlockAccess world,BlockPos pos) {
+        TileEntitySpaceDoor tile=settings(state,world,pos);
+        net.minecraft.util.math.AxisAlignedBB box=tile==null?super.getBoundingBox(state,world,pos)
+                :tile.model(tile.isSliding()).getBoundingBox(state,world,pos);
+        if (tile!=null) {
             EnumFacing facing=getActualState(state,world,pos).getValue(FACING);
-            return box.offset(facing.getFrontOffsetX()*TileEntitySpaceDoor.MIDDLE_OFFSET,0,
-                    facing.getFrontOffsetZ()*TileEntitySpaceDoor.MIDDLE_OFFSET);
+            box=box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
+                    facing.getFrontOffsetZ()*tile.positionOffset());
         }
         return box;
+    }
+    @Override public net.minecraft.util.math.AxisAlignedBB getCollisionBoundingBox(IBlockState state,
+            net.minecraft.world.IBlockAccess world,BlockPos pos) {
+        TileEntitySpaceDoor tile=settings(state,world,pos);
+        if (tile==null) return super.getCollisionBoundingBox(state,world,pos);
+        net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).getCollisionBoundingBox(state,world,pos);
+        if (box==NULL_AABB) return NULL_AABB;
+        EnumFacing facing=getActualState(state,world,pos).getValue(FACING);
+        return box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
+                facing.getFrontOffsetZ()*tile.positionOffset());
     }
 }

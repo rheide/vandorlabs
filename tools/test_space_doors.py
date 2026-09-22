@@ -29,7 +29,10 @@ for family in FAMILIES:
         assert '"'+texture_name(family+suffix)+'"' in sprites
 visible=[e for e in catalog if e['id'].startswith('space_') and e.get('item')
          and not e.get('hidden') and not e.get('internal_model') and e['id']!='space_glass']
-assert {e['id'] for e in visible}=={'space_rotating_door','space_sliding_door'}
+assert {e['id'] for e in visible}=={'space_door'}
+config=[e for e in catalog if e.get('class')=='BlockConfigurableSpaceDoor']
+assert {e['id'] for e in config}=={'space_door','space_rotating_door','space_sliding_door'}
+assert all(e.get('hidden') for e in config if e['id']!='space_door')
 
 def check_condition(c):
     if 'AND' in c or 'OR' in c:
@@ -57,8 +60,14 @@ for door in doors:
             rails=[e for e in fixed['elements'] if e['faces']['south']['texture']=='#frame']
             assert max(e['to'][2]-e['from'][2] for e in slabs)>=4.25
             width=sum(e['to'][0]-e['from'][0] for e in slabs)
-            expected=(16 if not door['framed'] else 15 if paired else 14)-(0 if door['sliding'] else .26)
+            expected=(16 if not door['framed'] else 15 if paired else 14)-(
+                    .26 if not door['sliding'] and not paired else 0)
             assert math.isclose(width,expected)
+            if paired and not door['sliding']:
+                # Inner-jamb removal must not leave daylight at the closed seam.
+                assert math.isclose(width,15 if door['framed'] else 16),(base,hand,'closed seam')
+                assert (max(e['to'][0] for e in slabs)==16 if hand=='left'
+                        else min(e['from'][0] for e in slabs)==0),(base,hand,'seam edge')
             if door['sliding']:
                 # Framed leaves clear the inner jamb by one model pixel;
                 # bare leaves stay one pixel inside their own block.
@@ -84,6 +93,12 @@ for door in doors:
             for rail in rails:
                 assert math.isclose(rail['to'][2]-rail['from'][2],4.45)
                 assert all(f['texture']=='#frame' for f in rail['faces'].values())
+            if not door['sliding']:
+                hinge=[e for e in leaf['elements'] if any(f.get('texture')=='#hinge' for f in e['faces'].values())]
+                assert hinge and max(e['to'][2]-e['from'][2] for e in hinge)>=3.25,(base,'thin moving hinge')
+            else:
+                assert not any(any(f.get('texture')=='#hinge' for f in e['faces'].values())
+                               for e in fixed['elements']+leaf['elements']),(base,'sliding hinge')
             for level in ('low','medium','high'):
                 for part in ('fixed','leaf')+ (('glass',) if any(f'_{d}_' in base for d in ('observation','viewport','laboratory','glazed_hangar')) else ()):
                     path=ASSETS/f'models/item/detailed_doors/{level}/{base}_{hand}_{part}.json'
@@ -108,4 +123,4 @@ for archive in sys.argv[1:]:
                 for tree in ('default','original'):
                     runtime=ROOT/f'texture-packs/{tree}/assets/vandorlabs/textures/blocks/space_doors/{level}'/source.name
                     assert runtime.read_bytes()==source.read_bytes()
-print('Space doors PASS: two visible blocks, fifteen designs, three detail sets, thick leaves, native UVs, all 91 swing angles and model references')
+print('Space doors PASS: one visible block, fifteen designs, three detail sets, thick hinges/leaves, sealed paired seams, native UVs, all 91 swing angles and model references')

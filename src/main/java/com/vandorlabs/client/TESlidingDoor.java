@@ -350,7 +350,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void renderSpaceDoor(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z) {
-        boolean sliding=((BlockDetailedDoor)state.getBlock()).isSlidingModel();
+        boolean sliding=tile.isSliding();
         BlockDetailedDoor motion=tile.model(sliding).getVisualModel(state);
         boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);
         boolean right=state.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.LEFT;
@@ -363,8 +363,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             GlStateManager.pushMatrix();
             GlStateManager.translate(x,y,z);
             orientDetailedDoor(facing);
-            if (!sliding && tile.isMiddle())
-                GlStateManager.translate(0,0,com.vandorlabs.tiles.TileEntitySpaceDoor.MIDDLE_OFFSET);
+            GlStateManager.translate(0,0,tile.positionOffset());
             if (part!=0) {
                 if (sliding && tile.getSlideDirection()!=0)
                     GlStateManager.translate(0,tile.verticalTravel()*progress,0);
