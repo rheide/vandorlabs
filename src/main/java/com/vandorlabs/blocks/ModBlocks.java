@@ -436,6 +436,8 @@ public class ModBlocks {
                     int meta=com.vandorlabs.tiles.TileEntitySpaceDoor.metadata(d,l,framed,paired,right,part,sliding);
                     ModelLoader.setCustomModelResourceLocation(item,meta,new ModelResourceLocation(
                             VandorLabs.MODID+":detailed_doors/"+details[l]+"/"+name,"inventory"));
+                    if (!sliding) ModelLoader.setCustomModelResourceLocation(item,meta+2160,new ModelResourceLocation(
+                            VandorLabs.MODID+":detailed_doors/"+details[l]+"/"+name+(part==2?"":"_no_hinges"),"inventory"));
                 }
         }
     }

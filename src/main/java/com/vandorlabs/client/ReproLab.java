@@ -286,6 +286,8 @@ public class ReproLab {
             }
         }
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
+        for (String hinges:new String[]{"on","off"}) SHOTS.add(new Shot("gallery_space_config_hinges_"+hinges,
+                GALLERY_X-2.5D,galleryFeet+.4D,-21,-36,5));
         // Stand inside the opening and inspect both jambs obliquely from both
         // depth edges. Missing step shoulders expose the magenta backing wall.
         for (String side : new String[]{"east","west"}) for (int edge : new int[]{-1,1}) {
@@ -505,6 +507,19 @@ public class ReproLab {
             case 10:
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"ramp_controller_gui");
+                BlockPos doorGui=CONSOLE.add(0,0,3);
+                for (World w:new World[]{mc.getIntegratedServer().getWorld(0),mc.world}) {
+                    placeDoor(w,doorGui,"space_door",false);
+                    ((com.vandorlabs.tiles.TileEntitySpaceDoor)w.getTileEntity(doorGui))
+                            .configure(2,1,true,0,true,false,false);
+                }
+                mc.displayGuiScreen(new GuiSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)mc.world.getTileEntity(doorGui)));
+                state=12;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 12:
+                if (--holdTicks > 0) break;
+                saveNamed(mc,"space_door_gui");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;
@@ -893,7 +908,15 @@ public class ReproLab {
             for (int x=0; x<3; x++) for (int y=0; y<2; y++) {
                 if (x==2 && y==1) continue;
                 world.setBlockState(new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18),
-                        block("space_glass").getDefaultState(),3);
+                        block(x==0?"space_glass_small":x==1?"space_glass":"space_glass_large").getDefaultState(),3);
+            }
+        } else if (shot.startsWith("gallery_space_config_hinges_")) {
+            for (int i=0;i<2;i++) {
+                BlockPos p=new BlockPos(GALLERY_X-1+i,GALLERY_Y,-18);
+                placeDoor(world,p,"space_door",true);
+                setDoorHinge(world,p,i==1?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT);
+                ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
+                        .configure(2,1,true,0,false,false,shot.endsWith("_on"));
             }
         } else if (shot.startsWith("gallery_space_jamb_")) {
             placeDoor(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),"space_standard_rotating_framed",true);

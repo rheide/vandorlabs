@@ -18,6 +18,12 @@ for motion in ('sliding', 'rotating'):
         difference = sum(ImageStat.Stat(ImageChops.difference(*shots)).mean) / 3
         assert difference > .1, f'{motion}/{trim}: open and closed look identical'
 Image.open(root / 'shot_gallery_space_glass.png').verify()
+hinges=[Image.open(root/f'shot_gallery_space_config_hinges_{mode}.png').convert('RGB') for mode in ('on','off')]
+assert sum(ImageStat.Stat(ImageChops.difference(*hinges)).mean)>.01,'hinge toggle has no rendered effect'
+for image in hinges+[Image.open(root/'shot_gallery_space_glass.png').convert('RGB')]:
+    missing=sum(r>80 and b>80 and g<min(r,b)*.3
+                for r,g,b in getattr(image,'get_flattened_data',image.getdata)())
+    assert missing<20,'missing texture in hinge variants or glass detail tiers'
 for side in ('east','west'):
     for edge in ('front','back'):
         name=f'gallery_space_jamb_{side}_{edge}'

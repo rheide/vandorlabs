@@ -1,0 +1,83 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "leaf": "vandorlabs:blocks/space_doors/door_ventilation",
+    "frame": "vandorlabs:blocks/space_doors/double_frame_metal",
+    "edge": "vandorlabs:blocks/space_doors/hinge",
+    "hinge": "vandorlabs:blocks/space_doors/hinge",
+    "glass": "vandorlabs:blocks/space_doors/observation_glass",
+    "pane": "vandorlabs:blocks/space_doors/glass_tile",
+    "particle": "vandorlabs:blocks/space_doors/door_ventilation"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        1,
+        12.24
+      ],
+      "to": [
+        15,
+        31,
+        14.24
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#leaf",
+          "uv": [
+            1,
+            0.5,
+            16,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#leaf",
+          "uv": [
+            16,
+            0.5,
+            1,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "down": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    }
+  ]
+}

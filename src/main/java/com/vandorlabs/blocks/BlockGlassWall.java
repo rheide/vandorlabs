@@ -92,7 +92,7 @@ public class BlockGlassWall extends Block {
         // Extending a panel inherits its plane, including placement against
         // the narrow edge or above/below the existing panel.
         IBlockState clicked = world.getBlockState(pos.offset(side.getOpposite()));
-        if (clicked.getBlock() == this) {
+        if (canConnectTo(clicked.getBlock())) {
             return getDefaultState().withProperty(
                     ROTATED, clicked.getValue(ROTATED));
         }
@@ -105,10 +105,11 @@ public class BlockGlassWall extends Block {
                 ROTATED, direction.getAxis() == EnumFacing.Axis.X);
     }
 
+    protected boolean canConnectTo(net.minecraft.block.Block other) { return other==this; }
     private boolean connects(IBlockAccess world, BlockPos pos,
             IBlockState state) {
         IBlockState other = world.getBlockState(pos);
-        return other.getBlock() == this
+        return canConnectTo(other.getBlock())
                 && other.getValue(ROTATED).equals(state.getValue(ROTATED));
     }
 

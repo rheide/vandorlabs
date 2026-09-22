@@ -28,12 +28,17 @@ for family in FAMILIES:
     for suffix in ('','_metal','_glass') if family in GLASS_FAMILIES else ('',):
         assert '"'+texture_name(family+suffix)+'"' in sprites
 visible=[e for e in catalog if e['id'].startswith('space_') and e.get('item')
-         and not e.get('hidden') and not e.get('internal_model') and e['id']!='space_glass']
+         and not e.get('hidden') and not e.get('internal_model') and not e['id'].startswith('space_glass')]
 assert {e['id'] for e in visible}=={'space_door'}
 config=[e for e in catalog if e.get('class')=='BlockConfigurableSpaceDoor']
 assert {e['id'] for e in config}=={'space_door','space_rotating_door','space_sliding_door'}
 assert all(e.get('hidden') for e in config if e['id']!='space_door')
 assert by_id['space_door']['sliding'] is True
+for glass,level in (('space_glass_small','low'),('space_glass','medium'),('space_glass_large','high')):
+    assert by_id[glass]['class']=='BlockSpaceGlass' and by_id[glass]['item']
+    assert load(ASSETS/f'models/item/{glass}.json')['parent']==f'vandorlabs:item/{level}/space_glass'
+    for part in load(ASSETS/f'blockstates/{glass}.json')['multipart']:
+        assert '/'+level+'/' in part['apply']['model']
 assert load(ASSETS/'models/item/space_door.json')['parent'].endswith('space_standard_sliding_framed')
 hinge_source=load(ROOT/'docs/space-door-pack/hinge/geometry.json')['cuboids']
 
@@ -144,6 +149,10 @@ for door in doors:
                     model=load(ASSETS/f'models/block/{parent}.json')
                     if part in ('fixed','leaf'):
                         assert model['elements']==(fixed if part=='fixed' else leaf)['elements'],(base,level,'tier geometry mismatch')
+                        if not door['sliding']:
+                            bare=load(ASSETS/f'models/block/detailed_doors/{level}/{base}_{hand}_{part}_no_hinges.json')
+                            expected=[e for e in model['elements'] if not all(f['texture']=='#hinge' for f in e['faces'].values())]
+                            assert bare['elements']==expected,(base,'hinge toggle changed slab or frame')
                     else:
                         assert len(model['elements'])==1,(base,level,'stepped glass geometry')
                     for tex in model['textures'].values():

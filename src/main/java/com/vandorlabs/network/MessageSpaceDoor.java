@@ -13,25 +13,28 @@ public class MessageSpaceDoor implements IMessage {
     private int design,detail,channel,slideDirection;
     private boolean framed;
     private boolean middle;
-    private boolean sliding;
+    private boolean sliding,hinges;
     public MessageSpaceDoor() {}
-    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,boolean middle,boolean sliding) {
+    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,boolean middle,boolean sliding,boolean hinges) {
         this.pos=pos; this.design=design; this.detail=detail; this.framed=framed; this.channel=channel;
         this.slideDirection=slideDirection;
         this.middle=middle;
         this.sliding=sliding;
+        this.hinges=hinges;
     }
     @Override public void fromBytes(ByteBuf b) {
         pos=BlockPos.fromLong(b.readLong()); design=b.readInt(); detail=b.readInt(); framed=b.readBoolean(); channel=b.readInt();
         slideDirection=b.readInt();
         middle=b.readBoolean();
         sliding=b.readBoolean();
+        hinges=b.readBoolean();
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
         b.writeInt(slideDirection);
         b.writeBoolean(middle);
         b.writeBoolean(sliding);
+        b.writeBoolean(hinges);
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
@@ -51,8 +54,8 @@ public class MessageSpaceDoor implements IMessage {
                     other=(TileEntitySpaceDoor)player.world.getTileEntity(mate);
                     if (!other.usable(player)) return;
                 }
-                tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding); tile.setRedstoneChannel(m.channel);
-                if (other!=null) { other.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding); other.setRedstoneChannel(m.channel); }
+                tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding,m.hinges); tile.setRedstoneChannel(m.channel);
+                if (other!=null) { other.configure(m.design,m.detail,m.framed,m.slideDirection,m.middle,m.sliding,m.hinges); other.setRedstoneChannel(m.channel); }
             });
             return null;
         }

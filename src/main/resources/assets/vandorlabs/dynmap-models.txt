@@ -21472,4 +21472,6 @@ modellist:id=%space_reactor_sliding_framed,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0
 modellist:id=%space_glass,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0
 modellist:id=%space_rotating_door,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0
 modellist:id=%space_sliding_door,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0
+modellist:id=%space_glass_small,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0
+modellist:id=%space_glass_large,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0
 modellist:id=%space_door,state=*,box=0/0/8:16/16/9:n/0:s/0:e/0:w/0:u/0:d/0

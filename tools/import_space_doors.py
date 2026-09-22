@@ -219,6 +219,11 @@ def main(archive, detail, expansion, lift):
                         for suffix,els in (('fixed',f),('leaf',l)):
                             name=f'{base}_{hand}_{suffix}'
                             emit_model(name,els,family+'_metal' if family in GLASS_FAMILIES else family)
+                            if not sliding:
+                                clean=[e for e in els if not all(f['texture']=='#hinge' for f in e['faces'].values())]
+                                emit_model(name+'_no_hinges',clean,family+'_metal' if family in GLASS_FAMILIES else family)
+                                write(OUT/'models/item/detailed_doors'/f'{name}_no_hinges.json',
+                                      {'parent':'vandorlabs:block/detailed_doors/'+name+'_no_hinges'})
                             if suffix=='leaf':
                                 write(OUT/'models/item/detailed_doors'/f'{name}.json',
                                       {'parent':'vandorlabs:block/detailed_doors/'+name})
@@ -247,7 +252,7 @@ def main(archive, detail, expansion, lift):
                 write(OUT/'models/item'/f'{id}.json',inventory)
     # Space Glass uses the same calculated connection flags as Observation Glass.
     catalog.append(dict(id='space_glass',type='glass_wall',**{'class':'BlockSpaceGlass'},item=True))
-    names.append(('space_glass','Space Glass'))
+    names.append(('space_glass','Space Glass (Medium)'))
     glass=plate(0,0,16,16,'pane',[0,0,16,16],7.99,8.01)
     glass['faces']={k:v for k,v in glass['faces'].items() if k in ('north','south')}
     emit_model('space_glass_pane',[glass])
@@ -298,6 +303,17 @@ def main(archive, detail, expansion, lift):
         names.append((id,'Space '+motion.title()+' Door'))
         write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
         write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_framed'})
+    # Retain the old saved id as Medium, with two additional creative items.
+    glass_state=json.loads((OUT/'blockstates/space_glass.json').read_text())
+    for id,level,label in (('space_glass_small','low','Small'),('space_glass','medium','Medium'),
+                           ('space_glass_large','high','Large')):
+        if id!='space_glass':
+            catalog.append(dict(id=id,type='glass_wall',**{'class':'BlockSpaceGlass'},item=True))
+            names.append((id,'Space Glass ('+label+')'))
+        state=json.loads(json.dumps(glass_state).replace('detailed_doors/space_glass_',
+                                                      'detailed_doors/'+level+'/space_glass_'))
+        write(OUT/'blockstates'/f'{id}.json',state)
+        write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/'+level+'/space_glass'})
     id='space_door'
     catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
                         item=True,sliding=True,paired_model='space_standard_sliding_framed_paired'))
@@ -318,7 +334,7 @@ def main(archive, detail, expansion, lift):
                 lines.append(f'texture:id=space_{family},filename=assets/vandorlabs/textures/blocks/space_doors/{texture_name(family)}.png,xcount=1,ycount=1')
         for id,_ in names:
             if any(e['id']==id and e.get('internal_model') for e in catalog): continue
-            texture='glass_tile' if id=='space_glass' else 'standard' if id in ('space_door','space_rotating_door','space_sliding_door') else id.split('_')[1]
+            texture='glass_tile' if id.startswith('space_glass') else 'standard' if id in ('space_door','space_rotating_door','space_sliding_door') else id.split('_')[1]
             if filename=='dynmap-texture.txt':
                 lines.append(f'block:id=%{id},state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_{texture}')
             else:

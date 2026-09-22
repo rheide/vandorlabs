@@ -20,10 +20,10 @@ public class GuiSpaceDoor extends GuiContainer {
     private final TileEntitySpaceDoor tile;
     private int design,detail,scrollIndex,lastValidChannel;
     private SpaceDoorMotion motion;
-    private boolean framed,middle,draggingScrollbar;
+    private boolean framed,middle,hinges,draggingScrollbar;
     private int listLeft,listTop,listRight,listBottom;
     private GuiTextField channelField;
-    private GuiButton done,motionButton;
+    private GuiButton done,motionButton,hingeButton;
     private int previewX,previewY;
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
@@ -39,6 +39,7 @@ public class GuiSpaceDoor extends GuiContainer {
         design=tile.getDesign(); detail=tile.getDetail(); framed=tile.isFramed();
         motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
         middle=tile.isMiddle();
+        hinges=tile.hasHinges();
         lastValidChannel=tile.getRedstoneChannel();
         scrollIndex=Math.max(0,Math.min(maxScroll(),design-LIST_ROWS/2));
         xSize=430; ySize=270;
@@ -54,7 +55,10 @@ public class GuiSpaceDoor extends GuiContainer {
         buttonList.add(new GuiButton(11,guiLeft+168,guiTop+66,154,20,SIZES[detail]));
         buttonList.add(new GuiButton(12,guiLeft+168,guiTop+92,154,20,framed?"Frame: Framed":"Frame: Bare"));
         buttonList.add(new GuiButton(14,guiLeft+168,guiTop+118,154,20,middle?"Position: Middle":"Position: Edge"));
-        channelField=new GuiTextField(0,fontRenderer,guiLeft+168,guiTop+190,154,18);
+        hingeButton=new GuiButton(15,guiLeft+338,guiTop+208,80,20,"");
+        buttonList.add(hingeButton);
+        updateHingeButton();
+        channelField=new GuiTextField(0,fontRenderer,guiLeft+168,guiTop+164,154,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(channelText);
@@ -68,6 +72,10 @@ public class GuiSpaceDoor extends GuiContainer {
             return value>Integer.MAX_VALUE?-1:(int)value;
         } catch (NumberFormatException e) { return -1; }
     }
+    private void updateHingeButton() {
+        hingeButton.enabled=!motion.sliding;
+        hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
+    }
     private void updateChannelValidity() {
         done.enabled=channel()>=0;
         channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);
@@ -76,17 +84,19 @@ public class GuiSpaceDoor extends GuiContainer {
         if (channel()>=0) lastValidChannel=channel();
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,middle,motion.sliding));
+                lastValidChannel,motion.direction,middle,motion.sliding,hinges));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
             motion=motion.next();
             motionButton.displayString=motion.label;
+            updateHingeButton();
         }
         else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail]; }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
         else if (button.id==14) { middle=!middle; button.displayString=middle?"Position: Middle":"Position: Edge"; }
+        else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
         else return;
         sendUpdate();
     }
@@ -174,9 +184,8 @@ public class GuiSpaceDoor extends GuiContainer {
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
         fontRenderer.drawString("Options",168,28,0xDAE8F0);
         fontRenderer.drawString("Preview",338,28,0xDAE8F0);
-        fontRenderer.drawString(motion.sliding?"Hinges: Off":"Hinges: On",338,208,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",168,176,0xDAE8F0);
-        if (channel()<0) fontRenderer.drawString("Invalid channel",168,213,0xFF7777);
+        fontRenderer.drawString("Channel (0 = none)",168,150,0xDAE8F0);
+        if (channel()<0) fontRenderer.drawString("Invalid channel",168,187,0xFF7777);
         fontRenderer.drawString("Changes apply live to both paired leaves",12,224,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial) {

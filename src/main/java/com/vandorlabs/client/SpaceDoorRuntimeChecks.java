@@ -58,9 +58,9 @@ final class SpaceDoorRuntimeChecks {
         int cases=0;
         for (int design=0;design<TileEntitySpaceDoor.DESIGNS.length;design++) for (int detail=0;detail<3;detail++)
             for (SpaceDoorMotion motion:SpaceDoorMotion.values()) for (boolean framed:new boolean[]{false,true})
-                for (boolean middle:new boolean[]{false,true}) {
+                for (boolean middle:new boolean[]{false,true}) for (boolean hinges:new boolean[]{false,true}) {
                     TileEntitySpaceDoor original=tile(world,source);
-                    original.configure(design,detail,framed,motion.direction,middle,motion.sliding);
+                    original.configure(design,detail,framed,motion.direction,middle,motion.sliding,hinges);
                     original.setRedstoneChannel(7341);
                     NBTTagCompound expected=original.itemSettings();
                     for (BlockPos half:new BlockPos[]{source,source.up()}) {
@@ -79,6 +79,24 @@ final class SpaceDoorRuntimeChecks {
                     }
                 }
         for (BlockPos pos:new BlockPos[]{source,target,neighbor}) clear(world,pos);
+        String[] glasses={"space_glass_small","space_glass","space_glass_large"};
+        for (boolean rotated:new boolean[]{false,true}) {
+            EnumFacing along=rotated?EnumFacing.SOUTH:EnumFacing.EAST;
+            for (int i=0;i<3;i++) {
+                Block glass=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",glasses[i]));
+                world.setBlockState(source.offset(along,i),glass.getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockGlassWall.ROTATED,rotated),3);
+            }
+            for (int i=0;i<3;i++) {
+                BlockPos p=source.offset(along,i);
+                IBlockState actual=world.getBlockState(p).getActualState(world,p);
+                check(actual.getValue(com.vandorlabs.blocks.BlockGlassWall.LEFT)==(i==0),"mixed glass left seam");
+                check(actual.getValue(com.vandorlabs.blocks.BlockGlassWall.RIGHT)==(i==2),"mixed glass right seam");
+                check(((com.vandorlabs.blocks.BlockSpaceGlass)actual.getBlock()).detail().equals(
+                        TileEntitySpaceDoor.DETAILS[i]),"glass detail selection");
+            }
+            for (int i=0;i<3;i++) world.setBlockToAir(source.offset(along,i));
+        }
         System.out.println("[vandorlabs][reprolab] space-door-settings PASS: "+cases
                 +" upper/lower pick-and-place cases, defaults, saved settings and neighbor precedence");
     }

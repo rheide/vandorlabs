@@ -3868,6 +3868,18 @@
     "paired_model": "space_standard_sliding_framed_paired"
   },
   {
+    "id": "space_glass_small",
+    "type": "glass_wall",
+    "class": "BlockSpaceGlass",
+    "item": true
+  },
+  {
+    "id": "space_glass_large",
+    "type": "glass_wall",
+    "class": "BlockSpaceGlass",
+    "item": true
+  },
+  {
     "id": "space_door",
     "type": "space_door",
     "class": "BlockConfigurableSpaceDoor",

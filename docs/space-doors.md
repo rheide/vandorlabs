@@ -11,7 +11,12 @@ Escape closes the dialog; neither rolls back the live changes. Choices are saved
 lower tile entity and synchronized by the server. Configuring a pair applies
 to both leaves; a newly placed matching mate inherits the existing appearance.
 An 80x160 native-aspect artwork preview updates with design and detail choices;
-the adjacent hinge label reflects the selected motion.
+The Hinges button below the preview toggles both fixed and moving hardware for
+rotating doors without changing their leaf, pivot or frame. It is disabled for
+sliding motion, preserving the last rotating choice. Existing doors default to
+hinges on. This preference is saved, synchronized to paired leaves, inherited
+by new mates and included in creative pick-block items. The channel label and
+field have moved up one option row.
 Creative pick-block on either half copies all selector settings, including the
 channel, into the item. Placement restores these settings before considering
 neighbor inheritance; it does not copy coordinates, power or open state, or
@@ -90,7 +95,10 @@ trimming its geometry.
 Their supplied one-model-pixel border width stays unchanged. Sliding models have no hinges.
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
-Space Glass uses the existing connection rules, including inner corners and
+Space Glass has three creative blocks: Small, Medium and Large. The existing
+`space_glass` id remains Medium for save compatibility; `space_glass_small` and
+`space_glass_large` use the low/high assets. Both frame and shimmer use the
+selected native tier. Mixed tiers still connect, including inner corners and
 both wall orientations. Its metal frame is solid-pass geometry. A non-ticking
 tile draws the repeating glass in the translucent pass with the pack's faint
 alpha preserved. Glass has a per-visible-block render call but no server ticks.
@@ -106,8 +114,10 @@ Offline checks cover all design/detail model references, constant-thickness
 2px rectangular leaves centered in 4px frames, full-width singles, shortened hinge mounts and surface
 contact, six closed faces on every jamb cuboid, sealed paired seams and jamb clearance at every
 integer angle. Live checks exercise default
-placement, saved settings and 1,440 upper/lower pick-and-place combinations,
-including precedence over a differently configured adjacent door. Four live
+placement, saved settings and 2,880 upper/lower pick-and-place combinations,
+including both hinge choices and precedence over a differently configured
+adjacent door. Mixed glass tiers are checked in both wall orientations; live
+fixtures show all three tiers, hinges on/off and the updated door dialog. Four live
 inside-frame screenshots look sideways at both jambs from both depth edges.
 A magenta backing wall makes missing faces visible; the pixel check rejects any
 backing pixels between the jamb edges across every interior scanline (excluding

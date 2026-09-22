@@ -12,14 +12,18 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 public class TESpaceGlass extends TileEntitySpecialRenderer<TileEntitySpaceGlass> {
-    private static final ResourceLocation GLASS = new ResourceLocation(
-            "vandorlabs", "textures/blocks/space_doors/glass_tile.png");
+    private static final java.util.Map<String,ResourceLocation> GLASS = new java.util.HashMap<>();
+    static {
+        for (String detail:new String[]{"low","medium","high"}) GLASS.put(detail,new ResourceLocation(
+                "vandorlabs", "textures/blocks/space_doors/"+detail+"/glass_tile.png"));
+    }
     @Override public void render(TileEntitySpaceGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null) return;
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockSpaceGlass)) return;
-        bindTexture(GLASS);
+        bindTexture(GLASS.get(((com.vandorlabs.blocks.BlockSpaceGlass)
+                tile.getWorld().getBlockState(tile.getPos()).getBlock()).detail()));
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();
