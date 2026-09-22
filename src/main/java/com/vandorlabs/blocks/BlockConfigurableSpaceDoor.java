@@ -57,10 +57,11 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,
             net.minecraft.world.IBlockAccess world,BlockPos pos) {
         TileEntitySpaceDoor tile=settings(state,world,pos);
+        IBlockState actual=getActualState(state,world,pos);
         net.minecraft.util.math.AxisAlignedBB box=tile==null?super.getBoundingBox(state,world,pos)
-                :tile.model(tile.isSliding()).getBoundingBox(state,world,pos);
+                :tile.model(tile.isSliding()).getBoundingBox(actual,world,pos);
         if (tile!=null) {
-            EnumFacing facing=getActualState(state,world,pos).getValue(FACING);
+            EnumFacing facing=actual.getValue(FACING);
             box=box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
                     facing.getFrontOffsetZ()*tile.positionOffset());
         }
@@ -70,9 +71,10 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
             net.minecraft.world.IBlockAccess world,BlockPos pos) {
         TileEntitySpaceDoor tile=settings(state,world,pos);
         if (tile==null) return super.getCollisionBoundingBox(state,world,pos);
-        net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).getCollisionBoundingBox(state,world,pos);
+        IBlockState actual=getActualState(state,world,pos);
+        net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).getCollisionBoundingBox(actual,world,pos);
         if (box==NULL_AABB) return NULL_AABB;
-        EnumFacing facing=getActualState(state,world,pos).getValue(FACING);
+        EnumFacing facing=actual.getValue(FACING);
         return box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
                 facing.getFrontOffsetZ()*tile.positionOffset());
     }
