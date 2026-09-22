@@ -30,6 +30,14 @@ public final class SpaceDoorDataTest {
         check(SpaceDoorData.positionOffset(false,true)<0,"rotating middle inset");
         check(SpaceDoorData.positionOffset(true,true)==0,"sliding middle native");
         check(SpaceDoorData.positionOffset(true,false)>0,"sliding edge outset");
+        com.vandorlabs.render.SpaceDoorMotion motion=com.vandorlabs.render.SpaceDoorMotion.ROTATING;
+        for (int i=0;i<4;i++) {
+            check(motion.sliding==(i>0) && motion.direction==Math.max(0,i-1),"four motion choices");
+            check(com.vandorlabs.render.SpaceDoorMotion.fromSettings(motion.sliding,motion.direction)==motion,
+                    "dialog motion matches saved settings");
+            motion=motion.next();
+        }
+        check(motion==com.vandorlabs.render.SpaceDoorMotion.ROTATING,"motion selector wraps");
         System.out.println("Space door settings PASS: 1080 configurations, persistence, motion, vertical travel and bounds");
     }
 }

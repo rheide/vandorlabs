@@ -49,6 +49,7 @@ final class DoorRuntimeChecks {
         checkMotionPairMatrix(world, player, origin);
         checkConnectingDetailedDoors(world, origin);
         checkSpaceDoors(world, player, origin);
+        SpaceDoorRuntimeChecks.run(world,player,origin);
         checkRedstoneEdges(world, player, origin, hingedA);
         checkBreakPair(world, origin, hingedA);
         clear(world, origin);
@@ -230,8 +231,8 @@ final class DoorRuntimeChecks {
             count++;
             com.vandorlabs.blocks.BlockSpaceDoor door =
                     (com.vandorlabs.blocks.BlockSpaceDoor) raw;
-            require(door.getPivot(false) == 2.5F && door.getPivot(true) == 13.5F
-                    && door.getPivotZ() == 13.5F, "Space pin axis differs from mesh");
+            require(door.getPivot(false) == 1F && door.getPivot(true) == 15F
+                    && door.getPivotZ() == 11.24F, "Space pin axis differs from mesh");
             if (door.isSlidingModel() && door.getRegistryName().getResourcePath().endsWith("_bare")) {
                 require(door.getSlide(false) == -15 && door.getSlide(true) == 15,
                         "bare slider must retain a one-pixel reveal");
@@ -253,8 +254,10 @@ final class DoorRuntimeChecks {
                 require(world.getBlockState(mate).getValue(BlockVandorDoor.OPEN),
                         "Space mate did not open");
                 AxisAlignedBB bounds=door.getBoundingBox(world.getBlockState(pos),world,pos);
-                require(bounds.minX>=0 && bounds.maxX<=1 && bounds.minZ>=0 && bounds.maxZ<=1,
-                        "open Space door bounds spill into neighboring block");
+                // A rectangular thick leaf on external hinges has a small
+                // forward overhang. Collision must include that visible tip.
+                require(bounds.minX>=-.24 && bounds.maxX<=1.24 && bounds.minZ>=-.24 && bounds.maxZ<=1.24,
+                        "open Space door exceeds the rectangular leaf envelope");
                 clear(world, mate);
                 require(!door.getActualState(world.getBlockState(pos), world, pos)
                         .getValue(BlockConnectingDetailedDoor.PAIRED), "Space pair did not revert");

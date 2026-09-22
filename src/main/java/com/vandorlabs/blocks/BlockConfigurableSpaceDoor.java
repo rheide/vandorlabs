@@ -36,18 +36,33 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         TileEntity raw=world.getTileEntity(pos);
         if (!world.isRemote && raw instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;
+            if (stack.hasTagCompound() && stack.getTagCompound().hasKey("SpaceDoorSettings",10)) {
+                // An explicitly picked configuration takes precedence over
+                // both placement defaults and neighbor appearance inheritance.
+                tile.applyItemSettings(stack.getTagCompound().getCompoundTag("SpaceDoorSettings"));
+                return;
+            }
             BlockPos mate=tile.mate();
             if (mate!=null && world.isBlockLoaded(mate) && world.getTileEntity(mate) instanceof TileEntitySpaceDoor) {
                 TileEntitySpaceDoor other=(TileEntitySpaceDoor)world.getTileEntity(mate);
                 tile.configure(other.getDesign(),other.getDetail(),other.isFramed(),other.getSlideDirection(),
                         other.isMiddle(),other.isSliding());
             } else if (isSlidingModel()) {
-                // Newly placed copies of the hidden legacy sliding id retain
-                // their old centre-track default. The unified block starts rotating/edge.
+                // Both the unified block and legacy sliding item default to
+                // sideways sliding on the centre track.
                 tile.configure(tile.getDesign(),tile.getDetail(),tile.isFramed(),
                         tile.getSlideDirection(),true,true);
             }
         }
+    }
+    @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult target,
+            World world,BlockPos pos,EntityPlayer player) {
+        net.minecraft.block.Block unified=net.minecraft.block.Block.REGISTRY.getObject(
+                new net.minecraft.util.ResourceLocation("vandorlabs","space_door"));
+        ItemStack stack=new ItemStack(unified);
+        TileEntitySpaceDoor tile=settings(state,world,pos);
+        if (tile!=null) stack.setTagInfo("SpaceDoorSettings",tile.itemSettings());
+        return stack;
     }
     private TileEntitySpaceDoor settings(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos) {
         BlockPos lower=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
@@ -59,7 +74,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         TileEntitySpaceDoor tile=settings(state,world,pos);
         IBlockState actual=getActualState(state,world,pos);
         net.minecraft.util.math.AxisAlignedBB box=tile==null?super.getBoundingBox(state,world,pos)
-                :tile.model(tile.isSliding()).getBoundingBox(actual,world,pos);
+                :tile.model(tile.isSliding()).spaceBounds(actual,world,pos);
         if (tile!=null) {
             EnumFacing facing=actual.getValue(FACING);
             box=box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
@@ -72,8 +87,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         TileEntitySpaceDoor tile=settings(state,world,pos);
         if (tile==null) return super.getCollisionBoundingBox(state,world,pos);
         IBlockState actual=getActualState(state,world,pos);
-        net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).getCollisionBoundingBox(actual,world,pos);
-        if (box==NULL_AABB) return NULL_AABB;
+        if (tile.isSliding() && actual.getValue(OPEN)) return NULL_AABB;
+        net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).spaceBounds(actual,world,pos);
         EnumFacing facing=actual.getValue(FACING);
         return box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
                 facing.getFrontOffsetZ()*tile.positionOffset());

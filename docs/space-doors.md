@@ -1,7 +1,8 @@
 # Space doors and glass
 
 The Space family is independent of the Detailed doors. The creative menu has one
-Space Door item. Shift-right-click either half to choose Rotating/Sliding motion,
+Space Door item, defaulting to Sliding Sideways in the Middle position.
+Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
 the design, Small/Medium/Large texture detail, framed/bare appearance, placement
 position, and redstone channel. Door types use a scrollable list with mouse-wheel,
 scrollbar and up/down-key navigation. Each option change applies immediately,
@@ -11,7 +12,11 @@ lower tile entity and synchronized by the server. Configuring a pair applies
 to both leaves; a newly placed matching mate inherits the existing appearance.
 An 80x160 native-aspect artwork preview updates with design and detail choices;
 the adjacent hinge label reflects the selected motion.
-Sliding doors also offer Sideways / Up / Down motion. Vertical travel is 31/16
+Creative pick-block on either half copies all selector settings, including the
+channel, into the item. Placement restores these settings before considering
+neighbor inheritance; it does not copy coordinates, power or open state, or
+reconfigure the neighbor. Ordinary unconfigured items still inherit a matching mate.
+Vertical travel is 31/16
 block: framed leaves retract one pixel beyond the inner frame edge, while bare
 leaves preserve their one-pixel open-edge reveal. Sideways travel is 15/16 for
 single framed leaves and 16/16 for paired framed leaves; bare leaves retain 15/16.
@@ -28,7 +33,7 @@ Fifteen designs are available: Observation, Airlock, Standard, Security, Reactor
 Service, Viewport, Laboratory, Cargo, Ventilation, Cargo Lift, Blast Shield,
 Glazed Hangar, Quarantine Seal, Reactor Barrier and Modular Shutter. Observation,
 Viewport, Laboratory and Glazed Hangar retain their translucent windows.
-Select Sliding and Up for lift-style motion; selecting artwork does not
+Select Sliding Up for lift-style motion; selecting artwork does not
 override the current motion setting. All designs also support rotating doors.
 Modular Shutter uses the existing door/pair sizes, not arbitrary-sized assemblies.
 Place matching motion types with
@@ -56,20 +61,32 @@ UV accessors expose only the original rectangle. PNGs are never resized.
 Glass mipmaps preserve low alpha instead of using vanilla's cutout threshold.
 Texture reloads use the same loader.
 
-Rotating leaves occupy the player-facing block edge, like Detailed doors.
-Hinges mount on the interior rebate, with their shared pin axis at X=2.5/Z=13.5
-(mirrored X=13.5 on the right). The inset keeps the open leaf inside its own block.
-A 0.26-model-pixel free-edge clearance on standalone leaves prevents the corner
-clipping the opposite jamb during its circular sweep; paired leaves omit that
-crop and meet exactly at the centre seam. Artwork is cropped, never stretched.
+Edge-positioned rotating leaves occupy the player-facing block edge.
+Hinges use the original thin-door hardware, with one pixel removed from the
+frame-side mounting arm. The whole hinge and pivot move one pixel toward the
+jamb: the shared pin axis is X=1/Z=11.24 (mirrored X=15 on the right), with
+the door mount against the leaf's inner face at Z=12.24. Other hinge dimensions
+are unchanged. The leaf is one rectangular cuboid, without a rebate.
+Standalone framed leaves span the entire 14-pixel opening, with no free-edge
+crop. A shallow relief inside the opposite jamb clears the swinging
+corner instead. The jamb uses two closed cuboids: a rear pocket and a full-width
+one-pixel-deep front stop. All six faces are retained, including exposed step
+shoulders. The former sixteen-strip version omitted these shoulders and could
+show the background when viewed obliquely from inside. Paired leaves still meet exactly at the
+centre seam. Artwork is cropped at native density, never stretched.
 Fixed mounts/pins stay stationary; the door mounts and sleeves rotate with the
-leaf. All hinge cuboids are depth-scaled 2.5x around the pin axis to match the
-thick leaf/frame assembly. Hinges sit at heights 6/16 and 26/16 and are included
+leaf. Hinge cuboids are not stretched to the leaf depth. Hinges sit at heights
+6/16 and 26/16 and are included
 only when Rotating motion is selected.
 Bare sliders travel 15/16 block, retaining a one-model-pixel reveal when open.
-Door and Space Glass frames are 4.45/16 block deep, matching Detailed Engineering.
-Rotating leaf bodies are also 4.45/16 block deep, with a narrower hinge-edge
-rebate to clear the jamb. Sliding leaves are 4.25/16 deep for track clearance.
+Door and Space Glass frames are now exactly 4/16 block deep (previously 4.45/16).
+Rotating and sliding leaf bodies are uniformly 2/16 block deep, centered with
+one pixel on either side. Rotating leaves occupy Z=12.24..14.24 inside
+Z=11.24..15.24 frames; sliding leaves occupy Z=7..9 inside Z=6..10 frames, preserving the same
+5.24/16 assembly offset for Edge/Middle. With surface-mounted
+hinges, the fully open rectangular leaf tip can project 3.76/16 beyond the
+block's front edge; open collision bounds follow the actual slab rather than
+trimming its geometry.
 Their supplied one-model-pixel border width stays unchanged. Sliding models have no hinges.
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
@@ -85,9 +102,18 @@ sets and regenerates the selected runtime assets. Pack instructions are archived
 `docs/space-door-pack/`. `tools/test_space_doors.py [zip]` checks density,
 frame seams, hinge separation and optionally exact texture byte preservation.
 The ReproLab retains the legacy door galleries and an L-shaped glass fixture.
-The configurable menu has not been verified in a live client in this revision;
-the requested test build skips the slow in-game overview. Offline checks cover
-all design/detail model references and hinge clearance at every integer angle.
+Offline checks cover all design/detail model references, constant-thickness
+2px rectangular leaves centered in 4px frames, full-width singles, shortened hinge mounts and surface
+contact, six closed faces on every jamb cuboid, sealed paired seams and jamb clearance at every
+integer angle. Live checks exercise default
+placement, saved settings and 1,440 upper/lower pick-and-place combinations,
+including precedence over a differently configured adjacent door. Four live
+inside-frame screenshots look sideways at both jambs from both depth edges.
+A magenta backing wall makes missing faces visible; the pixel check rejects any
+backing pixels between the jamb edges across every interior scanline (excluding
+two silhouette pixels for antialiasing), and checks the backing is present
+outside it. The gallery
+checks rendering; it does not automate interaction with the configuration GUI.
 Dynmap has static simplified door/glass fallbacks, not animated joined geometry.
 
 The supplied medium/high `double_frame_metal.png` has damaged opaque outer

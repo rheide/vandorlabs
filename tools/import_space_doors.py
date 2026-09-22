@@ -3,6 +3,7 @@
 import copy
 import argparse
 import json
+import math
 import zipfile
 from pathlib import Path
 
@@ -13,10 +14,11 @@ TEX = 'vandorlabs:blocks/space_doors/'
 FAMILIES = ('observation', 'airlock', 'standard', 'security', 'reactor', 'viewport', 'laboratory', 'cargo', 'ventilation',
             'cargo_lift', 'blast_shield', 'glazed_hangar', 'quarantine_seal', 'reactor_barrier', 'modular_shutter')
 GLASS_FAMILIES = ('observation','viewport','laboratory','glazed_hangar')
-FRAME_DEPTH = 4.45  # Detailed Engineering frame extrusion, in model pixels.
-HINGE_X, HINGE_Z = 2.5, 13.5
-HINGE_DEPTH_SCALE = 2.5
-SWING_GAP = .26
+FRAME_DEPTH = 4  # Space frames, in model pixels.
+# Original thin-door hardware: pin 1 pixel in front of the mounting face.
+# Move it with the inner face of the thick slab, without scaling the hardware.
+LEAF_FRONT, LEAF_BACK = 12.24, 14.24
+HINGE_X, HINGE_Z = 1, LEAF_FRONT-1
 WRITTEN_MODELS = []
 
 def write(path, value):
@@ -40,19 +42,9 @@ def plate(x0,y0,x1,y1, texture, uv, z0=8,z1=9):
     return el
 
 def leaf_parts(x0,y0,x1,y1,sliding,texture='leaf'):
-    # Full-depth body; the rebated hinge edge clears the jamb during rotation.
-    spans=[(x0,x1,6.1,10.35)] if sliding else [(x0,5,14.5,16),(5,x1,11.55,16)]
-    result=[plate(a,y0,b,y1,texture,[a,(32-y1)/2,b,(32-y0)/2],z0,z1)
-            for a,b,z0,z1 in spans]
-    if not sliding:
-        # No opaque internal wall through a porthole where the depth changes.
-        del result[0]['faces']['east']
-        del result[1]['faces']['west']
-        if texture=='leaf':
-            step=box(5,y0,11.55,5,y1,14.5,'leaf',[5,(32-y1)/2,5.001,(32-y0)/2])
-            step['faces']={k:v for k,v in step['faces'].items() if k in ('east','west')}
-            result.append(step)
-    return result
+    # One rectangular slab, including the hinge side. No rebate or internal wall.
+    z0,z1=(7,9) if sliding else (LEAF_FRONT,LEAF_BACK)
+    return [plate(x0,y0,x1,y1,texture,[x0,(32-y1)/2,x1,(32-y0)/2],z0,z1)]
 
 def mirror(elements):
     result = copy.deepcopy(elements)
@@ -84,6 +76,18 @@ def frame(width=16,height=32,paired=False,rotating=False):
     for element in result:
         element['from'][2] = 11.24 if rotating else 6
         element['to'][2] = element['from'][2] + FRAME_DEPTH
+    if rotating and not paired:
+        # Two closed solids, not open strips: a shallow rear pocket clears the
+        # swept corner, and a full-width front stop seals the closed opening.
+        # All six faces are needed: exposed step shoulders are visible from
+        # inside the doorway even where the cuboids touch in depth.
+        result.pop()  # free jamb; hinge jamb and horizontal rails stay intact
+        radius2=(width-1-HINGE_X)**2+(LEAF_BACK-HINGE_Z)**2
+        inner=HINGE_X+math.sqrt(radius2)
+        result.append(plate(inner,1,width,height-1,'frame',
+                            [15.5+(inner-(width-1))/2,.5,16,(height-1)/2],11.24,LEAF_BACK))
+        result.append(plate(width-1,1,width,height-1,'frame',
+                            [15.5,.5,16,(height-1)/2],LEAF_BACK,11.24+FRAME_DEPTH))
     return result
 
 def hinges(geometry, part, framed):
@@ -91,16 +95,13 @@ def hinges(geometry, part, framed):
     for height in (6,26):
         for c in geometry['cuboids']:
             if c['part'] != part: continue
-            a,b=c['from'],c['to']; tile=c['material_tile']
+            a,b=list(c['from']),c['to']; tile=c['material_tile']
+            if c['name']=='frame_mount': a[0]+=1  # truncate the frame-side arm
             u=(tile%2)*8+.25; v=(tile//2)*8+.25
-            # Mount on the interior hinge rebate at z=14.5, with pin z=13.5.
-            # The slight X inset keeps even the bare full-width leaf inside
-            # its own block at 90 degrees. Reversing Z swaps face winding too.
-            # The supplied hinge was authored for the original thin panel.
-            # Scale every fixed/moving cuboid about its pin axis so mounts,
-            # sleeve and caps span the thicker rotating leaf/frame assembly.
-            az=HINGE_Z+(14.5-b[2]-HINGE_Z)*HINGE_DEPTH_SCALE
-            bz=HINGE_Z+(14.5-a[2]-HINGE_Z)*HINGE_DEPTH_SCALE
+            # Rigidly translate the original thin-door hardware onto the new
+            # slab face. Fixed pin and moving sleeve share the actual pivot.
+            az=LEAF_FRONT-b[2]
+            bz=LEAF_FRONT-a[2]
             elements.append(box(a[0]+HINGE_X,a[1]+height,az,
                                 b[0]+HINGE_X,b[1]+height,bz,
                                 'hinge',[u,v,u+7.5,v+7.5]))
@@ -204,10 +205,6 @@ def main(archive, detail, expansion, lift):
                     base=paired if is_pair else id
                     x0=1 if framed else 0
                     x1=16 if is_pair or not framed else 15
-                    # Standalone leaves need free-edge jamb clearance through
-                    # their swing. Paired leaves have no inner jamb and must
-                    # meet exactly at the centre seam when closed.
-                    if not sliding and not is_pair: x1-=SWING_GAP
                     y0,y1=(1,31) if framed else (0,32)
                     # Sliding slabs have front/back clearance within the frame.
                     leaf=leaf_parts(x0,y0,x1,y1,sliding)
@@ -242,7 +239,6 @@ def main(archive, detail, expansion, lift):
                 write(OUT/'blockstates'/f'{id}.json',{'multipart':parts})
                 inventory=model(frame(rotating=not sliding) if framed else [],family)
                 ix0,ix1,iy0,iy1=(1,15,1,31) if framed else (0,16,0,32)
-                if not sliding: ix1-=SWING_GAP
                 inventory['elements']+=leaf_parts(ix0,iy0,ix1,iy1,sliding)
                 if not sliding:
                     inventory['elements']+=hinges(geometry,'fixed',framed)+hinges(geometry,'moving',framed)
@@ -304,10 +300,10 @@ def main(archive, detail, expansion, lift):
         write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_framed'})
     id='space_door'
     catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
-                        item=True,sliding=False,paired_model='space_standard_rotating_framed_paired'))
+                        item=True,sliding=True,paired_model='space_standard_sliding_framed_paired'))
     names.append((id,'Space Door'))
     write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
-    write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/space_standard_rotating_framed'})
+    write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/space_standard_sliding_framed'})
     emit_model('space_empty',[])
     write(catalog_path,catalog)
     lang=OUT/'lang/en_us.lang'

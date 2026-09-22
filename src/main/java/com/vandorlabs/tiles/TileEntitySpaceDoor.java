@@ -20,7 +20,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     private boolean framed=true, sliding;
     private boolean middle;
     private boolean migrateLegacyMotion;
-    public boolean isMiddle() { return middle; }
+    public boolean isMiddle() { migrateLegacyMotion(); return middle; }
     public static final double MIDDLE_OFFSET = -5.24/16.0;
     public int getDesign() { return design; }
     public int getDetail() { return detail; }
@@ -80,10 +80,26 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        migrateLegacyMotion();
         super.writeToNBT(tag);
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         return tag;
+    }
+    /** Copy user choices only, not tile coordinates, power or animation state. */
+    public NBTTagCompound itemSettings() {
+        migrateLegacyMotion();
+        NBTTagCompound tag=new NBTTagCompound();
+        new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding)
+                .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
+        tag.setInteger("SpaceDoorChannel",getRedstoneChannel());
+        return tag;
+    }
+    public void applyItemSettings(NBTTagCompound tag) {
+        com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
+                new com.vandorlabs.persistence.NbtPrimitiveData(tag));
+        configure(data.design,data.detail,data.framed,data.direction,data.middle,data.sliding);
+        setRedstoneChannel(Math.max(0,tag.getInteger("SpaceDoorChannel")));
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);

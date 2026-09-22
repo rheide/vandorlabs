@@ -15,7 +15,7 @@ cp "$HOME/MC-Forge12-2/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
     testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar
 cp "$HOME/MC-Forge12-2/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     testclient/runtime/game/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar
-VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 180 testclient/run.sh \
+VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 240 testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
 ANALYZE_ARGS=("$RUN_OUT" --texture-variant)
 if [[ "${VANDOR_LABS_TEXTURE_VARIANT:-default}" == "original" ]]; then
@@ -25,6 +25,8 @@ python3 testclient/analyze_viewscreen.py "${ANALYZE_ARGS[@]}"
 python3 testclient/analyze_space_doors.py "$RUN_OUT"
 grep -q '\[vandorlabs\]\[reprolab\] door-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: live door state, pairing, and collision contracts"
+grep -q '\[vandorlabs\]\[reprolab\] space-door-settings PASS' "$RUN_OUT/client.log"
+echo "PASS: Space door defaults and creative pick-block settings round trips"
 grep -q '\[vandorlabs\]\[reprolab\] redstone-channel-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: loaded-block redstone channel propagation and persistence"
 grep -q '\[vandorlabs\]\[reprolab\] chair-runtime PASS' "$RUN_OUT/client.log"

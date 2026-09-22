@@ -286,6 +286,14 @@ public class ReproLab {
             }
         }
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
+        // Stand inside the opening and inspect both jambs obliquely from both
+        // depth edges. Missing step shoulders expose the magenta backing wall.
+        for (String side : new String[]{"east","west"}) for (int edge : new int[]{-1,1}) {
+            float yaw=(float)(90+edge*Math.toDegrees(Math.atan(.1/.4375)));
+            SHOTS.add(new Shot("gallery_space_jamb_"+side+"_"+(edge<0?"front":"back"),
+                    GALLERY_X+.5,galleryFeet,-18+(16-13.24)/16+edge*.1,
+                    side.equals("east")?-yaw:yaw,0));
+        }
         for (String pose : new String[]{"closed","open"}) {
             SHOTS.add(new Shot("gallery_space_hinges_"+pose,
                     GALLERY_X-2.5D,galleryFeet+.4D,-21,-36,5));
@@ -887,6 +895,12 @@ public class ReproLab {
                 world.setBlockState(new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18),
                         block("space_glass").getDefaultState(),3);
             }
+        } else if (shot.startsWith("gallery_space_jamb_")) {
+            placeDoor(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),"space_standard_rotating_framed",true);
+            IBlockState backing=Blocks.CONCRETE.getDefaultState().withProperty(
+                    net.minecraft.block.BlockColored.COLOR,net.minecraft.item.EnumDyeColor.MAGENTA);
+            for (int side : new int[]{-1,1}) for (int y=0;y<2;y++) for (int z=-19;z<=-17;z++)
+                world.setBlockState(new BlockPos(GALLERY_X+side,GALLERY_Y+y,z),backing,2);
         } else if (shot.startsWith("gallery_space_hinges_")) {
             for (int i=0;i<3;i++) {
                 BlockPos p=new BlockPos(GALLERY_X-1+(i==2?3:i),GALLERY_Y,-18);

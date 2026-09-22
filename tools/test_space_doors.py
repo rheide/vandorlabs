@@ -33,6 +33,9 @@ assert {e['id'] for e in visible}=={'space_door'}
 config=[e for e in catalog if e.get('class')=='BlockConfigurableSpaceDoor']
 assert {e['id'] for e in config}=={'space_door','space_rotating_door','space_sliding_door'}
 assert all(e.get('hidden') for e in config if e['id']!='space_door')
+assert by_id['space_door']['sliding'] is True
+assert load(ASSETS/'models/item/space_door.json')['parent'].endswith('space_standard_sliding_framed')
+hinge_source=load(ROOT/'docs/space-door-pack/hinge/geometry.json')['cuboids']
 
 def check_condition(c):
     if 'AND' in c or 'OR' in c:
@@ -57,12 +60,23 @@ for door in doors:
             fixed=load(ASSETS/f'models/block/detailed_doors/{base}_{hand}_fixed.json')
             leaf=load(ASSETS/f'models/block/detailed_doors/{base}_{hand}_leaf.json')
             slabs=[e for e in leaf['elements'] if e['faces'].get('south',{}).get('texture')=='#leaf']
-            rails=[e for e in fixed['elements'] if e['faces']['south']['texture']=='#frame']
-            assert max(e['to'][2]-e['from'][2] for e in slabs)>=4.25
+            rails=[e for e in fixed['elements'] if any(f['texture']=='#frame' for f in e['faces'].values())]
+            assert len(slabs)==1,(base,hand,'door must be one rectangular slab, no hinge rebate')
+            assert len(slabs[0]['faces'])==6,(base,hand,'slab must have six complete faces')
+            assert math.isclose(slabs[0]['to'][2]-slabs[0]['from'][2],
+                                2),(base,hand,'uniform two-pixel thickness')
+            expected_center=8 if door['sliding'] else 13.24
+            assert math.isclose(sum((slabs[0]['from'][2],slabs[0]['to'][2]))/2,expected_center)
             width=sum(e['to'][0]-e['from'][0] for e in slabs)
-            expected=(16 if not door['framed'] else 15 if paired else 14)-(
-                    .26 if not door['sliding'] and not paired else 0)
+            expected=16 if not door['framed'] else 15 if paired else 14
             assert math.isclose(width,expected)
+            if door['framed'] and not paired:
+                assert slabs[0]['from'][0]==1 and slabs[0]['to'][0]==15,(base,'single must fill frame')
+                if not door['sliding']:
+                    # The relief is behind an unbroken, full-width visible border.
+                    lip=[r for r in rails if math.isclose(r['from'][2],slabs[0]['to'][2])]
+                    assert len(lip)==1 and math.isclose(lip[0]['to'][2]-lip[0]['from'][2],1)
+                    assert lip[0]['to'][0]-lip[0]['from'][0]==1
             if paired and not door['sliding']:
                 # Inner-jamb removal must not leave daylight at the closed seam.
                 assert math.isclose(width,15 if door['framed'] else 16),(base,hand,'closed seam')
@@ -79,23 +93,47 @@ for door in doors:
                 assert math.isclose(abs(uv[2]-uv[0]),slab['to'][0]-slab['from'][0])
                 assert math.isclose(abs(uv[3]-uv[1])*2,slab['to'][1]-slab['from'][1])
                 if not door['sliding']:
-                    pivot=13.5 if hand=='right' else 2.5
+                    pivot=15 if hand=='right' else 1
+                    pivot_z=11.24
+                    assert by_id[door['paired_model']]['pivot_z']==pivot_z
+                    assert by_id[door['paired_model']]['right_pivot' if hand=='right' else 'left_pivot']==pivot
                     sign=-1 if hand=='right' else 1
                     for angle in range(91):
                         c,s=math.cos(math.radians(angle)*sign),math.sin(math.radians(angle)*sign)
-                        poly=[(pivot+c*(x-pivot)+s*(z-13.5),13.5-s*(x-pivot)+c*(z-13.5))
+                        poly=[(pivot+c*(x-pivot)+s*(z-pivot_z),pivot_z-s*(x-pivot)+c*(z-pivot_z))
                               for x in (slab['from'][0],slab['to'][0]) for z in (slab['from'][2],slab['to'][2])]
                         if angle==90:
-                            assert all(-1e-7<=x<=16+1e-7 and -1e-7<=z<=16+1e-7 for x,z in poly),base
+                            # Full thickness plus surface-mounted original hardware
+                            # can overhang the front by 3.76 model pixels when open.
+                            assert all(-1e-7<=x<=16+1e-7 and -3.76-1e-7<=z<=16+1e-7 for x,z in poly),base
                         for rail in rails:
                             if rail['from'][1]==1 and rail['to'][1]==31:
                                 assert not overlaps(poly,rail,c,s),(base,hand,angle,'jamb collision')
             for rail in rails:
-                assert math.isclose(rail['to'][2]-rail['from'][2],4.45)
+                depth=rail['to'][2]-rail['from'][2]
+                relieved=not door['sliding'] and not paired and rail['from'][1]==1 and (
+                        rail['from'][0]>=15 if hand=='left' else rail['to'][0]<=1)
+                assert (0<depth<=4+1e-7) if relieved else math.isclose(depth,4)
+                assert set(rail['faces'])=={'north','south','east','west','up','down'},(base,'see-through jamb face')
                 assert all(f['texture']=='#frame' for f in rail['faces'].values())
+            if rails:
+                assert math.isclose((min(r['from'][2] for r in rails)+max(r['to'][2] for r in rails))/2,expected_center)
             if not door['sliding']:
-                hinge=[e for e in leaf['elements'] if any(f.get('texture')=='#hinge' for f in e['faces'].values())]
-                assert hinge and max(e['to'][2]-e['from'][2] for e in hinge)>=3.25,(base,'thin moving hinge')
+                for part,model in (('fixed',fixed),('moving',leaf)):
+                    hardware=[e for e in model['elements'] if any(f.get('texture')=='#hinge' for f in e['faces'].values())]
+                    source=[e for e in hinge_source if e['part']==part]*2
+                    assert len(hardware)==len(source),(base,part,'missing or extra hinge parts')
+                    for actual,original in zip(hardware,source):
+                        for axis in range(3):
+                            trim=1 if original['name']=='frame_mount' and axis==0 else 0
+                            assert math.isclose(actual['to'][axis]-actual['from'][axis],
+                                                original['to'][axis]-original['from'][axis]-trim),(base,original['name'],'hinge dimensions')
+                        if original['name']=='door_mount':
+                            assert math.isclose(actual['to'][2],slabs[0]['from'][2]),(base,'hinge not on leaf surface')
+                        if original['name'] in ('pin','rotating_sleeve'):
+                            assert math.isclose((actual['to'][0]+actual['from'][0])/2,pivot)
+                            assert math.isclose((actual['to'][2]+actual['from'][2])/2,pivot_z)
+                assert len(leaf['elements'])==7,(base,'extra leaf pieces or internal walls')
             else:
                 assert not any(any(f.get('texture')=='#hinge' for f in e['faces'].values())
                                for e in fixed['elements']+leaf['elements']),(base,'sliding hinge')
@@ -104,6 +142,10 @@ for door in doors:
                     path=ASSETS/f'models/item/detailed_doors/{level}/{base}_{hand}_{part}.json'
                     parent=load(path)['parent'].replace('vandorlabs:block/','')
                     model=load(ASSETS/f'models/block/{parent}.json')
+                    if part in ('fixed','leaf'):
+                        assert model['elements']==(fixed if part=='fixed' else leaf)['elements'],(base,level,'tier geometry mismatch')
+                    else:
+                        assert len(model['elements'])==1,(base,level,'stepped glass geometry')
                     for tex in model['textures'].values():
                         texture=ROOT/'texture-packs/default/assets/vandorlabs/textures'/(tex.split(':')[1]+'.png')
                         assert texture.is_file(),texture
@@ -111,7 +153,7 @@ for door in doors:
 for path in (ASSETS/'models/block/detailed_doors').glob('space_glass_*.json'):
     for e in load(path)['elements']:
         if e['faces'].get('south',{}).get('texture')=='#frame':
-            assert math.isclose(e['to'][2]-e['from'][2],4.45)
+            assert math.isclose(e['to'][2]-e['from'][2],4)
 
 for archive in sys.argv[1:]:
     with zipfile.ZipFile(archive) as z:
@@ -123,4 +165,4 @@ for archive in sys.argv[1:]:
                 for tree in ('default','original'):
                     runtime=ROOT/f'texture-packs/{tree}/assets/vandorlabs/textures/blocks/space_doors/{level}'/source.name
                     assert runtime.read_bytes()==source.read_bytes()
-print('Space doors PASS: one visible block, fifteen designs, three detail sets, thick hinges/leaves, sealed paired seams, native UVs, all 91 swing angles and model references')
+print('Space doors PASS: centered 2px rectangular leaves in 4px frames, solid jamb faces, shortened hinges, sealed seams, native UVs, all 91 swing angles and three model tiers')

@@ -4,6 +4,7 @@ import com.vandorlabs.container.ContainerSpaceDoor;
 import com.vandorlabs.network.MessageSpaceDoor;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
+import com.vandorlabs.render.SpaceDoorMotion;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -17,18 +18,17 @@ import java.io.IOException;
 public class GuiSpaceDoor extends GuiContainer {
     private static final int ROW_H=14, LIST_ROWS=10, LIST_H=ROW_H*LIST_ROWS;
     private final TileEntitySpaceDoor tile;
-    private int design,detail,slideDirection,scrollIndex,lastValidChannel;
-    private boolean sliding;
+    private int design,detail,scrollIndex,lastValidChannel;
+    private SpaceDoorMotion motion;
     private boolean framed,middle,draggingScrollbar;
     private int listLeft,listTop,listRight,listBottom;
     private GuiTextField channelField;
-    private GuiButton done,motionButton,slideButton;
+    private GuiButton done,motionButton;
     private int previewX,previewY;
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
             "Quarantine Seal","Reactor Barrier","Modular Shutter"};
     private static final String[] SIZES={"Small (128 x 256)","Medium (256 x 512)","Large (512 x 1024)"};
-    private static final String[] DIRECTIONS={"Sideways","Up","Down"};
     private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
             "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
             "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter"};
@@ -37,8 +37,8 @@ public class GuiSpaceDoor extends GuiContainer {
         super(new ContainerSpaceDoor(tile));
         this.tile=tile;
         design=tile.getDesign(); detail=tile.getDetail(); framed=tile.isFramed();
-        sliding=tile.isSliding();
-        slideDirection=tile.getSlideDirection(); middle=tile.isMiddle();
+        motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
+        middle=tile.isMiddle();
         lastValidChannel=tile.getRedstoneChannel();
         scrollIndex=Math.max(0,Math.min(maxScroll(),design-LIST_ROWS/2));
         xSize=430; ySize=270;
@@ -49,14 +49,11 @@ public class GuiSpaceDoor extends GuiContainer {
         Keyboard.enableRepeatEvents(true);
         listLeft=guiLeft+12; listRight=listLeft+140; listTop=guiTop+40; listBottom=listTop+LIST_H;
         previewX=guiLeft+338; previewY=guiTop+42;
-        motionButton=new GuiButton(10,guiLeft+168,guiTop+40,154,20,sliding?"Motion: Sliding":"Motion: Rotating");
+        motionButton=new GuiButton(10,guiLeft+168,guiTop+40,154,20,motion.label);
         buttonList.add(motionButton);
         buttonList.add(new GuiButton(11,guiLeft+168,guiTop+66,154,20,SIZES[detail]));
         buttonList.add(new GuiButton(12,guiLeft+168,guiTop+92,154,20,framed?"Frame: Framed":"Frame: Bare"));
-        slideButton=new GuiButton(13,guiLeft+168,guiTop+118,154,20,"Slide: "+DIRECTIONS[slideDirection]);
-        slideButton.visible=sliding;
-        buttonList.add(slideButton);
-        buttonList.add(new GuiButton(14,guiLeft+168,guiTop+144,154,20,middle?"Position: Middle":"Position: Edge"));
+        buttonList.add(new GuiButton(14,guiLeft+168,guiTop+118,154,20,middle?"Position: Middle":"Position: Edge"));
         channelField=new GuiTextField(0,fontRenderer,guiLeft+168,guiTop+190,154,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
@@ -79,18 +76,16 @@ public class GuiSpaceDoor extends GuiContainer {
         if (channel()>=0) lastValidChannel=channel();
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,sliding?slideDirection:0,middle,sliding));
+                lastValidChannel,motion.direction,middle,motion.sliding));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
-            sliding=!sliding;
-            motionButton.displayString=sliding?"Motion: Sliding":"Motion: Rotating";
-            slideButton.visible=sliding;
+            motion=motion.next();
+            motionButton.displayString=motion.label;
         }
         else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail]; }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
-        else if (button.id==13) { slideDirection=(slideDirection+1)%3; button.displayString="Slide: "+DIRECTIONS[slideDirection]; }
         else if (button.id==14) { middle=!middle; button.displayString=middle?"Position: Middle":"Position: Edge"; }
         else return;
         sendUpdate();
@@ -179,7 +174,7 @@ public class GuiSpaceDoor extends GuiContainer {
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
         fontRenderer.drawString("Options",168,28,0xDAE8F0);
         fontRenderer.drawString("Preview",338,28,0xDAE8F0);
-        fontRenderer.drawString(sliding?"Hinges: Off":"Hinges: On",338,208,0xDAE8F0);
+        fontRenderer.drawString(motion.sliding?"Hinges: Off":"Hinges: On",338,208,0xDAE8F0);
         fontRenderer.drawString("Channel (0 = none)",168,176,0xDAE8F0);
         if (channel()<0) fontRenderer.drawString("Invalid channel",168,213,0xFF7777);
         fontRenderer.drawString("Changes apply live to both paired leaves",12,224,0xDAE8F0);
