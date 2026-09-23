@@ -6,6 +6,7 @@ import com.vandorlabs.tiles.TileEntityRedstoneChannel;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
+import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -32,6 +33,7 @@ public class BlockVandorSwitch extends BlockVandor {
 
     public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, java.util.Arrays.asList(EnumFacing.values()));
     public static final PropertyBool ON = PropertyBool.create("on");
+    public static final PropertyInteger ROTATION = PropertyInteger.create("rotation",0,3);
 
     /** Rocker switches latch open/closed on click; buttons (push buttons)
      * turn ON for a short moment, then release like a vanilla button. */
@@ -62,13 +64,27 @@ public class BlockVandorSwitch extends BlockVandor {
     public BlockVandorSwitch(String name, boolean momentary) {
         super(name);
         this.momentary = momentary;
-        setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(ON, false));
+        setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH)
+                .withProperty(ON, false).withProperty(ROTATION,0));
         setLightOpacity(0);
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, ON);
+        return new BlockStateContainer(this, FACING, ON, ROTATION);
+    }
+
+    @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos) {
+        TileEntity tile=world.getTileEntity(pos);
+        return state.withProperty(ROTATION,state.getValue(FACING).getAxis()==EnumFacing.Axis.Y
+                && tile instanceof TileEntityRedstoneChannel
+                ?((TileEntityRedstoneChannel)tile).getMountRotation():0);
+    }
+
+    private static int placementRotation(EnumFacing facing,EntityLivingBase placer) {
+        if (facing.getAxis()!=EnumFacing.Axis.Y) return 0;
+        return (placer.getHorizontalFacing().getHorizontalIndex()
+                +(facing==EnumFacing.DOWN?2:0))&3;
     }
 
     @Override
@@ -112,7 +128,8 @@ public class BlockVandorSwitch extends BlockVandor {
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-        return getDefaultState().withProperty(FACING, facing).withProperty(ON, false);
+        return getDefaultState().withProperty(FACING, facing).withProperty(ON, false)
+                .withProperty(ROTATION,placementRotation(facing,placer));
     }
 
     @Override
@@ -152,6 +169,8 @@ public class BlockVandorSwitch extends BlockVandor {
         super.onBlockPlacedBy(world,pos,state,placer,stack);
         NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");
         TileEntityRedstoneChannel tile=channelTile(world,pos);
+        if (!world.isRemote && tile!=null)
+            tile.setMountRotation(placementRotation(state.getValue(FACING),placer));
         if (!world.isRemote && settings!=null && tile!=null)
             tile.setRedstoneChannel(Math.max(0,settings.getInteger("Channel")));
     }

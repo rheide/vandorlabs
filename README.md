@@ -67,6 +67,8 @@ lighting, furniture, ramps, glass, and building materials.
 - **Switches**: rocker/button wall plates and 3D throw levers, real
   redstone power, pop-off without support. Plus hand-built 3D Industrial,
   Compact and Glass levers (the glass one has a real seethrough window).
+  Flat-mounted switches rotate with the player's facing; floor-mounted levers
+  can be selected from every side.
 - **Redstone channels**: loaded blocks in the same dimension can share a
   virtual redstone signal without loading chunks. Configure channels in the
   programmable screen and ramp-controller dialogs; sneak-right-click a door,

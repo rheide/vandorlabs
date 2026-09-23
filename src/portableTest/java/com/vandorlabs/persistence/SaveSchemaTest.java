@@ -45,9 +45,9 @@ public final class SaveSchemaTest {
                 "Pos", "X", "Y", "Z");
         expect(SaveSchema.Redstone.class,
                 "RedstoneChannel", "ChannelSignal", "LocalOn", "ChannelInitialized",
-                "ManualOn", "ParticleStream", "LightInitialized");
+                "ManualOn", "ParticleStream", "LightInitialized", "MountRotation");
         if (SaveSchema.Screen.VERSION != 1 || SaveSchema.Ramp.CONTROLLER_VERSION != 6
-                || SaveSchema.Ramp.CELL_VERSION != 4 || SaveSchema.Redstone.VERSION != 1) {
+                || SaveSchema.Ramp.CELL_VERSION != 4 || SaveSchema.Redstone.VERSION != 2) {
             throw new AssertionError("save schema version changed without updating its contract test");
         }
         System.out.println("Save schema compatibility PASS");

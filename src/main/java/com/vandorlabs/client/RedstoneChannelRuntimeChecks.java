@@ -24,6 +24,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -35,6 +36,7 @@ final class RedstoneChannelRuntimeChecks {
     static void run(World world, EntityPlayer player) {
         checkTrianglePlacement(world, player);
         checkLeverPlacement(world,player);
+        checkFlatSwitchRotation(world,player);
         checkPickedChannels(world,player);
         checkLinkedLatches(world,player);
         Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_rocker"));
@@ -296,9 +298,71 @@ final class RedstoneChannelRuntimeChecks {
                     id+" floor placement did not retain its mount");
             require(lever.getStateFromMeta(lever.getMetaFromState(floor)).equals(floor),
                     id+" floor placement does not survive metadata");
+            for (EnumFacing orientation:EnumFacing.Plane.HORIZONTAL) {
+                for (boolean powered:new boolean[]{false,true}) {
+                    IBlockState mounted=floor.withProperty(BlockIndustrialLever.FACING,orientation)
+                            .withProperty(BlockIndustrialLever.POWERED,powered);
+                    world.setBlockState(pos,mounted,3);
+                    Vec3d target=new Vec3d(pos.getX()+.5,pos.getY()+.2,pos.getZ()+.5);
+                    require(lever.getSelectedBoundingBox(mounted,world,pos).contains(target),
+                            id+" floor selection box misses the model center: "+orientation);
+                    for (EnumFacing approach:new EnumFacing[]{EnumFacing.NORTH,EnumFacing.SOUTH,
+                            EnumFacing.EAST,EnumFacing.WEST,EnumFacing.UP}) {
+                        Vec3d start=target.addVector(approach.getFrontOffsetX()*1.5,
+                                approach.getFrontOffsetY()*1.5,approach.getFrontOffsetZ()*1.5);
+                        RayTraceResult hit=world.rayTraceBlocks(start,target,false,false,false);
+                        require(hit!=null && hit.typeOfHit==RayTraceResult.Type.BLOCK
+                                        && hit.getBlockPos().equals(pos) && hit.sideHit==approach,
+                                id+" floor lever cannot be selected from "+approach
+                                        +" facing "+orientation+" powered="+powered);
+                    }
+                }
+            }
         }
         world.setBlockToAir(pos);
         world.setBlockToAir(pos.down());
+    }
+
+    private static void checkFlatSwitchRotation(World world,EntityPlayer player) {
+        BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs","switch_rocker"));
+        BlockPos pos=new BlockPos(20,25,20);
+        float oldYaw=player.rotationYaw;
+        try {
+            for (EnumFacing support:new EnumFacing[]{EnumFacing.UP,EnumFacing.DOWN}) {
+                BlockPos supportPos=pos.offset(support.getOpposite());
+                world.setBlockState(supportPos,Blocks.STONE.getDefaultState(),3);
+                java.util.Set<Integer> turns=new java.util.HashSet<>();
+                for (EnumFacing looking:EnumFacing.Plane.HORIZONTAL) {
+                    player.rotationYaw=looking.getHorizontalAngle();
+                    IBlockState state=rocker.getStateForPlacement(world,pos,support,.5F,.5F,.5F,0,player);
+                    world.setBlockState(pos,state,3);
+                    rocker.onBlockPlacedBy(world,pos,state,player,new ItemStack(rocker));
+                    TileEntityRedstoneChannel tile=(TileEntityRedstoneChannel)world.getTileEntity(pos);
+                    int rotation=rocker.getActualState(state,world,pos).getValue(BlockVandorSwitch.ROTATION);
+                    turns.add(rotation);
+                    require(rotation==((looking.getHorizontalIndex()+(support==EnumFacing.DOWN?2:0))&3),
+                            "flat rocker does not follow player facing "+looking);
+                    TileEntityRedstoneChannel loaded=new TileEntityRedstoneChannel();
+                    loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                    require(loaded.getMountRotation()==rotation,"rocker rotation lost on reload");
+                    TileEntityRedstoneChannel client=new TileEntityRedstoneChannel();
+                    client.onDataPacket(null,tile.getUpdatePacket());
+                    require(client.getMountRotation()==rotation,"rocker rotation lost during client sync");
+                    rocker.onBlockActivated(world,pos,state,player,EnumHand.MAIN_HAND,support,.5F,.5F,.5F);
+                    require(rocker.getActualState(world.getBlockState(pos),world,pos)
+                            .getValue(BlockVandorSwitch.ROTATION)==rotation,"toggle reset rocker rotation");
+                    world.setBlockToAir(pos);
+                }
+                require(turns.size()==4,"flat rocker must have four distinct placement orientations");
+                world.setBlockToAir(supportPos);
+            }
+        } finally {
+            player.rotationYaw=oldYaw;
+            world.setBlockToAir(pos);
+            world.setBlockToAir(pos.down());
+            world.setBlockToAir(pos.up());
+        }
     }
 
     private static void checkTrianglePlacement(World world, EntityPlayer player) {

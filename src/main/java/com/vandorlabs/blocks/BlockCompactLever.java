@@ -21,6 +21,15 @@ public class BlockCompactLever extends BlockIndustrialLever {
         // Tighter union of both handle positions for the smaller model.
         double a = 2.75 / 16.0, b = 13.25 / 16.0, front = 9.5 / 16.0;
         EnumFacing facing = state.getValue(FACING);
+        if (state.getValue(FLOOR)) {
+            // Rotate the wall model's bounds onto its floor support, just
+            // like the blockstate's x=270 model rotation. East/west swaps
+            // the footprint axes; both handle positions remain selectable.
+            double along0=3.75/16.0,along1=12.25/16.0;
+            return facing.getAxis()==EnumFacing.Axis.X
+                    ?new AxisAlignedBB(along0,0,a,along1,1-front,b)
+                    :new AxisAlignedBB(a,0,along0,b,1-front,along1);
+        }
         switch (facing) {
             case SOUTH: return new AxisAlignedBB(a, 3.75/16, 0, b, 12.25/16, 1-front);
             case EAST:  return new AxisAlignedBB(0, 3.75/16, a, 1-front, 12.25/16, b);

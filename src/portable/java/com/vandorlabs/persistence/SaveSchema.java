@@ -43,11 +43,12 @@ public final class SaveSchema {
     }
 
     public static final class Redstone {
-        public static final int VERSION=1;
+        public static final int VERSION=2;
         public static final String CHANNEL="RedstoneChannel";
         public static final String SIGNAL="ChannelSignal";
         public static final String LOCAL_ON="LocalOn";
         public static final String CHANNEL_INITIALIZED="ChannelInitialized";
+        public static final String MOUNT_ROTATION="MountRotation";
         public static final String MANUAL_ON="ManualOn";
         public static final String PARTICLE_STREAM="ParticleStream";
         public static final String LIGHT_INITIALIZED="LightInitialized";

@@ -30,21 +30,28 @@ public final class RedstoneData {
         public final int channel;
         public final boolean localOn;
         public final boolean initialized;
+        public final int mountRotation;
         public Source(int channel, boolean localOn, boolean initialized) {
+            this(channel,localOn,initialized,0);
+        }
+        public Source(int channel, boolean localOn, boolean initialized, int mountRotation) {
             this.channel = Math.max(0, channel);
             this.localOn = localOn;
             this.initialized = initialized;
+            this.mountRotation = Math.floorMod(mountRotation,4);
         }
         public void write(PrimitiveData data) {
             beginWrite(data);
             data.putInt(SaveSchema.Redstone.CHANNEL, channel);
             data.putBoolean(SaveSchema.Redstone.LOCAL_ON, localOn);
             data.putBoolean(SaveSchema.Redstone.CHANNEL_INITIALIZED, initialized);
+            data.putInt(SaveSchema.Redstone.MOUNT_ROTATION, mountRotation);
         }
         public static Source read(PrimitiveData data) {
             return new Source(data.getInt(SaveSchema.Redstone.CHANNEL),
                     data.getBoolean(SaveSchema.Redstone.LOCAL_ON),
-                    data.getBoolean(SaveSchema.Redstone.CHANNEL_INITIALIZED));
+                    data.getBoolean(SaveSchema.Redstone.CHANNEL_INITIALIZED),
+                    data.getInt(SaveSchema.Redstone.MOUNT_ROTATION));
         }
     }
 

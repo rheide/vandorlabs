@@ -15,6 +15,14 @@ public final class RedstoneDataTest {
         new RedstoneData.Source(7,true,true).write(sourceTag);
         RedstoneData.Source source=RedstoneData.Source.read(sourceTag);
         check(source.channel==7&&source.localOn&&source.initialized,"source round trip");
+        check(source.mountRotation==0,"legacy switch orientation defaults to original model rotation");
+        for (int rotation=0;rotation<4;rotation++) {
+            new RedstoneData.Source(7,true,true,rotation).write(sourceTag);
+            check(RedstoneData.Source.read(sourceTag).mountRotation==rotation,
+                    "flat switch orientation survives save/load");
+        }
+        check(RedstoneData.Source.read(new MemoryPrimitiveData()).mountRotation==0,
+                "old saves without mount rotation retain the default orientation");
 
         MemoryPrimitiveData lightTag=new MemoryPrimitiveData();
         new RedstoneData.Light(9,true,false,true,true).write(lightTag);

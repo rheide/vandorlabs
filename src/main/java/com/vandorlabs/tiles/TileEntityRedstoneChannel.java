@@ -14,11 +14,21 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
-/** Channel and local latch state for switches whose visible state stays in metadata. */
+/** Channel, local latch, and flat-mount orientation for switches and levers. */
 public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelLatch {
     private int channel;
     private boolean localOn;
     private boolean initialized;
+    private int mountRotation;
+
+    public int getMountRotation() { return mountRotation; }
+    public void setMountRotation(int value) {
+        int next=Math.floorMod(value,4);
+        if (next==mountRotation) return;
+        mountRotation=next;
+        markDirty();
+        sync();
+    }
 
     @Override public boolean shouldRefresh(net.minecraft.world.World world,
             net.minecraft.util.math.BlockPos pos, IBlockState before, IBlockState after) {
@@ -108,17 +118,21 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        new RedstoneData.Source(channel,localOn,initialized).write(new NbtPrimitiveData(tag));
+        new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         int oldChannel = channel;
+        int oldRotation = mountRotation;
         super.readFromNBT(tag);
         RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
         channel=data.channel;
         localOn=data.localOn;
         initialized=data.initialized;
+        mountRotation=data.mountRotation;
+        if (world!=null && world.isRemote && oldRotation!=mountRotation)
+            world.markBlockRangeForRenderUpdate(pos,pos);
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }
