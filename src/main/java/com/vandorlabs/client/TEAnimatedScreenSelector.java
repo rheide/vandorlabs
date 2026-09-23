@@ -287,11 +287,9 @@ public class TEAnimatedScreenSelector
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        // Full-face quad just outside the local north face. U runs 1->0
-        // toward +X so paint reads exactly like a vanilla north face
-        // (U=0 sits east), matching BlockDisplaySequenced art. Offset ~6mm
-        // out: kills z-fighting flicker against the dark housing front
-        // behind it without a visible gap.
+        // U runs 1->0 toward +X so paint reads like a vanilla north face.
+        // Diagonal artwork lies on the housing plane; depth bias makes it win
+        // the depth test without opening a visible slit along the side.
         ScreenSurface.Kind surface=state.getBlock() instanceof BlockProgrammableConsole
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
@@ -300,7 +298,15 @@ public class TEAnimatedScreenSelector
         buf.pos(quad.topRight.x,quad.topRight.y,quad.topRight.z).tex(0,vTop).endVertex();
         buf.pos(quad.bottomRight.x,quad.bottomRight.y,quad.bottomRight.z).tex(0,vBottom).endVertex();
         buf.pos(quad.bottomLeft.x,quad.bottomLeft.y,quad.bottomLeft.z).tex(1,vBottom).endVertex();
+        if (surface==ScreenSurface.Kind.DIAGONAL) {
+            GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+            GL11.glPolygonOffset(-4.0F,-4.0F);
+        }
         tess.draw();
+        if (surface==ScreenSurface.Kind.DIAGONAL) {
+            GL11.glPolygonOffset(0.0F,0.0F);
+            GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+        }
         GlStateManager.enableLighting();
 
         GL11.glEnable(GL11.GL_CULL_FACE);

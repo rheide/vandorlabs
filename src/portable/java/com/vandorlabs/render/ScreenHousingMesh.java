@@ -48,23 +48,24 @@ public final class ScreenHousingMesh {
 
     private static ScreenHousingMesh buildDiagonal(boolean inverted) {
         if (inverted) return new ScreenHousingMesh(new Face[]{
-                quad(0,16,0,16,16,0,16,0,16,0,0,16,0,16,16,0),
-                quad(0,1,16,16,1,16,16,16,16,0,16,16,0,16,16,0),
+                quad(0,16,0,16,16,0,16,16,16,0,16,16,0,16,16,0),
+                quad(0,0,16,16,0,16,16,16,16,0,16,16,0,16,16,0),
                 quad(0,15,0,16,15,0,16,16,0,0,16,0,0,15,16,16),
-                // Leave the screen aperture open. A full sloped wall behind
-                // the image could win the depth test as the camera moved.
-                invertedSlopeQuiet(0,16,15,11.75),
-                invertedSlope(0,.5,11.75,1.15),
-                invertedSlope(15.5,16,11.75,1.15),
-                invertedSlope(0,16,1.15,1),
+                // One continuous inset slope. The image shares this plane
+                // and uses a rendering depth bias rather than a physical gap.
+                quad(0,15,1,16,15,1,16,1,15,0,1,15,0,1,16,15),
                 quad(0,15,0,16,15,0,16,15,1,0,15,1,0,15,16,16),
-                quad(0,1,15,16,1,15,16,1,16,0,1,16,0,15,16,16),
+                // A vertical one-pixel end cap connects the diagonal to the
+                // full-height rear block instead of extending the underside
+                // diagonally to the far corner.
+                quad(0,1,15,16,1,15,16,0,15,0,0,15,0,15,16,16),
+                quad(0,0,15,16,0,15,16,0,16,0,0,16,0,15,16,16),
                 sideQuad(0,15,0,15,1,16,1,16,0),
                 sideQuad(0,15,1,1,15,16,15,16,1),
-                sideQuad(0,1,15,1,16,16,16,16,15),
+                sideQuad(0,0,15,0,16,16,16,16,15),
                 sideQuad(16,15,0,16,0,16,1,15,1),
                 sideQuad(16,15,1,16,1,16,15,1,15),
-                sideQuad(16,1,15,16,15,16,16,1,16)},
+                sideQuad(16,0,15,16,15,16,16,0,16)},
                 new Face[0]);
         return new ScreenHousingMesh(new Face[]{
                 quad(0,0,0,16,0,0,16,0,16,0,0,16,0,16,16,0),
@@ -86,29 +87,6 @@ public final class ScreenHousingMesh {
                 new Face[0]);
     }
 
-    /** Keep side-wall texels at their real pixel scale across the narrow end caps. */
-    private static Face invertedSlope(double x0,double x1,double topY,double bottomY) {
-        double topZ=16-topY,bottomZ=16-bottomY;
-        // Follow real model-pixel height, as the console side faces do. The
-        // former one-texel strip was stretched across the entire slope and
-        // shimmered badly when viewed at a shallow angle.
-        double topV=16-topY,bottomV=16-bottomY;
-        return new Face(new Vertex(x0,topY,topZ,x0,topV),
-                new Vertex(x1,topY,topZ,x1,topV),
-                new Vertex(x1,bottomY,bottomZ,x1,bottomV),
-                new Vertex(x0,bottomY,bottomZ,x0,bottomV));
-    }
-    /** The broad ceiling-facing strip is nearly edge-on to the viewer. A
-     * high-resolution wall pattern there aliases as the camera moves; sample
-     * one neutral wall texel so the housing remains visually stationary. */
-    private static Face invertedSlopeQuiet(double x0,double x1,double topY,double bottomY) {
-        double topZ=16-topY,bottomZ=16-bottomY;
-        double u=7.125,v=8.875;
-        return new Face(new Vertex(x0,topY,topZ,u,v),
-                new Vertex(x1,topY,topZ,u,v),
-                new Vertex(x1,bottomY,bottomZ,u,v),
-                new Vertex(x0,bottomY,bottomZ,u,v));
-    }
     private static Face sideQuad(double x,double y0,double z0,double y1,double z1,
             double y2,double z2,double y3,double z3) {
         return new Face(new Vertex(x,y0,z0,z0,16-y0),new Vertex(x,y1,z1,z1,16-y1),

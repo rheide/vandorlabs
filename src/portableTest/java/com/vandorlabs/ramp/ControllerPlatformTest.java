@@ -181,29 +181,43 @@ public final class ControllerPlatformTest {
         close(diagonal.quads[3].vertices[2].z,15,"floor diagonal ends one pixel from back");
         close(diagonal.quads[6].vertices[0].v,15,"diagonal ledge uses the base edge texture strip");
         close(diagonal.quads[8].vertices[2].y,15,"floor side profile ends with diagonal");
-        close(surface.topLeft.y-surface.topLeft.z,.35,"floor image clears diagonal at top");
-        close(surface.bottomLeft.y-surface.bottomLeft.z,.35,"floor image clears diagonal at bottom");
-        close(invertedDiagonal.quads[0].vertices[0].y,16,"ceiling diagonal starts high");
-        check(invertedDiagonal.quads.length==15,"ceiling diagonal has a screen aperture");
-        close(invertedDiagonal.quads[3].vertices[0].y,15,"ceiling diagonal starts below top");
-        close(invertedDiagonal.quads[6].vertices[2].y,1,"ceiling diagonal ends above base");
-        close(invertedDiagonal.quads[3].vertices[0].v,8.875,"ceiling broad slope samples stable wall texel");
-        close(invertedDiagonal.quads[3].vertices[2].v,8.875,"ceiling broad slope does not shimmer");
-        close(invertedDiagonal.quads[4].vertices[0].v,4.25,"ceiling screen border follows native wall pixels");
-        for (int i=3;i<=6;i++) {
-            ScreenHousingMesh.Face frame=invertedDiagonal.quads[i];
-            double minX=16,maxX=0,minY=16,maxY=0;
-            for (ScreenHousingMesh.Vertex v:frame.vertices) {
+        close(surface.topLeft.y-surface.topLeft.z,0,"floor image meets diagonal at top");
+        close(surface.bottomLeft.y-surface.bottomLeft.z,0,"floor image meets diagonal at bottom");
+        // A malformed mounting face used to run from (y=16,z=0) to
+        // (y=0,z=16), duplicating the slope and protruding past both insets.
+        for (ScreenHousingMesh.Vertex v:invertedDiagonal.quads[0].vertices)
+            close(v.y,16,"every ceiling mounting-face vertex must be at the top");
+        int slopes=0;
+        for (ScreenHousingMesh.Face face:invertedDiagonal.quads) {
+            double minX=16,maxX=0,minY=16,maxY=0,minZ=16,maxZ=0;
+            for (ScreenHousingMesh.Vertex v:face.vertices) {
                 minX=Math.min(minX,v.x); maxX=Math.max(maxX,v.x);
                 minY=Math.min(minY,v.y); maxY=Math.max(maxY,v.y);
+                minZ=Math.min(minZ,v.z); maxZ=Math.max(maxZ,v.z);
             }
-            check(maxX<=.5 || minX>=15.5 || minY>=11.75 || maxY<=1.15,
-                    "ceiling housing covers the screen aperture");
+            if (maxX>minX && maxY>minY && maxZ>minZ) {
+                slopes++;
+                check(minY>=1 && maxY<=15 && minZ>=1 && maxZ<=15,
+                        "ceiling slope must stop at both one-pixel insets");
+            }
         }
+        check(slopes==1,"exactly one ceiling slope, with no overlapping diagonal");
+        check(invertedDiagonal.quads.length==13,"ceiling diagonal has a closed backing and end cap");
+        close(invertedDiagonal.quads[3].vertices[0].y,15,"ceiling diagonal starts below top");
+        close(invertedDiagonal.quads[3].vertices[2].y,1,"ceiling diagonal ends above base");
+        close(invertedDiagonal.quads[3].vertices[2].z,15,"ceiling diagonal meets bottom inset");
+        close(invertedDiagonal.quads[5].vertices[0].y,1,"ceiling diagonal meets vertical end cap");
+        close(invertedDiagonal.quads[5].vertices[2].y,0,"ceiling end cap reaches block edge");
+        close(invertedDiagonal.quads[6].vertices[0].y,0,"ceiling rear underside reaches block edge");
+        close(invertedDiagonal.quads[3].vertices[0].v,1,"ceiling slope texture starts at inset");
+        close(invertedDiagonal.quads[3].vertices[2].v,15,"ceiling slope texture ends at inset");
+        close(invertedDiagonal.quads[3].vertices[0].x,0,"ceiling backing begins at side wall");
+        close(invertedDiagonal.quads[3].vertices[1].x,16,"ceiling backing reaches other side wall");
         ScreenSurface.Quad ceilingImage=ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,true);
-        check(16-(ceilingImage.topLeft.y+ceilingImage.topLeft.z)>=.3
-                && 16-(ceilingImage.bottomLeft.y+ceilingImage.bottomLeft.z)>=.3,
-                "ceiling diagonal image must clear the housing at both edges");
+        close(ceilingImage.topLeft.y+ceilingImage.topLeft.z,16,
+                "ceiling image meets the diagonal at top");
+        close(ceilingImage.bottomLeft.y+ceilingImage.bottomLeft.z,16,
+                "ceiling image meets the diagonal at bottom");
         check(ScreenBehavior.effectiveMode(ScreenBehavior.ANIMATED,true,false)==ScreenBehavior.OFF,"unpowered redstone screen sleeps");
         check(ScreenBehavior.effectiveMode(ScreenBehavior.OFF,false,true)==ScreenBehavior.ANIMATED,"powered off screen wakes animated");
         check(ScreenBehavior.animationTicks(-3)==20&&ScreenBehavior.animationTicks(99)==5,"screen speed clamps");

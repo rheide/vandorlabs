@@ -195,6 +195,8 @@ public class ReproLab {
                 DIAGONAL_DOWN.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
         SHOTS.add(new Shot("diagonal_down_oblique", DIAGONAL_DOWN.getX() + 1.5D, eyeLevelFeet,
                 DIAGONAL_DOWN.getZ() + 0.5D - SIDE_DIST, 20.0F, 0.0F));
+        SHOTS.add(new Shot("diagonal_down_side", DIAGONAL_DOWN.getX() + 0.5D - SIDE_DIST,
+                eyeLevelFeet, DIAGONAL_DOWN.getZ() + 0.5D, 270.0F, 0.0F));
         SHOTS.add(new Shot("diagonal_down_close_low", DIAGONAL_DOWN.getX() + 0.5D,
                 Y + .45D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 0.0F));
         SHOTS.add(new Shot("diagonal_down_close_high", DIAGONAL_DOWN.getX() + 0.5D,
