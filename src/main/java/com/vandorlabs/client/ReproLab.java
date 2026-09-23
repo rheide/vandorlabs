@@ -598,6 +598,7 @@ public class ReproLab {
         }
         ScreenRuntimeChecks.run(serverPlayer);
         MaterialRuntimeChecks.run(serverPlayer);
+        ItemRuntimeChecks.run(serverPlayer);
         CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
         // Rebuild programmable fixtures after destructive runtime contracts.
         // Keeping render targets downstream from test mutations also avoids

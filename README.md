@@ -4,10 +4,9 @@
 > It is provided as-is, with no warranty of any kind and no guarantee of
 > correctness, compatibility, maintenance, future updates, or support.
 
-> **Creative-only:** Vandor Labs currently provides no recipes, loot, trading,
-> or other survival acquisition path. None of its blocks are obtainable in
-> Survival mode without commands or another mod; use the `vandorlabs` Creative
-> tab to access them.
+> **Acquisition:** the Programmable Matter Ingot has a Survival crafting recipe.
+> Blocks remain Creative-only, with no recipes, loot, trading, or other Survival
+> acquisition path; use the `vandorlabs` Creative tab to access them.
 
 A Minecraft Forge 1.12.2 mod (Forge `1.12.2-14.23.5.2860`) adding
 science-fiction ship blocks: hull and wall panels, animated bridge/engineering
@@ -48,6 +47,9 @@ lighting, furniture, ramps, glass, and building materials.
 - **Space Door**: configurable two-high sliding or rotating doors, with design,
   frame, hinge, and control-panel options. Adjacent doors pair automatically.
   Select manual operation or redstone on/off triggering, including virtual channels.
+- **Programmable Matter Ingot**: a crafting item made from clay balls in all
+  four corners, iron ingots at top/bottom center, gold ingots at left/right center,
+  and redstone dust in the center. Produces one ingot.
 - **Bridge furniture**: simplified Command, Companion, Operator, Conference
   and Mess Hall chairs; right-click to sit and sneak to dismount. Includes all
   sixteen buildable materials from their independent 4x4 source sheet.
