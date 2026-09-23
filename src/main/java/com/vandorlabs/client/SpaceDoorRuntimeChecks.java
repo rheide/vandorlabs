@@ -39,6 +39,16 @@ final class SpaceDoorRuntimeChecks {
     static void run(World world,EntityPlayer player,BlockPos source) {
         BlockConfigurableSpaceDoor block=(BlockConfigurableSpaceDoor)Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs","space_door"));
+        // A client ray may retain a door state briefly after its lower half
+        // disappears. Both stale halves must remain safe to inspect.
+        clear(world,source);
+        for (BlockDoor.EnumDoorHalf half:BlockDoor.EnumDoorHalf.values()) {
+            BlockPos target=half==BlockDoor.EnumDoorHalf.UPPER?source.up():source;
+            IBlockState stale=state(block).withProperty(BlockVandorDoor.HALF,half);
+            Vec3d start=new Vec3d(target.getX()+0.5,target.getY()+0.5,target.getZ()+2);
+            Vec3d end=new Vec3d(target.getX()+0.5,target.getY()+0.5,target.getZ()-1);
+            block.collisionRayTrace(stale,world,target,start,end);
+        }
         ItemStack blank=new ItemStack(block);
         ItemBlock item=(ItemBlock)blank.getItem();
         BlockPos target=source.east(4), neighbor=target.east();

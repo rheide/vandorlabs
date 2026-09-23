@@ -61,6 +61,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         boolean upper=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER;
         BlockPos lower=upper?pos.down():pos;
         IBlockState lowerState=world.getBlockState(lower);
+        if (lowerState.getBlock()!=this) return false;
         IBlockState actual=getActualState(lowerState,world,lower);
         SpaceDoorControlPanel.Side side=panelSide(world,lower,actual);
         if (side==SpaceDoorControlPanel.Side.NONE) return false;
@@ -100,6 +101,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         boolean upper=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER;
         BlockPos lower=upper?pos.down():pos;
         IBlockState lowerState=world.getBlockState(lower);
+        // A ray may retain the door state after its lower half is removed.
+        if (lowerState.getBlock()!=this) return door;
         IBlockState actual=getActualState(lowerState,world,lower);
         SpaceDoorControlPanel.Side side=panelSide(world,lower,actual);
         if (side==SpaceDoorControlPanel.Side.NONE) return door;
