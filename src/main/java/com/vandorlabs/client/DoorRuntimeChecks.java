@@ -24,9 +24,14 @@ final class DoorRuntimeChecks {
     private DoorRuntimeChecks() {}
 
     static void run(World world, EntityPlayer player) {
-        BlockVandorDoor hingedA = door("door_security");
-        BlockVandorDoor hingedB = door("door_airlock_glass");
-        BlockVandorDoor sliding = door("sliding_security_door");
+        for (String id:com.vandorlabs.blocks.ModBlocks.REMOVED_DOOR_IDS) {
+            ResourceLocation key=new ResourceLocation("vandorlabs",id);
+            require(!Block.REGISTRY.containsKey(key) && !net.minecraft.item.Item.REGISTRY.containsKey(key),
+                    "removed legacy door is still registered: "+id);
+        }
+        BlockVandorDoor hingedA = door("space_standard_rotating_framed");
+        BlockVandorDoor hingedB = hingedA;
+        BlockVandorDoor sliding = door("space_standard_sliding_framed");
         BlockPos origin = new BlockPos(-8, 21, 6);
 
         List<BlockVandorDoor> allDoors = allDoors();
@@ -47,7 +52,7 @@ final class DoorRuntimeChecks {
         checkIncompletePair(world, player, origin, hingedA, hingedB);
         checkPlacement(world, player, origin, hingedA, hingedB, sliding);
         checkMotionPairMatrix(world, player, origin);
-        checkConnectingDetailedDoors(world, origin);
+        checkConnectedSpaceModels(world, origin);
         checkSpaceDoors(world, player, origin);
         SpaceDoorRuntimeChecks.run(world,player,origin);
         checkRedstoneEdges(world, player, origin, hingedA);
@@ -309,16 +314,16 @@ final class DoorRuntimeChecks {
         }
     }
 
-    private static void checkConnectingDetailedDoors(World world, BlockPos pos) {
+    private static void checkConnectedSpaceModels(World world, BlockPos pos) {
         String[][] families = {
-                {"detail_engineering_rotating_single",
-                        "detail_engineering_rotating_double"},
-                {"detail_engineering_sliding_single",
-                        "detail_engineering_sliding_double"},
-                {"detail_observation_rotating_single",
-                        "detail_observation_rotating_double"},
-                {"detail_observation_sliding_single",
-                        "detail_observation_sliding_double"}
+                {"space_standard_rotating_framed",
+                        "space_standard_rotating_framed_paired"},
+                {"space_standard_sliding_framed",
+                        "space_standard_sliding_framed_paired"},
+                {"space_observation_rotating_framed",
+                        "space_observation_rotating_framed_paired"},
+                {"space_observation_sliding_framed",
+                        "space_observation_sliding_framed_paired"}
         };
         for (String[] family : families) {
             BlockVandorDoor rawSingle = door(family[0]);
@@ -383,8 +388,8 @@ final class DoorRuntimeChecks {
 
     private static void checkMotionPairMatrix(World world, EntityPlayer player, BlockPos pos) {
         BlockVandorDoor[] modes = {
-                door("door_security"),
-                door("sliding_security_door")
+                door("space_standard_rotating_framed"),
+                door("space_standard_sliding_framed")
         };
         for (BlockVandorDoor first : modes) {
             for (BlockVandorDoor second : modes) {

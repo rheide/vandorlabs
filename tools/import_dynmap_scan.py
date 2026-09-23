@@ -18,38 +18,26 @@ THRUSTER = re.compile(
     r"_top_right|_top_left)?)$"
 )
 
-FALLBACK_IDS = {
-    "glass_wall", "sliding_security_door", "door_airlock_glass",
-    "door_security", "sliding_airlock_glass",
-    "programmable_input", "programmable_full_input",
-    "programmable_diagonal_screen",
-}
-FALLBACK_IDS.update(
-    family + motion + size
-    for family in ("detail_split", "detail_observation", "detail_engineering")
-    for motion in ("_sliding", "_rotating")
-    for size in ("_single", "_double")
-)
+REMOVED_DOORS = {"door_airlock_glass", "door_security", "sliding_airlock_glass", "sliding_security_door"}
+REMOVED_DOORS.update(f"detail_{family}_{motion}_{size}"
+                     for family in ("split", "observation", "engineering")
+                     for motion in ("sliding", "rotating") for size in ("single", "double"))
+FALLBACK_IDS = {"glass_wall", "programmable_input", "programmable_full_input",
+                "programmable_diagonal_screen"}
 FALLBACK_IDS.update("bridge_chair_simple_" + role for role in
                     ("mess_hall", "conference", "command", "operator", "companion"))
 
-EXTRA_TEXTURES = {
-    "dynmap_glass_wall": "blocks/glass_wall/wall_00.png",
-    "dynmap_door_security_lower": "blocks/door_security_lower.png",
-    "dynmap_door_security_upper": "blocks/door_security_upper.png",
-    "dynmap_door_airlock_glass_lower": "blocks/door_airlock_glass_lower.png",
-    "dynmap_door_airlock_glass_upper": "blocks/door_airlock_glass_upper.png",
-    "dynmap_sliding_security_lower": "blocks/door_security_lower.png",
-    "dynmap_sliding_security_upper": "blocks/door_security_upper.png",
-    "dynmap_sliding_airlock_lower": "blocks/sliding_airlock_glass_lower.png",
-    "dynmap_sliding_airlock_upper": "blocks/sliding_airlock_glass_upper.png",
-    "dynmap_detail_split": "blocks/detailed_doors/split.png",
-    "dynmap_detail_split_double": "blocks/detailed_doors/split_double.png",
-    "dynmap_detail_observation": "blocks/detailed_doors/observation.png",
-    "dynmap_detail_observation_double": "blocks/detailed_doors/observation_double.png",
-    "dynmap_detail_engineering": "blocks/detailed_doors/engineering.png",
-    "dynmap_detail_engineering_double": "blocks/detailed_doors/engineering_double.png",
-}
+EXTRA_TEXTURES = {"dynmap_glass_wall": "blocks/glass_wall/wall_00.png"}
+
+
+def removed_record(line):
+    block = re.match(r"(?:modellist|block):id=%([^,]+),", line)
+    if block and block[1] in REMOVED_DOORS:
+        return True
+    return line.startswith("texture:") and (
+        "/textures/blocks/detailed_doors/" in line or
+        any("/" + name in line for name in REMOVED_DOORS))
+
 
 
 def parse_record(line):
@@ -119,24 +107,14 @@ def model_suffix(shape, corner, facing):
 
 
 def fallback_texture(block_id, state):
-    half = state.get("half", "lower")
     if block_id == "glass_wall":
         return "dynmap_glass_wall"
     if block_id.startswith("bridge_chair_simple_"):
         return "bridge_chair_simple_atlas"
     if block_id.startswith("programmable_"):
         return "wall_panel_dark"
-    if block_id.startswith("detail_"):
-        family = next(x for x in ("split", "observation", "engineering")
-                      if "_" + x + "_" in block_id)
-        return "dynmap_detail_" + family + ("_double" if block_id.endswith("_double") else "")
-    stem = {
-        "door_security": "dynmap_door_security_",
-        "door_airlock_glass": "dynmap_door_airlock_glass_",
-        "sliding_security_door": "dynmap_sliding_security_",
-        "sliding_airlock_glass": "dynmap_sliding_airlock_",
-    }[block_id]
-    return stem + half
+    raise ValueError("No fallback texture for " + block_id)
+
 
 
 def fallback_model(block_id, state):
@@ -155,15 +133,14 @@ def fallback_model(block_id, state):
                     + plain_box("0/8/12:16/12/16", facing)
                     + plain_box("0/12/14:16/16/16", facing))
         return plain_box("0/0/0:16/3/16", facing)
-    # A stable closed panel is preferable to an invisible or half-animated
-    # snapshot for TESR-driven doors.
-    return plain_box("0/0/7:16/16/9", facing)
+    raise ValueError("No fallback model for " + block_id)
 
 
 def repair_models(text):
     repaired = 0
     result = []
     for line in text.splitlines():
+        if removed_record(line): continue
         # DynmapBlockScan 3.7 emits explicit per-face UV bounds that Dynmap's
         # Forge 1.12 loader rejects as invalid patches for many otherwise-valid
         # JSON boxes.  Omitting them asks the same loader to derive safe UVs
@@ -187,6 +164,7 @@ def repair_textures(text):
     repaired = 0
     result = []
     for index, line in enumerate(text.splitlines()):
+        if removed_record(line): continue
         if index == 0:
             result.append(line)
             for texture_id, relative in sorted(EXTRA_TEXTURES.items()):
@@ -219,8 +197,8 @@ def main():
     source_textures = args.scan_dir / "vandorlabs-texture.txt"
     models, model_count = repair_models(source_models.read_text())
     textures, texture_count = repair_textures(source_textures.read_text())
-    if model_count != 1756 or texture_count != 1756:
-        raise SystemExit("expected 1756 unsupported states, repaired models=%d textures=%d"
+    if model_count != 1244 or texture_count != 1244:
+        raise SystemExit("expected 1244 unsupported states, repaired models=%d textures=%d"
                          % (model_count, texture_count))
 
     args.output.mkdir(parents=True, exist_ok=True)

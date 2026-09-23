@@ -12,6 +12,9 @@ ASSETS=ROOT/'generated-resources/assets/vandorlabs'
 def load(path): return json.loads(path.read_text())
 catalog=load(ASSETS/'data/blocks.json')
 by_id={entry['id']:entry for entry in catalog}
+removed={'door_airlock_glass','door_security','sliding_airlock_glass','sliding_security_door'}
+assert not (removed & by_id.keys()), 'retired standard doors remain in the catalog'
+assert not any(id.startswith('detail_') for id in by_id), 'retired detailed doors remain in the catalog'
 doors=[e for e in catalog if e['class']=='BlockSpaceDoor']
 assert len(doors)==60
 # Keep saved design indices, GUI choices, native sprites and generated art aligned.

@@ -96,7 +96,7 @@ final class CopyCompatibilityRuntimeChecks {
 
         // Multi-cell blocks need more than metadata: BBW places only the
         // clicked cell. The adapter reconstructs both door cells exactly.
-        BlockVandorDoor door = detailedObservationDoor();
+        BlockVandorDoor door = observationDoor();
         BlockPos doorSource = new BlockPos(13, 21, 6);
         BlockPos doorTarget = new BlockPos(15, 21, 6);
         world.setBlockState(doorSource.down(), Blocks.STONE.getDefaultState(), 2);
@@ -188,7 +188,7 @@ final class CopyCompatibilityRuntimeChecks {
             // Copy both cells, exactly as a region containing a complete door
             // does. A selection containing only half a door remains invalid by
             // vanilla/WorldEdit semantics.
-            BlockVandorDoor door = detailedObservationDoor();
+            BlockVandorDoor door = observationDoor();
             BlockPos doorSource = new BlockPos(13, 21, -6);
             BlockPos doorTarget = new BlockPos(15, 21, -6);
             world.setBlockState(doorSource.down(),
@@ -327,7 +327,7 @@ final class CopyCompatibilityRuntimeChecks {
                 +", upper actual="+spaceDoor.getActualState(pastedUpper,world,doorTo.up()));
 
         // Representative ForgeWorld pastes verify the transformed data crosses the adapter.
-        for (Block block:new Block[]{detailedObservationDoor(),
+        for (Block block:new Block[]{observationDoor(),
                 Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster")),
                 Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_triangle"))}) {
             IBlockState source=block.getDefaultState();
@@ -345,7 +345,7 @@ final class CopyCompatibilityRuntimeChecks {
         }
         for (int upperMeta:new int[]{8,9,10,11,12,13,14,15}) {
             Object rotatedUpper=transform.invoke(null,
-                    base.newInstance(Block.getIdFromBlock(detailedObservationDoor()),upperMeta),rotation,registry);
+                    base.newInstance(Block.getIdFromBlock(observationDoor()),upperMeta),rotation,registry);
             require((Integer)data.invoke(rotatedUpper)==upperMeta,"WorldEdit changed upper door hinge or power metadata");
         }
     }
@@ -368,9 +368,9 @@ final class CopyCompatibilityRuntimeChecks {
         selector.setSmallInput(true);
     }
 
-    private static BlockVandorDoor detailedObservationDoor() {
+    private static BlockVandorDoor observationDoor() {
         Block block = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",
-                "detail_observation_rotating_single"));
+                "space_observation_rotating_framed"));
         require(block instanceof BlockVandorDoor,
                 "detailed observation door is unavailable");
         return (BlockVandorDoor) block;

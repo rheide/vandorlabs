@@ -1,7 +1,0 @@
-{
-  "parent": "block/block",
-  "textures": {
-    "particle": "vandorlabs:blocks/door_security_lower"
-  },
-  "elements": []
-}

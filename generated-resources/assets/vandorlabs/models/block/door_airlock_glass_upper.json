@@ -1,7 +1,0 @@
-{
-  "parent": "block/block",
-  "textures": {
-    "particle": "vandorlabs:blocks/door_airlock_glass_upper"
-  },
-  "elements": []
-}

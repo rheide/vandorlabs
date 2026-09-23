@@ -46,6 +46,16 @@ public class ModBlocks {
     public static final List<String> DISPLAY_SCREEN_IDS = new ArrayList<>();
     /** Old static screen ids retained only for seamless world migration. */
     private static final java.util.Set<String> RETIRED_SCREEN_IDS = new java.util.HashSet<>();
+    /** Intentionally removed legacy doors; old saves may discard these entries. */
+    public static final java.util.Set<String> REMOVED_DOOR_IDS = java.util.Collections.unmodifiableSet(
+            new java.util.HashSet<>(java.util.Arrays.asList(
+                    "door_airlock_glass", "door_security", "sliding_airlock_glass", "sliding_security_door",
+                    "detail_engineering_rotating_single", "detail_engineering_rotating_double",
+                    "detail_engineering_sliding_single", "detail_engineering_sliding_double",
+                    "detail_observation_rotating_single", "detail_observation_rotating_double",
+                    "detail_observation_sliding_single", "detail_observation_sliding_double",
+                    "detail_split_rotating_single", "detail_split_rotating_double",
+                    "detail_split_sliding_single", "detail_split_sliding_double")));
     /** Subset of display ids using the framed off-border. */
     public static final java.util.Set<String> DISPLAY_FRAMED_IDS = new java.util.HashSet<>();
     /** One entry per screen family: ids carrying a bare_/framed_ segment are
@@ -319,7 +329,8 @@ public class ModBlocks {
                 Block block = Block.REGISTRY.getObject(
                         new ResourceLocation(VandorLabs.MODID, replacement));
                 if (block != null) mapping.remap(block);
-            } else if (isRetiredScreenId(mapping.key.getResourcePath())) mapping.ignore();
+            } else if (isRetiredScreenId(mapping.key.getResourcePath())
+                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())) mapping.ignore();
         }
     }
 
@@ -332,7 +343,8 @@ public class ModBlocks {
                 Item item = Item.REGISTRY.getObject(
                         new ResourceLocation(VandorLabs.MODID, replacement));
                 if (item != null) mapping.remap(item);
-            } else if (isRetiredScreenId(mapping.key.getResourcePath())) mapping.ignore();
+            } else if (isRetiredScreenId(mapping.key.getResourcePath())
+                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())) mapping.ignore();
         }
     }
 
@@ -343,14 +355,6 @@ public class ModBlocks {
     private static String replacementBlockId(String id) {
         if ("plasma_thruster".equals(id)) return "plasma_thruster_full";
         if ("impulse_engine".equals(id)) return "impulse_engine_full";
-        if ("detail_engineering_rotating_double".equals(id))
-            return "detail_engineering_rotating_single";
-        if ("detail_engineering_sliding_double".equals(id))
-            return "detail_engineering_sliding_single";
-        if ("detail_observation_rotating_double".equals(id))
-            return "detail_observation_rotating_single";
-        if ("detail_observation_sliding_double".equals(id))
-            return "detail_observation_sliding_single";
         return null;
     }
 

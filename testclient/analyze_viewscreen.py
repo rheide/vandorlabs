@@ -171,52 +171,6 @@ def main():
         if side_luma > 90.0:
             failures.append("diagonal-screen triangular side is transparent or missing")
 
-    door_images = {}
-    for pose in ("closed", "opening_mid", "open"):
-        path = args.shots / ("shot_door_%s.png" % pose)
-        if not path.is_file():
-            failures.append("missing animated-door %s screenshot" % pose)
-        else:
-            door_images[pose] = Image.open(path).convert("RGB").crop((500, 180, 900, 540))
-    if len(door_images) == 3:
-        def mean_difference(a, b):
-            return sum(ImageStat.Stat(ImageChops.difference(a, b)).mean) / 3.0
-        closed_mid = mean_difference(door_images["closed"], door_images["opening_mid"])
-        mid_open = mean_difference(door_images["opening_mid"], door_images["open"])
-        closed_open = mean_difference(door_images["closed"], door_images["open"])
-        print("door frame differences: closed/mid %.2f, mid/open %.2f, closed/open %.2f"
-              % (closed_mid, mid_open, closed_open))
-        if min(closed_mid, mid_open) < 5.0 or closed_open < 10.0:
-            failures.append("door renderer did not produce distinct closed/mid/open poses")
-
-    glass = {}
-    for name in ("airlock", "airlock_sliding"):
-        path = args.shots / ("shot_glass_%s.png" % name)
-        if not path.is_file():
-            failures.append("missing glass-door screenshot %s" % name)
-        else:
-            glass[name] = Image.open(path).convert("RGB").crop((500, 130, 780, 590))
-    if len(glass) == 2:
-        airlock_pair = sum(ImageStat.Stat(ImageChops.difference(
-            glass["airlock"], glass["airlock_sliding"])).mean) / 3.0
-        print("glass swing/slide difference: airlock %.2f" % airlock_pair)
-        # Hinged leaves sit at z[0,2] while sliders sit at z[7,9], so their
-        # perspective sizes differ. Assert the asymmetric orange control is
-        # nevertheless on the same (right) side in every live rendering.
-        for name in (() if args.texture_variant else glass):
-            image = Image.open(args.shots / ("shot_glass_%s.png" % name)).convert("RGB")
-            orange_x = []
-            for y in range(180, 540):
-                for x in range(540, 740):
-                    r, g, b = image.getpixel((x, y))
-                    if r > 150 and 55 < g < 180 and b < 50 and r > g * 1.4:
-                        orange_x.append(x)
-            if not orange_x or sum(orange_x) / len(orange_x) > 620:
-                failures.append("glass door control did not move to the left: %s"
-                                % name)
-    for name in ("airlock_diag",):
-        if not (args.shots / ("shot_glass_%s.png" % name)).is_file():
-            failures.append("missing angled glass-window jamb screenshot %s" % name)
     wide_path = args.shots / "shot_wide_ship_pair.png"
     if not wide_path.is_file():
         failures.append("missing two-block programmable display screenshot")
@@ -328,42 +282,6 @@ def main():
         if grid_detail < 15.0:
             failures.append("Cruiser Three Views 3x2 grid did not render")
 
-    model_poses = {}
-    for pose in ("closed", "opening_mid", "open"):
-        path = args.shots / ("shot_detailed_doors_%s.png" % pose)
-        if not path.is_file():
-            failures.append("missing detailed model-door %s screenshot" % pose)
-        else:
-            model_poses[pose] = Image.open(path).convert("RGB").crop(
-                (260, 170, 1020, 560))
-    if len(model_poses) == 3:
-        closed_mid = sum(ImageStat.Stat(ImageChops.difference(
-            model_poses["closed"], model_poses["opening_mid"])).mean) / 3.0
-        mid_open = sum(ImageStat.Stat(ImageChops.difference(
-            model_poses["opening_mid"], model_poses["open"])).mean) / 3.0
-        print("detailed model-door differences: closed/mid %.2f, mid/open %.2f"
-              % (closed_mid, mid_open))
-        if closed_mid < 1.0 or mid_open < 1.0:
-            failures.append("detailed hinged/sliding model doors do not animate")
-
-    split_poses = {}
-    for pose in ("closed", "opening_mid", "open"):
-        path = args.shots / ("shot_detailed_split_%s.png" % pose)
-        if not path.is_file():
-            failures.append("missing detailed split-door %s screenshot" % pose)
-        else:
-            split_poses[pose] = Image.open(path).convert("RGB").crop(
-                (430, 170, 850, 560))
-    if len(split_poses) == 3:
-        closed_mid = sum(ImageStat.Stat(ImageChops.difference(
-            split_poses["closed"], split_poses["opening_mid"])).mean) / 3.0
-        mid_open = sum(ImageStat.Stat(ImageChops.difference(
-            split_poses["opening_mid"], split_poses["open"])).mean) / 3.0
-        print("one-block split-door differences: closed/mid %.2f, mid/open %.2f"
-              % (closed_mid, mid_open))
-        if closed_mid < 1.0 or mid_open < 1.0:
-            failures.append("one-block split door does not animate both poses")
-
     for name, label, box in (
             ("bridge_chairs", "bridge chairs", (180, 120, 1100, 680)),
             ("material_grid", "material grid", (250, 90, 1030, 650))):
@@ -391,9 +309,6 @@ def main():
     print("PASS: all Programmable Console input-panel options render")
     print("PASS: Programmable Console GUI shows both scrollable lists")
     print("PASS: Programmable Diagonal Screen renders both stair-style halves")
-    print("PASS: animated door renderer produces closed, intermediate, and open poses")
-    print("PASS: glass hinged/sliding door pairs share texture orientation")
-    print("PASS: glass window jambs render from angled views")
     print("PASS: paired programmable display halves render together")
     print("PASS: Programmable Half-Input renders Small wall and attached keyboard placements")
     print("PASS: programmable input Off/Static/Animated modes render distinctly")
@@ -401,8 +316,6 @@ def main():
     print("PASS: Programmable Input renders full wall/floor surfaces and regular selector")
     print("PASS: Cruiser Three Views renders as its authored 3x2 grid")
     print("PASS: programmable/control blocks have representative hotbar icons")
-    print("PASS: detailed hinged/sliding door models animate")
-    print("PASS: one-block split door animates its independent leaves")
     print("PASS: simple bridge chairs and active material, hull, and floor blocks render")
 
 

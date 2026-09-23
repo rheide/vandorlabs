@@ -40,7 +40,7 @@ final class RedstoneChannelRuntimeChecks {
         checkPickedChannels(world,player);
         checkLinkedLatches(world,player);
         Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_rocker"));
-        Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "door_security"));
+        Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "space_standard_rotating_framed"));
         Block rawLight = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "wall_lightbar_unlit"));
         Block rawPropulsion = Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "ion_thruster"));

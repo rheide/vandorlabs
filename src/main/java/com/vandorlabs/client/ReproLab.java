@@ -64,9 +64,6 @@ public class ReproLab {
     private static final BlockPos DIAGONAL = new BlockPos(0, Y, 5);
     private static final BlockPos DIAGONAL_UP = new BlockPos(-5, Y, 5);
     private static final BlockPos DIAGONAL_DOWN = new BlockPos(5, Y, 5);
-    private static final BlockPos DOOR = new BlockPos(8, Y, 6);
-    private static final BlockPos GLASS_AIRLOCK = new BlockPos(-7, Y, -5);
-    private static final BlockPos GLASS_AIRLOCK_SLIDING = new BlockPos(-3, Y, -5);
     private static final BlockPos WIDE_LEFT = new BlockPos(-9, Y, 7);
     private static final BlockPos WIDE_RIGHT = new BlockPos(-8, Y, 7);
     private static final BlockPos INPUT_WALL = new BlockPos(-8, Y, 2);
@@ -75,12 +72,6 @@ public class ReproLab {
     private static final BlockPos CRUISER_GRID = new BlockPos(2, Y + 2, 8);
     private static final BlockPos FULL_INPUT_WALL = new BlockPos(3, Y, 2);
     private static final BlockPos FULL_INPUT_FLOOR = new BlockPos(7, Y, 2);
-    private static final BlockPos MODEL_HINGED = new BlockPos(-4, Y + 4, -8);
-    private static final BlockPos MODEL_OBSERVATION_LEFT = new BlockPos(-2, Y + 4, -8);
-    private static final BlockPos MODEL_OBSERVATION_RIGHT = new BlockPos(-1, Y + 4, -8);
-    private static final BlockPos MODEL_SLIDE_LEFT = new BlockPos(2, Y + 4, -8);
-    private static final BlockPos MODEL_SLIDE_RIGHT = new BlockPos(3, Y + 4, -8);
-    private static final BlockPos MODEL_SPLIT = new BlockPos(7, Y + 4, -8);
     private static final BlockPos CHAIR_COMMAND = new BlockPos(-3, Y + 4, 4);
     private static final BlockPos CHAIR_COMPANION = new BlockPos(0, Y + 4, 4);
     private static final BlockPos CHAIR_OPERATOR = new BlockPos(3, Y + 4, 4);
@@ -201,20 +192,6 @@ public class ReproLab {
                 Y + .45D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 0.0F));
         SHOTS.add(new Shot("diagonal_down_close_high", DIAGONAL_DOWN.getX() + 0.5D,
                 Y + .65D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 5.0F));
-        double doorFeet = Y + 1.0D - 1.62D;
-        SHOTS.add(new Shot("door_closed", DOOR.getX() + 0.5D, doorFeet,
-                DOOR.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
-        SHOTS.add(new Shot("door_opening_mid", DOOR.getX() + 0.5D, doorFeet,
-                DOOR.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
-        SHOTS.add(new Shot("door_open", DOOR.getX() + 0.5D, doorFeet,
-                DOOR.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
-        SHOTS.add(new Shot("glass_airlock", GLASS_AIRLOCK.getX() + 0.5D, doorFeet,
-                GLASS_AIRLOCK.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
-        SHOTS.add(new Shot("glass_airlock_sliding",
-                GLASS_AIRLOCK_SLIDING.getX() + 0.5D, doorFeet,
-                GLASS_AIRLOCK_SLIDING.getZ() + 0.5D - SIDE_DIST, 0.0F, 0.0F));
-        SHOTS.add(new Shot("glass_airlock_diag", GLASS_AIRLOCK.getX() - 1.5D,
-                doorFeet, GLASS_AIRLOCK.getZ() - 1.5D, 315.0F, 0.0F));
         SHOTS.add(new Shot("wide_ship_pair", -8.0D, eyeLevelFeet,
                 4.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("input_wall", INPUT_WALL.getX() + 0.5D,
@@ -240,16 +217,6 @@ public class ReproLab {
         SHOTS.add(new Shot("full_input_floor", FULL_INPUT_FLOOR.getX() + 0.5D,
                 Y + 1.25D - 1.62D, FULL_INPUT_FLOOR.getZ() - 2.5D,
                 0.0F, 18.0F));
-        double modelDoorFeet = MODEL_HINGED.getY() + 1.0D - 1.62D;
-        for (String pose : new String[] {"closed", "opening_mid", "open"}) {
-            SHOTS.add(new Shot("detailed_doors_" + pose, 0.0D, modelDoorFeet,
-                    -14.0D, 0.0F, 0.0F));
-        }
-        for (String pose : new String[] {"closed", "opening_mid", "open"}) {
-            SHOTS.add(new Shot("detailed_split_" + pose,
-                    MODEL_SPLIT.getX() + 0.5D, modelDoorFeet,
-                    -14.0D, 0.0F, 0.0F));
-        }
         SHOTS.add(new Shot("bridge_chairs", 0.0D, Y + 4.15D,
                 -3.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("material_grid", -6.5D, Y + 5.9D,
@@ -275,16 +242,6 @@ public class ReproLab {
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
-        SHOTS.add(new Shot("gallery_doors_standard", GALLERY_X, galleryFeet,
-                -28.0D, 0.0F, 0.0F));
-        SHOTS.add(new Shot("gallery_door_closed", GALLERY_X - 2.0D, galleryFeet,
-                -21.0D, -35.0F, 0.0F));
-        SHOTS.add(new Shot("gallery_door_open", GALLERY_X - 2.0D, galleryFeet,
-                -21.0D, -35.0F, 0.0F));
-        SHOTS.add(new Shot("gallery_doors_rotating", GALLERY_X, galleryFeet,
-                -28.0D, 0.0F, 0.0F));
-        SHOTS.add(new Shot("gallery_doors_sliding", GALLERY_X, galleryFeet,
-                -28.0D, 0.0F, 0.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {
             for (String trim : new String[]{"bare", "framed"}) {
                 for (String pose : new String[]{"closed", "open"}) {
@@ -422,9 +379,6 @@ public class ReproLab {
                     break;
                 }
                 Shot s = SHOTS.get(shotIndex);
-                if (s.name.startsWith("gallery_doors_")) {
-                    mc.effectRenderer.clearEffects(mc.world);
-                }
                 save(mc, s);
                 shotIndex++;
                 if (shotIndex < SHOTS.size()) {
@@ -685,28 +639,6 @@ public class ReproLab {
                         + (row == 0 ? "top_" : "bottom_") + columns[column]);
             }
         }
-        placeDoor(world, DOOR, "sliding_security_door", false);
-        placeDoor(world, GLASS_AIRLOCK, "door_airlock_glass", false);
-        placeDoor(world, GLASS_AIRLOCK_SLIDING, "sliding_airlock_glass", false);
-        placeDoor(world, MODEL_HINGED,
-                "detail_observation_rotating_single", false);
-        placeDoor(world, MODEL_OBSERVATION_LEFT,
-                "detail_observation_rotating_single", false);
-        setDoorHinge(world, MODEL_OBSERVATION_LEFT,
-                BlockDoor.EnumHingePosition.LEFT);
-        placeDoor(world, MODEL_OBSERVATION_RIGHT,
-                "detail_observation_rotating_single", false);
-        setDoorHinge(world, MODEL_OBSERVATION_RIGHT,
-                BlockDoor.EnumHingePosition.RIGHT);
-        placeDoor(world, MODEL_SLIDE_LEFT,
-                "detail_engineering_sliding_single", false);
-        // For NORTH the west column is the pack's visual right. Minecraft's
-        // hinge labels are mirrored from that literal model hand.
-        setDoorHinge(world, MODEL_SLIDE_LEFT, BlockDoor.EnumHingePosition.LEFT);
-        placeDoor(world, MODEL_SLIDE_RIGHT,
-                "detail_engineering_sliding_single", false);
-        setDoorHinge(world, MODEL_SLIDE_RIGHT, BlockDoor.EnumHingePosition.RIGHT);
-        placeDoor(world, MODEL_SPLIT, "detail_split_rotating_single", false);
         placeChair(world, CHAIR_COMMAND, "bridge_chair_simple_command");
         placeChair(world, CHAIR_COMPANION, "bridge_chair_simple_companion");
         placeChair(world, CHAIR_OPERATOR, "bridge_chair_simple_operator");
@@ -900,23 +832,6 @@ public class ReproLab {
                 world.setBlockState(new BlockPos(GALLERY_X - 7 + (i % 8) * 2,
                         GALLERY_Y + 6 - (i / 8) * 2, -18), state, 2);
             }
-        } else if (shot.equals("gallery_doors_standard")) {
-            String[] ids = {"door_airlock_glass", "door_security",
-                    "sliding_airlock_glass", "sliding_security_door"};
-            for (int i = 0; i < ids.length; i++)
-                placeDoor(world, new BlockPos(GALLERY_X - 8 + i * 4,
-                                GALLERY_Y, -18),
-                        ids[i], false);
-        } else if (shot.equals("gallery_door_closed")) {
-            placeDoor(world, new BlockPos(GALLERY_X, GALLERY_Y, -18),
-                    "door_security", false);
-        } else if (shot.equals("gallery_door_open")) {
-            placeDoor(world, new BlockPos(GALLERY_X, GALLERY_Y, -18),
-                    "door_security", true);
-        } else if (shot.equals("gallery_doors_rotating")) {
-            placeDetailedDoorRow(world, "rotating");
-        } else if (shot.equals("gallery_doors_sliding")) {
-            placeDetailedDoorRow(world, "sliding");
         } else if (shot.equals("gallery_space_glass")) {
             for (int x=0; x<3; x++) for (int y=0; y<2; y++) {
                 if (x==2 && y==1) continue;
@@ -1055,23 +970,6 @@ public class ReproLab {
         }
     }
 
-    private static void placeDetailedDoorRow(World world, String motion) {
-        int x = GALLERY_X - 9;
-        for (String theme : new String[] {"engineering", "observation", "split"}) {
-            String doubleId = "detail_" + theme + "_" + motion + "_double";
-            String pairedId = "split".equals(theme)
-                    ? doubleId : "detail_" + theme + "_" + motion + "_single";
-            placeDoor(world, new BlockPos(x, GALLERY_Y, -18), pairedId, false);
-            placeDoor(world, new BlockPos(x + 1, GALLERY_Y, -18), pairedId, false);
-            setDoorHinge(world, new BlockPos(x, GALLERY_Y, -18), BlockDoor.EnumHingePosition.LEFT);
-            setDoorHinge(world, new BlockPos(x + 1, GALLERY_Y, -18), BlockDoor.EnumHingePosition.RIGHT);
-            x += 3;
-            placeDoor(world, new BlockPos(x, GALLERY_Y, -18),
-                    "detail_" + theme + "_" + motion + "_single", false);
-            x += 3;
-        }
-    }
-
     private static void place(World world, BlockPos pos, Block block,
             IProperty<EnumFacing> facingProp, EnumFacing facing) {
         if (block == null) {
@@ -1206,21 +1104,6 @@ public class ReproLab {
             configureInputMode(mc.world.getTileEntity(INPUT_KEYBOARD), mode);
             configureInputMode(serverWorld.getTileEntity(INPUT_KEYBOARD), mode);
         }
-        if (s.name.equals("door_closed")) {
-            setDoorOpen(mc, false);
-        } else if (s.name.equals("door_opening_mid")) {
-            setDoorOpen(mc, true);
-        } else if (s.name.equals("detailed_doors_closed")) {
-            setModelDoorsOpen(mc, false);
-        } else if (s.name.equals("detailed_doors_opening_mid")) {
-            setModelDoorsOpen(mc, true);
-        } else if (s.name.equals("detailed_split_closed")) {
-            setDoorOpen(mc.world, MODEL_SPLIT, false);
-            setDoorOpen(mc.getIntegratedServer().getWorld(0), MODEL_SPLIT, false);
-        } else if (s.name.equals("detailed_split_opening_mid")) {
-            setDoorOpen(mc.world, MODEL_SPLIT, true);
-            setDoorOpen(mc.getIntegratedServer().getWorld(0), MODEL_SPLIT, true);
-        }
         if (s.name.startsWith("controller_")) {
             World sw=mc.getIntegratedServer().getWorld(0);
             int group=Integer.parseInt(s.name.split("_")[1]);
@@ -1314,24 +1197,6 @@ public class ReproLab {
         }
     }
 
-    private static void setDoorOpen(Minecraft mc, boolean open) {
-        setDoorOpen(mc.world, open);
-        setDoorOpen(mc.getIntegratedServer().getWorld(0), open);
-    }
-
-    private static void setModelDoorsOpen(Minecraft mc, boolean open) {
-        for (BlockPos pos : new BlockPos[] {
-                MODEL_HINGED, MODEL_OBSERVATION_LEFT, MODEL_OBSERVATION_RIGHT,
-                MODEL_SLIDE_LEFT, MODEL_SLIDE_RIGHT, MODEL_SPLIT}) {
-            setDoorOpen(mc.world, pos, open);
-            setDoorOpen(mc.getIntegratedServer().getWorld(0), pos, open);
-        }
-    }
-
-    private static void setDoorOpen(World world, boolean open) {
-        setDoorOpen(world, DOOR, open);
-    }
-
     private static void setDoorOpen(World world, BlockPos lower, boolean open) {
         for (BlockPos pos : new BlockPos[] { lower, lower.up() }) {
             IBlockState state = world.getBlockState(pos);
@@ -1376,8 +1241,6 @@ public class ReproLab {
     }
 
     private static BlockPos blockForShot(String name) {
-        if (name.startsWith("glass_airlock_sliding")) return GLASS_AIRLOCK_SLIDING;
-        if (name.startsWith("glass_airlock")) return GLASS_AIRLOCK;
         if (name.startsWith("wide_ship")) return WIDE_LEFT;
         if (name.equals("input_wall")) return INPUT_WALL;
         if (name.equals("input_keyboard")) return INPUT_KEYBOARD;
@@ -1391,9 +1254,6 @@ public class ReproLab {
         if (name.equals("diagonal_up")) return DIAGONAL_UP;
         if (name.startsWith("diagonal_down")) return DIAGONAL_DOWN;
         if (name.startsWith("diagonal")) return DIAGONAL;
-        if (name.startsWith("door")) return DOOR;
-        if (name.startsWith("detailed_doors")) return MODEL_HINGED;
-        if (name.startsWith("detailed_split")) return MODEL_SPLIT;
         if (name.startsWith("bridge_chairs")) return CHAIR_COMPANION;
         if (name.startsWith("material_grid")) return MATERIAL_GRID;
         return SELECTOR;
