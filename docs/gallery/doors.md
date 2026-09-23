@@ -1,6 +1,6 @@
-# Space Door
+# Programmable Door
 
-Space Door supports sliding or rotating movement, configurable designs, frames,
+Programmable Door supports sliding or rotating movement, configurable designs, frames,
 hinges, and an optional control panel. Adjacent doors pair automatically.
 Shift-right-click or click the control panel to configure the door.
 
@@ -14,4 +14,4 @@ operation. Physical redstone and virtual redstone channels are supported.
 
 The old Airlock, Security, and Detailed Engineering/Observation/Split door blocks
 have been removed. Existing instances of those blocks are discarded when an old
-world loads; they are not converted to Space Door.
+world loads; they are not converted to Programmable Door.

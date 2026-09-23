@@ -37,6 +37,7 @@ config=[e for e in catalog if e.get('class')=='BlockConfigurableSpaceDoor']
 assert {e['id'] for e in config}=={'space_door','space_rotating_door','space_sliding_door'}
 assert all(e.get('hidden') for e in config if e['id']!='space_door')
 assert by_id['space_door']['sliding'] is True
+assert 'tile.vandorlabs.space_door.name=Programmable Door' in (ASSETS/'lang/en_us.lang').read_text()
 for glass,level in (('space_glass_small','low'),('space_glass','medium'),('space_glass_large','high')):
     assert by_id[glass]['class']=='BlockSpaceGlass' and by_id[glass]['item']
     assert load(ASSETS/f'models/item/{glass}.json')['parent']==f'vandorlabs:item/{level}/space_glass'

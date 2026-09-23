@@ -44,7 +44,7 @@ lighting, furniture, ramps, glass, and building materials.
   occlusion, and preserve the source texture's face-local color gradient
   across every seam. Partial, rectangular, mixed and oversized arrangements
   remain individual blocks.
-- **Space Door**: configurable two-high sliding or rotating doors, with design,
+- **Programmable Door**: configurable two-high sliding or rotating doors, with design,
   frame, hinge, and control-panel options. Adjacent doors pair automatically.
   Select manual operation or redstone on/off triggering, including virtual channels.
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all
@@ -130,7 +130,7 @@ Use these dimensions for new or replacement art:
 | Full-height screens and viewscreens | 128x128 | A `_static.png` and its `_animated.anim` must have identical width and height. |
 | Half-height console screens and control faces | 128x64 | Keep the authored 2:1 aspect ratio; do not stretch them to square. |
 | Console-control inventory previews | 128x128 | These are the matching `_item.png` files. |
-| Space Door face atlases | 128x256, 256x512, or 512x1024 | Low, medium, and high texture tiers; preserve native frame, hinge, and glass atlas proportions. |
+| Programmable Door face atlases | 128x256, 256x512, or 512x1024 | Low, medium, and high texture tiers; preserve native frame, hinge, and glass atlas proportions. |
 | Connected glass-wall tiles | 64x64 | The generated 6px edge/corner slices are the only intentional non-power-of-two exceptions. |
 
 New texture dimensions should otherwise be powers of two. Preserve the native

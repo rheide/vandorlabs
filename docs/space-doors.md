@@ -1,7 +1,7 @@
 # Space doors and glass
 
 The Space family is independent of the Detailed doors. The creative menu has one
-Space Door item, defaulting to Sliding Sideways in the Middle position.
+Programmable Door item, defaulting to Sliding Sideways in the Middle position.
 Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
 the design, Small/Medium/Large texture detail, framed/bare appearance, placement
 position, Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
@@ -59,7 +59,7 @@ outer hinges to join them; the inner frame rails disappear. Breaking either
 restores the standalone frame. The old Space Rotating Door and Space Sliding
 Door IDs, plus the previous fixed-design IDs, remain registered but hidden from
 creative to preserve old worlds and inventories. Existing
-legacy doors remain fixed-design; use the unified Space Door for the selector.
+legacy doors remain fixed-design; use the unified Programmable Door for the selector.
 
 Assets come from `scifi_industrial_door_pack_v2.zip`,
 `scifi_industrial_door_expansion.zip` and `scifi_industrial_lift_doors.zip`.

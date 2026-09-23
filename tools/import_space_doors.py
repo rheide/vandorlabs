@@ -322,7 +322,7 @@ def main(archive, detail, expansion, lift):
     id='space_door'
     catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
                         item=True,sliding=True,paired_model='space_standard_sliding_framed_paired'))
-    names.append((id,'Space Door'))
+    names.append((id,'Programmable Door'))
     write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
     write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/space_standard_sliding_framed'})
     emit_model('space_empty',[])

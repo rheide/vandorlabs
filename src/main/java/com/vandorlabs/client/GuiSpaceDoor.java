@@ -193,7 +193,7 @@ public class GuiSpaceDoor extends GuiContainer {
         GlStateManager.disableBlend();
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
-        fontRenderer.drawString("Space Door",12,8,0xFFFFFF);
+        fontRenderer.drawString("Programmable Door",12,8,0xFFFFFF);
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
         fontRenderer.drawString("Options",168,28,0xDAE8F0);
         fontRenderer.drawString("Preview",338,28,0xDAE8F0);

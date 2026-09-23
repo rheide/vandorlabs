@@ -396,6 +396,6 @@ tile.vandorlabs.space_rotating_door.name=Space Rotating Door
 tile.vandorlabs.space_sliding_door.name=Space Sliding Door
 tile.vandorlabs.space_glass_small.name=Space Glass (Small)
 tile.vandorlabs.space_glass_large.name=Space Glass (Large)
-tile.vandorlabs.space_door.name=Space Door
+tile.vandorlabs.space_door.name=Programmable Door
 
 item.vandorlabs.programmable_matter_ingot.name=Programmable Matter Ingot
