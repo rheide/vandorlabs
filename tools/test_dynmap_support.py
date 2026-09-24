@@ -59,7 +59,8 @@ def main():
         "industrial_power_lever", "compact_power_lever", "programmable_viewscreen",
         "programmable_console", "programmable_diagonal_screen",
         "programmable_half_input", "programmable_half_console",
-        "programmable_input", "programmable_ramp", "industrial_display_table",
+        "programmable_input", "programmable_ramp", "industrial_table",
+        "wall_regular", "wall_porthole", "wall_bottom_diagonal", "wall_top_diagonal",
     })
     present = set(re.findall(r"^block:id=%([^,]+)", texture_text,
                              re.MULTILINE))

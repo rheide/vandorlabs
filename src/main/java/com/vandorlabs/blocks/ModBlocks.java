@@ -162,7 +162,11 @@ public class ModBlocks {
         // src/main/resources.
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
-        add(new BlockIndustrialDisplayTable());
+        add(new BlockIndustrialTable());
+        add(new BlockThinIndustrialWall("wall_regular", BlockThinIndustrialWall.Shape.REGULAR));
+        add(new BlockThinIndustrialWall("wall_porthole", BlockThinIndustrialWall.Shape.PORTHOLE));
+        add(new BlockThinIndustrialWall("wall_bottom_diagonal", BlockThinIndustrialWall.Shape.BOTTOM));
+        add(new BlockThinIndustrialWall("wall_top_diagonal", BlockThinIndustrialWall.Shape.TOP));
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
@@ -216,8 +220,8 @@ public class ModBlocks {
             case "BlockConfigurableSpaceDoor":
                 return new BlockConfigurableSpaceDoor(id,e.get("sliding").getAsBoolean(),
                         (BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
-            case "BlockSpaceGlass":
-                return new BlockSpaceGlass(id);
+            case "BlockProgrammableGlass":
+                return new BlockProgrammableGlass(id);
             case "BlockSpaceDoor":
                 return new BlockSpaceDoor(id, e.get("sliding").getAsBoolean(),
                         e.get("framed").getAsBoolean(),

@@ -1,0 +1,47 @@
+newmtl wall
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/quiet_wall
+
+newmtl edge
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/quiet_edge
+
+newmtl bezel
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/quiet_bezel
+
+newmtl gasket
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/quiet_gasket
+
+newmtl cyan
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/quiet_cyan
+
+newmtl glass
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/quiet_glass

@@ -235,21 +235,21 @@ final class SpaceDoorRuntimeChecks {
             world.setBlockToAir(adjacent.down());
         }
         for (BlockPos pos:new BlockPos[]{source,target,neighbor}) clear(world,pos);
-        String[] glasses={"space_glass_small","space_glass_medium","space_glass_large"};
+        Block glass=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","programmable_glass"));
         for (boolean rotated:new boolean[]{false,true}) {
             EnumFacing along=rotated?EnumFacing.SOUTH:EnumFacing.EAST;
             for (int i=0;i<3;i++) {
-                Block glass=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",glasses[i]));
                 world.setBlockState(source.offset(along,i),glass.getDefaultState().withProperty(
-                        com.vandorlabs.blocks.BlockGlassWall.ROTATED,rotated),3);
+                        com.vandorlabs.blocks.BlockGlassWall.ROTATED,rotated).withProperty(
+                        com.vandorlabs.blocks.BlockProgrammableGlass.SIZE,i),3);
             }
             for (int i=0;i<3;i++) {
                 BlockPos p=source.offset(along,i);
                 IBlockState actual=world.getBlockState(p).getActualState(world,p);
                 check(actual.getValue(com.vandorlabs.blocks.BlockGlassWall.LEFT)==(i==0),"mixed glass left seam");
                 check(actual.getValue(com.vandorlabs.blocks.BlockGlassWall.RIGHT)==(i==2),"mixed glass right seam");
-                check(((com.vandorlabs.blocks.BlockSpaceGlass)actual.getBlock()).detail().equals(
-                        TileEntitySpaceDoor.DETAILS[i]),"glass detail selection");
+                check(actual.getValue(com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)==i,
+                        "glass detail selection");
             }
             for (int i=0;i<3;i++) world.setBlockToAir(source.offset(along,i));
         }

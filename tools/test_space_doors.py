@@ -38,11 +38,23 @@ assert {e['id'] for e in config}=={'programmable_door','space_rotating_door','sp
 assert all(e.get('hidden') for e in config if e['id']!='programmable_door')
 assert by_id['programmable_door']['sliding'] is True
 assert 'tile.vandorlabs.programmable_door.name=Programmable Door' in (ASSETS/'lang/en_us.lang').read_text()
-for glass,level in (('space_glass_small','low'),('space_glass_medium','medium'),('space_glass_large','high')):
-    assert by_id[glass]['class']=='BlockSpaceGlass' and by_id[glass]['item']
-    assert load(ASSETS/f'models/item/{glass}.json')['parent']==f'vandorlabs:item/{level}/space_glass_medium'
-    for part in load(ASSETS/f'blockstates/{glass}.json')['multipart']:
-        assert '/'+level+'/' in part['apply']['model']
+assert by_id['programmable_glass']['class']=='BlockProgrammableGlass'
+assert by_id['programmable_glass']['item']
+assert not any(k in by_id for k in ('space_glass_small','space_glass_medium','space_glass_large','framed_observation_glass'))
+assert load(ASSETS/'models/item/programmable_glass.json')['parent']=='vandorlabs:item/medium/space_glass_medium'
+parts=load(ASSETS/'blockstates/programmable_glass.json')['multipart']
+assert len(parts)==48
+for part in parts:
+    assert any('/'+level+'/' in part['apply']['model'] for level in ('low','medium','high'))
+    assert part['when']['AND'][0]['size'] in ('0','1','2')
+for level in ('low','medium','high'):
+    frame=load(ASSETS/f'models/block/detailed_doors/{level}/space_glass_medium_left.json')
+    assert frame['textures']['frame']=='vandorlabs:blocks/space_doors/'+level+'/double_frame_metal'
+    assert frame['textures']['inner']=='vandorlabs:blocks/programmable_glass/metal_side'
+    assert all(face['texture']=='#frame' for element in frame['elements']
+               for side,face in element['faces'].items() if side in ('north','south'))
+    assert all(face['texture']=='#inner' for element in frame['elements']
+               for side,face in element['faces'].items() if side in ('east','west','up','down'))
 assert load(ASSETS/'models/item/programmable_door.json')['parent'].endswith('space_standard_sliding_door_framed')
 hinge_source=load(ROOT/'docs/space-door-pack/hinge/geometry.json')['cuboids']
 

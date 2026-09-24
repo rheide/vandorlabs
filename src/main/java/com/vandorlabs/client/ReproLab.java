@@ -236,6 +236,8 @@ public class ReproLab {
                 galleryFeet + 0.7D, -23.0D, 0.0F, 7.0F));
         SHOTS.add(new Shot("gallery_display_table", GALLERY_X,
                 galleryFeet + 0.5D, -24.0D, 0.0F, 8.0F));
+        SHOTS.add(new Shot("gallery_thin_walls", GALLERY_X,
+                galleryFeet + 1.0D, -25.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_propulsion", GALLERY_X, galleryFeet + 2.0D,
                 -32.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_connected_thruster", GALLERY_X,
@@ -488,6 +490,47 @@ public class ReproLab {
             case 12:
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"space_door_gui");
+                mc.displayGuiScreen(null);
+                BlockPos glassGui=CONSOLE.add(3,0,3);
+                mc.world.setBlockState(glassGui,block("programmable_glass").getDefaultState(),3);
+                mc.getIntegratedServer().addScheduledTask(() -> {
+                    World serverWorld=mc.getIntegratedServer().getWorld(0);
+                    serverWorld.setBlockState(glassGui,block("programmable_glass").getDefaultState(),3);
+                    EntityPlayerMP serverPlayer=mc.getIntegratedServer().getPlayerList()
+                            .getPlayerByUsername(mc.player.getName());
+                    serverPlayer.openGui(com.vandorlabs.VandorLabs.instance,
+                            com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_GLASS,serverWorld,
+                            glassGui.getX(),glassGui.getY(),glassGui.getZ());
+                });
+                state=13;
+                holdTicks=20;
+                break;
+            case 13:
+                if (--holdTicks > 0) break;
+                if (!(mc.currentScreen instanceof GuiProgrammableGlass))
+                    throw new IllegalStateException("glass GUI did not open");
+                GuiProgrammableGlass glassScreen=(GuiProgrammableGlass)mc.currentScreen;
+                try {
+                    glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Size"));
+                    glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Glass"));
+                } catch (java.io.IOException exception) {
+                    throw new IllegalStateException("glass GUI button failed",exception);
+                }
+                state=14;
+                holdTicks=20;
+                break;
+            case 14:
+                if (--holdTicks > 0) break;
+                if (!(mc.currentScreen instanceof GuiProgrammableGlass))
+                    throw new IllegalStateException("glass GUI closed after selection");
+                BlockPos configuredGlass=CONSOLE.add(3,0,3);
+                World glassWorld=mc.getIntegratedServer().getWorld(0);
+                if (glassWorld.getBlockState(configuredGlass).getValue(
+                        com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)!=2
+                        || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)
+                        glassWorld.getTileEntity(configuredGlass)).getShade()!=1)
+                    throw new IllegalStateException("glass GUI selections were not applied");
+                saveNamed(mc,"programmable_glass_gui");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;
@@ -589,6 +632,7 @@ public class ReproLab {
         }
         DoorRuntimeChecks.run(world, serverPlayer);
         DisplayTableRuntimeChecks.run(world, serverPlayer);
+        ThinWallRuntimeChecks.run(world, serverPlayer);
         ChairRuntimeChecks.run(world, serverPlayer);
         try {
             mc.getIntegratedServer().addScheduledTask(() -> {
@@ -643,17 +687,16 @@ public class ReproLab {
                         + (row == 0 ? "top_" : "bottom_") + columns[column]);
             }
         }
-        placeChair(world, CHAIR_COMMAND, "bridge_chair_simple_command");
-        placeChair(world, CHAIR_COMPANION, "bridge_chair_simple_companion");
-        placeChair(world, CHAIR_OPERATOR, "bridge_chair_simple_operator");
-        placeChair(world, CHAIR_CONFERENCE, "bridge_chair_simple_conference");
-        placeChair(world, CHAIR_MESS_HALL, "bridge_chair_simple_mess_hall");
+        placeChair(world, CHAIR_COMMAND, "bridge_chair_command");
+        placeChair(world, CHAIR_COMPANION, "bridge_chair_companion");
+        placeChair(world, CHAIR_OPERATOR, "bridge_chair_operator");
+        placeChair(world, CHAIR_CONFERENCE, "bridge_chair_conference");
+        placeChair(world, CHAIR_MESS_HALL, "bridge_chair_mess_hall");
         String[] materials = {"stitched_padding", "seamed_padding",
                 "ribbed_padding", "cushion_padding",
                 "cyan_light_strip", "control_buttons",
                 "vent_grille", "amber_light_strip",
-                "rubber_studs",
-                "wall_pipes", "framed_wall_pipes"};
+                                "wall_pipes", "framed_wall_pipes"};
         for (int index = 0; index < materials.length; index++) {
             Block material = Block.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs", materials[index]));
@@ -747,13 +790,24 @@ public class ReproLab {
         } else if (shot.equals("gallery_programmable_full_inputs")) {
             placeGalleryInputs(world, true);
         } else if (shot.equals("gallery_display_table")) {
-            com.vandorlabs.blocks.BlockIndustrialDisplayTable table =
-                    (com.vandorlabs.blocks.BlockIndustrialDisplayTable) block("industrial_display_table");
+            com.vandorlabs.blocks.BlockIndustrialTable table =
+                    (com.vandorlabs.blocks.BlockIndustrialTable) block("industrial_table");
             IBlockState state = table.getDefaultState().withProperty(
-                    com.vandorlabs.blocks.BlockIndustrialDisplayTable.FACING, EnumFacing.NORTH);
+                    com.vandorlabs.blocks.BlockIndustrialTable.FACING, EnumFacing.NORTH);
             for (int x = -2; x <= 0; x++)
                 world.setBlockState(new BlockPos(GALLERY_X + x, GALLERY_Y, -18), state, 3);
-            world.setBlockState(new BlockPos(GALLERY_X + 3, GALLERY_Y, -18), state, 3);
+            world.setBlockState(new BlockPos(GALLERY_X + 3, GALLERY_Y + 2, -18),
+                    state.withProperty(com.vandorlabs.blocks.BlockIndustrialTable.UPSIDE_DOWN, true), 3);
+        } else if (shot.equals("gallery_thin_walls")) {
+            for (int x=-2; x<=2; x++) {
+                String center=x==0?"wall_porthole":"wall_regular";
+                world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y,-18),
+                        block("wall_bottom_diagonal").getDefaultState(),3);
+                world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y+1,-18),
+                        block(center).getDefaultState(),3);
+                world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y+2,-18),
+                        block("wall_top_diagonal").getDefaultState(),3);
+            }
         } else if (shot.equals("gallery_propulsion")) {
             String[] hexes = {"rocket_thruster_hexagonal", "ion_drive_hexagonal",
                     "plasma_vent_hexagonal", "impulse_engine_hexagonal"};
@@ -832,11 +886,11 @@ public class ReproLab {
                     "border_light", "border_light_vertical", "framed_wall_pipes",
                     "wall_pipes", "stitched_padding", "seamed_padding",
                     "ribbed_padding", "cushion_padding", "control_buttons",
-                    "vent_grille", "rubber_studs", "light_alloy_hull",
+                    "vent_grille", "light_alloy_hull",
                     "dark_gunmetal_hull", "midnight_matte_hull", "midnight_satin_hull",
                     "bluegray_carpet", "burgundy_carpet",
                     "non_slip_metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
-                    "smoked_cockpit_glass", "framed_observation_glass"};
+                    "smoked_cockpit_glass"};
             for (int i = 0; i < ids.length; i++) {
                 Block block = block(ids[i]);
                 IBlockState state = block.getDefaultState();
@@ -847,10 +901,12 @@ public class ReproLab {
                         GALLERY_Y + 6 - (i / 8) * 2, -18), state, 2);
             }
         } else if (shot.equals("gallery_space_glass")) {
-            for (int x=0; x<3; x++) for (int y=0; y<2; y++) {
-                if (x==2 && y==1) continue;
+            for (int x=0; x<3; x++) for (int y=0; y<3; y++) {
                 world.setBlockState(new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18),
-                        block(x==0?"space_glass_small":x==1?"space_glass_medium":"space_glass_large").getDefaultState(),3);
+                        block("programmable_glass").getDefaultState().withProperty(
+                                com.vandorlabs.blocks.BlockProgrammableGlass.SIZE,x),3);
+                ((com.vandorlabs.tiles.TileEntityProgrammableGlass)world.getTileEntity(
+                        new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18))).setShade(y);
             }
         } else if (shot.startsWith("gallery_space_config_hinges_")) {
             for (int i=0;i<2;i++) {
@@ -899,9 +955,9 @@ public class ReproLab {
                 }
             }
         } else if (shot.equals("gallery_chairs")) {
-            String[] chairs = {"bridge_chair_simple_command",
-                    "bridge_chair_simple_companion", "bridge_chair_simple_operator",
-                    "bridge_chair_simple_conference", "bridge_chair_simple_mess_hall"};
+            String[] chairs = {"bridge_chair_command",
+                    "bridge_chair_companion", "bridge_chair_operator",
+                    "bridge_chair_conference", "bridge_chair_mess_hall"};
             for (int i = 0; i < chairs.length; i++)
                 placeChair(world, new BlockPos(GALLERY_X - 6 + i * 3,
                         GALLERY_Y, -18), chairs[i]);

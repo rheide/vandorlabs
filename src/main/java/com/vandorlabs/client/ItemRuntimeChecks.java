@@ -83,18 +83,29 @@ final class ItemRuntimeChecks {
         grid.setInventorySlotContents(4,new ItemStack(Item.getItemFromBlock(net.minecraft.init.Blocks.PISTON)));
         grid.setInventorySlotContents(0,ItemStack.EMPTY);
         require(!rampRecipe.matches(grid,player.world),"missing ingot does not craft ramp");
-        for (String finish : new String[]{"side", "top", "rear", "trim", "dark_trim", "cavity"}) {
+        String[][] finishes = {{"industrial_block", "Industrial Block"},
+                {"industrial_trim", "Industrial Trim"},
+                {"industrial_grate", "Industrial Grate"},
+                {"light_industrial_panel", "Light Industrial Panel"},
+                {"dark_industrial_panel", "Dark Industrial Panel"}};
+        for (String[] finish : finishes) {
             Block finishBlock = Block.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs", "plasma_vent_" + finish));
+                    new ResourceLocation("vandorlabs", finish[0]));
             require(finishBlock != null && finishBlock.getRegistryName() != null,
-                    "missing Plasma Vent finish " + finish);
+                    "missing industrial finish " + finish[0]);
             ItemStack finishItem = new ItemStack(finishBlock);
-            require(!finishItem.isEmpty() && finishItem.getDisplayName().startsWith("Plasma Vent "),
-                    "Plasma Vent finish item name " + finish);
+            require(!finishItem.isEmpty() && finishItem.getDisplayName().equals(finish[1]),
+                    "industrial finish item name " + finish[0]);
             require(mc.getRenderItem().getItemModelMesher().getItemModel(finishItem)
                     != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
-                    "Plasma Vent finish item model " + finish);
+                    "industrial finish item model " + finish[0]);
         }
+        for (String removed : new String[]{"plasma_vent_side", "plasma_vent_top",
+                "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
+                "plasma_vent_cavity", "rubber_studs", "framed_observation_glass",
+                "space_glass_small", "space_glass_medium", "space_glass_large"})
+            require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
+                    "retired block remains registered: " + removed);
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
     }
 

@@ -103,7 +103,7 @@ public final class ControllerPlatform {
         return duration(length,height,slow?2:1);
     }
     public static int duration(int length,int height,int speed) {
-        return (speed==0?5:speed==2?20:10)*Math.max(1,Math.max(length,height));
+        return (speed==0?4:speed==2?16:8)*Math.max(1,Math.max(length,height));
     }
     /** Undo segment translation before sampling the original block's side texture.
      * Keeping the source coordinate (rather than normalizing a clipped slice) also

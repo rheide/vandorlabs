@@ -120,7 +120,7 @@ public final class ControllerRuntimeChecks {
                     +" facing="+facing+" top="+top+" lift="+elevator+" kind="+kind);
             require(controller.attached() && controller.isOpen(),"unpowered deployment");
             finish(controller);
-            require(controller.durationTicks()==60,"slow matches old fast speed for length three");
+            require(controller.durationTicks()==48,"slow uses sixteen ticks per block");
             NBTTagCompound saved=controller.writeToNBT(new NBTTagCompound());
             controller.setRedstoneChannel(4271);
             saved=controller.writeToNBT(new NBTTagCompound());
@@ -548,7 +548,7 @@ public final class ControllerRuntimeChecks {
         require(controller.configureTreads(player,0,2,8,true,false,true,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.RIGHT,false,0),"fast mode config accepted");
         require(controller.request(true),"fast lift starts");
-        require(controller.speed==0 && controller.durationTicks()==15,"fast speed uses five ticks per block");
+        require(controller.speed==0 && controller.durationTicks()==12,"fast speed uses four ticks per block");
         elapsed(controller,controller.durationTicks()-1);
         require(!controller.error && controller.pose(0)>0.9,"fast lift does not slow sharply near the end");
         boolean movingTexture=false;

@@ -22,12 +22,12 @@ REMOVED_DOORS = {"door_airlock_glass", "door_security", "sliding_airlock_glass",
 REMOVED_DOORS.update(f"detail_{family}_{motion}_{size}"
                      for family in ("split", "observation", "engineering")
                      for motion in ("sliding", "rotating") for size in ("single", "double"))
-FALLBACK_IDS = {"framed_observation_glass", "programmable_half_input", "programmable_input",
+FALLBACK_IDS = {"programmable_half_input", "programmable_input",
                 "programmable_diagonal_screen"}
-FALLBACK_IDS.update("bridge_chair_simple_" + role for role in
+FALLBACK_IDS.update("bridge_chair_" + role for role in
                     ("mess_hall", "conference", "command", "operator", "companion"))
 
-EXTRA_TEXTURES = {"dynmap_glass_wall": "blocks/framed_observation_glass/wall_00.png"}
+EXTRA_TEXTURES = {}
 
 
 def removed_record(line):
@@ -107,10 +107,8 @@ def model_suffix(shape, corner, facing):
 
 
 def fallback_texture(block_id, state):
-    if block_id == "framed_observation_glass":
-        return "dynmap_glass_wall"
-    if block_id.startswith("bridge_chair_simple_"):
-        return "bridge_chair_simple_atlas"
+    if block_id.startswith("bridge_chair_"):
+        return "bridge_chair_atlas"
     if block_id.startswith("programmable_"):
         return "dark_wall_panel"
     raise ValueError("No fallback texture for " + block_id)
@@ -119,9 +117,7 @@ def fallback_texture(block_id, state):
 
 def fallback_model(block_id, state):
     facing = state.get("facing", "north")
-    if block_id == "framed_observation_glass":
-        return plain_box("7/0/0:9/16/16", "north")
-    if block_id.startswith("bridge_chair_simple_"):
+    if block_id.startswith("bridge_chair_"):
         return (plain_box("3/0/3:13/1/13", facing)
                 + plain_box("6/1/6:10/7/10", facing)
                 + plain_box("2/7/3:14/10/13", facing)

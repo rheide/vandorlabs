@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": {
+      "model": "vandorlabs:light_industrial_panel"
+    }
+  }
+}

@@ -1,7 +1,0 @@
-{
-  "parent": "block/block",
-  "textures": {
-    "particle": "vandorlabs:blocks/bridge_chair_simple_atlas"
-  },
-  "elements": []
-}

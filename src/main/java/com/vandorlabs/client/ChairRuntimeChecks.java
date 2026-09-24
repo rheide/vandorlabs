@@ -16,33 +16,38 @@ public final class ChairRuntimeChecks {
     private ChairRuntimeChecks() { }
 
     public static void run(World world, EntityPlayerMP player) {
-        Block raw = Block.REGISTRY.getObject(new ResourceLocation(
-                "vandorlabs", "bridge_chair_simple_command"));
-        require(raw instanceof BlockBridgeChair, "simple chair is not registered");
-        BlockBridgeChair chair = (BlockBridgeChair) raw;
+        String[] roles={"command","companion","operator","conference","mess_hall"};
         BlockPos pos = new BlockPos(18, 4, 18);
-        world.setBlockToAir(pos.up());
-        world.setBlockToAir(pos);
-        IBlockState lower = chair.getDefaultState()
-                .withProperty(BlockBridgeChair.FACING, EnumFacing.SOUTH)
-                .withProperty(BlockBridgeChair.UPPER, false);
-        world.setBlockState(pos, lower, 2);
-        world.setBlockState(pos.up(), lower.withProperty(
-                BlockBridgeChair.UPPER, true), 2);
-        require(chair.onBlockActivated(world, pos, lower, player,
-                EnumHand.MAIN_HAND, EnumFacing.UP, 0.5F, 0.5F, 0.5F),
-                "chair activation was not handled");
-        require(player.getRidingEntity() instanceof EntityChairSeat,
-                "chair did not mount player on seat entity");
-        EntityChairSeat seat = (EntityChairSeat) player.getRidingEntity();
-        seat.updatePassenger(player);
-        require(Math.abs(player.posY - (pos.getY() + 10.0D / 16.0D
-                        - EntityChairSeat.RIDER_PELVIS_OFFSET)) < 0.01D,
-                "chair rider pelvis does not match model cushion marker");
-        player.dismountRidingEntity();
-        world.setBlockToAir(pos);
-        require(seat.isDead, "breaking chair did not clean up seat entity");
-        world.setBlockToAir(pos.up());
+        for (String role : roles) {
+            Block raw = Block.REGISTRY.getObject(new ResourceLocation(
+                    "vandorlabs", "bridge_chair_" + role));
+            require(raw instanceof BlockBridgeChair, role + " chair is not registered");
+            BlockBridgeChair chair = (BlockBridgeChair) raw;
+            world.setBlockToAir(pos.up());
+            world.setBlockToAir(pos);
+            IBlockState lower = chair.getDefaultState()
+                    .withProperty(BlockBridgeChair.FACING, EnumFacing.SOUTH)
+                    .withProperty(BlockBridgeChair.UPPER, false);
+            world.setBlockState(pos, lower, 2);
+            world.setBlockState(pos.up(), lower.withProperty(
+                    BlockBridgeChair.UPPER, true), 2);
+            require(chair.onBlockActivated(world, pos, lower, player,
+                    EnumHand.MAIN_HAND, EnumFacing.UP, 0.5F, 0.5F, 0.5F),
+                    role + " activation was not handled");
+            require(player.getRidingEntity() instanceof EntityChairSeat,
+                    role + " did not mount player on seat entity");
+            EntityChairSeat seat = (EntityChairSeat) player.getRidingEntity();
+            seat.updatePassenger(player);
+            double seatPixels=role.equals("mess_hall")?10
+                    :role.equals("companion") || role.equals("conference")?11:12;
+            require(Math.abs(player.posY - (pos.getY() + seatPixels / 16.0D
+                            - EntityChairSeat.RIDER_PELVIS_OFFSET)) < 0.01D,
+                    role + " rider pelvis does not match model cushion marker");
+            player.dismountRidingEntity();
+            world.setBlockToAir(pos);
+            require(seat.isDead, "breaking " + role + " chair did not clean up seat entity");
+            world.setBlockToAir(pos.up());
+        }
         System.out.println("[vandorlabs][reprolab] chair-runtime PASS");
     }
 

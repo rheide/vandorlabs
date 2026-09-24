@@ -108,10 +108,12 @@ trimming its geometry.
 Their supplied one-model-pixel border width stays unchanged. Sliding models have no hinges.
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
-Space Glass has three creative blocks: Small, Medium and Large. The existing
-`space_glass_medium` id remains Medium for save compatibility; `space_glass_small` and
-`space_glass_large` use the low/high assets. Both frame and shimmer use the
-selected native tier. Mixed tiers still connect, including inner corners and
+Programmable Glass is one creative block that selects Small, Medium, or Large
+detail in its right-click menu.
+The glass shade is selected independently for each size. The thick inside faces
+use the former Observation Glass metal texture; the front and rear keep their
+original finish. Both frame and shimmer use the selected native tier. Mixed
+tiers still connect, including inner corners and
 both wall orientations. Its metal frame is solid-pass geometry. A non-ticking
 tile draws the repeating glass in the translucent pass with the pack's faint
 alpha preserved. Glass has a per-visible-block render call but no server ticks.

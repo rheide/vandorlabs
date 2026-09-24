@@ -8,7 +8,8 @@
     "hinge": "vandorlabs:blocks/space_doors/medium/hinge",
     "glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
     "pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
-    "particle": "vandorlabs:blocks/space_doors/medium/standard"
+    "particle": "vandorlabs:blocks/space_doors/medium/standard",
+    "inner": "vandorlabs:blocks/programmable_glass/metal_side"
   },
   "elements": [
     {
@@ -43,39 +44,39 @@
           ]
         },
         "east": {
-          "texture": "#frame",
+          "texture": "#inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
+            6,
+            15,
+            10,
+            16
           ]
         },
         "west": {
-          "texture": "#frame",
+          "texture": "#inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
+            6,
+            15,
+            10,
+            16
           ]
         },
         "up": {
-          "texture": "#frame",
+          "texture": "#inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
+            1,
+            6,
+            15,
+            10
           ]
         },
         "down": {
-          "texture": "#frame",
+          "texture": "#inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
+            1,
+            6,
+            15,
+            10
           ]
         }
       }

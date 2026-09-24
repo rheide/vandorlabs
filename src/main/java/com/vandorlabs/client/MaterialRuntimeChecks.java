@@ -2,9 +2,13 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockLightStrip;
 import com.vandorlabs.blocks.BlockGlassWall;
+import com.vandorlabs.blocks.BlockProgrammableGlass;
+import com.vandorlabs.tiles.TileEntityProgrammableGlass;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
@@ -35,16 +39,46 @@ final class MaterialRuntimeChecks {
         }
         checkGlassPlacement(player);
         BlockGlassWall space = (BlockGlassWall) Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "space_glass_medium"));
+                new ResourceLocation("vandorlabs", "programmable_glass"));
         checkGlassConnections(player,space,new BlockPos(24,4,24),false,EnumFacing.EAST);
         checkGlassConnections(player,space,new BlockPos(24,4,24),true,EnumFacing.SOUTH);
+        checkGlassSettings(player,(BlockProgrammableGlass)space);
         System.out.println("[vandorlabs][reprolab] material-runtime PASS");
+    }
+
+    private static void checkGlassSettings(EntityPlayer player, BlockProgrammableGlass glass) {
+        BlockPos source = new BlockPos(29,4,29);
+        BlockPos copy = source.east();
+        IBlockState chosen = glass.getDefaultState().withProperty(BlockProgrammableGlass.SIZE,2);
+        player.world.setBlockState(source, chosen, 3);
+        TileEntityProgrammableGlass original = (TileEntityProgrammableGlass)
+                player.world.getTileEntity(source);
+        original.setShade(2);
+        ItemStack picked = glass.getPickBlock(chosen, null, player.world, source, player);
+        require(picked.hasTagCompound(), "creative pick lost glass settings");
+        player.world.setBlockState(copy, glass.getDefaultState(), 3);
+        glass.onBlockPlacedBy(player.world, copy, player.world.getBlockState(copy), player, picked);
+        require(player.world.getBlockState(copy).getValue(BlockProgrammableGlass.SIZE)==2,
+                "creative copy lost size");
+        TileEntityProgrammableGlass copied = (TileEntityProgrammableGlass)
+                player.world.getTileEntity(copy);
+        require(copied.getShade()==2, "creative copy lost shade");
+        player.world.setBlockState(copy, player.world.getBlockState(copy)
+                .withProperty(BlockProgrammableGlass.SIZE,0),3);
+        require(player.world.getTileEntity(copy)==copied,
+                "size update replaced tile and would close dialog");
+        NBTTagCompound saved=copied.writeToNBT(new NBTTagCompound());
+        TileEntityProgrammableGlass loaded=new TileEntityProgrammableGlass();
+        loaded.readFromNBT(saved);
+        require(loaded.getShade()==2,"glass shade did not persist");
+        player.world.setBlockToAir(source);
+        player.world.setBlockToAir(copy);
     }
 
     private static void checkGlassPlacement(EntityPlayer player) {
         Block raw = Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "framed_observation_glass"));
-        require(raw instanceof BlockGlassWall, "framed_observation_glass has wrong block class");
+                new ResourceLocation("vandorlabs", "programmable_glass"));
+        require(raw instanceof BlockGlassWall, "programmable_glass has wrong block class");
         BlockGlassWall glass = (BlockGlassWall) raw;
         BlockPos pos = new BlockPos(24, 4, 24);
         for (EnumFacing direction : EnumFacing.HORIZONTALS) {

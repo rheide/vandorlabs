@@ -71,8 +71,8 @@ public final class ControllerPlatformTest {
                 "fast motion stays linear near the end");
         check(ControllerPlatform.offsetPixels(0,0,1,16,0,8,.9,true,false)>7.2,
                 "medium motion retains its eased profile");
-        check(ControllerPlatform.duration(3,2,0)==15 && ControllerPlatform.duration(3,2,1)==30
-                && ControllerPlatform.duration(3,2,2)==60,"three speed durations");
+        check(ControllerPlatform.duration(3,2,0)==12 && ControllerPlatform.duration(3,2,1)==24
+                && ControllerPlatform.duration(3,2,2)==48,"three speed durations");
         for (int start=-8;start<=8;start++) for (int end=-8;end<=8;end++) {
             for (boolean lift:new boolean[]{false,true}) {
                 close(ControllerPlatform.offset(2,7,3,8,start,end,0,lift),start,"signed start endpoint");
@@ -283,8 +283,8 @@ public final class ControllerPlatformTest {
             }
             int duration=ControllerPlatform.duration(length,height,false);
             check(ControllerPlatform.duration(length,height,true)==2*duration,"slow is half base speed");
-            check(duration==10*Math.max(length,height),"fast is twice the old fast speed");
-            check(ControllerPlatform.duration(length,height,true)==20*Math.max(length,height),"slow matches old fast speed");
+            check(duration==8*Math.max(length,height),"medium speed per block");
+            check(ControllerPlatform.duration(length,height,true)==16*Math.max(length,height),"slow speed per block");
             close(ControllerPlatform.pose(0,true,duration/2.0,duration),.5,"midpoint");
             close(ControllerPlatform.pose(.5,false,0,duration),.5,"reversal continuity");
             close(ControllerPlatform.pose(.5,false,duration/4.0,duration),.25,"reversal speed");

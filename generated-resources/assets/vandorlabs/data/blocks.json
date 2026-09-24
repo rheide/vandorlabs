@@ -1491,39 +1491,39 @@
     "grid_column": 2
   },
   {
-    "id": "bridge_chair_simple_command",
+    "id": "bridge_chair_command",
     "type": "bridge_chair",
     "class": "BlockBridgeChair",
     "item": true,
-    "height_units": 22,
-    "seat_y_units": 10
+    "height_units": 24,
+    "seat_y_units": 12
   },
   {
-    "id": "bridge_chair_simple_companion",
-    "type": "bridge_chair",
-    "class": "BlockBridgeChair",
-    "item": true,
-    "height_units": 20,
-    "seat_y_units": 10
-  },
-  {
-    "id": "bridge_chair_simple_operator",
+    "id": "bridge_chair_companion",
     "type": "bridge_chair",
     "class": "BlockBridgeChair",
     "item": true,
     "height_units": 21,
-    "seat_y_units": 10
+    "seat_y_units": 11
   },
   {
-    "id": "bridge_chair_simple_conference",
+    "id": "bridge_chair_operator",
     "type": "bridge_chair",
     "class": "BlockBridgeChair",
     "item": true,
-    "height_units": 22.5,
-    "seat_y_units": 10
+    "height_units": 23,
+    "seat_y_units": 12
   },
   {
-    "id": "bridge_chair_simple_mess_hall",
+    "id": "bridge_chair_conference",
+    "type": "bridge_chair",
+    "class": "BlockBridgeChair",
+    "item": true,
+    "height_units": 23.5,
+    "seat_y_units": 11
+  },
+  {
+    "id": "bridge_chair_mess_hall",
     "type": "bridge_chair",
     "class": "BlockBridgeChair",
     "item": true,
@@ -1576,12 +1576,6 @@
     "id": "amber_light_strip",
     "type": "regular",
     "class": "BlockLightStrip",
-    "item": true
-  },
-  {
-    "id": "rubber_studs",
-    "type": "regular",
-    "class": "BlockVandor",
     "item": true
   },
   {
@@ -1657,37 +1651,31 @@
     "item": true
   },
   {
-    "id": "plasma_vent_side",
+    "id": "industrial_block",
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "plasma_vent_top",
+    "id": "industrial_trim",
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "plasma_vent_rear",
+    "id": "industrial_grate",
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "plasma_vent_trim",
+    "id": "light_industrial_panel",
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "plasma_vent_dark_trim",
-    "type": "block",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "plasma_vent_cavity",
+    "id": "dark_industrial_panel",
     "type": "block",
     "class": "BlockVandor",
     "item": true
@@ -1862,12 +1850,6 @@
     "class": "BlockPropulsionLight",
     "item": true,
     "points_up": true
-  },
-  {
-    "id": "framed_observation_glass",
-    "type": "connected_glass_wall",
-    "class": "BlockGlassWall",
-    "item": true
   },
   {
     "id": "space_observation_rotating_door_bare_paired",
@@ -3610,12 +3592,6 @@
     "paired_model": "space_modular_shutter_sliding_framed_paired"
   },
   {
-    "id": "space_glass_medium",
-    "type": "framed_observation_glass",
-    "class": "BlockSpaceGlass",
-    "item": true
-  },
-  {
     "id": "space_rotating_door",
     "type": "space_door",
     "class": "BlockConfigurableSpaceDoor",
@@ -3634,15 +3610,9 @@
     "paired_model": "space_standard_sliding_door_framed_paired"
   },
   {
-    "id": "space_glass_small",
-    "type": "framed_observation_glass",
-    "class": "BlockSpaceGlass",
-    "item": true
-  },
-  {
-    "id": "space_glass_large",
-    "type": "framed_observation_glass",
-    "class": "BlockSpaceGlass",
+    "id": "programmable_glass",
+    "type": "connected_glass_wall",
+    "class": "BlockProgrammableGlass",
     "item": true
   },
   {

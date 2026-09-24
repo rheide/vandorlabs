@@ -23,9 +23,15 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_RAMP_CONTROLLER = 1;
     public static final int GUI_REDSTONE_CHANNEL = 2;
     public static final int GUI_SPACE_DOOR = 3;
+    public static final int GUI_PROGRAMMABLE_GLASS = 4;
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID==GUI_PROGRAMMABLE_GLASS) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass)
+                return new com.vandorlabs.container.ContainerProgrammableGlass((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile);
+        }
         if (ID==GUI_SPACE_DOOR) {
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
@@ -52,6 +58,11 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID==GUI_PROGRAMMABLE_GLASS) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass)
+                return new com.vandorlabs.client.GuiProgrammableGlass((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile);
+        }
         if (ID==GUI_SPACE_DOOR) {
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
