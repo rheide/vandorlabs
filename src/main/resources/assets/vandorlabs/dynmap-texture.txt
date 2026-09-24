@@ -22,7 +22,7 @@ texture:id=clear_cockpit_glass,filename=assets/vandorlabs/textures/blocks/clear_
 texture:id=pale_cyan_cockpit_glass,filename=assets/vandorlabs/textures/blocks/pale_cyan_cockpit_glass.png,xcount=1,ycount=1
 texture:id=bridge_chair_atlas,filename=assets/vandorlabs/textures/blocks/bridge_chair_atlas.png,xcount=1,ycount=1
 texture:id=cyan_light_strip,filename=assets/vandorlabs/textures/blocks/cyan_light_strip.png,xcount=1,ycount=1
-texture:id=non_slip_metal_floor,filename=assets/vandorlabs/textures/blocks/non_slip_metal_floor.png,xcount=1,ycount=1
+texture:id=metal_floor,filename=assets/vandorlabs/textures/blocks/metal_floor.png,xcount=1,ycount=1
 texture:id=amber_light_strip,filename=assets/vandorlabs/textures/blocks/amber_light_strip.png,xcount=1,ycount=1
 texture:id=rocket_off,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_off.png,xcount=1,ycount=1
 texture:id=rocket_stream,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_stream.png,xcount=1,ycount=1
@@ -5233,7 +5233,7 @@ block:id=%plasma_vent_90_degree_wedge,state=facing:east/particles:false/powered:
 block:id=%plasma_vent_90_degree_wedge,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_stream
 block:id=%cyan_light_strip,state=vertical:true,patch0=6000:cyan_light_strip,patch1=6000:cyan_light_strip,patch2=6000:cyan_light_strip,patch3=6000:cyan_light_strip,patch4=6000:cyan_light_strip,patch5=6000:cyan_light_strip,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%cyan_light_strip,state=vertical:false,patch0=0:cyan_light_strip,patch1=0:cyan_light_strip,patch2=0:cyan_light_strip,patch3=0:cyan_light_strip,patch4=0:cyan_light_strip,patch5=0:cyan_light_strip,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%non_slip_metal_floor,patch0=0:non_slip_metal_floor,patch1=0:non_slip_metal_floor,patch2=0:non_slip_metal_floor,patch3=0:non_slip_metal_floor,patch4=0:non_slip_metal_floor,patch5=0:non_slip_metal_floor,transparency=SEMITRANSPARENT,stdrot=true
+block:id=%metal_floor,patch0=0:metal_floor,patch1=0:metal_floor,patch2=0:metal_floor,patch3=0:metal_floor,patch4=0:metal_floor,patch5=0:metal_floor,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%amber_light_strip,state=vertical:true,patch0=6000:amber_light_strip,patch1=6000:amber_light_strip,patch2=6000:amber_light_strip,patch3=6000:amber_light_strip,patch4=6000:amber_light_strip,patch5=6000:amber_light_strip,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%amber_light_strip,state=vertical:false,patch0=0:amber_light_strip,patch1=0:amber_light_strip,patch2=0:amber_light_strip,patch3=0:amber_light_strip,patch4=0:amber_light_strip,patch5=0:amber_light_strip,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%classic_rocket,state=facing:south/particles:true/powered:true/part:s7_x1_y0,patch0=0:rear,patch1=0:cavity,patch2=0:dark_trim,transparency=TRANSPARENT,stdrot=true

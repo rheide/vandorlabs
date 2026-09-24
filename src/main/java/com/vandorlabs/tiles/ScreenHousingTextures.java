@@ -4,13 +4,13 @@ package com.vandorlabs.tiles;
 public final class ScreenHousingTextures {
     public static final String[] IDS = {
             "dark_wall_panel", "light_wall_panel", "light_alloy_hull",
-            "non_slip_metal_floor", "dark_gunmetal_hull", "midnight_matte_hull",
+            "metal_floor", "dark_gunmetal_hull", "midnight_matte_hull",
             "dark_industrial_panel", "light_industrial_panel", "ribbed_wall",
             "industrial_block", "industrial_trim", "industrial_grate"
     };
     private static final String[] TEXTURES = {
             "dark_wall_panel", "light_wall_panel", "light_alloy_hull",
-            "non_slip_metal_floor", "dark_gunmetal_hull", "midnight_matte_hull",
+            "metal_floor", "dark_gunmetal_hull", "midnight_matte_hull",
             "thrusters/dark_trim", "thrusters/trim", "ribbed_wall",
             "thrusters/side", "thrusters/top", "thrusters/rear"
     };

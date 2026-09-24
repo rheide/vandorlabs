@@ -122,9 +122,13 @@ final class ItemRuntimeChecks {
                 "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
                 "plasma_vent_cavity", "rubber_studs", "framed_observation_glass",
                 "space_glass_small", "space_glass_medium", "space_glass_large",
-                "wall_regular", "wall_porthole", "wall_bottom_diagonal", "wall_top_diagonal"})
+                "wall_regular", "wall_porthole", "wall_bottom_diagonal", "wall_top_diagonal",
+                "non_slip_metal_floor"})
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
+        Block metalFloor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "metal_floor"));
+        require(metalFloor != null && "Metal Floor".equals(new ItemStack(metalFloor).getDisplayName()),
+                "Metal Floor registry or display name missing");
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
     }
 

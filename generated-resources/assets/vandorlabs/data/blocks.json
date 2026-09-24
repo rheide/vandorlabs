@@ -1615,7 +1615,7 @@
     "item": true
   },
   {
-    "id": "non_slip_metal_floor",
+    "id": "metal_floor",
     "type": "regular",
     "class": "BlockVandor",
     "item": true

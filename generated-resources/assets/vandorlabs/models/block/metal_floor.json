@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "vandorlabs:blocks/non_slip_metal_floor"
+    "all": "vandorlabs:blocks/metal_floor"
   }
 }

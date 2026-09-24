@@ -703,7 +703,7 @@ public class ReproLab {
         String[] hullFloors = {"light_alloy_hull", "dark_gunmetal_hull",
                 "midnight_matte_hull", "midnight_satin_hull",
                 "bluegray_carpet", "burgundy_carpet",
-                "non_slip_metal_floor"};
+                "metal_floor"};
         for (int index = 0; index < hullFloors.length; index++) {
             String id = hullFloors[index];
             Block hull = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
@@ -876,7 +876,7 @@ public class ReproLab {
                     "vent_grille", "light_alloy_hull",
                     "dark_gunmetal_hull", "midnight_matte_hull", "midnight_satin_hull",
                     "bluegray_carpet", "burgundy_carpet",
-                    "non_slip_metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
+                    "metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
                     "smoked_cockpit_glass"};
             for (int i = 0; i < ids.length; i++) {
                 Block block = block(ids[i]);
