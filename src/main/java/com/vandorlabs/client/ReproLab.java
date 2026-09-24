@@ -236,8 +236,6 @@ public class ReproLab {
                 galleryFeet + 0.7D, -23.0D, 0.0F, 7.0F));
         SHOTS.add(new Shot("gallery_display_table", GALLERY_X,
                 galleryFeet + 0.5D, -24.0D, 0.0F, 8.0F));
-        SHOTS.add(new Shot("gallery_thin_walls", GALLERY_X,
-                galleryFeet + 1.0D, -25.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_propulsion", GALLERY_X, galleryFeet + 2.0D,
                 -32.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_connected_thruster", GALLERY_X,
@@ -632,7 +630,6 @@ public class ReproLab {
         }
         DoorRuntimeChecks.run(world, serverPlayer);
         DisplayTableRuntimeChecks.run(world, serverPlayer);
-        ThinWallRuntimeChecks.run(world, serverPlayer);
         ChairRuntimeChecks.run(world, serverPlayer);
         try {
             mc.getIntegratedServer().addScheduledTask(() -> {
@@ -798,17 +795,6 @@ public class ReproLab {
                 world.setBlockState(new BlockPos(GALLERY_X + x, GALLERY_Y, -18), state, 3);
             world.setBlockState(new BlockPos(GALLERY_X + 3, GALLERY_Y + 2, -18),
                     state.withProperty(com.vandorlabs.blocks.BlockIndustrialTable.UPSIDE_DOWN, true), 3);
-        } else if (shot.equals("gallery_thin_walls")) {
-            for (int x=-2; x<=2; x++) {
-                String border=x>0?"_bordered":"";
-                String center=Math.abs(x)==1?"voxel_wall_porthole":"voxel_wall_regular";
-                world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y,-18),
-                        block("voxel_wall_bottom_diagonal"+border).getDefaultState(),3);
-                world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y+1,-18),
-                        block(center+border).getDefaultState(),3);
-                world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y+2,-18),
-                        block("voxel_wall_top_diagonal"+border).getDefaultState(),3);
-            }
         } else if (shot.equals("gallery_propulsion")) {
             String[] hexes = {"rocket_thruster_hexagonal", "ion_drive_hexagonal",
                     "plasma_vent_hexagonal", "impulse_engine_hexagonal"};

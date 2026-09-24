@@ -101,6 +101,7 @@ language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
 `build/libs/vandorlabs-1.0.jar`.
+
 Keep finished builds there unless a specific destination is requested.
 
 The selected mixed-resolution texture set with crisp 128px single-door art is

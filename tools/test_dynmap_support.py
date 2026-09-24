@@ -60,9 +60,6 @@ def main():
         "programmable_console", "programmable_diagonal_screen",
         "programmable_half_input", "programmable_half_console",
         "programmable_input", "programmable_ramp", "industrial_table",
-        *("voxel_wall_" + shape + suffix
-          for suffix in ("", "_bordered")
-          for shape in ("regular", "porthole", "bottom_diagonal", "top_diagonal")),
     })
     present = set(re.findall(r"^block:id=%([^,]+)", texture_text,
                              re.MULTILINE))
