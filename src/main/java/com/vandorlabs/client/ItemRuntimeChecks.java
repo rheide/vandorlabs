@@ -47,6 +47,26 @@ final class ItemRuntimeChecks {
                 != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
                 "ingot model missing");
         require("Programmable Matter Ingot".equals(result.getDisplayName()), "ingot display name");
+        IRecipe doorRecipe = CraftingManager.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "programmable_door"));
+        require(doorRecipe != null, "door recipe loaded");
+        for (int i = 0; i < grid.getSizeInventory(); i++)
+            grid.setInventorySlotContents(i, ItemStack.EMPTY);
+        for (int row = 0; row < 3; row++)
+            for (int col = 0; col < 2; col++)
+                grid.setInventorySlotContents(row * 3 + col,
+                        new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        require(doorRecipe.matches(grid, player.world), "six ingots match door shape");
+        ItemStack door = CraftingManager.findMatchingResult(grid, player.world);
+        require(door.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(
+                        new ResourceLocation("vandorlabs", "space_door")))
+                        && door.getCount() == 1,
+                "six ingots craft one Programmable Door");
+        grid.setInventorySlotContents(0, ItemStack.EMPTY);
+        require(!doorRecipe.matches(grid, player.world), "five ingots crafted a door");
+        grid.setInventorySlotContents(0, new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        grid.setInventorySlotContents(2, new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        require(!doorRecipe.matches(grid, player.world), "extra ingredient crafted a door");
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
     }
 

@@ -4,6 +4,9 @@ Programmable Door supports sliding or rotating movement, configurable designs, f
 hinges, and an optional control panel. Adjacent doors pair automatically.
 Shift-right-click or click the control panel to configure the door.
 
+Craft one door from six Programmable Matter Ingots, arranged in two adjacent
+columns of three in a crafting table.
+
 Set Trigger to Disabled for manual operation, or On/Off for redstone-controlled
 operation. Physical redstone and virtual redstone channels are supported.
 

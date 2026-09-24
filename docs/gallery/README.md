@@ -5,9 +5,9 @@ deterministic ReproLab scene. They show representative states and functions;
 the dozens of selectable screen animations are intentionally summarized rather
 than documented one by one.
 
-> **Creative-only:** none of the mod's blocks currently have recipes or another
-> Survival-mode acquisition path. These examples use the `vandorlabs` Creative
-> tab and the deterministic test harness.
+> **Acquisition:** the Programmable Door can be crafted from six Programmable
+> Matter Ingots. Other blocks shown here use the `vandorlabs` Creative tab and
+> the deterministic test harness.
 
 - [Programmable displays and consoles](programmable.md)
 - [Doors](doors.md)

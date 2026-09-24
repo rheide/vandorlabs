@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "II",
+    "II",
+    "II"
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:space_door",
+    "count": 1
+  }
+}
