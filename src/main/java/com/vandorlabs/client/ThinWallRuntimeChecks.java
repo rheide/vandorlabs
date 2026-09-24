@@ -1,6 +1,6 @@
 package com.vandorlabs.client;
 
-import com.vandorlabs.blocks.BlockThinIndustrialWall;
+import com.vandorlabs.blocks.BlockVoxelWall;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.block.Block;
@@ -15,15 +15,16 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Forge runtime checks for the four imported wall meshes and panel collision. */
+/** Forge runtime checks for all voxel wall models and stepped collision. */
 final class ThinWallRuntimeChecks {
     private ThinWallRuntimeChecks() {}
     static void run(World world, EntityPlayer player) {
-        String[] ids={"wall_regular","wall_porthole","wall_bottom_diagonal","wall_top_diagonal"};
-        for (String id:ids) {
+        String[] shapes={"regular","porthole","bottom_diagonal","top_diagonal"};
+        for (String shape:shapes) for (String suffix:new String[]{"","_bordered"}) {
+            String id="voxel_wall_"+shape+suffix;
             Block raw=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
-            require(raw instanceof BlockThinIndustrialWall,id+" registration");
-            BlockThinIndustrialWall wall=(BlockThinIndustrialWall)raw;
+            require(raw instanceof BlockVoxelWall,id+" registration");
+            BlockVoxelWall wall=(BlockVoxelWall)raw;
             ItemStack item=new ItemStack(wall);
             require(Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(item)
                     !=Minecraft.getMinecraft().getRenderItem().getItemModelMesher()
@@ -35,7 +36,7 @@ final class ThinWallRuntimeChecks {
             List<AxisAlignedBB> boxes=new ArrayList<>();
             wall.addCollisionBoxToList(wall.getDefaultState(),world,BlockPos.ORIGIN,
                     new AxisAlignedBB(0,0,0,1,1,1),boxes,null,false);
-            require(boxes.size()==(id.contains("diagonal")?16:1),id+" collision strips");
+            require(boxes.size()==(id.contains("diagonal")?9:1),id+" collision bands");
             if (id.contains("diagonal"))
                 require(boxes.stream().allMatch(box->box.maxZ<=.875),id+" rear space filled");
         }

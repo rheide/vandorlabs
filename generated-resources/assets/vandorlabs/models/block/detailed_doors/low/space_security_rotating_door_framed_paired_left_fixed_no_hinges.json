@@ -8,7 +8,8 @@
     "hinge": "vandorlabs:blocks/space_doors/low/hinge",
     "glass": "vandorlabs:blocks/space_doors/low/observation_glass",
     "pane": "vandorlabs:blocks/space_doors/low/glass_tile",
-    "particle": "vandorlabs:blocks/space_doors/low/security"
+    "particle": "vandorlabs:blocks/space_doors/low/security",
+    "door_inner": "vandorlabs:blocks/programmable_glass/metal_side"
   },
   "elements": [
     {
@@ -43,40 +44,44 @@
           ]
         },
         "east": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            15.5,
+            15.24,
+            16.0
+          ],
+          "tintindex": 0
         },
         "west": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            15.5,
+            15.24,
+            16.0
+          ],
+          "tintindex": 0
         },
         "up": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            0,
+            11.24,
+            1,
+            15.24
+          ],
+          "tintindex": 0
         },
         "down": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            0,
+            11.24,
+            1,
+            15.24
+          ],
+          "tintindex": 0
         }
       }
     },
@@ -112,40 +117,44 @@
           ]
         },
         "east": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            15.5,
+            15.24,
+            16.0
+          ],
+          "tintindex": 0
         },
         "west": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            15.5,
+            15.24,
+            16.0
+          ],
+          "tintindex": 0
         },
         "up": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            1,
+            11.24,
+            16,
+            15.24
+          ],
+          "tintindex": 0
         },
         "down": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            1,
+            11.24,
+            16,
+            15.24
+          ],
+          "tintindex": 0
         }
       }
     },
@@ -181,40 +190,44 @@
           ]
         },
         "east": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            0.0,
+            15.24,
+            0.5
+          ],
+          "tintindex": 0
         },
         "west": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            0.0,
+            15.24,
+            0.5
+          ],
+          "tintindex": 0
         },
         "up": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            0,
+            11.24,
+            1,
+            15.24
+          ],
+          "tintindex": 0
         },
         "down": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            0,
+            11.24,
+            1,
+            15.24
+          ],
+          "tintindex": 0
         }
       }
     },
@@ -250,40 +263,44 @@
           ]
         },
         "east": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            0.0,
+            15.24,
+            0.5
+          ],
+          "tintindex": 0
         },
         "west": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            0.0,
+            15.24,
+            0.5
+          ],
+          "tintindex": 0
         },
         "up": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            1,
+            11.24,
+            16,
+            15.24
+          ],
+          "tintindex": 0
         },
         "down": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            1,
+            11.24,
+            16,
+            15.24
+          ],
+          "tintindex": 0
         }
       }
     },
@@ -319,40 +336,44 @@
           ]
         },
         "east": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            0.5,
+            15.24,
+            15.5
+          ],
+          "tintindex": 0
         },
         "west": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            11.24,
+            0.5,
+            15.24,
+            15.5
+          ],
+          "tintindex": 0
         },
         "up": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            0,
+            11.24,
+            1,
+            15.24
+          ],
+          "tintindex": 0
         },
         "down": {
-          "texture": "#frame",
+          "texture": "#door_inner",
           "uv": [
-            0.16,
-            4,
-            0.28,
-            4.12
-          ]
+            0,
+            11.24,
+            1,
+            15.24
+          ],
+          "tintindex": 0
         }
       }
     }

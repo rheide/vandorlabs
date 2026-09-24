@@ -12,6 +12,8 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityProgrammableGlass> {
+    private static final double PANE_NEAR = 7D / 16D;
+    private static final double PANE_FAR = 9D / 16D;
     private static final java.util.Map<String,ResourceLocation> GLASS = new java.util.HashMap<>();
     static {
         for (String detail:new String[]{"low","medium","high"}) GLASS.put(detail,new ResourceLocation(
@@ -45,20 +47,18 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.color(1F, 1F, 1F, 1F);
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
-        b.pos(0,0,.5).tex(0,1).endVertex();
-        b.pos(1,0,.5).tex(1,1).endVertex();
-        b.pos(1,1,.5).tex(1,0).endVertex();
-        b.pos(0,1,.5).tex(0,0).endVertex();
+        texturedFace(b, PANE_NEAR);
+        texturedFace(b, PANE_FAR);
         Tessellator.getInstance().draw();
         if (tile.getShade()!=0) {
             GlStateManager.disableTexture2D();
-            if (tile.getShade()==1) GlStateManager.color(.20F,.85F,.95F,.10F);
-            else GlStateManager.color(.10F,.12F,.16F,.32F);
+            // Both pane surfaces contribute to the tint. These per-face
+            // opacities preserve the apparent shade of the old single face.
+            if (tile.getShade()==1) GlStateManager.color(.20F,.85F,.95F,.0513F);
+            else GlStateManager.color(.10F,.12F,.16F,.1754F);
             b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION);
-            b.pos(0,0,.5).endVertex();
-            b.pos(1,0,.5).endVertex();
-            b.pos(1,1,.5).endVertex();
-            b.pos(0,1,.5).endVertex();
+            tintedFace(b, PANE_NEAR);
+            tintedFace(b, PANE_FAR);
             Tessellator.getInstance().draw();
             GlStateManager.enableTexture2D();
         }
@@ -70,5 +70,19 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.color(1F, 1F, 1F, 1F);
         GlStateManager.popMatrix();
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
+    }
+
+    private static void texturedFace(BufferBuilder b, double depth) {
+        b.pos(0,0,depth).tex(0,1).endVertex();
+        b.pos(1,0,depth).tex(1,1).endVertex();
+        b.pos(1,1,depth).tex(1,0).endVertex();
+        b.pos(0,1,depth).tex(0,0).endVertex();
+    }
+
+    private static void tintedFace(BufferBuilder b, double depth) {
+        b.pos(0,0,depth).endVertex();
+        b.pos(1,0,depth).endVertex();
+        b.pos(1,1,depth).endVertex();
+        b.pos(0,1,depth).endVertex();
     }
 }

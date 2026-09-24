@@ -163,10 +163,13 @@ public class ModBlocks {
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
-        add(new BlockThinIndustrialWall("wall_regular", BlockThinIndustrialWall.Shape.REGULAR));
-        add(new BlockThinIndustrialWall("wall_porthole", BlockThinIndustrialWall.Shape.PORTHOLE));
-        add(new BlockThinIndustrialWall("wall_bottom_diagonal", BlockThinIndustrialWall.Shape.BOTTOM));
-        add(new BlockThinIndustrialWall("wall_top_diagonal", BlockThinIndustrialWall.Shape.TOP));
+        for (boolean bordered : new boolean[]{false, true}) {
+            String suffix = bordered ? "_bordered" : "";
+            add(new BlockVoxelWall("voxel_wall_regular" + suffix, BlockVoxelWall.Shape.REGULAR));
+            add(new BlockVoxelWall("voxel_wall_porthole" + suffix, BlockVoxelWall.Shape.PORTHOLE));
+            add(new BlockVoxelWall("voxel_wall_bottom_diagonal" + suffix, BlockVoxelWall.Shape.BOTTOM));
+            add(new BlockVoxelWall("voxel_wall_top_diagonal" + suffix, BlockVoxelWall.Shape.TOP));
+        }
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();

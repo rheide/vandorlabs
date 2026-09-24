@@ -22,12 +22,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-/** Forge 1.12.2 / MCP example. Visual geometry is the exact OBJ mesh. */
-public final class BlockThinIndustrialWall extends Block {
+/** Six-pixel voxel wall with collision matching the supplied stepped models. */
+public final class BlockVoxelWall extends Block {
     public enum Shape { REGULAR, PORTHOLE, BOTTOM, TOP }
     public static final PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
     private final Shape shape;
-    public BlockThinIndustrialWall(String name, Shape shape) {
+    public BlockVoxelWall(String name, Shape shape) {
         super(Material.IRON);
         this.shape = shape;
         setRegistryName(VandorLabs.MODID, name);
@@ -78,11 +78,13 @@ public final class BlockThinIndustrialWall extends Block {
             // Glass is solid to entities; only its rendering is transparent.
             addCollisionBoxToList(pos,query,out,turn(new AxisAlignedBB(0,0,.5,1,1,.875),facing));
         } else {
-            // Sixteen thin strips approximate ONLY the panel, never a filled triangular wedge.
-            for (int i=0;i<16;++i) {
-                double y0=i/16.0,y1=(i+1)/16.0;
-                double z0=shape==Shape.BOTTOM ? .5*y0 : .5*(1-y1);
-                double z1=shape==Shape.BOTTOM ? .5*y1+.375 : .5*(1-y0)+.375;
+            // Nine integer-grid bands use the same bounds as the JSON model.
+            for (int i=0;i<=8;++i) {
+                double low=Math.max(0,2*i-1)/16.0;
+                double high=Math.min(16,2*i+1)/16.0;
+                double y0=shape==Shape.BOTTOM ? low : 1-high;
+                double y1=shape==Shape.BOTTOM ? high : 1-low;
+                double z0=i/16.0,z1=(i+6)/16.0;
                 addCollisionBoxToList(pos,query,out,turn(new AxisAlignedBB(0,y0,z0,1,y1,z1),facing));
             }
         }

@@ -800,13 +800,14 @@ public class ReproLab {
                     state.withProperty(com.vandorlabs.blocks.BlockIndustrialTable.UPSIDE_DOWN, true), 3);
         } else if (shot.equals("gallery_thin_walls")) {
             for (int x=-2; x<=2; x++) {
-                String center=x==0?"wall_porthole":"wall_regular";
+                String border=x>0?"_bordered":"";
+                String center=Math.abs(x)==1?"voxel_wall_porthole":"voxel_wall_regular";
                 world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y,-18),
-                        block("wall_bottom_diagonal").getDefaultState(),3);
+                        block("voxel_wall_bottom_diagonal"+border).getDefaultState(),3);
                 world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y+1,-18),
-                        block(center).getDefaultState(),3);
+                        block(center+border).getDefaultState(),3);
                 world.setBlockState(new BlockPos(GALLERY_X+x,GALLERY_Y+2,-18),
-                        block("wall_top_diagonal").getDefaultState(),3);
+                        block("voxel_wall_top_diagonal"+border).getDefaultState(),3);
             }
         } else if (shot.equals("gallery_propulsion")) {
             String[] hexes = {"rocket_thruster_hexagonal", "ion_drive_hexagonal",

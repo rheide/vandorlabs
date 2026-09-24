@@ -49,6 +49,13 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        net.minecraft.block.Block programmableDoor = net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS
+                .getValue(new net.minecraft.util.ResourceLocation(VandorLabs.MODID, "programmable_door"));
+        if (programmableDoor != null) {
+            net.minecraft.client.Minecraft.getMinecraft().getItemColors().registerItemColorHandler(
+                    (stack, tintIndex) -> tintIndex == 0 ? 0xA8A8A8 : 0xFFFFFF,
+                    net.minecraft.item.Item.getItemFromBlock(programmableDoor));
+        }
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class,
                 RenderChairSeat::new);
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntitySlidingDoor.class, new TESlidingDoor());

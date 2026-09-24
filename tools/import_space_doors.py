@@ -262,7 +262,9 @@ def main(archive, detail, expansion, lift):
                     'firstperson_righthand':{'scale':[.2,.2,.2]},'thirdperson_righthand':{'scale':[.2,.2,.2]}}
                 write(OUT/'models/item'/f'{id}.json',inventory)
     # Space Glass uses the same calculated connection flags as Observation Glass.
-    glass=plate(0,0,16,16,'pane',[0,0,16,16],7.99,8.01)
+    # A centered two-pixel pane sits one pixel behind each face of the
+    # four-pixel frame. Keep both surfaces for translucent world rendering.
+    glass=plate(0,0,16,16,'pane',[0,0,16,16],7,9)
     glass['faces']={k:v for k,v in glass['faces'].items() if k in ('north','south')}
     emit_model('space_glass_medium_pane',[glass])
     pieces={'left':[plate(0,1,1,15,'frame',[0,.5,.5,7.5])],
@@ -332,6 +334,29 @@ def main(archive, detail, expansion, lift):
                         element['faces'][face]['uv']=(
                             [z0,y0,z1,y1] if face in ('east','west') else [x0,z0,x1,z1])
             write(source,model_data)
+    # Programmable Door reuses the glass inner-metal pattern on its frame
+    # interior and leaf edges. Tint only those faces at item-render time; the
+    # face and front/rear frame atlas remain at their original brightness.
+    door_models=[source for source in (OUT/'models/block/detailed_doors').rglob('space_*.json')
+                 if source.stem.endswith(('_fixed','_leaf','_fixed_no_hinges','_leaf_no_hinges'))]
+    door_models+=list((OUT/'models/item').rglob('space_*.json'))
+    for source in door_models:
+        if 'space_glass_medium' in source.stem: continue
+        model_data=json.loads(source.read_text())
+        if 'elements' not in model_data: continue
+        model_data['textures']['door_inner']=observation
+        for element in model_data['elements']:
+            x0,y0,z0=element['from']; x1,y1,z1=element['to']
+            for face in ('east','west','up','down'):
+                surface=element['faces'].get(face)
+                if surface is None or surface['texture'] not in ('#frame','#leaf_side'):
+                    continue
+                surface['texture']='#door_inner'
+                surface['tintindex']=0
+                surface['uv']=(
+                    [z0,y0/2,z1,y1/2] if face in ('east','west')
+                    else [x0,z0,x1,z1])
+        write(source,model_data)
     glass_state=json.loads((OUT/'blockstates/space_glass_medium.json').read_text())
     parts=[]
     for size,level in enumerate(('low','medium','high')):

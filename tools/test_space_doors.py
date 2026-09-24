@@ -55,6 +55,12 @@ for level in ('low','medium','high'):
                for side,face in element['faces'].items() if side in ('north','south'))
     assert all(face['texture']=='#inner' for element in frame['elements']
                for side,face in element['faces'].items() if side in ('east','west','up','down'))
+    item=load(ASSETS/f'models/item/{level}/space_glass_medium.json')
+    pane=next(element for element in item['elements']
+              if element['faces'].get('south',{}).get('texture')=='#pane')
+    assert pane['from'][2]==7 and pane['to'][2]==9
+    assert all(element['from'][2]==6 and element['to'][2]==10
+               for element in item['elements'] if element is not pane)
 assert load(ASSETS/'models/item/programmable_door.json')['parent'].endswith('space_standard_sliding_door_framed')
 hinge_source=load(ROOT/'docs/space-door-pack/hinge/geometry.json')['cuboids']
 
@@ -110,6 +116,9 @@ for door in doors:
                 edge=(min(e['from'][0] for e in slabs) if hand=='right' else max(e['to'][0] for e in slabs))+travel
                 assert edge==((16 if door['framed'] else 15) if hand=='right' else (0 if door['framed'] else 1)),(base,hand,edge)
             for slab in slabs:
+                assert all(slab['faces'][side]['texture']=='#door_inner'
+                           and slab['faces'][side]['tintindex']==0
+                           for side in ('east','west','up','down'))
                 uv=slab['faces']['south']['uv']
                 assert math.isclose(abs(uv[2]-uv[0]),slab['to'][0]-slab['from'][0])
                 assert math.isclose(abs(uv[3]-uv[1])*2,slab['to'][1]-slab['from'][1])
@@ -136,7 +145,11 @@ for door in doors:
                         rail['from'][0]>=15 if hand=='left' else rail['to'][0]<=1)
                 assert (0<depth<=4+1e-7) if relieved else math.isclose(depth,4)
                 assert set(rail['faces'])=={'north','south','east','west','up','down'},(base,'see-through jamb face')
-                assert all(f['texture']=='#frame' for f in rail['faces'].values())
+                assert all(rail['faces'][side]['texture']=='#frame'
+                           for side in ('north','south'))
+                assert all(rail['faces'][side]['texture']=='#door_inner'
+                           and rail['faces'][side]['tintindex']==0
+                           for side in ('east','west','up','down'))
             if rails:
                 assert math.isclose((min(r['from'][2] for r in rails)+max(r['to'][2] for r in rails))/2,expected_center)
             if not door['sliding']:
@@ -179,6 +192,15 @@ for path in (ASSETS/'models/block/detailed_doors').glob('space_glass_medium_*.js
     for e in load(path)['elements']:
         if e['faces'].get('south',{}).get('texture')=='#frame':
             assert math.isclose(e['to'][2]-e['from'][2],4)
+
+# Vanilla's atlas interpolation does not wrap UVs beyond 16: those values
+# sample neighboring sprites (for example terrain blocks) at door edges.
+for path in (ASSETS/'models').rglob('space_*.json'):
+    model_data=load(path)
+    for element in model_data.get('elements',[]):
+        for face in element['faces'].values():
+            if face['texture']=='#door_inner':
+                assert all(0<=value<=16 for value in face['uv']),(path,face['uv'])
 
 for archive in sys.argv[1:]:
     with zipfile.ZipFile(archive) as z:

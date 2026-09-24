@@ -8,7 +8,8 @@
     "hinge": "vandorlabs:blocks/space_doors/medium/hinge",
     "glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
     "pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
-    "particle": "vandorlabs:blocks/space_doors/medium/lift_quarantine_seal"
+    "particle": "vandorlabs:blocks/space_doors/medium/lift_quarantine_seal",
+    "door_inner": "vandorlabs:blocks/programmable_glass/metal_side"
   },
   "elements": [
     {
@@ -43,40 +44,44 @@
           ]
         },
         "east": {
-          "texture": "#leaf_side",
+          "texture": "#door_inner",
           "uv": [
             12.24,
-            0,
+            0.0,
             14.24,
-            16
-          ]
+            16.0
+          ],
+          "tintindex": 0
         },
         "west": {
-          "texture": "#leaf_side",
+          "texture": "#door_inner",
           "uv": [
             12.24,
-            0,
+            0.0,
             14.24,
-            16
-          ]
+            16.0
+          ],
+          "tintindex": 0
         },
         "up": {
-          "texture": "#leaf_side",
+          "texture": "#door_inner",
           "uv": [
-            16,
-            12.24,
             0,
+            12.24,
+            16,
             14.24
-          ]
+          ],
+          "tintindex": 0
         },
         "down": {
-          "texture": "#leaf_side",
+          "texture": "#door_inner",
           "uv": [
-            16,
-            12.24,
             0,
+            12.24,
+            16,
             14.24
-          ]
+          ],
+          "tintindex": 0
         }
       }
     },

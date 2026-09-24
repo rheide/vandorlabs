@@ -83,6 +83,22 @@ final class ItemRuntimeChecks {
         grid.setInventorySlotContents(4,new ItemStack(Item.getItemFromBlock(net.minecraft.init.Blocks.PISTON)));
         grid.setInventorySlotContents(0,ItemStack.EMPTY);
         require(!rampRecipe.matches(grid,player.world),"missing ingot does not craft ramp");
+        IRecipe glassRecipe=CraftingManager.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "programmable_glass"));
+        require(glassRecipe!=null,"Programmable Glass recipe loaded");
+        for (int i=0;i<9;i++) grid.setInventorySlotContents(i,
+                new ItemStack(i==4?ModItems.PROGRAMMABLE_MATTER_INGOT
+                        :Item.getItemFromBlock(net.minecraft.init.Blocks.GLASS)));
+        require(glassRecipe.matches(grid,player.world),"ingot surrounded by eight glass blocks matches");
+        ItemStack programmableGlass=CraftingManager.findMatchingResult(grid,player.world);
+        require(programmableGlass.getItem()==Item.getItemFromBlock(Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "programmable_glass")))
+                && programmableGlass.getCount()==1,"recipe crafts one Programmable Glass");
+        grid.setInventorySlotContents(4,ItemStack.EMPTY);
+        require(!glassRecipe.matches(grid,player.world),"missing ingot does not craft glass");
+        grid.setInventorySlotContents(4,new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        grid.setInventorySlotContents(0,ItemStack.EMPTY);
+        require(!glassRecipe.matches(grid,player.world),"missing glass does not craft glass");
         String[][] finishes = {{"industrial_block", "Industrial Block"},
                 {"industrial_trim", "Industrial Trim"},
                 {"industrial_grate", "Industrial Grate"},
@@ -103,7 +119,8 @@ final class ItemRuntimeChecks {
         for (String removed : new String[]{"plasma_vent_side", "plasma_vent_top",
                 "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
                 "plasma_vent_cavity", "rubber_studs", "framed_observation_glass",
-                "space_glass_small", "space_glass_medium", "space_glass_large"})
+                "space_glass_small", "space_glass_medium", "space_glass_large",
+                "wall_regular", "wall_porthole", "wall_bottom_diagonal", "wall_top_diagonal"})
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");

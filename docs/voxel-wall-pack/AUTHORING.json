@@ -1,0 +1,7 @@
+{
+  "method": "Built-in image generation for grainy steel, native-grid cuboid modeling for all geometry",
+  "texture_prompt": "Single square Minecraft material on16x16 logical pixel grid. Industrial dark gray steel with conspicuous chunky grain. Eight shades, individual uniform flat square pixels, hard edges. No gradients, blur, vignette or details inside pixels. Few one-pixel lighter chips and darker pits. No lights, border or buttons.",
+  "export": "32x32 nearest-neighbor steel; contrast-controlled palette limited to8 shades.16x16 cyan and glass retained. Generated border artwork supplies only outer two texels; original plain center composited unchanged.",
+  "modeling": "New native Minecraft cuboids; exact integer-grid coordinates; whole-pixel hole mask; no smooth diagonal geometry.",
+  "revision": "Quieter32x32 steel artwork with reduced contrast and separate bordered set; all original geometry and collisions retained."
+}

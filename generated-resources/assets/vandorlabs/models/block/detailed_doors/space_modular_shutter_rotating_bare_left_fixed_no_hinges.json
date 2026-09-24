@@ -8,7 +8,8 @@
     "hinge": "vandorlabs:blocks/space_doors/hinge",
     "glass": "vandorlabs:blocks/space_doors/observation_glass",
     "pane": "vandorlabs:blocks/space_doors/glass_tile",
-    "particle": "vandorlabs:blocks/space_doors/lift_modular_shutter"
+    "particle": "vandorlabs:blocks/space_doors/lift_modular_shutter",
+    "door_inner": "vandorlabs:blocks/programmable_glass/metal_side"
   },
   "elements": []
 }
