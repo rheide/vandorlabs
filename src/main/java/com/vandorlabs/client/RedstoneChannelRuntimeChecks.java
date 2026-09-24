@@ -14,6 +14,7 @@ import com.vandorlabs.tiles.TileEntitySlidingDoor;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockRedstoneWire;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -36,6 +37,7 @@ final class RedstoneChannelRuntimeChecks {
     static void run(World world, EntityPlayer player) {
         checkTrianglePlacement(world, player);
         checkLeverPlacement(world,player);
+        checkFloorLeverPower(world,player);
         checkFlatSwitchRotation(world,player);
         checkPickedChannels(world,player);
         checkLinkedLatches(world,player);
@@ -321,6 +323,40 @@ final class RedstoneChannelRuntimeChecks {
         }
         world.setBlockToAir(pos);
         world.setBlockToAir(pos.down());
+    }
+
+    private static void checkFloorLeverPower(World world,EntityPlayer player) {
+        BlockPos pos=new BlockPos(20,25,20);
+        for (String id:new String[]{"industrial_lever","compact_lever"}) {
+            BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs",id));
+            world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
+            for (EnumFacing side:EnumFacing.Plane.HORIZONTAL) {
+                BlockPos wire=pos.offset(side);
+                world.setBlockState(wire.down(),Blocks.STONE.getDefaultState(),3);
+                world.setBlockState(wire,Blocks.REDSTONE_WIRE.getDefaultState(),3);
+            }
+            world.setBlockState(pos,lever.getDefaultState()
+                    .withProperty(BlockIndustrialLever.FLOOR,true),3);
+            lever.onBlockActivated(world,pos,world.getBlockState(pos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            for (EnumFacing side:EnumFacing.Plane.HORIZONTAL) {
+                BlockPos wire=pos.offset(side);
+                require(world.getBlockState(wire).getValue(BlockRedstoneWire.POWER)>0,
+                        id+" floor lever did not power adjacent surface wire on "+side);
+            }
+            lever.onBlockActivated(world,pos,world.getBlockState(pos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            for (EnumFacing side:EnumFacing.Plane.HORIZONTAL) {
+                BlockPos wire=pos.offset(side);
+                require(world.getBlockState(wire).getValue(BlockRedstoneWire.POWER)==0,
+                        id+" floor lever did not release adjacent surface wire on "+side);
+                world.setBlockToAir(wire);
+                world.setBlockToAir(wire.down());
+            }
+            world.setBlockToAir(pos);
+            world.setBlockToAir(pos.down());
+        }
     }
 
     private static void checkFlatSwitchRotation(World world,EntityPlayer player) {

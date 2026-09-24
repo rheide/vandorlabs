@@ -195,6 +195,11 @@ public class BlockIndustrialLever extends BlockHorizontal {
     public boolean canProvidePower(IBlockState state) { return true; }
 
     @Override
+    public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        return state.getValue(POWERED) ? 15 : 0;
+    }
+
+    @Override
     public int getStrongPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
         // Mod convention (matches BlockVandorSwitch): strong on every side
         // while on, so the support block conducts through to lamps and dust.
