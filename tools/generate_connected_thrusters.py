@@ -11,10 +11,10 @@ ASSETS = ROOT / "generated-resources/assets/vandorlabs"
 MODEL_DIR = ASSETS / "models/block"
 STATE_DIR = ASSETS / "blockstates"
 THRUSTERS = (
-    "rocket_thruster",
-    "ion_thruster",
-    "plasma_thruster_full",
-    "impulse_engine_full",
+    "classic_rocket",
+    "ion_drive",
+    "plasma_vent_full_face",
+    "impulse_engine_full_face",
 )
 MAX_SIZE = 8
 ROTATIONS = {

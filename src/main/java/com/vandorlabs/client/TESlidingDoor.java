@@ -242,9 +242,9 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         GlStateManager.disableLighting();
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         TextureAtlasSprite buttons=Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/material_control_buttons");
+                .getAtlasSprite("vandorlabs:blocks/control_buttons");
         TextureAtlasSprite wall=Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         float x0=(float)SpaceDoorControlPanel.x0(side),x1=(float)SpaceDoorControlPanel.x1(side);
         float y0=(float)SpaceDoorControlPanel.Y0,y1=(float)SpaceDoorControlPanel.Y1;
         float z0=(float)SpaceDoorControlPanel.z0(tile.isSliding()),

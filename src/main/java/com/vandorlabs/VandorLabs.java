@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "1.0";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t45";
+    public static final String BUILD_ID = "t47";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -41,11 +41,11 @@ public class VandorLabs {
         proxy.preInit(event);
         logger = event.getModLog();
         GameRegistry.registerTileEntity(TileEntitySlidingDoor.class, "vandorlabs:sliding_door");
-        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceGlass.class, "vandorlabs:space_glass");
-        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:space_door");
-        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRampController.class, "vandorlabs:ramp_controller");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceGlass.class, "vandorlabs:space_glass_medium");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:programmable_door");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRampController.class, "vandorlabs:programmable_ramp");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityControlledRamp.class, "vandorlabs:controlled_ramp");
-        GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class, "vandorlabs:animated_screen_selector");
+        GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class, "vandorlabs:programmable_viewscreen");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRedstoneChannel.class, "vandorlabs:redstone_channel");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRedstoneLight.class, "vandorlabs:redstone_light");
         EntityRegistry.registerModEntity(new ResourceLocation(MODID, "chair_seat"),

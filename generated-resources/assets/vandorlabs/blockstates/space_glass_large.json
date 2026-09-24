@@ -6,7 +6,7 @@
         "left": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_left",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_left",
         "y": 0
       }
     },
@@ -16,7 +16,7 @@
         "right": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_right",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_right",
         "y": 0
       }
     },
@@ -26,7 +26,7 @@
         "top": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_top",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_top",
         "y": 0
       }
     },
@@ -36,7 +36,7 @@
         "bottom": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_bottom",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_bottom",
         "y": 0
       }
     },
@@ -62,7 +62,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_bottom_left",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_bottom_left",
         "y": 0
       }
     },
@@ -88,7 +88,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_top_left",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_top_left",
         "y": 0
       }
     },
@@ -114,7 +114,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_bottom_right",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_bottom_right",
         "y": 0
       }
     },
@@ -140,7 +140,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_top_right",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_top_right",
         "y": 0
       }
     },
@@ -150,7 +150,7 @@
         "left": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_left",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_left",
         "y": 90
       }
     },
@@ -160,7 +160,7 @@
         "right": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_right",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_right",
         "y": 90
       }
     },
@@ -170,7 +170,7 @@
         "top": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_top",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_top",
         "y": 90
       }
     },
@@ -180,7 +180,7 @@
         "bottom": "true"
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_bottom",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_bottom",
         "y": 90
       }
     },
@@ -206,7 +206,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_bottom_left",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_bottom_left",
         "y": 90
       }
     },
@@ -232,7 +232,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_top_left",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_top_left",
         "y": 90
       }
     },
@@ -258,7 +258,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_bottom_right",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_bottom_right",
         "y": 90
       }
     },
@@ -284,7 +284,7 @@
         ]
       },
       "apply": {
-        "model": "vandorlabs:detailed_doors/high/space_glass_top_right",
+        "model": "vandorlabs:detailed_doors/high/space_glass_medium_top_right",
         "y": 90
       }
     }

@@ -1,0 +1,57 @@
+{
+  "variants": {
+    "facing=east,vertical=down": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east,vertical=level": {
+      "model": "vandorlabs:porthole_unlit",
+      "y": 90
+    },
+    "facing=east,vertical=up": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 270,
+      "y": 90
+    },
+    "facing=north,vertical=down": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 90,
+      "y": 180
+    },
+    "facing=north,vertical=level": {
+      "model": "vandorlabs:porthole_unlit"
+    },
+    "facing=north,vertical=up": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 270
+    },
+    "facing=south,vertical=down": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 90
+    },
+    "facing=south,vertical=level": {
+      "model": "vandorlabs:porthole_unlit",
+      "y": 180
+    },
+    "facing=south,vertical=up": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 270,
+      "y": 180
+    },
+    "facing=west,vertical=down": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 90,
+      "y": 90
+    },
+    "facing=west,vertical=level": {
+      "model": "vandorlabs:porthole_unlit",
+      "y": 270
+    },
+    "facing=west,vertical=up": {
+      "model": "vandorlabs:porthole_unlit",
+      "x": 270,
+      "y": 270
+    }
+  }
+}

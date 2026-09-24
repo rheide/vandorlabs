@@ -1,10 +1,10 @@
 {
   "parent": "block/block",
   "textures": {
-    "wall": "vandorlabs:blocks/wall_panel_dark",
+    "wall": "vandorlabs:blocks/dark_wall_panel",
     "input": "vandorlabs:blocks/console_inputs/console_controls_engineering_keyboard_item",
     "screen": "vandorlabs:blocks/engineering_screen_static",
-    "particle": "vandorlabs:blocks/wall_panel_dark"
+    "particle": "vandorlabs:blocks/dark_wall_panel"
   },
   "display": {
     "gui": { "rotation": [30, 225, 0], "scale": [0.68, 0.68, 0.68] }

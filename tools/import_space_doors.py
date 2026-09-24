@@ -123,7 +123,7 @@ def model(elements, family='standard'):
     if glass_family not in GLASS_FAMILIES: glass_family='observation'
     return {'ambientocclusion':False,'textures':{'leaf':TEX+texture_name(family),
             'frame':TEX+'double_frame_metal','edge':TEX+'hinge',
-            'leaf_side':'vandorlabs:blocks/wall_panel_dark',
+            'leaf_side':'vandorlabs:blocks/dark_wall_panel',
             'hinge':TEX+'hinge','glass':TEX+texture_name(glass_family)+'_glass',
             'pane':TEX+'glass_tile','particle':TEX+texture_name(family)},'elements':elements}
 
@@ -186,13 +186,19 @@ def main(archive, detail, expansion, lift):
                 dest.write_bytes(source.read_bytes())
 
     catalog_path=OUT/'data/blocks.json'
-    catalog=[e for e in json.loads(catalog_path.read_text()) if not e['id'].startswith('space_')]
+    catalog=[e for e in json.loads(catalog_path.read_text())
+             if not e['id'].startswith('space_') and e['id']!='programmable_door']
     names=[]
     for family in FAMILIES:
         for sliding in (False,True):
             for framed in (False,True):
                 motion='sliding' if sliding else 'rotating'
-                id=f'space_{family}_{motion}_'+('framed' if framed else 'bare')
+                finish='framed' if framed else 'bare'
+                if family in FAMILIES[:5]:
+                    prefix='space_'+('reactor_service' if family=='reactor' else family)
+                    id=f'{prefix}_{motion}_door_{finish}'
+                else:
+                    id=f'space_{family}_{motion}_{finish}'
                 paired=id+'_paired'
                 catalog.append(dict(id=paired,type='space_door_model',
                     **{'class':'BlockDetailedDoor'},item=False,internal_model=True,
@@ -256,11 +262,11 @@ def main(archive, detail, expansion, lift):
                     'firstperson_righthand':{'scale':[.2,.2,.2]},'thirdperson_righthand':{'scale':[.2,.2,.2]}}
                 write(OUT/'models/item'/f'{id}.json',inventory)
     # Space Glass uses the same calculated connection flags as Observation Glass.
-    catalog.append(dict(id='space_glass',type='glass_wall',**{'class':'BlockSpaceGlass'},item=True))
-    names.append(('space_glass','Space Glass (Medium)'))
+    catalog.append(dict(id='space_glass_medium',type='framed_observation_glass',**{'class':'BlockSpaceGlass'},item=True))
+    names.append(('space_glass_medium','Space Glass (Medium)'))
     glass=plate(0,0,16,16,'pane',[0,0,16,16],7.99,8.01)
     glass['faces']={k:v for k,v in glass['faces'].items() if k in ('north','south')}
-    emit_model('space_glass_pane',[glass])
+    emit_model('space_glass_medium_pane',[glass])
     pieces={'left':[plate(0,1,1,15,'frame',[0,.5,.5,7.5])],
             'right':[plate(15,1,16,15,'frame',[15.5,.5,16,7.5])],
             'top':[plate(1,15,15,16,'frame',[.5,0,7.5,.5])],
@@ -272,20 +278,20 @@ def main(archive, detail, expansion, lift):
             for element in els:
                 element['from'][2]=6
                 element['to'][2]=6+FRAME_DEPTH
-            emit_model('space_glass_'+edge,els)
+            emit_model('space_glass_medium_'+edge,els)
             parts.append({'when':{'rotated':str(rotated).lower(),edge:'true'},
-                          'apply':{'model':'vandorlabs:detailed_doors/space_glass_'+edge,'y':angle}})
+                          'apply':{'model':'vandorlabs:detailed_doors/space_glass_medium_'+edge,'y':angle}})
         for horiz,x in (('left',0),('right',15)):
             for vert,y in (('bottom',0),('top',15)):
-                name='space_glass_'+vert+'_'+horiz
+                name='space_glass_medium_'+vert+'_'+horiz
                 u=0 if x==0 else 15.5; v=0 if y==15 else 15.5
                 emit_model(name,[plate(x,y,x+1,y+1,'frame',[u,v,u+.5,v+.5],6,6+FRAME_DEPTH)])
                 inner='inner_'+('t' if y else 'b')+('l' if x==0 else 'r')
                 parts.append({'when':{'AND':[{'rotated':str(rotated).lower()},
                     {'OR':[{horiz:'true'},{vert:'true'},{inner:'true'}]}]},
                     'apply':{'model':'vandorlabs:detailed_doors/'+name,'y':angle}})
-    write(OUT/'blockstates/space_glass.json',{'multipart':parts})
-    write(OUT/'models/item/space_glass.json',model([glass]+frame(height=16)))
+    write(OUT/'blockstates/space_glass_medium.json',{'multipart':parts})
+    write(OUT/'models/item/space_glass_medium.json',model([glass]+frame(height=16)))
     # All three detail sets are baked for the two programmable door items.
     # Existing twenty IDs remain registered but hidden for save compatibility.
     originals=list(dict.fromkeys(WRITTEN_MODELS))
@@ -304,42 +310,45 @@ def main(archive, detail, expansion, lift):
     for motion in ('rotating','sliding'):
         id='space_'+motion+'_door'
         catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
-                            item=True,hidden=True,sliding=motion=='sliding',paired_model=f'space_standard_{motion}_framed_paired'))
+                            item=True,hidden=True,sliding=motion=='sliding',paired_model=f'space_standard_{motion}_door_framed_paired'))
         names.append((id,'Space '+motion.title()+' Door'))
         write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
-        write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_framed'})
+        write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_door_framed'})
     # Retain the old saved id as Medium, with two additional creative items.
-    glass_state=json.loads((OUT/'blockstates/space_glass.json').read_text())
-    for id,level,label in (('space_glass_small','low','Small'),('space_glass','medium','Medium'),
+    glass_state=json.loads((OUT/'blockstates/space_glass_medium.json').read_text())
+    for id,level,label in (('space_glass_small','low','Small'),('space_glass_medium','medium','Medium'),
                            ('space_glass_large','high','Large')):
-        if id!='space_glass':
-            catalog.append(dict(id=id,type='glass_wall',**{'class':'BlockSpaceGlass'},item=True))
+        if id!='space_glass_medium':
+            catalog.append(dict(id=id,type='framed_observation_glass',**{'class':'BlockSpaceGlass'},item=True))
             names.append((id,'Space Glass ('+label+')'))
-        state=json.loads(json.dumps(glass_state).replace('detailed_doors/space_glass_',
-                                                      'detailed_doors/'+level+'/space_glass_'))
+        state=json.loads(json.dumps(glass_state).replace('detailed_doors/space_glass_medium_',
+                                                      'detailed_doors/'+level+'/space_glass_medium_'))
         write(OUT/'blockstates'/f'{id}.json',state)
-        write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/'+level+'/space_glass'})
-    id='space_door'
+        write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/'+level+'/space_glass_medium'})
+    id='programmable_door'
     catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
-                        item=True,sliding=True,paired_model='space_standard_sliding_framed_paired'))
+                        item=True,sliding=True,paired_model='space_standard_sliding_door_framed_paired'))
     names.append((id,'Programmable Door'))
     write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
-    write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/space_standard_sliding_framed'})
+    write(OUT/'models/item'/f'{id}.json',{'parent':'vandorlabs:item/space_standard_sliding_door_framed'})
     emit_model('space_empty',[])
     write(catalog_path,catalog)
     lang=OUT/'lang/en_us.lang'
-    lines=[line for line in lang.read_text().splitlines() if not line.startswith('tile.vandorlabs.space_')]
+    lines=[line for line in lang.read_text().splitlines()
+           if not line.startswith('tile.vandorlabs.space_')
+           and not line.startswith('tile.vandorlabs.programmable_door.')]
     lang.write_text('\n'.join(lines+[f'tile.vandorlabs.{id}.name={name}' for id,name in names])+'\n')
     # Static Dynmap fallback; animated and neighbor-derived geometry is client-side.
     for filename in ('dynmap-models.txt','dynmap-texture.txt'):
         path=ROOT/'src/main/resources/assets/vandorlabs'/filename
-        lines=[s for s in path.read_text().splitlines() if 'space_' not in s]
+        lines=[s for s in path.read_text().splitlines()
+               if 'space_' not in s and '%programmable_door,' not in s]
         if filename=='dynmap-texture.txt':
             for family in FAMILIES+('glass_tile',):
                 lines.append(f'texture:id=space_{family},filename=assets/vandorlabs/textures/blocks/space_doors/{texture_name(family)}.png,xcount=1,ycount=1')
         for id,_ in names:
             if any(e['id']==id and e.get('internal_model') for e in catalog): continue
-            texture='glass_tile' if id.startswith('space_glass') else 'standard' if id in ('space_door','space_rotating_door','space_sliding_door') else id.split('_')[1]
+            texture='glass_tile' if id.startswith('space_glass_') else 'standard' if id in ('programmable_door','space_rotating_door','space_sliding_door') else id.split('_')[1]
             if filename=='dynmap-texture.txt':
                 lines.append(f'block:id=%{id},state=*,transparency=TRANSPARENT,stdrot=true,patch0=0:space_{texture}')
             else:

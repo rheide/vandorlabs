@@ -159,7 +159,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult target,
             World world,BlockPos pos,EntityPlayer player) {
         net.minecraft.block.Block unified=net.minecraft.block.Block.REGISTRY.getObject(
-                new net.minecraft.util.ResourceLocation("vandorlabs","space_door"));
+                new net.minecraft.util.ResourceLocation("vandorlabs","programmable_door"));
         ItemStack stack=new ItemStack(unified);
         TileEntitySpaceDoor tile=settings(state,world,pos);
         if (tile!=null) stack.setTagInfo("SpaceDoorSettings",tile.itemSettings());

@@ -13,7 +13,7 @@ import net.minecraft.world.IBlockAccess;
 public class BlockCompactLever extends BlockIndustrialLever {
 
     public BlockCompactLever() {
-        super("compact_lever");
+        super("compact_power_lever");
     }
 
     @Override

@@ -675,30 +675,30 @@
     "retired": true
   },
   {
-    "id": "lamp_slats",
+    "id": "slatted_lamp",
     "type": "light",
     "class": "BlockLamp",
     "item": true
   },
   {
-    "id": "lamp_slats_unlit",
+    "id": "slatted_lamp_unlit",
     "type": "light_off",
     "class": "BlockLampOff",
     "item": false,
-    "pair": "lamp_slats"
+    "pair": "slatted_lamp"
   },
   {
-    "id": "lamp_window",
+    "id": "window_lamp",
     "type": "light",
     "class": "BlockLamp",
     "item": true
   },
   {
-    "id": "lamp_window_unlit",
+    "id": "window_lamp_unlit",
     "type": "light_off",
     "class": "BlockLampOff",
     "item": false,
-    "pair": "lamp_window"
+    "pair": "window_lamp"
   },
   {
     "id": "planet_bare_1",
@@ -1322,14 +1322,14 @@
     "retired": true
   },
   {
-    "id": "switch_button",
+    "id": "push_button",
     "type": "switch",
     "class": "BlockVandorSwitch",
     "item": true,
     "momentary": true
   },
   {
-    "id": "switch_rocker",
+    "id": "rocker_switch",
     "type": "switch",
     "class": "BlockVandorSwitch",
     "item": true,
@@ -1350,7 +1350,7 @@
     "item": true
   },
   {
-    "id": "wall_light_columns",
+    "id": "light_column_wall",
     "type": "light",
     "class": "BlockLamp",
     "item": true
@@ -1360,10 +1360,10 @@
     "type": "light_off",
     "class": "BlockLampOff",
     "item": false,
-    "pair": "wall_light_columns"
+    "pair": "light_column_wall"
   },
   {
-    "id": "wall_lightbar",
+    "id": "lightbar_wall",
     "type": "light",
     "class": "BlockLamp",
     "item": true
@@ -1373,16 +1373,16 @@
     "type": "light_off",
     "class": "BlockLampOff",
     "item": false,
-    "pair": "wall_lightbar"
+    "pair": "lightbar_wall"
   },
   {
-    "id": "wall_panel_dark",
+    "id": "dark_wall_panel",
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
   },
   {
-    "id": "wall_panel_light",
+    "id": "light_wall_panel",
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
@@ -1394,26 +1394,26 @@
     "item": true
   },
   {
-    "id": "wall_plate",
+    "id": "bolted_wall_plate",
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
   },
   {
-    "id": "wall_porthole",
+    "id": "porthole",
     "type": "light",
     "class": "BlockLamp",
     "item": true
   },
   {
-    "id": "wall_porthole_unlit",
+    "id": "porthole_unlit",
     "type": "light_off",
     "class": "BlockLampOff",
     "item": false,
-    "pair": "wall_porthole"
+    "pair": "porthole"
   },
   {
-    "id": "wall_ribs",
+    "id": "ribbed_wall",
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
@@ -1531,277 +1531,313 @@
     "seat_y_units": 10
   },
   {
-    "id": "material_stitched_pad",
+    "id": "stitched_padding",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "material_seamed_pad",
+    "id": "seamed_padding",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "material_ribbed_pad",
+    "id": "ribbed_padding",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "material_cushion",
+    "id": "cushion_padding",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "material_cyan_strip",
+    "id": "cyan_light_strip",
     "type": "regular",
     "class": "BlockLightStrip",
     "item": true
   },
   {
-    "id": "material_control_buttons",
+    "id": "control_buttons",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "material_vent_grille",
+    "id": "vent_grille",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "material_amber_strip",
+    "id": "amber_light_strip",
     "type": "regular",
     "class": "BlockLightStrip",
     "item": true
   },
   {
-    "id": "material_rubber_studs",
+    "id": "rubber_studs",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "hull_light_alloy",
+    "id": "light_alloy_hull",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "hull_dark_gunmetal",
+    "id": "dark_gunmetal_hull",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "hull_midnight_matte",
+    "id": "midnight_matte_hull",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "hull_midnight_satin",
+    "id": "midnight_satin_hull",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "floor_carpet_bluegray",
+    "id": "bluegray_carpet",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "floor_carpet_warm_burgundy",
+    "id": "burgundy_carpet",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "floor_metal_nonslip",
+    "id": "non_slip_metal_floor",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
-    "id": "cockpit_glass_clear",
+    "id": "clear_cockpit_glass",
     "type": "cockpit_glass",
     "class": "BlockCockpitGlass",
     "item": true
   },
   {
-    "id": "cockpit_glass_cyan",
+    "id": "pale_cyan_cockpit_glass",
     "type": "cockpit_glass",
     "class": "BlockCockpitGlass",
     "item": true
   },
   {
-    "id": "cockpit_glass_smoked",
+    "id": "smoked_cockpit_glass",
     "type": "cockpit_glass",
     "class": "BlockCockpitGlass",
     "item": true
   },
   {
-    "id": "rocket_thruster",
+    "id": "classic_rocket",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
   },
   {
-    "id": "ion_thruster",
+    "id": "ion_drive",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
   },
   {
-    "id": "plasma_thruster_full",
+    "id": "plasma_vent_side",
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "plasma_vent_top",
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "plasma_vent_rear",
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "plasma_vent_trim",
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "plasma_vent_dark_trim",
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "plasma_vent_cavity",
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "plasma_vent_full_face",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
   },
   {
-    "id": "impulse_engine_full",
+    "id": "impulse_engine_full_face",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
   },
   {
-    "id": "rocket_thruster_hex",
+    "id": "rocket_thruster_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
     "item": true
   },
   {
-    "id": "ion_thruster_hex",
+    "id": "ion_drive_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
     "item": true
   },
   {
-    "id": "plasma_thruster_hex",
+    "id": "plasma_vent_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
     "item": true
   },
   {
-    "id": "impulse_engine_hex",
+    "id": "impulse_engine_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
     "item": true
   },
   {
-    "id": "rocket_thruster_triangle",
+    "id": "rocket_thruster_90_degree_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_triangle",
+    "triangle_base": "rocket_thruster_90_degree_wedge",
     "item": true
   },
   {
-    "id": "rocket_thruster_triangle_bottom_right",
+    "id": "rocket_thruster_90_degree_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_triangle",
+    "triangle_base": "rocket_thruster_90_degree_wedge",
     "item": false
   },
   {
-    "id": "rocket_thruster_triangle_top_right",
+    "id": "rocket_thruster_90_degree_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_triangle",
+    "triangle_base": "rocket_thruster_90_degree_wedge",
     "item": false
   },
   {
-    "id": "rocket_thruster_triangle_top_left",
+    "id": "rocket_thruster_90_degree_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_triangle",
+    "triangle_base": "rocket_thruster_90_degree_wedge",
     "item": false
   },
   {
-    "id": "ion_thruster_triangle",
+    "id": "ion_drive_90_degree_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_thruster_triangle",
+    "triangle_base": "ion_drive_90_degree_wedge",
     "item": true
   },
   {
-    "id": "ion_thruster_triangle_bottom_right",
+    "id": "ion_drive_90_degree_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_thruster_triangle",
+    "triangle_base": "ion_drive_90_degree_wedge",
     "item": false
   },
   {
-    "id": "ion_thruster_triangle_top_right",
+    "id": "ion_drive_90_degree_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_thruster_triangle",
+    "triangle_base": "ion_drive_90_degree_wedge",
     "item": false
   },
   {
-    "id": "ion_thruster_triangle_top_left",
+    "id": "ion_drive_90_degree_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_thruster_triangle",
+    "triangle_base": "ion_drive_90_degree_wedge",
     "item": false
   },
   {
-    "id": "plasma_thruster_triangle",
+    "id": "plasma_vent_90_degree_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_thruster_triangle",
+    "triangle_base": "plasma_vent_90_degree_wedge",
     "item": true
   },
   {
-    "id": "plasma_thruster_triangle_bottom_right",
+    "id": "plasma_vent_90_degree_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_thruster_triangle",
+    "triangle_base": "plasma_vent_90_degree_wedge",
     "item": false
   },
   {
-    "id": "plasma_thruster_triangle_top_right",
+    "id": "plasma_vent_90_degree_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_thruster_triangle",
+    "triangle_base": "plasma_vent_90_degree_wedge",
     "item": false
   },
   {
-    "id": "plasma_thruster_triangle_top_left",
+    "id": "plasma_vent_90_degree_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_thruster_triangle",
+    "triangle_base": "plasma_vent_90_degree_wedge",
     "item": false
   },
   {
-    "id": "impulse_engine_triangle",
+    "id": "impulse_engine_90_degree_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_triangle",
+    "triangle_base": "impulse_engine_90_degree_wedge",
     "item": true
   },
   {
-    "id": "impulse_engine_triangle_bottom_right",
+    "id": "impulse_engine_90_degree_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_triangle",
+    "triangle_base": "impulse_engine_90_degree_wedge",
     "item": false
   },
   {
-    "id": "impulse_engine_triangle_top_right",
+    "id": "impulse_engine_90_degree_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_triangle",
+    "triangle_base": "impulse_engine_90_degree_wedge",
     "item": false
   },
   {
-    "id": "impulse_engine_triangle_top_left",
+    "id": "impulse_engine_90_degree_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_triangle",
+    "triangle_base": "impulse_engine_90_degree_wedge",
     "item": false
   },
   {
@@ -1828,13 +1864,13 @@
     "points_up": true
   },
   {
-    "id": "glass_wall",
+    "id": "framed_observation_glass",
     "type": "connected_glass_wall",
     "class": "BlockGlassWall",
     "item": true
   },
   {
-    "id": "space_observation_rotating_bare_paired",
+    "id": "space_observation_rotating_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -1852,7 +1888,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_observation_rotating_bare",
+    "id": "space_observation_rotating_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -1860,10 +1896,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": false,
-    "paired_model": "space_observation_rotating_bare_paired"
+    "paired_model": "space_observation_rotating_door_bare_paired"
   },
   {
-    "id": "space_observation_rotating_framed_paired",
+    "id": "space_observation_rotating_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -1881,7 +1917,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_observation_rotating_framed",
+    "id": "space_observation_rotating_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -1889,10 +1925,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": true,
-    "paired_model": "space_observation_rotating_framed_paired"
+    "paired_model": "space_observation_rotating_door_framed_paired"
   },
   {
-    "id": "space_observation_sliding_bare_paired",
+    "id": "space_observation_sliding_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -1910,7 +1946,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_observation_sliding_bare",
+    "id": "space_observation_sliding_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -1918,10 +1954,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": false,
-    "paired_model": "space_observation_sliding_bare_paired"
+    "paired_model": "space_observation_sliding_door_bare_paired"
   },
   {
-    "id": "space_observation_sliding_framed_paired",
+    "id": "space_observation_sliding_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -1939,7 +1975,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_observation_sliding_framed",
+    "id": "space_observation_sliding_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -1947,10 +1983,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": true,
-    "paired_model": "space_observation_sliding_framed_paired"
+    "paired_model": "space_observation_sliding_door_framed_paired"
   },
   {
-    "id": "space_airlock_rotating_bare_paired",
+    "id": "space_airlock_rotating_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -1968,7 +2004,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_airlock_rotating_bare",
+    "id": "space_airlock_rotating_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -1976,10 +2012,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": false,
-    "paired_model": "space_airlock_rotating_bare_paired"
+    "paired_model": "space_airlock_rotating_door_bare_paired"
   },
   {
-    "id": "space_airlock_rotating_framed_paired",
+    "id": "space_airlock_rotating_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -1997,7 +2033,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_airlock_rotating_framed",
+    "id": "space_airlock_rotating_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2005,10 +2041,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": true,
-    "paired_model": "space_airlock_rotating_framed_paired"
+    "paired_model": "space_airlock_rotating_door_framed_paired"
   },
   {
-    "id": "space_airlock_sliding_bare_paired",
+    "id": "space_airlock_sliding_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2026,7 +2062,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_airlock_sliding_bare",
+    "id": "space_airlock_sliding_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2034,10 +2070,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": false,
-    "paired_model": "space_airlock_sliding_bare_paired"
+    "paired_model": "space_airlock_sliding_door_bare_paired"
   },
   {
-    "id": "space_airlock_sliding_framed_paired",
+    "id": "space_airlock_sliding_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2055,7 +2091,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_airlock_sliding_framed",
+    "id": "space_airlock_sliding_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2063,10 +2099,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": true,
-    "paired_model": "space_airlock_sliding_framed_paired"
+    "paired_model": "space_airlock_sliding_door_framed_paired"
   },
   {
-    "id": "space_standard_rotating_bare_paired",
+    "id": "space_standard_rotating_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2084,7 +2120,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_standard_rotating_bare",
+    "id": "space_standard_rotating_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2092,10 +2128,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": false,
-    "paired_model": "space_standard_rotating_bare_paired"
+    "paired_model": "space_standard_rotating_door_bare_paired"
   },
   {
-    "id": "space_standard_rotating_framed_paired",
+    "id": "space_standard_rotating_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2113,7 +2149,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_standard_rotating_framed",
+    "id": "space_standard_rotating_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2121,10 +2157,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": true,
-    "paired_model": "space_standard_rotating_framed_paired"
+    "paired_model": "space_standard_rotating_door_framed_paired"
   },
   {
-    "id": "space_standard_sliding_bare_paired",
+    "id": "space_standard_sliding_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2142,7 +2178,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_standard_sliding_bare",
+    "id": "space_standard_sliding_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2150,10 +2186,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": false,
-    "paired_model": "space_standard_sliding_bare_paired"
+    "paired_model": "space_standard_sliding_door_bare_paired"
   },
   {
-    "id": "space_standard_sliding_framed_paired",
+    "id": "space_standard_sliding_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2171,7 +2207,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_standard_sliding_framed",
+    "id": "space_standard_sliding_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2179,10 +2215,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": true,
-    "paired_model": "space_standard_sliding_framed_paired"
+    "paired_model": "space_standard_sliding_door_framed_paired"
   },
   {
-    "id": "space_security_rotating_bare_paired",
+    "id": "space_security_rotating_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2200,7 +2236,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_security_rotating_bare",
+    "id": "space_security_rotating_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2208,10 +2244,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": false,
-    "paired_model": "space_security_rotating_bare_paired"
+    "paired_model": "space_security_rotating_door_bare_paired"
   },
   {
-    "id": "space_security_rotating_framed_paired",
+    "id": "space_security_rotating_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2229,7 +2265,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_security_rotating_framed",
+    "id": "space_security_rotating_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2237,10 +2273,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": true,
-    "paired_model": "space_security_rotating_framed_paired"
+    "paired_model": "space_security_rotating_door_framed_paired"
   },
   {
-    "id": "space_security_sliding_bare_paired",
+    "id": "space_security_sliding_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2258,7 +2294,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_security_sliding_bare",
+    "id": "space_security_sliding_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2266,10 +2302,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": false,
-    "paired_model": "space_security_sliding_bare_paired"
+    "paired_model": "space_security_sliding_door_bare_paired"
   },
   {
-    "id": "space_security_sliding_framed_paired",
+    "id": "space_security_sliding_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2287,7 +2323,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_security_sliding_framed",
+    "id": "space_security_sliding_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2295,10 +2331,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": true,
-    "paired_model": "space_security_sliding_framed_paired"
+    "paired_model": "space_security_sliding_door_framed_paired"
   },
   {
-    "id": "space_reactor_rotating_bare_paired",
+    "id": "space_reactor_service_rotating_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2316,7 +2352,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_reactor_rotating_bare",
+    "id": "space_reactor_service_rotating_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2324,10 +2360,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": false,
-    "paired_model": "space_reactor_rotating_bare_paired"
+    "paired_model": "space_reactor_service_rotating_door_bare_paired"
   },
   {
-    "id": "space_reactor_rotating_framed_paired",
+    "id": "space_reactor_service_rotating_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2345,7 +2381,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_reactor_rotating_framed",
+    "id": "space_reactor_service_rotating_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2353,10 +2389,10 @@
     "internal_model": false,
     "sliding": false,
     "framed": true,
-    "paired_model": "space_reactor_rotating_framed_paired"
+    "paired_model": "space_reactor_service_rotating_door_framed_paired"
   },
   {
-    "id": "space_reactor_sliding_bare_paired",
+    "id": "space_reactor_service_sliding_door_bare_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2374,7 +2410,7 @@
     "right_slide": 15
   },
   {
-    "id": "space_reactor_sliding_bare",
+    "id": "space_reactor_service_sliding_door_bare",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2382,10 +2418,10 @@
     "internal_model": false,
     "sliding": true,
     "framed": false,
-    "paired_model": "space_reactor_sliding_bare_paired"
+    "paired_model": "space_reactor_service_sliding_door_bare_paired"
   },
   {
-    "id": "space_reactor_sliding_framed_paired",
+    "id": "space_reactor_service_sliding_door_framed_paired",
     "type": "space_door_model",
     "class": "BlockDetailedDoor",
     "item": false,
@@ -2403,7 +2439,7 @@
     "right_slide": 16
   },
   {
-    "id": "space_reactor_sliding_framed",
+    "id": "space_reactor_service_sliding_door_framed",
     "type": "space_door",
     "class": "BlockSpaceDoor",
     "item": true,
@@ -2411,7 +2447,7 @@
     "internal_model": false,
     "sliding": true,
     "framed": true,
-    "paired_model": "space_reactor_sliding_framed_paired"
+    "paired_model": "space_reactor_service_sliding_door_framed_paired"
   },
   {
     "id": "space_viewport_rotating_bare_paired",
@@ -3574,8 +3610,8 @@
     "paired_model": "space_modular_shutter_sliding_framed_paired"
   },
   {
-    "id": "space_glass",
-    "type": "glass_wall",
+    "id": "space_glass_medium",
+    "type": "framed_observation_glass",
     "class": "BlockSpaceGlass",
     "item": true
   },
@@ -3586,7 +3622,7 @@
     "item": true,
     "hidden": true,
     "sliding": false,
-    "paired_model": "space_standard_rotating_framed_paired"
+    "paired_model": "space_standard_rotating_door_framed_paired"
   },
   {
     "id": "space_sliding_door",
@@ -3595,26 +3631,26 @@
     "item": true,
     "hidden": true,
     "sliding": true,
-    "paired_model": "space_standard_sliding_framed_paired"
+    "paired_model": "space_standard_sliding_door_framed_paired"
   },
   {
     "id": "space_glass_small",
-    "type": "glass_wall",
+    "type": "framed_observation_glass",
     "class": "BlockSpaceGlass",
     "item": true
   },
   {
     "id": "space_glass_large",
-    "type": "glass_wall",
+    "type": "framed_observation_glass",
     "class": "BlockSpaceGlass",
     "item": true
   },
   {
-    "id": "space_door",
+    "id": "programmable_door",
     "type": "space_door",
     "class": "BlockConfigurableSpaceDoor",
     "item": true,
     "sliding": true,
-    "paired_model": "space_standard_sliding_framed_paired"
+    "paired_model": "space_standard_sliding_door_framed_paired"
   }
 ]

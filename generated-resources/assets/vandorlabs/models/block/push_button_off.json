@@ -1,0 +1,78 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "sw": "vandorlabs:blocks/push_button_unlit",
+    "particle": "vandorlabs:blocks/push_button_unlit",
+    "wall": "vandorlabs:blocks/dark_wall_panel"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        5,
+        15
+      ],
+      "to": [
+        11,
+        11,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#sw"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#sw"
+        },
+        "east": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#wall"
+        },
+        "west": {
+          "uv": [
+            7,
+            5,
+            9,
+            11
+          ],
+          "texture": "#wall"
+        },
+        "up": {
+          "uv": [
+            5,
+            7,
+            11,
+            9
+          ],
+          "texture": "#wall"
+        },
+        "down": {
+          "uv": [
+            5,
+            7,
+            11,
+            9
+          ],
+          "texture": "#wall"
+        }
+      }
+    }
+  ]
+}

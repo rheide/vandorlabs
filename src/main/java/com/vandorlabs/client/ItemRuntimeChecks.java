@@ -59,7 +59,7 @@ final class ItemRuntimeChecks {
         require(doorRecipe.matches(grid, player.world), "six ingots match door shape");
         ItemStack door = CraftingManager.findMatchingResult(grid, player.world);
         require(door.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(
-                        new ResourceLocation("vandorlabs", "space_door")))
+                        new ResourceLocation("vandorlabs", "programmable_door")))
                         && door.getCount() == 1,
                 "six ingots craft one Programmable Door");
         grid.setInventorySlotContents(0, ItemStack.EMPTY);
@@ -76,13 +76,25 @@ final class ItemRuntimeChecks {
         require(rampRecipe.matches(grid,player.world),"piston surrounded by eight ingots matches");
         ItemStack ramp=CraftingManager.findMatchingResult(grid,player.world);
         require(ramp.getItem()==Item.getItemFromBlock(Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "ramp_controller"))) && ramp.getCount()==1,
+                new ResourceLocation("vandorlabs", "programmable_ramp"))) && ramp.getCount()==1,
                 "recipe crafts one Programmable Ramp");
         grid.setInventorySlotContents(4,ItemStack.EMPTY);
         require(!rampRecipe.matches(grid,player.world),"missing piston does not craft ramp");
         grid.setInventorySlotContents(4,new ItemStack(Item.getItemFromBlock(net.minecraft.init.Blocks.PISTON)));
         grid.setInventorySlotContents(0,ItemStack.EMPTY);
         require(!rampRecipe.matches(grid,player.world),"missing ingot does not craft ramp");
+        for (String finish : new String[]{"side", "top", "rear", "trim", "dark_trim", "cavity"}) {
+            Block finishBlock = Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs", "plasma_vent_" + finish));
+            require(finishBlock != null && finishBlock.getRegistryName() != null,
+                    "missing Plasma Vent finish " + finish);
+            ItemStack finishItem = new ItemStack(finishBlock);
+            require(!finishItem.isEmpty() && finishItem.getDisplayName().startsWith("Plasma Vent "),
+                    "Plasma Vent finish item name " + finish);
+            require(mc.getRenderItem().getItemModelMesher().getItemModel(finishItem)
+                    != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
+                    "Plasma Vent finish item model " + finish);
+        }
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
     }
 

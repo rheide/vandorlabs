@@ -234,6 +234,8 @@ public class ReproLab {
                 galleryFeet + 0.7D, -24.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_programmable_full_inputs", GALLERY_X,
                 galleryFeet + 0.7D, -23.0D, 0.0F, 7.0F));
+        SHOTS.add(new Shot("gallery_display_table", GALLERY_X,
+                galleryFeet + 0.5D, -24.0D, 0.0F, 8.0F));
         SHOTS.add(new Shot("gallery_propulsion", GALLERY_X, galleryFeet + 2.0D,
                 -32.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_connected_thruster", GALLERY_X,
@@ -475,7 +477,7 @@ public class ReproLab {
                 saveNamed(mc,"ramp_controller_gui");
                 BlockPos doorGui=CONSOLE.add(0,0,3);
                 for (World w:new World[]{mc.getIntegratedServer().getWorld(0),mc.world}) {
-                    placeDoor(w,doorGui,"space_door",false);
+                    placeDoor(w,doorGui,"programmable_door",false);
                     ((com.vandorlabs.tiles.TileEntitySpaceDoor)w.getTileEntity(doorGui))
                             .configure(2,1,true,0,true,false,false);
                 }
@@ -509,9 +511,9 @@ public class ReproLab {
             ModBlocks.PROGRAMMABLE_INPUT,
             ModBlocks.PROGRAMMABLE_FULL_INPUT,
             ModBlocks.PROGRAMMABLE_HALF_CONSOLE,
-            Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "industrial_lever")),
-            Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_button")),
-            Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_rocker"))
+            Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "industrial_power_lever")),
+            Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "push_button")),
+            Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "rocker_switch"))
         };
         for (int i = 0; i < icons.length; i++) {
             if (icons[i] == null) {
@@ -546,7 +548,7 @@ public class ReproLab {
         place(world, SELECTOR, ModBlocks.ANIMATED_SCREEN_SELECTOR,
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         place(world, CONTROL, Block.REGISTRY.getObject(
-                        new ResourceLocation("vandorlabs", "wall_panel_dark")),
+                        new ResourceLocation("vandorlabs", "dark_wall_panel")),
                 BlockVandorDirectional.FACING, EnumFacing.NORTH);
         place(world, CONSOLE, ModBlocks.PROGRAMMABLE_CONSOLE,
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
@@ -586,6 +588,7 @@ public class ReproLab {
             throw new IllegalStateException("render lab server player unavailable");
         }
         DoorRuntimeChecks.run(world, serverPlayer);
+        DisplayTableRuntimeChecks.run(world, serverPlayer);
         ChairRuntimeChecks.run(world, serverPlayer);
         try {
             mc.getIntegratedServer().addScheduledTask(() -> {
@@ -645,11 +648,11 @@ public class ReproLab {
         placeChair(world, CHAIR_OPERATOR, "bridge_chair_simple_operator");
         placeChair(world, CHAIR_CONFERENCE, "bridge_chair_simple_conference");
         placeChair(world, CHAIR_MESS_HALL, "bridge_chair_simple_mess_hall");
-        String[] materials = {"material_stitched_pad", "material_seamed_pad",
-                "material_ribbed_pad", "material_cushion",
-                "material_cyan_strip", "material_control_buttons",
-                "material_vent_grille", "material_amber_strip",
-                "material_rubber_studs",
+        String[] materials = {"stitched_padding", "seamed_padding",
+                "ribbed_padding", "cushion_padding",
+                "cyan_light_strip", "control_buttons",
+                "vent_grille", "amber_light_strip",
+                "rubber_studs",
                 "wall_pipes", "framed_wall_pipes"};
         for (int index = 0; index < materials.length; index++) {
             Block material = Block.REGISTRY.getObject(
@@ -657,10 +660,10 @@ public class ReproLab {
             world.setBlockState(MATERIAL_GRID.add(index % 4, 3 - index / 4, 0),
                     material.getDefaultState(), 2);
         }
-        String[] hullFloors = {"hull_light_alloy", "hull_dark_gunmetal",
-                "hull_midnight_matte", "hull_midnight_satin",
-                "floor_carpet_bluegray", "floor_carpet_warm_burgundy",
-                "floor_metal_nonslip"};
+        String[] hullFloors = {"light_alloy_hull", "dark_gunmetal_hull",
+                "midnight_matte_hull", "midnight_satin_hull",
+                "bluegray_carpet", "burgundy_carpet",
+                "non_slip_metal_floor"};
         for (int index = 0; index < hullFloors.length; index++) {
             String id = hullFloors[index];
             Block hull = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
@@ -668,9 +671,9 @@ public class ReproLab {
                     hull.getDefaultState(), 2);
         }
         Block ceilingThruster = Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "ion_thruster"));
-        String[] ceilingFamilies = {"rocket_thruster", "ion_thruster",
-                "plasma_thruster_full", "impulse_engine_full"};
+                new ResourceLocation("vandorlabs", "ion_drive"));
+        String[] ceilingFamilies = {"classic_rocket", "ion_drive",
+                "plasma_vent_full_face", "impulse_engine_full_face"};
         for (int family = 0; family < ceilingFamilies.length; family++) {
             Block familyBlock = Block.REGISTRY.getObject(new ResourceLocation(
                     "vandorlabs", ceilingFamilies[family]));
@@ -743,15 +746,23 @@ public class ReproLab {
             placeGalleryInputs(world, false);
         } else if (shot.equals("gallery_programmable_full_inputs")) {
             placeGalleryInputs(world, true);
+        } else if (shot.equals("gallery_display_table")) {
+            com.vandorlabs.blocks.BlockIndustrialDisplayTable table =
+                    (com.vandorlabs.blocks.BlockIndustrialDisplayTable) block("industrial_display_table");
+            IBlockState state = table.getDefaultState().withProperty(
+                    com.vandorlabs.blocks.BlockIndustrialDisplayTable.FACING, EnumFacing.NORTH);
+            for (int x = -2; x <= 0; x++)
+                world.setBlockState(new BlockPos(GALLERY_X + x, GALLERY_Y, -18), state, 3);
+            world.setBlockState(new BlockPos(GALLERY_X + 3, GALLERY_Y, -18), state, 3);
         } else if (shot.equals("gallery_propulsion")) {
-            String[] hexes = {"rocket_thruster_hex", "ion_thruster_hex",
-                    "plasma_thruster_hex", "impulse_engine_hex"};
-            String[] triangles = {"rocket_thruster_triangle", "ion_thruster_triangle",
-                    "plasma_thruster_triangle", "impulse_engine_triangle"};
-            String[] corners = {"rocket_thruster_triangle",
-                    "rocket_thruster_triangle_bottom_right",
-                    "rocket_thruster_triangle_top_left",
-                    "rocket_thruster_triangle_top_right"};
+            String[] hexes = {"rocket_thruster_hexagonal", "ion_drive_hexagonal",
+                    "plasma_vent_hexagonal", "impulse_engine_hexagonal"};
+            String[] triangles = {"rocket_thruster_90_degree_wedge", "ion_drive_90_degree_wedge",
+                    "plasma_vent_90_degree_wedge", "impulse_engine_90_degree_wedge"};
+            String[] corners = {"rocket_thruster_90_degree_wedge",
+                    "rocket_thruster_90_degree_wedge_bottom_right",
+                    "rocket_thruster_90_degree_wedge_top_left",
+                    "rocket_thruster_90_degree_wedge_top_right"};
             placePropulsionRow(world, hexes, GALLERY_Y + 5, true);
             placePropulsionRow(world, triangles, GALLERY_Y + 3, false);
             placePropulsionRow(world, corners, GALLERY_Y + 1, false);
@@ -766,7 +777,7 @@ public class ReproLab {
                                 EnumFacing.NORTH), 2);
             }
         } else if (shot.equals("gallery_connected_thruster")) {
-            Block thruster = block("ion_thruster");
+            Block thruster = block("ion_drive");
             for (int x = -1; x <= 1; x++) {
                 for (int y = 0; y < 3; y++) {
                     BlockPos pos = new BlockPos(GALLERY_X + x, GALLERY_Y + y, -18);
@@ -780,17 +791,19 @@ public class ReproLab {
                 }
             }
         } else if (shot.equals("gallery_lighting_controls")) {
-            String[] lamps = {"lamp_slats", "lamp_window", "wall_light_columns",
-                    "wall_lightbar", "wall_porthole"};
+            String[] lamps = {"slatted_lamp", "window_lamp", "light_column_wall",
+                    "lightbar_wall", "porthole"};
+            String[] unlit = {"slatted_lamp_unlit", "window_lamp_unlit",
+                    "wall_light_columns_unlit", "wall_lightbar_unlit", "porthole_unlit"};
             for (int i = 0; i < lamps.length; i++) {
                 int x = GALLERY_X - 9 + i * 2;
                 world.setBlockState(new BlockPos(x, GALLERY_Y + 3, -18),
                         block(lamps[i]).getDefaultState(), 2);
                 world.setBlockState(new BlockPos(x, GALLERY_Y + 1, -18),
-                        block(lamps[i] + "_unlit").getDefaultState(), 2);
+                        block(unlit[i]).getDefaultState(), 2);
             }
-            String[] controls = {"switch_button", "switch_rocker",
-                    "industrial_lever", "compact_lever"};
+            String[] controls = {"push_button", "rocker_switch",
+                    "industrial_power_lever", "compact_power_lever"};
             for (int i = 0; i < controls.length; i++) {
                 Block control = block(controls[i]);
                 int x = GALLERY_X + 2 + i * 2;
@@ -813,17 +826,17 @@ public class ReproLab {
                 world.setBlockState(new BlockPos(x, GALLERY_Y + 1, -18), off, 2);
             }
         } else if (shot.equals("gallery_structure")) {
-            String[] ids = {"tritanium_hull", "wall_panel_dark", "wall_panel_light",
-                    "wall_plate", "wall_ribs", "wall_vent", "border_base_left",
+            String[] ids = {"tritanium_hull", "dark_wall_panel", "light_wall_panel",
+                    "bolted_wall_plate", "ribbed_wall", "wall_vent", "border_base_left",
                     "border_base_right", "border_corner_left", "border_corner_right",
                     "border_light", "border_light_vertical", "framed_wall_pipes",
-                    "wall_pipes", "material_stitched_pad", "material_seamed_pad",
-                    "material_ribbed_pad", "material_cushion", "material_control_buttons",
-                    "material_vent_grille", "material_rubber_studs", "hull_light_alloy",
-                    "hull_dark_gunmetal", "hull_midnight_matte", "hull_midnight_satin",
-                    "floor_carpet_bluegray", "floor_carpet_warm_burgundy",
-                    "floor_metal_nonslip", "cockpit_glass_clear", "cockpit_glass_cyan",
-                    "cockpit_glass_smoked", "glass_wall"};
+                    "wall_pipes", "stitched_padding", "seamed_padding",
+                    "ribbed_padding", "cushion_padding", "control_buttons",
+                    "vent_grille", "rubber_studs", "light_alloy_hull",
+                    "dark_gunmetal_hull", "midnight_matte_hull", "midnight_satin_hull",
+                    "bluegray_carpet", "burgundy_carpet",
+                    "non_slip_metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
+                    "smoked_cockpit_glass", "framed_observation_glass"};
             for (int i = 0; i < ids.length; i++) {
                 Block block = block(ids[i]);
                 IBlockState state = block.getDefaultState();
@@ -837,19 +850,19 @@ public class ReproLab {
             for (int x=0; x<3; x++) for (int y=0; y<2; y++) {
                 if (x==2 && y==1) continue;
                 world.setBlockState(new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18),
-                        block(x==0?"space_glass_small":x==1?"space_glass":"space_glass_large").getDefaultState(),3);
+                        block(x==0?"space_glass_small":x==1?"space_glass_medium":"space_glass_large").getDefaultState(),3);
             }
         } else if (shot.startsWith("gallery_space_config_hinges_")) {
             for (int i=0;i<2;i++) {
                 BlockPos p=new BlockPos(GALLERY_X-1+i,GALLERY_Y,-18);
-                placeDoor(world,p,"space_door",true);
+                placeDoor(world,p,"programmable_door",true);
                 setDoorHinge(world,p,i==1?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT);
                 ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
                         .configure(2,1,true,0,false,false,shot.endsWith("_on"));
             }
         } else if (shot.startsWith("gallery_space_panel_")) {
             BlockPos p=new BlockPos(GALLERY_X,GALLERY_Y,-18);
-            placeDoor(world,p,"space_door",false);
+            placeDoor(world,p,"programmable_door",false);
             for (BlockPos part:new BlockPos[]{p,p.up()}) {
                 IBlockState state=world.getBlockState(part);
                 world.setBlockState(part,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH),2);
@@ -859,7 +872,7 @@ public class ReproLab {
             ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
                     .configure(2,1,true,0,false,sliding,true);
         } else if (shot.startsWith("gallery_space_jamb_")) {
-            placeDoor(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),"space_standard_rotating_framed",true);
+            placeDoor(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),"space_standard_rotating_door_framed",true);
             IBlockState backing=Blocks.CONCRETE.getDefaultState().withProperty(
                     net.minecraft.block.BlockColored.COLOR,net.minecraft.item.EnumDyeColor.MAGENTA);
             for (int side : new int[]{-1,1}) for (int y=0;y<2;y++) for (int z=-19;z<=-17;z++)
@@ -867,7 +880,7 @@ public class ReproLab {
         } else if (shot.startsWith("gallery_space_hinges_")) {
             for (int i=0;i<3;i++) {
                 BlockPos p=new BlockPos(GALLERY_X-1+(i==2?3:i),GALLERY_Y,-18);
-                placeDoor(world,p,i==2?"space_standard_rotating_bare":"space_standard_rotating_framed",
+                placeDoor(world,p,i==2?"space_standard_rotating_door_bare":"space_standard_rotating_door_framed",
                         shot.endsWith("_open"));
                 setDoorHinge(world,p,i==1?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT);
             }
@@ -875,7 +888,8 @@ public class ReproLab {
             String[] bits=shot.split("_");
             int index=0;
             for (String family : new String[]{"observation","airlock","standard","security","reactor"}) {
-                String id="space_"+family+"_"+bits[2]+"_"+bits[3];
+                String id="space_"+(family.equals("reactor")?"reactor_service":family)
+                        +"_"+bits[2]+"_door_"+bits[3];
                 int x=GALLERY_X-11+index++*5;
                 for (int column : new int[]{0,1,3}) {
                     BlockPos p=new BlockPos(x+column,GALLERY_Y,-18);

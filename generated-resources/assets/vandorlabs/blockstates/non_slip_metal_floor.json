@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": {
+      "model": "vandorlabs:non_slip_metal_floor"
+    }
+  }
+}

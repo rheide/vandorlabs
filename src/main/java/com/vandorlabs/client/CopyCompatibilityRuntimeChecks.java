@@ -297,7 +297,7 @@ final class CopyCompatibilityRuntimeChecks {
         }
         require(checked>20,"WorldEdit rotation did not cover all doors and thrusters");
         BlockVandorDoor spaceDoor=(BlockVandorDoor)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","space_door"));
+                new ResourceLocation("vandorlabs","programmable_door"));
         require(spaceDoor!=null,"Space Door is unavailable");
         BlockPos doorFrom=new BlockPos(13,21,-15),doorTo=new BlockPos(15,21,-15);
         IBlockState lower=spaceDoor.getDefaultState()
@@ -328,8 +328,8 @@ final class CopyCompatibilityRuntimeChecks {
 
         // Representative ForgeWorld pastes verify the transformed data crosses the adapter.
         for (Block block:new Block[]{observationDoor(),
-                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster")),
-                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_triangle"))}) {
+                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","classic_rocket")),
+                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_90_degree_wedge"))}) {
             IBlockState source=block.getDefaultState();
             source=block instanceof BlockVandorDoor
                     ?source.withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH)
@@ -370,7 +370,7 @@ final class CopyCompatibilityRuntimeChecks {
 
     private static BlockVandorDoor observationDoor() {
         Block block = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",
-                "space_observation_rotating_framed"));
+                "space_observation_rotating_door_framed"));
         require(block instanceof BlockVandorDoor,
                 "detailed observation door is unavailable");
         return (BlockVandorDoor) block;

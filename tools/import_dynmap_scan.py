@@ -13,8 +13,8 @@ from pathlib import Path
 
 
 THRUSTER = re.compile(
-    r"^%(?P<id>(?P<family>rocket_thruster|ion_thruster|plasma_thruster|"
-    r"impulse_engine)_(?P<shape>hex|triangle)(?P<corner>_bottom_right|"
+    r"^%(?P<id>(?P<family>rocket_thruster|ion_drive|plasma_vent|"
+    r"impulse_engine)_(?P<shape>hexagonal|90_degree_wedge)(?P<corner>_bottom_right|"
     r"_top_right|_top_left)?)$"
 )
 
@@ -22,12 +22,12 @@ REMOVED_DOORS = {"door_airlock_glass", "door_security", "sliding_airlock_glass",
 REMOVED_DOORS.update(f"detail_{family}_{motion}_{size}"
                      for family in ("split", "observation", "engineering")
                      for motion in ("sliding", "rotating") for size in ("single", "double"))
-FALLBACK_IDS = {"glass_wall", "programmable_input", "programmable_full_input",
+FALLBACK_IDS = {"framed_observation_glass", "programmable_half_input", "programmable_input",
                 "programmable_diagonal_screen"}
 FALLBACK_IDS.update("bridge_chair_simple_" + role for role in
                     ("mess_hall", "conference", "command", "operator", "companion"))
 
-EXTRA_TEXTURES = {"dynmap_glass_wall": "blocks/glass_wall/wall_00.png"}
+EXTRA_TEXTURES = {"dynmap_glass_wall": "blocks/framed_observation_glass/wall_00.png"}
 
 
 def removed_record(line):
@@ -51,8 +51,8 @@ def parse_record(line):
 def texture_name(family, state):
     prefix = {
         "rocket_thruster": "rocket",
-        "ion_thruster": "ion",
-        "plasma_thruster": "plasma",
+        "ion_drive": "ion",
+        "plasma_vent": "plasma",
         "impulse_engine": "impulse",
     }[family]
     if state["powered"] != "true":
@@ -82,7 +82,7 @@ def plain_box(bounds, facing):
 
 
 def model_suffix(shape, corner, facing):
-    if shape == "hex":
+    if shape == "hexagonal":
         # Two overlapping shallow boxes form a chamfered, full-face fixture.
         return (textured_box("2/0/0:14/16/3", facing)
                 + textured_box("0/2/0:16/14/3", facing))
@@ -107,19 +107,19 @@ def model_suffix(shape, corner, facing):
 
 
 def fallback_texture(block_id, state):
-    if block_id == "glass_wall":
+    if block_id == "framed_observation_glass":
         return "dynmap_glass_wall"
     if block_id.startswith("bridge_chair_simple_"):
         return "bridge_chair_simple_atlas"
     if block_id.startswith("programmable_"):
-        return "wall_panel_dark"
+        return "dark_wall_panel"
     raise ValueError("No fallback texture for " + block_id)
 
 
 
 def fallback_model(block_id, state):
     facing = state.get("facing", "north")
-    if block_id == "glass_wall":
+    if block_id == "framed_observation_glass":
         return plain_box("7/0/0:9/16/16", "north")
     if block_id.startswith("bridge_chair_simple_"):
         return (plain_box("3/0/3:13/1/13", facing)

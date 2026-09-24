@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vandorlabs:ribbed_wall",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vandorlabs:ribbed_wall"
+    },
+    "facing=south": {
+      "model": "vandorlabs:ribbed_wall",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:ribbed_wall",
+      "y": 270
+    }
+  }
+}

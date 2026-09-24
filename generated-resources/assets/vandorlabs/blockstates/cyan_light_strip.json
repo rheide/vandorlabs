@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "vertical=false": {
+      "model": "vandorlabs:cyan_light_strip"
+    },
+    "vertical=true": {
+      "model": "vandorlabs:cyan_light_strip_vertical"
+    }
+  }
+}

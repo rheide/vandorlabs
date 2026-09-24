@@ -10,7 +10,7 @@ import net.minecraft.world.IBlockAccess;
 /** Full-square counterpart to the half-height programmable input surface. */
 public class BlockProgrammableFullInput extends BlockProgrammableInput {
 
-    public static final String NAME = "programmable_full_input";
+    public static final String NAME = "programmable_input";
     public BlockProgrammableFullInput() {
         super(NAME);
     }

@@ -56,10 +56,10 @@ def main():
                 and not entry.get("programmable_only")
                 and not entry.get("internal_model")}
     expected.update({
-        "industrial_lever", "compact_lever", "animated_screen_selector",
+        "industrial_power_lever", "compact_power_lever", "programmable_viewscreen",
         "programmable_console", "programmable_diagonal_screen",
-        "programmable_input", "programmable_half_console",
-        "programmable_full_input", "ramp_controller",
+        "programmable_half_input", "programmable_half_console",
+        "programmable_input", "programmable_ramp", "industrial_display_table",
     })
     present = set(re.findall(r"^block:id=%([^,]+)", texture_text,
                              re.MULTILINE))

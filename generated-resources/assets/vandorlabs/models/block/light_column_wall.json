@@ -1,0 +1,8 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/dark_wall_panel",
+    "front": "vandorlabs:blocks/light_column_wall_on",
+    "side": "vandorlabs:blocks/dark_wall_panel"
+  }
+}

@@ -1,9 +1,9 @@
 {
   "ambientocclusion": true,
   "textures": {
-    "particle": "vandorlabs:blocks/wall_panel_dark",
-    "wall": "vandorlabs:blocks/wall_panel_dark",
-    "screen": "vandorlabs:blocks/animated_screen_selector"
+    "particle": "vandorlabs:blocks/dark_wall_panel",
+    "wall": "vandorlabs:blocks/dark_wall_panel",
+    "screen": "vandorlabs:blocks/programmable_viewscreen"
   },
   "elements": [
     {

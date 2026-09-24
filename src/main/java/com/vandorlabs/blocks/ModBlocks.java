@@ -162,6 +162,7 @@ public class ModBlocks {
         // src/main/resources.
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
+        add(new BlockIndustrialDisplayTable());
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
@@ -353,8 +354,8 @@ public class ModBlocks {
     }
 
     private static String replacementBlockId(String id) {
-        if ("plasma_thruster".equals(id)) return "plasma_thruster_full";
-        if ("impulse_engine".equals(id)) return "impulse_engine_full";
+        if ("plasma_thruster".equals(id)) return "plasma_vent_full_face";
+        if ("impulse_engine".equals(id)) return "impulse_engine_full_face";
         return null;
     }
 
@@ -426,15 +427,13 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     private static void registerSpaceDoorModels(BlockConfigurableSpaceDoor block,Item item) {
         ModelLoader.setCustomStateMapper(block,new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
-        String[] designs=com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS;
         String[] details=com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS;
         for (boolean sliding:new boolean[]{false,true}) {
-        String motion=sliding?"sliding":"rotating";
-        for (int d=0;d<designs.length;d++) for (int l=0;l<details.length;l++)
+        for (int d=0;d<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;d++) for (int l=0;l<details.length;l++)
             for (boolean framed:new boolean[]{false,true}) for (boolean paired:new boolean[]{false,true})
                 for (boolean right:new boolean[]{false,true}) for (int part=0;part<3;part++) {
                     if (part==2 && !com.vandorlabs.tiles.TileEntitySpaceDoor.hasGlassDesign(d)) continue;
-                    String name="space_"+designs[d]+"_"+motion+(framed?"_framed":"_bare")
+                    String name=com.vandorlabs.tiles.TileEntitySpaceDoor.modelId(d,sliding,framed)
                             +(paired?"_paired":"")+(right?"_right_":"_left_")
                             +(part==0?"fixed":part==1?"leaf":"glass");
                     int meta=com.vandorlabs.tiles.TileEntitySpaceDoor.metadata(d,l,framed,paired,right,part,sliding);

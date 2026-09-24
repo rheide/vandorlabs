@@ -41,11 +41,11 @@ final class RedstoneChannelRuntimeChecks {
         checkFlatSwitchRotation(world,player);
         checkPickedChannels(world,player);
         checkLinkedLatches(world,player);
-        Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "switch_rocker"));
-        Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "space_standard_rotating_framed"));
+        Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "rocker_switch"));
+        Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "space_standard_rotating_door_framed"));
         Block rawLight = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "wall_lightbar_unlit"));
         Block rawPropulsion = Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "ion_thruster"));
+                new ResourceLocation("vandorlabs", "ion_drive"));
         require(rawSwitch instanceof BlockVandorSwitch && rawDoor instanceof BlockVandorDoor
                         && rawLight instanceof BlockLampOff
                         && rawPropulsion instanceof BlockPropulsionLight,
@@ -202,7 +202,7 @@ final class RedstoneChannelRuntimeChecks {
         BlockPos source=new BlockPos(20,25,28),target=source.east(2);
         world.setBlockState(source.down(),Blocks.STONE.getDefaultState(),3);
         world.setBlockState(target.down(),Blocks.STONE.getDefaultState(),3);
-        for (String id:new String[]{"switch_rocker","switch_button","industrial_lever","compact_lever"}) {
+        for (String id:new String[]{"rocker_switch","push_button","industrial_power_lever","compact_power_lever"}) {
             Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
             require(block instanceof BlockVandorSwitch || block instanceof BlockIndustrialLever,
                     "missing channel source "+id);
@@ -230,11 +230,11 @@ final class RedstoneChannelRuntimeChecks {
 
     private static void checkLinkedLatches(World world,EntityPlayer player) {
         BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","industrial_lever"));
+                new ResourceLocation("vandorlabs","industrial_power_lever"));
         BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","switch_rocker"));
+                new ResourceLocation("vandorlabs","rocker_switch"));
         BlockVandorSwitch button=(BlockVandorSwitch)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","switch_button"));
+                new ResourceLocation("vandorlabs","push_button"));
         BlockPos leverPos=new BlockPos(20,25,32),rockerPos=leverPos.east(2),buttonPos=leverPos.east(4);
         for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos})
             world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
@@ -288,7 +288,7 @@ final class RedstoneChannelRuntimeChecks {
     private static void checkLeverPlacement(World world,EntityPlayer player) {
         BlockPos pos=new BlockPos(20,25,20);
         world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
-        for (String id:new String[]{"industrial_lever","compact_lever"}) {
+        for (String id:new String[]{"industrial_power_lever","compact_power_lever"}) {
             Block raw=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
             require(raw instanceof BlockIndustrialLever,id+" is missing");
             BlockIndustrialLever lever=(BlockIndustrialLever)raw;
@@ -327,7 +327,7 @@ final class RedstoneChannelRuntimeChecks {
 
     private static void checkFloorLeverPower(World world,EntityPlayer player) {
         BlockPos pos=new BlockPos(20,25,20);
-        for (String id:new String[]{"industrial_lever","compact_lever"}) {
+        for (String id:new String[]{"industrial_power_lever","compact_power_lever"}) {
             BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs",id));
             world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
@@ -361,7 +361,7 @@ final class RedstoneChannelRuntimeChecks {
 
     private static void checkFlatSwitchRotation(World world,EntityPlayer player) {
         BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","switch_rocker"));
+                new ResourceLocation("vandorlabs","rocker_switch"));
         BlockPos pos=new BlockPos(20,25,20);
         float oldYaw=player.rotationYaw;
         try {
@@ -402,7 +402,7 @@ final class RedstoneChannelRuntimeChecks {
     }
 
     private static void checkTrianglePlacement(World world, EntityPlayer player) {
-        String base = "rocket_thruster_triangle";
+        String base = "rocket_thruster_90_degree_wedge";
         require(base.equals(BlockTrianglePropulsionLight.variantIdForHit(base,
                 EnumFacing.NORTH, 0.25F, 0.25F, 0.0F)),
                 "north triangle bottom-left placement is wrong");
@@ -436,15 +436,15 @@ final class RedstoneChannelRuntimeChecks {
                 EnumFacing.DOWN, 0.25F, 0.0F, 0.75F)),
                 "down triangle local axes are wrong");
 
-        String[] families = {"rocket_thruster", "ion_thruster", "plasma_thruster",
-                "impulse_engine"};
+        String[] bases = {"rocket_thruster_90_degree_wedge", "ion_drive_90_degree_wedge",
+                "plasma_vent_90_degree_wedge", "impulse_engine_90_degree_wedge"};
         String[] suffixes = {"", "_bottom_right", "_top_right", "_top_left"};
-        for (String family : families) {
+        for (String variantBase : bases) {
             for (String suffix : suffixes) {
                 Block block = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",
-                        family + "_triangle" + suffix));
+                        variantBase + suffix));
                 require(block instanceof BlockTrianglePropulsionLight,
-                        "triangle variant is missing: " + family + suffix);
+                        "triangle variant is missing: " + variantBase + suffix);
             }
         }
 

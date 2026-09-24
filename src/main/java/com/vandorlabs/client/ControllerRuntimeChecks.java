@@ -30,7 +30,7 @@ public final class ControllerRuntimeChecks {
         if (!condition) throw new IllegalStateException("ramp controller check: "+message);
     }
     private static BlockRampController block() {
-        return (BlockRampController)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:ramp_controller"));
+        return (BlockRampController)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_ramp"));
     }
     private static TileEntityRampController place(World world,BlockPos p,EnumFacing face) {
         world.setBlockState(p,block().getDefaultState().withProperty(BlockVandorDirectional.FACING,face),3);

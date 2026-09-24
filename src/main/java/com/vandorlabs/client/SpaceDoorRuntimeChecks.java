@@ -38,7 +38,7 @@ final class SpaceDoorRuntimeChecks {
     }
     static void run(World world,EntityPlayer player,BlockPos source) {
         BlockConfigurableSpaceDoor block=(BlockConfigurableSpaceDoor)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","space_door"));
+                new ResourceLocation("vandorlabs","programmable_door"));
         // A client ray may retain a door state briefly after its lower half
         // disappears. Both stale halves must remain safe to inspect.
         clear(world,source);
@@ -235,7 +235,7 @@ final class SpaceDoorRuntimeChecks {
             world.setBlockToAir(adjacent.down());
         }
         for (BlockPos pos:new BlockPos[]{source,target,neighbor}) clear(world,pos);
-        String[] glasses={"space_glass_small","space_glass","space_glass_large"};
+        String[] glasses={"space_glass_small","space_glass_medium","space_glass_large"};
         for (boolean rotated:new boolean[]{false,true}) {
             EnumFacing along=rotated?EnumFacing.SOUTH:EnumFacing.EAST;
             for (int i=0;i<3;i++) {

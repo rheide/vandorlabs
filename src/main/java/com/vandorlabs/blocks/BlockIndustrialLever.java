@@ -38,7 +38,7 @@ public class BlockIndustrialLever extends BlockHorizontal {
     public static final PropertyBool FLOOR = PropertyBool.create("floor");
 
     public BlockIndustrialLever() {
-        this("industrial_lever");
+        this("industrial_power_lever");
     }
 
     protected BlockIndustrialLever(String name) {

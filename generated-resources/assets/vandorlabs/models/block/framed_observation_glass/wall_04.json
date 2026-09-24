@@ -1,0 +1,118 @@
+{
+  "parent": "block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "face": "vandorlabs:blocks/framed_observation_glass/wall_04",
+    "side": "vandorlabs:blocks/framed_observation_glass/metal_side",
+    "particle": "vandorlabs:blocks/framed_observation_glass/metal_side"
+  },
+  "elements": [
+    {
+      "name": "glass",
+      "from": [
+        1.5,
+        0,
+        7.75
+      ],
+      "to": [
+        16,
+        16,
+        8.25
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#face",
+          "uv": [
+            16,
+            0,
+            1.5,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#face",
+          "uv": [
+            1.5,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "left_frame",
+      "from": [
+        0,
+        0,
+        6
+      ],
+      "to": [
+        1.5,
+        16,
+        10
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#face",
+          "uv": [
+            1.5,
+            0,
+            0,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#face",
+          "uv": [
+            0,
+            0,
+            1.5,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#side",
+          "uv": [
+            0,
+            6,
+            1.5,
+            10
+          ],
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#side",
+          "uv": [
+            0,
+            6,
+            1.5,
+            10
+          ],
+          "cullface": "down"
+        },
+        "east": {
+          "texture": "#side",
+          "uv": [
+            6,
+            0,
+            10,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#side",
+          "uv": [
+            6,
+            0,
+            10,
+            16
+          ],
+          "cullface": "west"
+        }
+      }
+    }
+  ]
+}

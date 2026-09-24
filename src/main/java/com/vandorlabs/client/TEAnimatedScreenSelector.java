@@ -335,7 +335,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         InputSurfaceLayout.Mounted layout=InputSurfaceLayout.halfInput(keyboard,upper,
                 wallPosition,small);
         renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
@@ -350,7 +350,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         double[] uv=bindScreenSurface(te);
         InputSurfaceLayout.Mounted layout=InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
@@ -396,7 +396,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         drawWallMesh(wall,ScreenHousingMesh.halfConsole());
 
         double[] frontUv = bindInput(te, te.getInputPanel());
@@ -470,7 +470,7 @@ public class TEAnimatedScreenSelector
                 (float) (combined % 65536), (float) (combined / 65536));
 
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         drawWallMesh(wall,ScreenHousingMesh.console());
 
         // The supplied half-height controls are native 2:1 textures rather
@@ -489,7 +489,7 @@ public class TEAnimatedScreenSelector
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,
                 (float) (combined % 65536), (float) (combined / 65536));
         TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/wall_panel_dark");
+                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         // Explicit upper/lower geometry keeps the artwork upright. Reflecting
         // the model matrix would also reflect the texture.
         drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted));

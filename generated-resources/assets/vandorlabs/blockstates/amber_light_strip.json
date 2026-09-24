@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "vertical=false": {
+      "model": "vandorlabs:amber_light_strip"
+    },
+    "vertical=true": {
+      "model": "vandorlabs:amber_light_strip_vertical"
+    }
+  }
+}

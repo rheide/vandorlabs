@@ -109,7 +109,7 @@ Their supplied one-model-pixel border width stays unchanged. Sliding models have
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
 Space Glass has three creative blocks: Small, Medium and Large. The existing
-`space_glass` id remains Medium for save compatibility; `space_glass_small` and
+`space_glass_medium` id remains Medium for save compatibility; `space_glass_small` and
 `space_glass_large` use the low/high assets. Both frame and shimmer use the
 selected native tier. Mixed tiers still connect, including inner corners and
 both wall orientations. Its metal frame is solid-pass geometry. A non-ticking

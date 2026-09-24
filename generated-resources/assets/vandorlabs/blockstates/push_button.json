@@ -1,0 +1,270 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "facing": "north",
+        "on": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "on": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on"
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "on": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "on": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "on": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "on": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "on": "false"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "on": "true"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "false",
+        "rotation": "0"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "false",
+        "rotation": "1"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 270,
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "false",
+        "rotation": "2"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 270,
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "false",
+        "rotation": "3"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 270,
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "true",
+        "rotation": "0"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "true",
+        "rotation": "1"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 270,
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "true",
+        "rotation": "2"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 270,
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "on": "true",
+        "rotation": "3"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 270,
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "false",
+        "rotation": "0"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "false",
+        "rotation": "1"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 90,
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "false",
+        "rotation": "2"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 90,
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "false",
+        "rotation": "3"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_off",
+        "x": 90,
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "true",
+        "rotation": "0"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "true",
+        "rotation": "1"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 90,
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "true",
+        "rotation": "2"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 90,
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "on": "true",
+        "rotation": "3"
+      },
+      "apply": {
+        "model": "vandorlabs:push_button_on",
+        "x": 90,
+        "y": 270
+      }
+    }
+  ]
+}

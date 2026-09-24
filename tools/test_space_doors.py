@@ -30,20 +30,20 @@ assert {designs[i] for i in glass_indices}==set(GLASS_FAMILIES)
 for family in FAMILIES:
     for suffix in ('','_metal','_glass') if family in GLASS_FAMILIES else ('',):
         assert '"'+texture_name(family+suffix)+'"' in sprites
-visible=[e for e in catalog if e['id'].startswith('space_') and e.get('item')
-         and not e.get('hidden') and not e.get('internal_model') and not e['id'].startswith('space_glass')]
-assert {e['id'] for e in visible}=={'space_door'}
+visible=[e for e in catalog if (e['id'].startswith('space_') or e['id']=='programmable_door') and e.get('item')
+         and not e.get('hidden') and not e.get('internal_model') and not e['id'].startswith('space_glass_')]
+assert {e['id'] for e in visible}=={'programmable_door'}
 config=[e for e in catalog if e.get('class')=='BlockConfigurableSpaceDoor']
-assert {e['id'] for e in config}=={'space_door','space_rotating_door','space_sliding_door'}
-assert all(e.get('hidden') for e in config if e['id']!='space_door')
-assert by_id['space_door']['sliding'] is True
-assert 'tile.vandorlabs.space_door.name=Programmable Door' in (ASSETS/'lang/en_us.lang').read_text()
-for glass,level in (('space_glass_small','low'),('space_glass','medium'),('space_glass_large','high')):
+assert {e['id'] for e in config}=={'programmable_door','space_rotating_door','space_sliding_door'}
+assert all(e.get('hidden') for e in config if e['id']!='programmable_door')
+assert by_id['programmable_door']['sliding'] is True
+assert 'tile.vandorlabs.programmable_door.name=Programmable Door' in (ASSETS/'lang/en_us.lang').read_text()
+for glass,level in (('space_glass_small','low'),('space_glass_medium','medium'),('space_glass_large','high')):
     assert by_id[glass]['class']=='BlockSpaceGlass' and by_id[glass]['item']
-    assert load(ASSETS/f'models/item/{glass}.json')['parent']==f'vandorlabs:item/{level}/space_glass'
+    assert load(ASSETS/f'models/item/{glass}.json')['parent']==f'vandorlabs:item/{level}/space_glass_medium'
     for part in load(ASSETS/f'blockstates/{glass}.json')['multipart']:
         assert '/'+level+'/' in part['apply']['model']
-assert load(ASSETS/'models/item/space_door.json')['parent'].endswith('space_standard_sliding_framed')
+assert load(ASSETS/'models/item/programmable_door.json')['parent'].endswith('space_standard_sliding_door_framed')
 hinge_source=load(ROOT/'docs/space-door-pack/hinge/geometry.json')['cuboids']
 
 def check_condition(c):
@@ -163,7 +163,7 @@ for door in doors:
                         texture=ROOT/'texture-packs/default/assets/vandorlabs/textures'/(tex.split(':')[1]+'.png')
                         assert texture.is_file(),texture
 
-for path in (ASSETS/'models/block/detailed_doors').glob('space_glass_*.json'):
+for path in (ASSETS/'models/block/detailed_doors').glob('space_glass_medium_*.json'):
     for e in load(path)['elements']:
         if e['faces'].get('south',{}).get('texture')=='#frame':
             assert math.isclose(e['to'][2]-e['from'][2],4)

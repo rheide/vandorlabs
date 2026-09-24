@@ -16,7 +16,7 @@ final class MaterialRuntimeChecks {
     private MaterialRuntimeChecks() {}
 
     static void run(EntityPlayer player) {
-        for (String id : new String[] {"material_cyan_strip", "material_amber_strip"}) {
+        for (String id : new String[] {"cyan_light_strip", "amber_light_strip"}) {
             Block raw = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
             require(raw instanceof BlockLightStrip, id + " is not a light strip");
             BlockLightStrip strip = (BlockLightStrip) raw;
@@ -35,7 +35,7 @@ final class MaterialRuntimeChecks {
         }
         checkGlassPlacement(player);
         BlockGlassWall space = (BlockGlassWall) Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "space_glass"));
+                new ResourceLocation("vandorlabs", "space_glass_medium"));
         checkGlassConnections(player,space,new BlockPos(24,4,24),false,EnumFacing.EAST);
         checkGlassConnections(player,space,new BlockPos(24,4,24),true,EnumFacing.SOUTH);
         System.out.println("[vandorlabs][reprolab] material-runtime PASS");
@@ -43,8 +43,8 @@ final class MaterialRuntimeChecks {
 
     private static void checkGlassPlacement(EntityPlayer player) {
         Block raw = Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs", "glass_wall"));
-        require(raw instanceof BlockGlassWall, "glass_wall has wrong block class");
+                new ResourceLocation("vandorlabs", "framed_observation_glass"));
+        require(raw instanceof BlockGlassWall, "framed_observation_glass has wrong block class");
         BlockGlassWall glass = (BlockGlassWall) raw;
         BlockPos pos = new BlockPos(24, 4, 24);
         for (EnumFacing direction : EnumFacing.HORIZONTALS) {

@@ -29,9 +29,9 @@ final class DoorRuntimeChecks {
             require(!Block.REGISTRY.containsKey(key) && !net.minecraft.item.Item.REGISTRY.containsKey(key),
                     "removed legacy door is still registered: "+id);
         }
-        BlockVandorDoor hingedA = door("space_standard_rotating_framed");
+        BlockVandorDoor hingedA = door("space_standard_rotating_door_framed");
         BlockVandorDoor hingedB = hingedA;
-        BlockVandorDoor sliding = door("space_standard_sliding_framed");
+        BlockVandorDoor sliding = door("space_standard_sliding_door_framed");
         BlockPos origin = new BlockPos(-8, 21, 6);
 
         List<BlockVandorDoor> allDoors = allDoors();
@@ -316,14 +316,14 @@ final class DoorRuntimeChecks {
 
     private static void checkConnectedSpaceModels(World world, BlockPos pos) {
         String[][] families = {
-                {"space_standard_rotating_framed",
-                        "space_standard_rotating_framed_paired"},
-                {"space_standard_sliding_framed",
-                        "space_standard_sliding_framed_paired"},
-                {"space_observation_rotating_framed",
-                        "space_observation_rotating_framed_paired"},
-                {"space_observation_sliding_framed",
-                        "space_observation_sliding_framed_paired"}
+                {"space_standard_rotating_door_framed",
+                        "space_standard_rotating_door_framed_paired"},
+                {"space_standard_sliding_door_framed",
+                        "space_standard_sliding_door_framed_paired"},
+                {"space_observation_rotating_door_framed",
+                        "space_observation_rotating_door_framed_paired"},
+                {"space_observation_sliding_door_framed",
+                        "space_observation_sliding_door_framed_paired"}
         };
         for (String[] family : families) {
             BlockVandorDoor rawSingle = door(family[0]);
@@ -388,8 +388,8 @@ final class DoorRuntimeChecks {
 
     private static void checkMotionPairMatrix(World world, EntityPlayer player, BlockPos pos) {
         BlockVandorDoor[] modes = {
-                door("space_standard_rotating_framed"),
-                door("space_standard_sliding_framed")
+                door("space_standard_rotating_door_framed"),
+                door("space_standard_sliding_door_framed")
         };
         for (BlockVandorDoor first : modes) {
             for (BlockVandorDoor second : modes) {

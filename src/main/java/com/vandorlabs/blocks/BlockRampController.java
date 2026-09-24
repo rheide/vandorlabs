@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 public class BlockRampController extends BlockVandorDirectional {
     public static final net.minecraft.block.properties.PropertyBool ACTIVE=net.minecraft.block.properties.PropertyBool.create("active");
     public BlockRampController() {
-        super("ramp_controller");
+        super("programmable_ramp");
         setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(ACTIVE,false));
     }
     @Override protected net.minecraft.block.state.BlockStateContainer createBlockState() {

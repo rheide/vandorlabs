@@ -1,8 +1,0 @@
-{
-  "parent": "block/orientable",
-  "textures": {
-    "front": "vandorlabs:blocks/engineering_screen_static",
-    "side": "vandorlabs:blocks/wall_panel_dark",
-    "top": "vandorlabs:blocks/wall_panel_dark"
-  }
-}

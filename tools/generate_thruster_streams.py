@@ -16,18 +16,20 @@ TEXTURE_ROOTS = (
     ROOT / "texture-packs/original/assets/vandorlabs/textures/blocks/thrusters",
 )
 SQUARES = {
-    "rocket_thruster": "rocket",
-    "ion_thruster": "ion",
-    "plasma_thruster_full": "plasma",
-    "impulse_engine_full": "impulse",
+    "classic_rocket": "rocket",
+    "ion_drive": "ion",
+    "plasma_vent_full_face": "plasma",
+    "impulse_engine_full_face": "impulse",
 }
-OBJ_BLOCKS = tuple(
-    f"{family}_{shape}{corner}"
-    for family in ("rocket_thruster", "ion_thruster", "plasma_thruster", "impulse_engine")
-    for shape, corners in (("hex", ("",)),
-                           ("triangle", ("", "_bottom_right", "_top_right", "_top_left")))
-    for corner in corners
+OBJ_BASES = (
+    ("rocket_thruster_hexagonal", "rocket_thruster_90_degree_wedge"),
+    ("ion_drive_hexagonal", "ion_drive_90_degree_wedge"),
+    ("plasma_vent_hexagonal", "plasma_vent_90_degree_wedge"),
+    ("impulse_engine_hexagonal", "impulse_engine_90_degree_wedge"),
 )
+OBJ_BLOCKS = tuple(block for hexagon, wedge in OBJ_BASES
+                   for block in (hexagon,) + tuple(wedge + corner for corner in
+                   ("", "_bottom_right", "_top_right", "_top_left")))
 HOVER_BLOCKS = ("antigravity_plate", "repulsor_array", "vertical_hover_thruster")
 ROTATIONS = {
     "north": {},

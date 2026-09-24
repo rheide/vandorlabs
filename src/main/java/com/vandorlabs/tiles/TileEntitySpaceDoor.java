@@ -43,7 +43,13 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
 
     public BlockSpaceDoor model(boolean sliding) {
         return (BlockSpaceDoor)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",
-                "space_standard"+(sliding?"_sliding_":"_rotating_")+(framed?"framed":"bare")));
+                modelId(2, sliding, framed)));
+    }
+    public static String modelId(int design, boolean sliding, boolean framed) {
+        String family = DESIGNS[design];
+        String prefix = "space_" + ("reactor".equals(family) ? "reactor_service" : family)
+                + (sliding ? "_sliding" : "_rotating");
+        return prefix + (design < 5 ? "_door_" : "_") + (framed ? "framed" : "bare");
     }
     public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part) {
         return 1+((design*3+detail)*2+(framed?1:0))*12+(paired?6:0)+part*2+(right?1:0);

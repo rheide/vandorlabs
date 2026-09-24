@@ -23,7 +23,7 @@ import net.minecraft.world.World;
  */
 public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
 
-    public static final String NAME = "programmable_input";
+    public static final String NAME = "programmable_half_input";
     public static final PropertyDirection FACING = PropertyDirection.create(
             "facing", EnumFacing.Plane.HORIZONTAL);
     public static final PropertyBool KEYBOARD = PropertyBool.create("keyboard");
