@@ -8,6 +8,7 @@ import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -66,6 +67,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private int speedIndex;
     private ResourceLocation previewTexture;
     private String inputPanel;
+    private int housingTexture;
+    private GuiButton housingButton;
 
     private int scrollIndex;
     private boolean draggingScrollbar;
@@ -111,6 +114,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         this.displayMode = te.getDisplayMode();
         this.speedIndex = te.getAnimationSpeedIndex();
         this.inputPanel = te.getInputPanel();
+        this.housingTexture = te.getHousingTexture();
         for (ModBlocks.ScreenOption option : ModBlocks.SCREEN_OPTIONS) {
             String raw = I18n.format("tile.vandorlabs." + option.bareId + ".name");
             String name = raw.replaceFirst("\\b(Bare|Framed) ", "")
@@ -221,8 +225,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         buttonList.add(modeStaticButton);
         buttonList.add(modeAnimatedButton);
         buttonList.add(frameButton);
+        housingButton = new GuiButton(50, x + 8, y + 210, xSize - 16, 20, "");
+        buttonList.add(housingButton);
         int doneW = Math.min(200, xSize - 16);
-        channelField = new GuiTextField(40,fontRenderer,x+120,y+212,84,18);
+        channelField = new GuiTextField(40,fontRenderer,x+64,y+186,84,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
@@ -246,12 +252,15 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         slowButton.enabled = speedIndex != 0;
         normalButton.enabled = speedIndex != 1;
         fastButton.enabled = speedIndex != 2;
+        housingButton.displayString = I18n.format("gui.vandorlabs.selector.housing") + ": "
+                + I18n.format("tile.vandorlabs."
+                        + ScreenHousingTextures.IDS[housingTexture] + ".name");
     }
 
     private void sendUpdate() {
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(pos,
                 activeId(), redstoneEnabled, displayMode, framed, speedIndex,
-                inputPanel, inputPanel, false, channel()));
+                inputPanel, inputPanel, false, channel(), housingTexture));
     }
 
     private int channel() {
@@ -289,6 +298,9 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 break;
             case 12:
                 speedIndex = 2;
+                break;
+            case 50:
+                housingTexture = (housingTexture + 1) % ScreenHousingTextures.IDS.length;
                 break;
             case 20:
                 if (channel() >= 0) sendUpdate();
@@ -553,7 +565,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 x + (console ? 164 : 196), y + 116, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),
                 x + 8, y + 148, 0xFFA0A0A8);
-        fontRenderer.drawString("Channel (0 = none)",x+8,y+217,0xFFA0A0A8);
+        fontRenderer.drawString("Channel",x+8,y+192,0xFFA0A0A8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
         // Hovered-row tooltip: family name plus which variant it addresses.

@@ -33,7 +33,7 @@ public final class SaveSchemaTest {
         expect(SaveSchema.Screen.class,
                 "selectedScreen", "redstoneEnabled", "displayMode", "framed",
                 "animationSpeedIndex", "inputPanel", "secondaryInputPanel",
-                "wallPosition", "smallInput");
+                "wallPosition", "smallInput", "housingTexture");
         expect(SaveSchema.Ramp.class,
                 "ControllerVersion", "Controller", "ControllerX", "ControllerY",
                 "ControllerZ", "Source", "SourceState", "SourceY", "Row",
@@ -47,7 +47,7 @@ public final class SaveSchemaTest {
         expect(SaveSchema.Redstone.class,
                 "RedstoneChannel", "ChannelSignal", "LocalOn", "ChannelInitialized",
                 "ManualOn", "ParticleStream", "LightInitialized", "MountRotation");
-        if (SaveSchema.Screen.VERSION != 1 || SaveSchema.Ramp.CONTROLLER_VERSION != 8
+        if (SaveSchema.Screen.VERSION != 2 || SaveSchema.Ramp.CONTROLLER_VERSION != 8
                 || SaveSchema.Ramp.CELL_VERSION != 6 || SaveSchema.Redstone.VERSION != 2) {
             throw new AssertionError("save schema version changed without updating its contract test");
         }

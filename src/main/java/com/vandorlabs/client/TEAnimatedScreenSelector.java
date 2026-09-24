@@ -6,6 +6,7 @@ import com.vandorlabs.animation.AnimationFrames;
 import com.vandorlabs.render.ScreenSurface;
 import com.vandorlabs.render.InputSurfaceLayout;
 import com.vandorlabs.render.ScreenHousingMesh;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.blocks.BlockProgrammableConsole;
@@ -281,6 +282,10 @@ public class TEAnimatedScreenSelector
             renderConsoleHousing(te);
         } else if (state.getBlock() instanceof BlockProgrammableDiagonalScreen) {
             renderDiagonalHousing(te, diagonalInverted);
+        } else {
+            bindAtlas();
+            setWorldLight(te);
+            renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
         }
         bindTexture(texture);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
@@ -334,8 +339,7 @@ public class TEAnimatedScreenSelector
         Minecraft mc = Minecraft.getMinecraft();
         bindAtlas();
         setWorldLight(te);
-        TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        TextureAtlasSprite wall = wallSprite(te);
         InputSurfaceLayout.Mounted layout=InputSurfaceLayout.halfInput(keyboard,upper,
                 wallPosition,small);
         renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
@@ -349,8 +353,7 @@ public class TEAnimatedScreenSelector
         Minecraft mc = Minecraft.getMinecraft();
         bindAtlas();
         setWorldLight(te);
-        TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        TextureAtlasSprite wall = wallSprite(te);
         double[] uv=bindScreenSurface(te);
         InputSurfaceLayout.Mounted layout=InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
@@ -395,8 +398,8 @@ public class TEAnimatedScreenSelector
         Minecraft mc = Minecraft.getMinecraft();
         bindAtlas();
         setWorldLight(te);
-        TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        TextureAtlasSprite wall = wallSprite(te);
+        renderWallBox(wall, 0, 0, 0, 16, 1, 16);
         drawWallMesh(wall,ScreenHousingMesh.halfConsole());
 
         double[] frontUv = bindInput(te, te.getInputPanel());
@@ -469,8 +472,8 @@ public class TEAnimatedScreenSelector
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,
                 (float) (combined % 65536), (float) (combined / 65536));
 
-        TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        TextureAtlasSprite wall = wallSprite(te);
+        renderWallBox(wall, 0, 0, 0, 16, 1, 16);
         drawWallMesh(wall,ScreenHousingMesh.console());
 
         // The supplied half-height controls are native 2:1 textures rather
@@ -488,8 +491,7 @@ public class TEAnimatedScreenSelector
         int combined = te.getWorld().getCombinedLight(te.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,
                 (float) (combined % 65536), (float) (combined / 65536));
-        TextureAtlasSprite wall = mc.getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        TextureAtlasSprite wall = wallSprite(te);
         // Explicit upper/lower geometry keeps the artwork upright. Reflecting
         // the model matrix would also reflect the texture.
         drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted));
@@ -497,6 +499,11 @@ public class TEAnimatedScreenSelector
 
     private static void bindAtlas() {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+    }
+
+    private static TextureAtlasSprite wallSprite(TileEntityAnimatedScreenSelector te) {
+        return Minecraft.getMinecraft().getTextureMapBlocks()
+                .getAtlasSprite(ScreenHousingTextures.texture(te.getHousingTexture()));
     }
 
     private static void spriteQuad(BufferBuilder buf, TextureAtlasSprite sprite,

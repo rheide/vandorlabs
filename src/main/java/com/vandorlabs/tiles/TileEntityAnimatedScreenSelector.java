@@ -77,6 +77,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean smallInput = false;
     private int redstoneChannel;
     private boolean channelSignal;
+    private int housingTexture;
+
+    public int getHousingTexture() { return housingTexture; }
+    public void setHousingTexture(int choice) {
+        housingTexture = ScreenHousingTextures.clamp(choice);
+        markDirty();
+    }
 
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return redstoneChannel; }
@@ -228,7 +235,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         super.writeToNBT(compound);
         new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
-                smallInput, redstoneChannel, channelSignal)
+                smallInput, redstoneChannel, channelSignal, housingTexture)
                 .write(new NbtPrimitiveData(compound));
         return compound;
     }
@@ -253,6 +260,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         smallInput = data.smallInput;
         redstoneChannel = data.redstoneChannel;
         channelSignal = data.channelSignal;
+        housingTexture = ScreenHousingTextures.clamp(data.housingTexture);
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

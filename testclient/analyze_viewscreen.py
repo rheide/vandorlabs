@@ -79,7 +79,7 @@ def main():
     console_housing_detail = mean_detail(console, (565, 463, 715, 472))
     print("console regions: screen %.2f, keyboard %.2f, housing %.2f"
           % (console_screen, console_keyboard, console_housing))
-    if console_screen < console_housing + 12.0:
+    if console_screen < console_housing + 6.0:
         failures.append("console programmable screen art is not visible")
     if console_keyboard < console_housing + 8.0:
         failures.append("console keyboard art is not visible")

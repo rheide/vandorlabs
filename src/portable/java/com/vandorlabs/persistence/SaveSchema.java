@@ -6,7 +6,7 @@ public final class SaveSchema {
     private SaveSchema() { }
 
     public static final class Screen {
-        public static final int VERSION=1;
+        public static final int VERSION=2;
         public static final String SELECTED="selectedScreen";
         public static final String REDSTONE_ENABLED="redstoneEnabled";
         public static final String DISPLAY_MODE="displayMode";
@@ -16,6 +16,7 @@ public final class SaveSchema {
         public static final String SECONDARY_INPUT="secondaryInputPanel";
         public static final String WALL_POSITION="wallPosition";
         public static final String SMALL_INPUT="smallInput";
+        public static final String HOUSING_TEXTURE="housingTexture";
         private Screen() { }
     }
 

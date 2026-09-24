@@ -16,11 +16,12 @@ public final class ScreenData {
     public final boolean smallInput;
     public final int redstoneChannel;
     public final boolean channelSignal;
+    public final int housingTexture;
 
     public ScreenData(String selectedScreen, boolean redstoneEnabled, int displayMode,
             boolean framed, int animationSpeedIndex, String inputPanel,
             String secondaryInputPanel, int wallPosition, boolean smallInput,
-            int redstoneChannel, boolean channelSignal) {
+            int redstoneChannel, boolean channelSignal, int housingTexture) {
         this.selectedScreen = selectedScreen;
         this.redstoneEnabled = redstoneEnabled;
         this.displayMode = ScreenBehavior.clampMode(displayMode);
@@ -32,6 +33,7 @@ public final class ScreenData {
         this.smallInput = smallInput;
         this.redstoneChannel = Math.max(0, redstoneChannel);
         this.channelSignal = channelSignal;
+        this.housingTexture = housingTexture;
     }
 
     public void write(PrimitiveData data) {
@@ -47,6 +49,7 @@ public final class ScreenData {
         data.putBoolean(SaveSchema.Screen.SMALL_INPUT, smallInput);
         data.putInt(SaveSchema.Redstone.CHANNEL, redstoneChannel);
         data.putBoolean(SaveSchema.Redstone.SIGNAL, channelSignal);
+        data.putInt(SaveSchema.Screen.HOUSING_TEXTURE, housingTexture);
     }
 
     public static ScreenData read(PrimitiveData data, String defaultScreen,
@@ -68,6 +71,7 @@ public final class ScreenData {
                 data.getInt(SaveSchema.Screen.SPEED), input, secondary, wall,
                 data.getBoolean(SaveSchema.Screen.SMALL_INPUT),
                 data.getInt(SaveSchema.Redstone.CHANNEL),
-                data.getBoolean(SaveSchema.Redstone.SIGNAL));
+                data.getBoolean(SaveSchema.Redstone.SIGNAL),
+                data.getInt(SaveSchema.Screen.HOUSING_TEXTURE));
     }
 }

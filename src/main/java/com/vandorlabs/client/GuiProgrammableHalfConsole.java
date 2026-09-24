@@ -4,6 +4,7 @@ import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -34,6 +35,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private int displayMode;
     private int speedIndex;
     private boolean redstoneEnabled;
+    private int housingTexture;
     private GuiTextField channelField;
 
     public GuiProgrammableHalfConsole(InventoryPlayer inventory,
@@ -45,6 +47,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         displayMode = te.getDisplayMode();
         speedIndex = te.getAnimationSpeedIndex();
         redstoneEnabled = te.isRedstoneEnabled();
+        housingTexture = te.getHousingTexture();
         xSize = 420;
         ySize = 268;
     }
@@ -75,6 +78,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
+        buttonList.add(new GuiButton(50, x + 8, y + 208, xSize - 16, 20, ""));
         buttonList.add(new GuiButton(20, x + (xSize - 200) / 2, y + 242, 200, 20,
                 I18n.format("gui.done")));
         topScroll = reveal(topPanel);
@@ -92,6 +96,10 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             }
             if (button.id >= 1 && button.id <= 3) button.enabled = displayMode != button.id - 1;
             if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
+            if (button.id == 50) button.displayString =
+                    I18n.format("gui.vandorlabs.selector.housing") + ": "
+                    + I18n.format("tile.vandorlabs."
+                            + ScreenHousingTextures.IDS[housingTexture] + ".name");
         }
     }
 
@@ -111,7 +119,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private void sendUpdate() {
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(te.getPos(),
                 te.getSelectedScreen(), redstoneEnabled, displayMode,
-                te.isFramed(), speedIndex, bottomPanel, topPanel, false, channel()));
+                te.isFramed(), speedIndex, bottomPanel, topPanel, false, channel(),
+                housingTexture));
     }
 
     private int channel() {
@@ -175,6 +184,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
+        else if (button.id == 50)
+            housingTexture = (housingTexture + 1) % ScreenHousingTextures.IDS.length;
         else return;
         refreshButtons();
         sendUpdate();

@@ -4,6 +4,7 @@ import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -30,6 +31,7 @@ public class GuiProgrammableInput extends GuiContainer {
     private int speedIndex;
     private boolean redstoneEnabled;
     private boolean smallInput;
+    private int housingTexture;
     private boolean draggingScrollbar;
     private int scrollbarDragOffset;
     private GuiTextField channelField;
@@ -43,6 +45,7 @@ public class GuiProgrammableInput extends GuiContainer {
         this.speedIndex = te.getAnimationSpeedIndex();
         this.redstoneEnabled = te.isRedstoneEnabled();
         this.smallInput = te.isSmallInput();
+        this.housingTexture = te.getHousingTexture();
         this.xSize = 250;
         this.ySize = 278;
     }
@@ -72,10 +75,11 @@ public class GuiProgrammableInput extends GuiContainer {
         buttonList.add(new GuiButton(31, x + 128, y + 178, 114, 18,
                 I18n.format("gui.vandorlabs.selector.normal")));
         buttonList.add(new GuiButton(0, x + 8, y + 202, 234, 18, ""));
-        channelField = new GuiTextField(40, fontRenderer, x + 168, y + 226, 74, 18);
+        channelField = new GuiTextField(40, fontRenderer, x + 168, y + 92, 74, 18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
+        buttonList.add(new GuiButton(50, x + 8, y + 226, 234, 20, ""));
         buttonList.add(new GuiButton(20, x + 25, y + 252, 200, 20,
                 I18n.format("gui.done")));
         revealSelection();
@@ -94,6 +98,10 @@ public class GuiProgrammableInput extends GuiContainer {
             if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
             if (button.id == 30) button.enabled = !smallInput;
             if (button.id == 31) button.enabled = smallInput;
+            if (button.id == 50) button.displayString =
+                    I18n.format("gui.vandorlabs.selector.housing") + ": "
+                    + I18n.format("tile.vandorlabs."
+                            + ScreenHousingTextures.IDS[housingTexture] + ".name");
         }
     }
 
@@ -122,7 +130,8 @@ public class GuiProgrammableInput extends GuiContainer {
     private void sendUpdate() {
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(te.getPos(),
                 te.getSelectedScreen(), redstoneEnabled, displayMode,
-                te.isFramed(), speedIndex, selected, selected, smallInput, channel()));
+                te.isFramed(), speedIndex, selected, selected, smallInput, channel(),
+                housingTexture));
     }
 
     private int channel() {
@@ -196,6 +205,8 @@ public class GuiProgrammableInput extends GuiContainer {
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
         else if (button.id == 30) smallInput = true;
         else if (button.id == 31) smallInput = false;
+        else if (button.id == 50)
+            housingTexture = (housingTexture + 1) % ScreenHousingTextures.IDS.length;
         else return;
         refreshButtons();
         sendUpdate();
@@ -256,7 +267,7 @@ public class GuiProgrammableInput extends GuiContainer {
                 x + 8, y + 142, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.size"),
                 x + 8, y + 170, 0xFFA0A0A8);
-        fontRenderer.drawString("Channel (0 = none)", x + 8, y + 231, 0xFFA0A0A8);
+        fontRenderer.drawString("Channel", x + 168, y + 80, 0xFFA0A0A8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
     }

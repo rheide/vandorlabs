@@ -16,6 +16,7 @@ public class MessageSyncScreenSelector implements IMessage {
     private String secondaryInputPanel;
     private boolean smallInput;
     private int redstoneChannel;
+    private int housingTexture;
 
     public MessageSyncScreenSelector() {}
 
@@ -42,6 +43,14 @@ public class MessageSyncScreenSelector implements IMessage {
     public MessageSyncScreenSelector(BlockPos pos, String selectedScreen, boolean redstoneEnabled,
             int displayMode, boolean framed, int animationSpeedIndex, String inputPanel,
             String secondaryInputPanel, boolean smallInput, int redstoneChannel) {
+        this(pos, selectedScreen, redstoneEnabled, displayMode, framed, animationSpeedIndex,
+                inputPanel, secondaryInputPanel, smallInput, redstoneChannel, 0);
+    }
+
+    public MessageSyncScreenSelector(BlockPos pos, String selectedScreen, boolean redstoneEnabled,
+            int displayMode, boolean framed, int animationSpeedIndex, String inputPanel,
+            String secondaryInputPanel, boolean smallInput, int redstoneChannel,
+            int housingTexture) {
         this.pos = pos;
         this.selectedScreen = selectedScreen;
         this.redstoneEnabled = redstoneEnabled;
@@ -52,6 +61,7 @@ public class MessageSyncScreenSelector implements IMessage {
         this.secondaryInputPanel = secondaryInputPanel;
         this.smallInput = smallInput;
         this.redstoneChannel = redstoneChannel;
+        this.housingTexture = housingTexture;
     }
 
     @Override
@@ -66,6 +76,7 @@ public class MessageSyncScreenSelector implements IMessage {
         secondaryInputPanel = buf.readableBytes() > 0 ? readString(buf) : inputPanel;
         smallInput = buf.readableBytes() > 0 && buf.readBoolean();
         redstoneChannel = buf.readableBytes() >= 4 ? buf.readInt() : 0;
+        housingTexture = buf.readableBytes() >= 4 ? buf.readInt() : 0;
     }
 
     @Override
@@ -80,6 +91,7 @@ public class MessageSyncScreenSelector implements IMessage {
         writeString(buf, secondaryInputPanel);
         buf.writeBoolean(smallInput);
         buf.writeInt(redstoneChannel);
+        buf.writeInt(housingTexture);
     }
 
     private static String readString(ByteBuf buf) {
@@ -136,4 +148,5 @@ public class MessageSyncScreenSelector implements IMessage {
     }
 
     public int getRedstoneChannel() { return redstoneChannel; }
+    public int getHousingTexture() { return housingTexture; }
 }

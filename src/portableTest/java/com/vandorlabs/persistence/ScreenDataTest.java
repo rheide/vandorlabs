@@ -17,7 +17,7 @@ public final class ScreenDataTest {
                 &&"keyboard".equals(defaults.secondaryInputPanel),"legacy input defaults");
 
         ScreenData source=new ScreenData("science",true,99,false,99,"pilot","keyboard",
-                9,true,-4,true);
+                9,true,-4,true,5);
         MemoryPrimitiveData encoded=new MemoryPrimitiveData();
         source.write(encoded);
         ScreenData decoded=ScreenData.read(encoded,"engineering_screen","keyboard",
@@ -26,7 +26,7 @@ public final class ScreenDataTest {
                 &&decoded.animationSpeedIndex==2,"untrusted modes clamp");
         check(decoded.wallPosition==2&&decoded.redstoneChannel==0,"numeric fields clamp");
         check("science".equals(decoded.selectedScreen)&&"pilot".equals(decoded.inputPanel)
-                &&decoded.channelSignal,"screen save round trip");
+                &&decoded.channelSignal&&decoded.housingTexture==5,"screen save round trip");
         check(encoded.getInt(SaveSchema.DATA_VERSION)==SaveSchema.Screen.VERSION,
                 "screen schema version written");
         System.out.println("Screen save codec PASS");

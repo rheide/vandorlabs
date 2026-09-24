@@ -1,9 +1,6 @@
 {
-  "parent": "block/orientable",
   "textures": {
-    "particle": "vandorlabs:blocks/dark_wall_panel",
-    "front": "vandorlabs:blocks/programmable_viewscreen",
-    "side": "vandorlabs:blocks/dark_wall_panel",
-    "top": "vandorlabs:blocks/dark_wall_panel"
-  }
+    "particle": "vandorlabs:blocks/dark_wall_panel"
+  },
+  "elements": []
 }

@@ -4,6 +4,8 @@ import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.ScreenHousingTextures;
+import net.minecraft.client.Minecraft;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.Block;
@@ -27,6 +29,7 @@ final class ScreenRuntimeChecks {
 
     static void run(EntityPlayer player) {
         checkTilePersistence();
+        checkHousingSprites();
         checkSurvivalDropRoundTrip(player);
         checkPacketRoundTrip();
         checkFacings(ModBlocks.ANIMATED_SCREEN_SELECTOR);
@@ -45,6 +48,15 @@ final class ScreenRuntimeChecks {
                 "half-input scrollbar drag does not cover its full range");
     }
 
+    private static void checkHousingSprites() {
+        for (int i = 0; i < ScreenHousingTextures.IDS.length; i++) {
+            String name = ScreenHousingTextures.texture(i);
+            require(name.equals(Minecraft.getMinecraft().getTextureMapBlocks()
+                            .getAtlasSprite(name).getIconName()),
+                    "missing housing sprite: " + name);
+        }
+    }
+
     private static void checkTilePersistence() {
         for (String panel : TileEntityAnimatedScreenSelector.INPUT_PANELS) {
             TileEntityAnimatedScreenSelector source = new TileEntityAnimatedScreenSelector();
@@ -59,6 +71,7 @@ final class ScreenRuntimeChecks {
             source.setWallPosition(1);
             source.setSmallInput(true);
             source.setRedstoneChannel(4271);
+            source.setHousingTexture(8);
             NBTTagCompound tag = source.writeToNBT(new NBTTagCompound());
             TileEntityAnimatedScreenSelector restored =
                     new TileEntityAnimatedScreenSelector();
@@ -75,7 +88,8 @@ final class ScreenRuntimeChecks {
                                     .equals(restored.getSecondaryInputPanel())
                             && restored.getWallPosition(0) == 1
                             && restored.isSmallInput()
-                            && restored.getRedstoneChannel() == 4271,
+                            && restored.getRedstoneChannel() == 4271
+                            && restored.getHousingTexture() == 8,
                     "tile NBT round trip failed for " + panel);
         }
         TileEntityAnimatedScreenSelector invalid = new TileEntityAnimatedScreenSelector();
@@ -141,6 +155,7 @@ final class ScreenRuntimeChecks {
         tile.setWallPosition(1);
         tile.setSmallInput(true);
         tile.setRedstoneChannel(4271);
+        tile.setHousingTexture(8);
     }
 
     private static void assertDistinctConfiguration(
@@ -156,7 +171,8 @@ final class ScreenRuntimeChecks {
                                 TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1]
                         .equals(tile.getSecondaryInputPanel())
                         && tile.getWallPosition(0) == 1 && tile.isSmallInput()
-                        && tile.getRedstoneChannel() == 4271,
+                        && tile.getRedstoneChannel() == 4271
+                        && tile.getHousingTexture() == 8,
                 "programmable drop configuration did not round-trip: " + context);
     }
 
@@ -167,7 +183,7 @@ final class ScreenRuntimeChecks {
                 TileEntityAnimatedScreenSelector.MODE_ANIMATED, false, 2,
                 TileEntityAnimatedScreenSelector.INPUT_PANELS[
                         TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1],
-                TileEntityAnimatedScreenSelector.INPUT_PANELS[1], true, 4271);
+                TileEntityAnimatedScreenSelector.INPUT_PANELS[1], true, 4271, 8);
         ByteBuf bytes = Unpooled.buffer();
         source.toBytes(bytes);
         MessageSyncScreenSelector restored = new MessageSyncScreenSelector();
@@ -185,7 +201,8 @@ final class ScreenRuntimeChecks {
                         && TileEntityAnimatedScreenSelector.INPUT_PANELS[1]
                                 .equals(restored.getSecondaryInputPanel())
                         && restored.isSmallInput()
-                        && restored.getRedstoneChannel() == 4271,
+                        && restored.getRedstoneChannel() == 4271
+                        && restored.getHousingTexture() == 8,
                 "selector packet round trip failed");
         bytes.release();
     }
