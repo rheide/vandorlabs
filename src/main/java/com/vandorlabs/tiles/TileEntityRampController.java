@@ -167,7 +167,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if (!recover(false)) return false;
         }
         startOffset=start; drop=Math.abs(end); treadPixels=pixels; segments=ControllerPlatform.treadCount(pixels); top=end<0; activateOnPower=powerOn; slow=slower; elevator=lift;
-        travelAxis=travel; extendSegments=extend; elevator=lift || extend;
+        travelAxis=travel; extendSegments=extend; elevator=lift;
         speed=selectedSpeed; slow=speed==2;
         configuredFacing=direction;
         owner=player.getUniqueID();
@@ -639,7 +639,6 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         drop=Math.abs(signedEnd); top=signedEnd<0;
         travelAxis=data.travelAxis==RampGeometry.LEFT?RampGeometry.RIGHT:data.travelAxis;
         extendSegments=data.extendSegments; speed=data.speed; slow=speed==2;
-        if (extendSegments) elevator=true;
         if (world!=null && !world.isRemote && oldChannel!=redstoneChannel)
             RedstoneChannels.channelChanged(this,oldChannel);
         original=tag.hasKey(SaveSchema.Ramp.ORIGINAL_STATE)

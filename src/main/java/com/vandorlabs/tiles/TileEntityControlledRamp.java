@@ -217,7 +217,6 @@ public class TileEntityControlledRamp extends TileEntity {
         extendSegments=tag.getBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS);
         speed=tag.hasKey(SaveSchema.Ramp.SPEED_MODE)?tag.getInteger(SaveSchema.Ramp.SPEED_MODE):1;
         if (speed<0 || speed>2) speed=1;
-        if (extendSegments) elevator=true;
         origins.clear();
         NBTTagList originList=tag.getTagList(SaveSchema.Ramp.ORIGINS,10);
         for (int i=0;i<Math.min(128,originList.tagCount());i++) {

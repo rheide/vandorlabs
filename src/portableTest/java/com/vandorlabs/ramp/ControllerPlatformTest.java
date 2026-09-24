@@ -58,6 +58,15 @@ public final class ControllerPlatformTest {
         close(down.minY,37,"negative fill sweep includes final position");
         close(down.maxY,41,"negative fill sweep keeps starting position");
         check(RampGeometry.clip(down,0,38,0)!=null,"negative fill sweep has a source for intermediate cells");
+        RampGeometry.Box hingeFill=RampGeometry.movingTread(RampGeometry.Direction.SOUTH,0,40,0,
+                0,.5,0,3,0,-3,8,0,1,1,false,RampGeometry.VERTICAL,true);
+        RampGeometry.Box farFill=RampGeometry.movingTread(RampGeometry.Direction.SOUTH,0,40,2,
+                0,.5,2,3,0,-3,8,1,1,1,false,RampGeometry.VERTICAL,true);
+        close(hingeFill.minY,40,"filled ramp hinge stays at start");
+        close(farFill.minY,37,"filled ramp far tread reaches full drop");
+        close(farFill.maxY,40.5,"filled ramp keeps far tread start");
+        check(RampGeometry.clip(farFill,0,38,2)!=null,
+                "filled ramp geometry includes intermediate far tread cell");
         close(ControllerPlatform.offsetPixels(0,0,1,16,0,8,.9,true,true),7.2,
                 "fast motion stays linear near the end");
         check(ControllerPlatform.offsetPixels(0,0,1,16,0,8,.9,true,false)>7.2,

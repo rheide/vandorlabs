@@ -6,7 +6,7 @@ no separate recipe.
 
 The controller discovers an adjacent rectangular platform made from matching
 slabs or ordinary full blocks. It replaces that platform with protected moving
-cells while deployed, animates it as a ramp, lift, or extension, and restores the exact
+cells while deployed, animates it as a ramp, filled ramp, lift, or extension, and restores the exact
 source blocks when retracted.
 
 ## Ramp direction and tread style
@@ -23,13 +23,14 @@ created through the real controller transaction rather than hand-built props.
 
 ## Configuration
 
-The interface controls up/down or left/right travel, ramp/lift/extend mode,
+The interface controls up/down or left/right travel, ramp/filled ramp/lift/extend mode,
 signed start and end offsets, physical or virtual redstone activation,
 fast/medium/slow movement, ramp direction, and tread size.
 
 ![Ramp controller configuration](../images/gallery/systems/ramp-controller-config.png)
 
-Platform width, length, and travel are each capped at eight blocks. Matching
+Platform width is capped at eight blocks, length at sixteen, and each signed
+travel endpoint at eight blocks. Matching
 blocks outside the selected connected platform are ignored, and occupied or
 obstructed travel space prevents deployment rather than overwriting blocks.
 For implementation details and placement rules, see

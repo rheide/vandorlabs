@@ -460,6 +460,12 @@ public final class ControllerRuntimeChecks {
         controller=place(world,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         require(controller.configureTreads(player,0,2,8,true,false,false,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.LEFT,true),"filled ramp config accepted");
+        require(!controller.elevator && controller.extendSegments,"filled ramp keeps per-tread travel");
+        require(controller.request(true),"filled ramp starts"); finish(controller);
+        require(!controller.error,"filled ramp finishes");
+        require(controller.recover(false),"filled ramp recovers");
+        require(controller.configureTreads(player,0,2,8,true,false,true,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.LEFT,true),"extend mode config accepted");
         require(controller.elevator && controller.extendSegments,"extend mode uses whole platform travel");
         require(controller.request(true),"whole platform extension starts"); finish(controller);
@@ -473,6 +479,29 @@ public final class ControllerRuntimeChecks {
                     "overlapping fill has one collision and render box per cell");
         }
         require(controller.recover(false),"whole platform extension recovers");
+        clear(world,pos);
+        controller=place(world,pos,EnumFacing.SOUTH);
+        sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+        require(controller.configureTreads(player,0,-3,8,false,false,false,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.VERTICAL,true),"vertical filled ramp config accepted");
+        require(controller.isOpen() && controller.extendSegments && !controller.elevator,
+                "filled ramp retains tread slope and starts on inverted redstone");
+        finish(controller);
+        BlockPos near=pos.south(),far=pos.south(3);
+        require(!controller.error && world.getTileEntity(far) instanceof TileEntityControlledRamp,
+                "filled ramp keeps its starting surface");
+        for (int depth=1;depth<=3;depth++)
+            require(world.getTileEntity(far.down(depth)) instanceof TileEntityControlledRamp,
+                    "far tread fills every intermediate block");
+        require(world.isAirBlock(near.down(3)),"hinge does not fill to far tread depth");
+        TileEntityRampController filledCopy=new TileEntityRampController();
+        filledCopy.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+        require(filledCopy.extendSegments && !filledCopy.elevator,"filled ramp mode survives NBT");
+        require(controller.request(false),"filled ramp retracts"); finish(controller);
+        require(!controller.attached() && !controller.error,"filled ramp releases all cells on retraction");
+        for (BlockPos source:sources)
+            require(world.getBlockState(source).equals(Blocks.STONE_SLAB.getDefaultState()),
+                    "filled ramp restores its source blocks");
         // Changing modes through the GUI while powered resets a deployed ramp and
         // immediately captures the same source platform for the new mode.
         clear(world,pos);
@@ -487,6 +516,13 @@ public final class ControllerRuntimeChecks {
         require(controller.isOpen() && !controller.error,"powered ramp deployed");
         require(controller.configureTreads(player,0,-3,2,true,false,false,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.VERTICAL,true),
+                "powered mode switch to filled ramp: "+controller.status);
+        require(controller.extendSegments && !controller.elevator && controller.attached() && !controller.error,
+                "powered filled ramp recaptured platform");
+        finish(controller);
+        require(controller.isOpen() && !controller.error,"powered filled ramp finishes: "+controller.status);
+        require(controller.configureTreads(player,0,-3,2,true,false,true,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.VERTICAL,true),
                 "powered mode switch to extend: "+controller.status);
         require(controller.extendSegments && controller.attached() && !controller.error,
                 "powered extend recaptured platform");
@@ -500,7 +536,7 @@ public final class ControllerRuntimeChecks {
         require(controller.configureTreads(player,0,-3,2,false,false,false,EnumFacing.SOUTH),
                 "unpowered ramp config: "+controller.status);
         finish(controller);
-        require(controller.configureTreads(player,0,-3,2,false,false,false,EnumFacing.SOUTH,
+        require(controller.configureTreads(player,0,-3,2,false,false,true,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.VERTICAL,true),
                 "unpowered mode switch to extend: "+controller.status);
         finish(controller);
@@ -534,6 +570,28 @@ public final class ControllerRuntimeChecks {
         finish(controller);
         require(!controller.error,"fast lift finishes");
         require(controller.recover(false),"fast lift recovers");
+        for (boolean lift:new boolean[]{false,true}) for (boolean fill:new boolean[]{false,true})
+        for (int travel:new int[]{com.vandorlabs.ramp.RampGeometry.VERTICAL,
+                com.vandorlabs.ramp.RampGeometry.RIGHT}) for (int end:new int[]{-2,2}) {
+            clear(world,pos);
+            controller=place(world,pos,EnumFacing.SOUTH);
+            sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+            require(controller.configureTreads(player,0,end,8,true,false,lift,EnumFacing.SOUTH,
+                    travel,fill),"mode/axis/sign matrix config");
+            require(controller.elevator==lift && controller.extendSegments==fill
+                    && controller.travelAxis==travel,"mode/axis/sign matrix settings");
+            require(controller.request(true),"mode/axis/sign matrix deployment starts");
+            finish(controller);
+            require(controller.isOpen() && !controller.error,"mode/axis/sign matrix completes: "
+                    +lift+" "+fill+" "+travel+" "+end+" "+controller.status);
+            require(controller.request(false),"mode/axis/sign matrix retraction starts");
+            finish(controller);
+            require(!controller.attached() && !controller.error,
+                    "mode/axis/sign matrix retraction restores platform");
+            for (BlockPos source:sources)
+                require(world.getBlockState(source).equals(Blocks.STONE_SLAB.getDefaultState()),
+                        "mode/axis/sign matrix source restored");
+        }
         player.capabilities.isFlying=flying; player.noClip=noClip;
         clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);

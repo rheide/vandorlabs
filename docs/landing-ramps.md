@@ -5,15 +5,17 @@ beside a horizontal platform made of matching slabs or ordinary
 solid blocks. Look toward the platform while placing the controller: its top
 arrow points to the seed block it will select.
 
+Craft the controller with a piston in the center of a 3×3 crafting grid and
+Programmable Matter Ingots in the eight surrounding slots.
+
 Right-click to configure. Every valid setting edit is sent immediately; there is
 no Apply button. An edit resets the platform to its original position, then
 evaluates the redstone signal using the new settings:
 
-Craft the controller with a piston in the center of a 3×3 crafting grid and
-Programmable Matter Ingots in the eight surrounding slots.
-
-- **Mode:** ramp (treads travel different distances), lift (whole platform
-  translates), or extend (whole platform expands to its destination).
+- **Mode:** ramp (treads travel different distances), filled ramp (the same
+  tread slope with material filling from each tread's starting position),
+  lift (whole platform translates), or extend (whole platform expands to its
+  destination).
 - **Start / off offset** and **End / on offset:** signed integers from -8 to +8,
   measured from the original platform along the chosen travel axis. Up/down
   uses positive for up and negative for down. Type a value or use the adjacent
@@ -29,9 +31,9 @@ Programmable Matter Ingots in the eight surrounding slots.
   ramp direction. A positive sideways offset goes right; a negative one goes left.
   The first ramp tread stays hinged; lift mode
   moves the whole platform sideways.
-- **Extend** keeps the starting platform and fills the space to its current
-  position with the source block material. Retraction removes that fill.
-  Standing entities remain on the starting surface in extend mode.
+- **Filled ramp / extend** keep each starting surface and fill the space to
+  its current position with the source block material. Retraction removes that
+  fill. These modes do not deliberately carry standing entities.
 - **Deploy when redstone is ON / OFF:** choose either signal polarity.
 - **Base speed:** fast, medium or slow. Medium is the previous fast speed;
   new fast takes half as long and moves at a constant rate. Slow takes twice
@@ -40,7 +42,7 @@ Programmable Matter Ingots in the eight surrounding slots.
   one block). Type an allowed value or use minus/plus to step through the choices;
   edits apply immediately. `1` is
   finest, `8` is half-block stairs, and `16` is a full-block step. This setting is
-  disabled for lift and extend. Existing stairs retain 8px treads; existing smooth
+  disabled for lift and extend; filled ramp retains tread control. Existing stairs retain 8px treads; existing smooth
   ramps retain their actual 2px treads. A one-block ramp with a single 16px tread
   moves that entire tread because it has no separate hinge tread.
 

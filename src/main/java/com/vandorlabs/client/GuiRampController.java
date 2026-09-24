@@ -57,10 +57,12 @@ public class GuiRampController extends GuiContainer {
         refresh();
     }
     private void refresh() {
-        treadField.setEnabled(!elevator && !extendSegments);
+        treadField.setEnabled(!elevator);
         for (GuiButton b:buttonList) {
-            if (b.id==14 || b.id==15) b.enabled=!elevator && !extendSegments;
-            if (b.id==1) b.displayString=extendSegments?"Mode: extend":elevator?"Mode: lift":"Mode: ramp";
+            if (b.id==14 || b.id==15) b.enabled=!elevator;
+            if (b.id==1) b.displayString=elevator
+                    ?(extendSegments?"Mode: extend":"Mode: lift")
+                    :(extendSegments?"Mode: filled ramp":"Mode: ramp");
             if (b.id==3) b.displayString=powerOn?"Trigger: redstone ON":"Trigger: redstone OFF";
             if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
             if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
@@ -69,9 +71,10 @@ public class GuiRampController extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) {
-            if (extendSegments) { extendSegments=false; elevator=false; }
-            else if (elevator) { extendSegments=true; elevator=true; }
-            else elevator=true;
+            if (!elevator && !extendSegments) extendSegments=true;
+            else if (!elevator) { elevator=true; extendSegments=false; }
+            else if (!extendSegments) extendSegments=true;
+            else { elevator=false; extendSegments=false; }
         }
         if (button.id==3) powerOn=!powerOn;
         if (button.id==4) speed=(speed+1)%3;
@@ -151,7 +154,7 @@ public class GuiRampController extends GuiContainer {
         fontRenderer.drawString("Programmable Ramp",14,10,0xFFFFFF);
         fontRenderer.drawString("Start / off offset (-8 to 8)",14,35,0xDAE8F0);
         fontRenderer.drawString("End / on offset (-8 to 8)",14,59,0xDAE8F0);
-        fontRenderer.drawString("Tread px",164,132,elevator||extendSegments?0x78848C:0xDAE8F0);
+        fontRenderer.drawString("Tread px",164,132,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawString(travelAxis==0?"Positive = up; negative = down. Footprint: 8x16.":
                 "Positive = right; negative = left. Footprint: 8x16.",14,153,0xADBECA);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
