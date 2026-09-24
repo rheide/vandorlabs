@@ -3,6 +3,9 @@ package com.vandorlabs.persistence;
 /** Portable scalar state for a ramp controller; coordinates and block states stay in adapters. */
 public final class RampControllerData {
     public final int startOffset,endOffset,treadPixels;
+    public final int travelAxis;
+    public final int speed;
+    public final boolean extendSegments;
     public final int savedVersion,drop,segments,duration,length,minAlong,facing,direction,redstoneChannel;
     public final String status;
     public final boolean top,activateOnPower,slow,elevator,error,open,moving;
@@ -37,6 +40,32 @@ public final class RampControllerData {
             int duration,int length,int minAlong,int facing,boolean hasDirection,int direction,
             double low,double high,boolean latched,boolean signalKnown,boolean recoveryPending,
             int redstoneChannel,boolean channelSignal,int startOffset,int endOffset,int treadPixels) {
+        this(savedVersion,drop,segments,status,top,activateOnPower,slow,elevator,error,open,moving,
+                startPose,startTick,lastStepTick,duration,length,minAlong,facing,hasDirection,direction,
+                low,high,latched,signalKnown,recoveryPending,redstoneChannel,channelSignal,
+                startOffset,endOffset,treadPixels,0,false,slow?2:1);
+    }
+
+    public RampControllerData(int savedVersion,int drop,int segments,String status,
+            boolean top,boolean activateOnPower,boolean slow,boolean elevator,boolean error,
+            boolean open,boolean moving,double startPose,long startTick,long lastStepTick,
+            int duration,int length,int minAlong,int facing,boolean hasDirection,int direction,
+            double low,double high,boolean latched,boolean signalKnown,boolean recoveryPending,
+            int redstoneChannel,boolean channelSignal,int startOffset,int endOffset,int treadPixels,
+            int travelAxis,boolean extendSegments) {
+        this(savedVersion,drop,segments,status,top,activateOnPower,slow,elevator,error,open,moving,
+                startPose,startTick,lastStepTick,duration,length,minAlong,facing,hasDirection,direction,
+                low,high,latched,signalKnown,recoveryPending,redstoneChannel,channelSignal,
+                startOffset,endOffset,treadPixels,travelAxis,extendSegments,slow?2:1);
+    }
+
+    public RampControllerData(int savedVersion,int drop,int segments,String status,
+            boolean top,boolean activateOnPower,boolean slow,boolean elevator,boolean error,
+            boolean open,boolean moving,double startPose,long startTick,long lastStepTick,
+            int duration,int length,int minAlong,int facing,boolean hasDirection,int direction,
+            double low,double high,boolean latched,boolean signalKnown,boolean recoveryPending,
+            int redstoneChannel,boolean channelSignal,int startOffset,int endOffset,int treadPixels,
+            int travelAxis,boolean extendSegments,int speed) {
         this.treadPixels=Math.max(1,Math.min(16,treadPixels));
         this.startOffset=Math.max(-8,Math.min(8,startOffset));
         this.endOffset=Math.max(-16,Math.min(16,endOffset));
@@ -58,12 +87,18 @@ public final class RampControllerData {
         this.recoveryPending=recoveryPending;
         this.redstoneChannel=Math.max(0,redstoneChannel);
         this.channelSignal=channelSignal;
+        this.travelAxis=Math.max(0,Math.min(2,travelAxis));
+        this.extendSegments=extendSegments;
+        this.speed=speed>=0 && speed<=2?speed:(slow?2:1);
     }
 
     public void write(PrimitiveData data) {
         data.putInt(SaveSchema.Ramp.TREAD_PIXELS,treadPixels);
         data.putInt(SaveSchema.Ramp.START_OFFSET,startOffset);
         data.putInt(SaveSchema.Ramp.END_OFFSET,endOffset);
+        data.putInt(SaveSchema.Ramp.TRAVEL_AXIS,travelAxis);
+        data.putBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS,extendSegments);
+        data.putInt(SaveSchema.Ramp.SPEED_MODE,speed);
         data.putInt(SaveSchema.Ramp.CONTROLLER_VERSION_KEY,SaveSchema.Ramp.CONTROLLER_VERSION);
         data.putInt(SaveSchema.Ramp.DROP,drop); data.putInt(SaveSchema.Ramp.SEGMENTS,segments);
         data.putString(SaveSchema.Ramp.STATUS,status); data.putBoolean(SaveSchema.Ramp.TOP,top);
@@ -104,6 +139,9 @@ public final class RampControllerData {
                 data.contains(SaveSchema.Ramp.END_OFFSET)?data.getInt(SaveSchema.Ramp.END_OFFSET)
                         :(legacy||data.getBoolean(SaveSchema.Ramp.TOP)?-1:1)*Math.max(1,Math.min(16,data.getInt(SaveSchema.Ramp.DROP))),
                 data.contains(SaveSchema.Ramp.TREAD_PIXELS)?data.getInt(SaveSchema.Ramp.TREAD_PIXELS)
-                        :(data.getInt(SaveSchema.Ramp.SEGMENTS)==8?2:8));
+                        :(data.getInt(SaveSchema.Ramp.SEGMENTS)==8?2:8),
+                data.getInt(SaveSchema.Ramp.TRAVEL_AXIS),data.getBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS),
+                data.contains(SaveSchema.Ramp.SPEED_MODE)?data.getInt(SaveSchema.Ramp.SPEED_MODE)
+                        :(data.getBoolean(SaveSchema.Ramp.SLOW)?2:1));
     }
 }

@@ -12,7 +12,7 @@ than documented one by one.
 - [Programmable displays and consoles](programmable.md)
 - [Doors](doors.md)
 - [Propulsion and hover systems](propulsion.md)
-- [Ramp / Elevator Controller](ramp-controller.md)
+- [Programmable Ramp](ramp-controller.md)
 - [Controls, lighting, furniture, and building blocks](systems-and-building.md)
 - [Maintaining and regenerating the gallery](CONTRIBUTING.md)
 

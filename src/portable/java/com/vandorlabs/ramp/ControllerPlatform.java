@@ -89,14 +89,21 @@ public final class ControllerPlatform {
     public static double treadEnd(int step,int pixels) { return Math.min(1,(step+1)*pixels/16.0); }
     public static double offsetPixels(int row,int step,int length,int pixels,int start,int end,
             double pose,boolean elevator) {
+        return offsetPixels(row,step,length,pixels,start,end,pose,elevator,false);
+    }
+    public static double offsetPixels(int row,int step,int length,int pixels,int start,int end,
+            double pose,boolean elevator,boolean fast) {
         double p=Math.max(0,Math.min(1,pose));
-        double height=start+(end-start)*p*p*(3-2*p);
+        double height=start+(end-start)*(fast?p:p*p*(3-2*p));
         double last=length-1+treadStart(treadCount(pixels)-1,pixels);
         // A one-block ramp with one full-block tread has no separate hinge tread.
         return elevator || last==0?height:height*(row+treadStart(step,pixels))/last;
     }
     public static int duration(int length,int height,boolean slow) {
-        return (slow?20:10)*Math.max(1,Math.max(length,height));
+        return duration(length,height,slow?2:1);
+    }
+    public static int duration(int length,int height,int speed) {
+        return (speed==0?5:speed==2?20:10)*Math.max(1,Math.max(length,height));
     }
     /** Undo segment translation before sampling the original block's side texture.
      * Keeping the source coordinate (rather than normalizing a clipped slice) also

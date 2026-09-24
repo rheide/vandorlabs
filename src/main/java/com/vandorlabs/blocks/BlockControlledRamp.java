@@ -104,7 +104,7 @@ public class BlockControlledRamp extends BlockVandorDirectional {
     @Override public Item getItemDropped(IBlockState state,Random rand,int fortune) { return net.minecraft.init.Items.AIR; }
     @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest) {
         if (!world.isRemote) player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(
-                "Retract or remove the Ramp Controller to restore this platform."),true);
+                "Retract or remove the Programmable Ramp to restore this platform."),true);
         return false; // Also protect the source journal from creative-mode harvesting.
     }
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,World world,BlockPos pos,EntityPlayer player) {

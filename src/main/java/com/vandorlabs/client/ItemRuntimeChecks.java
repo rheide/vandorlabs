@@ -67,6 +67,22 @@ final class ItemRuntimeChecks {
         grid.setInventorySlotContents(0, new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
         grid.setInventorySlotContents(2, new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
         require(!doorRecipe.matches(grid, player.world), "extra ingredient crafted a door");
+        IRecipe rampRecipe=CraftingManager.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "programmable_ramp"));
+        require(rampRecipe!=null,"Programmable Ramp recipe loaded");
+        for (int i=0;i<9;i++) grid.setInventorySlotContents(i,
+                new ItemStack(i==4?Item.getItemFromBlock(net.minecraft.init.Blocks.PISTON)
+                        :ModItems.PROGRAMMABLE_MATTER_INGOT));
+        require(rampRecipe.matches(grid,player.world),"piston surrounded by eight ingots matches");
+        ItemStack ramp=CraftingManager.findMatchingResult(grid,player.world);
+        require(ramp.getItem()==Item.getItemFromBlock(Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "ramp_controller"))) && ramp.getCount()==1,
+                "recipe crafts one Programmable Ramp");
+        grid.setInventorySlotContents(4,ItemStack.EMPTY);
+        require(!rampRecipe.matches(grid,player.world),"missing piston does not craft ramp");
+        grid.setInventorySlotContents(4,new ItemStack(Item.getItemFromBlock(net.minecraft.init.Blocks.PISTON)));
+        grid.setInventorySlotContents(0,ItemStack.EMPTY);
+        require(!rampRecipe.matches(grid,player.world),"missing ingot does not craft ramp");
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
     }
 

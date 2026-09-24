@@ -1,7 +1,7 @@
-# Ramp / Elevator Controller
+# Programmable Ramp
 
-The standalone Landing Ramp items have been removed. Use **Ramp / Elevator
-Controller** beside a horizontal platform made of matching slabs or ordinary
+The standalone Landing Ramp items have been removed. Use **Programmable Ramp**
+beside a horizontal platform made of matching slabs or ordinary
 solid blocks. Look toward the platform while placing the controller: its top
 arrow points to the seed block it will select.
 
@@ -9,37 +9,51 @@ Right-click to configure. Every valid setting edit is sent immediately; there is
 no Apply button. An edit resets the platform to its original position, then
 evaluates the redstone signal using the new settings:
 
-- **Mode:** ramp (hinged first tread) or elevator (whole platform translates).
+Craft the controller with a piston in the center of a 3×3 crafting grid and
+Programmable Matter Ingots in the eight surrounding slots.
+
+- **Mode:** ramp (treads travel different distances), lift (whole platform
+  translates), or extend (whole platform expands to its destination).
 - **Start / off offset** and **End / on offset:** signed integers from -8 to +8,
-  measured from the original platform. Positive raises, negative lowers, zero is
-  flat. Type a value or use the adjacent minus/plus buttons; valid edits apply
+  measured from the original platform along the chosen travel axis. Up/down
+  uses positive for up and negative for down. Type a value or use the adjacent
+  minus/plus buttons; valid edits apply
   immediately. For example, start `2`, end `-3` travels from two blocks up to
   three blocks down. Equal endpoints are allowed. Trigger polarity still decides
   which redstone signal selects the end position.
 - **Ramp direction:** north, east, south or west, independent of the controller's
   arrow. The arrow still selects the adjacent platform, so the controller may
   sit alongside the ramp. The chosen direction points toward the far treads
-  (the hinge stays at the original height at both endpoints).
+  (the hinge stays at the original position at both endpoints).
+- **Travel:** up/down or left/right. Left and right are relative to the selected
+  ramp direction. A positive sideways offset goes right; a negative one goes left.
+  The first ramp tread stays hinged; lift mode
+  moves the whole platform sideways.
+- **Extend** keeps the starting platform and fills the space to its current
+  position with the source block material. Retraction removes that fill.
+  Standing entities remain on the starting surface in extend mode.
 - **Deploy when redstone is ON / OFF:** choose either signal polarity.
-- **Base speed:** fast or slow. Slow takes twice as long.
+- **Base speed:** fast, medium or slow. Medium is the previous fast speed;
+  new fast takes half as long and moves at a constant rate. Slow takes twice
+  as long as medium.
 - **Tread px:** tread width along the ramp, choose **1, 2, 4, 8 or 16 pixels** (16 pixels =
   one block). Type an allowed value or use minus/plus to step through the choices;
   edits apply immediately. `1` is
   finest, `8` is half-block stairs, and `16` is a full-block step. This setting is
-  disabled for elevators. Existing stairs retain 8px treads; existing smooth
+  disabled for lift and extend. Existing stairs retain 8px treads; existing smooth
   ramps retain their actual 2px treads. A one-block ramp with a single 16px tread
   moves that entire tread because it has no separate hinge tread.
 
 Travel is the absolute difference between the two offsets (up to 16 blocks).
-Full-stroke time is `max(platform length, travel) × 10 ticks` on fast, or
-`× 20 ticks` on slow (the previous fast speed). For example, a four-long platform
-with three-block travel takes two seconds on fast and four on slow. Reversing redstone mid-animation
+Full-stroke time is `max(platform length, travel) × 5 ticks` on fast,
+`× 10 ticks` on medium, or `× 20 ticks` on slow. For example, a four-long platform
+with three-block travel takes one second on fast, two on medium, and four on slow. Reversing redstone mid-animation
 keeps the current pose and takes only the remaining portion of the stroke.
-Elevators and ramps carry standing entities; obstructed riders stop movement
+Moving lifts and ramps carry standing entities; obstructed riders stop movement
 and leave an error for the next signal edge or setting edit. Riders do not collide
 with their own platform during transport, but foreign ceilings still stop them.
-Player transport uses vertical-only support updates, not repeated teleports, so
-walking and camera input remain active. Moving collision surfaces tolerate a
+Vertical player transport uses support updates. Sideways travel uses server
+position updates. Moving collision surfaces tolerate a
 small difference between player and platform update times at block boundaries.
 
 ## Automatic selection and restoration
@@ -48,7 +62,7 @@ There is no connect/disconnect operation. Each deployment scans face-connected
 blocks matching the type **and complete blockstate** of the block directly in
 front, on that same horizontal layer. Different slab halves/material variants
 remain separate. Maximum footprint: **8 blocks wide × 16 blocks long** (128 source
-blocks), with **each endpoint within 8 blocks of the original height**. Matching blocks beyond those
+blocks), with **each endpoint within 8 blocks of the original position**. Matching blocks beyond those
 bounds are ignored, not treated as an error. Selection grows from the arrow's
 front block using a repeatable connected flood fill; sideways/backward growth
 also counts toward these spans. Length follows the configured ramp direction;
@@ -56,7 +70,7 @@ width is perpendicular to it, independently of the controller’s selection arro
 holes remain holes. Bounds are shown in the dialog. Previously deployed larger
 platforms retain their saved blocks until restored; new deployments use these limits.
 
-Before any mutation, the controller checks the whole selection and its vertical
+Before any mutation, the controller checks the whole selection and its
 movement space. That space must be air, all involved chunks must be loaded,
 and the travel must fit inside world height. Chests/machines with tile entities,
 unbreakable blocks and non-cuboid shapes are excluded.
@@ -112,5 +126,5 @@ redstone operation.
 across lengths, heights, modes, anchors, speed settings and reversals.
 `testclient/test_viewscreen.sh` runs actual Forge-world tests for automatic
 selection, both signal polarities, obstruction rollback, partial-install fault
-injection, preserved source variants, automatic cleanup, persistence and elevator
+injection, preserved source variants, automatic cleanup, persistence and lift
 passengers, and captures the four mode/direction combinations and settings dialog.

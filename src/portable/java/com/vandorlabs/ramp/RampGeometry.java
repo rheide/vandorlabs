@@ -9,12 +9,56 @@ public final class RampGeometry {
 
     public enum Direction { NORTH, SOUTH, WEST, EAST }
 
+    /** Travel is relative to the face selected in the controller. */
+    public static final int VERTICAL=0, LEFT=1, RIGHT=2;
+
     public static final class Box {
         public final double minX, minY, minZ, maxX, maxY, maxZ;
         public Box(double minX,double minY,double minZ,double maxX,double maxY,double maxZ) {
             this.minX=minX; this.minY=minY; this.minZ=minZ;
             this.maxX=maxX; this.maxY=maxY; this.maxZ=maxZ;
         }
+    }
+
+    public static Box movingTread(Direction face,int sourceX,int sourceY,int sourceZ,
+            double low,double high,int row,int length,int start,int end,int pixels,
+            int step,double from,double to,boolean elevator,int travel,boolean extend) {
+        return movingTread(face,sourceX,sourceY,sourceZ,low,high,row,length,start,end,pixels,
+                step,from,to,elevator,travel,extend,false);
+    }
+    public static Box movingTread(Direction face,int sourceX,int sourceY,int sourceZ,
+            double low,double high,int row,int length,int start,int end,int pixels,
+            int step,double from,double to,boolean elevator,int travel,boolean extend,boolean fast) {
+        Box footprint=footprintPixels(face,step,elevator?16:pixels,low,high);
+        double a=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,from,elevator,fast);
+        double b=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,to,elevator,fast);
+        if (extend) {
+            double initial=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,0,elevator,fast);
+            double lower=Math.min(initial,Math.min(a,b));
+            b=Math.max(initial,Math.max(a,b));
+            a=lower;
+        }
+        double lo=Math.min(a,b),hi=Math.max(a,b);
+        int dx=0,dz=0;
+        if (travel==LEFT || travel==RIGHT) {
+            dx=face==Direction.NORTH?-1:face==Direction.SOUTH?1:0;
+            dz=face==Direction.EAST?-1:face==Direction.WEST?1:0;
+            if (travel==RIGHT) { dx=-dx; dz=-dz; }
+        }
+        return new Box(sourceX+footprint.minX+(dx>0?lo:dx<0?-hi:0),
+                sourceY+footprint.minY+(travel==VERTICAL?lo:0),
+                sourceZ+footprint.minZ+(dz>0?lo:dz<0?-hi:0),
+                sourceX+footprint.maxX+(dx>0?hi:dx<0?-lo:0),
+                sourceY+footprint.maxY+(travel==VERTICAL?hi:0),
+                sourceZ+footprint.maxZ+(dz>0?hi:dz<0?-lo:0));
+    }
+
+    public static Box clip(Box box,int x,int y,int z) {
+        double x0=Math.max(0,box.minX-x),x1=Math.min(1,box.maxX-x);
+        double y0=Math.max(0,box.minY-y),y1=Math.min(1,box.maxY-y);
+        double z0=Math.max(0,box.minZ-z),z1=Math.min(1,box.maxZ-z);
+        return x1-x0>1e-8 && y1-y0>1e-8 && z1-z0>1e-8
+                ?new Box(x0,y0,z0,x1,y1,z1):null;
     }
 
     public static List<Box> boxes(Direction face,int cellY,int sourceY,double low,double high,

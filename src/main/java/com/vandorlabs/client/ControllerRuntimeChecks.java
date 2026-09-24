@@ -425,6 +425,115 @@ public final class ControllerRuntimeChecks {
         require(controller.request(true),"single full-block tread deployment"); finish(controller);
         require(!controller.error && world.getTileEntity(pos.south().down(3)) instanceof TileEntityControlledRamp,"single full-block tread reaches endpoint without division by zero");
         require(controller.recover(false),"single full-block tread recovery");
+        for (int travel:new int[]{com.vandorlabs.ramp.RampGeometry.LEFT,com.vandorlabs.ramp.RampGeometry.RIGHT})
+        for (boolean extend:new boolean[]{false,true}) {
+            clear(world,pos);
+            controller=place(world,pos,EnumFacing.SOUTH);
+            BlockPos source=pos.south();
+            world.setBlockState(source,Blocks.STONE_SLAB.getDefaultState(),3);
+            require(controller.configureTreads(player,0,2,16,true,false,true,EnumFacing.SOUTH,travel,extend),
+                    "side travel config accepted");
+            require(controller.request(true),"side travel starts");
+            finish(controller);
+            require(!controller.error && controller.isOpen(),"side travel finishes");
+            EnumFacing side=travel==com.vandorlabs.ramp.RampGeometry.LEFT?EnumFacing.EAST:EnumFacing.WEST;
+            for (int distance=0;distance<=2;distance++) {
+                BlockPos cell=source.offset(side,distance);
+                boolean shouldExist=extend || distance==2;
+                require((world.getTileEntity(cell) instanceof TileEntityControlledRamp)==shouldExist,
+                        "side fill controls intermediate cells");
+                if (shouldExist) require(!((TileEntityControlledRamp)world.getTileEntity(cell)).boxes(0).isEmpty(),
+                        "side cell has rendered and collidable geometry");
+            }
+            TileEntityRampController copy=new TileEntityRampController();
+            copy.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+            require(copy.travelAxis==com.vandorlabs.ramp.RampGeometry.RIGHT && copy.extendSegments==extend
+                    && copy.endOffset()==(travel==com.vandorlabs.ramp.RampGeometry.LEFT?-2:2),
+                    "side settings survive NBT with signed travel");
+            require(controller.recover(false),"side travel restores source");
+            require(world.getBlockState(source).equals(Blocks.STONE_SLAB.getDefaultState()),
+                    "side recovery restores material");
+            for (int distance=1;distance<=2;distance++)
+                require(world.isAirBlock(source.offset(side,distance)),"side recovery clears reservations");
+        }
+        clear(world,pos);
+        controller=place(world,pos,EnumFacing.SOUTH);
+        sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+        require(controller.configureTreads(player,0,2,8,true,false,false,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.LEFT,true),"extend mode config accepted");
+        require(controller.elevator && controller.extendSegments,"extend mode uses whole platform travel");
+        require(controller.request(true),"whole platform extension starts"); finish(controller);
+        require(!controller.error,"whole platform extension finishes");
+        for (BlockPos source:sources) {
+            require(world.getTileEntity(source) instanceof TileEntityControlledRamp,
+                    "extend keeps each starting block");
+            require(world.getTileEntity(source.east(2)) instanceof TileEntityControlledRamp,
+                    "extend reaches the same distance for every row");
+            require(((TileEntityControlledRamp)world.getTileEntity(source)).boxes(0).size()==1,
+                    "overlapping fill has one collision and render box per cell");
+        }
+        require(controller.recover(false),"whole platform extension recovers");
+        // Changing modes through the GUI while powered resets a deployed ramp and
+        // immediately captures the same source platform for the new mode.
+        clear(world,pos);
+        controller=place(world,pos,EnumFacing.SOUTH);
+        sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+        BlockPos powered=pos.north();
+        world.setBlockState(powered,Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+        controller.updatePower();
+        require(controller.configureTreads(player,0,-3,2,true,false,false,EnumFacing.SOUTH),
+                "powered ramp config: "+controller.status);
+        finish(controller);
+        require(controller.isOpen() && !controller.error,"powered ramp deployed");
+        require(controller.configureTreads(player,0,-3,2,true,false,false,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.VERTICAL,true),
+                "powered mode switch to extend: "+controller.status);
+        require(controller.extendSegments && controller.attached() && !controller.error,
+                "powered extend recaptured platform");
+        finish(controller);
+        require(controller.isOpen() && !controller.error,"powered extend finishes: "+controller.status);
+        require(controller.recover(false),"powered extend recovers");
+        world.setBlockToAir(powered);
+        clear(world,pos);
+        controller=place(world,pos,EnumFacing.SOUTH);
+        sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+        require(controller.configureTreads(player,0,-3,2,false,false,false,EnumFacing.SOUTH),
+                "unpowered ramp config: "+controller.status);
+        finish(controller);
+        require(controller.configureTreads(player,0,-3,2,false,false,false,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.VERTICAL,true),
+                "unpowered mode switch to extend: "+controller.status);
+        finish(controller);
+        require(controller.isOpen() && !controller.error,"unpowered extend finishes");
+        require(controller.recover(false),"unpowered extend recovers");
+        clear(world,pos);
+        controller=place(world,pos,EnumFacing.SOUTH);
+        sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+        require(controller.configureTreads(player,0,2,8,true,false,true,EnumFacing.SOUTH,
+                com.vandorlabs.ramp.RampGeometry.RIGHT,false,0),"fast mode config accepted");
+        require(controller.request(true),"fast lift starts");
+        require(controller.speed==0 && controller.durationTicks()==15,"fast speed uses five ticks per block");
+        elapsed(controller,controller.durationTicks()-1);
+        require(!controller.error && controller.pose(0)>0.9,"fast lift does not slow sharply near the end");
+        boolean movingTexture=false;
+        NBTTagList fastCells=controller.writeToNBT(new NBTTagCompound()).getTagList("Cells",10);
+        for (int i=0;i<fastCells.tagCount();i++) {
+            BlockPos cell=BlockPos.fromLong(fastCells.getCompoundTagAt(i).getLong("Pos"));
+            if (!(world.getTileEntity(cell) instanceof TileEntityControlledRamp)) continue;
+            TileEntityControlledRamp part=(TileEntityControlledRamp)world.getTileEntity(cell);
+            for (com.vandorlabs.ramp.RampGeometry.Box box:part.geometry(0)) {
+                double[] shift=part.textureShift(box,0);
+                if (Math.abs(shift[0])<1e-4 && Math.abs(shift[1])<1e-4) continue;
+                movingTexture=true;
+                require(box.minX+shift[0]>=-1e-6 && box.maxX+shift[0]<=1+1e-6
+                        && box.minZ+shift[1]>=-1e-6 && box.maxZ+shift[1]<=1+1e-6,
+                        "moving top texture samples source block coordinates");
+            }
+        }
+        require(movingTexture,"side travel moves top texture coordinates with segment");
+        finish(controller);
+        require(!controller.error,"fast lift finishes");
+        require(controller.recover(false),"fast lift recovers");
         player.capabilities.isFlying=flying; player.noClip=noClip;
         clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);

@@ -49,6 +49,7 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
                 .getBlockRendererDispatcher().getModelForState(te.source);
         double y=a.minY,Y=a.maxY;
         double vBottom=te.sideTextureV(a,y,partial),vTop=te.sideTextureV(a,Y,partial);
+        double[] shift=te.textureShift(a,partial);
         for (EnumFacing face:EnumFacing.values()) {
             java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(te.source,face,0);
             TextureAtlasSprite sprite=quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
@@ -58,9 +59,11 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
             float shade=face==EnumFacing.UP?1:face==EnumFacing.DOWN?.5F:face.getAxis()==EnumFacing.Axis.X?.6F:.8F;
             final TextureAtlasSprite drawSprite=sprite;
             final int drawTint=tint;
+            final double uShift=face==EnumFacing.WEST||face==EnumFacing.EAST?shift[1]:shift[0];
+            final double vShift=face==EnumFacing.UP||face==EnumFacing.DOWN?shift[1]:0;
             CuboidMesh.emitFace(a,
                     CuboidMesh.Face.valueOf(face.getName().toUpperCase(java.util.Locale.ROOT)),vBottom,vTop,
-                    (vx,vy,vz,u,v)->b.pos(vx,vy,vz).tex(drawSprite.getInterpolatedU(u*16),drawSprite.getInterpolatedV(v*16))
+                    (vx,vy,vz,u,v)->b.pos(vx,vy,vz).tex(drawSprite.getInterpolatedU((u+uShift)*16),drawSprite.getInterpolatedV((v+vShift)*16))
                         .color(((drawTint>>16)&255)/255F*shade,((drawTint>>8)&255)/255F*shade,(drawTint&255)/255F*shade,1).endVertex()
             );
         }

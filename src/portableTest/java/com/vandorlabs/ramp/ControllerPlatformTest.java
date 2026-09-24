@@ -27,6 +27,43 @@ public final class ControllerPlatformTest {
         return result;
     }
     public static void main(String[] args) {
+        for (RampGeometry.Direction face:RampGeometry.Direction.values()) {
+            RampGeometry.Box initial=RampGeometry.movingTread(face,10,40,20,0,1,0,1,0,2,16,0,
+                    0,0,true,RampGeometry.LEFT,false);
+            RampGeometry.Box moved=RampGeometry.movingTread(face,10,40,20,0,1,0,1,0,2,16,0,
+                    1,1,true,RampGeometry.LEFT,false);
+            RampGeometry.Box filled=RampGeometry.movingTread(face,10,40,20,0,1,0,1,0,2,16,0,
+                    1,1,true,RampGeometry.LEFT,true);
+            double dx=face==RampGeometry.Direction.NORTH?-2:face==RampGeometry.Direction.SOUTH?2:0;
+            double dz=face==RampGeometry.Direction.EAST?-2:face==RampGeometry.Direction.WEST?2:0;
+            close(moved.minX-initial.minX,dx,"left shifts relative to facing");
+            close(moved.minZ-initial.minZ,dz,"left shifts relative to facing");
+            close(filled.minX,Math.min(initial.minX,moved.minX),"fill retains initial X");
+            close(filled.maxX,Math.max(initial.maxX,moved.maxX),"fill reaches final X");
+            close(filled.minZ,Math.min(initial.minZ,moved.minZ),"fill retains initial Z");
+            close(filled.maxZ,Math.max(initial.maxZ,moved.maxZ),"fill reaches final Z");
+            RampGeometry.Box right=RampGeometry.movingTread(face,10,40,20,0,1,0,1,0,2,16,0,
+                    1,1,true,RampGeometry.RIGHT,false);
+            close(right.minX-initial.minX,-dx,"right reverses X");
+            close(right.minZ-initial.minZ,-dz,"right reverses Z");
+        }
+        RampGeometry.Box up=RampGeometry.movingTread(RampGeometry.Direction.SOUTH,0,40,0,0,1,0,1,
+                0,3,16,0,1,1,true,RampGeometry.VERTICAL,true);
+        close(up.minY,40,"vertical fill keeps initial height");
+        close(up.maxY,44,"vertical fill reaches final height");
+        check(RampGeometry.clip(up,0,42,0)!=null && RampGeometry.clip(up,0,44,0)==null,
+                "vertical fill occupies intermediate cells only");
+        RampGeometry.Box down=RampGeometry.movingTread(RampGeometry.Direction.SOUTH,0,40,0,0,1,0,1,
+                0,-3,16,0,0,1,true,RampGeometry.VERTICAL,true);
+        close(down.minY,37,"negative fill sweep includes final position");
+        close(down.maxY,41,"negative fill sweep keeps starting position");
+        check(RampGeometry.clip(down,0,38,0)!=null,"negative fill sweep has a source for intermediate cells");
+        close(ControllerPlatform.offsetPixels(0,0,1,16,0,8,.9,true,true),7.2,
+                "fast motion stays linear near the end");
+        check(ControllerPlatform.offsetPixels(0,0,1,16,0,8,.9,true,false)>7.2,
+                "medium motion retains its eased profile");
+        check(ControllerPlatform.duration(3,2,0)==15 && ControllerPlatform.duration(3,2,1)==30
+                && ControllerPlatform.duration(3,2,2)==60,"three speed durations");
         for (int start=-8;start<=8;start++) for (int end=-8;end<=8;end++) {
             for (boolean lift:new boolean[]{false,true}) {
                 close(ControllerPlatform.offset(2,7,3,8,start,end,0,lift),start,"signed start endpoint");

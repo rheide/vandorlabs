@@ -16,14 +16,16 @@ public class GuiRampController extends GuiContainer {
     private GuiTextField endField,startField;
     private GuiTextField channelField;
     private GuiTextField treadField;
-    private boolean powerOn,slow,elevator;
+    private boolean powerOn,elevator,extendSegments;
+    private int travelAxis,speed;
     private int lastUpdate;
     private net.minecraft.util.EnumFacing direction;
     public GuiRampController(TileEntityRampController controller) {
         super(new ContainerRampController(controller));
         this.controller=controller;
         powerOn=controller.activateOnPower;
-        slow=controller.slow; elevator=controller.elevator;
+        speed=controller.speed; elevator=controller.elevator;
+        travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
         lastUpdate=controller.clientUpdates;
         direction=controller.rampDirection();
         xSize=320; ySize=232;
@@ -50,24 +52,31 @@ public class GuiRampController extends GuiContainer {
         buttonList.add(new GuiButton(3,guiLeft+14,guiTop+102,142,20,""));
         buttonList.add(new GuiButton(6,guiLeft+164,guiTop+78,142,20,""));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+126,142,20,""));
+        buttonList.add(new GuiButton(17,guiLeft+164,guiTop+102,142,20,""));
         buttonList.add(new GuiButton(7,guiLeft+14,guiTop+208,292,20,"Done"));
         refresh();
     }
     private void refresh() {
-        treadField.setEnabled(!elevator);
+        treadField.setEnabled(!elevator && !extendSegments);
         for (GuiButton b:buttonList) {
-            if (b.id==14 || b.id==15) b.enabled=!elevator;
-            if (b.id==1) b.displayString=elevator?"Mode: elevator":"Mode: ramp";
+            if (b.id==14 || b.id==15) b.enabled=!elevator && !extendSegments;
+            if (b.id==1) b.displayString=extendSegments?"Mode: extend":elevator?"Mode: lift":"Mode: ramp";
             if (b.id==3) b.displayString=powerOn?"Trigger: redstone ON":"Trigger: redstone OFF";
             if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
-            if (b.id==4) b.displayString=slow?"Base speed: slow":"Base speed: fast";
+            if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
+            if (b.id==17) b.displayString="Travel: "+(travelAxis==0?"up / down":"left / right");
         }
     }
     @Override protected void actionPerformed(GuiButton button) {
-        if (button.id==1) elevator=!elevator;
+        if (button.id==1) {
+            if (extendSegments) { extendSegments=false; elevator=false; }
+            else if (elevator) { extendSegments=true; elevator=true; }
+            else elevator=true;
+        }
         if (button.id==3) powerOn=!powerOn;
-        if (button.id==4) slow=!slow;
+        if (button.id==4) speed=(speed+1)%3;
         if (button.id==6) direction=direction.rotateY();
+        if (button.id==17) travelAxis=travelAxis==0?2:0;
         if (button.id==7) mc.player.closeScreen();
         if (button.id>=10 && button.id<=13) {
             GuiTextField field=button.id<12?startField:endField;
@@ -98,7 +107,7 @@ public class GuiRampController extends GuiContainer {
         int start=parseOffset(startField),end=parseOffset(endField),pixels=parseOffset(treadField);
         if (start>=-8 && start<=8 && end>=-8 && end<=8 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0)
             PacketHandler.INSTANCE.sendToServer(new MessageRampController(controller.getPos(),start,end,
-                    pixels,powerOn,slow,elevator,direction,channel()));
+                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed));
     }
     private int channel() {
         try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
@@ -111,7 +120,8 @@ public class GuiRampController extends GuiContainer {
             if (controller.error) {
                 // A rejected reset retains old server settings; do not display unsaved toggles.
                 powerOn=controller.activateOnPower;
-                slow=controller.slow; elevator=controller.elevator;
+                speed=controller.speed; elevator=controller.elevator;
+                travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
                 direction=controller.rampDirection();
                 endField.setText(Integer.toString(controller.endOffset()));
                 startField.setText(Integer.toString(controller.startOffset));
@@ -138,14 +148,15 @@ public class GuiRampController extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xFF304858);
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
-        fontRenderer.drawString("Ramp / Elevator Controller",14,10,0xFFFFFF);
+        fontRenderer.drawString("Programmable Ramp",14,10,0xFFFFFF);
         fontRenderer.drawString("Start / off offset (-8 to 8)",14,35,0xDAE8F0);
         fontRenderer.drawString("End / on offset (-8 to 8)",14,59,0xDAE8F0);
-        fontRenderer.drawString("Tread px",164,132,elevator?0x78848C:0xDAE8F0);
-        fontRenderer.drawString("Positive = up; negative = down. Footprint: 8x16.",14,153,0xADBECA);
+        fontRenderer.drawString("Tread px",164,132,elevator||extendSegments?0x78848C:0xDAE8F0);
+        fontRenderer.drawString(travelAxis==0?"Positive = up; negative = down. Footprint: 8x16.":
+                "Positive = right; negative = left. Footprint: 8x16.",14,153,0xADBECA);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
                 14,166,292,controller.error?0xFF9988:0xE5C76B);
-        fontRenderer.drawString("Channel (0 = none)",144,189,0xDAE8F0);
+        fontRenderer.drawString("Channel (0 = none)",144,188,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

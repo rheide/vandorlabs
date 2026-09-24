@@ -26,6 +26,18 @@ public final class RampControllerDataTest {
                 "controller directions round trip");
         check(decoded.startPose==0&&decoded.startTick==45L&&decoded.lastStepTick==46L,
                 "controller animation state round trip");
+        check(decoded.travelAxis==0 && !decoded.extendSegments,"older constructors keep vertical move mode");
+        RampControllerData extended=new RampControllerData(7,3,2,"Sideways",false,true,
+                false,false,false,true,false,1,10,10,30,2,0,0,true,1,
+                0,1,false,true,false,0,false,0,3,8,2,true);
+        MemoryPrimitiveData extendedTag=new MemoryPrimitiveData(); extended.write(extendedTag);
+        RampControllerData extendedCopy=RampControllerData.read(extendedTag);
+        check(extendedCopy.travelAxis==2 && extendedCopy.extendSegments,"side travel and fill round trip");
+        RampControllerData fast=new RampControllerData(8,2,2,"Fast",false,true,
+                false,true,false,true,false,0,1,1,10,3,0,0,true,1,
+                0,1,false,true,false,0,false,0,2,8,2,false,0);
+        MemoryPrimitiveData fastTag=new MemoryPrimitiveData(); fast.write(fastTag);
+        check(RampControllerData.read(fastTag).speed==0,"fast speed round trips");
         check(!decoded.top&&!decoded.activateOnPower&&decoded.slow&&decoded.elevator
                 &&decoded.error&&decoded.open&&decoded.moving,"controller flags round trip");
         for (boolean top:new boolean[]{true,false}) {
