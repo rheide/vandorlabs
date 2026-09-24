@@ -16,16 +16,18 @@ import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 
-/** Two peer input lists for the half-console deck and inclined rear panel. */
+/** Two peer input lists for the half-console incline and flat deck. */
 public class GuiProgrammableHalfConsole extends GuiContainer {
 
     private static final int ROW_H = 12;
     private static final int ROWS = 8;
     private final TileEntityAnimatedScreenSelector te;
-    private String front;
-    private String rear;
-    private int frontScroll;
-    private int rearScroll;
+    private String topPanel;
+    private String bottomPanel;
+    private int topScroll;
+    private int bottomScroll;
+    private int draggingList;
+    private int scrollbarDragOffset;
     private int left;
     private int right;
     private int top;
@@ -38,8 +40,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             TileEntityAnimatedScreenSelector te) {
         super(new ContainerAnimatedScreenSelector(inventory, te));
         this.te = te;
-        front = te.getInputPanel();
-        rear = te.getSecondaryInputPanel();
+        topPanel = te.getSecondaryInputPanel();
+        bottomPanel = te.getInputPanel();
         displayMode = te.getDisplayMode();
         speedIndex = te.getAnimationSpeedIndex();
         redstoneEnabled = te.isRedstoneEnabled();
@@ -75,8 +77,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
         buttonList.add(new GuiButton(20, x + (xSize - 200) / 2, y + 242, 200, 20,
                 I18n.format("gui.done")));
-        frontScroll = reveal(front);
-        rearScroll = reveal(rear);
+        topScroll = reveal(topPanel);
+        bottomScroll = reveal(bottomPanel);
         refreshButtons();
     }
 
@@ -109,7 +111,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private void sendUpdate() {
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(te.getPos(),
                 te.getSelectedScreen(), redstoneEnabled, displayMode,
-                te.isFramed(), speedIndex, front, rear, false, channel()));
+                te.isFramed(), speedIndex, bottomPanel, topPanel, false, channel()));
     }
 
     private int channel() {
@@ -120,13 +122,27 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
         if (button == 0 && mouseY >= top && mouseY < top + ROW_H * ROWS) {
-            boolean first = mouseX >= left && mouseX < left + 150;
-            boolean second = mouseX >= right && mouseX < right + 150;
+            int list = mouseX >= left + 144 && mouseX < left + 150 ? 1
+                    : mouseX >= right + 144 && mouseX < right + 150 ? 2 : 0;
+            if (list != 0 && maxScroll() > 0) {
+                int scroll = list == 1 ? topScroll : bottomScroll;
+                int thumbY = scrollbarThumbY(scroll);
+                int thumbH = scrollbarThumbHeight();
+                scrollbarDragOffset = mouseY >= thumbY && mouseY < thumbY + thumbH
+                        ? mouseY - thumbY : thumbH / 2;
+                draggingList = list;
+                dragScrollbarTo(mouseY);
+                return;
+            }
+        }
+        if (button == 0 && mouseY >= top && mouseY < top + ROW_H * ROWS) {
+            boolean first = mouseX >= left && mouseX < left + 142;
+            boolean second = mouseX >= right && mouseX < right + 142;
             if (first || second) {
-                int index = (first ? frontScroll : rearScroll) + (mouseY - top) / ROW_H;
+                int index = (first ? topScroll : bottomScroll) + (mouseY - top) / ROW_H;
                 if (index < TileEntityAnimatedScreenSelector.INPUT_PANELS.length) {
-                    if (first) front = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
-                    else rear = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
+                    if (first) topPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
+                    else bottomPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
                     sendUpdate();
                 }
                 return;
@@ -134,6 +150,23 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         }
         super.mouseClicked(mouseX, mouseY, button);
         channelField.mouseClicked(mouseX,mouseY,button);
+    }
+
+    @Override protected void mouseReleased(int mouseX,int mouseY,int state) {
+        draggingList = 0;
+        super.mouseReleased(mouseX,mouseY,state);
+    }
+
+    @Override protected void mouseClickMove(int mouseX,int mouseY,int button,long elapsed) {
+        if (draggingList != 0) dragScrollbarTo(mouseY);
+        else super.mouseClickMove(mouseX,mouseY,button,elapsed);
+    }
+
+    private void dragScrollbarTo(int mouseY) {
+        int scroll = GuiProgrammableInput.scrollForDrag(mouseY, top, ROW_H * ROWS,
+                scrollbarThumbHeight(), maxScroll(), scrollbarDragOffset);
+        if (draggingList == 1) topScroll = scroll;
+        else if (draggingList == 2) bottomScroll = scroll;
     }
 
     @Override
@@ -154,12 +187,23 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if (wheel != 0) {
             int mouseX = Mouse.getEventX() * width / mc.displayWidth;
             int delta = wheel > 0 ? -1 : 1;
-            if (mouseX < width / 2) frontScroll = clamp(frontScroll + delta);
-            else rearScroll = clamp(rearScroll + delta);
+            if (mouseX >= left && mouseX < left + 150) topScroll = clamp(topScroll + delta);
+            else if (mouseX >= right && mouseX < right + 150)
+                bottomScroll = clamp(bottomScroll + delta);
         }
     }
 
     private int clamp(int value) { return Math.max(0, Math.min(maxScroll(), value)); }
+
+    private int scrollbarThumbHeight() {
+        return Math.max(8, ROW_H * ROWS * ROWS
+                / TileEntityAnimatedScreenSelector.INPUT_PANELS.length);
+    }
+
+    private int scrollbarThumbY(int scroll) {
+        return top + (ROW_H * ROWS - scrollbarThumbHeight()) * scroll
+                / Math.max(1,maxScroll());
+    }
 
     private void drawList(int x, int scroll, String selected) {
         drawRect(x - 1, top - 1, x + 151, top + ROW_H * ROWS + 1, 0xFF000000);
@@ -173,9 +217,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
                     I18n.format("gui.vandorlabs.console.input." + id), 136),
                     x + 3, yy + 2, id.equals(selected) ? 0xFFFFE08A : 0xFFD8D8D8);
         }
-        int thumbH = Math.max(8, ROW_H * ROWS * ROWS
-                / TileEntityAnimatedScreenSelector.INPUT_PANELS.length);
-        int thumbY = top + (ROW_H * ROWS - thumbH) * scroll / maxScroll();
+        int thumbH = scrollbarThumbHeight();
+        int thumbY = scrollbarThumbY(scroll);
         drawRect(x + 144, top, x + 150, top + ROW_H * ROWS, 0xFF303038);
         drawRect(x + 144, thumbY, x + 150, thumbY + thumbH, 0xFF808090);
     }
@@ -189,28 +232,28 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         drawRect(x, y, x + xSize, y + 16, 0xFF202028);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.title"),
                 x + 8, y + 5, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.front"),
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.top"),
                 left, y + 22, 0xFFA0A0A8);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.rear"),
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.bottom"),
                 right, y + 22, 0xFFA0A0A8);
-        drawList(left, frontScroll, front);
-        drawList(right, rearScroll, rear);
+        drawList(left, topScroll, topPanel);
+        drawList(right, bottomScroll, bottomPanel);
         int previewX = x + 334;
         String suffix = displayMode == TileEntityAnimatedScreenSelector.MODE_OFF
                 ? "_off.png" : "_static.png";
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.front"),
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.top"),
                 previewX, y + 22, 0xFFA0A0A8);
         drawRect(previewX - 1, y + 33, previewX + 79, y + 74, 0xFF000000);
         mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",
-                "textures/blocks/console_inputs/" + front + suffix));
+                "textures/blocks/console_inputs/" + topPanel + suffix));
         GlStateManager.color(1, 1, 1, 1);
         drawScaledCustomSizeModalRect(previewX, y + 34, 0, 0, 512, 256,
                 78, 39, 512, 256);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.rear"),
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.bottom"),
                 previewX, y + 82, 0xFFA0A0A8);
         drawRect(previewX - 1, y + 93, previewX + 79, y + 134, 0xFF000000);
         mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",
-                "textures/blocks/console_inputs/" + rear + suffix));
+                "textures/blocks/console_inputs/" + bottomPanel + suffix));
         GlStateManager.color(1, 1, 1, 1);
         drawScaledCustomSizeModalRect(previewX, y + 94, 0, 0, 512, 256,
                 78, 39, 512, 256);

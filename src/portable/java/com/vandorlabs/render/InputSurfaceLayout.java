@@ -32,7 +32,7 @@ public final class InputSurfaceLayout {
             horizontal(.25,15.75,.25,15.75,16.02));
     private static final Quad HALF_CONSOLE_FRONT=horizontal(.25,15.75,.25,7.25,1.02);
     private static final Quad HALF_CONSOLE_REAR=new Quad(
-            new Vertex(.25,7.75,15.70,0,0),new Vertex(15.75,7.75,15.70,1,0),
+            new Vertex(.25,7.75,14.70,0,0),new Vertex(15.75,7.75,14.70,1,0),
             new Vertex(15.75,1.25,7.70,1,1),new Vertex(.25,1.25,7.70,0,1));
     private static final Mounted[][][][] HALF_INPUTS=buildHalfInputs();
     private InputSurfaceLayout() { }

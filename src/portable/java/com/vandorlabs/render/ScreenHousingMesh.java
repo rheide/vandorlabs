@@ -41,9 +41,12 @@ public final class ScreenHousingMesh {
 
     private static ScreenHousingMesh buildHalfConsole() {
         return new ScreenHousingMesh(new Face[]{
-                quad(0,8,16,16,8,16,16,1,16,0,1,16,0,16,16,0)},
-                new Face[]{triangle(0,1,7.5,0,8,16,0,1,16),
-                        triangle(16,1,16,16,8,16,16,1,7.5)});
+                quad(0,8,16,16,8,16,16,1,16,0,1,16,0,16,16,0),
+                // The diagonal ends one model pixel before the back edge.
+                quad(0,8,15,16,8,15,16,8,16,0,8,16,0,15,16,16),
+                sideQuad(0,1,7.5,8,15,8,16,1,16),
+                sideQuad(16,1,16,8,16,8,15,1,7.5)},
+                new Face[0]);
     }
 
     private static ScreenHousingMesh buildDiagonal(boolean inverted) {
