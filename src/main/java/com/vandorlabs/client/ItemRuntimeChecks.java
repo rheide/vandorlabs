@@ -5,6 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
@@ -99,6 +100,7 @@ final class ItemRuntimeChecks {
         grid.setInventorySlotContents(4,new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
         grid.setInventorySlotContents(0,ItemStack.EMPTY);
         require(!glassRecipe.matches(grid,player.world),"missing glass does not craft glass");
+        checkProgrammableRecipes(grid, player);
         String[][] finishes = {{"industrial_block", "Industrial Block"},
                 {"industrial_trim", "Industrial Trim"},
                 {"industrial_grate", "Industrial Grate"},
@@ -124,6 +126,37 @@ final class ItemRuntimeChecks {
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
+    }
+
+    private static void checkProgrammableRecipes(InventoryCrafting grid,
+            EntityPlayer player) {
+        String[] blocks = {"programmable_viewscreen", "programmable_console",
+                "programmable_diagonal_screen", "programmable_half_console",
+                "programmable_half_input", "programmable_input"};
+        Item[] components = {Item.getItemFromBlock(Blocks.GLASS), Items.REDSTONE,
+                Item.getItemFromBlock(Blocks.QUARTZ_STAIRS),
+                Item.getItemFromBlock(Blocks.PISTON),
+                Item.getItemFromBlock(Blocks.STONE_PRESSURE_PLATE),
+                Item.getItemFromBlock(Blocks.LEVER)};
+        for (int index = 0; index < blocks.length; index++) {
+            ResourceLocation id = new ResourceLocation("vandorlabs", blocks[index]);
+            IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
+            require(recipe != null, "missing programmable recipe: " + id);
+            for (int slot = 0; slot < 9; slot++)
+                grid.setInventorySlotContents(slot, new ItemStack(slot == 4 ? Items.DIAMOND
+                        : slot == 7 ? components[index]
+                        : ModItems.PROGRAMMABLE_MATTER_INGOT));
+            require(recipe.matches(grid, player.world), "recipe shape does not match: " + id);
+            ItemStack crafted = CraftingManager.findMatchingResult(grid, player.world);
+            require(crafted.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(id))
+                            && crafted.getCount() == 1,
+                    "recipe crafts wrong block: " + id);
+            grid.setInventorySlotContents(4, ItemStack.EMPTY);
+            require(!recipe.matches(grid, player.world), "recipe accepts no diamond: " + id);
+            grid.setInventorySlotContents(4, new ItemStack(Items.DIAMOND));
+            grid.setInventorySlotContents(7, ItemStack.EMPTY);
+            require(!recipe.matches(grid, player.world), "recipe accepts no component: " + id);
+        }
     }
 
     private static void require(boolean condition, String message) {

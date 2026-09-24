@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IDI",
+    "IXI"
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "X": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:programmable_console",
+    "count": 1
+  }
+}
