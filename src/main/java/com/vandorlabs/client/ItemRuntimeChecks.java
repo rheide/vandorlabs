@@ -48,6 +48,7 @@ final class ItemRuntimeChecks {
                 != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
                 "ingot model missing");
         require("Programmable Matter Ingot".equals(result.getDisplayName()), "ingot display name");
+        checkIndustrialAlloyIngot(grid, player, mc);
         IRecipe doorRecipe = CraftingManager.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "programmable_door"));
         require(doorRecipe != null, "door recipe loaded");
@@ -130,6 +131,41 @@ final class ItemRuntimeChecks {
         require(metalFloor != null && "Metal Floor".equals(new ItemStack(metalFloor).getDisplayName()),
                 "Metal Floor registry or display name missing");
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
+    }
+
+    private static void checkIndustrialAlloyIngot(InventoryCrafting grid,
+            EntityPlayer player, Minecraft mc) {
+        ResourceLocation id = new ResourceLocation("vandorlabs", "industrial_alloy_ingot");
+        require(Item.REGISTRY.getObject(id) == ModItems.INDUSTRIAL_ALLOY_INGOT,
+                "industrial alloy ingot registration");
+        require(!Block.REGISTRY.containsKey(id), "industrial alloy ingot must not be a block");
+        IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
+        require(recipe != null, "industrial alloy recipe loaded");
+        for (int i = 0; i < 9; i++)
+            grid.setInventorySlotContents(i, new ItemStack(i == 4
+                    ? ModItems.PROGRAMMABLE_MATTER_INGOT : Items.IRON_INGOT));
+        require(recipe.matches(grid, player.world),
+                "programmable matter surrounded by iron does not match");
+        ItemStack result = CraftingManager.findMatchingResult(grid, player.world);
+        require(result.getItem() == ModItems.INDUSTRIAL_ALLOY_INGOT
+                        && result.getCount() == 9,
+                "industrial alloy recipe must yield nine ingots");
+        require("Industrial Alloy Ingot".equals(result.getDisplayName()),
+                "industrial alloy ingot display name");
+        require(mc.getRenderItem().getItemModelMesher().getItemModel(result)
+                        != mc.getRenderItem().getItemModelMesher().getModelManager()
+                                .getMissingModel(),
+                "industrial alloy ingot model missing");
+        String sprite = "vandorlabs:items/industrial_alloy_ingot";
+        require(sprite.equals(mc.getTextureMapBlocks().getAtlasSprite(sprite).getIconName()),
+                "industrial alloy ingot texture missing");
+        grid.setInventorySlotContents(4, ItemStack.EMPTY);
+        require(!recipe.matches(grid, player.world),
+                "industrial alloy recipe accepted a missing programmable ingot");
+        grid.setInventorySlotContents(4, new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        grid.setInventorySlotContents(0, ItemStack.EMPTY);
+        require(!recipe.matches(grid, player.world),
+                "industrial alloy recipe accepted a missing iron ingot");
     }
 
     private static void checkProgrammableRecipes(InventoryCrafting grid,

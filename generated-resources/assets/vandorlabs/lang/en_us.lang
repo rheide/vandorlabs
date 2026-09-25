@@ -338,6 +338,7 @@ gui.vandorlabs.console.input.sliders_buttons_six_faders=Six Faders
 gui.vandorlabs.console.input.sliders_buttons_twin_faders_transport=Twin Faders
 
 item.vandorlabs.programmable_matter_ingot.name=Programmable Matter Ingot
+item.vandorlabs.industrial_alloy_ingot.name=Industrial Alloy Ingot
 tile.vandorlabs.space_observation_rotating_door_bare.name=Space Observation Rotating Door (Bare)
 tile.vandorlabs.space_observation_rotating_door_framed.name=Space Observation Rotating Door (Framed)
 tile.vandorlabs.space_observation_sliding_door_bare.name=Space Observation Sliding Door (Bare)

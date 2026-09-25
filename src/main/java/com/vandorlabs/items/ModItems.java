@@ -17,12 +17,17 @@ public final class ModItems {
             .setRegistryName(VandorLabs.MODID, "programmable_matter_ingot")
             .setUnlocalizedName("vandorlabs.programmable_matter_ingot")
             .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+    public static final Item INDUSTRIAL_ALLOY_INGOT = new Item()
+            .setRegistryName(VandorLabs.MODID, "industrial_alloy_ingot")
+            .setUnlocalizedName("vandorlabs.industrial_alloy_ingot")
+            .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
 
     private ModItems() { }
 
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
+        event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
     }
 
     @SubscribeEvent
@@ -30,5 +35,7 @@ public final class ModItems {
     public static void registerModels(ModelRegistryEvent event) {
         ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_MATTER_INGOT, 0,
                 new ModelResourceLocation(PROGRAMMABLE_MATTER_INGOT.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(INDUSTRIAL_ALLOY_INGOT, 0,
+                new ModelResourceLocation(INDUSTRIAL_ALLOY_INGOT.getRegistryName(), "inventory"));
     }
 }
