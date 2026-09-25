@@ -185,6 +185,14 @@ final class ScreenRuntimeChecks {
             require(first.isOn() && ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
                             player.world.getBlockState(origin), player.world, origin) == 7,
                     "channel signal did not apply configured light level");
+            com.vandorlabs.tiles.TileEntityProgrammableLight manualNeighbor =
+                    (com.vandorlabs.tiles.TileEntityProgrammableLight)player.world.getTileEntity(east);
+            manualNeighbor.configure(3, 7, true, 0);
+            lightBlock.onBlockActivated(player.world, origin,
+                    player.world.getBlockState(origin), player, EnumHand.MAIN_HAND,
+                    EnumFacing.NORTH, .5F, .5F, .5F);
+            require(first.isOn() && manualNeighbor.isOn(),
+                    "clicking a channel-controlled light toggled a manual neighbor");
             ItemStack picked = ((BlockAnimatedScreenSelector) ModBlocks.PROGRAMMABLE_LIGHT)
                     .getPickBlock(player.world.getBlockState(origin), null,
                             player.world, origin, player);
