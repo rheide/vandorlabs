@@ -5,6 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -33,13 +34,7 @@ public class BlockGlassWall extends Block {
     public static final PropertyBool INNER_BR = PropertyBool.create("inner_br");
     /** False spans world X/Y; true spans world Z/Y. */
     public static final PropertyBool ROTATED = PropertyBool.create("rotated");
-
-    private static final AxisAlignedBB XY_BOX =
-            new AxisAlignedBB(0.0D, 0.0D, 6.0D / 16.0D,
-                    1.0D, 1.0D, 10.0D / 16.0D);
-    private static final AxisAlignedBB ZY_BOX =
-            new AxisAlignedBB(6.0D / 16.0D, 0.0D, 0.0D,
-                    10.0D / 16.0D, 1.0D, 1.0D);
+    public static final PropertyInteger DEPTH = PropertyInteger.create("depth", 0, 2);
 
     public BlockGlassWall(String name) {
         super(Material.GLASS);
@@ -53,6 +48,7 @@ public class BlockGlassWall extends Block {
         useNeighborBrightness = true;
         setDefaultState(blockState.getBaseState()
                 .withProperty(ROTATED, false)
+                .withProperty(DEPTH, 0)
                 .withProperty(TOP, true)
                 .withProperty(BOTTOM, true)
                 .withProperty(LEFT, true)
@@ -65,19 +61,21 @@ public class BlockGlassWall extends Block {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, ROTATED, TOP, BOTTOM, LEFT, RIGHT,
+        return new BlockStateContainer(this, ROTATED, DEPTH, TOP, BOTTOM, LEFT, RIGHT,
                 INNER_TL, INNER_TR, INNER_BL, INNER_BR);
     }
 
     /** Connection flags are calculated; only the wall plane is persisted. */
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(ROTATED) ? 1 : 0;
+        return (state.getValue(ROTATED) ? 1 : 0) | (state.getValue(DEPTH) << 1);
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(ROTATED, (meta & 1) != 0);
+        int depth = (meta >> 1) & 3;
+        return getDefaultState().withProperty(ROTATED, (meta & 1) != 0)
+                .withProperty(DEPTH, depth < 3 ? depth : 0);
     }
 
     @Override
@@ -92,17 +90,17 @@ public class BlockGlassWall extends Block {
         // Extending a panel inherits its plane, including placement against
         // the narrow edge or above/below the existing panel.
         IBlockState clicked = world.getBlockState(pos.offset(side.getOpposite()));
-        if (canConnectTo(clicked.getBlock())) {
-            return getDefaultState().withProperty(
-                    ROTATED, clicked.getValue(ROTATED));
-        }
+        boolean rotated;
+        if (canConnectTo(clicked.getBlock())) rotated = clicked.getValue(ROTATED);
+        else rotated = placer.getHorizontalFacing().getAxis() == EnumFacing.Axis.X;
         // A support beside the intended position exposes a face that lies in
         // the desired wall plane, so its axis would turn the panel 90 degrees.
         // Face the panel toward the placer unless an existing panel explicitly
         // supplied the plane.
-        EnumFacing direction = placer.getHorizontalFacing();
-        return getDefaultState().withProperty(
-                ROTATED, direction.getAxis() == EnumFacing.Axis.X);
+        // The baked glass model rotates 90 degrees about Y for the X plane.
+        float normalHit = rotated ? 1F - hitX : hitZ;
+        return getDefaultState().withProperty(ROTATED, rotated)
+                .withProperty(DEPTH, PanelDepth.fromHit(normalHit));
     }
 
     protected boolean canConnectTo(net.minecraft.block.Block other) { return other==this; }
@@ -110,7 +108,8 @@ public class BlockGlassWall extends Block {
             IBlockState state) {
         IBlockState other = world.getBlockState(pos);
         return canConnectTo(other.getBlock())
-                && other.getValue(ROTATED).equals(state.getValue(ROTATED));
+                && other.getValue(ROTATED).equals(state.getValue(ROTATED))
+                && other.getValue(DEPTH).equals(state.getValue(DEPTH));
     }
 
     @Override
@@ -165,7 +164,10 @@ public class BlockGlassWall extends Block {
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
             BlockPos pos) {
-        return state.getValue(ROTATED) ? ZY_BOX : XY_BOX;
+        double start = PanelDepth.start(state.getValue(DEPTH)) / 16D;
+        return state.getValue(ROTATED)
+                ? new AxisAlignedBB(1D - start - .25D, 0, 0, 1D - start, 1, 1)
+                : new AxisAlignedBB(0, 0, start, 1, 1, start + .25D);
     }
 
     @Override

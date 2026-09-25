@@ -8,7 +8,6 @@ import com.vandorlabs.tiles.TileEntityProgrammableGlass;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.block.state.IBlockState;
 import java.io.IOException;
 
 /** Live controls for size and translucent glass tint. */
@@ -20,8 +19,7 @@ public final class GuiProgrammableGlass extends GuiContainer {
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));
         this.tile=tile;
-        IBlockState state=tile.getWorld().getBlockState(tile.getPos());
-        size=state.getValue(BlockProgrammableGlass.SIZE);
+        size=tile.getSize();
         shade=tile.getShade();
         xSize=210; ySize=108;
     }

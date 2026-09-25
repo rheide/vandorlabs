@@ -27,16 +27,31 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         setDefaultState(getDefaultState().withProperty(SIZE, 1));
     }
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, ROTATED, TOP, BOTTOM, LEFT, RIGHT,
+        return new BlockStateContainer(this, ROTATED, DEPTH, TOP, BOTTOM, LEFT, RIGHT,
                 INNER_TL, INNER_TR, INNER_BL, INNER_BR, SIZE);
     }
     @Override public int getMetaFromState(IBlockState state) {
-        return (state.getValue(ROTATED) ? 1 : 0) | (state.getValue(SIZE) << 1);
+        int rotated = state.getValue(ROTATED) ? 1 : 0;
+        int depth = state.getValue(DEPTH);
+        // Metadata 0..5 belongs to existing worlds and retains its old size.
+        // Offset panes use the tile for size, since 3 x 3 x 2 exceeds 16 states.
+        return depth == 0 ? rotated | (state.getValue(SIZE) << 1)
+                : 4 + depth * 2 + rotated;
     }
     @Override public IBlockState getStateFromMeta(int meta) {
-        int size = (meta >> 1) & 3;
+        int size = meta < 6 ? (meta >> 1) & 3 : 1;
+        int depth = meta >= 6 && meta < 10 ? (meta - 4) / 2 : 0;
         return getDefaultState().withProperty(ROTATED, (meta & 1) != 0)
-                .withProperty(SIZE, size < 3 ? size : 1);
+                .withProperty(SIZE, size < 3 ? size : 1)
+                .withProperty(DEPTH, depth);
+    }
+    @Override public IBlockState getActualState(IBlockState state,
+            net.minecraft.world.IBlockAccess world, BlockPos pos) {
+        IBlockState actual = super.getActualState(state, world, pos);
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof TileEntityProgrammableGlass
+                ? actual.withProperty(SIZE, ((TileEntityProgrammableGlass) tile).getSize())
+                : actual;
     }
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
     @Override public TileEntity createTileEntity(World world, IBlockState state) {
@@ -47,8 +62,9 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             World world, BlockPos pos, EntityPlayer player) {
         ItemStack stack = new ItemStack(this);
         NBTTagCompound settings = new NBTTagCompound();
-        settings.setInteger("Size", state.getValue(SIZE));
         TileEntity te = world.getTileEntity(pos);
+        settings.setInteger("Size", te instanceof TileEntityProgrammableGlass
+                ? ((TileEntityProgrammableGlass) te).getSize() : state.getValue(SIZE));
         settings.setInteger("Shade", te instanceof TileEntityProgrammableGlass
                 ? ((TileEntityProgrammableGlass) te).getShade() : 0);
         stack.setTagInfo("ProgrammableGlassSettings", settings);
@@ -57,16 +73,19 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
     @Override public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
             EntityLivingBase placer, ItemStack stack) {
         super.onBlockPlacedBy(world, pos, state, placer, stack);
-        if (world.isRemote || !stack.hasTagCompound()
-                || !stack.getTagCompound().hasKey("ProgrammableGlassSettings", 10)) return;
-        NBTTagCompound settings = stack.getTagCompound()
-                .getCompoundTag("ProgrammableGlassSettings");
-        int size = settings.getInteger("Size");
-        int shade = settings.getInteger("Shade");
-        if (size >= 0 && size <= 2) world.setBlockState(pos, state.withProperty(SIZE, size), 3);
+        if (world.isRemote) return;
+        NBTTagCompound settings = stack.hasTagCompound()
+                && stack.getTagCompound().hasKey("ProgrammableGlassSettings", 10)
+                ? stack.getTagCompound().getCompoundTag("ProgrammableGlassSettings") : null;
+        int size = settings == null ? state.getValue(SIZE) : settings.getInteger("Size");
+        int shade = settings == null ? 0 : settings.getInteger("Shade");
+        if (size >= 0 && size <= 2 && state.getValue(DEPTH) == 0)
+            world.setBlockState(pos, state.withProperty(SIZE, size), 3);
         TileEntity te = world.getTileEntity(pos);
-        if (te instanceof TileEntityProgrammableGlass)
+        if (te instanceof TileEntityProgrammableGlass) {
+            ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);
+        }
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing face, float x, float y, float z) {

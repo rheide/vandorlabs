@@ -361,12 +361,24 @@ def main(archive, detail, expansion, lift):
     parts=[]
     for size,level in enumerate(('low','medium','high')):
         for part in glass_state['multipart']:
-            part=copy.deepcopy(part)
-            part['when']={'AND':[{'size':str(size)},part['when']]}
-            part['apply']['model']=part['apply']['model'].replace(
+            base=copy.deepcopy(part)
+            base['apply']['model']=base['apply']['model'].replace(
                 'detailed_doors/space_glass_medium_',
                 'detailed_doors/'+level+'/space_glass_medium_')
-            parts.append(part)
+            for depth,suffix,shift in ((0,'',0),(1,'_near',-6),(2,'_far',6)):
+                variant=copy.deepcopy(base)
+                variant['when']={'AND':[{'size':str(size)},
+                                       {'depth':str(depth)},base['when']]}
+                if depth:
+                    source=OUT/'models/block'/Path(base['apply']['model'].split(':',1)[1]+'.json')
+                    shifted=json.loads(source.read_text())
+                    for element in shifted['elements']:
+                        element['from'][2]+=shift
+                        element['to'][2]+=shift
+                    target=source.with_name(source.stem+suffix+'.json')
+                    write(target,shifted)
+                    variant['apply']['model']+=suffix
+                parts.append(variant)
     write(OUT/'blockstates/programmable_glass.json',{'multipart':parts})
     write(OUT/'models/item/programmable_glass.json',
           {'parent':'vandorlabs:item/medium/space_glass_medium'})

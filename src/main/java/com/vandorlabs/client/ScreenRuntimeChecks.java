@@ -302,6 +302,17 @@ final class ScreenRuntimeChecks {
                     state = state.withProperty(BlockProgrammableWall.INVERTED, true);
                 require(block.getStateFromMeta(block.getMetaFromState(state)).equals(state),
                         "wall facing/half metadata failed: " + block.getRegistryName());
+                if (block.getShape() != BlockProgrammableWall.Shape.DIAGONAL)
+                    for (int depth = 0; depth < 3; depth++) {
+                        IBlockState shifted = state.withProperty(BlockProgrammableWall.DEPTH, depth);
+                        require(block.getStateFromMeta(block.getMetaFromState(shifted))
+                                        .equals(shifted),
+                                "wall depth metadata failed: " + block.getRegistryName());
+                        double expected = com.vandorlabs.blocks.PanelDepth.start(depth) / 16D;
+                        require(block.getBoundingBox(shifted, player.world, pos).minZ == expected
+                                        || facing != EnumFacing.NORTH,
+                                "wall collision does not match depth");
+                    }
             }
         }
         BlockProgrammableWall diagonal = (BlockProgrammableWall) variants[2];
@@ -315,6 +326,15 @@ final class ScreenRuntimeChecks {
                 "diagonal wall did not follow stair half placement");
         for (int i = 0; i < 2; i++) {
             BlockProgrammableWall wall = (BlockProgrammableWall) variants[i];
+            player.rotationYaw = EnumFacing.SOUTH.getHorizontalAngle();
+            for (float hit : new float[] {.1F, .5F, .9F}) {
+                IBlockState placed = wall.getStateForPlacement(player.world, pos,
+                        EnumFacing.UP, .5F, .5F, hit, 0, player);
+                int expected = hit < .2F ? 1 : hit > .8F ? 2 : 0;
+                require(placed.getValue(BlockProgrammableWall.FACING) == EnumFacing.NORTH
+                                && placed.getValue(BlockProgrammableWall.DEPTH) == expected,
+                        "wall click did not select its depth");
+            }
             AxisAlignedBB bounds = wall.getBoundingBox(wall.getDefaultState(),
                     player.world, pos);
             require(bounds.minX == 0 && bounds.maxX == 1
@@ -331,6 +351,13 @@ final class ScreenRuntimeChecks {
         TileEntityAnimatedScreenSelector second = (TileEntityAnimatedScreenSelector)
                 player.world.getTileEntity(pos.east());
         first.setJoinPortholes(true);
+        second.setJoinPortholes(true);
+        player.world.setBlockState(pos.east(), north.withProperty(
+                BlockProgrammableWall.DEPTH, 1), 2);
+        require(!TEAnimatedScreenSelector.joinsPorthole(first, north, true),
+                "porthole joined panels at different depths");
+        player.world.setBlockState(pos.east(), north, 2);
+        second = (TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos.east());
         second.setJoinPortholes(true);
         player.world.setBlockState(pos.up(), north, 2);
         player.world.setBlockState(pos.east().up(), north, 2);

@@ -223,6 +223,8 @@ public class ReproLab {
                 Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 1D, 0.0F, 90.0F));
         SHOTS.add(new Shot("programmable_corner_pair_top", WALL_DISPLAY.getX() + 38.5D,
                 Y + 13.5D - 1.62D, WALL_DISPLAY.getZ() + 1D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_depth_top", WALL_DISPLAY.getX() + 45.5D,
+                Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 1.5D, 0.0F, 90.0F));
         SHOTS.add(new Shot("wide_ship_pair", -8.0D, eyeLevelFeet,
                 4.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("input_wall", INPUT_WALL.getX() + 0.5D,
@@ -659,6 +661,19 @@ public class ReproLab {
         }
         world.setBlockState(WALL_DISPLAY.add(-1, 0, 0),
                 Blocks.COBBLESTONE_WALL.getDefaultState(), 2);
+        for (int depth = 0; depth < 3; depth++) {
+            for (int row : new int[] {0, 2})
+                world.setBlockState(WALL_DISPLAY.add(44 + depth, -1, row),
+                        Blocks.STONE.getDefaultState(), 2);
+            BlockPos wallPos = WALL_DISPLAY.add(44 + depth, 0, 0);
+            world.setBlockState(wallPos, ModBlocks.PROGRAMMABLE_WALL.getDefaultState()
+                    .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                            EnumFacing.NORTH)
+                    .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.DEPTH, depth), 2);
+            BlockPos glassPos = WALL_DISPLAY.add(44 + depth, 0, 2);
+            world.setBlockState(glassPos, block("programmable_glass").getDefaultState()
+                    .withProperty(com.vandorlabs.blocks.BlockProgrammableGlass.DEPTH, depth), 2);
+        }
         for (int i = 0; i < 4; i++) {
             Block block = i == 0 ? ModBlocks.PROGRAMMABLE_WALL
                     : i == 1 ? ModBlocks.PROGRAMMABLE_PORTHOLE_WALL

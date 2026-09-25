@@ -43,6 +43,7 @@ final class MaterialRuntimeChecks {
         checkGlassConnections(player,space,new BlockPos(24,4,24),false,EnumFacing.EAST);
         checkGlassConnections(player,space,new BlockPos(24,4,24),true,EnumFacing.SOUTH);
         checkGlassSettings(player,(BlockProgrammableGlass)space);
+        checkGlassDepth(player, (BlockProgrammableGlass)space);
         System.out.println("[vandorlabs][reprolab] material-runtime PASS");
     }
 
@@ -97,6 +98,48 @@ final class MaterialRuntimeChecks {
         checkGlassConnections(player,glass,pos,false,EnumFacing.EAST);
         checkGlassConnections(player,glass,pos,true,EnumFacing.SOUTH);
         player.world.setBlockToAir(pos);
+    }
+
+    private static void checkGlassDepth(EntityPlayer player, BlockProgrammableGlass glass) {
+        BlockPos first = new BlockPos(25, 4, 25);
+        BlockPos second = first.east();
+        player.rotationYaw = EnumFacing.NORTH.getHorizontalAngle();
+        float[] hits = {.1F, .5F, .9F};
+        int[] depths = {1, 0, 2};
+        for (int i = 0; i < hits.length; i++) {
+            IBlockState placed = glass.getStateForPlacement(player.world, first,
+                    EnumFacing.UP, .5F, .5F, hits[i], 0, player, EnumHand.MAIN_HAND);
+            require(!placed.getValue(BlockGlassWall.ROTATED)
+                            && placed.getValue(BlockGlassWall.DEPTH) == depths[i],
+                    "glass click did not select its Z depth");
+        }
+        player.rotationYaw = EnumFacing.EAST.getHorizontalAngle();
+        for (int i = 0; i < hits.length; i++) {
+            IBlockState placed = glass.getStateForPlacement(player.world, first,
+                    EnumFacing.UP, hits[i], .5F, .5F, 0, player, EnumHand.MAIN_HAND);
+            require(placed.getValue(BlockGlassWall.ROTATED)
+                            && placed.getValue(BlockGlassWall.DEPTH) == depths[2 - i],
+                    "glass click did not select its X depth");
+        }
+        for (int depth = 0; depth < 3; depth++) {
+            IBlockState state = glass.getDefaultState()
+                    .withProperty(BlockGlassWall.DEPTH, depth);
+            require(glass.getStateFromMeta(glass.getMetaFromState(state))
+                            .getValue(BlockGlassWall.DEPTH) == depth,
+                    "glass depth did not survive metadata");
+            player.world.setBlockState(first, state, 3);
+            double expected = com.vandorlabs.blocks.PanelDepth.start(depth) / 16D;
+            require(glass.getBoundingBox(state, player.world, first).minZ == expected,
+                    "glass collision does not match depth");
+            IBlockState mismatched = glass.getDefaultState().withProperty(
+                    BlockGlassWall.DEPTH, (depth + 1) % 3);
+            player.world.setBlockState(second, mismatched, 3);
+            require(glass.getActualState(state, player.world, first)
+                            .getValue(BlockGlassWall.RIGHT),
+                    "glass joined panels at different depths");
+        }
+        player.world.setBlockToAir(first);
+        player.world.setBlockToAir(second);
     }
 
     private static void checkGlassConnections(EntityPlayer player,BlockGlassWall glass,

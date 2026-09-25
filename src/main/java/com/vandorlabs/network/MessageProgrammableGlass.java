@@ -39,11 +39,15 @@ public final class MessageProgrammableGlass implements IMessage {
                         || !container.canInteractWith(player)) return;
                 IBlockState state = player.world.getBlockState(msg.pos);
                 if (!(state.getBlock() instanceof BlockProgrammableGlass)) return;
-                IBlockState changed = state.withProperty(BlockProgrammableGlass.SIZE, msg.size);
-                if (changed != state) player.world.setBlockState(msg.pos, changed, 3);
+                if (state.getValue(BlockProgrammableGlass.DEPTH) == 0) {
+                    IBlockState changed = state.withProperty(BlockProgrammableGlass.SIZE, msg.size);
+                    if (changed != state) player.world.setBlockState(msg.pos, changed, 3);
+                }
                 TileEntity updated = player.world.getTileEntity(msg.pos);
-                if (updated instanceof TileEntityProgrammableGlass)
+                if (updated instanceof TileEntityProgrammableGlass) {
+                    ((TileEntityProgrammableGlass) updated).setSize(msg.size);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
+                }
             });
             return null;
         }

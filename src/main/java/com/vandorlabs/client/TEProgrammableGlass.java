@@ -24,8 +24,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if (tile.getWorld() == null) return;
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
-        int size = tile.getWorld().getBlockState(tile.getPos()).getValue(
-                com.vandorlabs.blocks.BlockProgrammableGlass.SIZE);
+        int size = tile.getSize();
         bindTexture(GLASS.get(new String[]{"low", "medium", "high"}[size]));
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
@@ -36,6 +35,8 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
             GlStateManager.rotate(-90,0,1,0);
             GlStateManager.translate(-.5,0,-.5);
         }
+        int depth = tile.getWorld().getBlockState(tile.getPos()).getValue(BlockGlassWall.DEPTH);
+        GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(depth) / 16D);
         GlStateManager.disableLighting();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,

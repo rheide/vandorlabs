@@ -3,6 +3,7 @@ package com.vandorlabs.blocks;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -25,8 +26,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     public static final PropertyDirection FACING = PropertyDirection.create(
             "facing", EnumFacing.Plane.HORIZONTAL);
     public static final PropertyBool INVERTED = PropertyBool.create("inverted");
-    private static final AxisAlignedBB PANEL = new AxisAlignedBB(0, 0, 6 / 16D,
-            1, 1, 10 / 16D);
+    public static final PropertyInteger DEPTH = PropertyInteger.create("depth", 0, 2);
     private final Shape shape;
 
     public BlockProgrammableWall(String name, Shape shape) {
@@ -34,7 +34,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         this.shape = shape;
         setDefaultState(blockState.getBaseState()
                 .withProperty(FACING, EnumFacing.NORTH)
-                .withProperty(INVERTED, false));
+                .withProperty(INVERTED, false)
+                .withProperty(DEPTH, 0));
         setLightLevel(0);
         useNeighborBrightness = true;
     }
@@ -48,7 +49,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override protected IProperty<EnumFacing> facingProperty() { return FACING; }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, INVERTED);
+        return new BlockStateContainer(this, FACING, INVERTED, DEPTH);
     }
 
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
@@ -56,21 +57,31 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             EntityLivingBase placer) {
         boolean inverted = isDiagonalShape() && (side == EnumFacing.DOWN
                 || (side.getAxis().isHorizontal() && hitY > .5F));
+        EnumFacing facing = isDiagonalShape() ? placer.getHorizontalFacing().getOpposite()
+                : placementFacing(world, pos, side, placer);
+        float normalHit;
+        switch (facing) {
+            case SOUTH: normalHit = 1F - hitZ; break;
+            case EAST: normalHit = 1F - hitX; break;
+            case WEST: normalHit = hitX; break;
+            default: normalHit = hitZ;
+        }
         return getDefaultState()
-                .withProperty(FACING, isDiagonalShape()
-                        ? placer.getHorizontalFacing().getOpposite()
-                        : placementFacing(world, pos, side, placer))
-                .withProperty(INVERTED, inverted);
+                .withProperty(FACING, facing)
+                .withProperty(INVERTED, inverted)
+                .withProperty(DEPTH, isDiagonalShape() ? 0 : PanelDepth.fromHit(normalHit));
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta & 3))
-                .withProperty(INVERTED, (meta & 4) != 0 && isDiagonalShape());
+                .withProperty(INVERTED, (meta & 4) != 0 && isDiagonalShape())
+                .withProperty(DEPTH, isDiagonalShape() ? 0 : (meta >> 2) < 3 ? meta >> 2 : 0);
     }
 
     @Override public int getMetaFromState(IBlockState state) {
         return state.getValue(FACING).getHorizontalIndex()
-                | (state.getValue(INVERTED) ? 4 : 0);
+                | (isDiagonalShape() ? (state.getValue(INVERTED) ? 4 : 0)
+                        : state.getValue(DEPTH) << 2);
     }
 
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
@@ -85,7 +96,10 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         return isDiagonalShape() ? rotate(new AxisAlignedBB(0, 0, 0,
                 1, 1, corner != null && corner.backRight != null ? 1 : 10 / 16D),
                 state.getValue(FACING))
-                : rotate(PANEL, state.getValue(FACING));
+                : rotate(new AxisAlignedBB(0, 0,
+                        PanelDepth.start(state.getValue(DEPTH)) / 16D,
+                        1, 1, (PanelDepth.start(state.getValue(DEPTH)) + 4) / 16D),
+                        state.getValue(FACING));
     }
 
     @Override public RayTraceResult collisionRayTrace(IBlockState state, World world,
@@ -183,7 +197,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             @Nullable Entity entity, boolean isActualState) {
         if (!isDiagonalShape()) {
             addCollisionBoxToList(pos, entityBox, boxes,
-                    rotate(PANEL, state.getValue(FACING)));
+                    getBoundingBox(state, world, pos));
             return;
         }
         Corner corner = corner(state, world, pos);

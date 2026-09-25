@@ -1,0 +1,85 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "leaf": "vandorlabs:blocks/space_doors/medium/standard",
+    "frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "edge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
+    "pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
+    "particle": "vandorlabs:blocks/space_doors/medium/standard",
+    "inner": "vandorlabs:blocks/programmable_glass/metal_side"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        0,
+        0
+      ],
+      "to": [
+        15,
+        1,
+        4
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#frame",
+          "uv": [
+            7.5,
+            15.5,
+            0.5,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#frame",
+          "uv": [
+            0.5,
+            15.5,
+            7.5,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#inner",
+          "uv": [
+            6,
+            0,
+            10,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#inner",
+          "uv": [
+            6,
+            0,
+            10,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#inner",
+          "uv": [
+            1,
+            6,
+            15,
+            10
+          ]
+        },
+        "down": {
+          "texture": "#inner",
+          "uv": [
+            1,
+            6,
+            15,
+            10
+          ]
+        }
+      }
+    }
+  ]
+}

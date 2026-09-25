@@ -146,7 +146,8 @@ public class TEAnimatedScreenSelector
                         right.getOpposite(), EnumFacing.UP, EnumFacing.DOWN}) {
                     BlockPos next = current.offset(side);
                     if (members.contains(next) || !world.isBlockLoaded(next)
-                            || !eligiblePorthole(world, next, facing)) continue;
+                            || !eligiblePorthole(world, next, facing,
+                                    state.getValue(BlockProgrammableWall.DEPTH))) continue;
                     members.add(next);
                     queue.addLast(next);
                     int coordinate = axis(next, right);
@@ -186,12 +187,13 @@ public class TEAnimatedScreenSelector
     }
 
     private static boolean eligiblePorthole(World world, BlockPos pos,
-            EnumFacing facing) {
+            EnumFacing facing, int depth) {
         IBlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockProgrammableWall)
                 || ((BlockProgrammableWall) state.getBlock()).getShape()
                 != BlockProgrammableWall.Shape.PORTHOLE
-                || state.getValue(BlockProgrammableWall.FACING) != facing) return false;
+                || state.getValue(BlockProgrammableWall.FACING) != facing
+                || state.getValue(BlockProgrammableWall.DEPTH) != depth) return false;
         net.minecraft.tileentity.TileEntity raw = world.getTileEntity(pos);
         return raw instanceof TileEntityAnimatedScreenSelector
                 && ((TileEntityAnimatedScreenSelector) raw).isJoinPortholes();
@@ -641,6 +643,9 @@ public class TEAnimatedScreenSelector
             IBlockState state, double x, double y, double z) {
         BlockProgrammableWall wallBlock = (BlockProgrammableWall) state.getBlock();
         beginLocalTransform(x, y, z, state.getValue(BlockProgrammableWall.FACING));
+        if (wallBlock.getShape() != BlockProgrammableWall.Shape.DIAGONAL)
+            GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(
+                    state.getValue(BlockProgrammableWall.DEPTH)));
         GlStateManager.disableLighting();
         bindAtlas();
         setWorldLight(te);
@@ -685,7 +690,9 @@ public class TEAnimatedScreenSelector
                 || ((BlockProgrammableWall) neighbor.getBlock()).getShape()
                 != BlockProgrammableWall.Shape.PORTHOLE
                 || neighbor.getValue(BlockProgrammableWall.FACING)
-                != state.getValue(BlockProgrammableWall.FACING)) return false;
+                != state.getValue(BlockProgrammableWall.FACING)
+                || neighbor.getValue(BlockProgrammableWall.DEPTH)
+                != state.getValue(BlockProgrammableWall.DEPTH)) return false;
         net.minecraft.tileentity.TileEntity other = tile.getWorld().getTileEntity(next);
         return other instanceof TileEntityAnimatedScreenSelector
                 && ((TileEntityAnimatedScreenSelector) other).isJoinPortholes();
@@ -751,7 +758,9 @@ public class TEAnimatedScreenSelector
         IBlockState other = tile.getWorld().getBlockState(next);
         return other.getBlock() == state.getBlock()
                 && other.getValue(BlockProgrammableWall.FACING)
-                == state.getValue(BlockProgrammableWall.FACING);
+                == state.getValue(BlockProgrammableWall.FACING)
+                && other.getValue(BlockProgrammableWall.DEPTH)
+                == state.getValue(BlockProgrammableWall.DEPTH);
     }
 
     private static void topRim(BufferBuilder buf, TextureAtlasSprite metal,

@@ -43,10 +43,12 @@ assert by_id['programmable_glass']['item']
 assert not any(k in by_id for k in ('space_glass_small','space_glass_medium','space_glass_large','framed_observation_glass'))
 assert load(ASSETS/'models/item/programmable_glass.json')['parent']=='vandorlabs:item/medium/space_glass_medium'
 parts=load(ASSETS/'blockstates/programmable_glass.json')['multipart']
-assert len(parts)==48
+assert len(parts)==144
 for part in parts:
     assert any('/'+level+'/' in part['apply']['model'] for level in ('low','medium','high'))
     assert part['when']['AND'][0]['size'] in ('0','1','2')
+    assert part['when']['AND'][1]['depth'] in ('0','1','2')
+    assert (ASSETS/'models/block'/Path(part['apply']['model'].split(':',1)[1]+'.json')).exists()
 for level in ('low','medium','high'):
     frame=load(ASSETS/f'models/block/detailed_doors/{level}/space_glass_medium_left.json')
     assert frame['textures']['frame']=='vandorlabs:blocks/space_doors/'+level+'/double_frame_metal'
