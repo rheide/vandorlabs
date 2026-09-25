@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 
@@ -21,6 +22,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     private boolean particles;
     private final boolean connected;
     private boolean join;
+    private int sideTexture;
+    private HousingTextureList housingList;
     private GuiButton particleButton;
 
     public GuiRedstoneChannel(RedstoneChannelMember member) {
@@ -36,8 +39,9 @@ public class GuiRedstoneChannel extends GuiContainer {
                 .getBlockState(member.channelTile().getPos()).getBlock()
                 instanceof BlockConnectedPropulsionLight;
         this.join = connected && ((TileEntityRedstoneLight) member).isJoin();
-        xSize = 240;
-        ySize = connected ? 160 : thruster ? 132 : 104;
+        this.sideTexture = thruster ? ((TileEntityRedstoneLight) member).getSideTexture() : 0;
+        xSize = thruster ? 410 : 240;
+        ySize = thruster ? 190 : 104;
     }
 
     @Override public void initGui() {
@@ -48,6 +52,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(member.getRedstoneChannel()));
         channelField.setFocused(true);
+        if (thruster) housingList = new HousingTextureList(guiLeft + 250,
+                guiTop + 48, 144, sideTexture);
         if (thruster) {
             particleButton = new GuiButton(2, guiLeft + 116, guiTop + 68, 106, 20,
                     particleLabel());
@@ -56,8 +62,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (connected) buttonList.add(new GuiButton(3, guiLeft + 116,
                 guiTop + 96, 106, 20, joinLabel()));
         buttonList.add(new GuiButton(1, guiLeft + 14,
-                guiTop + (connected ? 128 : thruster ? 100 : 72),
-                212, 20, "Done"));
+                guiTop + (thruster ? 158 : 72),
+                xSize - 28, 20, "Done"));
     }
 
     protected int channel() {
@@ -73,7 +79,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         int value = channel();
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
-                        thruster, particles, connected, join));
+                        thruster, particles, connected, join, thruster, sideTexture));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
@@ -104,8 +110,27 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
+        if (housingList != null && housingList.click(x, y, button)) {
+            sideTexture = housingList.selected();
+            return;
+        }
         super.mouseClicked(x, y, button);
         channelField.mouseClicked(x, y, button);
+    }
+
+    @Override protected void mouseClickMove(int x, int y, int button, long elapsed) {
+        if (housingList != null && housingList.drag(y)) return;
+        super.mouseClickMove(x, y, button, elapsed);
+    }
+    @Override protected void mouseReleased(int x, int y, int button) {
+        if (housingList != null) housingList.release();
+        super.mouseReleased(x, y, button);
+    }
+    @Override public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        if (housingList != null) housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+                height - Mouse.getEventY() * height / mc.displayHeight - 1,
+                Mouse.getEventDWheel());
     }
 
     @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }
@@ -121,11 +146,13 @@ public class GuiRedstoneChannel extends GuiContainer {
         fontRenderer.drawString("Channel (0 = none)", 14, 43, 0xDAE8F0);
         if (thruster) fontRenderer.drawString("Active mode", 14, 74, 0xDAE8F0);
         if (connected) fontRenderer.drawString("Adjacent", 14, 102, 0xDAE8F0);
+        if (thruster) fontRenderer.drawString("Side Texture", 250, 34, 0xDAE8F0);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {
         drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partial);
+        if (housingList != null) housingList.draw(fontRenderer, mouseX, mouseY);
         channelField.drawTextBox();
     }
 }

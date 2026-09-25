@@ -9,7 +9,7 @@ public final class ScreenHousingTextures {
             "industrial_block", "industrial_trim", "industrial_grate",
             "wall_vent", "bolted_wall_plate",
             "burgundy", "bluegray", "matter", "matter_amber",
-            "matter_cyan", "matter_red"
+            "matter_cyan", "matter_red", "thruster_side"
     };
     private static final String[] TEXTURES = {
             "dark_wall_panel", "light_wall_panel", "light_alloy_hull",
@@ -18,7 +18,7 @@ public final class ScreenHousingTextures {
             "thrusters/side", "thrusters/top", "thrusters/rear",
             "wall_vent", "bolted_wall_plate",
             "burgundy_carpet", "bluegray_carpet", "matter", "matter_amber",
-            "matter_cyan", "matter_red"
+            "matter_cyan", "matter_red", "thrusters/side"
     };
 
     private ScreenHousingTextures() { }

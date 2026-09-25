@@ -555,6 +555,18 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
+        for (ModelResourceLocation location : new java.util.ArrayList<>(
+                event.getModelRegistry().getKeys())) {
+            if (!VandorLabs.MODID.equals(location.getResourceDomain())) continue;
+            String path = location.getResourcePath();
+            if (!(path.startsWith("rocket_thruster") || path.startsWith("ion_drive")
+                    || path.startsWith("plasma_vent") || path.startsWith("impulse_engine")))
+                continue;
+            net.minecraft.client.renderer.block.model.IBakedModel model =
+                    event.getModelRegistry().getObject(location);
+            if (model != null) event.getModelRegistry().putObject(location,
+                    new com.vandorlabs.client.PropulsionSideModel(model));
+        }
         for (int design = 0; design < com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;
                 design++) for (String detail : com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS)
             for (boolean framed : new boolean[]{false, true})

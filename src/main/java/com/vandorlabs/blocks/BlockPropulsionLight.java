@@ -6,6 +6,7 @@ import com.vandorlabs.tiles.TileEntityRedstoneLight;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -19,6 +20,9 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.property.ExtendedBlockState;
+import net.minecraftforge.common.property.IExtendedBlockState;
+import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Six-direction engine/hover fixture with a channel-aware illuminated state. */
 public class BlockPropulsionLight extends BlockVandor {
@@ -26,6 +30,12 @@ public class BlockPropulsionLight extends BlockVandor {
     public static final PropertyBool POWERED = PropertyBool.create("powered");
     /** Derived client render state; persisted by the tile entity, not metadata. */
     public static final PropertyBool PARTICLES = PropertyBool.create("particles");
+    public static final IUnlistedProperty<Integer> SIDE_TEXTURE = new IUnlistedProperty<Integer>() {
+        @Override public String getName() { return "side_texture"; }
+        @Override public boolean isValid(Integer value) { return value != null; }
+        @Override public Class<Integer> getType() { return Integer.class; }
+        @Override public String valueToString(Integer value) { return value.toString(); }
+    };
 
     private final float depth;
 
@@ -40,7 +50,18 @@ public class BlockPropulsionLight extends BlockVandor {
     }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, POWERED, PARTICLES);
+        return new ExtendedBlockState(this,
+                new IProperty<?>[]{FACING, POWERED, PARTICLES},
+                new IUnlistedProperty<?>[]{SIDE_TEXTURE});
+    }
+
+    @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess source,
+            BlockPos pos) {
+        TileEntity tile = source.getTileEntity(pos);
+        int choice = tile instanceof TileEntityRedstoneLight
+                ? ((TileEntityRedstoneLight) tile).getSideTexture()
+                : com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1;
+        return ((IExtendedBlockState) state).withProperty(SIDE_TEXTURE, choice);
     }
 
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess source,

@@ -20,6 +20,8 @@ public class MessageRedstoneChannel implements IMessage {
     private boolean particles;
     private boolean updateJoin;
     private boolean join;
+    private boolean updateSide;
+    private int sideTexture;
 
     public MessageRedstoneChannel() { }
     public MessageRedstoneChannel(BlockPos pos, int channel) { this.pos = pos; this.channel = channel; }
@@ -29,12 +31,19 @@ public class MessageRedstoneChannel implements IMessage {
     }
     public MessageRedstoneChannel(BlockPos pos, int channel, boolean updateParticles,
             boolean particles, boolean updateJoin, boolean join) {
+        this(pos, channel, updateParticles, particles, updateJoin, join, false, 0);
+    }
+    public MessageRedstoneChannel(BlockPos pos, int channel, boolean updateParticles,
+            boolean particles, boolean updateJoin, boolean join,
+            boolean updateSide, int sideTexture) {
         this.pos = pos;
         this.channel = channel;
         this.updateParticles = updateParticles;
         this.particles = particles;
         this.updateJoin = updateJoin;
         this.join = join;
+        this.updateSide = updateSide;
+        this.sideTexture = sideTexture;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
@@ -43,6 +52,8 @@ public class MessageRedstoneChannel implements IMessage {
         particles = buf.readableBytes() > 0 && buf.readBoolean();
         updateJoin = buf.readableBytes() > 0 && buf.readBoolean();
         join = buf.readableBytes() > 0 && buf.readBoolean();
+        updateSide = buf.readableBytes() > 0 && buf.readBoolean();
+        sideTexture = buf.readableBytes() >= 4 ? buf.readInt() : 0;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -51,13 +62,17 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeBoolean(particles);
         buf.writeBoolean(updateJoin);
         buf.writeBoolean(join);
+        buf.writeBoolean(updateSide);
+        buf.writeInt(sideTexture);
     }
 
     public static class Handler implements IMessageHandler<MessageRedstoneChannel, IMessage> {
         @Override public IMessage onMessage(MessageRedstoneChannel message, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (message.pos == null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)) return;
+                if (message.pos == null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)
+                        || (message.updateSide && (message.sideTexture < 0
+                        || message.sideTexture >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length))) return;
                 TileEntity tile = player.world.getTileEntity(message.pos);
                 if (!(tile instanceof RedstoneChannelMember)
                         || !(player.openContainer instanceof ContainerRedstoneChannel)) return;
@@ -68,13 +83,17 @@ public class MessageRedstoneChannel implements IMessage {
                 if (block instanceof BlockConnectedPropulsionLight) {
                     ((BlockConnectedPropulsionLight) block).configureAssembly(player.world,
                             message.pos, message.channel, message.updateParticles,
-                            message.particles, message.updateJoin, message.join);
+                            message.particles, message.updateJoin, message.join,
+                            message.updateSide, message.sideTexture);
                 } else {
                     ((RedstoneChannelMember) tile).setRedstoneChannel(message.channel);
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile)
                                 .setParticleStreamSelected(message.particles);
+                    if (message.updateSide && tile instanceof TileEntityRedstoneLight
+                            && block instanceof BlockPropulsionLight)
+                        ((TileEntityRedstoneLight) tile).setSideTexture(message.sideTexture);
                 }
             });
             return null;

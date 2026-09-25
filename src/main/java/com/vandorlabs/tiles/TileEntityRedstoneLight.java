@@ -8,6 +8,7 @@ import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
 import com.vandorlabs.persistence.NbtPrimitiveData;
 import com.vandorlabs.persistence.RedstoneData;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
@@ -26,6 +27,20 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private boolean particleStreamSelected;
     private boolean initialized;
     private boolean join = true;
+    private int sideTexture = ScreenHousingTextures.IDS.length - 1;
+
+    public int getSideTexture() { return sideTexture; }
+    public void setSideTexture(int choice) {
+        int next = ScreenHousingTextures.clamp(choice);
+        if (sideTexture == next) return;
+        sideTexture = next;
+        markDirty();
+        if (world != null && pos != null) {
+            IBlockState state = world.getBlockState(pos);
+            world.notifyBlockUpdate(pos, state, state, 3);
+        }
+        sync();
+    }
 
     public boolean isJoin() { return join; }
     public void setJoin(boolean value) {
@@ -280,6 +295,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         new RedstoneData.Light(channel,channelSignal,manualOn,particleStreamSelected,
                 initialized).write(new NbtPrimitiveData(tag));
         tag.setBoolean("PropulsionJoin", join);
+        tag.setInteger("PropulsionSideTexture", sideTexture);
         return tag;
     }
 
@@ -293,6 +309,9 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         particleStreamSelected=data.particleStream;
         initialized=data.initialized;
         join = !tag.hasKey("PropulsionJoin") || tag.getBoolean("PropulsionJoin");
+        sideTexture = tag.hasKey("PropulsionSideTexture", 3)
+                ? ScreenHousingTextures.clamp(tag.getInteger("PropulsionSideTexture"))
+                : ScreenHousingTextures.IDS.length - 1;
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

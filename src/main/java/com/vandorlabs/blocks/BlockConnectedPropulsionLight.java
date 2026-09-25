@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
 import com.vandorlabs.render.ConnectedSquare;
 import net.minecraft.block.properties.PropertyHelper;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
@@ -16,6 +17,8 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.property.ExtendedBlockState;
+import net.minecraftforge.common.property.IUnlistedProperty;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -123,7 +126,9 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, POWERED, PARTICLES, PART);
+        return new ExtendedBlockState(this,
+                new IProperty<?>[]{FACING, POWERED, PARTICLES, PART},
+                new IUnlistedProperty<?>[]{SIDE_TEXTURE});
     }
 
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess source,
@@ -251,6 +256,13 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
 
     public void configureAssembly(World world, BlockPos pos, int channel,
             boolean updateParticles, boolean particles, boolean updateJoin, boolean join) {
+        configureAssembly(world, pos, channel, updateParticles, particles,
+                updateJoin, join, false, 0);
+    }
+
+    public void configureAssembly(World world, BlockPos pos, int channel,
+            boolean updateParticles, boolean particles, boolean updateJoin, boolean join,
+            boolean updateSide, int sideTexture) {
         IBlockState state = world.getBlockState(pos);
         List<TileEntityRedstoneLight> tiles = assemblyTiles(world, pos, state);
         for (TileEntityRedstoneLight tile : tiles) tile.setRedstoneChannel(channel);
@@ -259,6 +271,8 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
                 tile.setParticleStreamSelected(particles, false);
         if (updateJoin)
             for (TileEntityRedstoneLight tile : tiles) tile.setJoin(join);
+        if (updateSide)
+            for (TileEntityRedstoneLight tile : tiles) tile.setSideTexture(sideTexture);
         refreshConnectedModels(world, pos, state.getValue(FACING));
     }
 
