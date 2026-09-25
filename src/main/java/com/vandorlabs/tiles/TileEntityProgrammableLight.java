@@ -2,6 +2,7 @@ package com.vandorlabs.tiles;
 
 import net.minecraft.block.state.IBlockState;
 import com.vandorlabs.persistence.SpaceDoorData;
+import com.vandorlabs.blocks.ProgrammableLightConnections;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.EnumSkyBlock;
 
@@ -11,6 +12,18 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     private int lightLevel = 15;
     private boolean on = true;
     private boolean join;
+    private boolean joinedTriggerPower;
+    private boolean unloading;
+
+    public boolean isAvailableForJoining() { return !isInvalid() && !unloading; }
+
+    public boolean hasDirectTriggerPower() { return isTriggerPowered(); }
+
+    public void setJoinedTriggerPower(boolean powered) {
+        if (joinedTriggerPower == powered) return;
+        joinedTriggerPower = powered;
+        notifyChanged();
+    }
     private int trigger = SpaceDoorData.TRIGGER_DISABLED;
 
     public int getTrigger() { return trigger; }
@@ -22,7 +35,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     public int getTexture() { return texture; }
     public int getLightLevel() { return lightLevel; }
     public boolean isOn() {
-        return isManual() ? on : SpaceDoorData.openForSignal(trigger, isTriggerPowered());
+        return isManual() ? on : SpaceDoorData.openForSignal(trigger, join ? joinedTriggerPower : isTriggerPowered());
     }
     public boolean isJoin() { return join; }
 
@@ -76,14 +89,37 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         boolean wasOn = isOn();
         super.setChannelSignal(powered);
         if (wasOn != isOn()) joinRevision++;
+        ProgrammableLightConnections.refreshAround(world, pos);
     }
 
     @Override public void localInputChanged() {
         super.localInputChanged();
-        if (!isManual()) changed();
+        changed();
     }
 
     private void changed() {
+        ProgrammableLightConnections.refreshAround(world, pos);
+        notifyChanged();
+    }
+
+    @Override public void onLoad() {
+        unloading = false;
+        super.onLoad();
+        ProgrammableLightConnections.refreshAround(world, pos);
+    }
+
+    @Override public void onChunkUnload() {
+        unloading = true;
+        super.onChunkUnload();
+        ProgrammableLightConnections.refreshAround(world, pos);
+    }
+
+    @Override public void invalidate() {
+        super.invalidate();
+        ProgrammableLightConnections.refreshAround(world, pos);
+    }
+
+    private void notifyChanged() {
         joinRevision++;
         markDirty();
         if (world != null && pos != null) {
@@ -100,6 +136,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         tag.setBoolean("LightOn", on);
         tag.setBoolean("LightJoin", join);
         tag.setInteger("LightTrigger", trigger);
+        tag.setBoolean("LightGroupPowered", joinedTriggerPower);
         return tag;
     }
 
@@ -110,10 +147,12 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
                 ? Math.max(0, Math.min(15, tag.getInteger("LightLevel"))) : 15;
         on = !tag.hasKey("LightOn") || tag.getBoolean("LightOn");
         join = tag.getBoolean("LightJoin");
+        joinedTriggerPower = tag.getBoolean("LightGroupPowered");
         trigger = tag.hasKey("LightTrigger", 3) ? tag.getInteger("LightTrigger")
                 : getRedstoneChannel() > 0 ? SpaceDoorData.TRIGGER_REDSTONE_ON
                 : SpaceDoorData.TRIGGER_DISABLED;
         if (!SpaceDoorData.validTrigger(trigger)) trigger = SpaceDoorData.TRIGGER_DISABLED;
+        ProgrammableLightConnections.refreshAround(world, pos);
         joinRevision++;
         if (world != null && pos != null) world.checkLightFor(EnumSkyBlock.BLOCK, pos);
     }

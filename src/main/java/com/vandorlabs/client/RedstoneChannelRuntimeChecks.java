@@ -34,6 +34,7 @@ final class RedstoneChannelRuntimeChecks {
 
     static void run(World world, EntityPlayer player) {
         checkLightTriggers(world, player);
+        checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);
         checkLeverPlacement(world,player);
         checkFloorLeverPower(world,player);
@@ -165,6 +166,60 @@ final class RedstoneChannelRuntimeChecks {
         world.setBlockToAir(doorPos.down());
         world.setBlockToAir(propulsionPos);
         System.out.println("[vandorlabs][reprolab] redstone-channel-runtime PASS");
+    }
+
+    private static void checkJoinedLightTriggers(World world) {
+        BlockPos origin = new BlockPos(40, 240, 40);
+        Block block = com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_LIGHT;
+        com.vandorlabs.tiles.TileEntityProgrammableLight[] lights =
+                new com.vandorlabs.tiles.TileEntityProgrammableLight[3];
+        try {
+            for (int i=0;i<3;i++) {
+                world.setBlockState(origin.east(i), block.getDefaultState(), 3);
+                lights[i] = (com.vandorlabs.tiles.TileEntityProgrammableLight)
+                        world.getTileEntity(origin.east(i));
+            }
+            for (int trigger=1;trigger<=2;trigger++) {
+                for (com.vandorlabs.tiles.TileEntityProgrammableLight light : lights)
+                    light.configure(0, 11, true, 0, 9, trigger);
+                for (boolean powered : new boolean[]{false,true,false}) {
+                    world.setBlockState(origin.east(2).up(), powered
+                            ? Blocks.REDSTONE_BLOCK.getDefaultState() : Blocks.AIR.getDefaultState(), 3);
+                    for (int i=0;i<3;i++) {
+                        boolean expected = trigger == 1 ? powered : !powered;
+                        require(lights[i].isOn() == expected && block.getLightValue(
+                                        world.getBlockState(origin.east(i)), world, origin.east(i))
+                                        == (expected ? 11 : 0),
+                                "Joined light did not share trigger power/emission");
+                        com.vandorlabs.tiles.TileEntityProgrammableLight clientCopy =
+                                new com.vandorlabs.tiles.TileEntityProgrammableLight();
+                        clientCopy.readFromNBT(lights[i].getUpdateTag());
+                        require(clientCopy.isOn() == expected, "Joined power missing from client update");
+                    }
+                }
+            }
+            for (com.vandorlabs.tiles.TileEntityProgrammableLight light : lights)
+                light.configure(0,11,true,0,9,1);
+            world.setBlockState(origin.up(), Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+            world.setBlockState(origin.east(2).up(), Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+            world.setBlockToAir(origin.up());
+            require(lights[0].isOn(), "Removing one input ignored remaining joined power");
+            lights[1].configure(0,11,false,0,9,1);
+            require(!lights[0].isOn() && lights[2].isOn(), "Join Off did not split power group");
+            lights[1].configure(0,11,true,0,9,1);
+            require(lights[0].isOn(), "Joining did not restore shared power");
+            world.setBlockToAir(origin.east(2).up());
+            lights[2].setChannelSignal(true);
+            require(lights[0].isOn() && lights[1].isOn(), "One channel input did not power joined lights");
+            lights[2].setChannelSignal(false);
+            require(!lights[0].isOn() && !lights[1].isOn(), "Joined channel power stuck on");
+            world.setBlockState(origin.east(2).up(), Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+            world.setBlockToAir(origin.east(1));
+            require(!lights[0].isOn(), "Removing a bridge left disconnected light powered");
+        } finally {
+            for (int i=0;i<3;i++) world.setBlockToAir(origin.east(i).up());
+            for (int i=0;i<3;i++) world.setBlockToAir(origin.east(i));
+        }
     }
 
     private static void checkLightTriggers(World world, EntityPlayer player) {

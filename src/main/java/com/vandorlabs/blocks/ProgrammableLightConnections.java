@@ -18,6 +18,11 @@ public final class ProgrammableLightConnections {
 
     public static Set<BlockPos> members(TileEntityProgrammableLight first,
             IBlockState state) {
+        return members(first, state, true);
+    }
+
+    private static Set<BlockPos> members(TileEntityProgrammableLight first,
+            IBlockState state, boolean matchOn) {
         World world = first.getWorld();
         Set<BlockPos> members = new LinkedHashSet<>();
         members.add(first.getPos());
@@ -35,7 +40,7 @@ public final class ProgrammableLightConnections {
                     up, up.getOpposite()}) {
                 BlockPos next = current.offset(side);
                 if (members.contains(next) || !world.isBlockLoaded(next)
-                        || !eligible(world, next, facing, first)) continue;
+                        || !eligible(world, next, facing, first, matchOn)) continue;
                 members.add(next);
                 queue.addLast(next);
                 if (members.size() >= 4096) {
@@ -48,15 +53,38 @@ public final class ProgrammableLightConnections {
         return members;
     }
 
+    /** Reconcile only loaded assemblies touched by a signal or topology change. */
+    public static void refreshAround(World world, BlockPos pos) {
+        if (world == null || world.isRemote || pos == null) return;
+        Set<BlockPos> visited = new LinkedHashSet<>();
+        Set<BlockPos> seeds = new LinkedHashSet<>();
+        seeds.add(pos);
+        for (EnumFacing side : EnumFacing.values()) seeds.add(pos.offset(side));
+        for (BlockPos seed : seeds) {
+            if (visited.contains(seed) || !world.isBlockLoaded(seed)) continue;
+            TileEntity raw = world.getTileEntity(seed);
+            if (!(raw instanceof TileEntityProgrammableLight) || !((TileEntityProgrammableLight) raw).isAvailableForJoining()
+                    || world.getBlockState(seed).getBlock() != ModBlocks.PROGRAMMABLE_LIGHT) continue;
+            Set<BlockPos> group = members((TileEntityProgrammableLight) raw,
+                    world.getBlockState(seed), false);
+            visited.addAll(group);
+            boolean powered = false;
+            for (BlockPos member : group)
+                powered |= ((TileEntityProgrammableLight) world.getTileEntity(member)).hasDirectTriggerPower();
+            for (BlockPos member : group)
+                ((TileEntityProgrammableLight) world.getTileEntity(member)).setJoinedTriggerPower(powered);
+        }
+    }
+
     private static boolean eligible(World world, BlockPos pos, EnumFacing facing,
-            TileEntityProgrammableLight first) {
+            TileEntityProgrammableLight first, boolean matchOn) {
         IBlockState state = world.getBlockState(pos);
         if (state.getBlock() != ModBlocks.PROGRAMMABLE_LIGHT
                 || state.getValue(BlockAnimatedScreenSelector.FACING) != facing) return false;
         TileEntity raw = world.getTileEntity(pos);
         if (!(raw instanceof TileEntityProgrammableLight)) return false;
         TileEntityProgrammableLight other = (TileEntityProgrammableLight) raw;
-        return other.isJoin() && other.getTexture() == first.getTexture()
-                && other.isOn() == first.isOn();
+        return other.isAvailableForJoining() && other.isJoin() && other.getTexture() == first.getTexture()
+                && (!matchOn || other.isOn() == first.isOn());
     }
 }
