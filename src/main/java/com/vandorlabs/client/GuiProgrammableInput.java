@@ -36,7 +36,6 @@ public class GuiProgrammableInput extends GuiContainer {
     private int scrollbarDragOffset;
     private GuiTextField channelField;
     private HousingTextureList housingList;
-    private boolean housingOpen;
 
     public GuiProgrammableInput(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector te) {
@@ -48,7 +47,7 @@ public class GuiProgrammableInput extends GuiContainer {
         this.redstoneEnabled = te.isRedstoneEnabled();
         this.smallInput = te.isSmallInput();
         this.housingTexture = te.getHousingTexture();
-        this.xSize = 250;
+        this.xSize = 420;
         this.ySize = 260;
     }
 
@@ -81,10 +80,8 @@ public class GuiProgrammableInput extends GuiContainer {
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        housingList = new HousingTextureList(x + 8, y + 22, 226,
+        housingList = new HousingTextureList(x + 258, y + 34, 150,
                 housingTexture);
-        buttonList.add(new GuiButton(21, x + 8, y + 228, 114, 20,
-                I18n.format("gui.vandorlabs.selector.housing")));
         buttonList.add(new GuiButton(20, x + 128, y + 228, 114, 20,
                 I18n.format("gui.done")));
         revealSelection();
@@ -142,14 +139,13 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
-        if (housingOpen && housingList.click(mouseX, mouseY, button)) {
+        if (housingList.click(mouseX, mouseY, button)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();
                 sendUpdate();
             }
             return;
         }
-        if (housingOpen) { housingOpen = false; return; }
         if (button == 0 && maxScroll() > 0 && mouseX >= listX + 144
                 && mouseX < listX + 150 && mouseY >= listY
                 && mouseY < listY + ROW_H * ROWS) {
@@ -211,7 +207,6 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button.id == 20) { if (channel()>=0) sendUpdate(); mc.player.closeScreen(); return; }
-        if (button.id == 21) { housingOpen = !housingOpen; return; }
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
@@ -226,7 +221,7 @@ public class GuiProgrammableInput extends GuiContainer {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
-        if (housingOpen && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+        if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         if (wheel != 0) {
             scroll = Math.max(0, Math.min(maxScroll(), scroll + (wheel > 0 ? -1 : 1)));
@@ -280,9 +275,11 @@ public class GuiProgrammableInput extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.size"),
                 x + 8, y + 170, 0xFFA0A0A8);
         fontRenderer.drawString("Channel", x + 168, y + 80, 0xFFA0A0A8);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.housing"),
+                x + 258, y + 22, 0xFFA0A0A8);
+        housingList.draw(fontRenderer, mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
-        if (housingOpen) housingList.draw(fontRenderer, mouseX, mouseY);
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {

@@ -13,6 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraft.client.renderer.block.statemap.StateMap;
@@ -416,7 +417,12 @@ public class ModBlocks {
                 if (block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_SLAB
                         || block == PROGRAMMABLE_WALL || block == PROGRAMMABLE_DIAGONAL_WALL
                         || block == PROGRAMMABLE_PORTHOLE_WALL) {
-                    registerHousingItemModels(block, item);
+                    if (block == PROGRAMMABLE_SLAB) registerSlabItemModels(item);
+                    else registerHousingItemModels(block, item);
+                    continue;
+                }
+                if (block == PROGRAMMABLE_LIGHT) {
+                    registerLightItemModels(item);
                     continue;
                 }
                 if (block == PROGRAMMABLE_CHAIR) {
@@ -485,6 +491,53 @@ public class ModBlocks {
     }
 
     @SideOnly(Side.CLIENT)
+    private static void registerSlabItemModels(Item item) {
+        ResourceLocation[] variants = new ResourceLocation[
+                com.vandorlabs.tiles.ScreenHousingTextures.IDS.length * 2];
+        for (int i = 0; i < com.vandorlabs.tiles.ScreenHousingTextures.IDS.length; i++) {
+            String id = com.vandorlabs.tiles.ScreenHousingTextures.IDS[i];
+            variants[i * 2] = new ResourceLocation(VandorLabs.MODID,
+                    "configured/programmable_slab_" + id + "_fit");
+            variants[i * 2 + 1] = new ResourceLocation(VandorLabs.MODID,
+                    "configured/programmable_slab_" + id + "_tile");
+        }
+        ModelLoader.registerItemVariants(item, variants);
+        ModelLoader.setCustomMeshDefinition(item, stack -> {
+            net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+            int choice = tag == null ? 0 : com.vandorlabs.tiles.ScreenHousingTextures.clamp(
+                    tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+            boolean tileSides = tag != null && tag.getBoolean("SlabTileSides");
+            return new ModelResourceLocation(variants[choice * 2 + (tileSides ? 1 : 0)],
+                    "inventory");
+        });
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerLightItemModels(Item item) {
+        ResourceLocation[] variants = new ResourceLocation[
+                com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length * 2];
+        for (int i = 0; i < com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length; i++) {
+            String id = com.vandorlabs.tiles.ProgrammableLightTextures.IDS[i];
+            variants[i * 2] = new ResourceLocation(VandorLabs.MODID,
+                    "configured/programmable_light_" + id + "_off");
+            variants[i * 2 + 1] = new ResourceLocation(VandorLabs.MODID,
+                    "configured/programmable_light_" + id + "_on");
+        }
+        ModelLoader.registerItemVariants(item, variants);
+        ModelLoader.setCustomMeshDefinition(item, stack -> {
+            net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+            int choice = tag == null ? 0
+                    : com.vandorlabs.tiles.ProgrammableLightTextures.clamp(
+                            tag.getInteger("LightTexture"));
+            boolean lit = tag == null || ((!tag.hasKey("LightOn")
+                    || tag.getBoolean("LightOn"))
+                    && (!tag.hasKey("LightLevel", 3) || tag.getInteger("LightLevel") > 0));
+            return new ModelResourceLocation(variants[choice * 2 + (lit ? 1 : 0)],
+                    "inventory");
+        });
+    }
+
+    @SideOnly(Side.CLIENT)
     private static ModelResourceLocation doorItemModel(net.minecraft.item.ItemStack stack) {
         net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("SpaceDoorSettings");
         com.vandorlabs.persistence.SpaceDoorData data =
@@ -497,6 +550,28 @@ public class ModBlocks {
         return new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
                 + com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[data.detail]
                 + "/" + model, "inventory");
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public static void onModelBake(ModelBakeEvent event) {
+        for (int design = 0; design < com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;
+                design++) for (String detail : com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS)
+            for (boolean framed : new boolean[]{false, true})
+                for (boolean sliding : new boolean[]{false, true})
+                    for (boolean hinges : new boolean[]{false, true}) {
+                        if (sliding && !hinges) continue;
+                        String model = com.vandorlabs.tiles.TileEntitySpaceDoor.modelId(
+                                design, sliding, framed) + "_left_leaf"
+                                + (!sliding && !hinges ? "_no_hinges" : "");
+                        ModelResourceLocation location = new ModelResourceLocation(
+                                VandorLabs.MODID + ":detailed_doors/" + detail + "/" + model,
+                                "inventory");
+                        net.minecraft.client.renderer.block.model.IBakedModel baked =
+                                event.getModelRegistry().getObject(location);
+                        if (baked != null) event.getModelRegistry().putObject(location,
+                                new com.vandorlabs.client.ScaledDoorItemModel(baked));
+                    }
     }
 
     @SideOnly(Side.CLIENT)

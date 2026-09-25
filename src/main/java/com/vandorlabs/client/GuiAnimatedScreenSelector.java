@@ -51,7 +51,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private static final int ROW_H = 12;
     private static final int LIST_ROWS = 8;
     private static final int LIST_H = ROW_H * LIST_ROWS;
-    private static final int PREVIEW_PX = 80;
 
     private final TileEntityAnimatedScreenSelector te;
     private final BlockPos pos;
@@ -69,7 +68,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private String inputPanel;
     private int housingTexture;
     private HousingTextureList housingList;
-    private boolean housingOpen;
 
     private int scrollIndex;
     private boolean draggingScrollbar;
@@ -109,7 +107,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 .getBlock() instanceof BlockProgrammableDiagonalScreen;
         this.fullInput = te.getWorld() != null && te.getWorld().getBlockState(pos)
                 .getBlock() instanceof BlockProgrammableFullInput;
-        this.xSize = console ? 320 : 300;
+        this.xSize = 420;
         this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
         this.displayMode = te.getDisplayMode();
@@ -190,9 +188,9 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         listTop = y + 22;
         listRight = x + (console ? 126 : 184);
         listBottom = listTop + LIST_H;
-        previewX = x + (console ? 248 : 202);
-        previewY = y + 32;
-        previewSize = console ? 52 : PREVIEW_PX;
+        previewX = x + (console ? 340 : 194);
+        previewY = y + (console ? 130 : 32);
+        previewSize = console ? 52 : 64;
         inputListLeft = x + 136;
         inputListTop = y + 22;
         inputListRight = x + 236;
@@ -226,16 +224,15 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         buttonList.add(modeStaticButton);
         buttonList.add(modeAnimatedButton);
         buttonList.add(frameButton);
-        housingList = new HousingTextureList(x + 8, y + 22, xSize - 24,
+        housingList = new HousingTextureList(x + (console ? 244 : 266), y + 22,
+                console ? 160 : 140,
                 housingTexture);
         channelField = new GuiTextField(40,fontRenderer,x+64,y+186,84,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        buttonList.add(new GuiButton(21, x + 8, y + 212, xSize / 2 - 12, 20,
-                I18n.format("gui.vandorlabs.selector.housing")));
-        buttonList.add(new GuiButton(20, x + xSize / 2 + 4, y + 212,
-                xSize / 2 - 12, 20,
+        buttonList.add(new GuiButton(20, x + (console ? 164 : 154), y + 212,
+                console ? 148 : 138, 20,
                 I18n.format("gui.done")));
         refreshButtons();
         clampScroll();
@@ -303,9 +300,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 if (channel() >= 0) sendUpdate();
                 mc.player.closeScreen();
                 return;
-            case 21:
-                housingOpen = !housingOpen;
-                return;
             default:
                 return;
         }
@@ -345,14 +339,13 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if (housingOpen && housingList.click(mouseX, mouseY, mouseButton)) {
+        if (housingList.click(mouseX, mouseY, mouseButton)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();
                 sendUpdate();
             }
             return;
         }
-        if (housingOpen) { housingOpen = false; return; }
         if (console && mouseButton == 0 && mouseX >= inputListRight
                 && mouseX < inputListRight + 8 && mouseY >= inputListTop
                 && mouseY < inputListBottom && maxInputScroll() > 0) {
@@ -442,7 +435,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
-        if (housingOpen && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+        if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         if (wheel != 0) {
             int mouseX = Mouse.getEventX() * width / mc.displayWidth;
@@ -553,7 +546,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         }
         // Right column: preview + section labels.
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.preview"),
-                previewX, listTop, 0xFFA0A0A8);
+                previewX, console ? y + 118 : listTop, 0xFFA0A0A8);
         int previewHeight = previewSize + (console ? previewSize / 2 : 0);
         drawRect(previewX - 1, previewY - 1, previewX + previewSize + 1,
                 previewY + previewHeight + 1, 0xFF000000);
@@ -578,9 +571,11 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),
                 x + 8, y + 148, 0xFFA0A0A8);
         fontRenderer.drawString("Channel",x+8,y+192,0xFFA0A0A8);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.housing"),
+                x + (console ? 244 : 266), y + 5, 0xFFA0A0A8);
+        housingList.draw(fontRenderer, mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
-        if (housingOpen) housingList.draw(fontRenderer, mouseX, mouseY);
         // Hovered-row tooltip: family name plus which variant it addresses.
         // The selected row shows its live variant; other pairs show both.
         if (mouseX >= listLeft && mouseX < listRight

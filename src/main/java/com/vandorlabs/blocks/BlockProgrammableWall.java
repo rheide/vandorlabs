@@ -42,6 +42,14 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     public Shape getShape() { return shape; }
 
+    @Override public net.minecraft.tileentity.TileEntity createNewTileEntity(
+            World world, int meta) {
+        com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
+                new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
+        if (shape == Shape.PORTHOLE) tile.setJoinPortholes(true);
+        return tile;
+    }
+
     private boolean isDiagonalShape() {
         return shape == Shape.DIAGONAL;
     }

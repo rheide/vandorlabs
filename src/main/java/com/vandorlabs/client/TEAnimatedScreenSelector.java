@@ -96,21 +96,23 @@ public class TEAnimatedScreenSelector
     private static long lightCacheRevision = Long.MIN_VALUE;
 
     static final class LightGroup {
-        final int minAxis, minY, columns, rows;
-        final EnumFacing right;
+        final int minAxis, minRow, columns, rows;
+        final EnumFacing right, up;
 
-        LightGroup(int minAxis, int minY, int columns, int rows, EnumFacing right) {
+        LightGroup(int minAxis, int minRow, int columns, int rows,
+                EnumFacing right, EnumFacing up) {
             this.minAxis = minAxis;
-            this.minY = minY;
+            this.minRow = minRow;
             this.columns = columns;
             this.rows = rows;
             this.right = right;
+            this.up = up;
         }
 
         double left(BlockPos pos) { return 16.0 * (axis(pos, right) - minAxis) / columns; }
         double right(BlockPos pos) { return 16.0 * (axis(pos, right) - minAxis + 1) / columns; }
-        double top(BlockPos pos) { return 16.0 * (rows - 1 - (pos.getY() - minY)) / rows; }
-        double bottom(BlockPos pos) { return 16.0 * (rows - (pos.getY() - minY)) / rows; }
+        double top(BlockPos pos) { return 16.0 * (rows - 1 - (axis(pos, up) - minRow)) / rows; }
+        double bottom(BlockPos pos) { return 16.0 * (rows - (axis(pos, up) - minRow)) / rows; }
     }
 
     static LightGroup lightGroup(com.vandorlabs.tiles.TileEntityProgrammableLight tile,
@@ -128,8 +130,10 @@ public class TEAnimatedScreenSelector
         LightGroup cached = LIGHT_GROUPS.get(tile.getPos());
         if (cached != null) return cached;
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
-        EnumFacing right = facing.rotateY();
-        if (!facing.getAxis().isHorizontal()) right = EnumFacing.EAST;
+        EnumFacing right = facing.getAxis().isHorizontal()
+                ? facing.rotateY() : EnumFacing.EAST;
+        EnumFacing up = facing == EnumFacing.UP ? EnumFacing.SOUTH
+                : facing == EnumFacing.DOWN ? EnumFacing.NORTH : EnumFacing.UP;
         Set<BlockPos> members = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
         members.add(tile.getPos());
@@ -139,7 +143,7 @@ public class TEAnimatedScreenSelector
             while (!queue.isEmpty()) {
                 BlockPos current = queue.removeFirst();
                 for (EnumFacing side : new EnumFacing[] {
-                        right, right.getOpposite(), EnumFacing.UP, EnumFacing.DOWN}) {
+                        right, right.getOpposite(), up, up.getOpposite()}) {
                     BlockPos next = current.offset(side);
                     if (members.contains(next) || !world.isBlockLoaded(next)
                             || !eligibleLight(world, next, facing, tile)) continue;
@@ -157,9 +161,10 @@ public class TEAnimatedScreenSelector
         if (members.isEmpty()) members.add(tile.getPos());
         Map<Long, BlockPos> positions = new HashMap<>();
         for (BlockPos pos : members)
-            positions.put(PortholeRectangles.cell(axis(pos, right), pos.getY()), pos);
+            positions.put(PortholeRectangles.cell(axis(pos, right), axis(pos, up)), pos);
         for (PortholeRectangles.Rect rect : PortholeRectangles.partition(positions.keySet())) {
-            LightGroup group = new LightGroup(rect.x, rect.y, rect.width, rect.height, right);
+            LightGroup group = new LightGroup(rect.x, rect.y, rect.width, rect.height,
+                    right, up);
             for (int row = rect.y; row < rect.y + rect.height; row++)
                 for (int col = rect.x; col < rect.x + rect.width; col++)
                     LIGHT_GROUPS.put(positions.get(PortholeRectangles.cell(col, row)), group);
@@ -202,6 +207,7 @@ public class TEAnimatedScreenSelector
 
     private static int axis(BlockPos pos, EnumFacing right) {
         return pos.getX() * right.getFrontOffsetX()
+                + pos.getY() * right.getFrontOffsetY()
                 + pos.getZ() * right.getFrontOffsetZ();
     }
 
@@ -384,7 +390,7 @@ public class TEAnimatedScreenSelector
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLight) {
             com.vandorlabs.tiles.TileEntityProgrammableLight light =
                     (com.vandorlabs.tiles.TileEntityProgrammableLight) te;
-            beginLocalTransform(x, y, z, state.getValue(BlockAnimatedScreenSelector.FACING));
+            beginLightTransform(x, y, z, state.getValue(BlockAnimatedScreenSelector.FACING));
             GlStateManager.disableLighting();
             bindAtlas();
             setNeighborWorldLight(te);
@@ -405,8 +411,7 @@ public class TEAnimatedScreenSelector
             setNeighborWorldLight(te);
             boolean upper = state.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
                     == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP;
-            renderWallBox(wallSprite(te), 0, upper ? 8 : 0, 0,
-                    16, upper ? 16 : 8, 16);
+            renderSlab(wallSprite(te), upper, te.isSlabTileSides());
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
@@ -580,6 +585,20 @@ public class TEAnimatedScreenSelector
         GL11.glDisable(GL11.GL_CULL_FACE);
     }
 
+    private static void beginLightTransform(double x, double y, double z,
+            EnumFacing facing) {
+        if (facing.getAxis().isHorizontal()) {
+            beginLocalTransform(x, y, z, facing);
+            return;
+        }
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x + .5D, y + .5D, z + .5D);
+        GlStateManager.rotate(facing == EnumFacing.UP ? 90F : -90F, 1, 0, 0);
+        GlStateManager.translate(-.5D, -.5D, -.5D);
+        GlStateManager.scale(1F / 16F, 1F / 16F, 1F / 16F);
+        GL11.glDisable(GL11.GL_CULL_FACE);
+    }
+
     private static void endLocalTransform() {
         GL11.glEnable(GL11.GL_CULL_FACE);
         GlStateManager.popMatrix();
@@ -719,6 +738,30 @@ public class TEAnimatedScreenSelector
     private static void renderWallBox(TextureAtlasSprite wall, double x0, double y0,
             double z0, double x1, double y1, double z1) {
         renderWallBox(wall, wall, true, x0, y0, z0, x1, y1, z1);
+    }
+
+    private static void renderSlab(TextureAtlasSprite sprite, boolean upper,
+            boolean tileSides) {
+        double low = upper ? 8 : 0;
+        double high = upper ? 16 : 8;
+        double v0 = tileSides && !upper ? 8 : 0;
+        double v1 = tileSides && upper ? 8 : 16;
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder b = tess.getBuffer();
+        b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        spriteQuad(b, sprite, 0,high,0, 16,high,0, 16,high,16, 0,high,16,
+                0,0,16,16);
+        spriteQuad(b, sprite, 0,low,16, 16,low,16, 16,low,0, 0,low,0,
+                0,0,16,16);
+        spriteQuad(b, sprite, 0,high,0, 0,high,16, 0,low,16, 0,low,0,
+                0,v0,16,v1);
+        spriteQuad(b, sprite, 16,high,16, 16,high,0, 16,low,0, 16,low,16,
+                0,v0,16,v1);
+        spriteQuad(b, sprite, 16,high,0, 0,high,0, 0,low,0, 16,low,0,
+                0,v0,16,v1);
+        spriteQuad(b, sprite, 0,high,16, 16,high,16, 16,low,16, 0,low,16,
+                0,v0,16,v1);
+        tess.draw();
     }
 
     /** Broad faces use the selected wall art; exposed thickness uses frame metal. */
@@ -1126,8 +1169,8 @@ public class TEAnimatedScreenSelector
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         spriteQuad(buf, face, 16,16,-.002, 0,16,-.002,
-                0,0,-.002, 16,0,-.002, group.left(pos), group.top(pos),
-                group.right(pos), group.bottom(pos));
+                0,0,-.002, 16,0,-.002, group.right(pos), group.top(pos),
+                group.left(pos), group.bottom(pos));
         tess.draw();
     }
 

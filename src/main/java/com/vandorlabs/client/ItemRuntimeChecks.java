@@ -172,9 +172,18 @@ final class ItemRuntimeChecks {
         new com.vandorlabs.persistence.SpaceDoorData(7, 2, false, 0)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(doorTag));
         doorB.setTagInfo("SpaceDoorSettings", doorTag);
+        net.minecraft.client.renderer.block.model.IBakedModel chosenDoor =
+                mc.getRenderItem().getItemModelMesher().getItemModel(doorB);
         require(mc.getRenderItem().getItemModelMesher().getItemModel(doorA)
-                        != mc.getRenderItem().getItemModelMesher().getItemModel(doorB),
+                        != chosenDoor,
                 "programmable door hotbar model does not follow copied design");
+        require(Math.abs(chosenDoor.getItemCameraTransforms().gui.scale.x - .5F) < .001F
+                        && Math.abs(chosenDoor.getItemCameraTransforms()
+                        .gui.translation.y + .25F) < .001F
+                        && Math.abs(chosenDoor.getItemCameraTransforms().getTransform(
+                        net.minecraft.client.renderer.block.model.ItemCameraTransforms
+                                .TransformType.FIRST_PERSON_RIGHT_HAND).scale.x - .5F) < .001F,
+                "programmable door item model is too large");
     }
 
     private static void checkIndustrialAlloyIngot(InventoryCrafting grid,

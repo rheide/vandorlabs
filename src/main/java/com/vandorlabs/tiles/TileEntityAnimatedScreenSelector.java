@@ -78,6 +78,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int redstoneChannel;
     private boolean channelSignal;
     private int housingTexture;
+    private boolean slabTileSides;
     private int glassShade = 2;
     private boolean joinPortholes;
     private static long portholeRevision;
@@ -104,6 +105,14 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public int getHousingTexture() { return housingTexture; }
+    public boolean isSlabTileSides() { return slabTileSides; }
+    public void setSlabTileSides(boolean tileSides) {
+        if (slabTileSides == tileSides) return;
+        slabTileSides = tileSides;
+        markDirty();
+        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
+                world.getBlockState(pos), 3);
+    }
     public void setHousingTexture(int choice) {
         housingTexture = ScreenHousingTextures.clamp(choice);
         markDirty();
@@ -263,6 +272,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 .write(new NbtPrimitiveData(compound));
         compound.setInteger("GlassShade", glassShade);
         compound.setBoolean("JoinPortholes", joinPortholes);
+        compound.setBoolean("SlabTileSides", slabTileSides);
         return compound;
     }
 
@@ -290,6 +300,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         glassShade = compound.hasKey("GlassShade", 3)
                 ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
         joinPortholes = compound.getBoolean("JoinPortholes");
+        slabTileSides = compound.getBoolean("SlabTileSides");
         portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             RedstoneChannels.channelChanged(this, oldChannel);

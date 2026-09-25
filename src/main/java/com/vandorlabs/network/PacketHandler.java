@@ -18,6 +18,7 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageSpaceDoor.Handler.class, MessageSpaceDoor.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableGlass.Handler.class, MessageProgrammableGlass.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableWallShade.Handler.class, MessageProgrammableWallShade.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageProgrammableSlabSides.Handler.class, MessageProgrammableSlabSides.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableLight.Handler.class, MessageProgrammableLight.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableChair.Handler.class, MessageProgrammableChair.class, id++, Side.SERVER);
     }

@@ -33,6 +33,11 @@ final class ScreenRuntimeChecks {
         checkProgrammableLight(player);
         checkProgrammableLightJoin(player);
         checkProgrammableSlab(player);
+        require(((TileEntityAnimatedScreenSelector) ModBlocks.PROGRAMMABLE_PORTHOLE_WALL
+                        .createTileEntity(player.world,
+                                ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState()))
+                        .isJoinPortholes(),
+                "new programmable portholes should join by default");
         checkHousingSprites();
         checkHousingCycling();
         checkSurvivalDropRoundTrip(player);
@@ -50,6 +55,28 @@ final class ScreenRuntimeChecks {
     private static void checkProgrammableLight(EntityPlayer player) {
         require(ModBlocks.PROGRAMMABLE_LIGHT != null,
                 "programmable light is not registered");
+        BlockPos placement = new BlockPos(34, 250, 32);
+        try {
+            for (EnumFacing side : EnumFacing.values()) {
+                BlockPos support = placement.offset(side.getOpposite());
+                player.world.setBlockState(support, net.minecraft.init.Blocks.STONE.getDefaultState(), 3);
+                IBlockState placed = ModBlocks.PROGRAMMABLE_LIGHT.getStateForPlacement(
+                        player.world, placement, side, .5F, .5F, .5F, 0, player);
+                require(placed.getValue(BlockAnimatedScreenSelector.FACING) == side,
+                        "programmable light did not face clicked surface: " + side);
+                player.world.setBlockState(support,
+                        ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState().withProperty(
+                                BlockAnimatedScreenSelector.FACING, EnumFacing.WEST), 3);
+                placed = ModBlocks.PROGRAMMABLE_LIGHT.getStateForPlacement(
+                        player.world, placement, side, .5F, .5F, .5F, 0, player);
+                require(placed.getValue(BlockAnimatedScreenSelector.FACING) == EnumFacing.WEST,
+                        "programmable light did not inherit adjacent direction: " + side);
+                player.world.setBlockToAir(support);
+            }
+        } finally {
+            for (EnumFacing side : EnumFacing.values())
+                player.world.setBlockToAir(placement.offset(side.getOpposite()));
+        }
         BlockPos pos = new BlockPos(32, 250, 32);
         player.world.setBlockState(pos, ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 3);
         try {
@@ -107,6 +134,14 @@ final class ScreenRuntimeChecks {
                             && group.left(origin) == 0 && group.right(origin) == 8
                             && group.top(origin) == 8 && group.bottom(origin) == 16,
                     "joined light artwork did not span the 2 by 2 group");
+            BlockPos east = origin.east();
+            require(group.right(origin) == group.left(east)
+                            && group.top(origin) == group.top(east),
+                    "joined light artwork has a vertical seam");
+            BlockPos above = origin.up();
+            require(group.top(origin) == group.bottom(above)
+                            && group.left(origin) == group.left(above),
+                    "joined light artwork has a horizontal seam");
             first.configure(2, 12, false, 0);
             group = TEAnimatedScreenSelector.lightGroup(first,
                     player.world.getBlockState(origin));
@@ -129,6 +164,12 @@ final class ScreenRuntimeChecks {
                             && saved.getBoolean("LightJoin")
                             && saved.getInteger("RedstoneChannel") == 4271,
                     "creative pick lost programmable light configuration");
+            String pickedSprite = com.vandorlabs.tiles.ProgrammableLightTextures.texture(3,
+                    first.isOn() && first.getLightLevel() > 0);
+            require(pickedSprite.equals(Minecraft.getMinecraft().getRenderItem()
+                            .getItemModelMesher().getItemModel(picked)
+                            .getParticleTexture().getIconName()),
+                    "picked programmable light hotbar artwork does not match configuration");
             BlockPos copyPos = origin.add(3, 0, 0);
             require(((ItemBlock) picked.getItem()).placeBlockAt(picked.copy(), player,
                             player.world, copyPos, EnumFacing.UP, .5F, .5F, .5F,
@@ -140,10 +181,41 @@ final class ScreenRuntimeChecks {
             require(copy != null && copy.getTexture() == 3 && copy.getLightLevel() == 7
                             && copy.isJoin() && copy.getRedstoneChannel() == 4271,
                     "placed programmable light did not restore its configuration");
+            for (EnumFacing facing : new EnumFacing[]{EnumFacing.UP, EnumFacing.DOWN}) {
+                BlockPos plane = origin.add(0, 0, 4);
+                for (int dx = 0; dx < 2; dx++)
+                    for (int dz = 0; dz < 2; dz++) {
+                        BlockPos at = plane.add(dx, 0, dz);
+                        player.world.setBlockState(at,
+                                ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState().withProperty(
+                                        BlockAnimatedScreenSelector.FACING, facing), 3);
+                        ((com.vandorlabs.tiles.TileEntityProgrammableLight)
+                                player.world.getTileEntity(at)).configure(2, 12, true, 0);
+                    }
+                com.vandorlabs.tiles.TileEntityProgrammableLight tile =
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight)
+                        player.world.getTileEntity(plane);
+                TEAnimatedScreenSelector.LightGroup planeGroup =
+                        TEAnimatedScreenSelector.lightGroup(tile,
+                                player.world.getBlockState(plane));
+                require(planeGroup.columns == 2 && planeGroup.rows == 2
+                                && planeGroup.right(plane) == planeGroup.left(plane.east()),
+                        "joined " + facing + " lights did not span the floor plane");
+                BlockPos lowerRow = facing == EnumFacing.UP ? plane : plane.south();
+                BlockPos rowNeighbor = lowerRow.offset(planeGroup.up);
+                require(planeGroup.top(lowerRow) == planeGroup.bottom(rowNeighbor),
+                        "joined " + facing + " lights have a row seam");
+                for (int dx = 0; dx < 2; dx++)
+                    for (int dz = 0; dz < 2; dz++)
+                        player.world.setBlockToAir(plane.add(dx, 0, dz));
+            }
         } finally {
             for (int dx = 0; dx < 5; dx++)
                 for (int dy = 0; dy < 2; dy++)
                     player.world.setBlockToAir(origin.add(dx, dy, 0));
+            for (int dx = 0; dx < 2; dx++)
+                for (int dz = 0; dz < 2; dz++)
+                    player.world.setBlockToAir(origin.add(dx, 0, dz + 4));
         }
     }
 
@@ -181,14 +253,29 @@ final class ScreenRuntimeChecks {
                     (TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos);
             tile.setHousingTexture(ScreenHousingTextures.IDS.length - 1);
             ItemStack picked = slab.getPickBlock(top, null, player.world, pos, player);
+            String pickedSprite = ScreenHousingTextures.texture(
+                    ScreenHousingTextures.IDS.length - 1);
+            require(pickedSprite.equals(Minecraft.getMinecraft().getRenderItem()
+                            .getItemModelMesher().getItemModel(picked)
+                            .getParticleTexture().getIconName()),
+                    "picked programmable slab hotbar artwork does not match configuration");
+            tile.setSlabTileSides(true);
+            ItemStack tiled = slab.getPickBlock(top, null, player.world, pos, player);
+            require(tiled.getSubCompound("BlockEntityTag").getBoolean("SlabTileSides")
+                            && Minecraft.getMinecraft().getRenderItem()
+                            .getItemModelMesher().getItemModel(picked)
+                            != Minecraft.getMinecraft().getRenderItem()
+                            .getItemModelMesher().getItemModel(tiled),
+                    "picked programmable slab lost Tile side texture mode");
             BlockPos copyPos = pos.east();
-            require(((ItemBlock) picked.getItem()).placeBlockAt(picked.copy(), player,
+            require(((ItemBlock) tiled.getItem()).placeBlockAt(tiled.copy(), player,
                             player.world, copyPos, EnumFacing.UP, .5F, .5F, .5F, top),
                     "picked programmable slab did not place");
             TileEntityAnimatedScreenSelector copy =
                     (TileEntityAnimatedScreenSelector) player.world.getTileEntity(copyPos);
             require(copy != null && copy.getHousingTexture()
                             == ScreenHousingTextures.IDS.length - 1
+                            && copy.isSlabTileSides()
                             && player.world.getBlockState(copyPos).getValue(
                             com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
                             == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP,

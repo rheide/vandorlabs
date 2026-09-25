@@ -536,6 +536,19 @@ public class ReproLab {
             case 8:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "item_hotbar");
+                ItemStack doorIcon = new ItemStack(block("programmable_door"));
+                net.minecraft.nbt.NBTTagCompound doorSettings =
+                        new net.minecraft.nbt.NBTTagCompound();
+                new com.vandorlabs.persistence.SpaceDoorData(7, 2, false, 0)
+                        .write(new com.vandorlabs.persistence.NbtPrimitiveData(doorSettings));
+                doorIcon.setTagInfo("SpaceDoorSettings", doorSettings);
+                mc.player.inventory.setInventorySlotContents(4, doorIcon);
+                state = 17;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 17:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "door_item_hotbar");
                 TileEntity controllerRaw=mc.world.getTileEntity(ControllerRuntimeChecks.FIXTURE);
                 if (!(controllerRaw instanceof com.vandorlabs.tiles.TileEntityRampController))
                     throw new IllegalStateException("controller GUI fixture missing");

@@ -3,6 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.network.MessageProgrammableWallShade;
+import com.vandorlabs.network.MessageProgrammableSlabSides;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
@@ -29,9 +30,11 @@ public class GuiProgrammableWall extends GuiContainer {
     private final TileEntityAnimatedScreenSelector tile;
     private final boolean porthole;
     private final boolean fullBlock;
+    private final boolean slab;
     private int selected;
     private int shade;
     private boolean join;
+    private boolean tileSides;
     private int scroll;
     private int listX;
     private int listY;
@@ -46,15 +49,17 @@ public class GuiProgrammableWall extends GuiContainer {
                 instanceof BlockProgrammableWall
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
                 .getBlock()).getShape() == BlockProgrammableWall.Shape.PORTHOLE;
+        slab = tile.getWorld().getBlockState(tile.getPos()).getBlock()
+                instanceof BlockProgrammableSlab;
         fullBlock = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableBlock
-                || tile.getWorld().getBlockState(tile.getPos()).getBlock()
-                instanceof BlockProgrammableSlab;
+                || slab;
         selected = tile.getHousingTexture();
         shade = tile.getGlassShade();
         join = tile.isJoinPortholes();
+        tileSides = tile.isSlabTileSides();
         xSize = 340;
-        ySize = porthole ? 246 : 190;
+        ySize = porthole ? 246 : slab ? 216 : 190;
     }
 
     @Override public void initGui() {
@@ -67,12 +72,15 @@ public class GuiProgrammableWall extends GuiContainer {
                 guiTop + 25, 312, 20, shadeLabel()));
         if (porthole) buttonList.add(new GuiButton(102, guiLeft + 14,
                 guiTop + 51, 312, 20, joinLabel()));
+        if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
+                guiTop + 163, 312, 20, slabSidesLabel()));
         buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + ySize - 25, 312, 20,
                 I18n.format("gui.done")));
     }
 
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
     private String joinLabel() { return "Join glass: " + (join ? "On" : "Off"); }
+    private String slabSidesLabel() { return "Side texture: " + (tileSides ? "Tile" : "Fit"); }
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
@@ -167,6 +175,13 @@ public class GuiProgrammableWall extends GuiContainer {
             tile.setJoinPortholes(join);
             button.displayString = joinLabel();
             sendPortholeSettings();
+        }
+        if (button.id == 103) {
+            tileSides = !tileSides;
+            tile.setSlabTileSides(tileSides);
+            button.displayString = slabSidesLabel();
+            PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(
+                    tile.getPos(), tileSides));
         }
     }
 

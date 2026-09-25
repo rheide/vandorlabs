@@ -145,20 +145,21 @@ def main():
         failures.append("missing live console selector GUI screenshot")
     else:
         gui = Image.open(gui_path).convert("RGB")
-        # At the harness's 2x GUI scale the two 96px-tall lists occupy these
-        # independent columns. Both must contain visible text/selection detail.
-        screen_list = ImageStat.Stat(gui.crop((176, 162, 528, 354))).stddev
-        input_list = ImageStat.Stat(gui.crop((552, 162, 856, 354))).stddev
+        # The screen, input, and housing choices remain visible together.
+        screen_list = ImageStat.Stat(gui.crop((40, 70, 390, 345))).stddev
+        input_list = ImageStat.Stat(gui.crop((430, 70, 720, 345))).stddev
+        housing_list = ImageStat.Stat(gui.crop((750, 70, 1215, 345))).stddev
         screen_detail = sum(screen_list) / 3.0
         input_detail = sum(input_list) / 3.0
-        preview_screen = mean_chroma(gui_path, (910, 110, 1050, 235))
-        preview_input = mean_chroma(gui_path, (910, 260, 1050, 320))
-        print("console GUI list detail: screens %.2f, controls %.2f"
-              % (screen_detail, input_detail))
+        housing_detail = sum(housing_list) / 3.0
+        preview_screen = mean_chroma(gui_path, (1035, 395, 1180, 535))
+        preview_input = mean_chroma(gui_path, (1035, 550, 1180, 620))
+        print("console GUI list detail: screens %.2f, controls %.2f, housing %.2f"
+              % (screen_detail, input_detail, housing_detail))
         print("console GUI preview chroma: screen %.2f, controls %.2f"
               % (preview_screen, preview_input))
-        if screen_detail < 8.0 or input_detail < 8.0:
-            failures.append("console GUI does not show two populated peer lists")
+        if min(screen_detail, input_detail, housing_detail) < 8.0:
+            failures.append("console GUI does not show three populated peer lists")
         if preview_screen < 10.0 or preview_input < 10.0:
             failures.append("console GUI preview is missing screen or control artwork")
 
@@ -237,30 +238,35 @@ def main():
         failures.append("missing half-console two-list GUI screenshot")
     else:
         gui = Image.open(half_gui_path).convert("RGB")
-        left_detail = sum(ImageStat.Stat(gui.crop((330, 175, 625, 360))).stddev) / 3.0
-        right_detail = sum(ImageStat.Stat(gui.crop((655, 175, 950, 360))).stddev) / 3.0
-        print("half-console GUI list detail: front %.2f, rear %.2f"
-              % (left_detail, right_detail))
-        if left_detail < 8.0 or right_detail < 8.0:
-            failures.append("half-console GUI does not show two populated input lists")
+        left_detail = sum(ImageStat.Stat(gui.crop((35, 105, 385, 380))).stddev) / 3.0
+        right_detail = sum(ImageStat.Stat(gui.crop((450, 105, 790, 380))).stddev) / 3.0
+        housing_detail = sum(ImageStat.Stat(gui.crop((865, 105, 1220, 380))).stddev) / 3.0
+        print("half-console GUI list detail: front %.2f, rear %.2f, housing %.2f"
+              % (left_detail, right_detail, housing_detail))
+        if min(left_detail, right_detail, housing_detail) < 8.0:
+            failures.append("half-console GUI does not show three populated lists")
     input_gui_path = args.shots / "shot_input_gui.png"
     if not input_gui_path.is_file():
         failures.append("missing programmable-input selector GUI screenshot")
     else:
-        input_detail = sum(ImageStat.Stat(Image.open(input_gui_path).convert("RGB").crop(
-            (390, 170, 700, 370))).stddev) / 3.0
-        print("programmable-input GUI detail %.2f" % input_detail)
-        if input_detail < 8.0:
-            failures.append("programmable-input GUI list/preview is empty")
+        gui = Image.open(input_gui_path).convert("RGB")
+        input_detail = sum(ImageStat.Stat(gui.crop((390, 170, 700, 370))).stddev) / 3.0
+        housing_detail = sum(ImageStat.Stat(gui.crop((790, 75, 1230, 350))).stddev) / 3.0
+        print("programmable-input GUI detail: input %.2f, housing %.2f"
+              % (input_detail, housing_detail))
+        if min(input_detail, housing_detail) < 8.0:
+            failures.append("programmable-input GUI list, preview, or housing is empty")
     full_gui_path = args.shots / "shot_full_input_gui.png"
     if not full_gui_path.is_file():
         failures.append("missing full programmable-input GUI screenshot")
     else:
         full_detail = sum(ImageStat.Stat(Image.open(full_gui_path).convert("RGB").crop(
             (300, 120, 980, 600))).stddev) / 3.0
+        housing_detail = sum(ImageStat.Stat(Image.open(full_gui_path).convert("RGB").crop(
+            (790, 75, 1230, 350))).stddev) / 3.0
         print("full programmable-input GUI detail %.2f" % full_detail)
-        if full_detail < 12.0:
-            failures.append("full programmable-input regular animation list is empty")
+        if full_detail < 12.0 or housing_detail < 8.0:
+            failures.append("full programmable-input animation or housing list is empty")
 
     hotbar_path = args.shots / "shot_item_hotbar.png"
     if not hotbar_path.is_file():
@@ -286,6 +292,17 @@ def main():
             failures.append("programmable/control hotbar icons are not distinguishable")
         if any(count > 2 for count in missing_pixels):
             failures.append("one or more hotbar icons use the magenta missing texture")
+
+    door_hotbar_path = args.shots / "shot_door_item_hotbar.png"
+    if not door_hotbar_path.is_file():
+        failures.append("missing configured door hotbar screenshot")
+    else:
+        door_icon = Image.open(door_hotbar_path).convert("RGB").crop(
+            (632, 700, 648, 716))
+        door_detail = sum(ImageStat.Stat(door_icon).stddev) / 3.0
+        print("configured door hotbar detail %.2f" % door_detail)
+        if door_detail < 15.0:
+            failures.append("configured door hotbar icon is tiny or offscreen")
 
     cruiser_grid_path = args.shots / "shot_cruiser_grid.png"
     if not cruiser_grid_path.is_file():
@@ -322,7 +339,7 @@ def main():
     print("PASS: Programmable Console screen, keyboard, and housing all render")
     print("PASS: all Programmable Viewscreen animation slots render content")
     print("PASS: all Programmable Console input-panel options render")
-    print("PASS: Programmable Console GUI shows both scrollable lists")
+    print("PASS: Programmable Console GUI shows three scrollable lists")
     print("PASS: Programmable Diagonal Screen renders both stair-style halves")
     print("PASS: paired programmable display halves render together")
     print("PASS: Programmable Half-Input renders Small wall and attached keyboard placements")

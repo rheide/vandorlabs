@@ -4,6 +4,7 @@ import com.vandorlabs.GuiHandler;
 import com.vandorlabs.VandorLabs;
 import com.vandorlabs.tiles.TileEntityProgrammableLight;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -21,6 +22,12 @@ public final class BlockProgrammableLight extends BlockAnimatedScreenSelector {
 
     @Override public TileEntity createNewTileEntity(World world, int meta) {
         return new TileEntityProgrammableLight();
+    }
+
+    @Override protected EnumFacing placementFacing(World world, BlockPos pos,
+            EnumFacing clickedFace, EntityLivingBase placer) {
+        IBlockState support = world.getBlockState(pos.offset(clickedFace.getOpposite()));
+        return support.getBlock() == this ? support.getValue(FACING) : clickedFace;
     }
 
     @Override public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
