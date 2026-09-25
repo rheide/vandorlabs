@@ -113,14 +113,14 @@ final class ItemRuntimeChecks {
                         != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
                 "programmable block item/name/model");
         checkConfiguredItemModels(mc);
-        for (String id : new String[]{"rocket_thruster_wedge","ion_drive_wedge",
+        for (String wedgeId : new String[]{"rocket_thruster_wedge","ion_drive_wedge",
                 "plasma_vent_wedge","impulse_engine_wedge"}) {
             ItemStack wedge = new ItemStack(Block.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs",id)));
+                    new ResourceLocation("vandorlabs",wedgeId)));
             require(mc.getRenderItem().getItemModelMesher().getItemModel(wedge)
                             != mc.getRenderItem().getItemModelMesher()
                             .getModelManager().getMissingModel(),
-                    id + " hotbar model missing");
+                    wedgeId + " hotbar model missing");
         }
         for (String removed : new String[]{"plasma_vent_side", "plasma_vent_top",
                 "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
