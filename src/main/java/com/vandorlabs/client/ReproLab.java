@@ -305,6 +305,12 @@ public class ReproLab {
                 galleryFeet+.3D,-20.5D,-32,4));
         SHOTS.add(new Shot("gallery_space_panel_rotating_edge",GALLERY_X+2.0D,
                 galleryFeet+.3D,-20.5D,32,4));
+        for (String depth : new String[]{"middle","far"}) {
+            SHOTS.add(new Shot("gallery_space_panel_sliding_"+depth,GALLERY_X-2.0D,
+                    galleryFeet+.3D,-20.5D,-32,4));
+            SHOTS.add(new Shot("gallery_space_panel_rotating_"+depth,GALLERY_X+2.0D,
+                    galleryFeet+.3D,-20.5D,32,4));
+        }
         // Stand inside the opening and inspect both jambs obliquely from both
         // depth edges. Missing step shoulders expose the magenta backing wall.
         for (String side : new String[]{"east","west"}) for (int edge : new int[]{-1,1}) {
@@ -1263,6 +1269,8 @@ public class ReproLab {
             boolean sliding=shot.contains("sliding");
             ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
                     .configure(2,1,true,0,false,sliding,true);
+            ((com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p))
+                    .setPlacementDepth(shot.endsWith("_far")?2:shot.endsWith("_middle")?0:1);
         } else if (shot.startsWith("gallery_space_jamb_")) {
             placeDoor(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),"space_standard_rotating_door_framed",true);
             IBlockState backing=Blocks.CONCRETE.getDefaultState().withProperty(

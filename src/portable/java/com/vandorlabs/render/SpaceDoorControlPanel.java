@@ -21,8 +21,16 @@ public final class SpaceDoorControlPanel {
     // clear of the moving leaf and within the placed block after offsets.
     public static double z0(boolean sliding) { return sliding?3:8.24; }
     public static double z1(boolean sliding) { return z0(sliding)+3; }
+    /** Only far-edge doors mount the pad on the opposite depth face of the jamb. */
+    public static double z0(boolean sliding, boolean farEdge) {
+        return farEdge ? (sliding ? 10 : 15.24) : z0(sliding);
+    }
+    public static double z1(boolean sliding, boolean farEdge) { return z0(sliding,farEdge)+3; }
     public static boolean contains(double localZ,double localY,boolean sliding) {
-        return localZ>=z0(sliding) && localZ<=z1(sliding)
+        return contains(localZ,localY,sliding,false);
+    }
+    public static boolean contains(double localZ,double localY,boolean sliding,boolean farEdge) {
+        return localZ>=z0(sliding,farEdge) && localZ<=z1(sliding,farEdge)
                 && localY>=Y0 && localY<=Y1;
     }
 }

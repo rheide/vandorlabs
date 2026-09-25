@@ -247,15 +247,20 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         float x0=(float)SpaceDoorControlPanel.x0(side),x1=(float)SpaceDoorControlPanel.x1(side);
         float y0=(float)SpaceDoorControlPanel.Y0,y1=(float)SpaceDoorControlPanel.Y1;
-        float z0=(float)SpaceDoorControlPanel.z0(tile.isSliding()),
-                z1=(float)SpaceDoorControlPanel.z1(tile.isSliding());
+        boolean farEdge=tile.getPlacementDepth()==2;
+        float z0=(float)SpaceDoorControlPanel.z0(tile.isSliding(),farEdge),
+                z1=(float)SpaceDoorControlPanel.z1(tile.isSliding(),farEdge);
         float u0=buttons.getInterpolatedU(0),u1=buttons.getInterpolatedU(16);
         float v0=buttons.getInterpolatedV(0),v1=buttons.getInterpolatedV(16);
         // Match the Programmable Console's deck-side housing: U follows
         // depth and V follows the local height, using the native atlas pixels.
-        float sideU0=wall.getInterpolatedU(z0),sideU1=wall.getInterpolatedU(z1);
+        // Keep UVs in the original sprite even when the far-edge pad's local
+        // model coordinates extend beyond 16 before the placement offset.
+        double textureZ0=SpaceDoorControlPanel.z0(tile.isSliding()),
+                textureZ1=SpaceDoorControlPanel.z1(tile.isSliding());
+        float sideU0=wall.getInterpolatedU(textureZ0),sideU1=wall.getInterpolatedU(textureZ1);
         float sideV0=wall.getInterpolatedV(32-y1),sideV1=wall.getInterpolatedV(32-y0);
-        float topV0=wall.getInterpolatedV(z0),topV1=wall.getInterpolatedV(z1);
+        float topV0=wall.getInterpolatedV(textureZ0),topV1=wall.getInterpolatedV(textureZ1);
         float wallX0=wall.getInterpolatedU(x0),wallX1=wall.getInterpolatedU(x1);
         BufferBuilder buf=Tessellator.getInstance().getBuffer();
         buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);

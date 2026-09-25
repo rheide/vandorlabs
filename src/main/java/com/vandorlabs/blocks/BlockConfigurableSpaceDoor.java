@@ -62,9 +62,10 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,
             EnumHand hand,EnumFacing face,float x,float y,float z) {
-        if (hand != EnumHand.MAIN_HAND || !player.isSneaking()
-                || !player.capabilities.isCreativeMode)
-            return super.onBlockActivated(world,pos,state,player,hand,face,x,y,z);
+        if (hand != EnumHand.MAIN_HAND || !player.capabilities.isCreativeMode
+                || (!player.isSneaking() && !hitControlPanel(world,pos,state,face,x,y,z)))
+            return super.onBlockActivated(world,pos,getActualState(state,world,pos),
+                    player,hand,face,x,y,z);
         BlockPos lower=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
         if (!world.isRemote) player.openGui(VandorLabs.instance,GuiHandler.GUI_SPACE_DOOR,world,
                 lower.getX(),lower.getY(),lower.getZ());
@@ -85,7 +86,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                 :front==EnumFacing.EAST?x:1-x;
         TileEntitySpaceDoor tile=settings(state,world,pos);
         return tile!=null && SpaceDoorControlPanel.contains(
-                localZ*16-tile.positionOffset()*16,y*16+(upper?16:0),tile.isSliding());
+                localZ*16-tile.positionOffset()*16,y*16+(upper?16:0),tile.isSliding(),
+                tile.getPlacementDepth()==2);
     }
     public static SpaceDoorControlPanel.Side panelSide(World world,BlockPos lower,IBlockState actual) {
         TileEntity raw=world.getTileEntity(lower);
@@ -122,7 +124,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         if (side==SpaceDoorControlPanel.Side.NONE) return door;
         TileEntitySpaceDoor tile=settings(state,world,pos);
         if (tile==null) return door;
-        AxisAlignedBB panel=controlPanelBounds(actual.getValue(FACING),side,tile.positionOffset(),tile.isSliding())
+        AxisAlignedBB panel=controlPanelBounds(actual.getValue(FACING),side,tile.positionOffset(),
+                tile.isSliding(),tile.getPlacementDepth()==2)
                 .offset(0,upper?-1:0,0);
         RayTraceResult local=panel.calculateIntercept(start.subtract(pos.getX(),pos.getY(),pos.getZ()),
                 end.subtract(pos.getX(),pos.getY(),pos.getZ()));
@@ -135,9 +138,10 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                 || door==null || start.squareDistanceTo(hit)<start.squareDistanceTo(door.hitVec)?pad:door;
     }
     private static AxisAlignedBB controlPanelBounds(EnumFacing facing,
-            SpaceDoorControlPanel.Side side,double offset,boolean sliding) {
+            SpaceDoorControlPanel.Side side,double offset,boolean sliding,boolean farEdge) {
         double x0=SpaceDoorControlPanel.x0(side)/16,x1=SpaceDoorControlPanel.x1(side)/16;
-        double z0=SpaceDoorControlPanel.z0(sliding)/16,z1=SpaceDoorControlPanel.z1(sliding)/16;
+        double z0=SpaceDoorControlPanel.z0(sliding,farEdge)/16,
+                z1=SpaceDoorControlPanel.z1(sliding,farEdge)/16;
         double y0=SpaceDoorControlPanel.Y0/16,y1=SpaceDoorControlPanel.Y1/16;
         switch (facing) {
             case NORTH: return new AxisAlignedBB(1-x1,y0,1-z1-offset,1-x0,y1,1-z0-offset);

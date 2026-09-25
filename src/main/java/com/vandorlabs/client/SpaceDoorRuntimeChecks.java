@@ -285,7 +285,70 @@ final class SpaceDoorRuntimeChecks {
             }
             for (int i=0;i<3;i++) world.setBlockToAir(source.offset(along,i));
         }
+        checkPanelPlacementAndClicks(world,player,block,source.add(8,0,0));
         System.out.println("[vandorlabs][reprolab] space-door-settings PASS: "+cases
                 +" upper/lower pick-and-place cases, defaults, saved settings and neighbor precedence");
     }
+    private static void checkPanelPlacementAndClicks(World world, EntityPlayer player,
+            BlockConfigurableSpaceDoor block, BlockPos pos) {
+        boolean creative = player.capabilities.isCreativeMode, sneaking = player.isSneaking();
+        try {
+            clear(world,pos);
+            world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);
+            world.setBlockState(pos,state(block),2);
+            world.setBlockState(pos.up(),state(block).withProperty(
+                    BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.UPPER),2);
+            TileEntitySpaceDoor settings=tile(world,pos);
+            player.setSneaking(false);
+            for (boolean sliding : new boolean[]{false,true}) for (int depth=0;depth<3;depth++) {
+                settings.configure(2,1,true,0,false,sliding,true,
+                        com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,true);
+                settings.setPlacementDepth(depth);
+                com.vandorlabs.render.SpaceDoorControlPanel.Side side=
+                        BlockConfigurableSpaceDoor.panelSide(world,pos,
+                                block.getActualState(world.getBlockState(pos),world,pos));
+                boolean far=depth==2;
+                double z0=com.vandorlabs.render.SpaceDoorControlPanel.z0(sliding,far);
+                double z1=com.vandorlabs.render.SpaceDoorControlPanel.z1(sliding,far);
+                double shift=settings.positionOffset()*16;
+                check(z0+shift>=0 && z1+shift<=16,"control panel leaves its block at depth "+depth);
+                if (!far) check(z0==com.vandorlabs.render.SpaceDoorControlPanel.z0(sliding),
+                        "near or middle panel moved");
+                else check(Math.abs(z0+shift-4.76)<1E-6 && Math.abs(z1+shift-7.76)<1E-6,
+                        "far panel was not moved across the door frame");
+                boolean right=side==com.vandorlabs.render.SpaceDoorControlPanel.Side.RIGHT;
+                double z=(z0+z1)/32+settings.positionOffset();
+                Vec3d start=new Vec3d(pos.getX()+.5,pos.getY()+18/16D,pos.getZ()+z);
+                Vec3d end=new Vec3d(pos.getX()+(right?2:-1),start.y,start.z);
+                RayTraceResult hit=block.collisionRayTrace(world.getBlockState(pos.up()),world,
+                        pos.up(),start,end);
+                EnumFacing face=right?EnumFacing.WEST:EnumFacing.EAST;
+                check(hit!=null && hit.sideHit==face,"panel ray missed at depth "+depth);
+                float x=(float)(hit.hitVec.x-pos.getX());
+                player.capabilities.isCreativeMode=true;
+                boolean open=world.getBlockState(pos).getValue(BlockVandorDoor.OPEN);
+                block.onBlockActivated(world,pos.up(),world.getBlockState(pos.up()),player,
+                        EnumHand.MAIN_HAND,face,x,2/16F,(float)z);
+                check(player.openContainer instanceof com.vandorlabs.container.ContainerSpaceDoor
+                                && world.getBlockState(pos).getValue(BlockVandorDoor.OPEN)==open,
+                        "creative panel click did not open configuration without toggling");
+                player.closeScreen();
+                player.capabilities.isCreativeMode=false;
+                for (int click=0;click<2;click++) {
+                    block.onBlockActivated(world,pos.up(),world.getBlockState(pos.up()),player,
+                            EnumHand.MAIN_HAND,face,x,2/16F,(float)z);
+                    open=!open;
+                    check(world.getBlockState(pos).getValue(BlockVandorDoor.OPEN)==open,
+                            "survival panel click did not toggle the door");
+                }
+            }
+        } finally {
+            player.capabilities.isCreativeMode=creative;
+            player.setSneaking(sneaking);
+            player.closeScreen();
+            clear(world,pos);
+            world.setBlockToAir(pos.down());
+        }
+    }
+
 }
