@@ -312,13 +312,17 @@ def main():
         wedges = [wedge_bar.crop((552 + i * 20, 700, 568 + i * 20, 716))
                   for i in range(4)]
         wedge_detail = [sum(ImageStat.Stat(icon).stddev) / 3.0 for icon in wedges]
+        wedge_color = [sum(max(rgb) - min(rgb) for rgb in pixels(icon)) / 256.0
+                       for icon in wedges]
         wedge_difference = [sum(ImageStat.Stat(ImageChops.difference(
             wedges[i], wedges[j])).mean) / 3.0
             for i in range(4) for j in range(i + 1, 4)]
         print("wedge hotbar detail: %s" % ", ".join("%.2f" % x for x in wedge_detail))
+        print("wedge hotbar chroma: %s" % ", ".join("%.2f" % x for x in wedge_color))
         print("wedge hotbar pair differences: %s" %
               ", ".join("%.2f" % x for x in wedge_difference))
-        if min(wedge_detail) < 8.0 or min(wedge_difference) < 1.0:
+        if min(wedge_detail) < 8.0 or min(wedge_color) < 12.0 \
+                or min(wedge_difference) < 1.0:
             failures.append("propulsion wedge icons are blank or share the same side view")
 
     cruiser_grid_path = args.shots / "shot_cruiser_grid.png"

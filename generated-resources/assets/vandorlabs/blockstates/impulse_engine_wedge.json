@@ -103,9 +103,7 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:impulse_engine_wedge_on.obj",
-        "y": 180,
-        "transform": "forge:default-block"
+        "model": "vandorlabs:impulse_engine_wedge_icon"
       }
     ]
   }

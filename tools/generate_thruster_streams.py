@@ -109,12 +109,14 @@ def obj_models_and_states():
                     variants[(f"facing={facing},particles={str(particles).lower()},"
                               f"powered={str(powered).lower()}")] = value
         if block.endswith("_wedge"):
-            # Default block perspective exposes the common side panel. Turn
-            # the item toward its distinct nozzle artwork and use the lit face.
+            # The wedge OBJ's shared side panel dominates the tiny hotbar view.
+            # A flat nozzle icon keeps the family artwork legible at 16 pixels.
+            write_json(MODEL_DIR / f"{block}_icon.json", {
+                "parent": "item/generated",
+                "textures": {"layer0": f"vandorlabs:blocks/thrusters/{family}_on"},
+            })
             variants["inventory"] = [{
-                "model": f"vandorlabs:{block}_on.obj",
-                "y": 180,
-                "transform": "forge:default-block",
+                "model": f"vandorlabs:{block}_icon",
             }]
         else:
             variants["inventory"] = old_state["variants"]["inventory"]
