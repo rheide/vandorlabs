@@ -299,6 +299,7 @@ tile.vandorlabs.programmable_diagonal_wall.name=Programmable Diagonal Wall
 gui.vandorlabs.wall.title=Programmable Wall Texture
 gui.vandorlabs.block.title=Programmable Block Texture
 tile.vandorlabs.programmable_block.name=Programmable Block
+tile.vandorlabs.programmable_trigger_block.name=Programmable Trigger Block
 tile.vandorlabs.programmable_diagonal_screen.name=Programmable Diagonal Screen
 tile.vandorlabs.programmable_half_input.name=Programmable Half-Input
 tile.vandorlabs.programmable_input.name=Programmable Input

@@ -21,5 +21,7 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageProgrammableSlabSides.Handler.class, MessageProgrammableSlabSides.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableLight.Handler.class, MessageProgrammableLight.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableChair.Handler.class, MessageProgrammableChair.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageProgrammableTrigger.Handler.class,
+                MessageProgrammableTrigger.class, id++, Side.SERVER);
     }
 }

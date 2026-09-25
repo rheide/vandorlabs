@@ -8,6 +8,7 @@ import com.vandorlabs.blocks.BlockProgrammableHalfConsole;
 import com.vandorlabs.blocks.BlockProgrammableFullInput;
 import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
+import com.vandorlabs.blocks.BlockProgrammableTrigger;
 import com.vandorlabs.blocks.BlockProgrammableSlab;
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
@@ -110,6 +111,10 @@ public class GuiHandler implements IGuiHandler {
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
             if (te instanceof TileEntityAnimatedScreenSelector) {
+                if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
+                        instanceof BlockProgrammableTrigger)
+                    return new com.vandorlabs.client.GuiProgrammableTrigger(player.inventory,
+                            (com.vandorlabs.tiles.TileEntityProgrammableTrigger) te);
                 if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
                         instanceof BlockProgrammableWall || world.getBlockState(
                         new BlockPos(x, y, z)).getBlock() instanceof BlockProgrammableBlock

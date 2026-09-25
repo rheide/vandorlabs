@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": {"model": "vandorlabs:programmable_trigger_block"},
+    "facing=south": {"model": "vandorlabs:programmable_trigger_block"},
+    "facing=east": {"model": "vandorlabs:programmable_trigger_block"},
+    "facing=west": {"model": "vandorlabs:programmable_trigger_block"},
+    "facing=up": {"model": "vandorlabs:programmable_trigger_block"},
+    "facing=down": {"model": "vandorlabs:programmable_trigger_block"}
+  }
+}

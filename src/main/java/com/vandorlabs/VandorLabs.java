@@ -46,6 +46,8 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRampController.class, "vandorlabs:programmable_ramp");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityControlledRamp.class, "vandorlabs:controlled_ramp");
         GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class, "vandorlabs:programmable_viewscreen");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrigger.class,
+                "vandorlabs:programmable_trigger_block");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableLight.class, "vandorlabs:programmable_light");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableChair.class, "vandorlabs:programmable_chair");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRedstoneChannel.class, "vandorlabs:redstone_channel");

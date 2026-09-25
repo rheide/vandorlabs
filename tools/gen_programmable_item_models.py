@@ -17,7 +17,8 @@ assert len(ids) == len(textures)
 models = root / 'src/main/resources/assets/vandorlabs/models/item'
 out = models / 'configured'
 out.mkdir(exist_ok=True)
-for block in ('programmable_block', 'programmable_slab', 'programmable_wall',
+for block in ('programmable_block', 'programmable_trigger_block',
+              'programmable_slab', 'programmable_wall',
               'programmable_diagonal_wall', 'programmable_porthole_wall'):
     base = json.loads((models / (block + '.json')).read_text())
     for choice, texture in zip(ids, textures):
@@ -27,4 +28,4 @@ for block in ('programmable_block', 'programmable_slab', 'programmable_wall',
                 model['textures'][key] = 'vandorlabs:blocks/' + texture
         (out / (block + '_' + choice + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')
-print('Generated', len(ids) * 5, 'configured item models')
+print('Generated', len(ids) * 6, 'configured item models')

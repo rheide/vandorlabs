@@ -5,9 +5,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
 /** Full solid cube whose six faces share one selectable finish. */
-public final class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
+public class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
     public BlockProgrammableBlock() {
-        super("programmable_block");
+        this("programmable_block");
+    }
+
+    protected BlockProgrammableBlock(String name) {
+        super(name);
         setLightLevel(0);
     }
 

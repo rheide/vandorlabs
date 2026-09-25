@@ -1179,8 +1179,11 @@ public class TEAnimatedScreenSelector
     }
 
     private static TextureAtlasSprite wallSprite(TileEntityAnimatedScreenSelector te) {
+        int choice = te instanceof com.vandorlabs.tiles.TileEntityProgrammableTrigger
+                ? ((com.vandorlabs.tiles.TileEntityProgrammableTrigger) te).getVisibleTexture()
+                : te.getHousingTexture();
         return Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite(ScreenHousingTextures.texture(te.getHousingTexture()));
+                .getAtlasSprite(ScreenHousingTextures.texture(choice));
     }
 
     private static void spriteQuad(BufferBuilder buf, TextureAtlasSprite sprite,

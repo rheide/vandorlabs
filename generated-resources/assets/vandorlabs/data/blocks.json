@@ -3487,5 +3487,12 @@
     "item": true,
     "sliding": true,
     "paired_model": "space_standard_sliding_door_framed_paired"
+  },
+  {
+    "id": "programmable_trigger_block",
+    "programmable_only": true,
+    "type": "block",
+    "class": "BlockVandor",
+    "item": true
   }
 ]

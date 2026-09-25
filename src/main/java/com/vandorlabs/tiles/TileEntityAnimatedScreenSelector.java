@@ -253,6 +253,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return ScreenBehavior.effectiveMode(displayMode,redstoneEnabled,powered);
     }
 
+    protected boolean isTriggerPowered() {
+        return (world != null && pos != null && world.isBlockPowered(pos)) || channelSignal;
+    }
+
     public boolean isUsableByPlayer(EntityPlayer player) {
         if (world == null || pos == null) {
             return false;
