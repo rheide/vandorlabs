@@ -35,6 +35,12 @@ public final class ChairRuntimeChecks {
             TileEntityProgrammableChair tile = (TileEntityProgrammableChair) world.getTileEntity(pos);
             tile.setStyle(style);
             tile.setHeight(height);
+            com.vandorlabs.container.ContainerProgrammableChair upperMenu =
+                    (com.vandorlabs.container.ContainerProgrammableChair)new com.vandorlabs.GuiHandler()
+                            .getServerGuiElement(com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_CHAIR,
+                                    player, world, pos.getX(), pos.getY() + 1, pos.getZ());
+            require(upperMenu.tile == tile, "upper chair configuration edited the unused upper tile");
+
             require(chair.getActualState(lower, world, pos).getValue(BlockBridgeChair.STYLE)
                             == BlockBridgeChair.Style.byIndex(style)
                             && chair.getActualState(lower, world, pos).getValue(BlockBridgeChair.HEIGHT)

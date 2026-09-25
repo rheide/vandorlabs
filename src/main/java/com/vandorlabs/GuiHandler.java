@@ -31,10 +31,17 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_PROGRAMMABLE_LIGHT = 5;
     public static final int GUI_PROGRAMMABLE_CHAIR = 6;
 
+    private static TileEntity chairTile(World world, BlockPos pos) {
+        net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockBridgeChair
+                && state.getValue(com.vandorlabs.blocks.BlockBridgeChair.UPPER)) pos = pos.down();
+        return world.getTileEntity(pos);
+    }
+
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if (ID == GUI_PROGRAMMABLE_CHAIR) {
-            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            TileEntity tile = chairTile(world, new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
                 return new com.vandorlabs.container.ContainerProgrammableChair(
                         (com.vandorlabs.tiles.TileEntityProgrammableChair) tile);
@@ -77,7 +84,7 @@ public class GuiHandler implements IGuiHandler {
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if (ID == GUI_PROGRAMMABLE_CHAIR) {
-            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            TileEntity tile = chairTile(world, new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
                 return new com.vandorlabs.client.GuiProgrammableChair(
                         (com.vandorlabs.tiles.TileEntityProgrammableChair) tile);
