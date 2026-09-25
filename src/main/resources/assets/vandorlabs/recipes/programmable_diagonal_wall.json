@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["I ", "II"],
+  "key": {"I": {"item": "vandorlabs:industrial_alloy_ingot"}},
+  "result": {"item": "vandorlabs:programmable_diagonal_wall", "count": 4}
+}

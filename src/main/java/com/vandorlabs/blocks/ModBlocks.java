@@ -13,6 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraftforge.event.RegistryEvent;
@@ -34,6 +35,11 @@ public class ModBlocks {
     public static Block TRITANIUM_HULL;
     public static Block ANIMATED_SCREEN_SELECTOR;
     public static Block PROGRAMMABLE_CONSOLE;
+    public static Block PROGRAMMABLE_WALL;
+    public static Block PROGRAMMABLE_BLOCK;
+    public static Block PROGRAMMABLE_PORTHOLE_WALL;
+    public static Block PROGRAMMABLE_DIAGONAL_WALL;
+    public static Block PROGRAMMABLE_DIAGONAL_CORNER_WALL;
     public static Block PROGRAMMABLE_DIAGONAL_SCREEN;
     public static Block PROGRAMMABLE_INPUT;
     public static Block PROGRAMMABLE_HALF_CONSOLE;
@@ -167,6 +173,16 @@ public class ModBlocks {
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
         add(PROGRAMMABLE_CONSOLE);
+        PROGRAMMABLE_WALL = add(new BlockProgrammableWall("programmable_wall",
+                BlockProgrammableWall.Shape.PLAIN));
+        PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
+        PROGRAMMABLE_PORTHOLE_WALL = add(new BlockProgrammableWall("programmable_porthole_wall",
+                BlockProgrammableWall.Shape.PORTHOLE));
+        PROGRAMMABLE_DIAGONAL_WALL = add(new BlockProgrammableWall("programmable_diagonal_wall",
+                BlockProgrammableWall.Shape.DIAGONAL));
+        PROGRAMMABLE_DIAGONAL_CORNER_WALL = add(new BlockProgrammableWall(
+                "programmable_diagonal_corner_wall",
+                BlockProgrammableWall.Shape.DIAGONAL_CORNER));
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
         add(PROGRAMMABLE_DIAGONAL_SCREEN);
         PROGRAMMABLE_INPUT = new BlockProgrammableInput();
@@ -354,6 +370,8 @@ public class ModBlocks {
     }
 
     private static String replacementBlockId(String id) {
+        for (String finish : com.vandorlabs.tiles.ScreenHousingTextures.IDS)
+            if (finish.equals(id)) return "programmable_block";
         if ("plasma_thruster".equals(id)) return "plasma_vent_full_face";
         if ("impulse_engine".equals(id)) return "impulse_engine_full_face";
         return null;
@@ -369,6 +387,14 @@ public class ModBlocks {
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));
             }
         }
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        for (int i = 0; i < com.vandorlabs.tiles.ScreenHousingTextures.IDS.length; i++)
+            event.getMap().registerSprite(new ResourceLocation(
+                    com.vandorlabs.tiles.ScreenHousingTextures.texture(i)));
     }
 
     @SubscribeEvent

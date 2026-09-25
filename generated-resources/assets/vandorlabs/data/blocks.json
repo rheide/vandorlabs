@@ -1377,12 +1377,14 @@
   },
   {
     "id": "dark_wall_panel",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
   },
   {
     "id": "light_wall_panel",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
@@ -1414,6 +1416,7 @@
   },
   {
     "id": "ribbed_wall",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
@@ -1580,18 +1583,21 @@
   },
   {
     "id": "light_alloy_hull",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
     "id": "dark_gunmetal_hull",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandor",
     "item": true
   },
   {
     "id": "midnight_matte_hull",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandor",
     "item": true
@@ -1616,6 +1622,7 @@
   },
   {
     "id": "metal_floor",
+    "programmable_only": true,
     "type": "regular",
     "class": "BlockVandor",
     "item": true
@@ -1652,30 +1659,35 @@
   },
   {
     "id": "industrial_block",
+    "programmable_only": true,
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
     "id": "industrial_trim",
+    "programmable_only": true,
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
     "id": "industrial_grate",
+    "programmable_only": true,
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
     "id": "light_industrial_panel",
+    "programmable_only": true,
     "type": "block",
     "class": "BlockVandor",
     "item": true
   },
   {
     "id": "dark_industrial_panel",
+    "programmable_only": true,
     "type": "block",
     "class": "BlockVandor",
     "item": true

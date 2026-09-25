@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["II", "IR"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"}
+  },
+  "result": {"item": "vandorlabs:programmable_diagonal_corner_wall", "count": 4}
+}

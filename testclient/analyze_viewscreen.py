@@ -61,6 +61,21 @@ def main():
         print("  %-13s %.2f" % (name, values[name]))
 
     failures = []
+    porthole_path = args.shots / "shot_programmable_porthole.png"
+    if not porthole_path.is_file():
+        failures.append("missing programmable porthole screenshot")
+    else:
+        porthole = Image.open(porthole_path).convert("RGB")
+        # The opening and unobstructed sky share a horizontal scanline. A
+        # transparent pane must tint the opening without filling it solid.
+        pane = ImageStat.Stat(porthole.crop((475, 345, 485, 355))).mean
+        sky = ImageStat.Stat(porthole.crop((195, 345, 205, 355))).mean
+        pane_difference = sum(abs(a - b) for a, b in zip(pane, sky)) / 3.0
+        print("programmable porthole pane/sky difference %.2f" % pane_difference)
+        if pane_difference < 15.0:
+            failures.append("programmable porthole has no visible glass pane")
+        if pane_difference > 120.0:
+            failures.append("programmable porthole glass is opaque")
     # The Dark Wall Panel control is deliberately used as the live reference;
     # an allowance covers the selector's brighter emitted block light.
     for face in ("top", "back"):
@@ -316,6 +331,7 @@ def main():
     print("PASS: Programmable Input renders full wall/floor surfaces and regular selector")
     print("PASS: Cruiser Three Views renders as its authored 3x2 grid")
     print("PASS: programmable/control blocks have representative hotbar icons")
+    print("PASS: programmable porthole has visible translucent glass")
     print("PASS: simple bridge chairs and active material, hull, and floor blocks render")
 
 

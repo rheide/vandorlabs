@@ -1,0 +1,4 @@
+{
+  "parent": "block/cube_all",
+  "textures": {"all": "vandorlabs:blocks/dark_wall_panel"}
+}

@@ -6,6 +6,8 @@ import com.vandorlabs.client.GuiProgrammableHalfConsole;
 import com.vandorlabs.blocks.BlockProgrammableInput;
 import com.vandorlabs.blocks.BlockProgrammableHalfConsole;
 import com.vandorlabs.blocks.BlockProgrammableFullInput;
+import com.vandorlabs.blocks.BlockProgrammableWall;
+import com.vandorlabs.blocks.BlockProgrammableBlock;
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import com.vandorlabs.redstone.RedstoneChannelMember;
@@ -81,6 +83,12 @@ public class GuiHandler implements IGuiHandler {
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
             if (te instanceof TileEntityAnimatedScreenSelector) {
+                if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
+                        instanceof BlockProgrammableWall || world.getBlockState(
+                        new BlockPos(x, y, z)).getBlock() instanceof BlockProgrammableBlock) {
+                    return new com.vandorlabs.client.GuiProgrammableWall(player.inventory,
+                            (TileEntityAnimatedScreenSelector) te);
+                }
                 if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
                         instanceof BlockProgrammableFullInput) {
                     return new GuiAnimatedScreenSelector(player.inventory,

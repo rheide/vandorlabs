@@ -21,6 +21,7 @@ import net.minecraft.util.NonNullList;
 import com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;
 import com.vandorlabs.blocks.BlockProgrammableInput;
 import com.vandorlabs.blocks.BlockProgrammableFullInput;
+import com.vandorlabs.blocks.BlockProgrammableWall;
 
 /** Serialization and placement contracts for programmable displays. */
 final class ScreenRuntimeChecks {
@@ -36,6 +37,7 @@ final class ScreenRuntimeChecks {
         checkFacings(ModBlocks.ANIMATED_SCREEN_SELECTOR);
         checkViewscreenPlacement(player);
         checkDiagonalPlacement(player);
+        checkProgrammableWalls(player);
         checkInputPlacement(player);
         checkInputScrollbar();
         checkFullInputPlacement(player);
@@ -47,9 +49,17 @@ final class ScreenRuntimeChecks {
                         && GuiProgrammableInput.scrollForDrag(145, 100, 100, 20, 10, 5) == 5
                         && GuiProgrammableInput.scrollForDrag(185, 100, 100, 20, 10, 5) == 10,
                 "half-input scrollbar drag does not cover its full range");
+        require(GuiProgrammableWall.scrollForDrag(105, 100, 100, 20, 4, 5) == 0
+                        && GuiProgrammableWall.scrollForDrag(145, 100, 100, 20, 4, 5) == 2
+                        && GuiProgrammableWall.scrollForDrag(185, 100, 100, 20, 4, 5) == 4,
+                "wall texture scrollbar drag does not cover its full range");
     }
 
     private static void checkHousingSprites() {
+        String side = "vandorlabs:blocks/programmable_glass/metal_side";
+        require(side.equals(Minecraft.getMinecraft().getTextureMapBlocks()
+                        .getAtlasSprite(side).getIconName()),
+                "missing programmable wall side sprite: " + side);
         for (int i = 0; i < ScreenHousingTextures.IDS.length; i++) {
             String name = ScreenHousingTextures.texture(i);
             require(name.equals(Minecraft.getMinecraft().getTextureMapBlocks()
@@ -82,6 +92,8 @@ final class ScreenRuntimeChecks {
             source.setSmallInput(true);
             source.setRedstoneChannel(4271);
             source.setHousingTexture(8);
+            source.setGlassShade(1);
+            source.setJoinPortholes(true);
             NBTTagCompound tag = source.writeToNBT(new NBTTagCompound());
             TileEntityAnimatedScreenSelector restored =
                     new TileEntityAnimatedScreenSelector();
@@ -99,7 +111,9 @@ final class ScreenRuntimeChecks {
                             && restored.getWallPosition(0) == 1
                             && restored.isSmallInput()
                             && restored.getRedstoneChannel() == 4271
-                            && restored.getHousingTexture() == 8,
+                            && restored.getHousingTexture() == 8
+                            && restored.getGlassShade() == 1
+                            && restored.isJoinPortholes(),
                     "tile NBT round trip failed for " + panel);
         }
         TileEntityAnimatedScreenSelector invalid = new TileEntityAnimatedScreenSelector();
@@ -116,7 +130,12 @@ final class ScreenRuntimeChecks {
                 ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,
                 ModBlocks.PROGRAMMABLE_INPUT,
                 ModBlocks.PROGRAMMABLE_HALF_CONSOLE,
-                ModBlocks.PROGRAMMABLE_FULL_INPUT
+                ModBlocks.PROGRAMMABLE_FULL_INPUT,
+                ModBlocks.PROGRAMMABLE_WALL,
+                ModBlocks.PROGRAMMABLE_BLOCK,
+                ModBlocks.PROGRAMMABLE_PORTHOLE_WALL,
+                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,
+                ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL
         };
         for (int i = 0; i < programmableBlocks.length; i++) {
             Block raw = programmableBlocks[i];
@@ -166,6 +185,8 @@ final class ScreenRuntimeChecks {
         tile.setSmallInput(true);
         tile.setRedstoneChannel(4271);
         tile.setHousingTexture(8);
+        tile.setGlassShade(1);
+        tile.setJoinPortholes(true);
     }
 
     private static void assertDistinctConfiguration(
@@ -182,7 +203,9 @@ final class ScreenRuntimeChecks {
                         .equals(tile.getSecondaryInputPanel())
                         && tile.getWallPosition(0) == 1 && tile.isSmallInput()
                         && tile.getRedstoneChannel() == 4271
-                        && tile.getHousingTexture() == 8,
+                        && tile.getHousingTexture() == 8
+                        && tile.getGlassShade() == 1
+                        && tile.isJoinPortholes(),
                 "programmable drop configuration did not round-trip: " + context);
     }
 
@@ -263,6 +286,93 @@ final class ScreenRuntimeChecks {
                         == EnumFacing.WEST,
                 "view screen did not inherit the orientation of an extended panel");
         player.world.setBlockToAir(pos.down());
+    }
+
+    private static void checkProgrammableWalls(EntityPlayer player) {
+        Block[] variants = {ModBlocks.PROGRAMMABLE_WALL,
+                ModBlocks.PROGRAMMABLE_PORTHOLE_WALL,
+                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,
+                ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL};
+        BlockPos pos = new BlockPos(30, 250, 0);
+        for (Block raw : variants) {
+            require(raw instanceof BlockProgrammableWall, "programmable wall missing");
+            BlockProgrammableWall block = (BlockProgrammableWall) raw;
+            for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+                IBlockState state = block.getDefaultState()
+                        .withProperty(BlockProgrammableWall.FACING, facing);
+                if (block.getShape() == BlockProgrammableWall.Shape.DIAGONAL
+                        || block.getShape() == BlockProgrammableWall.Shape.DIAGONAL_CORNER)
+                    state = state.withProperty(BlockProgrammableWall.INVERTED, true);
+                require(block.getStateFromMeta(block.getMetaFromState(state)).equals(state),
+                        "wall facing/half metadata failed: " + block.getRegistryName());
+            }
+        }
+        BlockProgrammableWall diagonal = (BlockProgrammableWall) variants[2];
+        player.rotationYaw = EnumFacing.NORTH.getHorizontalAngle();
+        IBlockState floor = diagonal.getStateForPlacement(player.world, pos,
+                EnumFacing.UP, .5F, .2F, .5F, 0, player);
+        IBlockState ceiling = diagonal.getStateForPlacement(player.world, pos,
+                EnumFacing.DOWN, .5F, .8F, .5F, 0, player);
+        require(!floor.getValue(BlockProgrammableWall.INVERTED)
+                        && ceiling.getValue(BlockProgrammableWall.INVERTED),
+                "diagonal wall did not follow stair half placement");
+        BlockProgrammableWall corner = (BlockProgrammableWall) variants[3];
+        require(!corner.getStateForPlacement(player.world, pos, EnumFacing.UP,
+                        .5F, .2F, .5F, 0, player)
+                        .getValue(BlockProgrammableWall.INVERTED)
+                        && corner.getStateForPlacement(player.world, pos,
+                        EnumFacing.DOWN, .5F, .8F, .5F, 0, player)
+                        .getValue(BlockProgrammableWall.INVERTED),
+                "diagonal corner did not follow stair half placement");
+        for (int i = 0; i < 2; i++) {
+            BlockProgrammableWall wall = (BlockProgrammableWall) variants[i];
+            AxisAlignedBB bounds = wall.getBoundingBox(wall.getDefaultState(),
+                    player.world, pos);
+            require(bounds.minX == 0 && bounds.maxX == 1
+                            && bounds.minZ == 6 / 16D && bounds.maxZ == 10 / 16D,
+                    "wall is not a full-width four-pixel panel: " + wall.getRegistryName());
+        }
+        BlockProgrammableWall porthole = (BlockProgrammableWall) variants[1];
+        IBlockState north = porthole.getDefaultState()
+                .withProperty(BlockProgrammableWall.FACING, EnumFacing.NORTH);
+        player.world.setBlockState(pos, north, 2);
+        player.world.setBlockState(pos.east(), north, 2);
+        TileEntityAnimatedScreenSelector first = (TileEntityAnimatedScreenSelector)
+                player.world.getTileEntity(pos);
+        TileEntityAnimatedScreenSelector second = (TileEntityAnimatedScreenSelector)
+                player.world.getTileEntity(pos.east());
+        first.setJoinPortholes(true);
+        second.setJoinPortholes(true);
+        require(TEAnimatedScreenSelector.joinsPorthole(first, north, true)
+                        && TEAnimatedScreenSelector.joinsPorthole(second, north, false),
+                "north-facing portholes do not join at their shared edge");
+        second.setJoinPortholes(false);
+        require(!TEAnimatedScreenSelector.joinsPorthole(first, north, true),
+                "porthole joins a neighbor with its toggle off");
+        player.world.setBlockToAir(pos);
+        player.world.setBlockToAir(pos.east());
+        java.util.List<AxisAlignedBB> lower = new java.util.ArrayList<>();
+        java.util.List<AxisAlignedBB> upper = new java.util.ArrayList<>();
+        AxisAlignedBB query = new AxisAlignedBB(pos).grow(2);
+        IBlockState northLower = diagonal.getDefaultState()
+                .withProperty(BlockProgrammableWall.FACING, EnumFacing.NORTH);
+        diagonal.addCollisionBoxToList(northLower, player.world, pos, query,
+                lower, null, false);
+        diagonal.addCollisionBoxToList(northLower.withProperty(
+                        BlockProgrammableWall.INVERTED, true), player.world, pos, query,
+                upper, null, false);
+        require(lower.size() == 16 && upper.size() == 16
+                        && lower.get(0).minZ < lower.get(15).minZ
+                        && upper.get(0).minZ > upper.get(15).minZ,
+                "diagonal collision does not follow both continuous slopes");
+        java.util.List<AxisAlignedBB> cornerBoxes = new java.util.ArrayList<>();
+        corner.addCollisionBoxToList(corner.getDefaultState(), player.world,
+                pos, query, cornerBoxes, null, false);
+        require(cornerBoxes.size() == 32
+                        && cornerBoxes.get(0).minZ > pos.getZ()
+                        && cornerBoxes.get(1).maxZ == pos.getZ() + 1
+                        && cornerBoxes.get(0).maxX == cornerBoxes.get(1).maxX,
+                "diagonal corner collision does not join two arms at 90 degrees");
     }
 
     private static void checkDiagonalPlacement(EntityPlayer player) {

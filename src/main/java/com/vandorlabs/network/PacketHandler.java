@@ -17,5 +17,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageRedstoneChannel.Handler.class, MessageRedstoneChannel.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageSpaceDoor.Handler.class, MessageSpaceDoor.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableGlass.Handler.class, MessageProgrammableGlass.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageProgrammableWallShade.Handler.class, MessageProgrammableWallShade.class, id++, Side.SERVER);
     }
 }

@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IGI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "G": {"item": "minecraft:glass_pane"}
+  },
+  "result": {"item": "vandorlabs:programmable_porthole_wall", "count": 2}
+}

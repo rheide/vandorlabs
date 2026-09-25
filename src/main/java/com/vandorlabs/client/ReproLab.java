@@ -64,6 +64,7 @@ public class ReproLab {
     private static final BlockPos DIAGONAL = new BlockPos(0, Y, 5);
     private static final BlockPos DIAGONAL_UP = new BlockPos(-5, Y, 5);
     private static final BlockPos DIAGONAL_DOWN = new BlockPos(5, Y, 5);
+    private static final BlockPos WALL_DISPLAY = new BlockPos(-2, Y + 10, 2);
     private static final BlockPos WIDE_LEFT = new BlockPos(-9, Y, 7);
     private static final BlockPos WIDE_RIGHT = new BlockPos(-8, Y, 7);
     private static final BlockPos INPUT_WALL = new BlockPos(-8, Y, 2);
@@ -192,6 +193,20 @@ public class ReproLab {
                 Y + .45D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 0.0F));
         SHOTS.add(new Shot("diagonal_down_close_high", DIAGONAL_DOWN.getX() + 0.5D,
                 Y + .65D - 1.62D, DIAGONAL_DOWN.getZ() - 0.65D, 0.0F, 5.0F));
+        SHOTS.add(new Shot("programmable_walls", 0.5D,
+                Y + 10.6D - 1.62D, -2.0D, 0.0F, 2.0F));
+        SHOTS.add(new Shot("programmable_wall_side", -4.5D,
+                Y + 10.7D - 1.62D, -0.5D, -45.0F, 3.0F));
+        SHOTS.add(new Shot("programmable_porthole", -0.5D,
+                Y + 10.5D - 1.62D, 0.2D, 18.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_joined", -0.5D,
+                Y + 10.5D - 1.62D, -0.9D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_corner", WALL_DISPLAY.getX() + 6.5D,
+                Y + 10.5D - 1.62D, -0.7D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_corner_side", WALL_DISPLAY.getX() + 5.1D,
+                Y + 10.6D - 1.62D, -0.4D, -35.0F, 4.0F));
+        SHOTS.add(new Shot("programmable_corner_turn", WALL_DISPLAY.getX() + 12.4D,
+                Y + 11.1D - 1.62D, -0.1D, 42.0F, 20.0F));
         SHOTS.add(new Shot("wide_ship_pair", -8.0D, eyeLevelFeet,
                 4.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("input_wall", INPUT_WALL.getX() + 0.5D,
@@ -458,6 +473,32 @@ public class ReproLab {
             case 7:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "full_input_gui");
+                BlockPos porthole = WALL_DISPLAY.east();
+                rebuildGuiFixture(mc, porthole, ModBlocks.PROGRAMMABLE_PORTHOLE_WALL);
+                TileEntity wallRaw = mc.world.getTileEntity(porthole);
+                if (!(wallRaw instanceof TileEntityAnimatedScreenSelector)) {
+                    throw new IllegalStateException("wall tile unavailable for GUI shot");
+                }
+                mc.displayGuiScreen(new GuiProgrammableWall(mc.player.inventory,
+                        (TileEntityAnimatedScreenSelector) wallRaw));
+                state = 15;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 15:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "programmable_wall_gui");
+                rebuildGuiFixture(mc, CONTROL, ModBlocks.PROGRAMMABLE_BLOCK);
+                TileEntity blockRaw = mc.world.getTileEntity(CONTROL);
+                if (!(blockRaw instanceof TileEntityAnimatedScreenSelector))
+                    throw new IllegalStateException("programmable block tile unavailable");
+                mc.displayGuiScreen(new GuiProgrammableWall(mc.player.inventory,
+                        (TileEntityAnimatedScreenSelector) blockRaw));
+                state = 16;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 16:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "programmable_block_gui");
                 prepareItemHotbar(mc);
                 state = 8;
                 holdTicks = GUI_SETTLE_TICKS;
@@ -588,15 +629,70 @@ public class ReproLab {
                         world.setBlockState(pos, Blocks.STONE.getDefaultState(), 2));
         place(world, SELECTOR, ModBlocks.ANIMATED_SCREEN_SELECTOR,
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
-        place(world, CONTROL, Block.REGISTRY.getObject(
-                        new ResourceLocation("vandorlabs", "dark_wall_panel")),
-                BlockVandorDirectional.FACING, EnumFacing.NORTH);
+        place(world, CONTROL, ModBlocks.PROGRAMMABLE_BLOCK,
+                BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         place(world, CONSOLE, ModBlocks.PROGRAMMABLE_CONSOLE,
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         place(world, DIAGONAL, ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         placeDiagonal(world, DIAGONAL_UP, false);
         placeDiagonal(world, DIAGONAL_DOWN, true);
+        for (int dx = -1; dx <= 11; dx++) {
+            world.setBlockState(WALL_DISPLAY.add(dx, -1, 0),
+                    Blocks.STONE.getDefaultState(), 2);
+        }
+        world.setBlockState(WALL_DISPLAY.add(-1, 0, 0),
+                Blocks.COBBLESTONE_WALL.getDefaultState(), 2);
+        for (int i = 0; i < 4; i++) {
+            Block block = i == 0 ? ModBlocks.PROGRAMMABLE_WALL
+                    : i == 1 ? ModBlocks.PROGRAMMABLE_PORTHOLE_WALL
+                    : ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+            BlockPos wallPos = WALL_DISPLAY.add(i < 2 ? i : i + 1, 0, 0);
+            IBlockState wallState = block.getDefaultState().withProperty(
+                    com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                    EnumFacing.NORTH);
+            if (i == 3) wallState = wallState.withProperty(
+                    com.vandorlabs.blocks.BlockProgrammableWall.INVERTED, true);
+            world.setBlockState(wallPos, wallState, 2);
+            TileEntity tile = world.getTileEntity(wallPos);
+            if (tile instanceof TileEntityAnimatedScreenSelector) {
+                ((TileEntityAnimatedScreenSelector) tile).setHousingTexture(i);
+                world.notifyBlockUpdate(wallPos, wallState, wallState, 3);
+            }
+        }
+        BlockPos joined = WALL_DISPLAY.add(2, 0, 0);
+        IBlockState joinedState = ModBlocks.PROGRAMMABLE_PORTHOLE_WALL
+                .getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                        EnumFacing.NORTH);
+        world.setBlockState(joined, joinedState, 2);
+        ((TileEntityAnimatedScreenSelector) world.getTileEntity(WALL_DISPLAY.east()))
+                .setJoinPortholes(true);
+        TileEntityAnimatedScreenSelector joinedTile =
+                (TileEntityAnimatedScreenSelector) world.getTileEntity(joined);
+        joinedTile.setJoinPortholes(true);
+        joinedTile.setGlassShade(1);
+        joinedTile.setHousingTexture(2);
+        for (int offset = 6; offset <= 7; offset++) {
+            BlockPos cornerPos = WALL_DISPLAY.add(offset, 0, 0);
+            IBlockState cornerState = ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL
+                    .getDefaultState().withProperty(
+                            com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                            EnumFacing.NORTH).withProperty(
+                            com.vandorlabs.blocks.BlockProgrammableWall.INVERTED,
+                            offset == 7);
+            world.setBlockState(cornerPos, cornerState, 2);
+            ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerPos))
+                    .setHousingTexture(offset == 6 ? 1 : 2);
+        }
+        BlockPos cornerTurn = WALL_DISPLAY.add(10, 0, 0);
+        IBlockState turnState = ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL
+                .getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                        EnumFacing.NORTH);
+        world.setBlockState(cornerTurn, turnState, 2);
+        ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerTurn))
+                .setHousingTexture(1);
         world.setBlockState(DIAGONAL_DOWN.up(),Blocks.STONE.getDefaultState(),2);
         IBlockState inputWall = ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
                 .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
@@ -879,13 +975,18 @@ public class ReproLab {
                     "metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
                     "smoked_cockpit_glass"};
             for (int i = 0; i < ids.length; i++) {
-                Block block = block(ids[i]);
+                int finish = java.util.Arrays.asList(
+                        com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf(ids[i]);
+                Block block = finish >= 0 ? ModBlocks.PROGRAMMABLE_BLOCK : block(ids[i]);
                 IBlockState state = block.getDefaultState();
                 if (state.getProperties().containsKey(BlockVandorDirectional.FACING))
                     state = state.withProperty(BlockVandorDirectional.FACING,
                             EnumFacing.NORTH);
-                world.setBlockState(new BlockPos(GALLERY_X - 7 + (i % 8) * 2,
-                        GALLERY_Y + 6 - (i / 8) * 2, -18), state, 2);
+                BlockPos location = new BlockPos(GALLERY_X - 7 + (i % 8) * 2,
+                        GALLERY_Y + 6 - (i / 8) * 2, -18);
+                world.setBlockState(location, state, 2);
+                if (finish >= 0) ((TileEntityAnimatedScreenSelector)
+                        world.getTileEntity(location)).setHousingTexture(finish);
             }
         } else if (shot.equals("gallery_space_glass")) {
             for (int x=0; x<3; x++) for (int y=0; y<3; y++) {
@@ -1299,6 +1400,11 @@ public class ReproLab {
     }
 
     private static BlockPos blockForShot(String name) {
+        if (name.equals("programmable_walls") || name.equals("programmable_wall_side")
+                || name.equals("programmable_porthole")
+                || name.equals("programmable_porthole_joined")
+                || name.startsWith("programmable_corner"))
+            return WALL_DISPLAY;
         if (name.startsWith("wide_ship")) return WIDE_LEFT;
         if (name.equals("input_wall")) return INPUT_WALL;
         if (name.equals("input_keyboard")) return INPUT_KEYBOARD;

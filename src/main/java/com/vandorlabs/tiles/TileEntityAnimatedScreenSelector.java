@@ -78,6 +78,26 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int redstoneChannel;
     private boolean channelSignal;
     private int housingTexture;
+    private int glassShade = 2;
+    private boolean joinPortholes;
+
+    public boolean isJoinPortholes() { return joinPortholes; }
+    public void setJoinPortholes(boolean join) {
+        if (join == joinPortholes) return;
+        joinPortholes = join;
+        markDirty();
+        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
+                world.getBlockState(pos), 3);
+    }
+
+    public int getGlassShade() { return glassShade; }
+    public void setGlassShade(int shade) {
+        if (shade < 0 || shade > 2 || shade == glassShade) return;
+        glassShade = shade;
+        markDirty();
+        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
+                world.getBlockState(pos), 3);
+    }
 
     public int getHousingTexture() { return housingTexture; }
     public void setHousingTexture(int choice) {
@@ -237,6 +257,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
                 .write(new NbtPrimitiveData(compound));
+        compound.setInteger("GlassShade", glassShade);
+        compound.setBoolean("JoinPortholes", joinPortholes);
         return compound;
     }
 
@@ -261,6 +283,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         redstoneChannel = data.redstoneChannel;
         channelSignal = data.channelSignal;
         housingTexture = ScreenHousingTextures.clamp(data.housingTexture);
+        glassShade = compound.hasKey("GlassShade", 3)
+                ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
+        joinPortholes = compound.getBoolean("JoinPortholes");
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

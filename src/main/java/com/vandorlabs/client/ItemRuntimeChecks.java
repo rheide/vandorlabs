@@ -102,23 +102,16 @@ final class ItemRuntimeChecks {
         grid.setInventorySlotContents(0,ItemStack.EMPTY);
         require(!glassRecipe.matches(grid,player.world),"missing glass does not craft glass");
         checkProgrammableRecipes(grid, player);
-        String[][] finishes = {{"industrial_block", "Industrial Block"},
-                {"industrial_trim", "Industrial Trim"},
-                {"industrial_grate", "Industrial Grate"},
-                {"light_industrial_panel", "Light Industrial Panel"},
-                {"dark_industrial_panel", "Dark Industrial Panel"}};
-        for (String[] finish : finishes) {
-            Block finishBlock = Block.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs", finish[0]));
-            require(finishBlock != null && finishBlock.getRegistryName() != null,
-                    "missing industrial finish " + finish[0]);
-            ItemStack finishItem = new ItemStack(finishBlock);
-            require(!finishItem.isEmpty() && finishItem.getDisplayName().equals(finish[1]),
-                    "industrial finish item name " + finish[0]);
-            require(mc.getRenderItem().getItemModelMesher().getItemModel(finishItem)
-                    != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
-                    "industrial finish item model " + finish[0]);
-        }
+        checkWallRecipes(grid, player);
+        for (String finish : com.vandorlabs.tiles.ScreenHousingTextures.IDS)
+            require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", finish)),
+                    "retired finish remains a separate block: " + finish);
+        ItemStack programmableBlock = new ItemStack(
+                com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK);
+        require("Programmable Block".equals(programmableBlock.getDisplayName())
+                        && mc.getRenderItem().getItemModelMesher().getItemModel(programmableBlock)
+                        != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
+                "programmable block item/name/model");
         for (String removed : new String[]{"plasma_vent_side", "plasma_vent_top",
                 "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
                 "plasma_vent_cavity", "rubber_studs", "framed_observation_glass",
@@ -127,9 +120,6 @@ final class ItemRuntimeChecks {
                 "non_slip_metal_floor"})
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
-        Block metalFloor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "metal_floor"));
-        require(metalFloor != null && "Metal Floor".equals(new ItemStack(metalFloor).getDisplayName()),
-                "Metal Floor registry or display name missing");
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
     }
 
@@ -196,6 +186,50 @@ final class ItemRuntimeChecks {
             grid.setInventorySlotContents(4, new ItemStack(Items.DIAMOND));
             grid.setInventorySlotContents(7, ItemStack.EMPTY);
             require(!recipe.matches(grid, player.world), "recipe accepts no component: " + id);
+        }
+    }
+
+    private static void checkWallRecipes(InventoryCrafting grid,
+            EntityPlayer player) {
+        String[] names = {"programmable_block", "programmable_wall", "programmable_porthole_wall",
+                "programmable_diagonal_wall", "programmable_diagonal_corner_wall"};
+        int[] counts = {4, 4, 2, 4, 4};
+        for (int variant = 0; variant < names.length; variant++) {
+            for (int slot = 0; slot < 9; slot++)
+                grid.setInventorySlotContents(slot, ItemStack.EMPTY);
+            if (variant == 0) {
+                for (int slot : new int[] {1, 3, 5, 7})
+                    grid.setInventorySlotContents(slot,
+                            new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+                grid.setInventorySlotContents(4, new ItemStack(Items.REDSTONE));
+            } else if (variant == 1) {
+                for (int slot = 0; slot < 3; slot++)
+                    grid.setInventorySlotContents(slot,
+                            new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+            } else if (variant == 2) {
+                grid.setInventorySlotContents(0,
+                        new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+                grid.setInventorySlotContents(1, new ItemStack(Blocks.GLASS_PANE));
+                grid.setInventorySlotContents(2,
+                        new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+            } else if (variant == 3) {
+                for (int slot : new int[] {0, 3, 4})
+                    grid.setInventorySlotContents(slot,
+                            new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+            } else {
+                for (int slot : new int[] {0, 1, 3})
+                    grid.setInventorySlotContents(slot,
+                            new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+                grid.setInventorySlotContents(4, new ItemStack(Items.REDSTONE));
+            }
+            ResourceLocation id = new ResourceLocation("vandorlabs", names[variant]);
+            IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
+            require(recipe != null && recipe.matches(grid, player.world),
+                    "wall recipe missing or does not match: " + id);
+            ItemStack result = CraftingManager.findMatchingResult(grid, player.world);
+            require(result.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(id))
+                            && result.getCount() == counts[variant],
+                    "wall recipe crafts wrong result: " + id);
         }
     }
 

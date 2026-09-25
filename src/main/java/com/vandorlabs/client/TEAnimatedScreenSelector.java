@@ -14,6 +14,7 @@ import com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;
 import com.vandorlabs.blocks.BlockProgrammableHalfConsole;
 import com.vandorlabs.blocks.BlockProgrammableInput;
 import com.vandorlabs.blocks.BlockProgrammableFullInput;
+import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -167,6 +168,20 @@ public class TEAnimatedScreenSelector
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
         if (!(state.getBlock() instanceof BlockAnimatedScreenSelector)) {
+            return;
+        }
+        if (state.getBlock() instanceof BlockProgrammableWall) {
+            renderProgrammableWall(te, state, x, y, z);
+            return;
+        }
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableBlock) {
+            beginLocalTransform(x, y, z, state.getValue(BlockAnimatedScreenSelector.FACING));
+            GlStateManager.disableLighting();
+            bindAtlas();
+            setNeighborWorldLight(te);
+            renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
+            GlStateManager.enableLighting();
+            endLocalTransform();
             return;
         }
         if (state.getBlock() instanceof BlockProgrammableFullInput) {
@@ -450,17 +465,40 @@ public class TEAnimatedScreenSelector
                 combined % 65536, combined / 65536);
     }
 
+    /** A full opaque cube has no useful light value at its own position. */
+    private static void setNeighborWorldLight(TileEntityAnimatedScreenSelector te) {
+        int sky = 0;
+        int block = 0;
+        for (EnumFacing side : EnumFacing.values()) {
+            net.minecraft.util.math.BlockPos neighbor = te.getPos().offset(side);
+            if (!te.getWorld().isBlockLoaded(neighbor)) continue;
+            int combined = te.getWorld().getCombinedLight(neighbor, 0);
+            sky = Math.max(sky, combined >>> 16);
+            block = Math.max(block, combined & 65535);
+        }
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, block, sky);
+    }
+
     private static void renderWallBox(TextureAtlasSprite wall, double x0, double y0,
             double z0, double x1, double y1, double z1) {
+        renderWallBox(wall, wall, true, x0, y0, z0, x1, y1, z1);
+    }
+
+    /** Broad faces use the selected wall art; exposed thickness uses frame metal. */
+    private static void renderWallBox(TextureAtlasSprite face, TextureAtlasSprite side,
+            boolean faceAlongZ, double x0, double y0, double z0,
+            double x1, double y1, double z1) {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder b = tess.getBuffer();
         b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(b, wall, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,0,16,16);
-        spriteQuad(b, wall, x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0, 0,0,16,16);
-        spriteQuad(b, wall, x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0, 0,0,16,16);
-        spriteQuad(b, wall, x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1, 0,0,16,16);
-        spriteQuad(b, wall, x1,y1,z0, x0,y1,z0, x0,y0,z0, x1,y0,z0, 0,0,16,16);
-        spriteQuad(b, wall, x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1, 0,0,16,16);
+        spriteQuad(b, side, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,0,16,16);
+        spriteQuad(b, side, x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0, 0,0,16,16);
+        TextureAtlasSprite xFace = faceAlongZ ? side : face;
+        TextureAtlasSprite zFace = faceAlongZ ? face : side;
+        spriteQuad(b, xFace, x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0, 0,0,16,16);
+        spriteQuad(b, xFace, x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1, 0,0,16,16);
+        spriteQuad(b, zFace, x1,y1,z0, x0,y1,z0, x0,y0,z0, x1,y0,z0, 0,0,16,16);
+        spriteQuad(b, zFace, x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1, 0,0,16,16);
         tess.draw();
     }
 
@@ -481,6 +519,252 @@ public class TEAnimatedScreenSelector
         // fills the deck without cropping or atlas-induced aspect changes.
         double[] inputUv = bindInput(te, te.getInputPanel());
         drawInputSurface(InputSurfaceLayout.halfConsoleFront(),inputUv);
+    }
+
+    private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
+            IBlockState state, double x, double y, double z) {
+        BlockProgrammableWall wallBlock = (BlockProgrammableWall) state.getBlock();
+        beginLocalTransform(x, y, z, state.getValue(BlockProgrammableWall.FACING));
+        GlStateManager.disableLighting();
+        bindAtlas();
+        setWorldLight(te);
+        TextureAtlasSprite wall = wallSprite(te);
+        TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
+                .getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+        boolean joinLeft = wallBlock.getShape() == BlockProgrammableWall.Shape.PORTHOLE
+                && joinsPorthole(te, state, false);
+        boolean joinRight = wallBlock.getShape() == BlockProgrammableWall.Shape.PORTHOLE
+                && joinsPorthole(te, state, true);
+        BufferBuilder buf = Tessellator.getInstance().getBuffer();
+        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL_CORNER) {
+            renderDiagonalCornerWall(buf, wall, metal,
+                    state.getValue(BlockProgrammableWall.INVERTED));
+        } else if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
+            renderDiagonalWall(buf, wall, metal,
+                    state.getValue(BlockProgrammableWall.INVERTED));
+        } else {
+            if (wallBlock.getShape() == BlockProgrammableWall.Shape.PORTHOLE) {
+                // The broad faces use block-global UVs, including each piece
+                // around the opening. No connected arm can cover the pane.
+                panelRect(buf, wall, 0, 0, 16, 3);
+                panelRect(buf, wall, 0, 13, 16, 16);
+                if (!joinLeft) {
+                    panelQuad(buf, wall, 0, 3, 4, 3, 1, 8, 0, 8);
+                    panelQuad(buf, wall, 0, 8, 1, 8, 4, 13, 0, 13);
+                    rimSegment(buf, metal, 4, 3, 1, 8);
+                    rimSegment(buf, metal, 1, 8, 4, 13);
+                }
+                if (!joinRight) {
+                    panelQuad(buf, wall, 12, 3, 16, 3, 16, 8, 15, 8);
+                    panelQuad(buf, wall, 15, 8, 16, 8, 16, 13, 12, 13);
+                    rimSegment(buf, metal, 12, 3, 15, 8);
+                    rimSegment(buf, metal, 15, 8, 12, 13);
+                }
+                rimSegment(buf, metal, joinLeft ? 0 : 4, 3,
+                        joinRight ? 16 : 12, 3);
+                rimSegment(buf, metal, joinLeft ? 0 : 4, 13,
+                        joinRight ? 16 : 12, 13);
+            } else {
+                panelRect(buf, wall, 0, 0, 16, 16);
+            }
+            panelOuterRim(buf, metal, joinLeft, joinRight);
+        }
+        Tessellator.getInstance().draw();
+        if (wallBlock.getShape() == BlockProgrammableWall.Shape.PORTHOLE)
+            renderPortholeGlass(te.getGlassShade(), joinLeft, joinRight);
+        GlStateManager.enableLighting();
+        endLocalTransform();
+    }
+
+    static boolean joinsPorthole(TileEntityAnimatedScreenSelector tile,
+            IBlockState state, boolean right) {
+        if (!tile.isJoinPortholes()) return false;
+        EnumFacing side = state.getValue(BlockProgrammableWall.FACING).rotateY();
+        if (!right) side = side.getOpposite();
+        net.minecraft.util.math.BlockPos next = tile.getPos().offset(side);
+        if (!tile.getWorld().isBlockLoaded(next)) return false;
+        IBlockState neighbor = tile.getWorld().getBlockState(next);
+        if (!(neighbor.getBlock() instanceof BlockProgrammableWall)
+                || ((BlockProgrammableWall) neighbor.getBlock()).getShape()
+                != BlockProgrammableWall.Shape.PORTHOLE
+                || neighbor.getValue(BlockProgrammableWall.FACING)
+                != state.getValue(BlockProgrammableWall.FACING)) return false;
+        net.minecraft.tileentity.TileEntity other = tile.getWorld().getTileEntity(next);
+        return other instanceof TileEntityAnimatedScreenSelector
+                && ((TileEntityAnimatedScreenSelector) other).isJoinPortholes();
+    }
+
+    private static void wallVertex(BufferBuilder buf, TextureAtlasSprite sprite,
+            double x, double y, double z, double u, double v) {
+        buf.pos(x, y, z).tex(sprite.getInterpolatedU(u),
+                sprite.getInterpolatedV(v)).endVertex();
+    }
+
+    private static void panelRect(BufferBuilder buf, TextureAtlasSprite sprite,
+            int x0, int y0, int x1, int y1) {
+        for (int z : new int[] {6, 10}) {
+            wallVertex(buf, sprite, x0, y0, z, x0, 16 - y0);
+            wallVertex(buf, sprite, x1, y0, z, x1, 16 - y0);
+            wallVertex(buf, sprite, x1, y1, z, x1, 16 - y1);
+            wallVertex(buf, sprite, x0, y1, z, x0, 16 - y1);
+        }
+    }
+
+    private static void panelQuad(BufferBuilder buf, TextureAtlasSprite sprite,
+            int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3) {
+        for (int z : new int[] {6, 10}) {
+            wallVertex(buf, sprite, x0, y0, z, x0, 16 - y0);
+            wallVertex(buf, sprite, x1, y1, z, x1, 16 - y1);
+            wallVertex(buf, sprite, x2, y2, z, x2, 16 - y2);
+            wallVertex(buf, sprite, x3, y3, z, x3, 16 - y3);
+        }
+    }
+
+    private static void panelOuterRim(BufferBuilder buf, TextureAtlasSprite metal,
+            boolean joinLeft, boolean joinRight) {
+        for (int y : new int[] {0, 16}) {
+            wallVertex(buf, metal, 0, y, 6, 0, 0);
+            wallVertex(buf, metal, 16, y, 6, 16, 0);
+            wallVertex(buf, metal, 16, y, 10, 16, 4);
+            wallVertex(buf, metal, 0, y, 10, 0, 4);
+        }
+        for (int x : new int[] {0, 16}) {
+            if ((x == 0 && joinLeft) || (x == 16 && joinRight)) {
+                sideRim(buf, metal, x, 0, 3);
+                sideRim(buf, metal, x, 13, 16);
+            } else sideRim(buf, metal, x, 0, 16);
+        }
+    }
+
+    private static void sideRim(BufferBuilder buf, TextureAtlasSprite metal,
+            int x, int y0, int y1) {
+        wallVertex(buf, metal, x, y0, 6, 0, 16 - y0);
+        wallVertex(buf, metal, x, y0, 10, 4, 16 - y0);
+        wallVertex(buf, metal, x, y1, 10, 4, 16 - y1);
+        wallVertex(buf, metal, x, y1, 6, 0, 16 - y1);
+    }
+
+    private static void rimSegment(BufferBuilder buf, TextureAtlasSprite metal,
+            int x0, int y0, int x1, int y1) {
+        double length = Math.abs(x1 - x0) + Math.abs(y1 - y0);
+        wallVertex(buf, metal, x0, y0, 6, 0, 0);
+        wallVertex(buf, metal, x1, y1, 6, length, 0);
+        wallVertex(buf, metal, x1, y1, 10, length, 4);
+        wallVertex(buf, metal, x0, y0, 10, 0, 4);
+    }
+
+    private static void renderDiagonalWall(BufferBuilder buf,
+            TextureAtlasSprite wall, TextureAtlasSprite metal, boolean inverted) {
+        double nearBottom = inverted ? 6 : 0;
+        double nearTop = inverted ? 0 : 6;
+        for (int offset : new int[] {0, 4}) {
+            wallVertex(buf, wall, 0, 0, nearBottom + offset, 0, 16);
+            wallVertex(buf, wall, 16, 0, nearBottom + offset, 16, 16);
+            wallVertex(buf, wall, 16, 16, nearTop + offset, 16, 0);
+            wallVertex(buf, wall, 0, 16, nearTop + offset, 0, 0);
+        }
+        for (int x : new int[] {0, 16}) {
+            wallVertex(buf, metal, x, 0, nearBottom, 0, 16);
+            wallVertex(buf, metal, x, 0, nearBottom + 4, 4, 16);
+            wallVertex(buf, metal, x, 16, nearTop + 4, 4, 0);
+            wallVertex(buf, metal, x, 16, nearTop, 0, 0);
+        }
+        for (int y : new int[] {0, 16}) {
+            double near = y == 0 ? nearBottom : nearTop;
+            wallVertex(buf, metal, 0, y, near, 0, 0);
+            wallVertex(buf, metal, 16, y, near, 16, 0);
+            wallVertex(buf, metal, 16, y, near + 4, 16, 4);
+            wallVertex(buf, metal, 0, y, near + 4, 0, 4);
+        }
+    }
+
+    /** Two sloped four-pixel panels share a mitred 90 degree corner. */
+    private static void renderDiagonalCornerWall(BufferBuilder buf,
+            TextureAtlasSprite wall, TextureAtlasSprite metal, boolean inverted) {
+        double bottom = inverted ? 6 : 0;
+        double top = inverted ? 0 : 6;
+        for (int offset : new int[] {0, 4}) {
+            double xBottom = 16 - bottom - offset;
+            double xTop = 16 - top - offset;
+            double zBottom = bottom + offset;
+            double zTop = top + offset;
+            // Each face uses block coordinates for UVs, so its own complete
+            // texture spans the panel without repeating at the mitre.
+            wallVertex(buf, wall, 0, 0, zBottom, 0, 16);
+            wallVertex(buf, wall, xBottom, 0, zBottom, xBottom, 16);
+            wallVertex(buf, wall, xTop, 16, zTop, xTop, 0);
+            wallVertex(buf, wall, 0, 16, zTop, 0, 0);
+
+            wallVertex(buf, wall, xBottom, 0, zBottom, zBottom, 16);
+            wallVertex(buf, wall, xBottom, 0, 16, 16, 16);
+            wallVertex(buf, wall, xTop, 16, 16, 16, 0);
+            wallVertex(buf, wall, xTop, 16, zTop, zTop, 0);
+        }
+        for (int y : new int[] {0, 16}) {
+            double shift = y == 0 ? bottom : top;
+            double edge = 16 - shift;
+            wallVertex(buf, metal, 0, y, shift, 0, 0);
+            wallVertex(buf, metal, edge, y, shift, edge, 0);
+            wallVertex(buf, metal, edge - 4, y, shift + 4, edge - 4, 4);
+            wallVertex(buf, metal, 0, y, shift + 4, 0, 4);
+
+            wallVertex(buf, metal, edge, y, shift, shift, 0);
+            wallVertex(buf, metal, edge, y, 16, 16, 0);
+            wallVertex(buf, metal, edge - 4, y, 16, 16, 4);
+            wallVertex(buf, metal, edge - 4, y, shift + 4, shift + 4, 4);
+        }
+        wallVertex(buf, metal, 0, 0, bottom, 0, 16);
+        wallVertex(buf, metal, 0, 0, bottom + 4, 4, 16);
+        wallVertex(buf, metal, 0, 16, top + 4, 4, 0);
+        wallVertex(buf, metal, 0, 16, top, 0, 0);
+
+        wallVertex(buf, metal, 16 - bottom, 0, 16, 0, 16);
+        wallVertex(buf, metal, 12 - bottom, 0, 16, 4, 16);
+        wallVertex(buf, metal, 12 - top, 16, 16, 4, 0);
+        wallVertex(buf, metal, 16 - top, 16, 16, 0, 0);
+    }
+
+    private void renderPortholeGlass(int shade, boolean joinLeft, boolean joinRight) {
+        int left = joinLeft ? 0 : 1;
+        int right = joinRight ? 16 : 15;
+        bindTexture(new ResourceLocation(VandorLabs.MODID,
+                "textures/blocks/space_doors/medium/glass_tile.png"));
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        GlStateManager.alphaFunc(GL11.GL_GREATER, .003F);
+        GlStateManager.depthMask(false);
+        GlStateManager.color(1F, 1F, 1F, 1F);
+        BufferBuilder buf = Tessellator.getInstance().getBuffer();
+        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        for (int depth : new int[] {7, 9}) {
+            buf.pos(left, 3, depth).tex(left / 16D, 13 / 16D).endVertex();
+            buf.pos(right, 3, depth).tex(right / 16D, 13 / 16D).endVertex();
+            buf.pos(right, 13, depth).tex(right / 16D, 3 / 16D).endVertex();
+            buf.pos(left, 13, depth).tex(left / 16D, 3 / 16D).endVertex();
+        }
+        Tessellator.getInstance().draw();
+        if (shade != 0) {
+            GlStateManager.disableTexture2D();
+            if (shade == 1) GlStateManager.color(.20F, .85F, .95F, .0513F);
+            else GlStateManager.color(.10F, .12F, .16F, .1754F);
+            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+            for (int depth : new int[] {7, 9}) {
+                buf.pos(left, 3, depth).endVertex();
+                buf.pos(right, 3, depth).endVertex();
+                buf.pos(right, 13, depth).endVertex();
+                buf.pos(left, 13, depth).endVertex();
+            }
+            Tessellator.getInstance().draw();
+            GlStateManager.enableTexture2D();
+        }
+        GlStateManager.color(1F, 1F, 1F, 1F);
+        GlStateManager.depthMask(true);
+        GlStateManager.alphaFunc(GL11.GL_GREATER, .1F);
+        GlStateManager.disableBlend();
+        bindAtlas();
     }
 
     /** Full solid half-cube wedge used by the standalone diagonal display. */
