@@ -145,7 +145,9 @@ final class CopyCompatibilityRuntimeChecks {
                     sources[i] = origin.offset(along, i);
                     targets[i] = sources[i].offset(face);
                     world.setBlockState(sources[i], blocks[b].getDefaultState()
-                            .withProperty(BlockAnimatedScreenSelector.FACING,
+                            .withProperty(blocks[b] instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                                    ? com.vandorlabs.blocks.BlockProgrammableWall.FACING
+                                    : BlockAnimatedScreenSelector.FACING,
                                     EnumFacing.HORIZONTALS[i]), 2);
                     TileEntityAnimatedScreenSelector tile =
                             (TileEntityAnimatedScreenSelector) world.getTileEntity(sources[i]);
