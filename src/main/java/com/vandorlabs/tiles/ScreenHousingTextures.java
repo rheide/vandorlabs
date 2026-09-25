@@ -22,12 +22,10 @@ public final class ScreenHousingTextures {
     };
 
     public static final int INDUSTRIAL_BLOCK = 9;
-    private static final int LEGACY_ENGINE_SIDE = 20;
 
     private ScreenHousingTextures() { }
 
     public static int clamp(int choice) {
-        if (choice == LEGACY_ENGINE_SIDE) return INDUSTRIAL_BLOCK;
         return choice >= 0 && choice < IDS.length ? choice : 0;
     }
 
