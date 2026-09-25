@@ -1140,7 +1140,7 @@ public class ReproLab {
                                         : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM), 2);
                 ((TileEntityAnimatedScreenSelector) world.getTileEntity(at))
                         .setHousingTexture(i == 2 || i == 5
-                                ? com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1
+                                ? com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 2
                                 : i % 3);
             }
         } else if (shot.equals("gallery_structure")) {
@@ -1150,7 +1150,7 @@ public class ReproLab {
                     "border_light", "border_light_vertical", "framed_wall_pipes",
                     "wall_pipes", "stitched_padding", "seamed_padding",
                     "ribbed_padding", "cushion_padding", "border_light",
-                    "vent_grille", "light_alloy_hull",
+                    "matter", "light_alloy_hull",
                     "dark_gunmetal_hull", "midnight_matte_hull", "midnight_satin_hull",
                     "bluegray", "burgundy",
                     "metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
