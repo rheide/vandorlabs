@@ -1,0 +1,27 @@
+# Requested work
+
+A couple of things I'd like you to fix in this Minecraft 1.12.2 Forge mod, commit these as you go along, only test at the end. Any post-testing fixes should be new commits. 
+
+- Let's delete tile.vandorlabs.vent_grille.name from the Programmable Block texture list (and from other blocks too if they use it).
+- I added img/configurizer_low.png which I'd like you add as an item. When used as a tool in the hotbar, this tool will open the shift-right-click menu, both in survival and in creative mode. (unlike shift-right-clicking directly which only works in creative mode).
+- Programmable Light: this needs a list to select the side texture as well just like the Programmable Screen blocks and others.
+- Door placement: our Programmable Glass and Programmable Wall blocks allow placement at either edge of a block or in the center depending on where you click. I want door placement to work the same way rather than having to select it in the door dialog. Remove the placement option from the dialog.
+- Block renames: Ion Drive / Impulse Engine / Plasma Vent / Rocket Thruster: drop "90 degree" from "90 degree wedge", drop "Full Face" from the names, Rename Rocket Thruster to Rocket Thruster - Hexagonal, rename Classic Rocket to Rocket Thruster. No remap, change block ids as well.
+- Ion Drive / Impulse Engine / Plasma Vent / Rocket Thruster: the full-block versions of these have Join behavior when they're placed 2x2 or 3x3 etc. - let's make that behavior an option in their dialog (just like other programmable blocks that have this option), default turned on.
+- Ion Drive / Impulse Engine / Plasma Vent / Rocket Thruster: for both wedge, hexagonal and full block variants, let's make the side texture configurable like with the Programmable Screen/Console etc. blocks - a list of textures selectable from a list.
+- I added matter.png, matter_amber.png, matter_cyan.png, matter_red.png to img/, let's add these as textures to the Programmable Block, Programmable Slab, Wall, Diagonal Wall, Screen sides etc. as options. 
+- Let's add a new block called Programmable Trigger Block. This will function the same as the Programmable Block with the same list of textures, except it will have two texture lists: one for when redstone signal is off and one for when it's on. Should also have the Redstone Channel textfield like the other dialogs.
+- I added a img/logo_on_off.png which I want to add to the list of Programmable Light textures. Left side of the image is on, Right side is off. May need to split into separate textures.
+
+Below are more complex features that we should test individually before proceeding to the next task. Commit incrementally as you go along. I would also like you to start incrementing the modpack (minor) version for each of these, and I would like you to copy each version build to ~/LLMShareDrive.
+
+- Programmable Ramp: this block needs to be able to work with Programmable Slabs and Programmable Blocks (but no other types of 'Programmable' blocks)
+- Programmable Porthole: the Hexagon boundaries of 2x2 joined blocks are different from the single block: the top and bottom edges of the hexagon seem closer to the edge for the 2x2. We should keep the same distances from each edge when joining blocks.
+- Programmable Porthole: can we make the shape configurable in the dialog? I want Hexagon, Octagon, Square, and Round (but minecraft pixelated round, not smooth round)
+- Programmable Chair: can we add an option to adjust the height of the chair in the dialog? This should adjust the height of the base post below the seat. Let's add low, middle, high options, -2, 0, +2 minecraft pixels.
+- Programmable Door: we currently have an option to toggle Bare/Framed. Can we add the same shape options as we did for the Programmable Porthole: Hexagon, Octagon, Square (current) and Round (minecraft pixelated round). Note that this should take into account joined doors / adjacent door blocks, and that there may be more than two of the same door next to each other.
+- Programmable Glass and Programmable Wall (and Porthole): we currently have three placement positions: near edge of block, far edge of block, and center of block. Is it possible to add a dual placement option just for near/far, so that if the block already has a near wall/glass, right-clicking on the far edge allows us to place another of the same kind? (and vice versa). Do this only if not too complex. We don't want to include middle placement in this, or middle+far, don't do that. And each side does not have to be individually configurable. If that seems reasonable, include the Porthole block in this as well.
+
+# Status and findings
+
+- 2026-09-25: Recorded the request. Repository starts clean on `master`; implementation inspection is in progress. Initial feature group awaits end-of-group testing. Later features require a versioned build and separate test before the next feature.
