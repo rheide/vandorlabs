@@ -659,6 +659,22 @@ public class ReproLab {
             case 20:
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"programmable_trigger_gui");
+                mc.displayGuiScreen(null);
+                for (int slot = 0; slot < 9; slot++) {
+                    ItemStack chair = new ItemStack(ModBlocks.PROGRAMMABLE_CHAIR);
+                    net.minecraft.nbt.NBTTagCompound settings = new net.minecraft.nbt.NBTTagCompound();
+                    settings.setInteger("ChairStyle", slot % 5);
+                    settings.setInteger("ChairHeight", slot < 5 ? 2 : slot < 7 ? 0 : 1);
+                    chair.setTagInfo("BlockEntityTag", settings);
+                    mc.player.inventory.setInventorySlotContents(slot, chair);
+                }
+                mc.player.inventory.currentItem = 0;
+                state = 21;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 21:
+                if (--holdTicks > 0) break;
+                saveNamed(mc,"chair_item_hotbar_and_hand");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;
