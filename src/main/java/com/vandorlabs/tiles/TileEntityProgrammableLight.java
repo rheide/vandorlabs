@@ -27,13 +27,22 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
 
     public void configure(int selectedTexture, int selectedLevel, boolean selectedJoin,
             int selectedChannel) {
+        configure(selectedTexture, selectedLevel, selectedJoin, selectedChannel,
+                getHousingTexture());
+    }
+
+    public void configure(int selectedTexture, int selectedLevel, boolean selectedJoin,
+            int selectedChannel, int selectedHousing) {
         int nextTexture = ProgrammableLightTextures.clamp(selectedTexture);
         int nextLevel = Math.max(0, Math.min(15, selectedLevel));
+        int nextHousing = ScreenHousingTextures.clamp(selectedHousing);
         if (texture == nextTexture && lightLevel == nextLevel && join == selectedJoin
-                && getRedstoneChannel() == selectedChannel) return;
+                && getRedstoneChannel() == selectedChannel
+                && getHousingTexture() == nextHousing) return;
         texture = nextTexture;
         lightLevel = nextLevel;
         join = selectedJoin;
+        setHousingTexture(nextHousing);
         if (getRedstoneChannel() != selectedChannel) setRedstoneChannel(selectedChannel);
         else changed();
     }

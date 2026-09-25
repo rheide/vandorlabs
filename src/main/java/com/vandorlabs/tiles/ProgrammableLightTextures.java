@@ -3,7 +3,7 @@ package com.vandorlabs.tiles;
 /** The five artwork choices shared by the light menu and renderer. */
 public final class ProgrammableLightTextures {
     public static final String[] IDS = {
-            "porthole", "light_column_wall", "slatted_lamp", "window_lamp", "lightbar_wall"
+            "porthole", "light_column_wall", "slatted_lamp", "window_lamp", "lightbar_wall", "logo"
     };
 
     private ProgrammableLightTextures() { }

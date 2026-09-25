@@ -416,6 +416,7 @@ tile.vandorlabs.programmable_door.name=Programmable Door
 
 tile.vandorlabs.programmable_light.name=Programmable Light
 gui.vandorlabs.light.title=Programmable Light
+tile.vandorlabs.logo.name=Vandor Logo
 gui.vandorlabs.light.preview=Preview
 gui.vandorlabs.light.level=Light Level
 gui.vandorlabs.light.join=Join Adjacent Lights
