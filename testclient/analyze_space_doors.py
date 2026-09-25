@@ -25,8 +25,11 @@ for name,image in shapes.items():
                 for r,g,b in getattr(image,'get_flattened_data',image.getdata)())
     assert missing<20,f'{name}: missing door shape texture'
     if name!='square':
-        difference=sum(ImageStat.Stat(ImageChops.difference(image,shapes['square'])).mean)/3
-        assert difference>.01,f'{name}: door shape did not change rendered pixels'
+        w,h=image.size
+        door_box=(int(w*.37),int(h*.37),int(w*.58),int(h*.63))
+        difference=sum(ImageStat.Stat(ImageChops.difference(
+            image.crop(door_box),shapes['square'].crop(door_box))).mean)/3
+        assert difference>.1,f'{name}: door shape did not change rendered door pixels'
 hinges=[Image.open(root/f'shot_gallery_space_config_hinges_{mode}.png').convert('RGB') for mode in ('on','off')]
 assert sum(ImageStat.Stat(ImageChops.difference(*hinges)).mean)>.01,'hinge toggle has no rendered effect'
 for image in hinges+[Image.open(root/'shot_gallery_space_glass.png').convert('RGB')]:

@@ -274,8 +274,10 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void doorMaskVertex(BufferBuilder buffer,TextureAtlasSprite sprite,
             double x,double y,double z) {
-        buffer.pos(x,y,z).tex(sprite.getInterpolatedU(4+x/4),
-                sprite.getInterpolatedV(4+y/8)).endVertex();
+        // The atlas centre is transparent artwork padding. Its narrow metal
+        // strip is the same opaque material used by the generated frame sides.
+        buffer.pos(x,y,z).tex(sprite.getInterpolatedU(.16+x*.0075),
+                sprite.getInterpolatedV(4+y*.00375)).endVertex();
     }
 
     private static void renderSpaceDoorControlPanel(com.vandorlabs.tiles.TileEntitySpaceDoor tile,
