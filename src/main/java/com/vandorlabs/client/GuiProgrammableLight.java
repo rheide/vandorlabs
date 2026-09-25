@@ -27,6 +27,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     private int level;
     private boolean join;
     private int housing;
+    private int trigger;
     private HousingTextureList housingList;
     private GuiTextField channelField;
     private boolean draggingLevel;
@@ -39,6 +40,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         level = tile.getLightLevel();
         join = tile.isJoin();
         housing = tile.getHousingTexture();
+        trigger = tile.getTrigger();
         xSize = 420;
         ySize = 240;
     }
@@ -54,14 +56,21 @@ public final class GuiProgrammableLight extends GuiContainer {
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
         housingList = new HousingTextureList(guiLeft + 252, guiTop + 40, 148, housing);
         buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 214,
-                196, 20, joinLabel()));
-        buttonList.add(new GuiButton(100, guiLeft + 212, guiTop + 214,
-                196, 20, I18n.format("gui.done")));
+                96, 20, joinLabel()));
+        buttonList.add(new GuiButton(102, guiLeft + 112, guiTop + 214,
+                184, 20, triggerLabel()));
+        buttonList.add(new GuiButton(100, guiLeft + 300, guiTop + 214,
+                108, 20, I18n.format("gui.done")));
     }
 
     private String joinLabel() {
-        return I18n.format("gui.vandorlabs.light.join") + ": "
+        return "Join: "
                 + (join ? I18n.format("options.on") : I18n.format("options.off"));
+    }
+
+    private String triggerLabel() {
+        return trigger == 1 ? "Trigger: Redstone ON"
+                : trigger == 2 ? "Trigger: Redstone OFF" : "Trigger: Disabled";
     }
 
     private int channel() {
@@ -76,9 +85,9 @@ public final class GuiProgrammableLight extends GuiContainer {
     private void send() {
         int channel = channel();
         if (channel < 0) return;
-        tile.configure(selected, level, join, channel, housing);
+        tile.configure(selected, level, join, channel, housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
-                tile.getPos(), selected, level, join, channel, housing));
+                tile.getPos(), selected, level, join, channel, housing, trigger));
     }
 
     private void setLevelFromMouse(int mouseX) {
@@ -146,6 +155,11 @@ public final class GuiProgrammableLight extends GuiContainer {
         if (button.id == 101) {
             join = !join;
             button.displayString = joinLabel();
+            send();
+        }
+        if (button.id == 102) {
+            trigger = (trigger + 1) % 3;
+            button.displayString = triggerLabel();
             send();
         }
         if (button.id == 100) {

@@ -50,7 +50,7 @@ public final class BlockProgrammableLight extends BlockAnimatedScreenSelector {
                             pos.getX(), pos.getY(), pos.getZ());
                 } else {
                     TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
-                    if (light.getRedstoneChannel() > 0) return true;
+                    if (!light.isManual()) return true;
                     boolean next = !light.isOn();
                     for (BlockPos member : ProgrammableLightConnections.members(light, state)) {
                         TileEntity other = world.getTileEntity(member);

@@ -19,6 +19,7 @@ public final class MessageProgrammableLight implements IMessage {
     private boolean join;
     private int channel;
     private int housing;
+    private int trigger;
 
     public MessageProgrammableLight() { }
     public MessageProgrammableLight(BlockPos pos, int texture, int level,
@@ -28,12 +29,19 @@ public final class MessageProgrammableLight implements IMessage {
 
     public MessageProgrammableLight(BlockPos pos, int texture, int level,
             boolean join, int channel, int housing) {
+        this(pos, texture, level, join, channel, housing,
+                com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED);
+    }
+
+    public MessageProgrammableLight(BlockPos pos, int texture, int level,
+            boolean join, int channel, int housing, int trigger) {
         this.pos = pos;
         this.texture = texture;
         this.level = level;
         this.join = join;
         this.channel = channel;
         this.housing = housing;
+        this.trigger = trigger;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
@@ -42,6 +50,7 @@ public final class MessageProgrammableLight implements IMessage {
         join = buf.readBoolean();
         channel = buf.readInt();
         housing = buf.readInt();
+        trigger = buf.readInt();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -50,13 +59,15 @@ public final class MessageProgrammableLight implements IMessage {
         buf.writeBoolean(join);
         buf.writeInt(channel);
         buf.writeInt(housing);
+        buf.writeInt(trigger);
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableLight, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableLight msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.pos == null || msg.texture < 0
+                if (msg.pos == null || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(msg.trigger)
+                        || msg.texture < 0
                         || msg.texture >= com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length
                         || msg.housing < 0
                         || msg.housing >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length
@@ -73,7 +84,7 @@ public final class MessageProgrammableLight implements IMessage {
                         || player.world.getBlockState(msg.pos).getBlock()
                         != ModBlocks.PROGRAMMABLE_LIGHT) return;
                 ((TileEntityProgrammableLight) tile).configure(
-                        msg.texture, msg.level, msg.join, msg.channel, msg.housing);
+                        msg.texture, msg.level, msg.join, msg.channel, msg.housing, msg.trigger);
             });
             return null;
         }

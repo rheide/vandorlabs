@@ -33,6 +33,7 @@ final class RedstoneChannelRuntimeChecks {
     private RedstoneChannelRuntimeChecks() { }
 
     static void run(World world, EntityPlayer player) {
+        checkLightTriggers(world, player);
         checkTrianglePlacement(world, player);
         checkLeverPlacement(world,player);
         checkFloorLeverPower(world,player);
@@ -164,6 +165,56 @@ final class RedstoneChannelRuntimeChecks {
         world.setBlockToAir(doorPos.down());
         world.setBlockToAir(propulsionPos);
         System.out.println("[vandorlabs][reprolab] redstone-channel-runtime PASS");
+    }
+
+    private static void checkLightTriggers(World world, EntityPlayer player) {
+        BlockPos pos = new BlockPos(26, 240, 26), sourcePos = pos.east(4);
+        Block block = com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_LIGHT;
+        world.setBlockState(pos, block.getDefaultState(), 3);
+        world.setBlockState(sourcePos, block.getDefaultState(), 3);
+        com.vandorlabs.tiles.TileEntityProgrammableLight light =
+                (com.vandorlabs.tiles.TileEntityProgrammableLight) world.getTileEntity(pos);
+        com.vandorlabs.tiles.TileEntityProgrammableLight source =
+                (com.vandorlabs.tiles.TileEntityProgrammableLight) world.getTileEntity(sourcePos);
+        source.setRedstoneChannel(4279);
+        light.setOn(false);
+        try {
+            for (boolean remote : new boolean[]{false, true}) {
+                BlockPos power = (remote ? sourcePos : pos).up();
+                for (int trigger = 0; trigger < 3; trigger++) {
+                    light.configure(0, 11, true, remote ? 4279 : 0, 9, trigger);
+                    for (boolean powered : new boolean[]{false, true, false}) {
+                        world.setBlockState(power, powered ? Blocks.REDSTONE_BLOCK.getDefaultState()
+                                : Blocks.AIR.getDefaultState(), 3);
+                        boolean expected = trigger == 1 ? powered : trigger == 2 && !powered;
+                        require(light.isOn() == expected && block.getLightValue(
+                                        world.getBlockState(pos), world, pos) == (expected ? 11 : 0),
+                                "Light trigger/emission mismatch: " + trigger + "/" + remote + "/" + powered);
+                        if (trigger != 0) {
+                            light.setOn(!expected);
+                            require(light.isOn() == expected, "manual click overrode Light trigger");
+                        }
+                    }
+                    NBTTagCompound saved = light.writeToNBT(new NBTTagCompound());
+                    com.vandorlabs.tiles.TileEntityProgrammableLight restored =
+                            new com.vandorlabs.tiles.TileEntityProgrammableLight();
+                    restored.readFromNBT(saved);
+                    require(restored.getTrigger() == trigger, "Light trigger did not persist");
+                    ItemStack picked = block.getPickBlock(world.getBlockState(pos), null, world, pos, player);
+                    require(picked.getSubCompound("BlockEntityTag").getInteger("LightTrigger") == trigger,
+                            "Light trigger missing from picked item");
+                }
+                world.setBlockToAir(power);
+            }
+            light.configure(0, 11, true, 4279, 9, 0);
+            light.setOn(true);
+            require(light.isOn(), "Disabled Light trigger prevented manual switching with a channel");
+        } finally {
+            world.setBlockToAir(pos.up());
+            world.setBlockToAir(sourcePos.up());
+            world.setBlockToAir(pos);
+            world.setBlockToAir(sourcePos);
+        }
     }
 
     private static void checkPickedChannels(World world,EntityPlayer player) {

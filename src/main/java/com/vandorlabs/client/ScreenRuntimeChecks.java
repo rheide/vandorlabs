@@ -177,7 +177,7 @@ final class ScreenRuntimeChecks {
                             player.world.getTileEntity(east)).isOn(),
                     "Join Off right click switched a neighboring light");
             first.setOn(true);
-            first.configure(3, 7, true, 4271);
+            first.configure(3, 7, true, 4271, first.getHousingTexture(), 1);
             require(!first.isOn() && ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
                             player.world.getBlockState(origin), player.world, origin) == 0,
                     "unpowered channel light remained on");
@@ -200,7 +200,8 @@ final class ScreenRuntimeChecks {
             require(saved != null && saved.getInteger("LightTexture") == 3
                             && saved.getInteger("LightLevel") == 7
                             && saved.getBoolean("LightJoin")
-                            && saved.getInteger("RedstoneChannel") == 4271,
+                            && saved.getInteger("RedstoneChannel") == 4271
+                            && saved.getInteger("LightTrigger") == 1,
                     "creative pick lost programmable light configuration");
             String pickedSprite = com.vandorlabs.tiles.ProgrammableLightTextures.texture(3,
                     first.isOn() && first.getLightLevel() > 0);
@@ -217,7 +218,8 @@ final class ScreenRuntimeChecks {
                     (com.vandorlabs.tiles.TileEntityProgrammableLight)
                     player.world.getTileEntity(copyPos);
             require(copy != null && copy.getTexture() == 3 && copy.getLightLevel() == 7
-                            && copy.isJoin() && copy.getRedstoneChannel() == 4271,
+                            && copy.isJoin() && copy.getRedstoneChannel() == 4271
+                            && copy.getTrigger() == 1,
                     "placed programmable light did not restore its configuration");
             for (EnumFacing facing : new EnumFacing[]{EnumFacing.UP, EnumFacing.DOWN}) {
                 BlockPos plane = origin.add(0, 0, 4);
