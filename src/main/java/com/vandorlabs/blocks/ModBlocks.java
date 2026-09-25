@@ -591,16 +591,24 @@ public class ModBlocks {
 
     @SideOnly(Side.CLIENT)
     private static void registerChairItemModels(Item item) {
-        ResourceLocation[] variants = new ResourceLocation[BlockBridgeChair.Style.values().length];
-        for (int i = 0; i < variants.length; i++)
-            variants[i] = new ResourceLocation(VandorLabs.MODID,
-                    "configured/programmable_chair_" + BlockBridgeChair.Style.byIndex(i).id);
+        ResourceLocation[] variants = new ResourceLocation[
+                BlockBridgeChair.Style.values().length * BlockBridgeChair.Height.values().length];
+        for (int style = 0; style < BlockBridgeChair.Style.values().length; style++)
+            for (int height = 0; height < BlockBridgeChair.Height.values().length; height++) {
+                String name = "configured/programmable_chair_"
+                        + BlockBridgeChair.Style.byIndex(style).id;
+                if (height != 1)
+                    name += "_" + BlockBridgeChair.Height.byIndex(height).getName();
+                variants[style * 3 + height] = new ResourceLocation(VandorLabs.MODID, name);
+            }
         ModelLoader.registerItemVariants(item, variants);
         ModelLoader.setCustomMeshDefinition(item, stack -> {
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int style = tag == null ? 0 : tag.getInteger("ChairStyle");
+            int height = tag == null || !tag.hasKey("ChairHeight", 3)
+                    ? 1 : tag.getInteger("ChairHeight");
             return new ModelResourceLocation(variants[BlockBridgeChair.Style.byIndex(style)
-                    .ordinal()], "inventory");
+                    .ordinal() * 3 + BlockBridgeChair.Height.byIndex(height).ordinal()], "inventory");
         });
     }
 

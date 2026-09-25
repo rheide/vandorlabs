@@ -38,6 +38,14 @@ public class EntityChairSeat extends Entity {
 
     public BlockPos getChairPos() { return chairPos; }
 
+    public void setSeatY(double seatY) {
+        if (chairPos == null) return;
+        setPosition(chairPos.getX() + 0.5D,
+                chairPos.getY() + seatY + 0.35D - RIDER_PELVIS_OFFSET,
+                chairPos.getZ() + 0.5D);
+        for (Entity passenger : getPassengers()) updatePassenger(passenger);
+    }
+
     @Override protected void entityInit() { }
 
     @Override

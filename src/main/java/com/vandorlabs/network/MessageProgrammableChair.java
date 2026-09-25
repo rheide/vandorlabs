@@ -14,21 +14,24 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public final class MessageProgrammableChair implements IMessage {
     private BlockPos pos;
     private int style;
+    private int height;
     public MessageProgrammableChair() { }
-    public MessageProgrammableChair(BlockPos pos, int style) {
-        this.pos = pos; this.style = style;
+    public MessageProgrammableChair(BlockPos pos, int style, int height) {
+        this.pos = pos; this.style = style; this.height = height;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong()); style = buf.readInt();
+        height = buf.readInt();
     }
     @Override public void toBytes(ByteBuf buf) {
-        buf.writeLong(pos.toLong()); buf.writeInt(style);
+        buf.writeLong(pos.toLong()); buf.writeInt(style); buf.writeInt(height);
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableChair, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableChair msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || msg.style < 0 || msg.style >= 5
+                        || msg.height < 0 || msg.height > 2
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerProgrammableChair)
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) return;
@@ -40,6 +43,7 @@ public final class MessageProgrammableChair implements IMessage {
                         || player.world.getBlockState(msg.pos).getBlock()
                         != ModBlocks.PROGRAMMABLE_CHAIR) return;
                 ((TileEntityProgrammableChair) raw).setStyle(msg.style);
+                ((TileEntityProgrammableChair) raw).setHeight(msg.height);
             });
             return null;
         }

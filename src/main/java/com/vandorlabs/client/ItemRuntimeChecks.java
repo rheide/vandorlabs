@@ -165,6 +165,15 @@ final class ItemRuntimeChecks {
         require(mc.getRenderItem().getItemModelMesher().getItemModel(chairA)
                         != mc.getRenderItem().getItemModelMesher().getItemModel(chairB),
                 "programmable chair hotbar model does not follow selected style");
+        ItemStack chairLow = chairA.copy();
+        net.minecraft.nbt.NBTTagCompound lowTag = new net.minecraft.nbt.NBTTagCompound();
+        lowTag.setInteger("ChairHeight", 0);
+        chairLow.setTagInfo("BlockEntityTag", lowTag);
+        require(mc.getRenderItem().getItemModelMesher().getItemModel(chairA)
+                        != mc.getRenderItem().getItemModelMesher().getItemModel(chairLow)
+                        && mc.getRenderItem().getItemModelMesher().getItemModel(chairLow)
+                        != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
+                "programmable chair hotbar model does not follow selected height");
         ItemStack doorA = new ItemStack(Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "programmable_door")));
         ItemStack doorB = doorA.copy();

@@ -17,13 +17,16 @@ import java.io.IOException;
 public final class GuiProgrammableChair extends GuiContainer {
     private final TileEntityProgrammableChair tile;
     private int selected;
+    private int height;
+    private static final String[] HEIGHTS = {"Low (-2 px)", "Middle", "High (+2 px)"};
 
     public GuiProgrammableChair(TileEntityProgrammableChair tile) {
         super(new ContainerProgrammableChair(tile));
         this.tile = tile;
         this.selected = tile.getStyle();
+        this.height = tile.getHeight();
         xSize = 256;
-        ySize = 180;
+        ySize = 210;
     }
 
     @Override public void initGui() {
@@ -34,15 +37,29 @@ public final class GuiProgrammableChair extends GuiContainer {
             buttonList.add(new GuiButton(i, guiLeft + 14, guiTop + 25 + i * 24,
                     126, 20, I18n.format("gui.vandorlabs.chair." + id)));
         }
-        buttonList.add(new GuiButton(10, guiLeft + 154, guiTop + 145, 88, 20,
+        buttonList.add(new GuiButton(11, guiLeft + 14, guiTop + 151, 126, 20,
+                heightLabel()));
+        buttonList.add(new GuiButton(10, guiLeft + 154, guiTop + 175, 88, 20,
                 I18n.format("gui.done")));
+    }
+
+    private String heightLabel() { return "Height: " + HEIGHTS[height]; }
+
+    private void sendSettings() {
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableChair(
+                tile.getPos(), selected, height));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id >= 0 && button.id < 5) {
             selected = button.id;
             tile.setStyle(selected);
-            PacketHandler.INSTANCE.sendToServer(new MessageProgrammableChair(tile.getPos(), selected));
+            sendSettings();
+        } else if (button.id == 11) {
+            height = (height + 1) % HEIGHTS.length;
+            tile.setHeight(height);
+            button.displayString = heightLabel();
+            sendSettings();
         } else if (button.id == 10) mc.displayGuiScreen(null);
     }
 
@@ -56,6 +73,7 @@ public final class GuiProgrammableChair extends GuiContainer {
         ItemStack preview = new ItemStack(ModBlocks.PROGRAMMABLE_CHAIR);
         NBTTagCompound data = new NBTTagCompound();
         data.setInteger("ChairStyle", selected);
+        data.setInteger("ChairHeight", height);
         preview.setTagInfo("BlockEntityTag", data);
         net.minecraft.client.renderer.GlStateManager.pushMatrix();
         net.minecraft.client.renderer.GlStateManager.translate(guiLeft + 169,

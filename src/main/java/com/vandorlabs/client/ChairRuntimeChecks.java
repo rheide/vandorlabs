@@ -21,6 +21,7 @@ public final class ChairRuntimeChecks {
         String[] roles={"command","companion","operator","conference","mess_hall"};
         BlockPos pos = new BlockPos(18, 4, 18);
         for (int style = 0; style < roles.length; style++) {
+          for (int height = 0; height < 3; height++) {
             String role = roles[style];
             BlockBridgeChair chair = (BlockBridgeChair) ModBlocks.PROGRAMMABLE_CHAIR;
             world.setBlockToAir(pos.up());
@@ -31,14 +32,23 @@ public final class ChairRuntimeChecks {
             world.setBlockState(pos, lower, 2);
             world.setBlockState(pos.up(), lower.withProperty(
                     BlockBridgeChair.UPPER, true), 2);
-            ((TileEntityProgrammableChair) world.getTileEntity(pos)).setStyle(style);
+            TileEntityProgrammableChair tile = (TileEntityProgrammableChair) world.getTileEntity(pos);
+            tile.setStyle(style);
+            tile.setHeight(height);
             require(chair.getActualState(lower, world, pos).getValue(BlockBridgeChair.STYLE)
-                            == BlockBridgeChair.Style.byIndex(style),
+                            == BlockBridgeChair.Style.byIndex(style)
+                            && chair.getActualState(lower, world, pos).getValue(BlockBridgeChair.HEIGHT)
+                            == BlockBridgeChair.Height.byIndex(height),
                     role + " model selection was not applied");
+            TileEntityProgrammableChair restored = new TileEntityProgrammableChair();
+            restored.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));
+            require(restored.getStyle() == style && restored.getHeight() == height,
+                    role + " height was not saved");
             net.minecraft.item.ItemStack copied = chair.getPickBlock(lower, null,
                     world, pos, player);
             require(copied.getSubCompound("BlockEntityTag") != null
-                            && copied.getSubCompound("BlockEntityTag").getInteger("ChairStyle") == style,
+                            && copied.getSubCompound("BlockEntityTag").getInteger("ChairStyle") == style
+                            && copied.getSubCompound("BlockEntityTag").getInteger("ChairHeight") == height,
                     role + " middle-click copy lost style");
             require(chair.onBlockActivated(world, pos, lower, player,
                     EnumHand.MAIN_HAND, EnumFacing.UP, 0.5F, 0.5F, 0.5F),
@@ -49,13 +59,14 @@ public final class ChairRuntimeChecks {
             seat.updatePassenger(player);
             double seatPixels=role.equals("mess_hall")?10
                     :role.equals("companion") || role.equals("conference")?11:12;
-            require(Math.abs(player.posY - (pos.getY() + seatPixels / 16.0D
+            require(Math.abs(player.posY - (pos.getY() + (seatPixels + (height - 1) * 2) / 16.0D
                             - EntityChairSeat.RIDER_PELVIS_OFFSET)) < 0.01D,
                     role + " rider pelvis does not match model cushion marker");
             player.dismountRidingEntity();
             world.setBlockToAir(pos);
             require(seat.isDead, "breaking " + role + " chair did not clean up seat entity");
             world.setBlockToAir(pos.up());
+          }
         }
         System.out.println("[vandorlabs][reprolab] chair-runtime PASS");
     }

@@ -49,18 +49,29 @@ public class BlockBridgeChair extends BlockVandorDirectional {
         }
     }
     public static final PropertyEnum<Style> STYLE = PropertyEnum.create("style", Style.class);
+    public enum Height implements IStringSerializable {
+        LOW("low"), MIDDLE("middle"), HIGH("high");
+        private final String id;
+        Height(String id) { this.id = id; }
+        @Override public String getName() { return id; }
+        public static Height byIndex(int index) {
+            return values()[Math.max(0, Math.min(2, index))];
+        }
+    }
+    public static final PropertyEnum<Height> HEIGHT = PropertyEnum.create("height", Height.class);
 
     public BlockBridgeChair() {
         super("programmable_chair");
         setDefaultState(this.blockState.getBaseState()
                 .withProperty(FACING, EnumFacing.SOUTH)
-                .withProperty(UPPER, false).withProperty(STYLE, Style.COMMAND));
+                .withProperty(UPPER, false).withProperty(STYLE, Style.COMMAND)
+                .withProperty(HEIGHT, Height.MIDDLE));
         setLightOpacity(0);
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, UPPER, STYLE);
+        return new BlockStateContainer(this, FACING, UPPER, STYLE, HEIGHT);
     }
 
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
@@ -78,7 +89,8 @@ public class BlockBridgeChair extends BlockVandorDirectional {
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess world,
             BlockPos pos) {
         TileEntityProgrammableChair tile = settings(world, pos, state);
-        return state.withProperty(STYLE, Style.byIndex(tile == null ? 0 : tile.getStyle()));
+        return state.withProperty(STYLE, Style.byIndex(tile == null ? 0 : tile.getStyle()))
+                .withProperty(HEIGHT, Height.byIndex(tile == null ? 1 : tile.getHeight()));
     }
 
     @Override
@@ -103,7 +115,11 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             world.setBlockState(pos.up(), state.withProperty(UPPER, true), 3);
             TileEntityProgrammableChair tile = settings(world, pos, state);
             NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
-            if (tile != null && tag != null) tile.setStyle(tag.getInteger("ChairStyle"));
+            if (tile != null && tag != null) {
+                tile.setStyle(tag.getInteger("ChairStyle"));
+                tile.setHeight(tag.hasKey("ChairHeight", 3)
+                        ? tag.getInteger("ChairHeight") : 1);
+            }
         }
     }
 
@@ -150,7 +166,8 @@ public class BlockBridgeChair extends BlockVandorDirectional {
         }
         TileEntityProgrammableChair tile = settings(world, pos, state);
         EntityChairSeat seat = new EntityChairSeat(world, lower,
-                Style.byIndex(tile == null ? 0 : tile.getStyle()).seatY);
+                Style.byIndex(tile == null ? 0 : tile.getStyle()).seatY
+                        + (tile == null ? 0 : tile.getHeightOffsetPixels() / 16D));
         IBlockState lowerState = world.getBlockState(lower);
         seat.rotationYaw = lowerState.getValue(FACING).getHorizontalAngle();
         if (world.spawnEntity(seat)) player.startRiding(seat, true);
@@ -189,7 +206,8 @@ public class BlockBridgeChair extends BlockVandorDirectional {
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
             BlockPos pos) {
         TileEntityProgrammableChair tile = settings(world, pos, state);
-        double height = Style.byIndex(tile == null ? 0 : tile.getStyle()).height;
+        double height = Style.byIndex(tile == null ? 0 : tile.getStyle()).height
+                + (tile == null ? 0 : tile.getHeightOffsetPixels() / 16D);
         return state.getValue(UPPER)
                 ? new AxisAlignedBB(0, 0, 0, 1, Math.max(0.05D, height - 1.0D), 1)
                 : FULL_BLOCK_AABB;
@@ -202,6 +220,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
         if (tile != null) {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("ChairStyle", tile.getStyle());
+            tag.setInteger("ChairHeight", tile.getHeight());
             stack.setTagInfo("BlockEntityTag", tag);
         }
         return stack;
@@ -214,6 +233,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
         if (tile != null) {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("ChairStyle", tile.getStyle());
+            tag.setInteger("ChairHeight", tile.getHeight());
             stack.setTagInfo("BlockEntityTag", tag);
         }
         drops.add(stack);
