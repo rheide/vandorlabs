@@ -675,6 +675,16 @@ public class ReproLab {
             case 21:
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"chair_item_hotbar_and_hand");
+                BlockPos thrusterGui = CONSOLE.add(6, 0, 3);
+                mc.world.setBlockState(thrusterGui, block("ion_drive").getDefaultState(), 3);
+                mc.displayGuiScreen(new GuiRedstoneChannel(
+                        (com.vandorlabs.tiles.TileEntityRedstoneLight) mc.world.getTileEntity(thrusterGui)));
+                state = 22;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 22:
+                if (--holdTicks > 0) break;
+                saveNamed(mc,"thruster_gui");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;

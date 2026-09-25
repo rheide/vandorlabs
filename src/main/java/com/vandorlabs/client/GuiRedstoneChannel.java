@@ -8,6 +8,7 @@ import com.vandorlabs.blocks.BlockPropulsionLight;
 import com.vandorlabs.blocks.BlockConnectedPropulsionLight;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import org.lwjgl.input.Keyboard;
@@ -46,6 +47,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override public void initGui() {
         super.initGui();
+        buttonList.clear();
         Keyboard.enableRepeatEvents(true);
         channelField = new GuiTextField(0, fontRenderer, guiLeft + 116, guiTop + 38, 106, 18);
         channelField.setMaxStringLength(10);
@@ -61,9 +63,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
         if (connected) buttonList.add(new GuiButton(3, guiLeft + 116,
                 guiTop + 96, 106, 20, joinLabel()));
-        buttonList.add(new GuiButton(1, guiLeft + 14,
+        buttonList.add(new GuiButton(1, guiLeft + (xSize - 200) / 2,
                 guiTop + (thruster ? 158 : 72),
-                xSize - 28, 20, "Done"));
+                200, 20, "Done"));
     }
 
     protected int channel() {
@@ -137,21 +139,23 @@ public class GuiRedstoneChannel extends GuiContainer {
     @Override public void onGuiClosed() { super.onGuiClosed(); Keyboard.enableRepeatEvents(false); }
 
     @Override protected void drawGuiContainerBackgroundLayer(float partial, int mouseX, int mouseY) {
-        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF19232C);
-        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 28, 0xFF304858);
+        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
+        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 28, 0xFF202028);
     }
 
     @Override protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        fontRenderer.drawString("Redstone Channel", 14, 10, 0xFFFFFF);
-        fontRenderer.drawString("Channel (0 = none)", 14, 43, 0xDAE8F0);
-        if (thruster) fontRenderer.drawString("Active mode", 14, 74, 0xDAE8F0);
-        if (connected) fontRenderer.drawString("Adjacent", 14, 102, 0xDAE8F0);
-        if (thruster) fontRenderer.drawString("Side Texture", 250, 34, 0xDAE8F0);
+        GlStateManager.disableLighting();
+        fontRenderer.drawString("Redstone Channel", 14, 10, 0xFFFFFFFF);
+        fontRenderer.drawString("Channel (0 = none)", 14, 43, 0xFFD8D8D8);
+        if (thruster) fontRenderer.drawString("Active mode", 14, 74, 0xFFD8D8D8);
+        if (connected) fontRenderer.drawString("Adjacent", 14, 102, 0xFFD8D8D8);
+        if (thruster) fontRenderer.drawString("Side Texture", 250, 34, 0xFFD8D8D8);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {
         drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partial);
+        GlStateManager.disableLighting();
         if (housingList != null) housingList.draw(fontRenderer, mouseX, mouseY);
         channelField.drawTextBox();
     }
