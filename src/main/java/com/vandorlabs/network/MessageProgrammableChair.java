@@ -31,7 +31,7 @@ public final class MessageProgrammableChair implements IMessage {
                 if (msg.pos == null || msg.style < 0 || msg.style >= 5
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerProgrammableChair)
-                        || !player.capabilities.isCreativeMode) return;
+                        || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) return;
                 ContainerProgrammableChair container =
                         (ContainerProgrammableChair) player.openContainer;
                 TileEntity raw = player.world.getTileEntity(msg.pos);

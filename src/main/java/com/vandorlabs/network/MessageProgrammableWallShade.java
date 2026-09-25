@@ -47,7 +47,7 @@ public final class MessageProgrammableWallShade implements IMessage {
                 if (!(raw instanceof TileEntityAnimatedScreenSelector)
                         || raw != container.getTileEntity()
                         || !container.canInteractWith(player)
-                        || !player.capabilities.isCreativeMode
+                        || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock()
                         instanceof BlockProgrammableWall)
                         || ((BlockProgrammableWall) player.world.getBlockState(msg.pos)

@@ -67,7 +67,7 @@ public class MessageRampController implements IMessage {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if (message.pos==null || !player.capabilities.isCreativeMode
+                if (message.pos==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !player.world.isBlockLoaded(message.pos)) return;
                 TileEntity raw=player.world.getTileEntity(message.pos);
                 if (!(raw instanceof TileEntityRampController) || !(player.openContainer instanceof ContainerRampController)) return;

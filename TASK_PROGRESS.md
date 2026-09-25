@@ -26,3 +26,4 @@ Below are more complex features that we should test individually before proceedi
 
 - 2026-09-25: Recorded the request. Repository starts clean on `master`; implementation inspection is in progress. Initial feature group awaits end-of-group testing. Later features require a versioned build and separate test before the next feature.
 - 2026-09-25: Removed vent grille from the shared programmable housing menu; added four matter finishes to both texture packs and generated item previews. Existing saved housing choices after vent grille are translated when read. Not tested yet, per request.
+- 2026-09-25: Added Configurizer item, icon, and crafting recipe. Its right click path opens existing configuration menus from the hotbar, and server packet checks now accept a player holding the item in survival. Not tested yet.

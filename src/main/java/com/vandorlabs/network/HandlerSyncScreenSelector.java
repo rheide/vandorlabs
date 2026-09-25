@@ -30,7 +30,7 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             TileEntityAnimatedScreenSelector te = (TileEntityAnimatedScreenSelector) raw;
             // The opener must still be in range, and the screen id must be a
             // real display block (never trust client strings for rendering).
-            if (!player.capabilities.isCreativeMode || !te.isUsableByPlayer(player)) {
+            if (!com.vandorlabs.items.ConfigurationAccess.canConfigure(player) || !te.isUsableByPlayer(player)) {
                 return;
             }
             if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(message.getSelectedScreen())) {
