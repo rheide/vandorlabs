@@ -653,6 +653,18 @@ final class ScreenRuntimeChecks {
         PortholeHex single = new PortholeHex(1, 1);
         require(single.vertices[0][1] == 4 && single.vertices[2][0] == 14,
                 "single porthole hexagon is too large");
+        for (int[] size : new int[][]{{2,2},{3,3},{1,2},{2,1}}) {
+            PortholeHex joined = new PortholeHex(size[0],size[1]);
+            double left=Double.POSITIVE_INFINITY,right=Double.NEGATIVE_INFINITY;
+            double bottom=Double.POSITIVE_INFINITY,top=Double.NEGATIVE_INFINITY;
+            for (double[] vertex:joined.vertices) {
+                left=Math.min(left,vertex[0]); right=Math.max(right,vertex[0]);
+                bottom=Math.min(bottom,vertex[1]); top=Math.max(top,vertex[1]);
+            }
+            require(left==2 && right==size[0]*16-2
+                            && bottom==4 && top==size[1]*16-4,
+                    "joined porthole margins differ from the single block");
+        }
         PortholeHex vertical = new PortholeHex(1, 2);
         require(vertical.slice(0, 0).edgeOpening(1, 16) != null
                         && vertical.slice(0, 1).edgeOpening(1, 0) != null,

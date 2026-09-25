@@ -14,8 +14,8 @@ final class PortholeHex {
         double width = columns * 16D;
         double height = rows * 16D;
         double x0 = 2, x1 = width - 2;
-        double y0 = rows == 1 && columns == 1 ? 4 : 2;
-        double y1 = rows == 1 && columns == 1 ? 12 : height - 2;
+        double y0 = 4;
+        double y1 = height - 4;
         if (columns == 1 && rows == 1) {
             vertices = new double[][] {
                     {5, 4}, {11, 4}, {14, 8}, {11, 12}, {5, 12}, {2, 8}
