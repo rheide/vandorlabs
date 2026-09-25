@@ -28,4 +28,13 @@ for block in ('programmable_block', 'programmable_trigger_block',
                 model['textures'][key] = 'vandorlabs:blocks/' + texture
         (out / (block + '_' + choice + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')
-print('Generated', len(ids) * 6, 'configured item models')
+for style in ('fit', 'tile'):
+    base = json.loads((out / ('programmable_slab_dark_wall_panel_' + style + '.json')).read_text())
+    for choice, texture in zip(ids, textures):
+        model = json.loads(json.dumps(base))
+        for key, value in model['textures'].items():
+            if value == 'vandorlabs:blocks/dark_wall_panel':
+                model['textures'][key] = 'vandorlabs:blocks/' + texture
+        (out / ('programmable_slab_' + choice + '_' + style + '.json')).write_text(
+            json.dumps(model, indent=2) + '\n')
+print('Generated', len(ids) * 8, 'configured item models')
