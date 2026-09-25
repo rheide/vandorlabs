@@ -201,12 +201,28 @@ public class ReproLab {
                 Y + 10.5D - 1.62D, 0.2D, 18.0F, 0.0F));
         SHOTS.add(new Shot("programmable_porthole_joined", -0.5D,
                 Y + 10.5D - 1.62D, -0.9D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_vertical", WALL_DISPLAY.getX() + 13.5D,
+                Y + 10.95D - 1.62D, -0.9D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_single", WALL_DISPLAY.getX() + 14.5D,
+                Y + 10.5D - 1.62D, -0.9D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_incomplete", WALL_DISPLAY.getX() + 23D,
+                Y + 11D - 1.62D, -1.2D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_large_rim", WALL_DISPLAY.getX() + 28.5D,
+                Y + 11.5D - 1.62D, -1.5D, 15.0F, 0.0F));
         SHOTS.add(new Shot("programmable_corner", WALL_DISPLAY.getX() + 6.5D,
                 Y + 10.5D - 1.62D, -0.7D, 0.0F, 0.0F));
         SHOTS.add(new Shot("programmable_corner_side", WALL_DISPLAY.getX() + 5.1D,
                 Y + 10.6D - 1.62D, -0.4D, -35.0F, 4.0F));
         SHOTS.add(new Shot("programmable_corner_turn", WALL_DISPLAY.getX() + 12.4D,
                 Y + 11.1D - 1.62D, -0.1D, 42.0F, 20.0F));
+        SHOTS.add(new Shot("programmable_corner_three_back", WALL_DISPLAY.getX() + 10.5D,
+                Y + 10.7D - 1.62D, 5.0D, 180.0F, 4.0F));
+        SHOTS.add(new Shot("programmable_corner_three_top", WALL_DISPLAY.getX() + 18.0D,
+                Y + 13.5D - 1.62D, WALL_DISPLAY.getZ() + 1.0D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_corner_t_top", WALL_DISPLAY.getX() + 33.5D,
+                Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 1D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_corner_pair_top", WALL_DISPLAY.getX() + 38.5D,
+                Y + 13.5D - 1.62D, WALL_DISPLAY.getZ() + 1D, 0.0F, 90.0F));
         SHOTS.add(new Shot("wide_ship_pair", -8.0D, eyeLevelFeet,
                 4.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("input_wall", INPUT_WALL.getX() + 0.5D,
@@ -637,7 +653,7 @@ public class ReproLab {
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         placeDiagonal(world, DIAGONAL_UP, false);
         placeDiagonal(world, DIAGONAL_DOWN, true);
-        for (int dx = -1; dx <= 11; dx++) {
+        for (int dx = -1; dx <= 19; dx++) {
             world.setBlockState(WALL_DISPLAY.add(dx, -1, 0),
                     Blocks.STONE.getDefaultState(), 2);
         }
@@ -673,9 +689,18 @@ public class ReproLab {
         joinedTile.setJoinPortholes(true);
         joinedTile.setGlassShade(1);
         joinedTile.setHousingTexture(2);
+        for (int dx = 1; dx <= 2; dx++) {
+            BlockPos upperPorthole = WALL_DISPLAY.add(dx, 1, 0);
+            world.setBlockState(upperPorthole, joinedState, 2);
+            TileEntityAnimatedScreenSelector upperTile =
+                    (TileEntityAnimatedScreenSelector) world.getTileEntity(upperPorthole);
+            upperTile.setJoinPortholes(true);
+            upperTile.setGlassShade(1);
+            upperTile.setHousingTexture(dx);
+        }
         for (int offset = 6; offset <= 7; offset++) {
             BlockPos cornerPos = WALL_DISPLAY.add(offset, 0, 0);
-            IBlockState cornerState = ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL
+            IBlockState cornerState = ModBlocks.PROGRAMMABLE_DIAGONAL_WALL
                     .getDefaultState().withProperty(
                             com.vandorlabs.blocks.BlockProgrammableWall.FACING,
                             EnumFacing.NORTH).withProperty(
@@ -684,15 +709,71 @@ public class ReproLab {
             world.setBlockState(cornerPos, cornerState, 2);
             ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerPos))
                     .setHousingTexture(offset == 6 ? 1 : 2);
+            BlockPos turnPos = cornerPos.north();
+            world.setBlockState(turnPos, cornerState.withProperty(
+                    com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                    EnumFacing.EAST), 2);
+            ((TileEntityAnimatedScreenSelector) world.getTileEntity(turnPos))
+                    .setHousingTexture(offset == 6 ? 1 : 2);
         }
         BlockPos cornerTurn = WALL_DISPLAY.add(10, 0, 0);
-        IBlockState turnState = ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL
+        IBlockState turnState = ModBlocks.PROGRAMMABLE_DIAGONAL_WALL
                 .getDefaultState().withProperty(
                         com.vandorlabs.blocks.BlockProgrammableWall.FACING,
                         EnumFacing.NORTH);
         world.setBlockState(cornerTurn, turnState, 2);
         ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerTurn))
                 .setHousingTexture(1);
+        world.setBlockState(cornerTurn.north(), turnState.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                EnumFacing.WEST), 2);
+        world.setBlockState(cornerTurn.south(), turnState.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                EnumFacing.EAST), 2);
+        ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerTurn.south()))
+                .setHousingTexture(2);
+        BlockPos threeCorner = WALL_DISPLAY.add(18, 0, 0);
+        world.setBlockState(threeCorner, turnState, 2);
+        world.setBlockState(threeCorner.west(), turnState, 2);
+        world.setBlockState(threeCorner.south(), turnState.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                EnumFacing.WEST), 2);
+        world.setBlockState(threeCorner.south().down(),
+                Blocks.STONE.getDefaultState(), 2);
+        for (int offset : new int[] {33, 38}) {
+            BlockPos center = WALL_DISPLAY.add(offset, 0, 0);
+            world.setBlockState(center, turnState, 2);
+            world.setBlockState(center.south(), turnState.withProperty(
+                    com.vandorlabs.blocks.BlockProgrammableWall.FACING, EnumFacing.EAST), 2);
+            if (offset == 33) {
+                world.setBlockState(center.west(), turnState, 2);
+                world.setBlockState(center.east(), turnState, 2);
+            }
+        }
+        for (int dy = 0; dy <= 1; dy++) {
+            BlockPos verticalPos = WALL_DISPLAY.add(13, dy, 0);
+            world.setBlockState(verticalPos, joinedState, 2);
+            TileEntityAnimatedScreenSelector verticalTile =
+                    (TileEntityAnimatedScreenSelector) world.getTileEntity(verticalPos);
+            verticalTile.setJoinPortholes(true);
+            verticalTile.setHousingTexture(1);
+        }
+        BlockPos singlePos = WALL_DISPLAY.add(14, 0, 0);
+        world.setBlockState(singlePos, joinedState, 2);
+        ((TileEntityAnimatedScreenSelector) world.getTileEntity(singlePos))
+                .setHousingTexture(2);
+        for (int dx = 22; dx <= 28; dx++) {
+            if (dx == 24 || dx == 25) continue;
+            int rows = dx < 26 ? (dx == 22 ? 2 : 1) : 3;
+            for (int dy = 0; dy < rows; dy++) {
+                BlockPos panePos = WALL_DISPLAY.add(dx, dy, 0);
+                world.setBlockState(panePos, joinedState, 2);
+                TileEntityAnimatedScreenSelector pane =
+                        (TileEntityAnimatedScreenSelector) world.getTileEntity(panePos);
+                pane.setJoinPortholes(true);
+                pane.setHousingTexture(1);
+            }
+        }
         world.setBlockState(DIAGONAL_DOWN.up(),Blocks.STONE.getDefaultState(),2);
         IBlockState inputWall = ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
                 .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
@@ -1401,8 +1482,10 @@ public class ReproLab {
 
     private static BlockPos blockForShot(String name) {
         if (name.equals("programmable_walls") || name.equals("programmable_wall_side")
-                || name.equals("programmable_porthole")
+                || name.startsWith("programmable_porthole")
                 || name.equals("programmable_porthole_joined")
+                || name.equals("programmable_porthole_vertical")
+                || name.equals("programmable_porthole_single")
                 || name.startsWith("programmable_corner"))
             return WALL_DISPLAY;
         if (name.startsWith("wide_ship")) return WIDE_LEFT;

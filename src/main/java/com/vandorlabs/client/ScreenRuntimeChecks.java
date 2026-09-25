@@ -134,8 +134,7 @@ final class ScreenRuntimeChecks {
                 ModBlocks.PROGRAMMABLE_WALL,
                 ModBlocks.PROGRAMMABLE_BLOCK,
                 ModBlocks.PROGRAMMABLE_PORTHOLE_WALL,
-                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,
-                ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL
+                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL
         };
         for (int i = 0; i < programmableBlocks.length; i++) {
             Block raw = programmableBlocks[i];
@@ -291,8 +290,7 @@ final class ScreenRuntimeChecks {
     private static void checkProgrammableWalls(EntityPlayer player) {
         Block[] variants = {ModBlocks.PROGRAMMABLE_WALL,
                 ModBlocks.PROGRAMMABLE_PORTHOLE_WALL,
-                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,
-                ModBlocks.PROGRAMMABLE_DIAGONAL_CORNER_WALL};
+                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL};
         BlockPos pos = new BlockPos(30, 250, 0);
         for (Block raw : variants) {
             require(raw instanceof BlockProgrammableWall, "programmable wall missing");
@@ -300,8 +298,7 @@ final class ScreenRuntimeChecks {
             for (EnumFacing facing : EnumFacing.HORIZONTALS) {
                 IBlockState state = block.getDefaultState()
                         .withProperty(BlockProgrammableWall.FACING, facing);
-                if (block.getShape() == BlockProgrammableWall.Shape.DIAGONAL
-                        || block.getShape() == BlockProgrammableWall.Shape.DIAGONAL_CORNER)
+                if (block.getShape() == BlockProgrammableWall.Shape.DIAGONAL)
                     state = state.withProperty(BlockProgrammableWall.INVERTED, true);
                 require(block.getStateFromMeta(block.getMetaFromState(state)).equals(state),
                         "wall facing/half metadata failed: " + block.getRegistryName());
@@ -316,14 +313,6 @@ final class ScreenRuntimeChecks {
         require(!floor.getValue(BlockProgrammableWall.INVERTED)
                         && ceiling.getValue(BlockProgrammableWall.INVERTED),
                 "diagonal wall did not follow stair half placement");
-        BlockProgrammableWall corner = (BlockProgrammableWall) variants[3];
-        require(!corner.getStateForPlacement(player.world, pos, EnumFacing.UP,
-                        .5F, .2F, .5F, 0, player)
-                        .getValue(BlockProgrammableWall.INVERTED)
-                        && corner.getStateForPlacement(player.world, pos,
-                        EnumFacing.DOWN, .5F, .8F, .5F, 0, player)
-                        .getValue(BlockProgrammableWall.INVERTED),
-                "diagonal corner did not follow stair half placement");
         for (int i = 0; i < 2; i++) {
             BlockProgrammableWall wall = (BlockProgrammableWall) variants[i];
             AxisAlignedBB bounds = wall.getBoundingBox(wall.getDefaultState(),
@@ -343,6 +332,36 @@ final class ScreenRuntimeChecks {
                 player.world.getTileEntity(pos.east());
         first.setJoinPortholes(true);
         second.setJoinPortholes(true);
+        player.world.setBlockState(pos.up(), north, 2);
+        player.world.setBlockState(pos.east().up(), north, 2);
+        TileEntityAnimatedScreenSelector above = (TileEntityAnimatedScreenSelector)
+                player.world.getTileEntity(pos.up());
+        TileEntityAnimatedScreenSelector aboveRight = (TileEntityAnimatedScreenSelector)
+                player.world.getTileEntity(pos.east().up());
+        above.setJoinPortholes(true);
+        aboveRight.setJoinPortholes(true);
+        TEAnimatedScreenSelector.PortholeGroup group =
+                TEAnimatedScreenSelector.portholeGroup(first, north);
+        require(group.columns == 2 && group.rows == 2
+                        && group.slice(pos).edgeOpening(0, 16) != null
+                        && group.slice(pos).edgeOpening(1, 16) != null,
+                "joined portholes do not make one hexagon across both seams");
+        player.world.setBlockToAir(pos.east().up());
+        first.setJoinPortholes(false);
+        first.setJoinPortholes(true);
+        for (TileEntityAnimatedScreenSelector member : new TileEntityAnimatedScreenSelector[] {
+                first, second, above}) {
+            TEAnimatedScreenSelector.PortholeGroup incomplete =
+                    TEAnimatedScreenSelector.portholeGroup(member, north);
+            require(incomplete.columns == (member == above ? 1 : 2) && incomplete.rows == 1,
+                    "L-shaped portholes must partition into a pair and a single");
+        }
+        player.world.setBlockState(pos.east().up(), north, 2);
+        ((TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos.east().up()))
+                .setJoinPortholes(true);
+        group = TEAnimatedScreenSelector.portholeGroup(first, north);
+        require(group.columns == 2 && group.rows == 2,
+                "completing the rectangle must restore its joined hexagon");
         require(TEAnimatedScreenSelector.joinsPorthole(first, north, true)
                         && TEAnimatedScreenSelector.joinsPorthole(second, north, false),
                 "north-facing portholes do not join at their shared edge");
@@ -351,6 +370,15 @@ final class ScreenRuntimeChecks {
                 "porthole joins a neighbor with its toggle off");
         player.world.setBlockToAir(pos);
         player.world.setBlockToAir(pos.east());
+        player.world.setBlockToAir(pos.up());
+        player.world.setBlockToAir(pos.east().up());
+        PortholeHex single = new PortholeHex(1, 1);
+        require(single.vertices[0][1] == 4 && single.vertices[2][0] == 14,
+                "single porthole hexagon is too large");
+        PortholeHex vertical = new PortholeHex(1, 2);
+        require(vertical.slice(0, 0).edgeOpening(1, 16) != null
+                        && vertical.slice(0, 1).edgeOpening(1, 0) != null,
+                "vertical portholes have a frame across their glass seam");
         java.util.List<AxisAlignedBB> lower = new java.util.ArrayList<>();
         java.util.List<AxisAlignedBB> upper = new java.util.ArrayList<>();
         AxisAlignedBB query = new AxisAlignedBB(pos).grow(2);
@@ -365,17 +393,177 @@ final class ScreenRuntimeChecks {
                         && lower.get(0).minZ < lower.get(15).minZ
                         && upper.get(0).minZ > upper.get(15).minZ,
                 "diagonal collision does not follow both continuous slopes");
-        java.util.List<AxisAlignedBB> cornerBoxes = new java.util.ArrayList<>();
-        corner.addCollisionBoxToList(corner.getDefaultState(), player.world,
-                pos, query, cornerBoxes, null, false);
-        require(cornerBoxes.size() == 32
-                        && cornerBoxes.get(0).minZ > pos.getZ()
-                        && cornerBoxes.get(1).maxZ == pos.getZ() + 1
-                        && cornerBoxes.get(0).maxX == cornerBoxes.get(1).maxX,
-                "diagonal corner collision does not join two arms at 90 degrees");
+        require(diagonal.getBoundingBox(northLower, player.world, pos).maxZ
+                        == 10 / 16D
+                        && diagonal.collisionRayTrace(northLower, player.world, pos,
+                        new net.minecraft.util.math.Vec3d(pos.getX() + .5,
+                                pos.getY() + .9, pos.getZ() - .5),
+                        new net.minecraft.util.math.Vec3d(pos.getX() + .5,
+                                pos.getY() + .9, pos.getZ() + .2)) == null,
+                "diagonal selection still covers empty space in the block");
+        for (boolean inverted : new boolean[] {false, true}) {
+            for (boolean front : new boolean[] {false, true}) {
+                for (EnumFacing turnFacing : new EnumFacing[] {
+                        EnumFacing.EAST, EnumFacing.WEST}) {
+                    IBlockState turn = northLower.withProperty(
+                            BlockProgrammableWall.INVERTED, inverted);
+                    BlockPos turnPos = pos.offset(front ? EnumFacing.NORTH
+                            : EnumFacing.SOUTH);
+                    player.world.setBlockState(pos, turn, 2);
+                    player.world.setBlockState(turnPos, turn.withProperty(
+                            BlockProgrammableWall.FACING, turnFacing), 2);
+                    require(diagonal.corner(turn, player.world, pos) != null,
+                            "diagonal walls do not form a corner in each half and direction");
+                    java.util.List<AxisAlignedBB> joinedBoxes = new java.util.ArrayList<>();
+                    diagonal.addCollisionBoxToList(turn, player.world, pos, query,
+                            joinedBoxes, null, false);
+                    require(joinedBoxes.size() == 32,
+                            "diagonal turn does not add only the connecting arm");
+                    AxisAlignedBB shortened = joinedBoxes.get(inverted ? 0 : 30);
+                    require(turnFacing == EnumFacing.EAST
+                                    ? shortened.minX > pos.getX()
+                                    : shortened.maxX < pos.getX() + 1,
+                            "diagonal corner leaves a full-width T junction");
+                    player.world.setBlockToAir(turnPos);
+                    player.world.setBlockToAir(pos);
+                }
+            }
+        }
+        for (boolean inverted : new boolean[] {false, true}) {
+            IBlockState turn = northLower.withProperty(
+                    BlockProgrammableWall.INVERTED, inverted);
+            player.world.setBlockState(pos, turn, 2);
+            player.world.setBlockState(pos.north(), turn.withProperty(
+                    BlockProgrammableWall.FACING, EnumFacing.WEST), 2);
+            player.world.setBlockState(pos.south(), turn.withProperty(
+                    BlockProgrammableWall.FACING, EnumFacing.EAST), 2);
+            BlockProgrammableWall.Corner both = diagonal.corner(turn, player.world, pos);
+            java.util.List<AxisAlignedBB> threeBoxes = new java.util.ArrayList<>();
+            diagonal.addCollisionBoxToList(turn, player.world, pos, query,
+                    threeBoxes, null, false);
+            require(both != null && both.frontRight != null
+                            && both.backRight != null && threeBoxes.size() == 48,
+                    "three diagonal walls do not retain both corner connections");
+            player.world.setBlockToAir(pos.north());
+            player.world.setBlockToAir(pos.south());
+            player.world.setBlockToAir(pos);
+        }
+        for (boolean inverted : new boolean[] {false, true}) {
+            IBlockState turn = northLower.withProperty(
+                    BlockProgrammableWall.INVERTED, inverted);
+            for (boolean right : new boolean[] {false, true}) {
+                BlockPos straightPos = pos.offset(right ? EnumFacing.EAST
+                        : EnumFacing.WEST);
+                player.world.setBlockState(pos, turn, 2);
+                player.world.setBlockState(straightPos, turn, 2);
+                player.world.setBlockState(pos.south(), turn.withProperty(
+                        BlockProgrammableWall.FACING,
+                        right ? EnumFacing.EAST : EnumFacing.WEST), 2);
+                BlockProgrammableWall.Corner junction =
+                        diagonal.corner(turn, player.world, pos);
+                require(junction != null && (right
+                                ? junction.left(6) == 6 && junction.right(6) == 16
+                                : junction.left(6) == 0 && junction.right(6) == 10),
+                        "diagonal corner must run from the straight neighbor only to the bend");
+                java.util.List<AxisAlignedBB> unwantedTail = new java.util.ArrayList<>();
+                double probeX = right ? .05 : .87;
+                double probeY = inverted ? .01 : .94;
+                AxisAlignedBB tail = new AxisAlignedBB(probeX, probeY, .45,
+                        probeX + .08, probeY + .05, .55).offset(pos);
+                diagonal.addCollisionBoxToList(turn, player.world, pos, tail,
+                        unwantedTail, null, false);
+                require(unwantedTail.isEmpty(),
+                        "L corner still has a collidable tail beyond the junction");
+                player.world.setBlockToAir(pos.south());
+                player.world.setBlockToAir(straightPos);
+                player.world.setBlockToAir(pos);
+            }
+        }
+    }
+
+    private static void checkWallTurnOrders(EntityPlayer player) {
+        checkPortholePartitions();
+        BlockProgrammableWall block = (BlockProgrammableWall) ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+        BlockPos pos = new BlockPos(30, 250, 0);
+        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+            EnumFacing rightSide = facing.rotateY();
+            for (boolean inverted : new boolean[] {false, true}) {
+                IBlockState state = block.getDefaultState()
+                        .withProperty(BlockProgrammableWall.FACING, facing)
+                        .withProperty(BlockProgrammableWall.INVERTED, inverted);
+                for (boolean front : new boolean[] {false, true}) {
+                    BlockPos perpendicular = pos.offset(front ? facing : facing.getOpposite());
+                    for (boolean right : new boolean[] {false, true}) {
+                        IBlockState turn = state.withProperty(BlockProgrammableWall.FACING,
+                                right ? rightSide : rightSide.getOpposite());
+                        for (int straight = 0; straight < 4; straight++) {
+                            for (boolean reverse : new boolean[] {false, true}) {
+                                java.util.List<BlockPos> positions = new java.util.ArrayList<>();
+                                positions.add(pos);
+                                positions.add(perpendicular);
+                                if ((straight & 1) != 0) positions.add(pos.offset(rightSide.getOpposite()));
+                                if ((straight & 2) != 0) positions.add(pos.offset(rightSide));
+                                if (reverse) java.util.Collections.reverse(positions);
+                                for (BlockPos at : positions)
+                                    player.world.setBlockState(at, at.equals(perpendicular) ? turn : state, 2);
+                                BlockProgrammableWall.Corner corner = block.corner(state, player.world, pos);
+                                require(corner != null, "wall turn missing after placement order change");
+                                double armStart = right ? 9 : 3;
+                                boolean keepLeft = (straight & 1) != 0 || (straight == 0 && !right);
+                                boolean keepRight = (straight & 2) != 0 || (straight == 0 && right);
+                                require(corner.left(3) == (keepLeft ? 0 : armStart)
+                                                && corner.right(3) == (keepRight ? 16 : armStart + 4),
+                                        "wall turn selects the wrong free end or truncates a T junction: "
+                                                + facing + "/" + inverted + "/" + front + "/" + right
+                                                + "/" + straight + "/" + reverse);
+                                for (BlockPos at : positions) player.world.setBlockToAir(at);
+                            }
+                        }
+                    }
+                }
+                // Clicking another diagonal must still honor the player's
+                // intended direction, just as clicking the floor does.
+                player.world.setBlockState(pos.offset(rightSide.getOpposite()),
+                        state.withProperty(BlockProgrammableWall.FACING, rightSide), 2);
+                player.rotationYaw = facing.getOpposite().getHorizontalAngle();
+                IBlockState placed = block.getStateForPlacement(player.world, pos,
+                        rightSide, .5F, inverted ? .75F : .25F, .5F, 0, player);
+                require(placed.getValue(BlockProgrammableWall.FACING) == facing
+                                && placed.getValue(BlockProgrammableWall.INVERTED) == inverted,
+                        "diagonal side placement inherits the clicked block's facing");
+                player.world.setBlockToAir(pos.offset(rightSide.getOpposite()));
+            }
+        }
+    }
+
+    private static void checkPortholePartitions() {
+        // Exhaust every 3x3 occupancy pattern against a brute-force rectangle
+        // search. Each chosen rectangle must be largest among remaining cells.
+        for (int mask = 1; mask < 512; mask++) {
+            java.util.Set<Long> remaining = new java.util.HashSet<>();
+            for (int bit = 0; bit < 9; bit++) if ((mask & (1 << bit)) != 0)
+                remaining.add(PortholeRectangles.cell(bit % 3 - 1, bit / 3 - 1));
+            for (PortholeRectangles.Rect rect : PortholeRectangles.partition(remaining)) {
+                int largest = 0;
+                for (int x0 = -1; x0 <= 1; x0++) for (int x1 = x0; x1 <= 1; x1++)
+                    for (int y0 = -1; y0 <= 1; y0++) for (int y1 = y0; y1 <= 1; y1++) {
+                        boolean filled = true;
+                        for (int x = x0; x <= x1; x++) for (int y = y0; y <= y1; y++)
+                            filled &= remaining.contains(PortholeRectangles.cell(x, y));
+                        if (filled) largest = Math.max(largest, (x1-x0+1)*(y1-y0+1));
+                    }
+                require(rect.width * rect.height == largest, "porthole rectangle is not largest available");
+                for (int x = rect.x; x < rect.x + rect.width; x++)
+                    for (int y = rect.y; y < rect.y + rect.height; y++)
+                        require(remaining.remove(PortholeRectangles.cell(x, y)),
+                                "porthole rectangles overlap or include missing cells");
+            }
+            require(remaining.isEmpty(), "porthole partition leaves cells unassigned");
+        }
     }
 
     private static void checkDiagonalPlacement(EntityPlayer player) {
+        checkWallTurnOrders(player);
         require(ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN
                         instanceof BlockProgrammableDiagonalScreen,
                 "programmable diagonal screen block missing");

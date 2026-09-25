@@ -80,11 +80,15 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int housingTexture;
     private int glassShade = 2;
     private boolean joinPortholes;
+    private static long portholeRevision;
+
+    public static long getPortholeRevision() { return portholeRevision; }
 
     public boolean isJoinPortholes() { return joinPortholes; }
     public void setJoinPortholes(boolean join) {
         if (join == joinPortholes) return;
         joinPortholes = join;
+        portholeRevision++;
         markDirty();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
@@ -286,6 +290,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         glassShade = compound.hasKey("GlassShade", 3)
                 ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
         joinPortholes = compound.getBoolean("JoinPortholes");
+        portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }

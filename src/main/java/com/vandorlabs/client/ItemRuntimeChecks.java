@@ -192,7 +192,7 @@ final class ItemRuntimeChecks {
     private static void checkWallRecipes(InventoryCrafting grid,
             EntityPlayer player) {
         String[] names = {"programmable_block", "programmable_wall", "programmable_porthole_wall",
-                "programmable_diagonal_wall", "programmable_diagonal_corner_wall"};
+                "programmable_diagonal_wall"};
         int[] counts = {4, 4, 2, 4, 4};
         for (int variant = 0; variant < names.length; variant++) {
             for (int slot = 0; slot < 9; slot++)
