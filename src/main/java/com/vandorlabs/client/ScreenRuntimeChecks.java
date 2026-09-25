@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.ModBlocks;
+import com.vandorlabs.blocks.BlockProgrammableLight;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import com.vandorlabs.tiles.ScreenHousingTextures;
@@ -12,6 +13,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.entity.player.EntityPlayer;
@@ -145,11 +147,36 @@ final class ScreenRuntimeChecks {
             require(group.top(origin) == group.bottom(above)
                             && group.left(origin) == group.left(above),
                     "joined light artwork has a horizontal seam");
+            BlockProgrammableLight lightBlock =
+                    (BlockProgrammableLight) ModBlocks.PROGRAMMABLE_LIGHT;
+            lightBlock.onBlockActivated(player.world, origin,
+                    player.world.getBlockState(origin), player, EnumHand.MAIN_HAND,
+                    EnumFacing.NORTH, .5F, .5F, .5F);
+            for (int dx = 0; dx < 2; dx++)
+                for (int dy = 0; dy < 2; dy++)
+                    require(!((com.vandorlabs.tiles.TileEntityProgrammableLight)
+                                    player.world.getTileEntity(origin.add(dx, dy, 0))).isOn(),
+                            "right click did not switch the whole joined light group off");
+            lightBlock.onBlockActivated(player.world, origin,
+                    player.world.getBlockState(origin), player, EnumHand.MAIN_HAND,
+                    EnumFacing.NORTH, .5F, .5F, .5F);
+            for (int dx = 0; dx < 2; dx++)
+                for (int dy = 0; dy < 2; dy++)
+                    require(((com.vandorlabs.tiles.TileEntityProgrammableLight)
+                                    player.world.getTileEntity(origin.add(dx, dy, 0))).isOn(),
+                            "right click did not switch the whole joined light group on");
             first.configure(2, 12, false, 0);
             group = TEAnimatedScreenSelector.lightGroup(first,
                     player.world.getBlockState(origin));
             require(group.columns == 1 && group.rows == 1,
                     "disabling join did not separate the light");
+            lightBlock.onBlockActivated(player.world, origin,
+                    player.world.getBlockState(origin), player, EnumHand.MAIN_HAND,
+                    EnumFacing.NORTH, .5F, .5F, .5F);
+            require(!first.isOn() && ((com.vandorlabs.tiles.TileEntityProgrammableLight)
+                            player.world.getTileEntity(east)).isOn(),
+                    "Join Off right click switched a neighboring light");
+            first.setOn(true);
             first.configure(3, 7, true, 4271);
             require(!first.isOn() && ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
                             player.world.getBlockState(origin), player.world, origin) == 0,

@@ -626,6 +626,20 @@ public class ReproLab {
                         glassWorld.getTileEntity(configuredGlass)).isJoin())
                     throw new IllegalStateException("glass GUI selections were not applied");
                 saveNamed(mc,"programmable_glass_gui");
+                mc.displayGuiScreen(null);
+                BlockPos lightGui=CONSOLE.add(4,0,3);
+                mc.world.setBlockState(lightGui,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
+                TileEntity lightRaw=mc.world.getTileEntity(lightGui);
+                if (!(lightRaw instanceof com.vandorlabs.tiles.TileEntityProgrammableLight))
+                    throw new IllegalStateException("light GUI fixture missing");
+                mc.displayGuiScreen(new GuiProgrammableLight(mc.player.inventory,
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight)lightRaw));
+                state=19;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 19:
+                if (--holdTicks > 0) break;
+                saveNamed(mc,"programmable_light_gui");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;

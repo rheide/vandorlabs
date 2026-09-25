@@ -48,8 +48,15 @@ public final class BlockProgrammableLight extends BlockAnimatedScreenSelector {
                     if (player.capabilities.isCreativeMode) player.openGui(VandorLabs.instance,
                             GuiHandler.GUI_PROGRAMMABLE_LIGHT, world,
                             pos.getX(), pos.getY(), pos.getZ());
-                } else ((TileEntityProgrammableLight) tile).setOn(
-                        !((TileEntityProgrammableLight) tile).isOn());
+                } else {
+                    TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
+                    boolean next = !light.isOn();
+                    for (BlockPos member : ProgrammableLightConnections.members(light, state)) {
+                        TileEntity other = world.getTileEntity(member);
+                        if (other instanceof TileEntityProgrammableLight)
+                            ((TileEntityProgrammableLight) other).setOn(next);
+                    }
+                }
             }
         }
         return !player.isSneaking() || player.capabilities.isCreativeMode;

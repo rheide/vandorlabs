@@ -134,31 +134,8 @@ public class TEAnimatedScreenSelector
                 ? facing.rotateY() : EnumFacing.EAST;
         EnumFacing up = facing == EnumFacing.UP ? EnumFacing.SOUTH
                 : facing == EnumFacing.DOWN ? EnumFacing.NORTH : EnumFacing.UP;
-        Set<BlockPos> members = new HashSet<>();
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        members.add(tile.getPos());
-        queue.add(tile.getPos());
-        boolean capped = false;
-        if (tile.isJoin()) {
-            while (!queue.isEmpty()) {
-                BlockPos current = queue.removeFirst();
-                for (EnumFacing side : new EnumFacing[] {
-                        right, right.getOpposite(), up, up.getOpposite()}) {
-                    BlockPos next = current.offset(side);
-                    if (members.contains(next) || !world.isBlockLoaded(next)
-                            || !eligibleLight(world, next, facing, tile)) continue;
-                    members.add(next);
-                    queue.addLast(next);
-                    if (members.size() >= 4096) {
-                        capped = true;
-                        queue.clear();
-                        break;
-                    }
-                }
-            }
-        }
-        if (capped) members.clear();
-        if (members.isEmpty()) members.add(tile.getPos());
+        Set<BlockPos> members = com.vandorlabs.blocks.ProgrammableLightConnections
+                .members(tile, state);
         Map<Long, BlockPos> positions = new HashMap<>();
         for (BlockPos pos : members)
             positions.put(PortholeRectangles.cell(axis(pos, right), axis(pos, up)), pos);
@@ -170,19 +147,6 @@ public class TEAnimatedScreenSelector
                     LIGHT_GROUPS.put(positions.get(PortholeRectangles.cell(col, row)), group);
         }
         return LIGHT_GROUPS.get(tile.getPos());
-    }
-
-    private static boolean eligibleLight(World world, BlockPos pos, EnumFacing facing,
-            com.vandorlabs.tiles.TileEntityProgrammableLight first) {
-        IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() != ModBlocks.PROGRAMMABLE_LIGHT
-                || state.getValue(BlockAnimatedScreenSelector.FACING) != facing) return false;
-        net.minecraft.tileentity.TileEntity raw = world.getTileEntity(pos);
-        if (!(raw instanceof com.vandorlabs.tiles.TileEntityProgrammableLight)) return false;
-        com.vandorlabs.tiles.TileEntityProgrammableLight other =
-                (com.vandorlabs.tiles.TileEntityProgrammableLight) raw;
-        return other.isJoin() && other.getTexture() == first.getTexture()
-                && other.isOn() == first.isOn();
     }
 
     static final class PortholeGroup {

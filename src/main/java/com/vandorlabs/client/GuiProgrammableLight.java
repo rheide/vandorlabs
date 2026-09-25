@@ -39,7 +39,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         join = tile.isJoin();
         housing = tile.getHousingTexture();
         xSize = 500;
-        ySize = 266;
+        ySize = 302;
     }
 
     @Override public void initGui() {
@@ -47,14 +47,14 @@ public final class GuiProgrammableLight extends GuiContainer {
         buttonList.clear();
         Keyboard.enableRepeatEvents(true);
         channelField = new GuiTextField(0, fontRenderer, guiLeft + 150,
-                guiTop + 185, 164, 18);
+                guiTop + 211, 164, 18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
         housingList = new HousingTextureList(guiLeft + 336, guiTop + 40, 148, housing);
-        buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 210,
+        buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 241,
                 xSize - 24, 20, joinLabel()));
-        buttonList.add(new GuiButton(100, guiLeft + 12, guiTop + 236,
+        buttonList.add(new GuiButton(100, guiLeft + 12, guiTop + 271,
                 xSize - 24, 20, I18n.format("gui.done")));
     }
 
@@ -111,7 +111,7 @@ public final class GuiProgrammableLight extends GuiContainer {
                 return;
             }
             if (mouseX >= guiLeft + 12 && mouseX <= guiLeft + 318
-                    && mouseY >= guiTop + 153 && mouseY <= guiTop + 176) {
+                    && mouseY >= guiTop + 175 && mouseY <= guiTop + 197) {
                 draggingLevel = true;
                 setLevelFromMouse(mouseX);
                 return;
@@ -205,13 +205,13 @@ public final class GuiProgrammableLight extends GuiContainer {
         GlStateManager.color(1F, 1F, 1F, 1F);
         drawTexturedModalRect(guiLeft + 214, guiTop + 44, sprite, 96, 96);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level") + ": " + level,
-                guiLeft + 13, guiTop + 146, 0xFFD8D8D8);
-        drawRect(guiLeft + 16, guiTop + 166, guiLeft + 16 + SLIDER_W,
-                guiTop + 172, 0xFF555560);
+                guiLeft + 13, guiTop + 160, 0xFFD8D8D8);
+        drawRect(guiLeft + 16, guiTop + 184, guiLeft + 16 + SLIDER_W,
+                guiTop + 190, 0xFF555560);
         int thumb = guiLeft + 16 + Math.round(SLIDER_W * level / 15F);
-        drawRect(thumb - 3, guiTop + 161, thumb + 3, guiTop + 177, 0xFFB8D7E8);
+        drawRect(thumb - 3, guiTop + 179, thumb + 3, guiTop + 195, 0xFFB8D7E8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.channel"),
-                guiLeft + 13, guiTop + 190, 0xFFD8D8D8);
+                guiLeft + 13, guiTop + 216, 0xFFD8D8D8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
     }
