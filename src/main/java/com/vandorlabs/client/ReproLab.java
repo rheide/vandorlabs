@@ -227,6 +227,12 @@ public class ReproLab {
                 Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 1.5D, 0.0F, 90.0F));
         SHOTS.add(new Shot("programmable_flat_corners_top", WALL_DISPLAY.getX() + 55D,
                 Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 0.5D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_flat_three_top", WALL_DISPLAY.getX() + 110.5D,
+                Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 0.5D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_flat_four_top", WALL_DISPLAY.getX() + 116.5D,
+                Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 0.5D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_flat_edge_top", WALL_DISPLAY.getX() + 122.5D,
+                Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 0.5D, 0.0F, 90.0F));
         SHOTS.add(new Shot("wide_ship_pair", -8.0D, eyeLevelFeet,
                 4.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("input_wall", INPUT_WALL.getX() + 0.5D,
@@ -686,6 +692,24 @@ public class ReproLab {
                     dx == 52 || dx == 56 ? plainNorth : plainEast, 2);
         for (int dz : new int[] {-1, 1})
             world.setBlockState(WALL_DISPLAY.add(57, 0, dz), plainEast, 2);
+        IBlockState plainSouth = plainNorth.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.FACING, EnumFacing.SOUTH);
+        IBlockState plainWest = plainNorth.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.FACING, EnumFacing.WEST);
+        for (int center : new int[] {110, 116}) {
+            world.setBlockState(WALL_DISPLAY.add(center - 1, 0, 0), plainNorth, 2);
+            world.setBlockState(WALL_DISPLAY.add(center, 0, 0), plainEast, 2);
+            world.setBlockState(WALL_DISPLAY.add(center + 1, 0, 0), plainSouth, 2);
+        }
+        world.setBlockState(WALL_DISPLAY.add(110, 0, -1), plainWest, 2);
+        for (int dz : new int[] {-1, 1})
+            world.setBlockState(WALL_DISPLAY.add(116, 0, dz), plainWest, 2);
+        world.setBlockState(WALL_DISPLAY.add(121, 0, 0), plainSouth.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.DEPTH, 1), 2);
+        world.setBlockState(WALL_DISPLAY.add(122, 0, 0), plainEast.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.DEPTH, 1), 2);
+        world.setBlockState(WALL_DISPLAY.add(122, 0, -1), plainWest.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.DEPTH, 2), 2);
         for (int i = 0; i < 4; i++) {
             Block block = i == 0 ? ModBlocks.PROGRAMMABLE_WALL
                     : i == 1 ? ModBlocks.PROGRAMMABLE_PORTHOLE_WALL

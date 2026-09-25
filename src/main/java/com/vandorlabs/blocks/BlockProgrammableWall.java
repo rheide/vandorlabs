@@ -181,12 +181,20 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             this.straightRight = straightRight;
         }
         public double left() {
+            // Two perpendicular arms already define both ends of this bridge.
+            // A free tail here turns a three-way meeting into a false cross.
+            if (!straightLeft && !straightRight
+                    && frontArm != null && backArm != null)
+                return Math.min(frontArm, backArm);
             if (straightLeft || !straightRight && (Boolean.FALSE.equals(frontRight)
                     || Boolean.FALSE.equals(backRight))) return 0;
             return Math.min(frontArm == null ? 16 : frontArm,
                     backArm == null ? 16 : backArm);
         }
         public double right() {
+            if (!straightLeft && !straightRight
+                    && frontArm != null && backArm != null)
+                return Math.max(frontArm, backArm) + 4;
             if (straightRight || !straightLeft && (Boolean.TRUE.equals(frontRight)
                     || Boolean.TRUE.equals(backRight))) return 16;
             return Math.max(frontArm == null ? 0 : frontArm + 4,
@@ -252,11 +260,23 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
             return false;
         IBlockState neighbor = world.getBlockState(neighborPos);
-        return neighbor.getBlock() == this
-                && neighbor.getValue(FACING) == state.getValue(FACING)
-                && (isDiagonalShape()
-                        ? neighbor.getValue(INVERTED) == state.getValue(INVERTED)
-                        : neighbor.getValue(DEPTH) == state.getValue(DEPTH));
+        if (neighbor.getBlock() != this) return false;
+        EnumFacing facing = state.getValue(FACING);
+        EnumFacing neighborFacing = neighbor.getValue(FACING);
+        if (isDiagonalShape())
+            return neighborFacing == facing
+                    && neighbor.getValue(INVERTED) == state.getValue(INVERTED);
+        // Opposite facings still occupy the same world plane when their
+        // depth values mirror each other (near meets far; middle meets middle).
+        return neighborFacing.getAxis() == facing.getAxis()
+                && worldPlane(facing, state.getValue(DEPTH))
+                == worldPlane(neighborFacing, neighbor.getValue(DEPTH));
+    }
+
+    private static int worldPlane(EnumFacing facing, int depth) {
+        int near = PanelDepth.start(depth);
+        return facing == EnumFacing.SOUTH || facing == EnumFacing.EAST
+                ? 12 - near : near;
     }
 
     @Override public void addCollisionBoxToList(IBlockState state, World world,

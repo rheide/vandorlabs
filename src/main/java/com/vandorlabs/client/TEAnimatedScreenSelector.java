@@ -858,6 +858,11 @@ public class TEAnimatedScreenSelector
             if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) < 1.0E-7) continue;
             boolean endCap = Math.abs(a[0] - b[0]) < 1.0E-7
                     && Math.abs(Math.abs(a[1] - b[1]) - 4) < 1.0E-7;
+            // Exposed ends of a connecting arm are also four-pixel metal caps.
+            endCap |= Math.abs(a[1] - b[1]) < 1.0E-7
+                    && Math.abs(Math.abs(a[0] - b[0]) - 4) < 1.0E-7
+                    && ((corner.frontArm != null && near > 0 && a[1] == 0)
+                    || (corner.backArm != null && near + 4 < 16 && a[1] == 16));
             TextureAtlasSprite sprite = endCap ? metal : wall;
             boolean acrossX = Math.abs(a[0] - b[0]) > Math.abs(a[1] - b[1]);
             double u0 = acrossX ? a[0] : a[1];

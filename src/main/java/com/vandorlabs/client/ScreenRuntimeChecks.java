@@ -535,6 +535,42 @@ final class ScreenRuntimeChecks {
                 "plain wall T junction does not span both straight neighbors");
         player.world.setBlockToAir(bend.north());
         player.world.setBlockToAir(bend.south());
+        player.world.setBlockState(bend.east(), across.withProperty(
+                BlockProgrammableWall.FACING, EnumFacing.SOUTH), 2);
+        corner = wall.flatCorner(turn, player.world, bend);
+        require(corner != null && corner.frontArm != null && corner.backArm != null
+                        && corner.left() == 6 && corner.right() == 10,
+                "two perpendicular arms grew a false fourth branch");
+        IBlockState opposite = turn.withProperty(BlockProgrammableWall.FACING,
+                EnumFacing.WEST);
+        player.world.setBlockState(bend.north(), opposite, 2);
+        corner = wall.flatCorner(turn, player.world, bend);
+        require(corner != null && corner.left() == 0 && corner.right() == 10,
+                "opposite-facing straight extension disappeared from a three-way junction");
+        player.world.setBlockState(bend.south(), opposite, 2);
+        corner = wall.flatCorner(turn, player.world, bend);
+        require(corner != null && corner.left() == 0 && corner.right() == 16,
+                "opposite-facing extension did not complete the four-way junction");
+        player.world.setBlockToAir(bend.east());
+        player.world.setBlockToAir(bend.north());
+        player.world.setBlockToAir(bend.south());
+        IBlockState edgeAcross = across.withProperty(BlockProgrammableWall.FACING,
+                EnumFacing.SOUTH).withProperty(BlockProgrammableWall.DEPTH, 1);
+        IBlockState edgeTurn = turn.withProperty(BlockProgrammableWall.DEPTH, 1);
+        player.world.setBlockState(pos, edgeAcross, 2);
+        player.world.setBlockState(bend, edgeTurn, 2);
+        corner = wall.flatCorner(edgeTurn, player.world, bend);
+        require(corner != null && corner.left() == 12 && corner.right() == 16,
+                "edge corner did not start at its neighboring wall");
+        player.world.setBlockState(bend.north(), opposite.withProperty(
+                BlockProgrammableWall.DEPTH, 2), 2);
+        corner = wall.flatCorner(edgeTurn, player.world, bend);
+        require(corner != null && corner.left() == 0 && corner.right() == 16,
+                "edge corner did not extend across the full block");
+        AxisAlignedBB edgeBounds = wall.getBoundingBox(edgeTurn, player.world, bend);
+        require(edgeBounds.minZ == 0 && edgeBounds.maxZ == 1,
+                "edge extension selection box stops at the short corner");
+        player.world.setBlockToAir(bend.north());
         player.world.setBlockToAir(pos);
         player.world.setBlockToAir(bend);
     }
