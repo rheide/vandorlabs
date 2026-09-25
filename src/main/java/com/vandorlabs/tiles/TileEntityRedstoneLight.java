@@ -329,6 +329,8 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
                 ((BlockConnectedPropulsionLight) state.getBlock())
                         .refreshConnectedModels(world, pos,
                                 state.getValue(BlockPropulsionLight.FACING));
+            else if (state.getBlock() instanceof BlockPropulsionLight)
+                world.markBlockRangeForRenderUpdate(pos, pos);
         }
     }
 }
