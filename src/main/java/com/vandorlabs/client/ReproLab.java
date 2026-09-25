@@ -1480,7 +1480,8 @@ public class ReproLab {
         p.setAir(300);
         mc.setRenderViewEntity(p);
         if (s.name.startsWith("gallery_")) {
-            buildGalleryStage(mc.getIntegratedServer().getWorld(0), s.name);
+            mc.getIntegratedServer().addScheduledTask(() ->
+                    buildGalleryStage(mc.getIntegratedServer().getWorld(0), s.name));
             buildGalleryStage(mc.world, s.name);
         }
         if (s.name.equals("wide_ship_pair")) {
