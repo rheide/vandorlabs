@@ -21,6 +21,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameType;
@@ -574,6 +575,10 @@ public class ReproLab {
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"ramp_controller_gui");
                 BlockPos doorGui=CONSOLE.add(0,0,3);
+                // Represent an already-loaded door before the tool opens its GUI.
+                placeDoor(mc.world,doorGui,"programmable_door",false);
+                ((com.vandorlabs.tiles.TileEntitySpaceDoor)mc.world.getTileEntity(doorGui))
+                        .configure(7,1,true,0,true,false,false);
                 mc.displayGuiScreen(null);
                 mc.getIntegratedServer().addScheduledTask(() -> {
                     World serverWorld = mc.getIntegratedServer().getWorld(0);
