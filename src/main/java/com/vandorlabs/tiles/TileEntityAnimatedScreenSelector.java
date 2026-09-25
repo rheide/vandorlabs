@@ -273,6 +273,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("GlassShade", glassShade);
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setBoolean("SlabTileSides", slabTileSides);
+        compound.setInteger("HousingTextureVersion", 1);
         return compound;
     }
 
@@ -296,7 +297,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         smallInput = data.smallInput;
         redstoneChannel = data.redstoneChannel;
         channelSignal = data.channelSignal;
-        housingTexture = ScreenHousingTextures.clamp(data.housingTexture);
+        int savedHousing = data.housingTexture;
+        if (!compound.hasKey("HousingTextureVersion", 3)) {
+            // The removed vent grille occupied index 14 in existing worlds.
+            if (savedHousing == 14) savedHousing = 0;
+            else if (savedHousing > 14) savedHousing--;
+        }
+        housingTexture = ScreenHousingTextures.clamp(savedHousing);
         glassShade = compound.hasKey("GlassShade", 3)
                 ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
         joinPortholes = compound.getBoolean("JoinPortholes");

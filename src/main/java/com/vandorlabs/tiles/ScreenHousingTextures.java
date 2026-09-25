@@ -7,16 +7,18 @@ public final class ScreenHousingTextures {
             "metal_floor", "dark_gunmetal_hull", "midnight_matte_hull",
             "dark_industrial_panel", "light_industrial_panel", "ribbed_wall",
             "industrial_block", "industrial_trim", "industrial_grate",
-            "wall_vent", "bolted_wall_plate", "vent_grille",
-            "burgundy", "bluegray"
+            "wall_vent", "bolted_wall_plate",
+            "burgundy", "bluegray", "matter", "matter_amber",
+            "matter_cyan", "matter_red"
     };
     private static final String[] TEXTURES = {
             "dark_wall_panel", "light_wall_panel", "light_alloy_hull",
             "metal_floor", "dark_gunmetal_hull", "midnight_matte_hull",
             "thrusters/dark_trim", "thrusters/trim", "ribbed_wall",
             "thrusters/side", "thrusters/top", "thrusters/rear",
-            "wall_vent", "bolted_wall_plate", "vent_grille",
-            "burgundy_carpet", "bluegray_carpet"
+            "wall_vent", "bolted_wall_plate",
+            "burgundy_carpet", "bluegray_carpet", "matter", "matter_amber",
+            "matter_cyan", "matter_red"
     };
 
     private ScreenHousingTextures() { }

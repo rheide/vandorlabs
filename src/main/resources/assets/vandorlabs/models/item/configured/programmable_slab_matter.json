@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/matter",
+    "top": "vandorlabs:blocks/matter",
+    "side": "vandorlabs:blocks/matter"
+  }
+}
