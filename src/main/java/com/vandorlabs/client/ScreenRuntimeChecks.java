@@ -105,7 +105,10 @@ final class ScreenRuntimeChecks {
             com.vandorlabs.tiles.TileEntityProgrammableLight restored =
                     new com.vandorlabs.tiles.TileEntityProgrammableLight();
             restored.readFromNBT(saved);
-            require(restored.getTexture() == 4 && restored.getLightLevel() == 5
+            require(restored.getTexture() ==
+                            com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length - 1
+                            && restored.getLightLevel() ==
+                            com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length
                             && !restored.isOn(),
                     "programmable light settings did not persist");
         } finally {
