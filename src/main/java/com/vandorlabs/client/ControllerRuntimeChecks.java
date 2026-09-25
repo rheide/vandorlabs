@@ -10,6 +10,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
@@ -594,9 +596,40 @@ public final class ControllerRuntimeChecks {
         }
         player.capabilities.isFlying=flying; player.noClip=noClip;
         clear(world,pos);
+        checkCreativePick(world, player, pos);
+        clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);
         System.out.println("[vandorlabs][reprolab] controller-runtime PASS ("+assertions+" assertions)");
     }
+    private static void checkCreativePick(World world, EntityPlayerMP player, BlockPos pos) {
+        TileEntityRampController source = place(world, pos, EnumFacing.NORTH);
+        require(source.configureTreads(player, 0, -2, 8, true, false, false,
+                        EnumFacing.WEST, 0, true, 1),
+                "ramp pick fixture could not save its settings");
+        source.setRedstoneChannel(4271);
+        ItemStack picked = block().getPickBlock(world.getBlockState(pos), null,
+                world, pos, player);
+        NBTTagCompound saved = picked.getSubCompound("RampSettings");
+        require(saved != null && saved.getInteger("StartOffset") == 0
+                        && saved.getInteger("EndOffset") == -2
+                        && saved.getInteger("TreadPixels") == 8
+                        && saved.getInteger("Channel") == 4271,
+                "creative ramp pick lost settings");
+        BlockPos copyPos = pos.east(2);
+        IBlockState placed = block().getDefaultState().withProperty(
+                BlockVandorDirectional.FACING, EnumFacing.NORTH);
+        require(((ItemBlock) picked.getItem()).placeBlockAt(picked.copy(), player,
+                        world, copyPos, EnumFacing.UP, .5F, .5F, .5F, placed),
+                "creative ramp pick did not place");
+        TileEntityRampController copy = (TileEntityRampController) world.getTileEntity(copyPos);
+        require(copy != null && copy.startOffset == 0 && copy.endOffset() == -2
+                        && copy.treadPixels == 8 && copy.getRedstoneChannel() == 4271
+                        && copy.rampDirection() == EnumFacing.WEST
+                        && copy.extendSegments,
+                "creative ramp pick did not restore settings");
+        world.setBlockToAir(copyPos);
+    }
+
     private static final class FaultController extends TileEntityRampController {
         private int writes;
         private final int failAt;
@@ -647,6 +680,7 @@ public final class ControllerRuntimeChecks {
             boolean upper,boolean smooth) {
         double px=player.posX,py=player.posY,pz=player.posZ;
         player.setPosition(root.getX()+.5,root.getY()+1,root.getZ()+.5);
+        clear(world,root);
         TileEntityRampController controller=place(world,root,EnumFacing.SOUTH);
         for (int row=1;row<=4;row++) for (int width=-1;width<=1;width++)
             world.setBlockState(root.south(row).west(width),

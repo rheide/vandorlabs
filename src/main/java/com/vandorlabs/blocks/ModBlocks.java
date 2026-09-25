@@ -32,11 +32,13 @@ import java.util.Map;
 @Mod.EventBusSubscriber(modid = VandorLabs.MODID)
 public class ModBlocks {
 
-    public static Block TRITANIUM_HULL;
     public static Block ANIMATED_SCREEN_SELECTOR;
     public static Block PROGRAMMABLE_CONSOLE;
     public static Block PROGRAMMABLE_WALL;
     public static Block PROGRAMMABLE_BLOCK;
+    public static Block PROGRAMMABLE_LIGHT;
+    public static Block PROGRAMMABLE_SLAB;
+    public static Block PROGRAMMABLE_CHAIR;
     public static Block PROGRAMMABLE_PORTHOLE_WALL;
     public static Block PROGRAMMABLE_DIAGONAL_WALL;
     public static Block PROGRAMMABLE_DIAGONAL_SCREEN;
@@ -44,6 +46,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_HALF_CONSOLE;
     public static Block PROGRAMMABLE_FULL_INPUT;
     public static Block CONTROLLED_RAMP;
+    public static Block PROGRAMMABLE_RAMP;
     public static final List<Block> BLOCKS = new ArrayList<>();
     /** Ids of every "display" (animated screen) block, sorted. Populated
      * from the generated catalog; drives the selector GUI list and packet
@@ -128,9 +131,6 @@ public class ModBlocks {
             } else {
                 add(block);
             }
-            if ("tritanium_hull".equals(id)) {
-                TRITANIUM_HULL = block;
-            }
         }
         java.util.Collections.sort(DISPLAY_SCREEN_IDS);
         Map<String, String> bareByKey = new HashMap<>();
@@ -160,9 +160,6 @@ public class ModBlocks {
             }
             SCREEN_OPTIONS.add(new ScreenOption(key, bare, framed));
         }
-        if (TRITANIUM_HULL == null) {
-            throw new IllegalStateException("vandorlabs: catalog is missing tritanium_hull");
-        }
         // Hand-maintained custom blocks with bespoke assets in
         // src/main/resources.
         add(new BlockIndustrialLever());
@@ -175,6 +172,9 @@ public class ModBlocks {
         PROGRAMMABLE_WALL = add(new BlockProgrammableWall("programmable_wall",
                 BlockProgrammableWall.Shape.PLAIN));
         PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
+        PROGRAMMABLE_LIGHT = add(new BlockProgrammableLight());
+        PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
+        PROGRAMMABLE_SLAB = add(new BlockProgrammableSlab());
         PROGRAMMABLE_PORTHOLE_WALL = add(new BlockProgrammableWall("programmable_porthole_wall",
                 BlockProgrammableWall.Shape.PORTHOLE));
         PROGRAMMABLE_DIAGONAL_WALL = add(new BlockProgrammableWall("programmable_diagonal_wall",
@@ -187,7 +187,7 @@ public class ModBlocks {
         add(PROGRAMMABLE_HALF_CONSOLE);
         PROGRAMMABLE_FULL_INPUT = new BlockProgrammableFullInput();
         add(PROGRAMMABLE_FULL_INPUT);
-        add(new BlockRampController());
+        PROGRAMMABLE_RAMP = add(new BlockRampController());
         CONTROLLED_RAMP = new BlockControlledRamp();
         addNoItem(CONTROLLED_RAMP);
     }
@@ -288,10 +288,6 @@ public class ModBlocks {
                         e.get("right_slide").getAsFloat(),
                         (BlockDetailedDoor) paired);
             }
-            case "BlockBridgeChair":
-                return new BlockBridgeChair(id,
-                        e.get("height_units").getAsFloat(),
-                        e.get("seat_y_units").getAsFloat());
             case "BlockLamp":
                 return new BlockLamp(id);
             case "BlockPropulsionLight":
@@ -366,6 +362,9 @@ public class ModBlocks {
     }
 
     private static String replacementBlockId(String id) {
+        if ("wall_vent".equals(id) || "bolted_wall_plate".equals(id)
+                || "vent_grille".equals(id) || "burgundy_carpet".equals(id)
+                || "bluegray_carpet".equals(id)) return null;
         for (String finish : com.vandorlabs.tiles.ScreenHousingTextures.IDS)
             if (finish.equals(id)) return "programmable_block";
         if ("plasma_thruster".equals(id)) return "plasma_vent_full_face";
@@ -388,9 +387,19 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        // Door control panels still use this sprite after the standalone
+        // Control Buttons block and its model were retired.
+        event.getMap().registerSprite(new ResourceLocation(
+                VandorLabs.MODID, "blocks/control_buttons"));
         for (int i = 0; i < com.vandorlabs.tiles.ScreenHousingTextures.IDS.length; i++)
             event.getMap().registerSprite(new ResourceLocation(
                     com.vandorlabs.tiles.ScreenHousingTextures.texture(i)));
+        for (int i = 0; i < com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length; i++) {
+            event.getMap().registerSprite(new ResourceLocation(
+                    com.vandorlabs.tiles.ProgrammableLightTextures.texture(i, true)));
+            event.getMap().registerSprite(new ResourceLocation(
+                    com.vandorlabs.tiles.ProgrammableLightTextures.texture(i, false)));
+        }
     }
 
     @SubscribeEvent
@@ -399,14 +408,25 @@ public class ModBlocks {
         for (Block block : BLOCKS) {
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);
+                if (block instanceof BlockConfigurableSpaceDoor) {
+                    registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
+                    ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
+                    continue;
+                }
+                if (block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_SLAB
+                        || block == PROGRAMMABLE_WALL || block == PROGRAMMABLE_DIAGONAL_WALL
+                        || block == PROGRAMMABLE_PORTHOLE_WALL) {
+                    registerHousingItemModels(block, item);
+                    continue;
+                }
+                if (block == PROGRAMMABLE_CHAIR) {
+                    registerChairItemModels(item);
+                    continue;
+                }
                 ModelLoader.setCustomModelResourceLocation(
                         item,
                         0,
                         new ModelResourceLocation(block.getRegistryName(), "inventory"));
-                if (block instanceof BlockConfigurableSpaceDoor) {
-                    registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
-                    continue;
-                }
                 if (block instanceof BlockDetailedDoor) {
                     ModelLoader.setCustomStateMapper(block,
                             new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
@@ -444,6 +464,54 @@ public class ModBlocks {
                 }
             }
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerHousingItemModels(Block block, Item item) {
+        String id = block.getRegistryName().getResourcePath();
+        ResourceLocation[] variants = new ResourceLocation[
+                com.vandorlabs.tiles.ScreenHousingTextures.IDS.length];
+        for (int i = 0; i < variants.length; i++)
+            variants[i] = new ResourceLocation(VandorLabs.MODID,
+                    "configured/" + id + "_"
+                            + com.vandorlabs.tiles.ScreenHousingTextures.IDS[i]);
+        ModelLoader.registerItemVariants(item, variants);
+        ModelLoader.setCustomMeshDefinition(item, stack -> {
+            net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+            int choice = tag == null ? 0 : com.vandorlabs.tiles.ScreenHousingTextures.clamp(
+                    tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+            return new ModelResourceLocation(variants[choice], "inventory");
+        });
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static ModelResourceLocation doorItemModel(net.minecraft.item.ItemStack stack) {
+        net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("SpaceDoorSettings");
+        com.vandorlabs.persistence.SpaceDoorData data =
+                com.vandorlabs.persistence.SpaceDoorData.read(
+                        new com.vandorlabs.persistence.NbtPrimitiveData(
+                                tag == null ? new net.minecraft.nbt.NBTTagCompound() : tag));
+        String model = com.vandorlabs.tiles.TileEntitySpaceDoor.modelId(
+                data.design, data.sliding, data.framed) + "_left_leaf"
+                + (!data.sliding && !data.hinges ? "_no_hinges" : "");
+        return new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
+                + com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[data.detail]
+                + "/" + model, "inventory");
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerChairItemModels(Item item) {
+        ResourceLocation[] variants = new ResourceLocation[BlockBridgeChair.Style.values().length];
+        for (int i = 0; i < variants.length; i++)
+            variants[i] = new ResourceLocation(VandorLabs.MODID,
+                    "configured/programmable_chair_" + BlockBridgeChair.Style.byIndex(i).id);
+        ModelLoader.registerItemVariants(item, variants);
+        ModelLoader.setCustomMeshDefinition(item, stack -> {
+            net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+            int style = tag == null ? 0 : tag.getInteger("ChairStyle");
+            return new ModelResourceLocation(variants[BlockBridgeChair.Style.byIndex(style)
+                    .ordinal()], "inventory");
+        });
     }
 
     @SideOnly(Side.CLIENT)

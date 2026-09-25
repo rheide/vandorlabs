@@ -15,6 +15,6 @@ public class VandorLabsTab extends CreativeTabs {
     @Override
     @SideOnly(Side.CLIENT)
     public ItemStack getTabIconItem() {
-        return new ItemStack(ModBlocks.TRITANIUM_HULL);
+        return new ItemStack(ModBlocks.PROGRAMMABLE_RAMP);
     }
 }

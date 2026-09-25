@@ -1,6 +1,8 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockBridgeChair;
+import com.vandorlabs.blocks.ModBlocks;
+import com.vandorlabs.tiles.TileEntityProgrammableChair;
 import com.vandorlabs.entity.EntityChairSeat;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -18,11 +20,9 @@ public final class ChairRuntimeChecks {
     public static void run(World world, EntityPlayerMP player) {
         String[] roles={"command","companion","operator","conference","mess_hall"};
         BlockPos pos = new BlockPos(18, 4, 18);
-        for (String role : roles) {
-            Block raw = Block.REGISTRY.getObject(new ResourceLocation(
-                    "vandorlabs", "bridge_chair_" + role));
-            require(raw instanceof BlockBridgeChair, role + " chair is not registered");
-            BlockBridgeChair chair = (BlockBridgeChair) raw;
+        for (int style = 0; style < roles.length; style++) {
+            String role = roles[style];
+            BlockBridgeChair chair = (BlockBridgeChair) ModBlocks.PROGRAMMABLE_CHAIR;
             world.setBlockToAir(pos.up());
             world.setBlockToAir(pos);
             IBlockState lower = chair.getDefaultState()
@@ -31,6 +31,15 @@ public final class ChairRuntimeChecks {
             world.setBlockState(pos, lower, 2);
             world.setBlockState(pos.up(), lower.withProperty(
                     BlockBridgeChair.UPPER, true), 2);
+            ((TileEntityProgrammableChair) world.getTileEntity(pos)).setStyle(style);
+            require(chair.getActualState(lower, world, pos).getValue(BlockBridgeChair.STYLE)
+                            == BlockBridgeChair.Style.byIndex(style),
+                    role + " model selection was not applied");
+            net.minecraft.item.ItemStack copied = chair.getPickBlock(lower, null,
+                    world, pos, player);
+            require(copied.getSubCompound("BlockEntityTag") != null
+                            && copied.getSubCompound("BlockEntityTag").getInteger("ChairStyle") == style,
+                    role + " middle-click copy lost style");
             require(chair.onBlockActivated(world, pos, lower, player,
                     EnumHand.MAIN_HAND, EnumFacing.UP, 0.5F, 0.5F, 0.5F),
                     role + " activation was not handled");

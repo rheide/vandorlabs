@@ -132,10 +132,20 @@ final class SpaceDoorRuntimeChecks {
         player.setSneaking(false);
         block.onBlockActivated(world,source.up(),world.getBlockState(source.up()),player,
                 EnumHand.MAIN_HAND,EnumFacing.WEST,14F/16,1.5F/16,4.5F/16);
-        check(player.openContainer instanceof com.vandorlabs.container.ContainerSpaceDoor
-                        && !world.getBlockState(source).getValue(BlockVandorDoor.OPEN),
-                "control pad did not open the settings dialog");
+        check(!(player.openContainer instanceof com.vandorlabs.container.ContainerSpaceDoor),
+                "regular click opened the settings dialog");
+        player.setSneaking(true);
+        block.onBlockActivated(world,source.up(),world.getBlockState(source.up()),player,
+                EnumHand.MAIN_HAND,EnumFacing.WEST,14F/16,1.5F/16,4.5F/16);
+        check(player.openContainer instanceof com.vandorlabs.container.ContainerSpaceDoor,
+                "creative shift-click did not open the settings dialog");
+        player.setSneaking(false);
         player.closeScreen();
+        // Restore the closed state after the ordinary click toggled the door.
+        block.onBlockActivated(world,source,world.getBlockState(source),player,
+                EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F);
+        check(!world.getBlockState(source).getValue(BlockVandorDoor.OPEN),
+                "ordinary click did not restore the closed door");
         TileEntitySpaceDoor controlled=tile(world,source);
         controlled.configure(controlled.getDesign(),controlled.getDetail(),controlled.isFramed(),
                 controlled.getSlideDirection(),controlled.isMiddle(),controlled.isSliding(),

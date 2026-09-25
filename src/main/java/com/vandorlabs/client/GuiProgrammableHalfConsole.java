@@ -37,7 +37,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private boolean redstoneEnabled;
     private int housingTexture;
     private GuiTextField channelField;
-    private GuiButton housingButton;
+    private HousingTextureList housingList;
+    private boolean housingOpen;
 
     public GuiProgrammableHalfConsole(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector te) {
@@ -50,7 +51,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         redstoneEnabled = te.isRedstoneEnabled();
         housingTexture = te.getHousingTexture();
         xSize = 420;
-        ySize = 268;
+        ySize = 240;
     }
 
     @Override
@@ -79,9 +80,11 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        housingButton = new GuiButton(50, x + 8, y + 208, xSize - 16, 20, "");
-        buttonList.add(housingButton);
-        buttonList.add(new GuiButton(20, x + (xSize - 200) / 2, y + 242, 200, 20,
+        housingList = new HousingTextureList(x + 8, y + 22, xSize - 24,
+                housingTexture);
+        buttonList.add(new GuiButton(21, x + 8, y + 208, 198, 20,
+                I18n.format("gui.vandorlabs.selector.housing")));
+        buttonList.add(new GuiButton(20, x + 214, y + 208, 198, 20,
                 I18n.format("gui.done")));
         topScroll = reveal(topPanel);
         bottomScroll = reveal(bottomPanel);
@@ -98,10 +101,6 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             }
             if (button.id >= 1 && button.id <= 3) button.enabled = displayMode != button.id - 1;
             if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
-            if (button.id == 50) button.displayString =
-                    I18n.format("gui.vandorlabs.selector.housing") + ": "
-                    + I18n.format("tile.vandorlabs."
-                            + ScreenHousingTextures.IDS[housingTexture] + ".name");
         }
     }
 
@@ -132,13 +131,14 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
-        if (button == 1 && housingButton.mousePressed(mc, mouseX, mouseY)) {
-            housingButton.playPressSound(mc.getSoundHandler());
-            housingTexture = ScreenHousingTextures.cycle(housingTexture, -1);
-            refreshButtons();
-            sendUpdate();
+        if (housingOpen && housingList.click(mouseX, mouseY, button)) {
+            if (housingTexture != housingList.selected()) {
+                housingTexture = housingList.selected();
+                sendUpdate();
+            }
             return;
         }
+        if (housingOpen) { housingOpen = false; return; }
         if (button == 0 && mouseY >= top && mouseY < top + ROW_H * ROWS) {
             int list = mouseX >= left + 144 && mouseX < left + 150 ? 1
                     : mouseX >= right + 144 && mouseX < right + 150 ? 2 : 0;
@@ -172,10 +172,12 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override protected void mouseReleased(int mouseX,int mouseY,int state) {
         draggingList = 0;
+        if (housingList != null) housingList.release();
         super.mouseReleased(mouseX,mouseY,state);
     }
 
     @Override protected void mouseClickMove(int mouseX,int mouseY,int button,long elapsed) {
+        if (housingList != null && housingList.drag(mouseY)) return;
         if (draggingList != 0) dragScrollbarTo(mouseY);
         else super.mouseClickMove(mouseX,mouseY,button,elapsed);
     }
@@ -190,11 +192,10 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button.id == 20) { if (channel()>=0) sendUpdate(); mc.player.closeScreen(); return; }
+        if (button.id == 21) { housingOpen = !housingOpen; return; }
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
-        else if (button.id == 50)
-            housingTexture = ScreenHousingTextures.cycle(housingTexture, 1);
         else return;
         refreshButtons();
         sendUpdate();
@@ -204,6 +205,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
+        if (housingOpen && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+                height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         if (wheel != 0) {
             int mouseX = Mouse.getEventX() * width / mc.displayWidth;
             int delta = wheel > 0 ? -1 : 1;
@@ -285,6 +288,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         fontRenderer.drawString("Channel", x + 338, y + 164, 0xFFA0A0A8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
+        if (housingOpen) housingList.draw(fontRenderer, mouseX, mouseY);
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {

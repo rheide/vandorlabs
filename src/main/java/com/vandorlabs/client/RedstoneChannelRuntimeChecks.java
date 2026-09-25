@@ -2,8 +2,6 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.BlockVandorSwitch;
-import com.vandorlabs.blocks.BlockLampOff;
-import com.vandorlabs.blocks.BlockLamp;
 import com.vandorlabs.blocks.BlockPropulsionLight;
 import com.vandorlabs.blocks.BlockConnectedPropulsionLight;
 import com.vandorlabs.blocks.BlockTrianglePropulsionLight;
@@ -43,24 +41,18 @@ final class RedstoneChannelRuntimeChecks {
         checkLinkedLatches(world,player);
         Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "rocker_switch"));
         Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "space_standard_rotating_door_framed"));
-        Block rawLight = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "wall_lightbar_unlit"));
         Block rawPropulsion = Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "ion_drive"));
         require(rawSwitch instanceof BlockVandorSwitch && rawDoor instanceof BlockVandorDoor
-                        && rawLight instanceof BlockLampOff
                         && rawPropulsion instanceof BlockPropulsionLight,
                 "channel test blocks are missing");
         BlockVandorSwitch channelSwitch = (BlockVandorSwitch) rawSwitch;
         BlockVandorDoor door = (BlockVandorDoor) rawDoor;
-        BlockLampOff light = (BlockLampOff) rawLight;
         BlockPropulsionLight propulsion = (BlockPropulsionLight) rawPropulsion;
         BlockPos switchPos = new BlockPos(24, 25, 24);
         BlockPos secondSwitchPos = switchPos.add(0, 0, -4);
         BlockPos doorPos = switchPos.add(4, 0, 0);
-        // Keep one receiver directly beside the first switch. This exercises
-        // the case where the same block contributes physical power and also
-        // follows the channel while another transmitter remains on.
-        BlockPos lightPos = switchPos.east();
+        // Keep the propulsion receiver near the first switch.
         BlockPos propulsionPos = switchPos.east(2);
 
         world.setBlockState(switchPos.down(), Blocks.STONE.getDefaultState(), 3);
@@ -81,7 +73,6 @@ final class RedstoneChannelRuntimeChecks {
         world.setBlockState(doorPos, lower, 3);
         world.setBlockState(doorPos.up(), lower.withProperty(BlockVandorDoor.HALF,
                 BlockDoor.EnumDoorHalf.UPPER), 3);
-        world.setBlockState(lightPos, light.getDefaultState(), 3);
         world.setBlockState(propulsionPos, propulsion.getDefaultState()
                 .withProperty(BlockPropulsionLight.FACING, EnumFacing.EAST), 3);
 
@@ -89,16 +80,12 @@ final class RedstoneChannelRuntimeChecks {
         RedstoneChannelMember secondSwitchTile = (RedstoneChannelMember)
                 world.getTileEntity(secondSwitchPos);
         RedstoneChannelMember doorTile = (RedstoneChannelMember) world.getTileEntity(doorPos);
-        RedstoneChannelMember lightTile = (RedstoneChannelMember) world.getTileEntity(lightPos);
         RedstoneChannelMember propulsionTile = (RedstoneChannelMember)
                 world.getTileEntity(propulsionPos);
         switchTile.setRedstoneChannel(4271);
         secondSwitchTile.setRedstoneChannel(4271);
         doorTile.setRedstoneChannel(4271);
-        lightTile.setRedstoneChannel(4271);
         propulsionTile.setRedstoneChannel(4271);
-        require(world.getBlockState(lightPos).getBlock() instanceof BlockLampOff,
-                "unpowered channel light started illuminated");
         require(!world.getBlockState(propulsionPos).getValue(BlockPropulsionLight.POWERED),
                 "unpowered channel propulsion fixture started illuminated");
         channelSwitch.onBlockActivated(world, switchPos, world.getBlockState(switchPos), player,
@@ -107,9 +94,6 @@ final class RedstoneChannelRuntimeChecks {
                 "switch high did not propagate to door");
         require(world.getBlockState(secondSwitchPos).getValue(BlockVandorSwitch.ON),
                 "linked rocker did not mirror the first switch");
-        require(world.getBlockState(lightPos).getBlock() instanceof BlockLamp,
-                "switch high kept unlit block variant: "
-                        + world.getBlockState(lightPos).getBlock().getRegistryName());
         require(world.getBlockState(propulsionPos).getValue(BlockPropulsionLight.POWERED)
                         && world.getBlockState(propulsionPos).getValue(BlockPropulsionLight.FACING)
                                 == EnumFacing.EAST,
@@ -125,30 +109,16 @@ final class RedstoneChannelRuntimeChecks {
                 EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
         require(world.getBlockState(doorPos).getValue(BlockVandorDoor.OPEN),
                 "switch ON did not re-power channel");
-        require(world.getBlockState(lightPos).getBlock() instanceof BlockLamp,
-                "switch ON did not re-light channel fixture");
         channelSwitch.onBlockActivated(world, secondSwitchPos,
                 world.getBlockState(secondSwitchPos), player,
                 EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
         require(!world.getBlockState(doorPos).getValue(BlockVandorDoor.OPEN),
                 "linked switch OFF did not release door");
-        require(world.getBlockState(lightPos).getBlock() instanceof BlockLampOff,
-                "last of two switches low kept lit block variant: "
-                        + world.getBlockState(lightPos).getBlock().getRegistryName());
         require(!world.getBlockState(propulsionPos).getValue(BlockPropulsionLight.POWERED),
                 "last of two switches low kept propulsion fixture illuminated");
 
-        require(lightTile.getRedstoneChannel() == 4271,
-                "redstone-driven lamp toggle discarded its channel");
-        NBTTagCompound lightNbt = ((TileEntityRedstoneLight) lightTile)
-                .writeToNBT(new NBTTagCompound());
         NBTTagCompound propulsionNbt = ((TileEntityRedstoneLight) propulsionTile)
                 .writeToNBT(new NBTTagCompound());
-        lightTile.setRedstoneChannel(0);
-        light.onBlockActivated(world, lightPos, world.getBlockState(lightPos), player,
-                EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
-        require(world.getBlockState(lightPos).getBlock() instanceof BlockLamp,
-                "channel-zero lamp did not preserve manual right-click behavior");
         propulsionTile.setRedstoneChannel(0);
         propulsion.onBlockActivated(world, propulsionPos, world.getBlockState(propulsionPos),
                 player, EnumHand.MAIN_HAND, EnumFacing.UP, .5F, .5F, .5F);
@@ -182,7 +152,6 @@ final class RedstoneChannelRuntimeChecks {
                 .writeToNBT(new NBTTagCompound());
         require(switchNbt.getInteger("RedstoneChannel") == 4271
                         && doorNbt.getInteger("RedstoneChannel") == 4271
-                        && lightNbt.getInteger("RedstoneChannel") == 4271
                         && propulsionNbt.getInteger("RedstoneChannel") == 4271,
                 "channel assignments were not persisted");
 
@@ -193,7 +162,6 @@ final class RedstoneChannelRuntimeChecks {
         world.setBlockToAir(doorPos.up());
         world.setBlockToAir(doorPos);
         world.setBlockToAir(doorPos.down());
-        world.setBlockToAir(lightPos);
         world.setBlockToAir(propulsionPos);
         System.out.println("[vandorlabs][reprolab] redstone-channel-runtime PASS");
     }

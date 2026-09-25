@@ -49,7 +49,7 @@ public class MessageSpaceDoor implements IMessage {
             player.getServerWorld().addScheduledTask(()->{
                 if (!TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
                         || !SpaceDoorData.validTrigger(m.trigger)
-                        || m.channel<0 || m.pos==null
+                        || m.channel<0 || m.pos==null || !player.capabilities.isCreativeMode
                         || !player.world.isBlockLoaded(m.pos) || !(player.openContainer instanceof ContainerSpaceDoor)) return;
                 TileEntity raw=player.world.getTileEntity(m.pos);
                 ContainerSpaceDoor container=(ContainerSpaceDoor)player.openContainer;

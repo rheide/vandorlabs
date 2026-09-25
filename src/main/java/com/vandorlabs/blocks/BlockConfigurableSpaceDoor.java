@@ -49,7 +49,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,
             EnumHand hand,EnumFacing face,float x,float y,float z) {
-        if (!player.isSneaking() && !hitControlPanel(world,pos,state,face,x,y,z))
+        if (hand != EnumHand.MAIN_HAND || !player.isSneaking()
+                || !player.capabilities.isCreativeMode)
             return super.onBlockActivated(world,pos,state,player,hand,face,x,y,z);
         BlockPos lower=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
         if (!world.isRemote) player.openGui(VandorLabs.instance,GuiHandler.GUI_SPACE_DOOR,world,

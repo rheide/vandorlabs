@@ -283,6 +283,10 @@ public class ReproLab {
                 galleryFeet + 1.0D, -26.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("gallery_lighting_controls", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
+        SHOTS.add(new Shot("gallery_joined_lights", GALLERY_X,
+                galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
+        SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
+                galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {
@@ -912,15 +916,15 @@ public class ReproLab {
                         + (row == 0 ? "top_" : "bottom_") + columns[column]);
             }
         }
-        placeChair(world, CHAIR_COMMAND, "bridge_chair_command");
-        placeChair(world, CHAIR_COMPANION, "bridge_chair_companion");
-        placeChair(world, CHAIR_OPERATOR, "bridge_chair_operator");
-        placeChair(world, CHAIR_CONFERENCE, "bridge_chair_conference");
-        placeChair(world, CHAIR_MESS_HALL, "bridge_chair_mess_hall");
+        placeChair(world, CHAIR_COMMAND, 0);
+        placeChair(world, CHAIR_COMPANION, 1);
+        placeChair(world, CHAIR_OPERATOR, 2);
+        placeChair(world, CHAIR_CONFERENCE, 3);
+        placeChair(world, CHAIR_MESS_HALL, 4);
         String[] materials = {"stitched_padding", "seamed_padding",
                 "ribbed_padding", "cushion_padding",
-                "cyan_light_strip", "control_buttons",
-                "vent_grille", "amber_light_strip",
+                "cyan_light_strip", "border_light",
+                "amber_light_strip",
                                 "wall_pipes", "framed_wall_pipes"};
         for (int index = 0; index < materials.length; index++) {
             Block material = Block.REGISTRY.getObject(
@@ -930,13 +934,18 @@ public class ReproLab {
         }
         String[] hullFloors = {"light_alloy_hull", "dark_gunmetal_hull",
                 "midnight_matte_hull", "midnight_satin_hull",
-                "bluegray_carpet", "burgundy_carpet",
+                "bluegray", "burgundy",
                 "metal_floor"};
         for (int index = 0; index < hullFloors.length; index++) {
             String id = hullFloors[index];
-            Block hull = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
-            world.setBlockState(MATERIAL_GRID.add(4 + index % 2, 3 - index / 2, 0),
-                    hull.getDefaultState(), 2);
+            int finish = java.util.Arrays.asList(
+                    com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf(id);
+            Block hull = finish >= 0 ? ModBlocks.PROGRAMMABLE_BLOCK
+                    : Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
+            BlockPos at = MATERIAL_GRID.add(4 + index % 2, 3 - index / 2, 0);
+            world.setBlockState(at, hull.getDefaultState(), 2);
+            if (finish >= 0) ((TileEntityAnimatedScreenSelector)
+                    world.getTileEntity(at)).setHousingTexture(finish);
         }
         Block ceilingThruster = Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "ion_drive"));
@@ -975,16 +984,15 @@ public class ReproLab {
         System.out.println("[vandorlabs][reprolab] platform built");
     }
 
-    private static void placeChair(World world, BlockPos pos, String id) {
-        Block raw = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
-        if (!(raw instanceof BlockBridgeChair)) {
-            throw new IllegalStateException("missing bridge chair " + id);
-        }
+    private static void placeChair(World world, BlockPos pos, int style) {
+        Block raw = ModBlocks.PROGRAMMABLE_CHAIR;
         IBlockState lower = raw.getDefaultState()
                 .withProperty(BlockBridgeChair.FACING, EnumFacing.NORTH)
                 .withProperty(BlockBridgeChair.UPPER, false);
         world.setBlockState(pos, lower, 2);
         world.setBlockState(pos.up(), lower.withProperty(BlockBridgeChair.UPPER, true), 2);
+        ((com.vandorlabs.tiles.TileEntityProgrammableChair)
+                world.getTileEntity(pos)).setStyle(style);
     }
 
     private static void buildGalleryStage(World world, String shot) {
@@ -1060,16 +1068,18 @@ public class ReproLab {
                 }
             }
         } else if (shot.equals("gallery_lighting_controls")) {
-            String[] lamps = {"slatted_lamp", "window_lamp", "light_column_wall",
-                    "lightbar_wall", "porthole"};
-            String[] unlit = {"slatted_lamp_unlit", "window_lamp_unlit",
-                    "wall_light_columns_unlit", "wall_lightbar_unlit", "porthole_unlit"};
-            for (int i = 0; i < lamps.length; i++) {
+            for (int i = 0; i < com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length; i++) {
                 int x = GALLERY_X - 9 + i * 2;
-                world.setBlockState(new BlockPos(x, GALLERY_Y + 3, -18),
-                        block(lamps[i]).getDefaultState(), 2);
-                world.setBlockState(new BlockPos(x, GALLERY_Y + 1, -18),
-                        block(unlit[i]).getDefaultState(), 2);
+                BlockPos on = new BlockPos(x, GALLERY_Y + 3, -18);
+                BlockPos off = new BlockPos(x, GALLERY_Y + 1, -18);
+                world.setBlockState(on, ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 2);
+                world.setBlockState(off, ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 2);
+                ((com.vandorlabs.tiles.TileEntityProgrammableLight) world.getTileEntity(on))
+                        .configure(i, 15);
+                com.vandorlabs.tiles.TileEntityProgrammableLight dark =
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight) world.getTileEntity(off);
+                dark.configure(i, 15);
+                dark.setOn(false);
             }
             String[] controls = {"push_button", "rocker_switch",
                     "industrial_power_lever", "compact_power_lever"};
@@ -1094,16 +1104,42 @@ public class ReproLab {
                 world.setBlockState(new BlockPos(x, GALLERY_Y + 3, -18), on, 2);
                 world.setBlockState(new BlockPos(x, GALLERY_Y + 1, -18), off, 2);
             }
+        } else if (shot.equals("gallery_joined_lights")) {
+            for (int style = 0; style < 2; style++) {
+                for (int dx = 0; dx < 3; dx++)
+                    for (int dy = 0; dy < 2; dy++) {
+                        BlockPos at = new BlockPos(GALLERY_X - 6 + style * 8 + dx,
+                                GALLERY_Y + 1 + dy, -18);
+                        world.setBlockState(at, ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 2);
+                        ((com.vandorlabs.tiles.TileEntityProgrammableLight)
+                                world.getTileEntity(at)).configure(style == 0 ? 0 : 2,
+                                style == 0 ? 15 : 9, true, 0);
+                    }
+            }
+        } else if (shot.equals("gallery_programmable_slabs")) {
+            for (int i = 0; i < 6; i++) {
+                boolean top = i >= 3;
+                BlockPos at = new BlockPos(GALLERY_X - 6 + (i % 3) * 4,
+                        GALLERY_Y + (top ? 3 : 1), -18);
+                world.setBlockState(at, ModBlocks.PROGRAMMABLE_SLAB.getDefaultState()
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableSlab.HALF,
+                                top ? net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
+                                        : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM), 2);
+                ((TileEntityAnimatedScreenSelector) world.getTileEntity(at))
+                        .setHousingTexture(i == 2 || i == 5
+                                ? com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1
+                                : i % 3);
+            }
         } else if (shot.equals("gallery_structure")) {
-            String[] ids = {"tritanium_hull", "dark_wall_panel", "light_wall_panel",
+            String[] ids = {"dark_wall_panel", "light_wall_panel",
                     "bolted_wall_plate", "ribbed_wall", "wall_vent", "border_base_left",
                     "border_base_right", "border_corner_left", "border_corner_right",
                     "border_light", "border_light_vertical", "framed_wall_pipes",
                     "wall_pipes", "stitched_padding", "seamed_padding",
-                    "ribbed_padding", "cushion_padding", "control_buttons",
+                    "ribbed_padding", "cushion_padding", "border_light",
                     "vent_grille", "light_alloy_hull",
                     "dark_gunmetal_hull", "midnight_matte_hull", "midnight_satin_hull",
-                    "bluegray_carpet", "burgundy_carpet",
+                    "bluegray", "burgundy",
                     "metal_floor", "clear_cockpit_glass", "pale_cyan_cockpit_glass",
                     "smoked_cockpit_glass"};
             for (int i = 0; i < ids.length; i++) {
@@ -1175,12 +1211,9 @@ public class ReproLab {
                 }
             }
         } else if (shot.equals("gallery_chairs")) {
-            String[] chairs = {"bridge_chair_command",
-                    "bridge_chair_companion", "bridge_chair_operator",
-                    "bridge_chair_conference", "bridge_chair_mess_hall"};
-            for (int i = 0; i < chairs.length; i++)
+            for (int i = 0; i < 5; i++)
                 placeChair(world, new BlockPos(GALLERY_X - 6 + i * 3,
-                        GALLERY_Y, -18), chairs[i]);
+                        GALLERY_Y, -18), i);
         } else if (shot.startsWith("gallery_ramp_") && !world.isRemote) {
             EntityPlayerMP player = null;
             for (EntityPlayer candidate : world.playerEntities) {

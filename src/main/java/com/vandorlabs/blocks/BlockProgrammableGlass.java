@@ -89,7 +89,8 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing face, float x, float y, float z) {
-        if (hand != EnumHand.MAIN_HAND) return true;
+        if (hand != EnumHand.MAIN_HAND || !player.isSneaking()
+                || !player.capabilities.isCreativeMode) return false;
         if (!world.isRemote) player.openGui(VandorLabs.instance, GuiHandler.GUI_PROGRAMMABLE_GLASS,
                 world, pos.getX(), pos.getY(), pos.getZ());
         return true;

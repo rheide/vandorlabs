@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/thrusters/dark_trim",
+    "top": "vandorlabs:blocks/thrusters/dark_trim",
+    "side": "vandorlabs:blocks/thrusters/dark_trim"
+  }
+}

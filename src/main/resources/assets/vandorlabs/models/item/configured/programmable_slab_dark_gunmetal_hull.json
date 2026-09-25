@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/dark_gunmetal_hull",
+    "top": "vandorlabs:blocks/dark_gunmetal_hull",
+    "side": "vandorlabs:blocks/dark_gunmetal_hull"
+  }
+}

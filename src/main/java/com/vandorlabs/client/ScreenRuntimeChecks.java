@@ -30,6 +30,9 @@ final class ScreenRuntimeChecks {
 
     static void run(EntityPlayer player) {
         checkTilePersistence();
+        checkProgrammableLight(player);
+        checkProgrammableLightJoin(player);
+        checkProgrammableSlab(player);
         checkHousingSprites();
         checkHousingCycling();
         checkSurvivalDropRoundTrip(player);
@@ -44,11 +47,167 @@ final class ScreenRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] screen-runtime PASS");
     }
 
+    private static void checkProgrammableLight(EntityPlayer player) {
+        require(ModBlocks.PROGRAMMABLE_LIGHT != null,
+                "programmable light is not registered");
+        BlockPos pos = new BlockPos(32, 250, 32);
+        player.world.setBlockState(pos, ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 3);
+        try {
+            com.vandorlabs.tiles.TileEntityProgrammableLight light =
+                    (com.vandorlabs.tiles.TileEntityProgrammableLight)
+                    player.world.getTileEntity(pos);
+            require(light != null, "programmable light tile missing");
+            for (int i = 0; i < com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length; i++) {
+                for (boolean on : new boolean[]{true, false}) {
+                    String name = com.vandorlabs.tiles.ProgrammableLightTextures.texture(i, on);
+                    require(name.equals(Minecraft.getMinecraft().getTextureMapBlocks()
+                                    .getAtlasSprite(name).getIconName()),
+                            "missing programmable light sprite: " + name);
+                }
+                light.configure(i, i + 1);
+                require(light.getTexture() == i && light.getLightLevel() == i + 1
+                                && ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
+                                player.world.getBlockState(pos), player.world, pos) == i + 1,
+                        "programmable light choice or emission failed: " + i);
+            }
+            light.setOn(false);
+            require(ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
+                            player.world.getBlockState(pos), player.world, pos) == 0,
+                    "switched-off programmable light still emits");
+            NBTTagCompound saved = light.writeToNBT(new NBTTagCompound());
+            com.vandorlabs.tiles.TileEntityProgrammableLight restored =
+                    new com.vandorlabs.tiles.TileEntityProgrammableLight();
+            restored.readFromNBT(saved);
+            require(restored.getTexture() == 4 && restored.getLightLevel() == 5
+                            && !restored.isOn(),
+                    "programmable light settings did not persist");
+        } finally {
+            player.world.setBlockToAir(pos);
+        }
+    }
+
+    private static void checkProgrammableLightJoin(EntityPlayer player) {
+        BlockPos origin = new BlockPos(36, 250, 36);
+        try {
+            for (int dx = 0; dx < 2; dx++)
+                for (int dy = 0; dy < 2; dy++) {
+                    BlockPos at = origin.add(dx, dy, 0);
+                    player.world.setBlockState(at,
+                            ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 3);
+                    ((com.vandorlabs.tiles.TileEntityProgrammableLight)
+                            player.world.getTileEntity(at)).configure(2, 12, true, 0);
+                }
+            com.vandorlabs.tiles.TileEntityProgrammableLight first =
+                    (com.vandorlabs.tiles.TileEntityProgrammableLight)
+                    player.world.getTileEntity(origin);
+            TEAnimatedScreenSelector.LightGroup group =
+                    TEAnimatedScreenSelector.lightGroup(first,
+                            player.world.getBlockState(origin));
+            require(group.columns == 2 && group.rows == 2
+                            && group.left(origin) == 0 && group.right(origin) == 8
+                            && group.top(origin) == 8 && group.bottom(origin) == 16,
+                    "joined light artwork did not span the 2 by 2 group");
+            first.configure(2, 12, false, 0);
+            group = TEAnimatedScreenSelector.lightGroup(first,
+                    player.world.getBlockState(origin));
+            require(group.columns == 1 && group.rows == 1,
+                    "disabling join did not separate the light");
+            first.configure(3, 7, true, 4271);
+            require(!first.isOn() && ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
+                            player.world.getBlockState(origin), player.world, origin) == 0,
+                    "unpowered channel light remained on");
+            first.setChannelSignal(true);
+            require(first.isOn() && ModBlocks.PROGRAMMABLE_LIGHT.getLightValue(
+                            player.world.getBlockState(origin), player.world, origin) == 7,
+                    "channel signal did not apply configured light level");
+            ItemStack picked = ((BlockAnimatedScreenSelector) ModBlocks.PROGRAMMABLE_LIGHT)
+                    .getPickBlock(player.world.getBlockState(origin), null,
+                            player.world, origin, player);
+            NBTTagCompound saved = picked.getSubCompound("BlockEntityTag");
+            require(saved != null && saved.getInteger("LightTexture") == 3
+                            && saved.getInteger("LightLevel") == 7
+                            && saved.getBoolean("LightJoin")
+                            && saved.getInteger("RedstoneChannel") == 4271,
+                    "creative pick lost programmable light configuration");
+            BlockPos copyPos = origin.add(3, 0, 0);
+            require(((ItemBlock) picked.getItem()).placeBlockAt(picked.copy(), player,
+                            player.world, copyPos, EnumFacing.UP, .5F, .5F, .5F,
+                            ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState()),
+                    "picked programmable light did not place");
+            com.vandorlabs.tiles.TileEntityProgrammableLight copy =
+                    (com.vandorlabs.tiles.TileEntityProgrammableLight)
+                    player.world.getTileEntity(copyPos);
+            require(copy != null && copy.getTexture() == 3 && copy.getLightLevel() == 7
+                            && copy.isJoin() && copy.getRedstoneChannel() == 4271,
+                    "placed programmable light did not restore its configuration");
+        } finally {
+            for (int dx = 0; dx < 5; dx++)
+                for (int dy = 0; dy < 2; dy++)
+                    player.world.setBlockToAir(origin.add(dx, dy, 0));
+        }
+    }
+
+    private static void checkProgrammableSlab(EntityPlayer player) {
+        com.vandorlabs.blocks.BlockProgrammableSlab slab =
+                (com.vandorlabs.blocks.BlockProgrammableSlab) ModBlocks.PROGRAMMABLE_SLAB;
+        BlockPos pos = new BlockPos(41, 250, 41);
+        IBlockState bottom = slab.getStateForPlacement(player.world, pos,
+                EnumFacing.UP, .5F, .9F, .5F, 0, player);
+        IBlockState top = slab.getStateForPlacement(player.world, pos,
+                EnumFacing.DOWN, .5F, .1F, .5F, 0, player);
+        require(bottom.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                        == net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM
+                        && top.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                        == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP,
+                "programmable slab did not follow clicked face");
+        IBlockState sideTop = slab.getStateForPlacement(player.world, pos,
+                EnumFacing.NORTH, .5F, .75F, .5F, 0, player);
+        IBlockState sideBottom = slab.getStateForPlacement(player.world, pos,
+                EnumFacing.NORTH, .5F, .25F, .5F, 0, player);
+        require(sideTop.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                        == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
+                        && sideBottom.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                        == net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM,
+                "programmable slab did not follow side hit height");
+        require(slab.getBoundingBox(bottom, player.world, pos).maxY == .5
+                        && slab.getBoundingBox(top, player.world, pos).minY == .5
+                        && slab.getStateFromMeta(slab.getMetaFromState(top))
+                        .getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                        == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP,
+                "programmable slab bounds or metadata failed");
+        player.world.setBlockState(pos, top, 3);
+        try {
+            TileEntityAnimatedScreenSelector tile =
+                    (TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos);
+            tile.setHousingTexture(ScreenHousingTextures.IDS.length - 1);
+            ItemStack picked = slab.getPickBlock(top, null, player.world, pos, player);
+            BlockPos copyPos = pos.east();
+            require(((ItemBlock) picked.getItem()).placeBlockAt(picked.copy(), player,
+                            player.world, copyPos, EnumFacing.UP, .5F, .5F, .5F, top),
+                    "picked programmable slab did not place");
+            TileEntityAnimatedScreenSelector copy =
+                    (TileEntityAnimatedScreenSelector) player.world.getTileEntity(copyPos);
+            require(copy != null && copy.getHousingTexture()
+                            == ScreenHousingTextures.IDS.length - 1
+                            && player.world.getBlockState(copyPos).getValue(
+                            com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                            == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP,
+                    "picked programmable slab lost its texture or top placement");
+            player.world.setBlockToAir(copyPos);
+        } finally {
+            player.world.setBlockToAir(pos);
+        }
+    }
+
     private static void checkInputScrollbar() {
         require(GuiProgrammableInput.scrollForDrag(105, 100, 100, 20, 10, 5) == 0
                         && GuiProgrammableInput.scrollForDrag(145, 100, 100, 20, 10, 5) == 5
                         && GuiProgrammableInput.scrollForDrag(185, 100, 100, 20, 10, 5) == 10,
                 "half-input scrollbar drag does not cover its full range");
+        HousingTextureList finishes = new HousingTextureList(0, 0, 120, 0);
+        finishes.wheel(10, 10, -1);
+        finishes.click(10, 2, 0);
+        require(finishes.selected() == 1, "housing finish list did not scroll and select");
         require(GuiProgrammableWall.scrollForDrag(105, 100, 100, 20, 4, 5) == 0
                         && GuiProgrammableWall.scrollForDrag(145, 100, 100, 20, 4, 5) == 2
                         && GuiProgrammableWall.scrollForDrag(185, 100, 100, 20, 4, 5) == 4,

@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["BBB"],
+  "key": {"B": {"item": "vandorlabs:programmable_block"}},
+  "result": {"item": "vandorlabs:programmable_slab", "count": 6}
+}

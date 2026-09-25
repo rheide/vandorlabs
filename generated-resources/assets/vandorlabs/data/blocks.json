@@ -675,32 +675,6 @@
     "retired": true
   },
   {
-    "id": "slatted_lamp",
-    "type": "light",
-    "class": "BlockLamp",
-    "item": true
-  },
-  {
-    "id": "slatted_lamp_unlit",
-    "type": "light_off",
-    "class": "BlockLampOff",
-    "item": false,
-    "pair": "slatted_lamp"
-  },
-  {
-    "id": "window_lamp",
-    "type": "light",
-    "class": "BlockLamp",
-    "item": true
-  },
-  {
-    "id": "window_lamp_unlit",
-    "type": "light_off",
-    "class": "BlockLampOff",
-    "item": false,
-    "pair": "window_lamp"
-  },
-  {
     "id": "planet_bare_1",
     "type": "screen",
     "class": "BlockVandorDirectional",
@@ -1344,38 +1318,6 @@
     "programmable_only": true
   },
   {
-    "id": "tritanium_hull",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "light_column_wall",
-    "type": "light",
-    "class": "BlockLamp",
-    "item": true
-  },
-  {
-    "id": "wall_light_columns_unlit",
-    "type": "light_off",
-    "class": "BlockLampOff",
-    "item": false,
-    "pair": "light_column_wall"
-  },
-  {
-    "id": "lightbar_wall",
-    "type": "light",
-    "class": "BlockLamp",
-    "item": true
-  },
-  {
-    "id": "wall_lightbar_unlit",
-    "type": "light_off",
-    "class": "BlockLampOff",
-    "item": false,
-    "pair": "lightbar_wall"
-  },
-  {
     "id": "dark_wall_panel",
     "programmable_only": true,
     "type": "regular",
@@ -1396,33 +1338,8 @@
     "item": true
   },
   {
-    "id": "bolted_wall_plate",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "porthole",
-    "type": "light",
-    "class": "BlockLamp",
-    "item": true
-  },
-  {
-    "id": "porthole_unlit",
-    "type": "light_off",
-    "class": "BlockLampOff",
-    "item": false,
-    "pair": "porthole"
-  },
-  {
     "id": "ribbed_wall",
     "programmable_only": true,
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "wall_vent",
     "type": "regular",
     "class": "BlockVandorDirectional",
     "item": true
@@ -1494,46 +1411,6 @@
     "grid_column": 2
   },
   {
-    "id": "bridge_chair_command",
-    "type": "bridge_chair",
-    "class": "BlockBridgeChair",
-    "item": true,
-    "height_units": 24,
-    "seat_y_units": 12
-  },
-  {
-    "id": "bridge_chair_companion",
-    "type": "bridge_chair",
-    "class": "BlockBridgeChair",
-    "item": true,
-    "height_units": 21,
-    "seat_y_units": 11
-  },
-  {
-    "id": "bridge_chair_operator",
-    "type": "bridge_chair",
-    "class": "BlockBridgeChair",
-    "item": true,
-    "height_units": 23,
-    "seat_y_units": 12
-  },
-  {
-    "id": "bridge_chair_conference",
-    "type": "bridge_chair",
-    "class": "BlockBridgeChair",
-    "item": true,
-    "height_units": 23.5,
-    "seat_y_units": 11
-  },
-  {
-    "id": "bridge_chair_mess_hall",
-    "type": "bridge_chair",
-    "class": "BlockBridgeChair",
-    "item": true,
-    "height_units": 18.5,
-    "seat_y_units": 10
-  },
-  {
     "id": "stitched_padding",
     "type": "regular",
     "class": "BlockVandor",
@@ -1561,18 +1438,6 @@
     "id": "cyan_light_strip",
     "type": "regular",
     "class": "BlockLightStrip",
-    "item": true
-  },
-  {
-    "id": "control_buttons",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "vent_grille",
-    "type": "regular",
-    "class": "BlockVandor",
     "item": true
   },
   {
@@ -1604,18 +1469,6 @@
   },
   {
     "id": "midnight_satin_hull",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "bluegray_carpet",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "burgundy_carpet",
     "type": "regular",
     "class": "BlockVandor",
     "item": true

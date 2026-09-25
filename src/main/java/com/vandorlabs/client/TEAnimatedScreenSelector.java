@@ -90,6 +90,95 @@ public class TEAnimatedScreenSelector
     private static World portholeCacheWorld;
     private static long portholeCacheTick = Long.MIN_VALUE;
     private static long portholeCacheRevision = Long.MIN_VALUE;
+    private static final Map<BlockPos, LightGroup> LIGHT_GROUPS = new HashMap<>();
+    private static World lightCacheWorld;
+    private static long lightCacheTick = Long.MIN_VALUE;
+    private static long lightCacheRevision = Long.MIN_VALUE;
+
+    static final class LightGroup {
+        final int minAxis, minY, columns, rows;
+        final EnumFacing right;
+
+        LightGroup(int minAxis, int minY, int columns, int rows, EnumFacing right) {
+            this.minAxis = minAxis;
+            this.minY = minY;
+            this.columns = columns;
+            this.rows = rows;
+            this.right = right;
+        }
+
+        double left(BlockPos pos) { return 16.0 * (axis(pos, right) - minAxis) / columns; }
+        double right(BlockPos pos) { return 16.0 * (axis(pos, right) - minAxis + 1) / columns; }
+        double top(BlockPos pos) { return 16.0 * (rows - 1 - (pos.getY() - minY)) / rows; }
+        double bottom(BlockPos pos) { return 16.0 * (rows - (pos.getY() - minY)) / rows; }
+    }
+
+    static LightGroup lightGroup(com.vandorlabs.tiles.TileEntityProgrammableLight tile,
+            IBlockState state) {
+        World world = tile.getWorld();
+        long tick = world.getTotalWorldTime();
+        long revision = com.vandorlabs.tiles.TileEntityProgrammableLight.getJoinRevision();
+        if (world != lightCacheWorld || tick != lightCacheTick
+                || revision != lightCacheRevision) {
+            LIGHT_GROUPS.clear();
+            lightCacheWorld = world;
+            lightCacheTick = tick;
+            lightCacheRevision = revision;
+        }
+        LightGroup cached = LIGHT_GROUPS.get(tile.getPos());
+        if (cached != null) return cached;
+        EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
+        EnumFacing right = facing.rotateY();
+        if (!facing.getAxis().isHorizontal()) right = EnumFacing.EAST;
+        Set<BlockPos> members = new HashSet<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
+        members.add(tile.getPos());
+        queue.add(tile.getPos());
+        boolean capped = false;
+        if (tile.isJoin()) {
+            while (!queue.isEmpty()) {
+                BlockPos current = queue.removeFirst();
+                for (EnumFacing side : new EnumFacing[] {
+                        right, right.getOpposite(), EnumFacing.UP, EnumFacing.DOWN}) {
+                    BlockPos next = current.offset(side);
+                    if (members.contains(next) || !world.isBlockLoaded(next)
+                            || !eligibleLight(world, next, facing, tile)) continue;
+                    members.add(next);
+                    queue.addLast(next);
+                    if (members.size() >= 4096) {
+                        capped = true;
+                        queue.clear();
+                        break;
+                    }
+                }
+            }
+        }
+        if (capped) members.clear();
+        if (members.isEmpty()) members.add(tile.getPos());
+        Map<Long, BlockPos> positions = new HashMap<>();
+        for (BlockPos pos : members)
+            positions.put(PortholeRectangles.cell(axis(pos, right), pos.getY()), pos);
+        for (PortholeRectangles.Rect rect : PortholeRectangles.partition(positions.keySet())) {
+            LightGroup group = new LightGroup(rect.x, rect.y, rect.width, rect.height, right);
+            for (int row = rect.y; row < rect.y + rect.height; row++)
+                for (int col = rect.x; col < rect.x + rect.width; col++)
+                    LIGHT_GROUPS.put(positions.get(PortholeRectangles.cell(col, row)), group);
+        }
+        return LIGHT_GROUPS.get(tile.getPos());
+    }
+
+    private static boolean eligibleLight(World world, BlockPos pos, EnumFacing facing,
+            com.vandorlabs.tiles.TileEntityProgrammableLight first) {
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock() != ModBlocks.PROGRAMMABLE_LIGHT
+                || state.getValue(BlockAnimatedScreenSelector.FACING) != facing) return false;
+        net.minecraft.tileentity.TileEntity raw = world.getTileEntity(pos);
+        if (!(raw instanceof com.vandorlabs.tiles.TileEntityProgrammableLight)) return false;
+        com.vandorlabs.tiles.TileEntityProgrammableLight other =
+                (com.vandorlabs.tiles.TileEntityProgrammableLight) raw;
+        return other.isJoin() && other.getTexture() == first.getTexture()
+                && other.isOn() == first.isOn();
+    }
 
     static final class PortholeGroup {
         final int minAxis, minY, columns, rows;
@@ -290,6 +379,36 @@ public class TEAnimatedScreenSelector
         }
         if (state.getBlock() instanceof BlockProgrammableWall) {
             renderProgrammableWall(te, state, x, y, z);
+            return;
+        }
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLight) {
+            com.vandorlabs.tiles.TileEntityProgrammableLight light =
+                    (com.vandorlabs.tiles.TileEntityProgrammableLight) te;
+            beginLocalTransform(x, y, z, state.getValue(BlockAnimatedScreenSelector.FACING));
+            GlStateManager.disableLighting();
+            bindAtlas();
+            setNeighborWorldLight(te);
+            TextureAtlasSprite housing = wallSprite(te);
+            TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks()
+                    .getAtlasSprite(com.vandorlabs.tiles.ProgrammableLightTextures.texture(
+                            light.getTexture(), light.isOn() && light.getLightLevel() > 0));
+            renderWallBox(housing, 0, 0, 0, 16, 16, 16);
+            renderProgrammableLightFace(face, lightGroup(light, state), te.getPos());
+            GlStateManager.enableLighting();
+            endLocalTransform();
+            return;
+        }
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableSlab) {
+            beginLocalTransform(x, y, z, state.getValue(BlockAnimatedScreenSelector.FACING));
+            GlStateManager.disableLighting();
+            bindAtlas();
+            setNeighborWorldLight(te);
+            boolean upper = state.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                    == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP;
+            renderWallBox(wallSprite(te), 0, upper ? 8 : 0, 0,
+                    16, upper ? 16 : 8, 16);
+            GlStateManager.enableLighting();
+            endLocalTransform();
             return;
         }
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableBlock) {
@@ -999,6 +1118,17 @@ public class TEAnimatedScreenSelector
         // Explicit upper/lower geometry keeps the artwork upright. Reflecting
         // the model matrix would also reflect the texture.
         drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted));
+    }
+
+    private static void renderProgrammableLightFace(TextureAtlasSprite face,
+            LightGroup group, BlockPos pos) {
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder buf = tess.getBuffer();
+        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        spriteQuad(buf, face, 16,16,-.002, 0,16,-.002,
+                0,0,-.002, 16,0,-.002, group.left(pos), group.top(pos),
+                group.right(pos), group.bottom(pos));
+        tess.draw();
     }
 
     private static void bindAtlas() {

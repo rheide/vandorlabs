@@ -8,6 +8,7 @@ import com.vandorlabs.blocks.BlockProgrammableHalfConsole;
 import com.vandorlabs.blocks.BlockProgrammableFullInput;
 import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
+import com.vandorlabs.blocks.BlockProgrammableSlab;
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import com.vandorlabs.redstone.RedstoneChannelMember;
@@ -26,9 +27,23 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_REDSTONE_CHANNEL = 2;
     public static final int GUI_SPACE_DOOR = 3;
     public static final int GUI_PROGRAMMABLE_GLASS = 4;
+    public static final int GUI_PROGRAMMABLE_LIGHT = 5;
+    public static final int GUI_PROGRAMMABLE_CHAIR = 6;
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_PROGRAMMABLE_CHAIR) {
+            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
+                return new com.vandorlabs.container.ContainerProgrammableChair(
+                        (com.vandorlabs.tiles.TileEntityProgrammableChair) tile);
+        }
+        if (ID == GUI_PROGRAMMABLE_LIGHT) {
+            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableLight)
+                return new ContainerAnimatedScreenSelector(player.inventory,
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight) tile);
+        }
         if (ID==GUI_PROGRAMMABLE_GLASS) {
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass)
@@ -60,6 +75,18 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_PROGRAMMABLE_CHAIR) {
+            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
+                return new com.vandorlabs.client.GuiProgrammableChair(
+                        (com.vandorlabs.tiles.TileEntityProgrammableChair) tile);
+        }
+        if (ID == GUI_PROGRAMMABLE_LIGHT) {
+            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableLight)
+                return new com.vandorlabs.client.GuiProgrammableLight(player.inventory,
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight) tile);
+        }
         if (ID==GUI_PROGRAMMABLE_GLASS) {
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass)
@@ -85,7 +112,9 @@ public class GuiHandler implements IGuiHandler {
             if (te instanceof TileEntityAnimatedScreenSelector) {
                 if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
                         instanceof BlockProgrammableWall || world.getBlockState(
-                        new BlockPos(x, y, z)).getBlock() instanceof BlockProgrammableBlock) {
+                        new BlockPos(x, y, z)).getBlock() instanceof BlockProgrammableBlock
+                        || world.getBlockState(new BlockPos(x, y, z)).getBlock()
+                        instanceof BlockProgrammableSlab) {
                     return new com.vandorlabs.client.GuiProgrammableWall(player.inventory,
                             (TileEntityAnimatedScreenSelector) te);
                 }

@@ -36,7 +36,8 @@ public final class MessageProgrammableGlass implements IMessage {
                 TileEntity te = player.world.getTileEntity(msg.pos);
                 ContainerProgrammableGlass container = (ContainerProgrammableGlass) player.openContainer;
                 if (!(te instanceof TileEntityProgrammableGlass) || container.tile != te
-                        || !container.canInteractWith(player)) return;
+                        || !container.canInteractWith(player)
+                        || !player.capabilities.isCreativeMode) return;
                 IBlockState state = player.world.getBlockState(msg.pos);
                 if (!(state.getBlock() instanceof BlockProgrammableGlass)) return;
                 if (state.getValue(BlockProgrammableGlass.DEPTH) == 0) {

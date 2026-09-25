@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/light_alloy_hull",
+    "top": "vandorlabs:blocks/light_alloy_hull",
+    "side": "vandorlabs:blocks/light_alloy_hull"
+  }
+}

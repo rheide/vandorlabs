@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "vandorlabs:programmable_block"},
+    {"item": "minecraft:glowstone_dust"}
+  ],
+  "result": {"item": "vandorlabs:programmable_light"}
+}

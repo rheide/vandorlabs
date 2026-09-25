@@ -1,12 +1,22 @@
 package com.vandorlabs.blocks;
 
 import com.vandorlabs.entity.EntityChairSeat;
+import com.vandorlabs.GuiHandler;
+import com.vandorlabs.VandorLabs;
+import com.vandorlabs.tiles.TileEntityProgrammableChair;
 import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.BlockRenderLayer;
@@ -24,22 +34,51 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class BlockBridgeChair extends BlockVandorDirectional {
 
     public static final PropertyBool UPPER = PropertyBool.create("upper");
-    private final double height;
-    private final double seatY;
+    public enum Style implements IStringSerializable {
+        COMMAND("command", 24, 12), COMPANION("companion", 21, 11),
+        OPERATOR("operator", 23, 12), CONFERENCE("conference", 23.5, 11),
+        MESS_HALL("mess_hall", 18.5, 10);
+        public final String id;
+        public final double height, seatY;
+        Style(String id, double height, double seatY) {
+            this.id = id; this.height = height / 16.0; this.seatY = seatY / 16.0;
+        }
+        @Override public String getName() { return id; }
+        public static Style byIndex(int index) {
+            return values()[Math.max(0, Math.min(values().length - 1, index))];
+        }
+    }
+    public static final PropertyEnum<Style> STYLE = PropertyEnum.create("style", Style.class);
 
-    public BlockBridgeChair(String name, float heightUnits, float seatYUnits) {
-        super(name);
-        height = heightUnits / 16.0D;
-        seatY = seatYUnits / 16.0D;
+    public BlockBridgeChair() {
+        super("programmable_chair");
         setDefaultState(this.blockState.getBaseState()
                 .withProperty(FACING, EnumFacing.SOUTH)
-                .withProperty(UPPER, false));
+                .withProperty(UPPER, false).withProperty(STYLE, Style.COMMAND));
         setLightOpacity(0);
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, UPPER);
+        return new BlockStateContainer(this, FACING, UPPER, STYLE);
+    }
+
+    @Override public boolean hasTileEntity(IBlockState state) { return true; }
+    @Override public TileEntity createTileEntity(World world, IBlockState state) {
+        return new TileEntityProgrammableChair();
+    }
+
+    private TileEntityProgrammableChair settings(IBlockAccess world, BlockPos pos,
+            IBlockState state) {
+        TileEntity raw = world.getTileEntity(state.getValue(UPPER) ? pos.down() : pos);
+        return raw instanceof TileEntityProgrammableChair
+                ? (TileEntityProgrammableChair) raw : null;
+    }
+
+    @Override public IBlockState getActualState(IBlockState state, IBlockAccess world,
+            BlockPos pos) {
+        TileEntityProgrammableChair tile = settings(world, pos, state);
+        return state.withProperty(STYLE, Style.byIndex(tile == null ? 0 : tile.getStyle()));
     }
 
     @Override
@@ -62,6 +101,9 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             EntityLivingBase placer, ItemStack stack) {
         if (!world.isRemote) {
             world.setBlockState(pos.up(), state.withProperty(UPPER, true), 3);
+            TileEntityProgrammableChair tile = settings(world, pos, state);
+            NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+            if (tile != null && tag != null) tile.setStyle(tag.getInteger("ChairStyle"));
         }
     }
 
@@ -90,6 +132,12 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             EnumFacing side, float hitX, float hitY, float hitZ) {
         if (hand != EnumHand.MAIN_HAND) return true;
         BlockPos lower = state.getValue(UPPER) ? pos.down() : pos;
+        if (player.isSneaking()) {
+            if (player.capabilities.isCreativeMode && !world.isRemote)
+                player.openGui(VandorLabs.instance, GuiHandler.GUI_PROGRAMMABLE_CHAIR,
+                        world, lower.getX(), lower.getY(), lower.getZ());
+            return player.capabilities.isCreativeMode;
+        }
         if (world.isRemote) return true;
         AxisAlignedBB search = new AxisAlignedBB(lower).grow(0.25D, 1.0D, 0.25D);
         for (EntityChairSeat seat : world.getEntitiesWithinAABB(
@@ -100,7 +148,9 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             }
             if (!seat.isDead) return true; // occupied
         }
-        EntityChairSeat seat = new EntityChairSeat(world, lower, seatY);
+        TileEntityProgrammableChair tile = settings(world, pos, state);
+        EntityChairSeat seat = new EntityChairSeat(world, lower,
+                Style.byIndex(tile == null ? 0 : tile.getStyle()).seatY);
         IBlockState lowerState = world.getBlockState(lower);
         seat.rotationYaw = lowerState.getValue(FACING).getHorizontalAngle();
         if (world.spawnEntity(seat)) player.startRiding(seat, true);
@@ -133,16 +183,41 @@ public class BlockBridgeChair extends BlockVandorDirectional {
         return state.withRotation(mirror.toRotation(state.getValue(FACING)));
     }
 
-    @Override
-    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
+    @Override public boolean isOpaqueCube(IBlockState state) { return false; }
+    @Override public boolean isFullCube(IBlockState state) { return false; }
+
+    @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
             BlockPos pos) {
+        TileEntityProgrammableChair tile = settings(world, pos, state);
+        double height = Style.byIndex(tile == null ? 0 : tile.getStyle()).height;
         return state.getValue(UPPER)
                 ? new AxisAlignedBB(0, 0, 0, 1, Math.max(0.05D, height - 1.0D), 1)
                 : FULL_BLOCK_AABB;
     }
 
-    @Override public boolean isOpaqueCube(IBlockState state) { return false; }
-    @Override public boolean isFullCube(IBlockState state) { return false; }
+    @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
+            World world, BlockPos pos, EntityPlayer player) {
+        ItemStack stack = new ItemStack(Item.getItemFromBlock(this));
+        TileEntityProgrammableChair tile = settings(world, pos, state);
+        if (tile != null) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setInteger("ChairStyle", tile.getStyle());
+            stack.setTagInfo("BlockEntityTag", tag);
+        }
+        return stack;
+    }
+
+    @Override public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world,
+            BlockPos pos, IBlockState state, int fortune) {
+        ItemStack stack = new ItemStack(Item.getItemFromBlock(this));
+        TileEntityProgrammableChair tile = settings(world, pos, state);
+        if (tile != null) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setInteger("ChairStyle", tile.getStyle());
+            stack.setTagInfo("BlockEntityTag", tag);
+        }
+        drops.add(stack);
+    }
 
     @Override
     @SideOnly(Side.CLIENT)

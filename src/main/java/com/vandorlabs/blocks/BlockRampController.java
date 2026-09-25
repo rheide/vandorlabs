@@ -7,6 +7,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +39,9 @@ public class BlockRampController extends BlockVandorDirectional {
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
             EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
-        if (!world.isRemote && hand==EnumHand.MAIN_HAND) player.openGui(VandorLabs.instance,
+        if (hand != EnumHand.MAIN_HAND || !player.isSneaking()
+                || !player.capabilities.isCreativeMode) return false;
+        if (!world.isRemote) player.openGui(VandorLabs.instance,
                 GuiHandler.GUI_RAMP_CONTROLLER,world,pos.getX(),pos.getY(),pos.getZ());
         return true;
     }
@@ -53,10 +58,45 @@ public class BlockRampController extends BlockVandorDirectional {
             net.minecraft.entity.EntityLivingBase placer,net.minecraft.item.ItemStack stack) {
         TileEntity te=world.getTileEntity(pos);
         if (!world.isRemote && te instanceof TileEntityRampController) {
-            if (placer instanceof EntityPlayer) ((TileEntityRampController)te).setOwner((EntityPlayer)placer);
-            ((TileEntityRampController)te).updatePower();
+            TileEntityRampController ramp = (TileEntityRampController) te;
+            if (placer instanceof EntityPlayer) ramp.setOwner((EntityPlayer) placer);
+            NBTTagCompound settings = stack.hasTagCompound()
+                    && stack.getTagCompound().hasKey("RampSettings", 10)
+                    ? stack.getTagCompound().getCompoundTag("RampSettings") : null;
+            if (settings != null && placer instanceof EntityPlayer) {
+                ramp.configureTreads((EntityPlayer) placer,
+                        settings.getInteger("StartOffset"), settings.getInteger("EndOffset"),
+                        settings.getInteger("TreadPixels"), settings.getBoolean("PowerOn"),
+                        settings.getInteger("Speed") == 2, settings.getBoolean("Elevator"),
+                        EnumFacing.getHorizontal(settings.getInteger("Direction") & 3),
+                        settings.getInteger("TravelAxis"),
+                        settings.getBoolean("ExtendSegments"), settings.getInteger("Speed"));
+                ramp.setRedstoneChannel(settings.getInteger("Channel"));
+            } else ramp.updatePower();
         }
     }
+    @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
+            World world, BlockPos pos, EntityPlayer player) {
+        ItemStack stack = new ItemStack(this);
+        TileEntity raw = world.getTileEntity(pos);
+        if (raw instanceof TileEntityRampController) {
+            TileEntityRampController ramp = (TileEntityRampController) raw;
+            NBTTagCompound settings = new NBTTagCompound();
+            settings.setInteger("StartOffset", ramp.startOffset);
+            settings.setInteger("EndOffset", ramp.endOffset());
+            settings.setInteger("TreadPixels", ramp.treadPixels);
+            settings.setBoolean("PowerOn", ramp.activateOnPower);
+            settings.setBoolean("Elevator", ramp.elevator);
+            settings.setInteger("Direction", ramp.rampDirection().getHorizontalIndex());
+            settings.setInteger("TravelAxis", ramp.travelAxis);
+            settings.setBoolean("ExtendSegments", ramp.extendSegments);
+            settings.setInteger("Speed", ramp.speed);
+            settings.setInteger("Channel", ramp.getRedstoneChannel());
+            stack.setTagInfo("RampSettings", settings);
+        }
+        return stack;
+    }
+
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random) {
         TileEntity te=world.getTileEntity(pos);
         if (te instanceof TileEntityRampController) ((TileEntityRampController)te).scheduledTick();

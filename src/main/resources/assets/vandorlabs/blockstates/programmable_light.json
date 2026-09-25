@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": {"model": "vandorlabs:programmable_light"},
+    "facing=south": {"model": "vandorlabs:programmable_light"},
+    "facing=east": {"model": "vandorlabs:programmable_light"},
+    "facing=west": {"model": "vandorlabs:programmable_light"},
+    "facing=up": {"model": "vandorlabs:programmable_light"},
+    "facing=down": {"model": "vandorlabs:programmable_light"}
+  }
+}

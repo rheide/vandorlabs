@@ -68,7 +68,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private ResourceLocation previewTexture;
     private String inputPanel;
     private int housingTexture;
-    private GuiButton housingButton;
+    private HousingTextureList housingList;
+    private boolean housingOpen;
 
     private int scrollIndex;
     private boolean draggingScrollbar;
@@ -109,7 +110,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         this.fullInput = te.getWorld() != null && te.getWorld().getBlockState(pos)
                 .getBlock() instanceof BlockProgrammableFullInput;
         this.xSize = console ? 320 : 300;
-        this.ySize = 268;
+        this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
         this.displayMode = te.getDisplayMode();
         this.speedIndex = te.getAnimationSpeedIndex();
@@ -225,14 +226,16 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         buttonList.add(modeStaticButton);
         buttonList.add(modeAnimatedButton);
         buttonList.add(frameButton);
-        housingButton = new GuiButton(50, x + 8, y + 210, xSize - 16, 20, "");
-        buttonList.add(housingButton);
-        int doneW = Math.min(200, xSize - 16);
+        housingList = new HousingTextureList(x + 8, y + 22, xSize - 24,
+                housingTexture);
         channelField = new GuiTextField(40,fontRenderer,x+64,y+186,84,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        buttonList.add(new GuiButton(20, x + (xSize - doneW) / 2, y + 236, doneW, 20,
+        buttonList.add(new GuiButton(21, x + 8, y + 212, xSize / 2 - 12, 20,
+                I18n.format("gui.vandorlabs.selector.housing")));
+        buttonList.add(new GuiButton(20, x + xSize / 2 + 4, y + 212,
+                xSize / 2 - 12, 20,
                 I18n.format("gui.done")));
         refreshButtons();
         clampScroll();
@@ -252,9 +255,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         slowButton.enabled = speedIndex != 0;
         normalButton.enabled = speedIndex != 1;
         fastButton.enabled = speedIndex != 2;
-        housingButton.displayString = I18n.format("gui.vandorlabs.selector.housing") + ": "
-                + I18n.format("tile.vandorlabs."
-                        + ScreenHousingTextures.IDS[housingTexture] + ".name");
     }
 
     private void sendUpdate() {
@@ -299,12 +299,12 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
             case 12:
                 speedIndex = 2;
                 break;
-            case 50:
-                housingTexture = ScreenHousingTextures.cycle(housingTexture, 1);
-                break;
             case 20:
                 if (channel() >= 0) sendUpdate();
                 mc.player.closeScreen();
+                return;
+            case 21:
+                housingOpen = !housingOpen;
                 return;
             default:
                 return;
@@ -345,13 +345,14 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if (mouseButton == 1 && housingButton.mousePressed(mc, mouseX, mouseY)) {
-            housingButton.playPressSound(mc.getSoundHandler());
-            housingTexture = ScreenHousingTextures.cycle(housingTexture, -1);
-            refreshButtons();
-            sendUpdate();
+        if (housingOpen && housingList.click(mouseX, mouseY, mouseButton)) {
+            if (housingTexture != housingList.selected()) {
+                housingTexture = housingList.selected();
+                sendUpdate();
+            }
             return;
         }
+        if (housingOpen) { housingOpen = false; return; }
         if (console && mouseButton == 0 && mouseX >= inputListRight
                 && mouseX < inputListRight + 8 && mouseY >= inputListTop
                 && mouseY < inputListBottom && maxInputScroll() > 0) {
@@ -405,6 +406,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
         draggingScrollbar = false;
+        if (housingList != null) housingList.release();
         draggingInputScrollbar = false;
         super.mouseReleased(mouseX, mouseY, state);
     }
@@ -412,6 +414,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
             long timeSinceLastClick) {
+        if (housingList != null && housingList.drag(mouseY)) return;
         if (draggingScrollbar) {
             dragScrollbarTo(mouseY);
         } else if (draggingInputScrollbar) {
@@ -439,6 +442,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
+        if (housingOpen && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+                height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         if (wheel != 0) {
             int mouseX = Mouse.getEventX() * width / mc.displayWidth;
             int mouseY = height - Mouse.getEventY() * height / mc.displayHeight - 1;
@@ -575,6 +580,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         fontRenderer.drawString("Channel",x+8,y+192,0xFFA0A0A8);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
+        if (housingOpen) housingList.draw(fontRenderer, mouseX, mouseY);
         // Hovered-row tooltip: family name plus which variant it addresses.
         // The selected row shows its live variant; other pairs show both.
         if (mouseX >= listLeft && mouseX < listRight

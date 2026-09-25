@@ -6,6 +6,7 @@ import com.vandorlabs.network.MessageProgrammableWallShade;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
+import com.vandorlabs.blocks.BlockProgrammableSlab;
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.client.gui.GuiButton;
@@ -46,7 +47,9 @@ public class GuiProgrammableWall extends GuiContainer {
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
                 .getBlock()).getShape() == BlockProgrammableWall.Shape.PORTHOLE;
         fullBlock = tile.getWorld().getBlockState(tile.getPos()).getBlock()
-                instanceof BlockProgrammableBlock;
+                instanceof BlockProgrammableBlock
+                || tile.getWorld().getBlockState(tile.getPos()).getBlock()
+                instanceof BlockProgrammableSlab;
         selected = tile.getHousingTexture();
         shade = tile.getGlassShade();
         join = tile.isJoinPortholes();
@@ -174,8 +177,10 @@ public class GuiProgrammableWall extends GuiContainer {
         drawDefaultBackground();
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 18, 0xFF202028);
-        fontRenderer.drawString(I18n.format(fullBlock
-                        ? "gui.vandorlabs.block.title" : "gui.vandorlabs.wall.title"),
+        fontRenderer.drawString(I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
+                        instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
+                        : fullBlock ? "gui.vandorlabs.block.title"
+                        : "gui.vandorlabs.wall.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
         drawRect(listX - 1, listY - 1, listX + LIST_W + 8,
                 listY + ROW_H * ROWS + 1, 0xFF000000);

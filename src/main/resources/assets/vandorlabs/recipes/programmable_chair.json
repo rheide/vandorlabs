@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [" I ", "IPI", " I "],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "P": {"item": "vandorlabs:programmable_block"}
+  },
+  "result": {"item": "vandorlabs:programmable_chair"}
+}

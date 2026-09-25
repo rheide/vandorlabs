@@ -136,11 +136,14 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
             EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if (!world.isRemote && world.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector) {
+        if (hand == EnumHand.MAIN_HAND && player.isSneaking()
+                && player.capabilities.isCreativeMode && !world.isRemote
+                && world.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector) {
             player.openGui(VandorLabs.instance, GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,
                     world, pos.getX(), pos.getY(), pos.getZ());
         }
-        return true;
+        return hand == EnumHand.MAIN_HAND && player.isSneaking()
+                && player.capabilities.isCreativeMode;
     }
 
     @Override

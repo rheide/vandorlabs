@@ -64,6 +64,8 @@ public class ClientProxy extends CommonProxy {
                 new com.vandorlabs.client.TEProgrammableGlass());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityControlledRamp.class, new TEControlledRamp());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityAnimatedScreenSelector.class, new TEAnimatedScreenSelector());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableLight.class,
+                new TEAnimatedScreenSelector());
         if (System.getProperty("vandorlabs.reprolab") != null) {
             MinecraftForge.EVENT_BUS.register(new ReproLab());
         }

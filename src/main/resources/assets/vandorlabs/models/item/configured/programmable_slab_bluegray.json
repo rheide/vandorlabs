@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/bluegray_carpet",
+    "top": "vandorlabs:blocks/bluegray_carpet",
+    "side": "vandorlabs:blocks/bluegray_carpet"
+  }
+}

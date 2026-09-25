@@ -112,15 +112,69 @@ final class ItemRuntimeChecks {
                         && mc.getRenderItem().getItemModelMesher().getItemModel(programmableBlock)
                         != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
                 "programmable block item/name/model");
+        checkConfiguredItemModels(mc);
         for (String removed : new String[]{"plasma_vent_side", "plasma_vent_top",
                 "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
                 "plasma_vent_cavity", "rubber_studs", "framed_observation_glass",
                 "space_glass_small", "space_glass_medium", "space_glass_large",
                 "wall_regular", "wall_porthole", "wall_bottom_diagonal", "wall_top_diagonal",
-                "non_slip_metal_floor"})
+                "non_slip_metal_floor", "tritanium_hull", "wall_vent",
+                "bolted_wall_plate", "porthole", "porthole_unlit",
+                "light_column_wall", "wall_light_columns_unlit",
+                "slatted_lamp", "slatted_lamp_unlit",
+                "window_lamp", "window_lamp_unlit",
+                "lightbar_wall", "wall_lightbar_unlit", "control_buttons",
+                "vent_grille", "burgundy_carpet", "bluegray_carpet",
+                "bridge_chair_command", "bridge_chair_companion",
+                "bridge_chair_operator", "bridge_chair_conference",
+                "bridge_chair_mess_hall"})
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
+    }
+
+    private static void checkConfiguredItemModels(Minecraft mc) {
+        Block[] housingBlocks = {
+                com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK,
+                com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_SLAB,
+                com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_WALL,
+                com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,
+                com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_PORTHOLE_WALL};
+        for (Block block : housingBlocks) {
+            ItemStack first = new ItemStack(block);
+            ItemStack last = new ItemStack(block);
+            net.minecraft.nbt.NBTTagCompound tag = new net.minecraft.nbt.NBTTagCompound();
+            tag.setInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,
+                    com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1);
+            last.setTagInfo("BlockEntityTag", tag);
+            net.minecraft.client.renderer.block.model.IBakedModel a =
+                    mc.getRenderItem().getItemModelMesher().getItemModel(first);
+            net.minecraft.client.renderer.block.model.IBakedModel b =
+                    mc.getRenderItem().getItemModelMesher().getItemModel(last);
+            require(a != b && a != mc.getRenderItem().getItemModelMesher()
+                            .getModelManager().getMissingModel()
+                            && b != mc.getRenderItem().getItemModelMesher()
+                            .getModelManager().getMissingModel(),
+                    block.getRegistryName() + " hotbar texture does not follow copied housing");
+        }
+        ItemStack chairA = new ItemStack(com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_CHAIR);
+        ItemStack chairB = chairA.copy();
+        net.minecraft.nbt.NBTTagCompound chairTag = new net.minecraft.nbt.NBTTagCompound();
+        chairTag.setInteger("ChairStyle", 4);
+        chairB.setTagInfo("BlockEntityTag", chairTag);
+        require(mc.getRenderItem().getItemModelMesher().getItemModel(chairA)
+                        != mc.getRenderItem().getItemModelMesher().getItemModel(chairB),
+                "programmable chair hotbar model does not follow selected style");
+        ItemStack doorA = new ItemStack(Block.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "programmable_door")));
+        ItemStack doorB = doorA.copy();
+        net.minecraft.nbt.NBTTagCompound doorTag = new net.minecraft.nbt.NBTTagCompound();
+        new com.vandorlabs.persistence.SpaceDoorData(7, 2, false, 0)
+                .write(new com.vandorlabs.persistence.NbtPrimitiveData(doorTag));
+        doorB.setTagInfo("SpaceDoorSettings", doorTag);
+        require(mc.getRenderItem().getItemModelMesher().getItemModel(doorA)
+                        != mc.getRenderItem().getItemModelMesher().getItemModel(doorB),
+                "programmable door hotbar model does not follow copied design");
     }
 
     private static void checkIndustrialAlloyIngot(InventoryCrafting grid,
