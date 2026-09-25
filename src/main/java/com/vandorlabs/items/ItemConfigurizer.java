@@ -3,6 +3,7 @@ package com.vandorlabs.items;
 import com.vandorlabs.GuiHandler;
 import com.vandorlabs.VandorLabs;
 import com.vandorlabs.blocks.BlockRampController;
+import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
@@ -39,7 +40,10 @@ public final class ItemConfigurizer extends Item {
         World world = event.getWorld();
         BlockPos pos = event.getPos();
         IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() instanceof BlockDoor
+        if (state.getBlock() instanceof BlockVandorDoor
+                && state.getValue(BlockVandorDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER)
+            pos = pos.down();
+        else if (state.getBlock() instanceof BlockDoor
                 && state.getValue(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER)
             pos = pos.down();
         TileEntity tile = world.getTileEntity(pos);

@@ -31,6 +31,14 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_PROGRAMMABLE_LIGHT = 5;
     public static final int GUI_PROGRAMMABLE_CHAIR = 6;
 
+    private static TileEntity doorTile(World world, BlockPos pos) {
+        net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockVandorDoor
+                && state.getValue(com.vandorlabs.blocks.BlockVandorDoor.HALF)
+                == net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER) pos = pos.down();
+        return world.getTileEntity(pos);
+    }
+
     private static TileEntity chairTile(World world, BlockPos pos) {
         net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockBridgeChair
@@ -58,7 +66,7 @@ public class GuiHandler implements IGuiHandler {
                 return new com.vandorlabs.container.ContainerProgrammableGlass((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile);
         }
         if (ID==GUI_SPACE_DOOR) {
-            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            TileEntity tile=doorTile(world,new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
                 return new com.vandorlabs.container.ContainerSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)tile);
         }
@@ -101,7 +109,7 @@ public class GuiHandler implements IGuiHandler {
                 return new com.vandorlabs.client.GuiProgrammableGlass((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile);
         }
         if (ID==GUI_SPACE_DOOR) {
-            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            TileEntity tile=doorTile(world,new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
                 return new com.vandorlabs.client.GuiSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)tile);
         }

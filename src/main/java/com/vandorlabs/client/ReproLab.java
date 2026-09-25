@@ -574,17 +574,45 @@ public class ReproLab {
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"ramp_controller_gui");
                 BlockPos doorGui=CONSOLE.add(0,0,3);
-                for (World w:new World[]{mc.getIntegratedServer().getWorld(0),mc.world}) {
-                    placeDoor(w,doorGui,"programmable_door",false);
-                    ((com.vandorlabs.tiles.TileEntitySpaceDoor)w.getTileEntity(doorGui))
-                            .configure(2,1,true,0,true,false,false);
-                }
-                mc.displayGuiScreen(new GuiSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)mc.world.getTileEntity(doorGui)));
+                mc.displayGuiScreen(null);
+                mc.getIntegratedServer().addScheduledTask(() -> {
+                    World serverWorld = mc.getIntegratedServer().getWorld(0);
+                    placeDoor(serverWorld,doorGui,"programmable_door",false);
+                    ((com.vandorlabs.tiles.TileEntitySpaceDoor)serverWorld.getTileEntity(doorGui))
+                            .configure(7,1,true,0,true,false,false);
+                    EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()
+                            .getPlayerByUsername(mc.player.getName());
+                    serverPlayer.setPositionAndUpdate(doorGui.getX()+.5,doorGui.getY(),doorGui.getZ()-2);
+                    serverPlayer.capabilities.isCreativeMode = false;
+                    serverPlayer.setHeldItem(EnumHand.MAIN_HAND,
+                            new ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));
+                    com.vandorlabs.items.ItemConfigurizer.onRightClickBlock(
+                            new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock(
+                                    serverPlayer,EnumHand.MAIN_HAND,doorGui.up(),EnumFacing.NORTH,
+                                    new net.minecraft.util.math.Vec3d(.5,.5,.5)));
+                });
+                state=23;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 23:
+                if (--holdTicks > 0) break;
+                if (!(mc.currentScreen instanceof GuiSpaceDoor))
+                    throw new IllegalStateException("Configurizer upper-door GUI did not open");
+                GuiSpaceDoor doorScreen = (GuiSpaceDoor) mc.currentScreen;
+                for (int i=0;i<5;i++)
+                    doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(11,0,0,"Size"));
+                for (int i=0;i<3;i++)
+                    doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(12,0,0,"Frame"));
                 state=12;
                 holdTicks=GUI_SETTLE_TICKS;
                 break;
             case 12:
                 if (--holdTicks > 0) break;
+                com.vandorlabs.tiles.TileEntitySpaceDoor editedDoor =
+                        (com.vandorlabs.tiles.TileEntitySpaceDoor)mc.getIntegratedServer().getWorld(0)
+                                .getTileEntity(CONSOLE.add(0,0,3));
+                if (editedDoor.getDesign()!=7 || editedDoor.getDetail()!=0 || editedDoor.isFramed())
+                    throw new IllegalStateException("Configurizer frame/size changes reset or stopped updating door");
                 saveNamed(mc,"space_door_gui");
                 mc.displayGuiScreen(null);
                 BlockPos glassGui=CONSOLE.add(3,0,3);
