@@ -98,7 +98,7 @@ final class CopyCompatibilityRuntimeChecks {
         // clicked cell. The adapter reconstructs both door cells exactly.
         BlockVandorDoor door = observationDoor();
         BlockPos doorSource = new BlockPos(13, 21, 6);
-        BlockPos doorTarget = new BlockPos(15, 21, 6);
+        BlockPos doorTarget = new BlockPos(14, 21, 6);
         world.setBlockState(doorSource.down(), Blocks.STONE.getDefaultState(), 2);
         world.setBlockState(doorTarget.down(), Blocks.STONE.getDefaultState(), 2);
         IBlockState lower = door.getDefaultState()
@@ -126,23 +126,84 @@ final class CopyCompatibilityRuntimeChecks {
                         doorSource.up()), world, doorSource.up())),
                 "BBW did not preserve both door halves");
 
+        checkMixedWandSources(world, player, wand);
         player.setHeldItem(EnumHand.MAIN_HAND, oldHeld);
+    }
+
+    private static void checkMixedWandSources(World world, EntityPlayerMP player,
+            ItemStack wand) {
+        Block[] blocks = {ModBlocks.PROGRAMMABLE_WALL, ModBlocks.PROGRAMMABLE_BLOCK,
+                ModBlocks.PROGRAMMABLE_CONSOLE};
+        for (int b = 0; b < blocks.length; b++) {
+            for (EnumFacing face : EnumFacing.values()) {
+                BlockPos origin = new BlockPos(30 + b * 8, 40 + face.ordinal() * 4, 0);
+                EnumFacing along = face.getAxis() == EnumFacing.Axis.X
+                        ? EnumFacing.SOUTH : EnumFacing.EAST;
+                BlockPos[] sources = new BlockPos[3];
+                BlockPos[] targets = new BlockPos[3];
+                for (int i = 0; i < sources.length; i++) {
+                    sources[i] = origin.offset(along, i);
+                    targets[i] = sources[i].offset(face);
+                    world.setBlockState(sources[i], blocks[b].getDefaultState()
+                            .withProperty(BlockAnimatedScreenSelector.FACING,
+                                    EnumFacing.HORIZONTALS[i]), 2);
+                    TileEntityAnimatedScreenSelector tile =
+                            (TileEntityAnimatedScreenSelector) world.getTileEntity(sources[i]);
+                    tile.setHousingTexture(7 + i);
+                    tile.setWallPosition(i);
+                    world.setBlockToAir(targets[i]);
+                }
+                BetterBuildersWandsCompat.INSTANCE.onRightClickBlock(
+                        new PlayerInteractEvent.RightClickBlock(player,
+                                EnumHand.MAIN_HAND, sources[0], face,
+                                new Vec3d(0.5D, 0.5D, 0.5D)));
+                for (BlockPos target : targets) {
+                    world.setBlockState(target, blocks[b].getDefaultState(), 2);
+                }
+                setLastPlaced(wand, targets);
+                require(BetterBuildersWandsCompat.finishPending(player),
+                        "BBW mixed-source journal not consumed");
+                for (int i = 0; i < targets.length; i++) {
+                    TileEntityAnimatedScreenSelector tile =
+                            (TileEntityAnimatedScreenSelector) world.getTileEntity(targets[i]);
+                    require(tile.getHousingTexture() == 7 + i
+                                    && tile.getWallPosition(-1) == i
+                                    && world.getBlockState(targets[i]).equals(
+                                            world.getBlockState(sources[i])),
+                            "BBW lost per-source settings for " + blocks[b].getRegistryName()
+                                    + " face " + face + " cell " + i);
+                }
+                // Reusing the previous journal on a failed click must do nothing.
+                BetterBuildersWandsCompat.INSTANCE.onRightClickBlock(
+                        new PlayerInteractEvent.RightClickBlock(player,
+                                EnumHand.MAIN_HAND, sources[0], face, Vec3d.ZERO));
+                require(!BetterBuildersWandsCompat.finishPending(player),
+                        "BBW replayed a stale journal");
+                for (BlockPos target : targets) world.setBlockToAir(target);
+                for (BlockPos source : sources) world.setBlockToAir(source);
+            }
+        }
     }
 
     private static void captureBbw(EntityPlayerMP player, BlockPos source) {
         BetterBuildersWandsCompat.INSTANCE.onRightClickBlock(
                 new PlayerInteractEvent.RightClickBlock(player,
-                        EnumHand.MAIN_HAND, source, EnumFacing.UP,
+                        EnumHand.MAIN_HAND, source, EnumFacing.EAST,
                         new Vec3d(0.5D, 1.0D, 0.5D)));
     }
 
-    private static void setLastPlaced(ItemStack wand, BlockPos target) {
+    private static void setLastPlaced(ItemStack wand, BlockPos... targets) {
         NBTTagCompound root = wand.hasTagCompound()
                 ? wand.getTagCompound() : new NBTTagCompound();
         NBTTagCompound bbw = root.hasKey("bbw", 10)
                 ? root.getCompoundTag("bbw") : new NBTTagCompound();
-        bbw.setIntArray("lastPlaced", new int[] {target.getX(), target.getY(),
-                target.getZ()});
+        int[] packed = new int[targets.length * 3];
+        for (int i = 0; i < targets.length; i++) {
+            packed[i * 3] = targets[i].getX();
+            packed[i * 3 + 1] = targets[i].getY();
+            packed[i * 3 + 2] = targets[i].getZ();
+        }
+        bbw.setIntArray("lastPlaced", packed);
         root.setTag("bbw", bbw);
         wand.setTagCompound(root);
     }

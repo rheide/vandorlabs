@@ -11,6 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -49,7 +50,7 @@ public final class BetterBuildersWandsCompat {
     @SubscribeEvent
     public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         World world = event.getWorld();
-        if (world.isRemote || !isBbwWand(event.getItemStack())) {
+        if (world.isRemote || event.getFace() == null || !isBbwWand(event.getItemStack())) {
             return;
         }
         IBlockState clicked = world.getBlockState(event.getPos());
@@ -59,7 +60,7 @@ public final class BetterBuildersWandsCompat {
         }
         PENDING.put(event.getEntityPlayer().getUniqueID(),
                 PendingCopy.capture(world, event.getPos(), clicked,
-                        event.getHand(), getLastPlaced(event.getItemStack())));
+                        event.getHand(), event.getFace(), getLastPlaced(event.getItemStack())));
     }
 
     @SubscribeEvent
@@ -126,6 +127,8 @@ public final class BetterBuildersWandsCompat {
 
     private static final class PendingCopy {
         final EnumHand hand;
+        final EnumFacing face;
+        final BlockPos clickedPos;
         final BlockPos clickedOffset;
         final Block block;
         final List<Part> parts;
@@ -133,10 +136,13 @@ public final class BetterBuildersWandsCompat {
         final boolean[] previousDestinationWasSource;
         int ticksLeft = 4;
 
-        private PendingCopy(EnumHand hand, BlockPos clickedOffset, Block block,
+        private PendingCopy(EnumHand hand, EnumFacing face, BlockPos clickedPos,
+                BlockPos clickedOffset, Block block,
                 List<Part> parts, int[] previousDestinations,
                 boolean[] previousDestinationWasSource) {
             this.hand = hand;
+            this.face = face;
+            this.clickedPos = clickedPos;
             this.clickedOffset = clickedOffset;
             this.block = block;
             this.parts = parts;
@@ -145,7 +151,7 @@ public final class BetterBuildersWandsCompat {
         }
 
         static PendingCopy capture(World world, BlockPos clickedPos,
-                IBlockState clicked, EnumHand hand, int[] previousDestinations) {
+                IBlockState clicked, EnumHand hand, EnumFacing face, int[] previousDestinations) {
             BlockPos root = clickedPos;
             List<BlockPos> positions = new ArrayList<>();
             if (clicked.getBlock() instanceof BlockVandorDoor) {
@@ -186,7 +192,7 @@ public final class BetterBuildersWandsCompat {
                 occupied[i] = world.getBlockState(oldTarget).getBlock()
                         == clicked.getBlock();
             }
-            return new PendingCopy(hand, clickedPos.subtract(root),
+            return new PendingCopy(hand, face, clickedPos, clickedPos.subtract(root),
                     clicked.getBlock(), parts, previousDestinations.clone(),
                     occupied);
         }
@@ -212,17 +218,35 @@ public final class BetterBuildersWandsCompat {
                     return false;
                 }
             }
+            // Each journal destination is one block beyond its own source on
+            // the clicked face. Snapshot all sources before writing any parts:
+            // reconstructing multi-cell blocks may touch another destination.
+            PendingCopy[] sources = new PendingCopy[packedPositions.length / 3];
+            for (int i = 0; i < sources.length; i++) {
+                BlockPos target = new BlockPos(packedPositions[i * 3],
+                        packedPositions[i * 3 + 1], packedPositions[i * 3 + 2]);
+                BlockPos source = target.offset(face.getOpposite());
+                if (!world.isBlockLoaded(source)
+                        || world.getBlockState(target).getBlock() != block
+                        || world.getBlockState(source).getBlock() != block) {
+                    continue;
+                }
+                sources[i] = source.equals(clickedPos) ? this
+                        : capture(world, source, world.getBlockState(source),
+                                hand, face, new int[0]);
+            }
             boolean copied = false;
             for (int i = 0; i + 2 < packedPositions.length; i += 3) {
                 BlockPos wandTarget = new BlockPos(packedPositions[i],
                         packedPositions[i + 1], packedPositions[i + 2]);
                 // BBW may have discarded properties, but it must at least
                 // have placed the same Vandor Labs block before we touch it.
-                if (world.getBlockState(wandTarget).getBlock() != block) {
+                if (sources[i / 3] == null) {
                     continue;
                 }
-                BlockPos targetRoot = wandTarget.subtract(clickedOffset);
-                for (Part part : parts) {
+                PendingCopy source = sources[i / 3];
+                BlockPos targetRoot = wandTarget.subtract(source.clickedOffset);
+                for (Part part : source.parts) {
                     BlockPos target = targetRoot.add(part.offset);
                     world.setBlockState(target, part.state, 2);
                     copyTileNbt(world, target, part.tileNbt);
