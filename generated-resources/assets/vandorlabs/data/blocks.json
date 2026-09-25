@@ -1499,7 +1499,7 @@
     "item": true
   },
   {
-    "id": "classic_rocket",
+    "id": "rocket_thruster",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
@@ -1546,13 +1546,13 @@
     "item": true
   },
   {
-    "id": "plasma_vent_full_face",
+    "id": "plasma_vent",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
   },
   {
-    "id": "impulse_engine_full_face",
+    "id": "impulse_engine",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",
     "item": true
@@ -1582,115 +1582,115 @@
     "item": true
   },
   {
-    "id": "rocket_thruster_90_degree_wedge",
+    "id": "rocket_thruster_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_90_degree_wedge",
+    "triangle_base": "rocket_thruster_wedge",
     "item": true
   },
   {
-    "id": "rocket_thruster_90_degree_wedge_bottom_right",
+    "id": "rocket_thruster_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_90_degree_wedge",
+    "triangle_base": "rocket_thruster_wedge",
     "item": false
   },
   {
-    "id": "rocket_thruster_90_degree_wedge_top_right",
+    "id": "rocket_thruster_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_90_degree_wedge",
+    "triangle_base": "rocket_thruster_wedge",
     "item": false
   },
   {
-    "id": "rocket_thruster_90_degree_wedge_top_left",
+    "id": "rocket_thruster_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "rocket_thruster_90_degree_wedge",
+    "triangle_base": "rocket_thruster_wedge",
     "item": false
   },
   {
-    "id": "ion_drive_90_degree_wedge",
+    "id": "ion_drive_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_drive_90_degree_wedge",
+    "triangle_base": "ion_drive_wedge",
     "item": true
   },
   {
-    "id": "ion_drive_90_degree_wedge_bottom_right",
+    "id": "ion_drive_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_drive_90_degree_wedge",
+    "triangle_base": "ion_drive_wedge",
     "item": false
   },
   {
-    "id": "ion_drive_90_degree_wedge_top_right",
+    "id": "ion_drive_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_drive_90_degree_wedge",
+    "triangle_base": "ion_drive_wedge",
     "item": false
   },
   {
-    "id": "ion_drive_90_degree_wedge_top_left",
+    "id": "ion_drive_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "ion_drive_90_degree_wedge",
+    "triangle_base": "ion_drive_wedge",
     "item": false
   },
   {
-    "id": "plasma_vent_90_degree_wedge",
+    "id": "plasma_vent_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_vent_90_degree_wedge",
+    "triangle_base": "plasma_vent_wedge",
     "item": true
   },
   {
-    "id": "plasma_vent_90_degree_wedge_bottom_right",
+    "id": "plasma_vent_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_vent_90_degree_wedge",
+    "triangle_base": "plasma_vent_wedge",
     "item": false
   },
   {
-    "id": "plasma_vent_90_degree_wedge_top_right",
+    "id": "plasma_vent_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_vent_90_degree_wedge",
+    "triangle_base": "plasma_vent_wedge",
     "item": false
   },
   {
-    "id": "plasma_vent_90_degree_wedge_top_left",
+    "id": "plasma_vent_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "plasma_vent_90_degree_wedge",
+    "triangle_base": "plasma_vent_wedge",
     "item": false
   },
   {
-    "id": "impulse_engine_90_degree_wedge",
+    "id": "impulse_engine_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_90_degree_wedge",
+    "triangle_base": "impulse_engine_wedge",
     "item": true
   },
   {
-    "id": "impulse_engine_90_degree_wedge_bottom_right",
+    "id": "impulse_engine_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_90_degree_wedge",
+    "triangle_base": "impulse_engine_wedge",
     "item": false
   },
   {
-    "id": "impulse_engine_90_degree_wedge_top_right",
+    "id": "impulse_engine_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_90_degree_wedge",
+    "triangle_base": "impulse_engine_wedge",
     "item": false
   },
   {
-    "id": "impulse_engine_90_degree_wedge_top_left",
+    "id": "impulse_engine_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
-    "triangle_base": "impulse_engine_90_degree_wedge",
+    "triangle_base": "impulse_engine_wedge",
     "item": false
   },
   {

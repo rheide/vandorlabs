@@ -368,8 +368,8 @@ public class ModBlocks {
                 || "bluegray_carpet".equals(id)) return null;
         for (String finish : com.vandorlabs.tiles.ScreenHousingTextures.IDS)
             if (finish.equals(id)) return "programmable_block";
-        if ("plasma_thruster".equals(id)) return "plasma_vent_full_face";
-        if ("impulse_engine".equals(id)) return "impulse_engine_full_face";
+        if ("plasma_thruster".equals(id)) return "plasma_vent";
+        if ("impulse_engine".equals(id)) return "impulse_engine";
         return null;
     }
 

@@ -962,8 +962,8 @@ public class ReproLab {
         }
         Block ceilingThruster = Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "ion_drive"));
-        String[] ceilingFamilies = {"classic_rocket", "ion_drive",
-                "plasma_vent_full_face", "impulse_engine_full_face"};
+        String[] ceilingFamilies = {"rocket_thruster", "ion_drive",
+                "plasma_vent", "impulse_engine"};
         for (int family = 0; family < ceilingFamilies.length; family++) {
             Block familyBlock = Block.REGISTRY.getObject(new ResourceLocation(
                     "vandorlabs", ceilingFamilies[family]));
@@ -1047,12 +1047,12 @@ public class ReproLab {
         } else if (shot.equals("gallery_propulsion")) {
             String[] hexes = {"rocket_thruster_hexagonal", "ion_drive_hexagonal",
                     "plasma_vent_hexagonal", "impulse_engine_hexagonal"};
-            String[] triangles = {"rocket_thruster_90_degree_wedge", "ion_drive_90_degree_wedge",
-                    "plasma_vent_90_degree_wedge", "impulse_engine_90_degree_wedge"};
-            String[] corners = {"rocket_thruster_90_degree_wedge",
-                    "rocket_thruster_90_degree_wedge_bottom_right",
-                    "rocket_thruster_90_degree_wedge_top_left",
-                    "rocket_thruster_90_degree_wedge_top_right"};
+            String[] triangles = {"rocket_thruster_wedge", "ion_drive_wedge",
+                    "plasma_vent_wedge", "impulse_engine_wedge"};
+            String[] corners = {"rocket_thruster_wedge",
+                    "rocket_thruster_wedge_bottom_right",
+                    "rocket_thruster_wedge_top_left",
+                    "rocket_thruster_wedge_top_right"};
             placePropulsionRow(world, hexes, GALLERY_Y + 5, true);
             placePropulsionRow(world, triangles, GALLERY_Y + 3, false);
             placePropulsionRow(world, corners, GALLERY_Y + 1, false);

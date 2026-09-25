@@ -328,8 +328,8 @@ final class CopyCompatibilityRuntimeChecks {
 
         // Representative ForgeWorld pastes verify the transformed data crosses the adapter.
         for (Block block:new Block[]{observationDoor(),
-                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","classic_rocket")),
-                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_90_degree_wedge"))}) {
+                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster")),
+                Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_wedge"))}) {
             IBlockState source=block.getDefaultState();
             source=block instanceof BlockVandorDoor
                     ?source.withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH)

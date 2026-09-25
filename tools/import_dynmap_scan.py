@@ -14,7 +14,7 @@ from pathlib import Path
 
 THRUSTER = re.compile(
     r"^%(?P<id>(?P<family>rocket_thruster|ion_drive|plasma_vent|"
-    r"impulse_engine)_(?P<shape>hexagonal|90_degree_wedge)(?P<corner>_bottom_right|"
+    r"impulse_engine)_(?P<shape>hexagonal|wedge)(?P<corner>_bottom_right|"
     r"_top_right|_top_left)?)$"
 )
 

@@ -370,7 +370,7 @@ final class RedstoneChannelRuntimeChecks {
     }
 
     private static void checkTrianglePlacement(World world, EntityPlayer player) {
-        String base = "rocket_thruster_90_degree_wedge";
+        String base = "rocket_thruster_wedge";
         require(base.equals(BlockTrianglePropulsionLight.variantIdForHit(base,
                 EnumFacing.NORTH, 0.25F, 0.25F, 0.0F)),
                 "north triangle bottom-left placement is wrong");
@@ -404,8 +404,8 @@ final class RedstoneChannelRuntimeChecks {
                 EnumFacing.DOWN, 0.25F, 0.0F, 0.75F)),
                 "down triangle local axes are wrong");
 
-        String[] bases = {"rocket_thruster_90_degree_wedge", "ion_drive_90_degree_wedge",
-                "plasma_vent_90_degree_wedge", "impulse_engine_90_degree_wedge"};
+        String[] bases = {"rocket_thruster_wedge", "ion_drive_wedge",
+                "plasma_vent_wedge", "impulse_engine_wedge"};
         String[] suffixes = {"", "_bottom_right", "_top_right", "_top_left"};
         for (String variantBase : bases) {
             for (String suffix : suffixes) {
