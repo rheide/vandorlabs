@@ -5,6 +5,7 @@ import com.vandorlabs.network.MessageRedstoneChannel;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.blocks.BlockPropulsionLight;
+import com.vandorlabs.blocks.BlockConnectedPropulsionLight;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
@@ -18,6 +19,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     private GuiTextField channelField;
     private final boolean thruster;
     private boolean particles;
+    private final boolean connected;
+    private boolean join;
     private GuiButton particleButton;
 
     public GuiRedstoneChannel(RedstoneChannelMember member) {
@@ -29,8 +32,12 @@ public class GuiRedstoneChannel extends GuiContainer {
                         .getBlock() instanceof BlockPropulsionLight;
         this.particles = thruster
                 && ((TileEntityRedstoneLight) member).isParticleStreamSelected();
+        this.connected = thruster && member.channelTile().getWorld()
+                .getBlockState(member.channelTile().getPos()).getBlock()
+                instanceof BlockConnectedPropulsionLight;
+        this.join = connected && ((TileEntityRedstoneLight) member).isJoin();
         xSize = 240;
-        ySize = thruster ? 132 : 104;
+        ySize = connected ? 160 : thruster ? 132 : 104;
     }
 
     @Override public void initGui() {
@@ -46,7 +53,10 @@ public class GuiRedstoneChannel extends GuiContainer {
                     particleLabel());
             buttonList.add(particleButton);
         }
-        buttonList.add(new GuiButton(1, guiLeft + 14, guiTop + (thruster ? 100 : 72),
+        if (connected) buttonList.add(new GuiButton(3, guiLeft + 116,
+                guiTop + 96, 106, 20, joinLabel()));
+        buttonList.add(new GuiButton(1, guiLeft + 14,
+                guiTop + (connected ? 128 : thruster ? 100 : 72),
                 212, 20, "Done"));
     }
 
@@ -63,7 +73,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         int value = channel();
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
-                        thruster, particles));
+                        thruster, particles, connected, join));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
@@ -75,9 +85,14 @@ public class GuiRedstoneChannel extends GuiContainer {
             particles = !particles;
             particleButton.displayString = particleLabel();
         }
+        if (button.id == 3 && connected) {
+            join = !join;
+            button.displayString = joinLabel();
+        }
     }
 
     private String particleLabel() { return particles ? "Particles: On" : "Particles: Off"; }
+    private String joinLabel() { return join ? "Join: On" : "Join: Off"; }
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
@@ -105,6 +120,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         fontRenderer.drawString("Redstone Channel", 14, 10, 0xFFFFFF);
         fontRenderer.drawString("Channel (0 = none)", 14, 43, 0xDAE8F0);
         if (thruster) fontRenderer.drawString("Active mode", 14, 74, 0xDAE8F0);
+        if (connected) fontRenderer.drawString("Adjacent", 14, 102, 0xDAE8F0);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {

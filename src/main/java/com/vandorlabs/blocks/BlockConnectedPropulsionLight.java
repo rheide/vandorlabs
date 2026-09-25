@@ -129,6 +129,10 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess source,
             BlockPos pos) {
         state = withParticleState(state, source, pos);
+        net.minecraft.tileentity.TileEntity self = source.getTileEntity(pos);
+        if (self instanceof TileEntityRedstoneLight
+                && !((TileEntityRedstoneLight) self).isJoin())
+            return state.withProperty(PART, ConnectedPart.SINGLE);
         EnumFacing facing = state.getValue(FACING);
         EnumFacing right = localRight(facing);
         EnumFacing up = localUp(facing);
@@ -142,6 +146,8 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     private boolean matches(IBlockAccess source, BlockPos pos, IBlockState expected, int mode) {
         IBlockState found = source.getBlockState(pos);
         return found.getBlock() == this
+                && source.getTileEntity(pos) instanceof TileEntityRedstoneLight
+                && ((TileEntityRedstoneLight) source.getTileEntity(pos)).isJoin()
                 && found.getValue(FACING) == expected.getValue(FACING)
                 && renderMode(source, pos) == mode;
     }
@@ -240,12 +246,19 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
 
     public void configureAssembly(World world, BlockPos pos, int channel,
             boolean updateParticles, boolean particles) {
+        configureAssembly(world, pos, channel, updateParticles, particles, false, true);
+    }
+
+    public void configureAssembly(World world, BlockPos pos, int channel,
+            boolean updateParticles, boolean particles, boolean updateJoin, boolean join) {
         IBlockState state = world.getBlockState(pos);
         List<TileEntityRedstoneLight> tiles = assemblyTiles(world, pos, state);
         for (TileEntityRedstoneLight tile : tiles) tile.setRedstoneChannel(channel);
         if (updateParticles)
             for (TileEntityRedstoneLight tile : tiles)
                 tile.setParticleStreamSelected(particles, false);
+        if (updateJoin)
+            for (TileEntityRedstoneLight tile : tiles) tile.setJoin(join);
         refreshConnectedModels(world, pos, state.getValue(FACING));
     }
 

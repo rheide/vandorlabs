@@ -18,27 +18,39 @@ public class MessageRedstoneChannel implements IMessage {
     private int channel;
     private boolean updateParticles;
     private boolean particles;
+    private boolean updateJoin;
+    private boolean join;
 
     public MessageRedstoneChannel() { }
     public MessageRedstoneChannel(BlockPos pos, int channel) { this.pos = pos; this.channel = channel; }
     public MessageRedstoneChannel(BlockPos pos, int channel, boolean updateParticles,
             boolean particles) {
+        this(pos, channel, updateParticles, particles, false, true);
+    }
+    public MessageRedstoneChannel(BlockPos pos, int channel, boolean updateParticles,
+            boolean particles, boolean updateJoin, boolean join) {
         this.pos = pos;
         this.channel = channel;
         this.updateParticles = updateParticles;
         this.particles = particles;
+        this.updateJoin = updateJoin;
+        this.join = join;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
         channel = buf.readInt();
         updateParticles = buf.readableBytes() > 0 && buf.readBoolean();
         particles = buf.readableBytes() > 0 && buf.readBoolean();
+        updateJoin = buf.readableBytes() > 0 && buf.readBoolean();
+        join = buf.readableBytes() > 0 && buf.readBoolean();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         buf.writeInt(channel);
         buf.writeBoolean(updateParticles);
         buf.writeBoolean(particles);
+        buf.writeBoolean(updateJoin);
+        buf.writeBoolean(join);
     }
 
     public static class Handler implements IMessageHandler<MessageRedstoneChannel, IMessage> {
@@ -56,7 +68,7 @@ public class MessageRedstoneChannel implements IMessage {
                 if (block instanceof BlockConnectedPropulsionLight) {
                     ((BlockConnectedPropulsionLight) block).configureAssembly(player.world,
                             message.pos, message.channel, message.updateParticles,
-                            message.particles);
+                            message.particles, message.updateJoin, message.join);
                 } else {
                     ((RedstoneChannelMember) tile).setRedstoneChannel(message.channel);
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight

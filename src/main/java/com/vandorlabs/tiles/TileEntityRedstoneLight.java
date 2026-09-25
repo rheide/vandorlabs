@@ -25,6 +25,21 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private boolean manualOn;
     private boolean particleStreamSelected;
     private boolean initialized;
+    private boolean join = true;
+
+    public boolean isJoin() { return join; }
+    public void setJoin(boolean value) {
+        if (join == value) return;
+        join = value;
+        markDirty();
+        if (world != null && pos != null) {
+            IBlockState state = world.getBlockState(pos);
+            if (state.getBlock() instanceof BlockConnectedPropulsionLight)
+                ((BlockConnectedPropulsionLight) state.getBlock()).refreshConnectedModels(
+                        world, pos, state.getValue(BlockPropulsionLight.FACING));
+        }
+        sync();
+    }
 
     @Override public boolean shouldRefresh(net.minecraft.world.World world,
             net.minecraft.util.math.BlockPos pos, IBlockState before, IBlockState after) {
@@ -264,6 +279,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         super.writeToNBT(tag);
         new RedstoneData.Light(channel,channelSignal,manualOn,particleStreamSelected,
                 initialized).write(new NbtPrimitiveData(tag));
+        tag.setBoolean("PropulsionJoin", join);
         return tag;
     }
 
@@ -276,6 +292,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         manualOn=data.manualOn;
         particleStreamSelected=data.particleStream;
         initialized=data.initialized;
+        join = !tag.hasKey("PropulsionJoin") || tag.getBoolean("PropulsionJoin");
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }
