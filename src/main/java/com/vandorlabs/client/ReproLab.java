@@ -637,6 +637,21 @@ public class ReproLab {
             case 19:
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"programmable_light_gui");
+                mc.displayGuiScreen(null);
+                BlockPos triggerGui=CONSOLE.add(5,0,3);
+                mc.world.setBlockState(triggerGui,ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),3);
+                com.vandorlabs.tiles.TileEntityProgrammableTrigger triggerTile=
+                        (com.vandorlabs.tiles.TileEntityProgrammableTrigger)mc.world.getTileEntity(triggerGui);
+                java.util.List<String> finishes=java.util.Arrays.asList(
+                        com.vandorlabs.tiles.ScreenHousingTextures.IDS);
+                triggerTile.configure(finishes.indexOf("matter_red"),finishes.indexOf("matter_cyan"),0);
+                mc.displayGuiScreen(new GuiProgrammableTrigger(mc.player.inventory,triggerTile));
+                state=20;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 20:
+                if (--holdTicks > 0) break;
+                saveNamed(mc,"programmable_trigger_gui");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;

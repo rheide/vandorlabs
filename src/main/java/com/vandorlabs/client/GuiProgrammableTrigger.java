@@ -4,6 +4,9 @@ import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageProgrammableTrigger;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityProgrammableTrigger;
+import com.vandorlabs.tiles.ScreenHousingTextures;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -28,22 +31,23 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         this.tile = tile;
         off = tile.getHousingTexture();
         on = tile.getOnTexture();
-        xSize = 380;
+        xSize = 420;
         ySize = 196;
     }
 
     @Override public void initGui() {
         super.initGui();
+        buttonList.clear();
         Keyboard.enableRepeatEvents(true);
-        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 160, off);
-        onList = new HousingTextureList(guiLeft + 200, guiTop + 41, 160, on);
+        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 124, off);
+        onList = new HousingTextureList(guiLeft + 216, guiTop + 41, 124, on);
         channelField = new GuiTextField(0, fontRenderer, guiLeft + 132,
                 guiTop + 144, 110, 18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(value -> value.isEmpty() || value.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
-        buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + 169,
-                xSize - 28, 20, "Done"));
+        buttonList.add(new GuiButton(100, guiLeft + 110, guiTop + 169,
+                200, 20, "Done"));
     }
 
     private int channel() {
@@ -126,9 +130,11 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         fontRenderer.drawString("Programmable Trigger Block", guiLeft + 8,
                 guiTop + 5, 0xFFFFFFFF);
         fontRenderer.drawString("Redstone Off", guiLeft + 12, guiTop + 27, 0xFFD8D8D8);
-        fontRenderer.drawString("Redstone On", guiLeft + 200, guiTop + 27, 0xFFD8D8D8);
+        fontRenderer.drawString("Redstone On", guiLeft + 216, guiTop + 27, 0xFFD8D8D8);
         offList.draw(fontRenderer, mouseX, mouseY);
         onList.draw(fontRenderer, mouseX, mouseY);
+        drawPreview(guiLeft + 146, off);
+        drawPreview(guiLeft + 350, on);
         fontRenderer.drawString("Redstone Channel", guiLeft + 12,
                 guiTop + 149, 0xFFD8D8D8);
         super.drawScreen(mouseX, mouseY, partial);
@@ -136,4 +142,16 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }
+
+    private void drawPreview(int x, int texture) {
+        int y = guiTop + 65;
+        drawRect(x - 2, y - 2, x + 50, y + 50, 0xFF505058);
+        drawRect(x, y, x + 48, y + 48, 0xFF202028);
+        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        GlStateManager.color(1F, 1F, 1F, 1F);
+        GlStateManager.enableBlend();
+        drawTexturedModalRect(x, y, mc.getTextureMapBlocks().getAtlasSprite(
+                ScreenHousingTextures.texture(texture)), 48, 48);
+        GlStateManager.disableBlend();
+    }
 }
