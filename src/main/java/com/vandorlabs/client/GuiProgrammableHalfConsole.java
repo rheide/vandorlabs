@@ -37,6 +37,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private boolean redstoneEnabled;
     private int housingTexture;
     private GuiTextField channelField;
+    private GuiButton housingButton;
 
     public GuiProgrammableHalfConsole(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector te) {
@@ -78,7 +79,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        buttonList.add(new GuiButton(50, x + 8, y + 208, xSize - 16, 20, ""));
+        housingButton = new GuiButton(50, x + 8, y + 208, xSize - 16, 20, "");
+        buttonList.add(housingButton);
         buttonList.add(new GuiButton(20, x + (xSize - 200) / 2, y + 242, 200, 20,
                 I18n.format("gui.done")));
         topScroll = reveal(topPanel);
@@ -130,11 +132,18 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
+        if (button == 1 && housingButton.mousePressed(mc, mouseX, mouseY)) {
+            housingButton.playPressSound(mc.getSoundHandler());
+            housingTexture = ScreenHousingTextures.cycle(housingTexture, -1);
+            refreshButtons();
+            sendUpdate();
+            return;
+        }
         if (button == 0 && mouseY >= top && mouseY < top + ROW_H * ROWS) {
             int list = mouseX >= left + 144 && mouseX < left + 150 ? 1
                     : mouseX >= right + 144 && mouseX < right + 150 ? 2 : 0;
             if (list != 0 && maxScroll() > 0) {
-                int scroll = list == 1 ? topScroll : bottomScroll;
+                int scroll = list == 1 ? bottomScroll : topScroll;
                 int thumbY = scrollbarThumbY(scroll);
                 int thumbH = scrollbarThumbHeight();
                 scrollbarDragOffset = mouseY >= thumbY && mouseY < thumbY + thumbH
@@ -148,10 +157,10 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             boolean first = mouseX >= left && mouseX < left + 142;
             boolean second = mouseX >= right && mouseX < right + 142;
             if (first || second) {
-                int index = (first ? topScroll : bottomScroll) + (mouseY - top) / ROW_H;
+                int index = (first ? bottomScroll : topScroll) + (mouseY - top) / ROW_H;
                 if (index < TileEntityAnimatedScreenSelector.INPUT_PANELS.length) {
-                    if (first) topPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
-                    else bottomPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
+                    if (first) bottomPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
+                    else topPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
                     sendUpdate();
                 }
                 return;
@@ -174,8 +183,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private void dragScrollbarTo(int mouseY) {
         int scroll = GuiProgrammableInput.scrollForDrag(mouseY, top, ROW_H * ROWS,
                 scrollbarThumbHeight(), maxScroll(), scrollbarDragOffset);
-        if (draggingList == 1) topScroll = scroll;
-        else if (draggingList == 2) bottomScroll = scroll;
+        if (draggingList == 1) bottomScroll = scroll;
+        else if (draggingList == 2) topScroll = scroll;
     }
 
     @Override
@@ -185,7 +194,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
         else if (button.id == 50)
-            housingTexture = (housingTexture + 1) % ScreenHousingTextures.IDS.length;
+            housingTexture = ScreenHousingTextures.cycle(housingTexture, 1);
         else return;
         refreshButtons();
         sendUpdate();
@@ -198,9 +207,10 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if (wheel != 0) {
             int mouseX = Mouse.getEventX() * width / mc.displayWidth;
             int delta = wheel > 0 ? -1 : 1;
-            if (mouseX >= left && mouseX < left + 150) topScroll = clamp(topScroll + delta);
-            else if (mouseX >= right && mouseX < right + 150)
+            if (mouseX >= left && mouseX < left + 150)
                 bottomScroll = clamp(bottomScroll + delta);
+            else if (mouseX >= right && mouseX < right + 150)
+                topScroll = clamp(topScroll + delta);
         }
     }
 
@@ -243,12 +253,12 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         drawRect(x, y, x + xSize, y + 16, 0xFF202028);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.title"),
                 x + 8, y + 5, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.top"),
-                left, y + 22, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.bottom"),
+                left, y + 22, 0xFFA0A0A8);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.top"),
                 right, y + 22, 0xFFA0A0A8);
-        drawList(left, topScroll, topPanel);
-        drawList(right, bottomScroll, bottomPanel);
+        drawList(left, bottomScroll, bottomPanel);
+        drawList(right, topScroll, topPanel);
         int previewX = x + 334;
         String suffix = displayMode == TileEntityAnimatedScreenSelector.MODE_OFF
                 ? "_off.png" : "_static.png";

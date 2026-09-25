@@ -21,6 +21,10 @@ public final class ScreenHousingTextures {
         return choice >= 0 && choice < IDS.length ? choice : 0;
     }
 
+    public static int cycle(int choice, int direction) {
+        return Math.floorMod(clamp(choice) + direction, IDS.length);
+    }
+
     public static String texture(int choice) {
         return "vandorlabs:blocks/" + TEXTURES[clamp(choice)];
     }

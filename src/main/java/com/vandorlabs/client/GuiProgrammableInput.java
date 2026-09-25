@@ -35,6 +35,7 @@ public class GuiProgrammableInput extends GuiContainer {
     private boolean draggingScrollbar;
     private int scrollbarDragOffset;
     private GuiTextField channelField;
+    private GuiButton housingButton;
 
     public GuiProgrammableInput(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector te) {
@@ -79,7 +80,8 @@ public class GuiProgrammableInput extends GuiContainer {
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        buttonList.add(new GuiButton(50, x + 8, y + 226, 234, 20, ""));
+        housingButton = new GuiButton(50, x + 8, y + 226, 234, 20, "");
+        buttonList.add(housingButton);
         buttonList.add(new GuiButton(20, x + 25, y + 252, 200, 20,
                 I18n.format("gui.done")));
         revealSelection();
@@ -141,6 +143,13 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
+        if (button == 1 && housingButton.mousePressed(mc, mouseX, mouseY)) {
+            housingButton.playPressSound(mc.getSoundHandler());
+            housingTexture = ScreenHousingTextures.cycle(housingTexture, -1);
+            refreshButtons();
+            sendUpdate();
+            return;
+        }
         if (button == 0 && maxScroll() > 0 && mouseX >= listX + 144
                 && mouseX < listX + 150 && mouseY >= listY
                 && mouseY < listY + ROW_H * ROWS) {
@@ -206,7 +215,7 @@ public class GuiProgrammableInput extends GuiContainer {
         else if (button.id == 30) smallInput = true;
         else if (button.id == 31) smallInput = false;
         else if (button.id == 50)
-            housingTexture = (housingTexture + 1) % ScreenHousingTextures.IDS.length;
+            housingTexture = ScreenHousingTextures.cycle(housingTexture, 1);
         else return;
         refreshButtons();
         sendUpdate();

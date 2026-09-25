@@ -30,6 +30,7 @@ final class ScreenRuntimeChecks {
     static void run(EntityPlayer player) {
         checkTilePersistence();
         checkHousingSprites();
+        checkHousingCycling();
         checkSurvivalDropRoundTrip(player);
         checkPacketRoundTrip();
         checkFacings(ModBlocks.ANIMATED_SCREEN_SELECTOR);
@@ -55,6 +56,15 @@ final class ScreenRuntimeChecks {
                             .getAtlasSprite(name).getIconName()),
                     "missing housing sprite: " + name);
         }
+    }
+
+    private static void checkHousingCycling() {
+        int last = ScreenHousingTextures.IDS.length - 1;
+        require(ScreenHousingTextures.cycle(0, -1) == last
+                        && ScreenHousingTextures.cycle(last, 1) == 0
+                        && ScreenHousingTextures.cycle(4, -1) == 3
+                        && ScreenHousingTextures.cycle(4, 1) == 5,
+                "housing texture cycling does not move in both directions");
     }
 
     private static void checkTilePersistence() {

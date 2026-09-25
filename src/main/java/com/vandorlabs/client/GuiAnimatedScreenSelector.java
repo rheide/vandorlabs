@@ -300,7 +300,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 speedIndex = 2;
                 break;
             case 50:
-                housingTexture = (housingTexture + 1) % ScreenHousingTextures.IDS.length;
+                housingTexture = ScreenHousingTextures.cycle(housingTexture, 1);
                 break;
             case 20:
                 if (channel() >= 0) sendUpdate();
@@ -345,6 +345,13 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if (mouseButton == 1 && housingButton.mousePressed(mc, mouseX, mouseY)) {
+            housingButton.playPressSound(mc.getSoundHandler());
+            housingTexture = ScreenHousingTextures.cycle(housingTexture, -1);
+            refreshButtons();
+            sendUpdate();
+            return;
+        }
         if (console && mouseButton == 0 && mouseX >= inputListRight
                 && mouseX < inputListRight + 8 && mouseY >= inputListTop
                 && mouseY < inputListBottom && maxInputScroll() > 0) {
