@@ -1081,7 +1081,7 @@ public class TEAnimatedScreenSelector
     }
 
     private void renderPortholeGlass(int shade, PortholeHex.Slice opening) {
-        if (opening.polygon.size() < 3) return;
+        if (opening.glassQuads.isEmpty()) return;
         bindTexture(new ResourceLocation(VandorLabs.MODID,
                 "textures/blocks/space_doors/medium/glass_tile.png"));
         GlStateManager.enableBlend();
@@ -1092,11 +1092,11 @@ public class TEAnimatedScreenSelector
         GlStateManager.depthMask(false);
         GlStateManager.color(1F, 1F, 1F, 1F);
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         for (int depth : new int[] {7, 9}) {
-            for (int i = 1; i < opening.polygon.size() - 1; i++) {
-                for (int vertex : new int[] {0, i, i + 1}) {
-                    double[] point = opening.polygon.get(vertex);
+            for (double[] quad : opening.glassQuads) {
+                for (int vertex = 0; vertex < 4; vertex++) {
+                    double[] point = {quad[vertex * 2], quad[vertex * 2 + 1]};
                     buf.pos(point[0], point[1], depth)
                             .tex(point[0] / 16D, 1D - point[1] / 16D).endVertex();
                 }
@@ -1107,11 +1107,11 @@ public class TEAnimatedScreenSelector
             GlStateManager.disableTexture2D();
             if (shade == 1) GlStateManager.color(.20F, .85F, .95F, .0513F);
             else GlStateManager.color(.10F, .12F, .16F, .1754F);
-            buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION);
+            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
             for (int depth : new int[] {7, 9}) {
-                for (int i = 1; i < opening.polygon.size() - 1; i++) {
-                    for (int vertex : new int[] {0, i, i + 1}) {
-                        double[] point = opening.polygon.get(vertex);
+                for (double[] quad : opening.glassQuads) {
+                    for (int vertex = 0; vertex < 4; vertex++) {
+                        double[] point = {quad[vertex * 2], quad[vertex * 2 + 1]};
                         buf.pos(point[0], point[1], depth).endVertex();
                     }
                 }

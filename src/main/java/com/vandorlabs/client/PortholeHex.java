@@ -32,20 +32,7 @@ final class PortholeHex {
                     {x1-bevel,y1},{x0+bevel,y1},{x0,y1-bevel},{x0,y0+bevel}
             };
         } else if (shape == ROUND) {
-            double dx = Math.max(1,Math.floor((x1-x0)/6D));
-            double dy = Math.max(1,Math.floor((y1-y0)/6D));
-            vertices = new double[][] {
-                    {x0+2*dx,y0},{x1-2*dx,y0},
-                    {x1-2*dx,y0+dy},{x1-dx,y0+dy},
-                    {x1-dx,y0+2*dy},{x1,y0+2*dy},
-                    {x1,y1-2*dy},{x1-dx,y1-2*dy},
-                    {x1-dx,y1-dy},{x1-2*dx,y1-dy},
-                    {x1-2*dx,y1},{x0+2*dx,y1},
-                    {x0+2*dx,y1-dy},{x0+dx,y1-dy},
-                    {x0+dx,y1-2*dy},{x0,y1-2*dy},
-                    {x0,y0+2*dy},{x0+dx,y0+2*dy},
-                    {x0+dx,y0+dy},{x0+2*dx,y0+dy}
-            };
+            vertices = pixelEllipse((int)x0, (int)y0, (int)x1, (int)y1);
         } else if (columns == 1 && rows == 1) {
             vertices = new double[][] {
                     {5, 4}, {11, 4}, {14, 8}, {11, 12}, {5, 12}, {2, 8}
@@ -65,6 +52,36 @@ final class PortholeHex {
         }
     }
 
+    /** Rasterize at one world pixel per cell, regardless of assembly size. */
+    private static double[][] pixelEllipse(int x0, int y0, int x1, int y1) {
+        int rows = y1 - y0;
+        int[] left = new int[rows], right = new int[rows];
+        double cx = (x0 + x1) / 2D, cy = (y0 + y1) / 2D;
+        double rx = (x1 - x0) / 2D, ry = rows / 2D;
+        for (int row = 0; row < rows; row++) {
+            double dy = (y0 + row + .5D - cy) / ry;
+            double reach = rx * Math.sqrt(Math.max(0, 1 - dy * dy));
+            left[row] = Math.max(x0, (int)Math.ceil(cx - reach - .5D));
+            right[row] = Math.min(x1, (int)Math.floor(cx + reach - .5D) + 1);
+        }
+        List<double[]> outline = new ArrayList<>();
+        outline.add(new double[]{left[0], y0});
+        outline.add(new double[]{right[0], y0});
+        for (int row = 0; row < rows; row++) {
+            outline.add(new double[]{right[row], y0 + row + 1});
+            if (row + 1 < rows && right[row + 1] != right[row])
+                outline.add(new double[]{right[row + 1], y0 + row + 1});
+        }
+        outline.add(new double[]{left[rows - 1], y1});
+        for (int row = rows - 1; row >= 0; row--) {
+            outline.add(new double[]{left[row], y0 + row});
+            if (row > 0 && left[row - 1] != left[row])
+                outline.add(new double[]{left[row - 1], y0 + row});
+        }
+        outline.remove(outline.size() - 1); // Closing vertex is implicit.
+        return outline.toArray(new double[outline.size()][]);
+    }
+
     Slice slice(int column, int row) {
         double[][] local = new double[vertices.length][2];
         for (int i = 0; i < vertices.length; i++) {
@@ -80,14 +97,14 @@ final class PortholeHex {
         if (polygon.size() < 3 || Math.abs(area(polygon)) < EPS)
             polygon = Collections.emptyList();
 
-        List<double[]> frame = frameQuads(polygon);
+        List<double[]> frame = bandQuads(polygon, false);
         List<double[]> edges = new ArrayList<>();
         for (int i = 0; i < local.length; i++) {
             double[] a = local[i], b = local[(i + 1) % local.length];
             double[] segment = clipSegment(a[0], a[1], b[0], b[1]);
             if (segment != null) edges.add(segment);
         }
-        return new Slice(polygon, frame, edges);
+        return new Slice(polygon, frame, edges, bandQuads(polygon, true));
     }
 
     private static List<double[]> clipPolygon(List<double[]> input, int axis,
@@ -126,12 +143,9 @@ final class PortholeHex {
         return area / 2D;
     }
 
-    private static List<double[]> frameQuads(List<double[]> polygon) {
+    /** Both surfaces use the same row spans, including the square step corners. */
+    private static List<double[]> bandQuads(List<double[]> polygon, boolean glass) {
         List<double[]> result = new ArrayList<>();
-        if (polygon.isEmpty()) {
-            result.add(new double[] {0, 0, 16, 0, 16, 16, 0, 16});
-            return result;
-        }
         List<Double> breaks = new ArrayList<>();
         breaks.add(0D);
         breaks.add(16D);
@@ -140,45 +154,40 @@ final class PortholeHex {
         for (int i = 0; i < breaks.size() - 1; i++) {
             double low = breaks.get(i), high = breaks.get(i + 1);
             if (high - low < EPS) continue;
-            double[] middle = span(polygon, (low + high) / 2D);
-            if (middle == null) {
-                result.add(new double[] {0, low, 16, low, 16, high, 0, high});
+            double[] span = bandSpan(polygon, low, high);
+            if (span == null) {
+                if (!glass) result.add(new double[] {0, low, 16, low, 16, high, 0, high});
                 continue;
             }
-            double[] bottom = span(polygon, low);
-            double[] top = span(polygon, high);
-            if (bottom == null || top == null) continue;
-            double leftBottom = clamp(bottom[0]), leftTop = clamp(top[0]);
-            double rightBottom = clamp(bottom[1]), rightTop = clamp(top[1]);
-            if (leftBottom + leftTop > EPS)
-                result.add(new double[] {0, low, leftBottom, low,
-                        leftTop, high, 0, high});
-            if (rightBottom + rightTop < 32 - EPS)
-                result.add(new double[] {rightBottom, low, 16, low,
-                        16, high, rightTop, high});
+            double leftBottom = clamp(span[0]), rightBottom = clamp(span[1]);
+            double leftTop = clamp(span[2]), rightTop = clamp(span[3]);
+            if (glass) result.add(new double[] {leftBottom, low, rightBottom, low,
+                    rightTop, high, leftTop, high});
+            else {
+                if (leftBottom + leftTop > EPS)
+                    result.add(new double[] {0, low, leftBottom, low, leftTop, high, 0, high});
+                if (rightBottom + rightTop < 32 - EPS)
+                    result.add(new double[] {rightBottom, low, 16, low, 16, high, rightTop, high});
+            }
         }
         return result;
     }
 
-    private static double[] span(List<double[]> polygon, double y) {
-        double minimum = Double.POSITIVE_INFINITY;
-        double maximum = Double.NEGATIVE_INFINITY;
+    private static double[] bandSpan(List<double[]> polygon, double low, double high) {
+        double middle = (low + high) / 2D;
+        double[] span = {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
         for (int i = 0; i < polygon.size(); i++) {
             double[] a = polygon.get(i), b = polygon.get((i + 1) % polygon.size());
-            if (Math.abs(a[1] - b[1]) < EPS) {
-                if (Math.abs(y - a[1]) < EPS) {
-                    minimum = Math.min(minimum, Math.min(a[0], b[0]));
-                    maximum = Math.max(maximum, Math.max(a[0], b[0]));
-                }
-            } else if (y >= Math.min(a[1], b[1]) - EPS
-                    && y <= Math.max(a[1], b[1]) + EPS) {
-                double x = a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
-                minimum = Math.min(minimum, x);
-                maximum = Math.max(maximum, x);
-            }
+            if (Math.abs(a[1] - b[1]) < EPS
+                    || middle <= Math.min(a[1], b[1])
+                    || middle >= Math.max(a[1], b[1])) continue;
+            double bottom = a[0] + (low - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+            double top = a[0] + (high - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+            span[0] = Math.min(span[0], bottom); span[1] = Math.max(span[1], bottom);
+            span[2] = Math.min(span[2], top); span[3] = Math.max(span[3], top);
         }
-        return minimum == Double.POSITIVE_INFINITY ? null
-                : new double[] {minimum, maximum};
+        return span[0] == Double.POSITIVE_INFINITY ? null : span;
     }
 
     private static double clamp(double value) {
@@ -207,12 +216,14 @@ final class PortholeHex {
         final List<double[]> polygon;
         final List<double[]> frameQuads;
         final List<double[]> hexEdges;
+        final List<double[]> glassQuads;
 
         Slice(List<double[]> polygon, List<double[]> frameQuads,
-                List<double[]> hexEdges) {
+                List<double[]> hexEdges, List<double[]> glassQuads) {
             this.polygon = polygon;
             this.frameQuads = frameQuads;
             this.hexEdges = hexEdges;
+            this.glassQuads = glassQuads;
         }
 
         /** Interval occupied by glass where a pane crosses a block edge. */

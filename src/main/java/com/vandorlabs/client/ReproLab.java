@@ -298,6 +298,7 @@ public class ReproLab {
             }
         }
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
+        SHOTS.add(new Shot("gallery_round_portholes", GALLERY_X, galleryFeet + 2, -27, 0, 0));
         for (String hinges:new String[]{"on","off"}) SHOTS.add(new Shot("gallery_space_config_hinges_"+hinges,
                 GALLERY_X-2.5D,galleryFeet+.4D,-21,-36,5));
         SHOTS.add(new Shot("gallery_space_panel_sliding_edge",GALLERY_X-2.0D,
@@ -1226,6 +1227,23 @@ public class ReproLab {
                 ((com.vandorlabs.tiles.TileEntityProgrammableGlass)world.getTileEntity(
                         new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18))).setShade(y);
             }
+        } else if (shot.equals("gallery_round_portholes")) {
+            int[] starts = {-6, -3, 1};
+            for (int size = 1; size <= 3; size++)
+                for (int dx = 0; dx < size; dx++) for (int dy = 0; dy < size; dy++) {
+                    BlockPos at = new BlockPos(GALLERY_X + starts[size - 1] + dx,
+                            GALLERY_Y + 1 + dy, -18);
+                    world.setBlockState(at, ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState()
+                            .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                                    EnumFacing.NORTH), 2);
+                    TileEntityAnimatedScreenSelector tile =
+                            (TileEntityAnimatedScreenSelector)world.getTileEntity(at);
+                    tile.setPortholeShape(PortholeHex.ROUND);
+                    tile.setJoinPortholes(true);
+                    tile.setGlassShade(2);
+                    tile.setHousingTexture(java.util.Arrays.asList(
+                            com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf("light_alloy_hull"));
+                }
         } else if (shot.startsWith("gallery_space_config_hinges_")) {
             for (int i=0;i<2;i++) {
                 BlockPos p=new BlockPos(GALLERY_X-1+i,GALLERY_Y,-18);

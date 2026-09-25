@@ -249,6 +249,39 @@ final class ScreenRuntimeChecks {
         }
     }
 
+    private static void checkRoundPortholePixels() {
+        for (int[] size : new int[][]{{1,1},{2,2},{3,3},{1,2},{2,1}}) {
+            PortholeHex round = new PortholeHex(size[0], size[1], PortholeHex.ROUND);
+            double cx = size[0] * 8D, cy = size[1] * 8D;
+            double rx = cx - 2, ry = cy - 4;
+            for (int col = 0; col < size[0]; col++) for (int row = 0; row < size[1]; row++) {
+                PortholeHex.Slice slice = round.slice(col, row);
+                java.util.List<double[]> all = new java.util.ArrayList<>(slice.frameQuads);
+                all.addAll(slice.glassQuads);
+                for (double[] quad : all) {
+                    for (double coordinate : quad)
+                        require(coordinate == Math.rint(coordinate), "round edge is between world pixels");
+                    require(quad[1] == quad[3] && quad[5] == quad[7]
+                                    && quad[0] == quad[6] && quad[2] == quad[4],
+                            "round frame or glass has a diagonal edge");
+                }
+                for (int x = 0; x < 16; x++) for (int y = 0; y < 16; y++) {
+                    int cover = 0, glass = 0;
+                    for (double[] quad : all)
+                        if (x + .5 > quad[0] && x + .5 < quad[2]
+                                && y + .5 > quad[1] && y + .5 < quad[5]) cover++;
+                    for (double[] quad : slice.glassQuads)
+                        if (x + .5 > quad[0] && x + .5 < quad[2]
+                                && y + .5 > quad[1] && y + .5 < quad[5]) glass++;
+                    double dx = (col * 16 + x + .5 - cx) / rx;
+                    double dy = (row * 16 + y + .5 - cy) / ry;
+                    require(cover == 1 && glass == (dx * dx + dy * dy <= 1 ? 1 : 0),
+                            "round glass and frame disagree at a pixel or joined seam");
+                }
+            }
+        }
+    }
+
     private static void checkProgrammableSlab(EntityPlayer player) {
         com.vandorlabs.blocks.BlockProgrammableSlab slab =
                 (com.vandorlabs.blocks.BlockProgrammableSlab) ModBlocks.PROGRAMMABLE_SLAB;
@@ -678,7 +711,8 @@ final class ScreenRuntimeChecks {
                     .setPortholeShape(shape);
             group = TEAnimatedScreenSelector.portholeGroup(first, north);
             require(group.columns == 2 && group.rows == 2
-                            && group.hex.vertices.length == new int[] {6, 8, 4, 20}[shape]
+                            && (shape == PortholeHex.ROUND
+                            || group.hex.vertices.length == new int[] {6, 8, 4}[shape])
                             && group.slice(pos).edgeOpening(0, 16) != null
                             && group.slice(pos).edgeOpening(1, 16) != null,
                     "joined porthole shape is incomplete: " + shape);
@@ -697,6 +731,7 @@ final class ScreenRuntimeChecks {
         player.world.setBlockToAir(pos.east().up());
         checkFlatWallCorners(player, pos.add(8, 0, 0),
                 (BlockProgrammableWall) variants[0]);
+        checkRoundPortholePixels();
         PortholeHex single = new PortholeHex(1, 1);
         require(single.vertices[0][1] == 4 && single.vertices[2][0] == 14,
                 "single porthole hexagon is too large");
