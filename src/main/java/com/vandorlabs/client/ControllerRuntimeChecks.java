@@ -596,10 +596,54 @@ public final class ControllerRuntimeChecks {
         }
         player.capabilities.isFlying=flying; player.noClip=noClip;
         clear(world,pos);
+        checkProgrammableSources(world,player,pos);
+        clear(world,pos);
         checkCreativePick(world, player, pos);
         clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);
         System.out.println("[vandorlabs][reprolab] controller-runtime PASS ("+assertions+" assertions)");
+    }
+    private static void checkProgrammableSources(World world,EntityPlayerMP player,
+            BlockPos pos) {
+        IBlockState[] materials={ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),
+                ModBlocks.PROGRAMMABLE_SLAB.getDefaultState(),
+                ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockProgrammableSlab.HALF,
+                        net.minecraft.block.BlockSlab.EnumBlockHalf.TOP)};
+        for (int i=0;i<materials.length;i++) {
+            clear(world,pos);
+            TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+            BlockPos source=pos.south();
+            world.setBlockState(source,materials[i],3);
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=
+                    (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(source);
+            tile.setHousingTexture(i+2);
+            if (i>0) tile.setSlabTileSides(true);
+            require(controller.configure(player,2,2,true,true,false,false),
+                    "programmable source settings");
+            require(controller.request(true),"programmable source deploy: "+controller.status);
+            TileEntityControlledRamp cell=(TileEntityControlledRamp)world.getTileEntity(source);
+            require(cell!=null && cell.sourceTileTags.containsKey(source),
+                    "programmable source tile journal missing");
+            NBTTagCompound saved=controller.writeToNBT(new NBTTagCompound());
+            controller.readFromNBT(saved);
+            require(controller.recover(true),"programmable source recovery");
+            require(world.getBlockState(source).equals(materials[i]),
+                    "programmable source blockstate restored");
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector restored=
+                    (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(source);
+            require(restored!=null && restored.getHousingTexture()==i+2
+                            && (i==0 || restored.isSlabTileSides()),
+                    "programmable source finish and slab side setting restored");
+        }
+        clear(world,pos);
+        TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+        world.setBlockState(pos.south(),ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),3);
+        require(!controller.request(true),"trigger block must not be a ramp source");
+        clear(world,pos);
+        controller=place(world,pos,EnumFacing.SOUTH);
+        world.setBlockState(pos.south(),ModBlocks.PROGRAMMABLE_WALL.getDefaultState(),3);
+        require(!controller.request(true),"wall block must not be a ramp source");
     }
     private static void checkCreativePick(World world, EntityPlayerMP player, BlockPos pos) {
         TileEntityRampController source = place(world, pos, EnumFacing.NORTH);

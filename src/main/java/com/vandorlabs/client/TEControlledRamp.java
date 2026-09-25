@@ -50,9 +50,13 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
         double y=a.minY,Y=a.maxY;
         double vBottom=te.sideTextureV(a,y,partial),vTop=te.sideTextureV(a,Y,partial);
         double[] shift=te.textureShift(a,partial);
+        int housing=te.sourceHousing(a,partial);
         for (EnumFacing face:EnumFacing.values()) {
             java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(te.source,face,0);
-            TextureAtlasSprite sprite=quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
+            TextureAtlasSprite sprite=housing>=0
+                    ? Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
+                    com.vandorlabs.tiles.ScreenHousingTextures.texture(housing))
+                    : quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
             int tint=0xFFFFFF;
             if (!quads.isEmpty() && quads.get(0).hasTintIndex()) tint=Minecraft.getMinecraft().getBlockColors()
                     .colorMultiplier(te.source,te.getWorld(),te.getPos(),quads.get(0).getTintIndex());

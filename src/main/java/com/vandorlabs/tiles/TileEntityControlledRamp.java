@@ -22,6 +22,8 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 /** Non-ticking occupied/next-step cell. Carries its own recovery journal and timeline. */
 public class TileEntityControlledRamp extends TileEntity {
@@ -35,6 +37,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public int speed=1;
     public boolean extendSegments;
     public final List<BlockPos> origins=new ArrayList<>();
+    public final Map<BlockPos,NBTTagCompound> sourceTileTags=new LinkedHashMap<>();
     public double low,high=1;
     public boolean top=true,elevator;
     private boolean open,moving;
@@ -146,6 +149,39 @@ public class TileEntityControlledRamp extends TileEntity {
         return RampGeometry.Direction.valueOf(face.getName().toUpperCase(java.util.Locale.ROOT));
     }
     public boolean belongsTo(BlockPos owner) { return controller.equals(owner); }
+    public int sourceHousing(RampGeometry.Box box,double partial) {
+        if (sourceTileTags.isEmpty()) return -1;
+        BlockPos origin=originFor(box,partial);
+        NBTTagCompound saved=sourceTileTags.get(origin);
+        if (saved==null) saved=sourceTileTags.values().iterator().next();
+        return ScreenHousingTextures.clamp(saved.getInteger(
+                com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+    }
+
+    private BlockPos originFor(RampGeometry.Box box,double partial) {
+        double centerX=pos.getX()+(box.minX+box.maxX)*.5;
+        double centerZ=pos.getZ()+(box.minZ+box.maxZ)*.5;
+        for (BlockPos origin:origins)
+            if (centerX>=origin.getX() && centerX<origin.getX()+1
+                    && centerZ>=origin.getZ() && centerZ<origin.getZ()+1)
+                return origin;
+        return origins.isEmpty()?pos:origins.get(0);
+    }
+
+    public static void restoreSourceTile(net.minecraft.world.World world,BlockPos origin,
+            NBTTagCompound saved) {
+        if (saved==null) return;
+        TileEntity tile=world.getTileEntity(origin);
+        if (tile==null) return;
+        NBTTagCompound copy=saved.copy();
+        copy.setInteger("x",origin.getX());
+        copy.setInteger("y",origin.getY());
+        copy.setInteger("z",origin.getZ());
+        tile.readFromNBT(copy);
+        tile.markDirty();
+        IBlockState state=world.getBlockState(origin);
+        world.notifyBlockUpdate(origin,state,state,3);
+    }
     public void restore() {
         if (world.getTileEntity(pos)!=this) return;
         List<BlockPos> savedOrigins=origins.isEmpty()
@@ -153,7 +189,10 @@ public class TileEntityControlledRamp extends TileEntity {
         for (BlockPos origin:savedOrigins) {
             TileEntity other=world.getTileEntity(origin);
             if (world.isAirBlock(origin) || (other instanceof TileEntityControlledRamp
-                    && ((TileEntityControlledRamp)other).belongsTo(controller))) world.setBlockState(origin,source,3);
+                    && ((TileEntityControlledRamp)other).belongsTo(controller))) {
+                world.setBlockState(origin,source,3);
+                restoreSourceTile(world,origin,sourceTileTags.get(origin));
+            }
         }
         if (world.getTileEntity(pos)==this) world.setBlockToAir(pos);
     }
@@ -185,6 +224,16 @@ public class TileEntityControlledRamp extends TileEntity {
             originList.appendTag(entry);
         }
         tag.setTag(SaveSchema.Ramp.ORIGINS,originList);
+        NBTTagList tileList=new NBTTagList();
+        for (Map.Entry<BlockPos,NBTTagCompound> source:sourceTileTags.entrySet()) {
+            NBTTagCompound entry=new NBTTagCompound();
+            entry.setInteger("X",source.getKey().getX());
+            entry.setInteger("Y",source.getKey().getY());
+            entry.setInteger("Z",source.getKey().getZ());
+            entry.setTag("Tile",source.getValue().copy());
+            tileList.appendTag(entry);
+        }
+        tag.setTag("RampSourceTiles",tileList);
         tag.setLong(SaveSchema.Ramp.CONTROLLER,controller.toLong());
         tag.setInteger(SaveSchema.Ramp.CONTROLLER_X,controller.getX());
         tag.setInteger(SaveSchema.Ramp.CONTROLLER_Y,controller.getY());
@@ -224,6 +273,14 @@ public class TileEntityControlledRamp extends TileEntity {
             origins.add(new BlockPos(entry.getInteger("X"),entry.getInteger("Y"),entry.getInteger("Z")));
         }
         if (origins.isEmpty()) origins.add(new BlockPos(pos.getX(),sourceY,pos.getZ()));
+        sourceTileTags.clear();
+        NBTTagList tileList=tag.getTagList("RampSourceTiles",10);
+        for (int i=0;i<Math.min(128,tileList.tagCount());i++) {
+            NBTTagCompound entry=tileList.getCompoundTagAt(i);
+            if (entry.hasKey("Tile",10)) sourceTileTags.put(new BlockPos(
+                    entry.getInteger("X"),entry.getInteger("Y"),entry.getInteger("Z")),
+                    entry.getCompoundTag("Tile").copy());
+        }
     }
     @Override public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }
     @Override public SPacketUpdateTileEntity getUpdatePacket() { return new SPacketUpdateTileEntity(pos,0,getUpdateTag()); }

@@ -48,6 +48,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public boolean error;
     public int clientUpdates;
     private final List<BlockPos> sources=new ArrayList<>();
+    private final Map<BlockPos,NBTTagCompound> sourceTiles=new LinkedHashMap<>();
     private final Set<BlockPos> cells=new HashSet<>();
     private IBlockState original=Blocks.AIR.getDefaultState();
     private boolean open,moving,changing,latched,signalKnown,needsLoadCheck,recoveryPending,legacy;
@@ -223,9 +224,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         BlockPos seed=pos.offset(scanFacing);
         if (!world.isBlockLoaded(seed)) return fail("Load all platform chunks first");
         IBlockState material=world.getBlockState(seed);
-        if (material.getBlock().hasTileEntity(material) || material.getBlockHardness(world,seed)<0
-                || (!(material.getBlock() instanceof BlockSlab) && !material.isFullCube()))
-            return fail("Front block must be a slab or ordinary solid block");
+        boolean programmable = material.getBlock() == ModBlocks.PROGRAMMABLE_BLOCK
+                || material.getBlock() == ModBlocks.PROGRAMMABLE_SLAB;
+        if ((material.getBlock().hasTileEntity(material) && !programmable)
+                || material.getBlockHardness(world,seed)<0
+                || (!programmable && !(material.getBlock() instanceof BlockSlab)
+                        && !material.isFullCube()))
+            return fail("Front block must be a slab, Programmable Block, or ordinary solid block");
         boolean[] loaded={true};
         Set<ControllerPlatform.Cell> platform=ControllerPlatform.discover(
                 new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->{
@@ -243,6 +248,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             selected.add(source);
             int along=c.x*facing.getFrontOffsetX()+c.z*facing.getFrontOffsetZ();
             min=Math.min(min,along); max=Math.max(max,along);
+        }
+        Map<BlockPos,NBTTagCompound> capturedTiles=new LinkedHashMap<>();
+        if (programmable) for (BlockPos source:selected) {
+            TileEntity sourceTile=world.getTileEntity(source);
+            if (!(sourceTile instanceof TileEntityAnimatedScreenSelector))
+                return fail("Programmable source tile is missing");
+            capturedTiles.put(source,sourceTile.writeToNBT(new NBTTagCompound()));
         }
         AxisAlignedBB bounds=material.getBoundingBox(world,seed);
         if (bounds.minX!=0 || bounds.maxX!=1 || bounds.minZ!=0 || bounds.maxZ!=1)
@@ -267,6 +279,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         || !world.isBlockModifiable(actor,p))) { sources.clear(); return fail("No permission to move this platform"); }
                 if (distance!=0 && !world.isAirBlock(p)) { sources.clear(); return fail("Movement path is obstructed"); }
             }
+        sourceTiles.clear(); sourceTiles.putAll(capturedTiles);
         startPose=0; moving=false; open=false; startTick=world.getTotalWorldTime();
         changing=true; markDirty();
         try {
@@ -296,7 +309,12 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         te.low=low; te.high=high; te.travelAxis=travelAxis; te.extendSegments=extendSegments;
         te.speed=speed;
         te.origins.clear();
-        for (BlockPos source:sources) if (intersects(source,p,0,1)) te.origins.add(source);
+        te.sourceTileTags.clear();
+        for (BlockPos source:sources) if (intersects(source,p,0,1)) {
+            te.origins.add(source);
+            NBTTagCompound saved=sourceTiles.get(source);
+            if (saved!=null) te.sourceTileTags.put(source,saved.copy());
+        }
         te.move(open,startPose,startTick,duration,moving);
     }
 
@@ -585,12 +603,17 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         && ((TileEntityControlledRamp)sourceTile).belongsTo(pos))
                     saved=((TileEntityControlledRamp)sourceTile).source;
                 if (!world.getBlockState(source).equals(saved)) {
-                    if (world.isAirBlock(source)) { world.setBlockState(source,saved,2); changed.add(source); }
+                    if (world.isAirBlock(source)) {
+                        world.setBlockState(source,saved,2);
+                        TileEntityControlledRamp.restoreSourceTile(world,source,sourceTiles.get(source));
+                        changed.add(source);
+                    }
                     else if (saved.getBlock()!=Blocks.AIR)
                         Block.spawnAsEntity(world,pos.up(),new ItemStack(saved.getBlock(),1,saved.getBlock().damageDropped(saved)));
                 }
             }
-            sources.clear(); cells.clear(); recoveryPending=false; open=false; startPose=0;
+            sources.clear(); cells.clear(); sourceTiles.clear();
+            recoveryPending=false; open=false; startPose=0;
             error=false; status="Retracted"; sync();
             for (BlockPos p:changed) world.notifyNeighborsOfStateChange(p,world.getBlockState(p).getBlock(),false);
             return true;
@@ -614,6 +637,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         NBTTagList list=new NBTTagList();
         for (BlockPos p:sources) list.appendTag(writePosition(p));
         tag.setTag(SaveSchema.Ramp.SOURCES,list);
+        NBTTagList tileList=new NBTTagList();
+        for (Map.Entry<BlockPos,NBTTagCompound> entry:sourceTiles.entrySet()) {
+            NBTTagCompound saved=writePosition(entry.getKey());
+            saved.setTag("Tile",entry.getValue().copy());
+            tileList.appendTag(saved);
+        }
+        tag.setTag("RampSourceTiles",tileList);
         NBTTagList reservations=new NBTTagList();
         for (BlockPos p:cells) reservations.appendTag(writePosition(p));
         tag.setTag(SaveSchema.Ramp.CELLS,reservations);
@@ -649,6 +679,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         owner=readOwner(tag);
         sources.clear(); NBTTagList list=tag.getTagList(SaveSchema.Ramp.SOURCES,10);
         for (int i=0;i<Math.min(128,list.tagCount());i++) sources.add(readPosition(list.getCompoundTagAt(i)));
+        sourceTiles.clear();
+        NBTTagList tileList=tag.getTagList("RampSourceTiles",10);
+        for (int i=0;i<Math.min(128,tileList.tagCount());i++) {
+            NBTTagCompound entry=tileList.getCompoundTagAt(i);
+            if (entry.hasKey("Tile",10)) sourceTiles.put(readPosition(entry),
+                    entry.getCompoundTag("Tile").copy());
+        }
         cells.clear();
         if (data.savedVersion<3) {
             for (BlockPos source:sources) for (int d=0;d<=drop;d++) cells.add(reserved(source,d));
