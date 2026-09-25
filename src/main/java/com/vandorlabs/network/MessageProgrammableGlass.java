@@ -15,15 +15,17 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public final class MessageProgrammableGlass implements IMessage {
     private BlockPos pos;
     private int size, shade;
+    private boolean join;
     public MessageProgrammableGlass() {}
-    public MessageProgrammableGlass(BlockPos pos, int size, int shade) {
-        this.pos = pos; this.size = size; this.shade = shade;
+    public MessageProgrammableGlass(BlockPos pos, int size, int shade, boolean join) {
+        this.pos = pos; this.size = size; this.shade = shade; this.join = join;
     }
     @Override public void fromBytes(ByteBuf b) {
         pos = BlockPos.fromLong(b.readLong()); size = b.readInt(); shade = b.readInt();
+        join = b.readBoolean();
     }
     @Override public void toBytes(ByteBuf b) {
-        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade);
+        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
@@ -48,6 +50,7 @@ public final class MessageProgrammableGlass implements IMessage {
                 if (updated instanceof TileEntityProgrammableGlass) {
                     ((TileEntityProgrammableGlass) updated).setSize(msg.size);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
+                    ((TileEntityProgrammableGlass) updated).setJoin(msg.join);
                 }
             });
             return null;

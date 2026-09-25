@@ -104,10 +104,12 @@ public class BlockGlassWall extends Block {
     }
 
     protected boolean canConnectTo(net.minecraft.block.Block other) { return other==this; }
+    protected boolean joinsAt(IBlockAccess world, BlockPos pos) { return true; }
     private boolean connects(IBlockAccess world, BlockPos pos,
             IBlockState state) {
         IBlockState other = world.getBlockState(pos);
         return canConnectTo(other.getBlock())
+                && joinsAt(world, pos)
                 && other.getValue(ROTATED).equals(state.getValue(ROTATED))
                 && other.getValue(DEPTH).equals(state.getValue(DEPTH));
     }
@@ -115,6 +117,11 @@ public class BlockGlassWall extends Block {
     @Override
     public IBlockState getActualState(IBlockState state, IBlockAccess world,
             BlockPos pos) {
+        if (!joinsAt(world, pos)) return state.withProperty(TOP, true)
+                .withProperty(BOTTOM, true).withProperty(LEFT, true)
+                .withProperty(RIGHT, true).withProperty(INNER_TL, false)
+                .withProperty(INNER_TR, false).withProperty(INNER_BL, false)
+                .withProperty(INNER_BR, false);
         EnumFacing left = state.getValue(ROTATED)
                 ? EnumFacing.NORTH : EnumFacing.WEST;
         final IBlockState expected=state;
@@ -194,7 +201,7 @@ public class BlockGlassWall extends Block {
             BlockPos pos, EnumFacing side) {
         EnumFacing.Axis normal = state.getValue(ROTATED)
                 ? EnumFacing.Axis.X : EnumFacing.Axis.Z;
-        if (side.getAxis() != normal
+        if (joinsAt(world, pos) && side.getAxis() != normal
                 && connects(world, pos.offset(side), state)) {
             return false;
         }

@@ -17,6 +17,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraft.world.IBlockAccess;
 
 /** One connected wall block with three detail sizes and a fixed metal frame. */
 public final class BlockProgrammableGlass extends BlockGlassWall {
@@ -53,6 +54,11 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
                 ? actual.withProperty(SIZE, ((TileEntityProgrammableGlass) tile).getSize())
                 : actual;
     }
+    @Override protected boolean joinsAt(IBlockAccess world, BlockPos pos) {
+        TileEntity tile = world.getTileEntity(pos);
+        return !(tile instanceof TileEntityProgrammableGlass)
+                || ((TileEntityProgrammableGlass) tile).isJoin();
+    }
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
     @Override public TileEntity createTileEntity(World world, IBlockState state) {
         return new TileEntityProgrammableGlass();
@@ -67,6 +73,8 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
                 ? ((TileEntityProgrammableGlass) te).getSize() : state.getValue(SIZE));
         settings.setInteger("Shade", te instanceof TileEntityProgrammableGlass
                 ? ((TileEntityProgrammableGlass) te).getShade() : 0);
+        settings.setBoolean("Join", !(te instanceof TileEntityProgrammableGlass)
+                || ((TileEntityProgrammableGlass) te).isJoin());
         stack.setTagInfo("ProgrammableGlassSettings", settings);
         return stack;
     }
@@ -79,12 +87,15 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
                 ? stack.getTagCompound().getCompoundTag("ProgrammableGlassSettings") : null;
         int size = settings == null ? state.getValue(SIZE) : settings.getInteger("Size");
         int shade = settings == null ? 0 : settings.getInteger("Shade");
+        boolean join = settings == null || !settings.hasKey("Join")
+                || settings.getBoolean("Join");
         if (size >= 0 && size <= 2 && state.getValue(DEPTH) == 0)
             world.setBlockState(pos, state.withProperty(SIZE, size), 3);
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof TileEntityProgrammableGlass) {
             ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);
+            ((TileEntityProgrammableGlass)te).setJoin(join);
         }
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,

@@ -16,12 +16,14 @@ public final class GuiProgrammableGlass extends GuiContainer {
     private static final String[] SHADES={"Clear", "Cyan", "Dark Grey"};
     private final TileEntityProgrammableGlass tile;
     private int size,shade;
+    private boolean join;
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));
         this.tile=tile;
         size=tile.getSize();
         shade=tile.getShade();
-        xSize=210; ySize=108;
+        join=tile.isJoin();
+        xSize=210; ySize=136;
     }
     @Override public void initGui() {
         super.initGui();
@@ -29,19 +31,22 @@ public final class GuiProgrammableGlass extends GuiContainer {
         int x=guiLeft+20;
         buttonList.add(new GuiButton(0,x,guiTop+28,170,20,""));
         buttonList.add(new GuiButton(1,x,guiTop+54,170,20,""));
-        buttonList.add(new GuiButton(2,guiLeft+145,guiTop+81,45,20,"Done"));
+        buttonList.add(new GuiButton(3,x,guiTop+80,170,20,""));
+        buttonList.add(new GuiButton(2,guiLeft+145,guiTop+107,45,20,"Done"));
         updateLabels();
     }
     private void updateLabels() {
         buttonList.get(0).displayString="Size: "+SIZES[size];
         buttonList.get(1).displayString="Glass: "+SHADES[shade];
+        buttonList.get(2).displayString="Join: "+(join ? "On" : "Off");
     }
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id==2) { mc.player.closeScreen(); return; }
         if (button.id==0) size=(size+1)%3;
         if (button.id==1) shade=(shade+1)%3;
+        if (button.id==3) join=!join;
         updateLabels();
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade));
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join));
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial, int mouseX, int mouseY) {
         GlStateManager.disableLighting();

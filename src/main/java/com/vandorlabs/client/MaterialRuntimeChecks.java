@@ -55,6 +55,8 @@ final class MaterialRuntimeChecks {
         TileEntityProgrammableGlass original = (TileEntityProgrammableGlass)
                 player.world.getTileEntity(source);
         original.setShade(2);
+        require(original.isJoin(), "new programmable glass did not default to Join On");
+        original.setJoin(false);
         ItemStack picked = glass.getPickBlock(chosen, null, player.world, source, player);
         require(picked.hasTagCompound(), "creative pick lost glass settings");
         player.world.setBlockState(copy, glass.getDefaultState(), 3);
@@ -64,6 +66,7 @@ final class MaterialRuntimeChecks {
         TileEntityProgrammableGlass copied = (TileEntityProgrammableGlass)
                 player.world.getTileEntity(copy);
         require(copied.getShade()==2, "creative copy lost shade");
+        require(!copied.isJoin(), "creative copy lost Join Off");
         player.world.setBlockState(copy, player.world.getBlockState(copy)
                 .withProperty(BlockProgrammableGlass.SIZE,0),3);
         require(player.world.getTileEntity(copy)==copied,
@@ -72,6 +75,11 @@ final class MaterialRuntimeChecks {
         TileEntityProgrammableGlass loaded=new TileEntityProgrammableGlass();
         loaded.readFromNBT(saved);
         require(loaded.getShade()==2,"glass shade did not persist");
+        require(!loaded.isJoin(),"glass Join Off did not persist");
+        NBTTagCompound legacy = saved.copy();
+        legacy.removeTag("GlassJoin");
+        loaded.readFromNBT(legacy);
+        require(loaded.isJoin(), "legacy programmable glass did not default to Join On");
         player.world.setBlockToAir(source);
         player.world.setBlockToAir(copy);
     }
@@ -156,6 +164,25 @@ final class MaterialRuntimeChecks {
         require(!secondActual.getValue(BlockGlassWall.LEFT)
                         &&secondActual.getValue(BlockGlassWall.RIGHT),
                 "second connected glass panel framed the joining side");
+        if (glass instanceof BlockProgrammableGlass) {
+            TileEntityProgrammableGlass firstTile = (TileEntityProgrammableGlass)
+                    player.world.getTileEntity(first);
+            TileEntityProgrammableGlass secondTile = (TileEntityProgrammableGlass)
+                    player.world.getTileEntity(second);
+            firstTile.setJoin(false);
+            firstActual=glass.getActualState(base,player.world,first);
+            secondActual=glass.getActualState(base,player.world,second);
+            require(firstActual.getValue(BlockGlassWall.RIGHT)
+                            && secondActual.getValue(BlockGlassWall.LEFT),
+                    "Join Off did not frame both sides of the seam");
+            firstTile.setJoin(true);
+            secondTile.setJoin(false);
+            firstActual=glass.getActualState(base,player.world,first);
+            secondActual=glass.getActualState(base,player.world,second);
+            require(firstActual.getValue(BlockGlassWall.RIGHT)
+                            && secondActual.getValue(BlockGlassWall.LEFT),
+                    "neighbor Join Off did not frame both sides of the seam");
+        }
         player.world.setBlockToAir(first);
         player.world.setBlockToAir(second);
     }

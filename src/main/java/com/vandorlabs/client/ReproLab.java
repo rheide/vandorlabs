@@ -605,6 +605,7 @@ public class ReproLab {
                 try {
                     glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Size"));
                     glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Glass"));
+                    glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Join"));
                 } catch (java.io.IOException exception) {
                     throw new IllegalStateException("glass GUI button failed",exception);
                 }
@@ -620,7 +621,9 @@ public class ReproLab {
                 if (glassWorld.getBlockState(configuredGlass).getValue(
                         com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)!=2
                         || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)
-                        glassWorld.getTileEntity(configuredGlass)).getShade()!=1)
+                        glassWorld.getTileEntity(configuredGlass)).getShade()!=1
+                        || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)
+                        glassWorld.getTileEntity(configuredGlass)).isJoin())
                     throw new IllegalStateException("glass GUI selections were not applied");
                 saveNamed(mc,"programmable_glass_gui");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
