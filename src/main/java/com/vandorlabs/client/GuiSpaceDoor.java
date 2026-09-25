@@ -58,7 +58,6 @@ public class GuiSpaceDoor extends GuiContainer {
         buttonList.add(motionButton);
         buttonList.add(new GuiButton(11,guiLeft+168,guiTop+66,154,20,SIZES[detail]));
         buttonList.add(new GuiButton(12,guiLeft+168,guiTop+92,154,20,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(new GuiButton(14,guiLeft+168,guiTop+118,154,20,middle?"Position: Middle":"Position: Edge"));
         buttonList.add(new GuiButton(16,guiLeft+168,guiTop+144,154,20,triggerLabel()));
         hingeButton=new GuiButton(15,guiLeft+338,guiTop+190,80,20,"");
         buttonList.add(hingeButton);
@@ -106,7 +105,6 @@ public class GuiSpaceDoor extends GuiContainer {
         }
         else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail]; }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
-        else if (button.id==14) { middle=!middle; button.displayString=middle?"Position: Middle":"Position: Edge"; }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
         else if (button.id==16) { trigger=(trigger+1)%3; button.displayString=triggerLabel(); }
         else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }

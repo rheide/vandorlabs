@@ -19,6 +19,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     private int slideDirection;
     private boolean framed=true, sliding;
     private boolean middle, hinges=true, panel=true;
+    /** 0 centre, 1 near edge, 2 far edge. */
+    private int placementDepth = 1;
     private int trigger=com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED;
     public int getTrigger() { return trigger; }
     public boolean hasHinges() { return hinges; }
@@ -37,7 +39,20 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     /** Model-space depth offset: rotating art is edge-native, sliding art is centre-native. */
     public double positionOffset() {
-        return com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(),middle);
+        double centre = com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(), true);
+        double near = com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(), false);
+        return placementDepth == 0 ? centre : placementDepth == 2 ? 2 * centre - near : near;
+    }
+    public int getPlacementDepth() { return placementDepth; }
+    public void setPlacementDepth(int depth) {
+        if (depth < 0 || depth > 2) return;
+        placementDepth = depth;
+        middle = depth == 0;
+        markDirty();
+        if (world != null && pos != null) {
+            IBlockState state = world.getBlockState(pos);
+            world.notifyBlockUpdate(pos, state, state, 3);
+        }
     }
     public static boolean valid(int design,int detail) { return design>=0 && design<DESIGNS.length && detail>=0 && detail<DETAILS.length; }
 
@@ -92,6 +107,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
                 || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
         this.design=design; this.detail=detail; this.framed=framed;
         this.slideDirection=direction;
+        if (this.middle != middle) placementDepth = middle ? 0 : 1;
         this.middle=middle; this.sliding=sliding; this.migrateLegacyMotion=false;
         this.hinges=hinges;
         this.trigger=trigger;
@@ -109,6 +125,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         super.writeToNBT(tag);
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
+        tag.setInteger("SpaceDoorPlacementDepth", placementDepth);
         return tag;
     }
     /** Copy user choices only, not tile coordinates, power or animation state. */
@@ -132,6 +149,9 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         design=data.design; detail=data.detail; framed=data.framed; slideDirection=data.direction;
         middle=data.middle; sliding=data.sliding;
+        placementDepth = tag.hasKey("SpaceDoorPlacementDepth", 3)
+                ? Math.max(0, Math.min(2, tag.getInteger("SpaceDoorPlacementDepth")))
+                : (middle ? 0 : 1);
         hinges=data.hinges;
         trigger=data.trigger;
         panel=data.panel;
@@ -143,7 +163,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if (block instanceof com.vandorlabs.blocks.BlockDetailedDoor) {
             sliding=((com.vandorlabs.blocks.BlockDetailedDoor)block).isSlidingModel();
             // The old sliding block's native placement was the centre track.
-            if (sliding) middle=true;
+            if (sliding) { middle=true; placementDepth=0; }
         }
         migrateLegacyMotion=false;
         if (!world.isRemote) markDirty();

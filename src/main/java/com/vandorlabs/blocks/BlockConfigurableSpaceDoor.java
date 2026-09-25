@@ -20,6 +20,19 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
+    private static final ThreadLocal<Integer> PLACEMENT_DEPTH = new ThreadLocal<>();
+
+    @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
+            EnumFacing side, float hitX, float hitY, float hitZ, int meta,
+            EntityLivingBase placer, EnumHand hand) {
+        EnumFacing front = placer.getHorizontalFacing().getOpposite();
+        float normalHit = front == EnumFacing.SOUTH ? 1F - hitZ
+                : front == EnumFacing.EAST ? 1F - hitX
+                : front == EnumFacing.WEST ? hitX : hitZ;
+        PLACEMENT_DEPTH.set(PanelDepth.fromHit(normalHit));
+        return super.getStateForPlacement(world, pos, side, hitX, hitY, hitZ,
+                meta, placer, hand);
+    }
     @Override protected boolean canToggleByHand(World world,BlockPos lowerPos) {
         TileEntity raw=world.getTileEntity(lowerPos);
         return !(raw instanceof TileEntitySpaceDoor)
@@ -135,6 +148,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     }
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack) {
         super.onBlockPlacedBy(world,pos,state,placer,stack);
+        Integer clickedDepth = PLACEMENT_DEPTH.get();
+        PLACEMENT_DEPTH.remove();
         TileEntity raw=world.getTileEntity(pos);
         if (!world.isRemote && raw instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;
@@ -142,6 +157,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                 // An explicitly picked configuration takes precedence over
                 // both placement defaults and neighbor appearance inheritance.
                 tile.applyItemSettings(stack.getTagCompound().getCompoundTag("SpaceDoorSettings"));
+                tile.setPlacementDepth(clickedDepth == null ? 1 : clickedDepth);
                 return;
             }
             BlockPos mate=tile.mate();
@@ -155,6 +171,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                 tile.configure(tile.getDesign(),tile.getDetail(),tile.isFramed(),
                         tile.getSlideDirection(),true,true);
             }
+            tile.setPlacementDepth(clickedDepth == null ? 1 : clickedDepth);
         }
     }
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult target,
