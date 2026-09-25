@@ -19,12 +19,24 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     private int slideDirection;
     private boolean framed=true, sliding;
     private boolean middle, hinges=true, panel=true;
+    /** Hexagon, octagon, square, round. Square preserves existing doors. */
+    private int shape = 2;
     /** 0 centre, 1 near edge, 2 far edge. */
     private int placementDepth = 1;
     private int trigger=com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED;
     public int getTrigger() { return trigger; }
     public boolean hasHinges() { return hinges; }
     public boolean hasPanel() { return panel; }
+    public int getShape() { return shape; }
+    public void setShape(int value) {
+        if (value < 0 || value > 3 || value == shape) return;
+        shape = value;
+        markDirty();
+        if (world != null) {
+            IBlockState state = world.getBlockState(pos);
+            world.notifyBlockUpdate(pos, state, state, 3);
+        }
+    }
     private boolean migrateLegacyMotion;
     public boolean isMiddle() { migrateLegacyMotion(); return middle; }
     public static final double MIDDLE_OFFSET = -5.24/16.0;
@@ -126,6 +138,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("SpaceDoorPlacementDepth", placementDepth);
+        tag.setInteger("SpaceDoorShape", shape);
         return tag;
     }
     /** Copy user choices only, not tile coordinates, power or animation state. */
@@ -135,12 +148,14 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("SpaceDoorChannel",getRedstoneChannel());
+        tag.setInteger("SpaceDoorShape", shape);
         return tag;
     }
     public void applyItemSettings(NBTTagCompound tag) {
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         configure(data.design,data.detail,data.framed,data.direction,data.middle,data.sliding,data.hinges,data.trigger,data.panel);
+        setShape(tag.hasKey("SpaceDoorShape", 3) ? tag.getInteger("SpaceDoorShape") : 2);
         setRedstoneChannel(Math.max(0,tag.getInteger("SpaceDoorChannel")));
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
@@ -152,6 +167,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         placementDepth = tag.hasKey("SpaceDoorPlacementDepth", 3)
                 ? Math.max(0, Math.min(2, tag.getInteger("SpaceDoorPlacementDepth")))
                 : (middle ? 0 : 1);
+        shape = tag.hasKey("SpaceDoorShape", 3)
+                ? Math.max(0, Math.min(3, tag.getInteger("SpaceDoorShape"))) : 2;
         hinges=data.hinges;
         trigger=data.trigger;
         panel=data.panel;

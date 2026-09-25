@@ -11,6 +11,8 @@ final class PortholeHex {
     static boolean validShape(int shape) { return shape >= HEXAGON && shape <= ROUND; }
     final double[][] vertices;
 
+    PortholeHex(double[][] vertices) { this.vertices = vertices; }
+
     PortholeHex(int columns, int rows) { this(columns, rows, HEXAGON); }
 
     PortholeHex(int columns, int rows, int shape) {

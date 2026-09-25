@@ -21,6 +21,8 @@ public class GuiSpaceDoor extends GuiContainer {
     private final TileEntitySpaceDoor tile;
     private int design,detail,scrollIndex,lastValidChannel;
     private int trigger;
+    private int shape;
+    private static final String[] SHAPES={"Hexagon","Octagon","Square","Round"};
     private SpaceDoorMotion motion;
     private boolean framed,middle,hinges,panel,draggingScrollbar;
     private int listLeft,listTop,listRight,listBottom;
@@ -44,6 +46,7 @@ public class GuiSpaceDoor extends GuiContainer {
         hinges=tile.hasHinges();
         panel=tile.hasPanel();
         trigger=tile.getTrigger();
+        shape=tile.getShape();
         lastValidChannel=tile.getRedstoneChannel();
         scrollIndex=Math.max(0,Math.min(maxScroll(),design-LIST_ROWS/2));
         xSize=420; ySize=240;
@@ -58,6 +61,7 @@ public class GuiSpaceDoor extends GuiContainer {
         buttonList.add(motionButton);
         buttonList.add(new GuiButton(11,guiLeft+168,guiTop+66,154,20,SIZES[detail]));
         buttonList.add(new GuiButton(12,guiLeft+168,guiTop+92,154,20,framed?"Frame: Framed":"Frame: Bare"));
+        buttonList.add(new GuiButton(18,guiLeft+168,guiTop+118,154,20,shapeLabel()));
         buttonList.add(new GuiButton(16,guiLeft+168,guiTop+144,154,20,triggerLabel()));
         hingeButton=new GuiButton(15,guiLeft+338,guiTop+190,80,20,"");
         buttonList.add(hingeButton);
@@ -86,6 +90,7 @@ public class GuiSpaceDoor extends GuiContainer {
                 :trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Trigger: Redstone OFF"
                 :"Trigger: Disabled";
     }
+    private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
     private void updateChannelValidity() {
         done.enabled=channel()>=0;
         channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);
@@ -94,7 +99,7 @@ public class GuiSpaceDoor extends GuiContainer {
         if (channel()>=0) lastValidChannel=channel();
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,middle,motion.sliding,hinges,trigger,panel));
+                lastValidChannel,motion.direction,middle,motion.sliding,hinges,trigger,panel,shape));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
@@ -105,6 +110,7 @@ public class GuiSpaceDoor extends GuiContainer {
         }
         else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail]; }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
+        else if (button.id==18) { shape=(shape+1)%SHAPES.length; button.displayString=shapeLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
         else if (button.id==16) { trigger=(trigger+1)%3; button.displayString=triggerLabel(); }
         else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }

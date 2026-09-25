@@ -18,6 +18,15 @@ for motion in ('sliding', 'rotating'):
         difference = sum(ImageStat.Stat(ImageChops.difference(*shots)).mean) / 3
         assert difference > .1, f'{motion}/{trim}: open and closed look identical'
 Image.open(root / 'shot_gallery_space_glass.png').verify()
+shapes={name:Image.open(root/f'shot_gallery_space_shape_{name}.png').convert('RGB')
+        for name in ('hexagon','octagon','square','round')}
+for name,image in shapes.items():
+    missing=sum(r>80 and b>80 and g<min(r,b)*.3
+                for r,g,b in getattr(image,'get_flattened_data',image.getdata)())
+    assert missing<20,f'{name}: missing door shape texture'
+    if name!='square':
+        difference=sum(ImageStat.Stat(ImageChops.difference(image,shapes['square'])).mean)/3
+        assert difference>.01,f'{name}: door shape did not change rendered pixels'
 hinges=[Image.open(root/f'shot_gallery_space_config_hinges_{mode}.png').convert('RGB') for mode in ('on','off')]
 assert sum(ImageStat.Stat(ImageChops.difference(*hinges)).mean)>.01,'hinge toggle has no rendered effect'
 for image in hinges+[Image.open(root/'shot_gallery_space_glass.png').convert('RGB')]:

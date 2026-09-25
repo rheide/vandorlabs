@@ -257,6 +257,34 @@ final class SpaceDoorRuntimeChecks {
                         block.getActualState(world.getBlockState(source),world,source))
                         ==com.vandorlabs.render.SpaceDoorControlPanel.Side.NONE,
                 "door with neighbors on both sides retained a pad");
+        for (BlockPos part:new BlockPos[]{west,source,east}) {
+            TileEntitySpaceDoor t=tile(world,part);
+            t.configure(2,1,true,0,false,true);
+            t.setPlacementDepth(1);
+        }
+        for (int shape=0;shape<4;shape++) {
+            for (BlockPos part:new BlockPos[]{west,source,east})
+                tile(world,part).setShape(shape);
+            DoorShapeOutline outline=DoorShapeOutline.group(tile(world,source),
+                    block.getActualState(world.getBlockState(source),world,source));
+            check(outline.columns==3 && outline.column==1
+                            && outline.outline.vertices.length==new int[]{6,8,4,28}[shape],
+                    "three-door outline is not continuous for shape "+shape);
+            check(outline.slice(0).edgeOpening(0,0)!=null
+                            && outline.slice(0).edgeOpening(0,16)!=null,
+                    "three-door shape does not cross both seams");
+            NBTTagCompound data=tile(world,source).writeToNBT(new NBTTagCompound());
+            TileEntitySpaceDoor restored=new TileEntitySpaceDoor();
+            restored.readFromNBT(data);
+            check(restored.getShape()==shape
+                            && tile(world,source).itemSettings().getInteger("SpaceDoorShape")==shape,
+                    "door shape was not saved or copied");
+            tile(world,east).setShape((shape+1)%4);
+            check(DoorShapeOutline.group(tile(world,source),
+                            block.getActualState(world.getBlockState(source),world,source))
+                            .columns==2,
+                    "different door shapes joined into one outline");
+        }
         for (BlockPos adjacent:new BlockPos[]{east,west}) {
             clear(world,adjacent);
             world.setBlockToAir(adjacent.down());

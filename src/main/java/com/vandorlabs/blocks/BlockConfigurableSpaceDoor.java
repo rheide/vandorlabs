@@ -165,6 +165,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                 TileEntitySpaceDoor other=(TileEntitySpaceDoor)world.getTileEntity(mate);
                 tile.configure(other.getDesign(),other.getDetail(),other.isFramed(),other.getSlideDirection(),
                         other.isMiddle(),other.isSliding(),other.hasHinges(),other.getTrigger(),other.hasPanel());
+                tile.setShape(other.getShape());
             } else if (isSlidingModel()) {
                 // Both the unified block and legacy sliding item default to
                 // sideways sliding on the centre track.
