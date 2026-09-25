@@ -4,6 +4,7 @@ import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageProgrammableLight;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.ProgrammableLightTextures;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.tiles.TileEntityProgrammableLight;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
@@ -204,6 +205,17 @@ public final class GuiProgrammableLight extends GuiContainer {
         mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1F, 1F, 1F, 1F);
         drawTexturedModalRect(guiLeft + 169, guiTop + 44, sprite, 66, 66);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.preview"),
+                guiLeft + 344, guiTop + 140, 0xFFD8D8D8);
+        drawRect(guiLeft + 342, guiTop + 150, guiLeft + 402,
+                guiTop + 210, 0xFF505058);
+        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        GlStateManager.color(1F, 1F, 1F, 1F);
+        GlStateManager.enableBlend();
+        drawTexturedModalRect(guiLeft + 344, guiTop + 152,
+                mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(housing)),
+                56, 56);
+        GlStateManager.disableBlend();
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level") + ": " + level,
                 guiLeft + 13, guiTop + 156, 0xFFD8D8D8);
         drawRect(guiLeft + 16, guiTop + 173, guiLeft + 16 + SLIDER_W,
