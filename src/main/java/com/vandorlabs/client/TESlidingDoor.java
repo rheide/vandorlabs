@@ -225,59 +225,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             GlStateManager.popMatrix();
         }
         if (!glass) {
-            if (tile.getShape()!=2) renderDoorShapeMask(tile,state,facing,x,y,z);
             SpaceDoorControlPanel.Side side=com.vandorlabs.blocks.BlockConfigurableSpaceDoor
                     .panelSide(tile.getWorld(),tile.getPos(),state);
             if (side!=SpaceDoorControlPanel.Side.NONE)
                 renderSpaceDoorControlPanel(tile,facing,side,x,y,z);
         }
-    }
-
-    private static void renderDoorShapeMask(
-            com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
-            EnumFacing facing,double x,double y,double z) {
-        DoorShapeOutline group=DoorShapeOutline.group(tile,state);
-        TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/space_doors/"
-                        +com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[tile.getDetail()]
-                        +"/double_frame_metal");
-        double front=tile.isSliding()?10.1:15.35;
-        double back=tile.isSliding()?5.9:11.1;
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x,y,z);
-        orientDetailedDoor(facing);
-        GlStateManager.translate(0,0,tile.positionOffset());
-        GlStateManager.scale(1F/16,1F/16,1F/16);
-        GlStateManager.disableLighting();
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        BufferBuilder buffer=Tessellator.getInstance().getBuffer();
-        buffer.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
-        for (int row=0;row<2;row++) {
-            PortholeHex.Slice slice=group.slice(row);
-            for (double[] quad:slice.frameQuads) {
-                for (int i=0;i<4;i++)
-                    doorMaskVertex(buffer,metal,quad[i*2],quad[i*2+1]+row*16,front);
-                for (int i=3;i>=0;i--)
-                    doorMaskVertex(buffer,metal,quad[i*2],quad[i*2+1]+row*16,back);
-            }
-            for (double[] edge:slice.hexEdges) {
-                doorMaskVertex(buffer,metal,edge[0],edge[1]+row*16,front);
-                doorMaskVertex(buffer,metal,edge[2],edge[3]+row*16,front);
-                doorMaskVertex(buffer,metal,edge[2],edge[3]+row*16,back);
-                doorMaskVertex(buffer,metal,edge[0],edge[1]+row*16,back);
-            }
-        }
-        Tessellator.getInstance().draw();
-        GlStateManager.enableLighting();
-        GlStateManager.popMatrix();
-    }
-
-    private static void doorMaskVertex(BufferBuilder buffer,TextureAtlasSprite sprite,
-            double x,double y,double z) {
-        // The atlas centre is transparent artwork padding. Its narrow metal
-        // strip is the same opaque material used by the generated frame sides.
-        buffer.pos(x,y,z).tex(sprite.getInterpolatedU(.16+x*.0075),
-                sprite.getInterpolatedV(4+y*.00375)).endVertex();
     }
 
     private static void renderSpaceDoorControlPanel(com.vandorlabs.tiles.TileEntitySpaceDoor tile,

@@ -298,9 +298,6 @@ public class ReproLab {
             }
         }
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
-        for (String shape:new String[]{"hexagon","octagon","square","round"})
-            SHOTS.add(new Shot("gallery_space_shape_"+shape,
-                    GALLERY_X,galleryFeet,-23.0D,0,0));
         for (String hinges:new String[]{"on","off"}) SHOTS.add(new Shot("gallery_space_config_hinges_"+hinges,
                 GALLERY_X-2.5D,galleryFeet+.4D,-21,-36,5));
         SHOTS.add(new Shot("gallery_space_panel_sliding_edge",GALLERY_X-2.0D,
@@ -1213,23 +1210,6 @@ public class ReproLab {
                                 com.vandorlabs.blocks.BlockProgrammableGlass.SIZE,x),3);
                 ((com.vandorlabs.tiles.TileEntityProgrammableGlass)world.getTileEntity(
                         new BlockPos(GALLERY_X-1+x,GALLERY_Y+y,-18))).setShade(y);
-            }
-        } else if (shot.startsWith("gallery_space_shape_")) {
-            String shape=shot.substring("gallery_space_shape_".length());
-            int choice=shape.equals("hexagon")?0:shape.equals("octagon")?1
-                    :shape.equals("round")?3:2;
-            for (int dx=-1;dx<=1;dx++) {
-                BlockPos p=new BlockPos(GALLERY_X+dx,GALLERY_Y,-18);
-                placeDoor(world,p,"programmable_door",false);
-                for (BlockPos part:new BlockPos[]{p,p.up()}) {
-                    IBlockState state=world.getBlockState(part);
-                    world.setBlockState(part,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH),2);
-                }
-                com.vandorlabs.tiles.TileEntitySpaceDoor tile=
-                        (com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(p);
-                tile.configure(2,1,true,0,false,true);
-                tile.setPlacementDepth(1);
-                tile.setShape(choice);
             }
         } else if (shot.startsWith("gallery_space_config_hinges_")) {
             for (int i=0;i<2;i++) {
