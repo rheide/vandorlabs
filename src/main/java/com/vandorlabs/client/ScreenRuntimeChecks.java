@@ -343,6 +343,7 @@ final class ScreenRuntimeChecks {
             source.setHousingTexture(8);
             source.setGlassShade(1);
             source.setJoinPortholes(true);
+            source.setPortholeShape(PortholeHex.ROUND);
             NBTTagCompound tag = source.writeToNBT(new NBTTagCompound());
             TileEntityAnimatedScreenSelector restored =
                     new TileEntityAnimatedScreenSelector();
@@ -362,7 +363,8 @@ final class ScreenRuntimeChecks {
                             && restored.getRedstoneChannel() == 4271
                             && restored.getHousingTexture() == 8
                             && restored.getGlassShade() == 1
-                            && restored.isJoinPortholes(),
+                            && restored.isJoinPortholes()
+                            && restored.getPortholeShape() == PortholeHex.ROUND,
                     "tile NBT round trip failed for " + panel);
         }
         TileEntityAnimatedScreenSelector invalid = new TileEntityAnimatedScreenSelector();
@@ -641,6 +643,24 @@ final class ScreenRuntimeChecks {
         require(TEAnimatedScreenSelector.joinsPorthole(first, north, true)
                         && TEAnimatedScreenSelector.joinsPorthole(second, north, false),
                 "north-facing portholes do not join at their shared edge");
+        for (int shape = PortholeHex.HEXAGON; shape <= PortholeHex.ROUND; shape++) {
+            first.setPortholeShape(shape);
+            second.setPortholeShape(shape);
+            above.setPortholeShape(shape);
+            ((TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos.east().up()))
+                    .setPortholeShape(shape);
+            group = TEAnimatedScreenSelector.portholeGroup(first, north);
+            require(group.columns == 2 && group.rows == 2
+                            && group.hex.vertices.length == new int[] {6, 8, 4, 20}[shape]
+                            && group.slice(pos).edgeOpening(0, 16) != null
+                            && group.slice(pos).edgeOpening(1, 16) != null,
+                    "joined porthole shape is incomplete: " + shape);
+            second.setPortholeShape((shape + 1) % 4);
+            require(!TEAnimatedScreenSelector.joinsPorthole(first, north, true)
+                            && TEAnimatedScreenSelector.portholeGroup(first, north).columns == 1,
+                    "portholes joined across different shapes: " + shape);
+            second.setPortholeShape(shape);
+        }
         second.setJoinPortholes(false);
         require(!TEAnimatedScreenSelector.joinsPorthole(first, north, true),
                 "porthole joins a neighbor with its toggle off");

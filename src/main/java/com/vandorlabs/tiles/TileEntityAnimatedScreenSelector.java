@@ -81,11 +81,21 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean slabTileSides;
     private int glassShade = 2;
     private boolean joinPortholes;
+    private int portholeShape;
     private static long portholeRevision;
 
     public static long getPortholeRevision() { return portholeRevision; }
 
     public boolean isJoinPortholes() { return joinPortholes; }
+    public int getPortholeShape() { return portholeShape; }
+    public void setPortholeShape(int shape) {
+        if (shape < 0 || shape > 3 || shape == portholeShape) return;
+        portholeShape = shape;
+        portholeRevision++;
+        markDirty();
+        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
+                world.getBlockState(pos), 3);
+    }
     public void setJoinPortholes(boolean join) {
         if (join == joinPortholes) return;
         joinPortholes = join;
@@ -276,6 +286,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 .write(new NbtPrimitiveData(compound));
         compound.setInteger("GlassShade", glassShade);
         compound.setBoolean("JoinPortholes", joinPortholes);
+        compound.setInteger("PortholeShape", portholeShape);
         compound.setBoolean("SlabTileSides", slabTileSides);
         compound.setInteger("HousingTextureVersion", 1);
         return compound;
@@ -311,6 +322,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         glassShade = compound.hasKey("GlassShade", 3)
                 ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
         joinPortholes = compound.getBoolean("JoinPortholes");
+        portholeShape = compound.hasKey("PortholeShape",3)
+                ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
         slabTileSides = compound.getBoolean("SlabTileSides");
         portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)

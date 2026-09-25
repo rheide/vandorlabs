@@ -42,3 +42,4 @@ Below are more complex features that we should test individually before proceedi
 - 2026-09-25: Version 1.1 passed Java 8 build and live client suite (39,408 ramp assertions; artifacts `testclient/render-run.FwTmCe`). Copied `build/libs/vandorlabs-1.1.jar` to `~/LLMShareDrive/vandorlabs-1.1.jar`.
 - 2026-09-25: Version 1.2 in progress: joined portholes now keep the same four-pixel top/bottom margin as a single porthole. Added 2x2, 3x3, vertical, and horizontal margin checks; individual test and build copy pending.
 - 2026-09-25: Version 1.2 passed Java 8 build and the live client suite (`testclient/render-run.hLkC6X`). Copied `build/libs/vandorlabs-1.2.jar` to `~/LLMShareDrive/vandorlabs-1.2.jar`.
+- 2026-09-25: Version 1.3 in progress: Porthole dialog now selects Hexagon, Octagon, Square, or pixelated Round. Shape persists with the tile, joins only match neighboring shapes, and joined geometry uses the selected outline. Individual build and live test pending.

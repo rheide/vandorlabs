@@ -191,13 +191,13 @@ public class TEAnimatedScreenSelector
         final PortholeHex hex;
 
         PortholeGroup(int minAxis, int minY, int columns, int rows,
-                EnumFacing right) {
+                EnumFacing right, int shape) {
             this.minAxis = minAxis;
             this.minY = minY;
             this.columns = columns;
             this.rows = rows;
             this.right = right;
-            this.hex = new PortholeHex(columns, rows);
+            this.hex = new PortholeHex(columns, rows, shape);
         }
 
         PortholeHex.Slice slice(BlockPos pos) {
@@ -242,7 +242,8 @@ public class TEAnimatedScreenSelector
                     BlockPos next = current.offset(side);
                     if (members.contains(next) || !world.isBlockLoaded(next)
                             || !eligiblePorthole(world, next, facing,
-                                    state.getValue(BlockProgrammableWall.DEPTH))) continue;
+                                    state.getValue(BlockProgrammableWall.DEPTH),
+                                    tile.getPortholeShape())) continue;
                     members.add(next);
                     queue.addLast(next);
                     int coordinate = axis(next, right);
@@ -260,7 +261,8 @@ public class TEAnimatedScreenSelector
         }
         if (capped) {
             for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos,
-                    new PortholeGroup(axis(pos, right), pos.getY(), 1, 1, right));
+                    new PortholeGroup(axis(pos, right), pos.getY(), 1, 1, right,
+                            tile.getPortholeShape()));
             return PORTHOLE_GROUPS.get(tile.getPos());
         }
         if ((long) (maximum - minimum + 1) * (maxY - minY + 1) != members.size()) {
@@ -268,7 +270,8 @@ public class TEAnimatedScreenSelector
             for (BlockPos pos : members)
                 positions.put(PortholeRectangles.cell(axis(pos, right), pos.getY()), pos);
             for (PortholeRectangles.Rect rect : PortholeRectangles.partition(positions.keySet())) {
-                PortholeGroup part = new PortholeGroup(rect.x, rect.y, rect.width, rect.height, right);
+                PortholeGroup part = new PortholeGroup(rect.x, rect.y,
+                        rect.width, rect.height, right, tile.getPortholeShape());
                 for (int row = rect.y; row < rect.y + rect.height; row++)
                     for (int column = rect.x; column < rect.x + rect.width; column++)
                         PORTHOLE_GROUPS.put(positions.get(PortholeRectangles.cell(column, row)), part);
@@ -276,13 +279,14 @@ public class TEAnimatedScreenSelector
             return PORTHOLE_GROUPS.get(tile.getPos());
         }
         PortholeGroup group = new PortholeGroup(minimum, minY,
-                maximum - minimum + 1, maxY - minY + 1, right);
+                maximum - minimum + 1, maxY - minY + 1, right,
+                tile.getPortholeShape());
         for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos, group);
         return group;
     }
 
     private static boolean eligiblePorthole(World world, BlockPos pos,
-            EnumFacing facing, int depth) {
+            EnumFacing facing, int depth, int shape) {
         IBlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockProgrammableWall)
                 || ((BlockProgrammableWall) state.getBlock()).getShape()
@@ -291,7 +295,8 @@ public class TEAnimatedScreenSelector
                 || state.getValue(BlockProgrammableWall.DEPTH) != depth) return false;
         net.minecraft.tileentity.TileEntity raw = world.getTileEntity(pos);
         return raw instanceof TileEntityAnimatedScreenSelector
-                && ((TileEntityAnimatedScreenSelector) raw).isJoinPortholes();
+                && ((TileEntityAnimatedScreenSelector) raw).isJoinPortholes()
+                && ((TileEntityAnimatedScreenSelector) raw).getPortholeShape() == shape;
     }
 
     /** Uploads reconstructed pixels and releases them immediately afterward.
@@ -865,7 +870,9 @@ public class TEAnimatedScreenSelector
                 != state.getValue(BlockProgrammableWall.DEPTH)) return false;
         net.minecraft.tileentity.TileEntity other = tile.getWorld().getTileEntity(next);
         return other instanceof TileEntityAnimatedScreenSelector
-                && ((TileEntityAnimatedScreenSelector) other).isJoinPortholes();
+                && ((TileEntityAnimatedScreenSelector) other).isJoinPortholes()
+                && ((TileEntityAnimatedScreenSelector) other).getPortholeShape()
+                == tile.getPortholeShape();
     }
 
     private static void wallVertex(BufferBuilder buf, TextureAtlasSprite sprite,
@@ -930,7 +937,13 @@ public class TEAnimatedScreenSelector
                 && other.getValue(BlockProgrammableWall.FACING)
                 == state.getValue(BlockProgrammableWall.FACING)
                 && other.getValue(BlockProgrammableWall.DEPTH)
-                == state.getValue(BlockProgrammableWall.DEPTH);
+                == state.getValue(BlockProgrammableWall.DEPTH)
+                && tile.isJoinPortholes()
+                && tile.getWorld().getTileEntity(next) instanceof TileEntityAnimatedScreenSelector
+                && ((TileEntityAnimatedScreenSelector)tile.getWorld().getTileEntity(next))
+                .isJoinPortholes()
+                && ((TileEntityAnimatedScreenSelector)tile.getWorld().getTileEntity(next))
+                .getPortholeShape() == tile.getPortholeShape();
     }
 
     private static void topRim(BufferBuilder buf, TextureAtlasSprite metal,

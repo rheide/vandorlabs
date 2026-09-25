@@ -27,12 +27,14 @@ public class GuiProgrammableWall extends GuiContainer {
     private static final int ROWS = 8;
     private static final int LIST_W = 190;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
+    private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
     private final TileEntityAnimatedScreenSelector tile;
     private final boolean porthole;
     private final boolean fullBlock;
     private final boolean slab;
     private int selected;
     private int shade;
+    private int shape;
     private boolean join;
     private boolean tileSides;
     private int scroll;
@@ -56,22 +58,25 @@ public class GuiProgrammableWall extends GuiContainer {
                 || slab;
         selected = tile.getHousingTexture();
         shade = tile.getGlassShade();
+        shape = tile.getPortholeShape();
         join = tile.isJoinPortholes();
         tileSides = tile.isSlabTileSides();
         xSize = 340;
-        ySize = porthole ? 246 : slab ? 216 : 190;
+        ySize = porthole ? 272 : slab ? 216 : 190;
     }
 
     @Override public void initGui() {
         super.initGui();
         buttonList.clear();
         listX = guiLeft + 11;
-        listY = guiTop + (porthole ? 80 : 27);
+        listY = guiTop + (porthole ? 106 : 27);
         scroll = Math.min(Math.max(0, selected - ROWS / 2), maxScroll());
         if (porthole) buttonList.add(new GuiButton(101, guiLeft + 14,
                 guiTop + 25, 312, 20, shadeLabel()));
         if (porthole) buttonList.add(new GuiButton(102, guiLeft + 14,
                 guiTop + 51, 312, 20, joinLabel()));
+        if (porthole) buttonList.add(new GuiButton(104, guiLeft + 14,
+                guiTop + 77, 312, 20, shapeLabel()));
         if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
                 guiTop + 163, 312, 20, slabSidesLabel()));
         buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + ySize - 25, 312, 20,
@@ -80,11 +85,12 @@ public class GuiProgrammableWall extends GuiContainer {
 
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
     private String joinLabel() { return "Join glass: " + (join ? "On" : "Off"); }
+    private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
     private String slabSidesLabel() { return "Side texture: " + (tileSides ? "Tile" : "Fit"); }
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
-                tile.getPos(), shade, join));
+                tile.getPos(), shade, join, shape));
     }
 
     private int maxScroll() {
@@ -182,6 +188,12 @@ public class GuiProgrammableWall extends GuiContainer {
             button.displayString = slabSidesLabel();
             PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(
                     tile.getPos(), tileSides));
+        }
+        if (button.id == 104) {
+            shape = (shape + 1) % SHAPES.length;
+            tile.setPortholeShape(shape);
+            button.displayString = shapeLabel();
+            sendPortholeSettings();
         }
     }
 

@@ -7,16 +7,44 @@ import java.util.List;
 /** Pixel-space hexagon shared by a connected group of porthole blocks. */
 final class PortholeHex {
     private static final double EPS = 1.0E-7;
+    static final int HEXAGON = 0, OCTAGON = 1, SQUARE = 2, ROUND = 3;
+    static boolean validShape(int shape) { return shape >= HEXAGON && shape <= ROUND; }
     final double[][] vertices;
 
-    PortholeHex(int columns, int rows) {
+    PortholeHex(int columns, int rows) { this(columns, rows, HEXAGON); }
+
+    PortholeHex(int columns, int rows, int shape) {
         if (columns < 1 || rows < 1) throw new IllegalArgumentException("empty porthole group");
+        if (!validShape(shape)) throw new IllegalArgumentException("unknown porthole shape");
         double width = columns * 16D;
         double height = rows * 16D;
         double x0 = 2, x1 = width - 2;
         double y0 = 4;
         double y1 = height - 4;
-        if (columns == 1 && rows == 1) {
+        if (shape == SQUARE) {
+            vertices = new double[][] {{x0,y0},{x1,y0},{x1,y1},{x0,y1}};
+        } else if (shape == OCTAGON) {
+            double bevel = Math.min((x1-x0)/4D,(y1-y0)/4D);
+            vertices = new double[][] {
+                    {x0+bevel,y0},{x1-bevel,y0},{x1,y0+bevel},{x1,y1-bevel},
+                    {x1-bevel,y1},{x0+bevel,y1},{x0,y1-bevel},{x0,y0+bevel}
+            };
+        } else if (shape == ROUND) {
+            double dx = Math.max(1,Math.floor((x1-x0)/6D));
+            double dy = Math.max(1,Math.floor((y1-y0)/6D));
+            vertices = new double[][] {
+                    {x0+2*dx,y0},{x1-2*dx,y0},
+                    {x1-2*dx,y0+dy},{x1-dx,y0+dy},
+                    {x1-dx,y0+2*dy},{x1,y0+2*dy},
+                    {x1,y1-2*dy},{x1-dx,y1-2*dy},
+                    {x1-dx,y1-dy},{x1-2*dx,y1-dy},
+                    {x1-2*dx,y1},{x0+2*dx,y1},
+                    {x0+2*dx,y1-dy},{x0+dx,y1-dy},
+                    {x0+dx,y1-2*dy},{x0,y1-2*dy},
+                    {x0,y0+2*dy},{x0+dx,y0+2*dy},
+                    {x0+dx,y0+dy},{x0+2*dx,y0+dy}
+            };
+        } else if (columns == 1 && rows == 1) {
             vertices = new double[][] {
                     {5, 4}, {11, 4}, {14, 8}, {11, 12}, {5, 12}, {2, 8}
             };

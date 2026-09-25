@@ -16,22 +16,26 @@ public final class MessageProgrammableWallShade implements IMessage {
     private BlockPos pos;
     private int shade;
     private boolean join;
+    private int shape;
 
     public MessageProgrammableWallShade() {}
-    public MessageProgrammableWallShade(BlockPos pos, int shade, boolean join) {
+    public MessageProgrammableWallShade(BlockPos pos, int shade, boolean join, int shape) {
         this.pos = pos;
         this.shade = shade;
         this.join = join;
+        this.shape = shape;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
         shade = buf.readInt();
         join = buf.readBoolean();
+        shape = buf.readInt();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         buf.writeInt(shade);
         buf.writeBoolean(join);
+        buf.writeInt(shape);
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableWallShade, IMessage> {
@@ -39,6 +43,7 @@ public final class MessageProgrammableWallShade implements IMessage {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || msg.shade < 0 || msg.shade > 2
+                        || msg.shape < 0 || msg.shape > 3
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector)) return;
                 ContainerAnimatedScreenSelector container =
@@ -54,6 +59,7 @@ public final class MessageProgrammableWallShade implements IMessage {
                         .getBlock()).getShape() != BlockProgrammableWall.Shape.PORTHOLE) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);
+                ((TileEntityAnimatedScreenSelector) raw).setPortholeShape(msg.shape);
             });
             return null;
         }
