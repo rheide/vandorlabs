@@ -56,8 +56,22 @@ final class SpaceDoorRuntimeChecks {
             clear(world,pos); world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);
         }
         check(item.placeBlockAt(blank.copy(),player,world,source,EnumFacing.UP,.5F,.5F,.5F,state(block)),"default placement");
-        check(tile(world,source).isSliding() && tile(world,source).isMiddle()
-                && tile(world,source).getSlideDirection()==0,"new door must default to sideways / middle");
+        check(tile(world,source).isSliding() && tile(world,source).getPlacementDepth()==1
+                && tile(world,source).getSlideDirection()==0,
+                "new door without a placement hit defaults to the near edge");
+        float oldYaw = player.rotationYaw;
+        player.rotationYaw = 0F;
+        for (float hitZ : new float[]{.1F,.5F,.9F}) {
+            clear(world,target);
+            IBlockState placed = block.getStateForPlacement(world,target,EnumFacing.UP,
+                    .5F,.5F,hitZ,0,player,EnumHand.MAIN_HAND);
+            check(item.placeBlockAt(blank.copy(),player,world,target,EnumFacing.UP,
+                    .5F,.5F,hitZ,placed),"door depth placement");
+            check(tile(world,target).getPlacementDepth()
+                    == (hitZ < .3F ? 1 : hitZ > .7F ? 2 : 0),
+                    "door placement did not follow hit depth " + hitZ);
+        }
+        player.rotationYaw = oldYaw;
         // Existing settings survive the default change and NBT reload.
         tile(world,source).configure(4,2,false,0,false,false);
         NBTTagCompound saved=tile(world,source).writeToNBT(new NBTTagCompound());
@@ -85,7 +99,10 @@ final class SpaceDoorRuntimeChecks {
                                 "pick copied transient tile data");
                         clear(world,target);
                         check(item.placeBlockAt(picked,player,world,target,EnumFacing.UP,.5F,.5F,.5F,state(block)),"picked placement");
-                        check(tile(world,target).itemSettings().equals(expected),"placement changed copied properties");
+                        NBTTagCompound expectedAtNearEdge=expected.copy();
+                        expectedAtNearEdge.setBoolean("SpaceDoorMiddle",false);
+                        check(tile(world,target).itemSettings().equals(expectedAtNearEdge),
+                                "placement changed copied properties other than click depth");
                         check(!world.getBlockState(target).getValue(BlockVandorDoor.OPEN),"pick copied open state");
                         check(tile(world,neighbor).itemSettings().equals(neighborSettings),"pick changed neighbor settings");
                         cases++;
