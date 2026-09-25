@@ -108,7 +108,16 @@ def obj_models_and_states():
                     value.update(rotation)
                     variants[(f"facing={facing},particles={str(particles).lower()},"
                               f"powered={str(powered).lower()}")] = value
-        variants["inventory"] = old_state["variants"]["inventory"]
+        if block.endswith("_wedge"):
+            # Default block perspective exposes the common side panel. Turn
+            # the item toward its distinct nozzle artwork and use the lit face.
+            variants["inventory"] = [{
+                "model": f"vandorlabs:{block}_on.obj",
+                "y": 180,
+                "transform": "forge:default-block",
+            }]
+        else:
+            variants["inventory"] = old_state["variants"]["inventory"]
         old_state["variants"] = variants
         write_json(STATE_DIR / f"{block}.json", old_state)
 

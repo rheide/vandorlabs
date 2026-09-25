@@ -552,6 +552,13 @@ public class ReproLab {
             case 17:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "door_item_hotbar");
+                prepareWedgeHotbar(mc);
+                state=18;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 18:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "wedge_item_hotbar");
                 TileEntity controllerRaw=mc.world.getTileEntity(ControllerRuntimeChecks.FIXTURE);
                 if (!(controllerRaw instanceof com.vandorlabs.tiles.TileEntityRampController))
                     throw new IllegalStateException("controller GUI fixture missing");
@@ -651,6 +658,16 @@ public class ReproLab {
         }
         mc.player.inventory.currentItem = 0;
         System.out.println("[vandorlabs][reprolab] representative item hotbar prepared");
+    }
+
+    private static void prepareWedgeHotbar(Minecraft mc) {
+        String[] ids={"rocket_thruster_wedge","ion_drive_wedge",
+                "plasma_vent_wedge","impulse_engine_wedge"};
+        for (int slot=0;slot<9;slot++)
+            mc.player.inventory.setInventorySlotContents(slot,ItemStack.EMPTY);
+        for (int slot=0;slot<ids.length;slot++)
+            mc.player.inventory.setInventorySlotContents(slot,new ItemStack(block(ids[slot])));
+        mc.player.inventory.currentItem=8;
     }
 
     private void build() {

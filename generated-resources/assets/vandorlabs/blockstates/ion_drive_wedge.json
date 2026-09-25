@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:ion_drive_wedge_off.obj",
+        "model": "vandorlabs:ion_drive_wedge_on.obj",
+        "y": 180,
         "transform": "forge:default-block"
       }
     ]

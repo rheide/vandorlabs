@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:plasma_vent_wedge_off.obj",
+        "model": "vandorlabs:plasma_vent_wedge_on.obj",
+        "y": 180,
         "transform": "forge:default-block"
       }
     ]
