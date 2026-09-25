@@ -1,8 +1,0 @@
-{
-  "parent": "block/half_slab",
-  "textures": {
-    "bottom": "vandorlabs:blocks/thrusters/side",
-    "top": "vandorlabs:blocks/thrusters/side",
-    "side": "vandorlabs:blocks/thrusters/side"
-  }
-}

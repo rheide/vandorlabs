@@ -28,7 +28,7 @@ public final class PropulsionSideModel implements IBakedModel {
         List<BakedQuad> original = delegate.getQuads(state, side, rand);
         if (!(state instanceof IExtendedBlockState)) return original;
         Integer choice = ((IExtendedBlockState) state).getValue(BlockPropulsionLight.SIDE_TEXTURE);
-        if (choice == null || choice == ScreenHousingTextures.IDS.length - 1)
+        if (choice == null || choice == ScreenHousingTextures.INDUSTRIAL_BLOCK)
             return original;
         TextureAtlasSprite replacement = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(ScreenHousingTextures.texture(choice));

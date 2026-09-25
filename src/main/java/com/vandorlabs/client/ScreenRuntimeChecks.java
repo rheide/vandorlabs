@@ -373,6 +373,9 @@ final class ScreenRuntimeChecks {
     }
 
     private static void checkHousingSprites() {
+        require(ScreenHousingTextures.clamp(20) == ScreenHousingTextures.INDUSTRIAL_BLOCK
+                        && !java.util.Arrays.asList(ScreenHousingTextures.IDS).contains("thruster_side"),
+                "retired Engine Side choice did not preserve Industrial Block appearance");
         String side = "vandorlabs:blocks/programmable_glass/metal_side";
         require(side.equals(Minecraft.getMinecraft().getTextureMapBlocks()
                         .getAtlasSprite(side).getIconName()),

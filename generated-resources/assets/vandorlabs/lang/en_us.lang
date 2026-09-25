@@ -137,7 +137,6 @@ tile.vandorlabs.matter.name=Matter
 tile.vandorlabs.matter_amber.name=Matter - Amber
 tile.vandorlabs.matter_cyan.name=Matter - Cyan
 tile.vandorlabs.matter_red.name=Matter - Red
-tile.vandorlabs.thruster_side.name=Engine Side
 tile.vandorlabs.metal_floor.name=Metal Floor
 gui.vandorlabs.selector.housing=Housing
 tile.vandorlabs.framed_wall_pipes.name=Framed Wall Pipes

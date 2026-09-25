@@ -60,7 +60,7 @@ public class BlockPropulsionLight extends BlockVandor {
         TileEntity tile = source.getTileEntity(pos);
         int choice = tile instanceof TileEntityRedstoneLight
                 ? ((TileEntityRedstoneLight) tile).getSideTexture()
-                : com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1;
+                : com.vandorlabs.tiles.ScreenHousingTextures.INDUSTRIAL_BLOCK;
         return ((IExtendedBlockState) state).withProperty(SIDE_TEXTURE, choice);
     }
 

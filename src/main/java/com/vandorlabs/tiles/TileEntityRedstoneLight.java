@@ -27,7 +27,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private boolean particleStreamSelected;
     private boolean initialized;
     private boolean join = true;
-    private int sideTexture = ScreenHousingTextures.IDS.length - 1;
+    private int sideTexture = ScreenHousingTextures.INDUSTRIAL_BLOCK;
 
     public int getSideTexture() { return sideTexture; }
     public void setSideTexture(int choice) {
@@ -311,7 +311,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         join = !tag.hasKey("PropulsionJoin") || tag.getBoolean("PropulsionJoin");
         sideTexture = tag.hasKey("PropulsionSideTexture", 3)
                 ? ScreenHousingTextures.clamp(tag.getInteger("PropulsionSideTexture"))
-                : ScreenHousingTextures.IDS.length - 1;
+                : ScreenHousingTextures.INDUSTRIAL_BLOCK;
         if (world != null && !world.isRemote && oldChannel != channel)
             RedstoneChannels.channelChanged(this, oldChannel);
     }
