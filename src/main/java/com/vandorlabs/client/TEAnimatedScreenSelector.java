@@ -642,8 +642,11 @@ public class TEAnimatedScreenSelector
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
             IBlockState state, double x, double y, double z) {
         BlockProgrammableWall wallBlock = (BlockProgrammableWall) state.getBlock();
+        BlockProgrammableWall.FlatCorner flat = wallBlock.getShape()
+                == BlockProgrammableWall.Shape.PLAIN
+                ? wallBlock.flatCorner(state, te.getWorld(), te.getPos()) : null;
         beginLocalTransform(x, y, z, state.getValue(BlockProgrammableWall.FACING));
-        if (wallBlock.getShape() != BlockProgrammableWall.Shape.DIAGONAL)
+        if (wallBlock.getShape() != BlockProgrammableWall.Shape.DIAGONAL && flat == null)
             GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(
                     state.getValue(BlockProgrammableWall.DEPTH)));
         GlStateManager.disableLighting();
@@ -660,6 +663,11 @@ public class TEAnimatedScreenSelector
             renderDiagonalWall(buf, wall, metal,
                     state.getValue(BlockProgrammableWall.INVERTED),
                     wallBlock.corner(state, te.getWorld(), te.getPos()));
+        } else if (flat != null) {
+            renderFlatWall(buf, wall, metal,
+                    com.vandorlabs.blocks.PanelDepth.start(
+                            state.getValue(BlockProgrammableWall.DEPTH)),
+                    flat);
         } else {
             if (porthole != null) {
                 for (double[] quad : porthole.frameQuads)
@@ -839,6 +847,57 @@ public class TEAnimatedScreenSelector
                 }
             }
         }
+    }
+
+    private static void renderFlatWall(BufferBuilder buf,
+            TextureAtlasSprite wall, TextureAtlasSprite metal, double near,
+            BlockProgrammableWall.FlatCorner corner) {
+        double[][] outline = flatOutline(near, corner);
+        for (int i = 0; i < outline.length; i++) {
+            double[] a = outline[i], b = outline[(i + 1) % outline.length];
+            if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) < 1.0E-7) continue;
+            boolean endCap = Math.abs(a[0] - b[0]) < 1.0E-7
+                    && Math.abs(Math.abs(a[1] - b[1]) - 4) < 1.0E-7;
+            TextureAtlasSprite sprite = endCap ? metal : wall;
+            boolean acrossX = Math.abs(a[0] - b[0]) > Math.abs(a[1] - b[1]);
+            double u0 = acrossX ? a[0] : a[1];
+            double u1 = acrossX ? b[0] : b[1];
+            wallVertex(buf, sprite, a[0], 0, a[1], u0, 16);
+            wallVertex(buf, sprite, b[0], 0, b[1], u1, 16);
+            wallVertex(buf, sprite, b[0], 16, b[1], u1, 0);
+            wallVertex(buf, sprite, a[0], 16, a[1], u0, 0);
+        }
+        for (int y : new int[] {0, 16}) {
+            roofRect(buf, metal, y, corner.left(), corner.right(), near, near + 4);
+            if (corner.frontArm != null)
+                roofRect(buf, metal, y, corner.frontArm,
+                        corner.frontArm + 4, 0, near);
+            if (corner.backArm != null)
+                roofRect(buf, metal, y, corner.backArm,
+                        corner.backArm + 4, near + 4, 16);
+        }
+    }
+
+    private static double[][] flatOutline(double near,
+            BlockProgrammableWall.FlatCorner corner) {
+        java.util.List<double[]> points = new java.util.ArrayList<>();
+        points.add(new double[] {corner.left(), near});
+        if (corner.frontArm != null) {
+            points.add(new double[] {corner.frontArm, near});
+            points.add(new double[] {corner.frontArm, 0});
+            points.add(new double[] {corner.frontArm + 4, 0});
+            points.add(new double[] {corner.frontArm + 4, near});
+        }
+        points.add(new double[] {corner.right(), near});
+        points.add(new double[] {corner.right(), near + 4});
+        if (corner.backArm != null) {
+            points.add(new double[] {corner.backArm + 4, near + 4});
+            points.add(new double[] {corner.backArm + 4, 16});
+            points.add(new double[] {corner.backArm, 16});
+            points.add(new double[] {corner.backArm, near + 4});
+        }
+        points.add(new double[] {corner.left(), near + 4});
+        return points.toArray(new double[points.size()][]);
     }
 
     private static double[][] diagonalOutline(double near,

@@ -93,18 +93,23 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
             BlockPos pos) {
         Corner corner = corner(state, world, pos);
-        return isDiagonalShape() ? rotate(new AxisAlignedBB(0, 0, 0,
-                1, 1, corner != null && corner.backRight != null ? 1 : 10 / 16D),
-                state.getValue(FACING))
-                : rotate(new AxisAlignedBB(0, 0,
-                        PanelDepth.start(state.getValue(DEPTH)) / 16D,
-                        1, 1, (PanelDepth.start(state.getValue(DEPTH)) + 4) / 16D),
-                        state.getValue(FACING));
+        if (isDiagonalShape())
+            return rotate(new AxisAlignedBB(0, 0, 0, 1, 1,
+                    corner != null && corner.backRight != null ? 1 : 10 / 16D),
+                    state.getValue(FACING));
+        FlatCorner flat = flatCorner(state, world, pos);
+        double near = PanelDepth.start(state.getValue(DEPTH));
+        return rotate(new AxisAlignedBB((flat == null ? 0 : flat.left()) / 16D, 0,
+                (flat != null && flat.frontArm != null ? 0 : near) / 16D,
+                (flat == null ? 16 : flat.right()) / 16D, 1,
+                (flat != null && flat.backArm != null ? 16 : near + 4) / 16D),
+                state.getValue(FACING));
     }
 
     @Override public RayTraceResult collisionRayTrace(IBlockState state, World world,
             BlockPos pos, Vec3d start, Vec3d end) {
-        if (!isDiagonalShape()) return super.collisionRayTrace(state, world, pos, start, end);
+        if (!isDiagonalShape() && flatCorner(state, world, pos) == null)
+            return super.collisionRayTrace(state, world, pos, start, end);
         List<AxisAlignedBB> boxes = new java.util.ArrayList<>();
         addCollisionBoxToList(state, world, pos, new AxisAlignedBB(pos).grow(2),
                 boxes, null, false);
@@ -156,6 +161,66 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         }
     }
 
+    /** A level panel bends into a perpendicular neighbor within this block. */
+    public static final class FlatCorner {
+        @Nullable public final Double frontArm;
+        @Nullable public final Double backArm;
+        @Nullable public final Boolean frontRight;
+        @Nullable public final Boolean backRight;
+        public final boolean straightLeft;
+        public final boolean straightRight;
+
+        FlatCorner(@Nullable Double frontArm, @Nullable Double backArm,
+                @Nullable Boolean frontRight, @Nullable Boolean backRight,
+                boolean straightLeft, boolean straightRight) {
+            this.frontArm = frontArm;
+            this.backArm = backArm;
+            this.frontRight = frontRight;
+            this.backRight = backRight;
+            this.straightLeft = straightLeft;
+            this.straightRight = straightRight;
+        }
+        public double left() {
+            if (straightLeft || !straightRight && (Boolean.FALSE.equals(frontRight)
+                    || Boolean.FALSE.equals(backRight))) return 0;
+            return Math.min(frontArm == null ? 16 : frontArm,
+                    backArm == null ? 16 : backArm);
+        }
+        public double right() {
+            if (straightRight || !straightLeft && (Boolean.TRUE.equals(frontRight)
+                    || Boolean.TRUE.equals(backRight))) return 16;
+            return Math.max(frontArm == null ? 0 : frontArm + 4,
+                    backArm == null ? 0 : backArm + 4);
+        }
+    }
+
+    @Nullable public FlatCorner flatCorner(IBlockState state, IBlockAccess world,
+            BlockPos pos) {
+        if (shape != Shape.PLAIN) return null;
+        EnumFacing facing = state.getValue(FACING);
+        Double frontArm = null, backArm = null;
+        Boolean frontRight = null, backRight = null;
+        for (boolean front : new boolean[] {true, false}) {
+            BlockPos neighborPos = pos.offset(front ? facing : facing.getOpposite());
+            if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
+                continue;
+            IBlockState neighbor = world.getBlockState(neighborPos);
+            if (neighbor.getBlock() != this) continue;
+            EnumFacing neighborFacing = neighbor.getValue(FACING);
+            Boolean right = neighborFacing == facing.rotateY() ? Boolean.TRUE
+                    : neighborFacing == facing.rotateYCCW() ? Boolean.FALSE : null;
+            if (right == null) continue;
+            double neighborNear = PanelDepth.start(neighbor.getValue(DEPTH));
+            double arm = right ? 12 - neighborNear : neighborNear;
+            if (front) { frontArm = arm; frontRight = right; }
+            else { backArm = arm; backRight = right; }
+        }
+        if (frontArm == null && backArm == null) return null;
+        return new FlatCorner(frontArm, backArm, frontRight, backRight,
+                straightNeighbor(state, world, pos, facing.rotateYCCW()),
+                straightNeighbor(state, world, pos, facing.rotateY()));
+    }
+
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {
         if (!isDiagonalShape()) return null;
         EnumFacing facing = state.getValue(FACING);
@@ -189,15 +254,30 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         IBlockState neighbor = world.getBlockState(neighborPos);
         return neighbor.getBlock() == this
                 && neighbor.getValue(FACING) == state.getValue(FACING)
-                && neighbor.getValue(INVERTED) == state.getValue(INVERTED);
+                && (isDiagonalShape()
+                        ? neighbor.getValue(INVERTED) == state.getValue(INVERTED)
+                        : neighbor.getValue(DEPTH) == state.getValue(DEPTH));
     }
 
     @Override public void addCollisionBoxToList(IBlockState state, World world,
             BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> boxes,
             @Nullable Entity entity, boolean isActualState) {
         if (!isDiagonalShape()) {
-            addCollisionBoxToList(pos, entityBox, boxes,
-                    getBoundingBox(state, world, pos));
+            FlatCorner flat = flatCorner(state, world, pos);
+            if (flat == null) {
+                addCollisionBoxToList(pos, entityBox, boxes,
+                        getBoundingBox(state, world, pos));
+                return;
+            }
+            double near = PanelDepth.start(state.getValue(DEPTH));
+            addFlatBox(pos, entityBox, boxes, state, flat.left(), flat.right(),
+                    near, near + 4);
+            if (flat.frontArm != null)
+                addFlatBox(pos, entityBox, boxes, state,
+                        flat.frontArm, flat.frontArm + 4, 0, near);
+            if (flat.backArm != null)
+                addFlatBox(pos, entityBox, boxes, state,
+                        flat.backArm, flat.backArm + 4, near + 4, 16);
             return;
         }
         Corner corner = corner(state, world, pos);
@@ -224,6 +304,15 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                             false, slice, near0, near1);
             }
         }
+    }
+
+    private void addFlatBox(BlockPos pos, AxisAlignedBB entityBox,
+            List<AxisAlignedBB> boxes, IBlockState state, double x0, double x1,
+            double z0, double z1) {
+        if (x1 - x0 < 1.0E-7 || z1 - z0 < 1.0E-7) return;
+        addCollisionBoxToList(pos, entityBox, boxes,
+                rotate(new AxisAlignedBB(x0 / 16D, 0, z0 / 16D,
+                        x1 / 16D, 1, z1 / 16D), state.getValue(FACING)));
     }
 
     private void addCornerArm(BlockPos pos, AxisAlignedBB entityBox,

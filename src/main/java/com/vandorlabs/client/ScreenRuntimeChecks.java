@@ -399,6 +399,8 @@ final class ScreenRuntimeChecks {
         player.world.setBlockToAir(pos.east());
         player.world.setBlockToAir(pos.up());
         player.world.setBlockToAir(pos.east().up());
+        checkFlatWallCorners(player, pos.add(8, 0, 0),
+                (BlockProgrammableWall) variants[0]);
         PortholeHex single = new PortholeHex(1, 1);
         require(single.vertices[0][1] == 4 && single.vertices[2][0] == 14,
                 "single porthole hexagon is too large");
@@ -506,6 +508,35 @@ final class ScreenRuntimeChecks {
                 player.world.setBlockToAir(pos);
             }
         }
+    }
+
+    private static void checkFlatWallCorners(EntityPlayer player, BlockPos pos,
+            BlockProgrammableWall wall) {
+        IBlockState across = wall.getDefaultState().withProperty(
+                BlockProgrammableWall.FACING, EnumFacing.NORTH);
+        IBlockState turn = across.withProperty(BlockProgrammableWall.FACING,
+                EnumFacing.EAST);
+        BlockPos bend = pos.east();
+        player.world.setBlockState(pos, across, 2);
+        player.world.setBlockState(bend, turn, 2);
+        BlockProgrammableWall.FlatCorner corner = wall.flatCorner(turn, player.world, bend);
+        require(corner != null && corner.backArm != null
+                        && corner.frontArm == null && corner.left() == 0
+                        && corner.right() == 10,
+                "two plain walls do not form a short L corner");
+        java.util.List<AxisAlignedBB> boxes = new java.util.ArrayList<>();
+        wall.addCollisionBoxToList(turn, player.world, bend,
+                new AxisAlignedBB(bend).grow(2), boxes, null, false);
+        require(boxes.size() == 2, "L corner collision lacks its connecting arm");
+        player.world.setBlockState(bend.north(), turn, 2);
+        player.world.setBlockState(bend.south(), turn, 2);
+        corner = wall.flatCorner(turn, player.world, bend);
+        require(corner != null && corner.left() == 0 && corner.right() == 16,
+                "plain wall T junction does not span both straight neighbors");
+        player.world.setBlockToAir(bend.north());
+        player.world.setBlockToAir(bend.south());
+        player.world.setBlockToAir(pos);
+        player.world.setBlockToAir(bend);
     }
 
     private static void checkWallTurnOrders(EntityPlayer player) {

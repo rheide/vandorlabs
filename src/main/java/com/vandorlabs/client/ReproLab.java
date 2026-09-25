@@ -225,6 +225,8 @@ public class ReproLab {
                 Y + 13.5D - 1.62D, WALL_DISPLAY.getZ() + 1D, 0.0F, 90.0F));
         SHOTS.add(new Shot("programmable_depth_top", WALL_DISPLAY.getX() + 45.5D,
                 Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 1.5D, 0.0F, 90.0F));
+        SHOTS.add(new Shot("programmable_flat_corners_top", WALL_DISPLAY.getX() + 55D,
+                Y + 14D - 1.62D, WALL_DISPLAY.getZ() + 0.5D, 0.0F, 90.0F));
         SHOTS.add(new Shot("wide_ship_pair", -8.0D, eyeLevelFeet,
                 4.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("input_wall", INPUT_WALL.getX() + 0.5D,
@@ -674,6 +676,16 @@ public class ReproLab {
             world.setBlockState(glassPos, block("programmable_glass").getDefaultState()
                     .withProperty(com.vandorlabs.blocks.BlockProgrammableGlass.DEPTH, depth), 2);
         }
+        IBlockState plainNorth = ModBlocks.PROGRAMMABLE_WALL.getDefaultState()
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                        EnumFacing.NORTH);
+        IBlockState plainEast = plainNorth.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableWall.FACING, EnumFacing.EAST);
+        for (int dx : new int[] {52, 53, 56, 57})
+            world.setBlockState(WALL_DISPLAY.add(dx, 0, 0),
+                    dx == 52 || dx == 56 ? plainNorth : plainEast, 2);
+        for (int dz : new int[] {-1, 1})
+            world.setBlockState(WALL_DISPLAY.add(57, 0, dz), plainEast, 2);
         for (int i = 0; i < 4; i++) {
             Block block = i == 0 ? ModBlocks.PROGRAMMABLE_WALL
                     : i == 1 ? ModBlocks.PROGRAMMABLE_PORTHOLE_WALL
