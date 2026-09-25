@@ -955,11 +955,12 @@ public class ReproLab {
         if (serverPlayer == null) {
             throw new IllegalStateException("render lab server player unavailable");
         }
-        DoorRuntimeChecks.run(world, serverPlayer);
-        DisplayTableRuntimeChecks.run(world, serverPlayer);
-        ChairRuntimeChecks.run(world, serverPlayer);
         try {
             mc.getIntegratedServer().addScheduledTask(() -> {
+                DoorRuntimeChecks.run(world, serverPlayer);
+                DisplayTableRuntimeChecks.run(world, serverPlayer);
+                ChairRuntimeChecks.run(world, serverPlayer);
+                CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
                 ControllerRuntimeChecks.buildFixture(world, serverPlayer);
@@ -970,7 +971,6 @@ public class ReproLab {
         ScreenRuntimeChecks.run(serverPlayer);
         MaterialRuntimeChecks.run(serverPlayer);
         ItemRuntimeChecks.run(serverPlayer);
-        CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
         // Rebuild programmable fixtures after destructive runtime contracts.
         // Keeping render targets downstream from test mutations also avoids
         // integrated-server/client ordering races in a reused world.
