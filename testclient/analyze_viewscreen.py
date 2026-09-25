@@ -275,7 +275,7 @@ def main():
         hotbar = Image.open(hotbar_path).convert("RGB")
         # Vanilla's 182 px hotbar is centered at the bottom of a 1280x720
         # test frame. Crop inside each 20 px slot, excluding slot borders.
-        icons = [hotbar.crop((552 + i * 20, 700, 568 + i * 20, 716))
+        icons = [hotbar.crop((376 + i * 60, 663, 424 + i * 60, 711))
                  for i in range(9)]
         detail = [sum(ImageStat.Stat(icon).stddev) / 3.0 for icon in icons]
         distinct = [sum(ImageStat.Stat(ImageChops.difference(
@@ -309,10 +309,10 @@ def main():
         failures.append("missing propulsion wedge hotbar screenshot")
     else:
         wedge_bar = Image.open(wedge_hotbar_path).convert("RGB")
-        wedges = [wedge_bar.crop((552 + i * 20, 700, 568 + i * 20, 716))
+        wedges = [wedge_bar.crop((376 + i * 60, 663, 424 + i * 60, 711))
                   for i in range(4)]
         wedge_detail = [sum(ImageStat.Stat(icon).stddev) / 3.0 for icon in wedges]
-        wedge_color = [sum(max(rgb) - min(rgb) for rgb in pixels(icon)) / 256.0
+        wedge_color = [sum(max(rgb) - min(rgb) for rgb in pixels(icon)) / (48.0 * 48.0)
                        for icon in wedges]
         wedge_difference = [sum(ImageStat.Stat(ImageChops.difference(
             wedges[i], wedges[j])).mean) / 3.0
