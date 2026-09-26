@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [" R", "IR"],
+  "key": {
+    "R": { "item": "minecraft:redstone" },
+    "I": { "item": "vandorlabs:programmable_matter_ingot" }
+  },
+  "result": { "item": "vandorlabs:duplifier" }
+}

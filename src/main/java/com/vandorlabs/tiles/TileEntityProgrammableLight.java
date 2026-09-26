@@ -37,6 +37,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     public boolean isOn() {
         return isManual() ? on : SpaceDoorData.openForSignal(trigger, join ? joinedTriggerPower : isTriggerPowered());
     }
+    public boolean isManualOn() { return on; }
     public boolean isJoin() { return join; }
 
     public void configure(int selectedTexture, int selectedLevel) {

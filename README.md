@@ -100,6 +100,11 @@ texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 
 Keep finished builds there unless a specific destination is requested.
 
+New blocks should have crafting recipes. Keep each recipe distinct so it does
+not clash with another recipe. A new block recipe should include a Programmable
+Matter Ingot, an Industrial Alloy Ingot, or another non-vanilla block. The
+Programmable Matter Ingot's own recipe is exempt from that ingredient rule.
+
 The selected mixed-resolution texture set with crisp 128px single-door art is
 the default and is included by the normal build above. The complete previous
 runtime texture set is preserved under `texture-packs/original`. To make a

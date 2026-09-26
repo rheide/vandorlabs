@@ -175,9 +175,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         fontRenderer.drawString("Channel (0 = none)", 14, 43, 0xFFD8D8D8);
         if (thruster) fontRenderer.drawString("Active mode", 14, 74, 0xFFD8D8D8);
         if (programmableThruster) fontRenderer.drawString("Shape", 14, 102, 0xFFD8D8D8);
-        if (connected) fontRenderer.drawString("Adjacent", 14,
+        if (connected) fontRenderer.drawString("Join", 14,
                 programmableThruster ? 130 : 102, 0xFFD8D8D8);
-        if (thruster) fontRenderer.drawString("Side Texture", 250, 34, 0xFFD8D8D8);
+        if (thruster) fontRenderer.drawString("Wall Texture", 250, 34, 0xFFD8D8D8);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {

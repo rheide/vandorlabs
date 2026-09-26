@@ -3,7 +3,6 @@ package com.vandorlabs.items;
 import com.vandorlabs.GuiHandler;
 import com.vandorlabs.VandorLabs;
 import com.vandorlabs.blocks.BlockRampController;
-import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
@@ -11,7 +10,6 @@ import com.vandorlabs.tiles.TileEntityProgrammableChair;
 import com.vandorlabs.tiles.TileEntityProgrammableGlass;
 import com.vandorlabs.tiles.TileEntityProgrammableLight;
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
-import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -38,14 +36,8 @@ public final class ItemConfigurizer extends Item {
         if (event.getHand() != EnumHand.MAIN_HAND
                 || event.getItemStack().getItem() != ModItems.CONFIGURIZER) return;
         World world = event.getWorld();
-        BlockPos pos = event.getPos();
+        BlockPos pos = ProgrammableTarget.settingsPos(world, event.getPos());
         IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() instanceof BlockVandorDoor
-                && state.getValue(BlockVandorDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER)
-            pos = pos.down();
-        else if (state.getBlock() instanceof BlockDoor
-                && state.getValue(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER)
-            pos = pos.down();
         TileEntity tile = world.getTileEntity(pos);
         int gui;
         if (tile instanceof TileEntitySpaceDoor) gui = GuiHandler.GUI_SPACE_DOOR;

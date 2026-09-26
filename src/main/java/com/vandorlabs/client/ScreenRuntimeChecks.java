@@ -52,6 +52,7 @@ final class ScreenRuntimeChecks {
         checkInputPlacement(player);
         checkInputScrollbar();
         checkFullInputPlacement(player);
+        DuplifierRuntimeChecks.run(player);
         System.out.println("[vandorlabs][reprolab] screen-runtime PASS");
     }
 

@@ -3,6 +3,7 @@ package com.vandorlabs.items;
 import com.vandorlabs.VandorLabs;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
@@ -22,6 +23,7 @@ public final class ModItems {
             .setUnlocalizedName("vandorlabs.industrial_alloy_ingot")
             .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
     public static final Item CONFIGURIZER = new ItemConfigurizer();
+    public static final Item DUPLIFIER = new ItemDuplifier();
 
     private ModItems() { }
 
@@ -30,6 +32,7 @@ public final class ModItems {
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
         event.getRegistry().register(CONFIGURIZER);
+        event.getRegistry().register(DUPLIFIER);
     }
 
     @SubscribeEvent
@@ -41,5 +44,11 @@ public final class ModItems {
                 new ModelResourceLocation(INDUSTRIAL_ALLOY_INGOT.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(CONFIGURIZER, 0,
                 new ModelResourceLocation(CONFIGURIZER.getRegistryName(), "inventory"));
+        ResourceLocation off = new ResourceLocation(VandorLabs.MODID, "duplifier_off");
+        ResourceLocation on = new ResourceLocation(VandorLabs.MODID, "duplifier_on");
+        ModelLoader.registerItemVariants(DUPLIFIER, off, on);
+        ModelLoader.setCustomMeshDefinition(DUPLIFIER, stack ->
+                new ModelResourceLocation(ItemDuplifier.hasCopy(stack) ? on : off,
+                        "inventory"));
     }
 }

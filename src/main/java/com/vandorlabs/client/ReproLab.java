@@ -584,6 +584,36 @@ public class ReproLab {
             case 26:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "programmable_slab_item_hotbar");
+                ItemStack duplifierIcon = new ItemStack(
+                        com.vandorlabs.items.ModItems.DUPLIFIER);
+                net.minecraft.nbt.NBTTagCompound duplifierData =
+                        new net.minecraft.nbt.NBTTagCompound();
+                duplifierData.setString(com.vandorlabs.items.ItemDuplifier.SOURCE_TAG,
+                        "Programmable Porthole Wall");
+                net.minecraft.nbt.NBTTagCompound duplifierSettings =
+                        new net.minecraft.nbt.NBTTagCompound();
+                duplifierSettings.setInteger(
+                        com.vandorlabs.items.ProgrammableSettings.CHANNEL, 7);
+                duplifierData.setTag(
+                        com.vandorlabs.items.ItemDuplifier.SETTINGS_TAG,
+                        duplifierSettings);
+                duplifierIcon.setTagCompound(duplifierData);
+                mc.player.inventory.setInventorySlotContents(4, duplifierIcon);
+                mc.player.inventory.currentItem = 4;
+                state = 27;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 27:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "duplifier_item_hotbar");
+                com.vandorlabs.items.ItemDuplifier.clearCopyState(
+                        mc.player.inventory.getStackInSlot(4));
+                state = 28;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 28:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "duplifier_off_item_hotbar");
                 TileEntity controllerRaw=mc.world.getTileEntity(ControllerRuntimeChecks.FIXTURE);
                 if (!(controllerRaw instanceof com.vandorlabs.tiles.TileEntityRampController))
                     throw new IllegalStateException("controller GUI fixture missing");

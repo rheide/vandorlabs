@@ -84,9 +84,9 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
-    private String joinLabel() { return "Join glass: " + (join ? "On" : "Off"); }
+    private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
     private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
-    private String slabSidesLabel() { return "Side texture: " + (tileSides ? "Tile" : "Fit"); }
+    private String slabSidesLabel() { return "Side layout: " + (tileSides ? "Tile" : "Fit"); }
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(

@@ -11,6 +11,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
@@ -50,6 +51,39 @@ final class ItemRuntimeChecks {
                 "ingot model missing");
         require("Programmable Matter Ingot".equals(result.getDisplayName()), "ingot display name");
         checkIndustrialAlloyIngot(grid, player, mc);
+        ItemStack duplifier = new ItemStack(ModItems.DUPLIFIER);
+        net.minecraft.client.renderer.block.model.IBakedModel offModel =
+                mc.getRenderItem().getItemModelMesher().getItemModel(duplifier);
+        require("Duplifier".equals(duplifier.getDisplayName())
+                        && offModel
+                        != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
+                "empty Duplifier registration, name or off model missing");
+        NBTTagCompound duplifierTag = new NBTTagCompound();
+        duplifierTag.setString(com.vandorlabs.items.ItemDuplifier.SOURCE_TAG,
+                "Programmable Porthole Wall");
+        NBTTagCompound copiedSettings = new NBTTagCompound();
+        copiedSettings.setInteger(com.vandorlabs.items.ProgrammableSettings.CHANNEL, 7);
+        duplifierTag.setTag(com.vandorlabs.items.ItemDuplifier.SETTINGS_TAG, copiedSettings);
+        duplifier.setTagCompound(duplifierTag);
+        require(duplifier.getDisplayName().contains("Programmable Porthole Wall"),
+                "duplifier hotbar name does not show the copied block");
+        net.minecraft.client.renderer.block.model.IBakedModel onModel =
+                mc.getRenderItem().getItemModelMesher().getItemModel(duplifier);
+        require(onModel != offModel && onModel != mc.getRenderItem()
+                        .getItemModelMesher().getModelManager().getMissingModel(),
+                "loaded Duplifier does not use its on model");
+        for (String state : new String[]{"off", "on"}) {
+            String sprite = "vandorlabs:items/duplifier_" + state;
+            require(sprite.equals(mc.getTextureMapBlocks()
+                            .getAtlasSprite(sprite).getIconName()),
+                    "Duplifier " + state + " texture missing");
+        }
+        checkDuplifierAirClear(player, duplifier);
+        require("Duplifier".equals(duplifier.getDisplayName())
+                        && mc.getRenderItem().getItemModelMesher().getItemModel(duplifier)
+                        == offModel,
+                "cleared Duplifier did not return to its name and off model");
+        checkDuplifierRecipe(grid, player);
         IRecipe doorRecipe = CraftingManager.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "programmable_door"));
         require(doorRecipe != null, "door recipe loaded");
@@ -152,6 +186,46 @@ final class ItemRuntimeChecks {
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
+    }
+
+    private static void checkDuplifierRecipe(InventoryCrafting grid,
+            EntityPlayer player) {
+        IRecipe recipe = CraftingManager.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "duplifier"));
+        require(recipe != null, "Duplifier recipe missing");
+        for (int i = 0; i < grid.getSizeInventory(); i++)
+            grid.setInventorySlotContents(i, ItemStack.EMPTY);
+        grid.setInventorySlotContents(1, new ItemStack(Items.REDSTONE));
+        grid.setInventorySlotContents(3,
+                new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        grid.setInventorySlotContents(4, new ItemStack(Items.REDSTONE));
+        require(recipe.matches(grid, player.world), "Duplifier recipe does not match");
+        ItemStack crafted = CraftingManager.findMatchingResult(grid, player.world);
+        require(crafted.getItem() == ModItems.DUPLIFIER && crafted.getCount() == 1,
+                "Duplifier recipe yields wrong item");
+        grid.setInventorySlotContents(4, ItemStack.EMPTY);
+        require(!recipe.matches(grid, player.world),
+                "Duplifier recipe accepts only one redstone");
+    }
+
+    private static void checkDuplifierAirClear(EntityPlayer player, ItemStack tool) {
+        int slot = player.inventory.currentItem;
+        ItemStack previous = player.inventory.getStackInSlot(slot);
+        boolean sneaking = player.isSneaking();
+        try {
+            player.inventory.setInventorySlotContents(slot, tool);
+            player.setSneaking(true);
+            require(ModItems.DUPLIFIER.onItemRightClick(player.world, player,
+                            net.minecraft.util.EnumHand.MAIN_HAND).getType()
+                            == net.minecraft.util.EnumActionResult.SUCCESS,
+                    "shift-right-click air did not handle Duplifier clear");
+            require(!com.vandorlabs.items.ItemDuplifier.hasCopy(tool)
+                            && tool.getTagCompound() == null,
+                    "shift-right-click air retained copied settings or name");
+        } finally {
+            player.setSneaking(sneaking);
+            player.inventory.setInventorySlotContents(slot, previous);
+        }
     }
 
     private static void checkPropulsionRecipes(InventoryCrafting grid, EntityPlayer player) {
