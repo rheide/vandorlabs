@@ -91,3 +91,53 @@ submission measurements.
 and triggers. Splitting its persisted data into components could improve
 ownership, but requires migration/packet/copy tests. A wholesale hierarchy
 rewrite would add risk without reducing the measured rendering cost.
+
+## Active ramps and moving doors
+
+The inactive Ramp Controller has a baked block model. Once deployed, its
+`controlled_ramp` cells use `TEControlledRamp`, so the inactive controller's
+benchmark must not be used to predict a moving platform's cost.
+`TileEntityControlledRamp.geometry` clips source treads to each occupied cell.
+The renderer then samples source materials and emits every cuboid face. Small
+(one-pixel) treads increase the number of cuboids. Horizontal movement also
+recomputes matching clipped treads in `textureShift` for each rendered box.
+That is a concrete candidate for sharing one render snapshot containing both
+geometry and source UV offsets. Stationary deployed platforms could cache that
+snapshot until settings/timeline/source data change. The shared collision and
+render geometry must remain consistent; existing controller runtime contracts
+are the starting point for such work.
+
+`TESlidingDoor` resolves baked item models for leaf/frame/glass metadata during
+rendering and constructs temporary ItemStacks. Stable model selection could be
+cached across frames with explicit model-reload invalidation, while movement
+transforms remain live. Batching opaque door parts separately from glass would
+need a mixed-scene transparency check. Neither active ramps nor moving-door
+poses are assigned an FPS estimate by the current measurements.
+
+## Changes completed in this review
+
+The new `PanelPlane`, `LoadedPlaneConnections`, `PanelPlacement` and `PanelDepth`
+helpers consolidate common math/traversal. Porthole eligibility has one source.
+`SignalUpdateBatch` allows derived group work to settle once after nested channel
+notifications; it does not delay updates to a later tick. Its jobs and the light
+refresh queue are scoped to the current thread and cleared after settlement.
+The original channel reconciliation and snapshot iteration remain intact.
+
+The rendering changes batch opaque programmable solids and cache porthole
+geometry. They preserve per-family placement, joining and persistence rules.
+The remaining broader tile settings hierarchy can be improved independently
+when a concrete feature or migration warrants it.
+
+## Follow-up work and required evidence
+
+| Candidate | Existing code to start from | Baseline to capture before editing |
+| --- | --- | --- |
+| Chunk-bake static selectable solids | `ProgrammableSolidRenderer`, `BlockAnimatedScreenSelector`, model registration in `ClientProxy` | Mixed scenes with all six facings, slabs, joined lights, texture/settings changes, light changes and resource reload; compare against current batch images and timings |
+| Batch opaque walls | `TEAnimatedScreenSelector` wall and porthole paths | Wall corners, depth slots, porthole borders, overlap with glass and screens, and mixed render ordering |
+| Reduce active-ramp allocations | `TEControlledRamp` and `TileEntityControlledRamp.geometry/textureShift` | Deploy/move/retract each mode, thin/dense treads, sampled materials and UVs, clipping at cells, plus collision parity |
+| Cache door model selection | `TESlidingDoor` item-model lookup | Single/paired doors at closed, moving and open poses, every part/material, copied settings and resource reload |
+| Reduce screen light-update cost | `TileEntityAnimatedScreenSelector` effective state updates | Lit/unlit transitions, overlapping emitters, unloaded neighbors, channel changes and actual light propagation timing |
+
+The current evidence supports the implemented batching and geometry reuse.
+These follow-ups require additional baselines because their visual/state paths
+are broader than the steady-state fixtures measured here.

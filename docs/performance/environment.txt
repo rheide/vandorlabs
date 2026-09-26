@@ -1,5 +1,13 @@
 GL renderer: llvmpipe (LLVM 21.1.8, 256 bits)
 GL version: 4.5 (Compatibility Profile) Mesa 26.0.8-1ubuntu0.3
 Java: 1.8.0_504
-Backend: cached display list for baked geometry plus actual TESRs
+Backend: cached VBOs for baked geometry plus actual Forge-batched TESRs
 15 warmups, 31 samples; glFinish before/after each batch; no FPS claim
+CPU exposed to process: AMD Ryzen 7 9700X 8-Core Processor; 12 logical CPUs
+Original production revision: a3962677 (reference worktree at baseline-test commit 71819719)
+Optimized production and final harness revision: 3cbec41c
+Primary baseline run: testclient/render-benchmark.bawwR0
+Primary optimized run: testclient/render-benchmark.PrvD0B
+Final JAR SHA-256: 0de7324cdb383de582af5308b869542e744a6c82a58e2af9a1d19896dc66e70b
+Baseline JAR SHA-256: bebbd5f44a23583de41fc5cad242ae25052cfd6346a4c9222ce94b99905cba34
+Final test-only rebuild differs from the measured optimized JAR only in archive and manifest build timestamps. Class/resource contents match.
