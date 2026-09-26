@@ -91,3 +91,10 @@ Keep final build in `build/libs/`. Benchmarks run in the isolated test client.
 - Final review commit `445755d7` adds the partial-failure contract and allocation
   columns to the comparison script. The temporary baseline source worktree was
   removed after preserving its JAR, CSVs and reconstruction instructions.
+
+### Stop condition
+
+- Live `~/LLMShareDrive/codexstatus.py` reached **40% weekly allowance remaining**.
+  Work stopped at the requested threshold. The final read-only tick review found
+  repeated connected-engine discovery during particle emission as a follow-up;
+  no additional production changes were started.

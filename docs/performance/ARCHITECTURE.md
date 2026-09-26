@@ -141,3 +141,21 @@ when a concrete feature or migration warrants it.
 The current evidence supports the implemented batching and geometry reuse.
 These follow-ups require additional baselines because their visual/state paths
 are broader than the steady-state fixtures measured here.
+
+## Final recurring-work review
+
+- Selectors, programmable lights/triggers, chairs, doors and ramp tiles do not
+  implement `ITickable`. Ramp motion uses scheduled block ticks while moving,
+  plus event/load recovery. Door interpolation is sampled during rendering;
+  the marker tile's older comment about a client tick driver is stale.
+- `TileEntityRedstoneLight` is the production ticking tile. Its server update
+  returns immediately; client particle-stream mode calls connected-engine
+  `getActualState` on each powered member before rejecting non-emitting members.
+  `ConnectedSquare.find` scans the square and its perimeter each time. Sharing
+  a topology result across members could reduce repeated client-tick work, but
+  needs baselines for breaking, joining, rotating, mode changes and chunk edges.
+- Particle objects also have their own update/render cost. A joined assembly
+  already emits from one anchor, while each separate engine emits independently.
+  These costs are excluded from the warmed block-render benchmark; the existing
+  geometry reduction must not be interpreted as a complete plume performance
+  measurement.
