@@ -78,6 +78,15 @@ final class ProgrammableRenderBenchmark {
                 for (String id : ids) {
                     measure(mc, csv, id, "default", 16);
                     measure(mc, csv, id, "default", 64);
+                    if (Arrays.asList("minecraft:stone", "minecraft:stone_slab",
+                            "vandorlabs:programmable_block", "vandorlabs:programmable_slab")
+                            .contains(id)) {
+                        measure(mc, csv, id, "floor_8x8", 64);
+                        measure(mc, csv, id, "solid_4x4x4", 64);
+                    }
+                    if (id.equals("minecraft:iron_door")
+                            || id.equals("vandorlabs:programmable_door"))
+                        measure(mc, csv, id, "door_open", 64);
                     if (Arrays.asList("vandorlabs:rocket_thruster", "vandorlabs:ion_drive",
                             "vandorlabs:plasma_vent", "vandorlabs:impulse_engine").contains(id)) {
                         measure(mc, csv, id + "_hexagonal", "default", 64);
@@ -121,14 +130,24 @@ final class ProgrammableRenderBenchmark {
         List<TileEntity> tiles = new ArrayList<>();
         List<BlockPos> extraPositions = new ArrayList<>();
         int side = count == 16 ? 4 : 8;
-        int spacing = variant.endsWith("_joined") && !variant.endsWith("unjoined") ? 1 : 2;
+        int spacing = (variant.endsWith("_joined") && !variant.endsWith("unjoined"))
+                || variant.equals("floor_8x8") || variant.equals("solid_4x4x4") ? 1 : 2;
         List<net.minecraft.client.renderer.vertex.VertexBuffer> baked = new ArrayList<>();
         try {
             for (int i = 0; i < count; i++) {
-                BlockPos pos = ORIGIN.add((i % side) * spacing, (i / side) * spacing, 0);
+                BlockPos pos = variant.equals("solid_4x4x4")
+                        ? ORIGIN.add(i % 4, (i / 16) % 4, (i / 4) % 4)
+                        : variant.equals("floor_8x8") ? ORIGIN.add(i % 8, 0, i / 8)
+                        : ORIGIN.add((i % side) * spacing, (i / side) * spacing, 0);
                 if (!mc.world.isBlockLoaded(pos)) throw new IllegalStateException("fixture chunk not loaded");
                 positions.add(pos);
                 IBlockState fixture = block.getDefaultState();
+                if (variant.equals("door_open")) {
+                    if (block instanceof com.vandorlabs.blocks.BlockVandorDoor)
+                        fixture = fixture.withProperty(com.vandorlabs.blocks.BlockVandorDoor.OPEN,true);
+                    else if (block instanceof net.minecraft.block.BlockDoor)
+                        fixture = fixture.withProperty(net.minecraft.block.BlockDoor.OPEN,true);
+                }
                 if (variant.startsWith("facing_")) fixture = fixture.withProperty(
                         com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,
                         net.minecraft.util.EnumFacing.byName(variant.substring(7)));
@@ -139,10 +158,16 @@ final class ProgrammableRenderBenchmark {
                 if (block instanceof com.vandorlabs.blocks.BlockVandorDoor
                         || block instanceof net.minecraft.block.BlockDoor) {
                     BlockPos upper = pos.up();
-                    mc.world.setBlockState(upper, block.getDefaultState().withProperty(
+                    IBlockState upperState = block.getDefaultState().withProperty(
                             block instanceof com.vandorlabs.blocks.BlockVandorDoor
                                     ? com.vandorlabs.blocks.BlockVandorDoor.HALF : net.minecraft.block.BlockDoor.HALF,
-                            net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER), 2);
+                            net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER);
+                    if (variant.equals("door_open")) {
+                        if (block instanceof com.vandorlabs.blocks.BlockVandorDoor)
+                            upperState = upperState.withProperty(com.vandorlabs.blocks.BlockVandorDoor.OPEN,true);
+                        else upperState = upperState.withProperty(net.minecraft.block.BlockDoor.OPEN,true);
+                    }
+                    mc.world.setBlockState(upper, upperState, 2);
                     extraPositions.add(upper);
                 } else if (block instanceof com.vandorlabs.blocks.BlockBridgeChair) {
                     BlockPos upper = pos.up();

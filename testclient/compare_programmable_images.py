@@ -16,7 +16,7 @@ def main():
     for before in sorted((args.before / 'screenshots').glob('*.png')):
         if not any(name in before.name for name in (
             'programmable_block-', 'programmable_trigger_block-', 'programmable_slab-',
-            'programmable_light-', 'programmable_porthole_'
+            'programmable_light-', 'programmable_porthole_', 'programmable_door-'
         )):
             continue
         after = args.after / 'screenshots' / before.name
@@ -29,8 +29,8 @@ def main():
         if fraction > 0.0001:
             failures.append(f'{before.name}: {fraction:.3%} pixels differ by more than 3/255')
         count += 1
-    if count != 30:
-        raise SystemExit(f'Expected 30 static fixture images, found {count}')
+    if count != 36:
+        raise SystemExit(f'Expected 36 static fixture images, found {count}')
     if failures:
         raise SystemExit('\n'.join(failures))
     print(f'PASS: {count} static benchmark images; at least 99.99% of pixels within 3/255 per channel')
