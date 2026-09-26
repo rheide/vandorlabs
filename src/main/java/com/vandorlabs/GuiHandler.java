@@ -30,6 +30,7 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_PROGRAMMABLE_GLASS = 4;
     public static final int GUI_PROGRAMMABLE_LIGHT = 5;
     public static final int GUI_PROGRAMMABLE_CHAIR = 6;
+    public static final int GUI_DUPLIFIER = 7;
 
     private static TileEntity doorTile(World world, BlockPos pos) {
         net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
@@ -48,6 +49,9 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_DUPLIFIER && player.getHeldItemMainhand().getItem()
+                == com.vandorlabs.items.ModItems.DUPLIFIER)
+            return new com.vandorlabs.container.ContainerDuplifier(player.inventory);
         if (ID == GUI_PROGRAMMABLE_CHAIR) {
             TileEntity tile = chairTile(world, new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
@@ -91,6 +95,9 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_DUPLIFIER && player.getHeldItemMainhand().getItem()
+                == com.vandorlabs.items.ModItems.DUPLIFIER)
+            return new com.vandorlabs.client.GuiDuplifier(player.inventory);
         if (ID == GUI_PROGRAMMABLE_CHAIR) {
             TileEntity tile = chairTile(world, new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)

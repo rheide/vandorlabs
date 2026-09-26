@@ -23,13 +23,12 @@ lighting, furniture, ramps, glass, and building materials.
   redstone and sleep when power drops.
 - **Consoles**: floor/wall/ceiling screens (keyboards, sliders, controls).
 - **Lamps**: toggleable lit/unlit pairs, click or redstone.
-- **Propulsion fixtures**: classic square rocket/ion engines, full-face
-  plasma/impulse engines, true-hex variants and click-positioned 90-degree
-  triangular wedges for all four families, plus antigravity, repulsor and
-  vertical-hover units. Place a triangular thruster against any wall, floor
-  or ceiling and its corner is chosen from the quadrant you click. All
-  are six-direction, light-emitting and redstone-channel aware. Right-click
-  cycles On, On + Particle Stream and Off. Particle-stream mode uses a separate,
+- **Propulsion fixtures**: programmable Rocket Thruster, Ion Drive, Plasma
+  Vent and Impulse Engine blocks with Block, Hexagon and Wedge shapes, plus
+  antigravity, repulsor and vertical-hover units. Change a thruster's shape in
+  its settings menu; placement keeps the chosen direction and wedge corner.
+  These fixtures are six-direction, light-emitting and redstone-channel aware.
+  Right-click cycles On, On + Particle Stream and Off. Particle-stream mode uses a separate,
   substantially brighter family-colored emitter texture in addition to its
   denser exhaust effect. The channel dialog can also choose whether
   redstone-powered engines emit particles. Matching square engines in
@@ -47,6 +46,16 @@ lighting, furniture, ramps, glass, and building materials.
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all
   four corners, iron ingots at top/bottom center, gold ingots at left/right center,
   and redstone dust in the center. Produces one ingot.
+- **Configurizer**: right-click a configurable block while holding it to open
+  that block's settings menu, including in survival mode. Craft it from one
+  Programmable Matter Ingot and one redstone; see the
+  [Configurizer guide](docs/CONFIGURIZER.md) for the pattern and supported menus.
+- **Duplifier**: shift-right-click a configurable block to copy its settings, then
+  right-click another block to apply every setting that block supports. The
+  item shows the copied block's name and lights up while loaded;
+  right-click in the air to choose which properties to apply, or
+  shift-right-click in the air to clear it. Craft it from one Programmable
+  Matter Ingot and two redstone. See the [Duplifier guide](docs/DUPLIFIER.md).
 - **Bridge furniture**: simplified Command, Companion, Operator, Conference
   and Mess Hall chairs; right-click to sit and sneak to dismount. Includes all
   sixteen buildable materials from their independent 4x4 source sheet.
@@ -67,9 +76,10 @@ lighting, furniture, ramps, glass, and building materials.
   can be selected from every side.
 - **Redstone channels**: loaded blocks in the same dimension can share a
   virtual redstone signal without loading chunks. Configure channels in the
-  programmable screen and ramp-controller dialogs; sneak-right-click a door,
-  switch, lever, Lightbar Wall, Light Column Wall, Porthole, Window Lamp or
-  Slatted Lamp, engine or hover fixture to set its channel. Channel `0` leaves
+  programmable screen and ramp-controller dialogs; in creative mode,
+  sneak-right-click a door, switch, lever, programmable light, porthole,
+  engine or hover fixture to set its channel. The Configurizer opens the same
+  menus in survival. Channel `0` leaves
   a block unlinked.
   Levers and Rocker Switches on the same nonzero channel mirror each other's
   ON state; push buttons remain momentary inputs. These controls transmit

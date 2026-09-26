@@ -1,6 +1,7 @@
 package com.vandorlabs.items;
 
 import com.vandorlabs.VandorLabs;
+import com.vandorlabs.GuiHandler;
 import com.vandorlabs.blocks.BlockPropulsionLight;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,12 +56,14 @@ public final class ItemDuplifier extends Item {
     @Override public ActionResult<ItemStack> onItemRightClick(World world,
             EntityPlayer player, EnumHand hand) {
         ItemStack tool = player.getHeldItem(hand);
-        if (!player.isSneaking())
-            return new ActionResult<>(EnumActionResult.PASS, tool);
         if (!world.isRemote) {
-            clearCopyState(tool);
-            player.inventory.markDirty();
-            player.sendStatusMessage(new TextComponentString("Duplifier cleared"), true);
+            if (player.isSneaking()) {
+                clearCopyState(tool);
+                player.inventory.markDirty();
+                player.sendStatusMessage(new TextComponentString("Duplifier cleared"), true);
+            } else {
+                player.openGui(VandorLabs.instance, GuiHandler.GUI_DUPLIFIER, world, 0, 0, 0);
+            }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, tool);
     }
@@ -89,7 +92,9 @@ public final class ItemDuplifier extends Item {
     public static boolean applyTo(World world, BlockPos pos, ItemStack tool,
             EntityPlayer player) {
         NBTTagCompound settings = tool.getSubCompound(SETTINGS_TAG);
-        return ProgrammableSettings.apply(world, pos, settings, player);
+        return ProgrammableSettings.apply(world, pos,
+                DuplifierApplyOptions.selected(settings, DuplifierApplyOptions.mask(tool)),
+                player);
     }
 
     @SubscribeEvent

@@ -11,8 +11,11 @@ Shift-right-click a configurable block to replace the settings stored in the
 Duplifier. Its item name then includes the copied block's name. Right-click a
 target block to apply each stored setting that the target supports. The tool
 works from either half of a Programmable Door. The display on the item lights
-up when it holds settings. Shift-right-click in the air to clear the copy,
-returning its name and display to the empty state.
+up when it holds settings. Right-click in the air to open Apply Settings:
+each On/Off switch controls one property of future applications. All switches
+start On, and the choices stay on the item when you copy a different block.
+Shift-right-click in the air to clear the copy and return its name and display
+to the empty state; the Apply Settings choices remain in place.
 
 | Shared setting | Sources and targets |
 | --- | --- |

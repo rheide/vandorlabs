@@ -614,6 +614,14 @@ public class ReproLab {
             case 28:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "duplifier_off_item_hotbar");
+                mc.displayGuiScreen(new GuiDuplifier(mc.player.inventory));
+                state = 29;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 29:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "duplifier_apply_settings_gui");
+                mc.displayGuiScreen(null);
                 TileEntity controllerRaw=mc.world.getTileEntity(ControllerRuntimeChecks.FIXTURE);
                 if (!(controllerRaw instanceof com.vandorlabs.tiles.TileEntityRampController))
                     throw new IllegalStateException("controller GUI fixture missing");

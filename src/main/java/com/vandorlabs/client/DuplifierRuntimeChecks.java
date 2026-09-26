@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.items.ItemDuplifier;
+import com.vandorlabs.items.DuplifierApplyOptions;
 import com.vandorlabs.items.ModItems;
 import com.vandorlabs.items.ProgrammableSettings;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
@@ -41,10 +42,23 @@ final class DuplifierRuntimeChecks {
                     "thruster settings were not captured under shared keys");
 
             world.setBlockState(target, ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState(), 3);
+            long filtered = DuplifierApplyOptions.ALL;
+            for (int i = 0; i < DuplifierApplyOptions.OPTIONS.length; i++)
+                if (ProgrammableSettings.JOIN.equals(DuplifierApplyOptions.OPTIONS[i].key)
+                        || ProgrammableSettings.CHANNEL.equals(
+                                DuplifierApplyOptions.OPTIONS[i].key))
+                    filtered &= ~(1L << i);
+            DuplifierApplyOptions.setMask(tool, filtered);
             require(ItemDuplifier.applyTo(world, target, tool, player),
-                    "thruster settings did not apply to porthole");
+                    "selected thruster settings did not apply to porthole");
             TileEntityAnimatedScreenSelector porthole =
                     (TileEntityAnimatedScreenSelector) world.getTileEntity(target);
+            require(porthole.getHousingTexture() == 20 && porthole.isJoinPortholes()
+                            && porthole.getRedstoneChannel() == 0,
+                    "disabled Join or channel changed the porthole");
+            DuplifierApplyOptions.setMask(tool, DuplifierApplyOptions.ALL);
+            require(ItemDuplifier.applyTo(world, target, tool, player),
+                    "all enabled thruster settings did not apply to porthole");
             require(porthole.getHousingTexture() == 20 && !porthole.isJoinPortholes()
                             && porthole.getRedstoneChannel() == 19,
                     "thruster to porthole wall texture, Join or channel transfer failed");
@@ -76,6 +90,8 @@ final class DuplifierRuntimeChecks {
             screen.setHousingTexture(14);
             require(ItemDuplifier.copyFrom(world, source, tool) != null,
                     "duplifier could not replace the captured source");
+            require(DuplifierApplyOptions.mask(tool) == DuplifierApplyOptions.ALL,
+                    "copying replaced the selected apply options");
             NBTTagCompound screenSettings = tool.getSubCompound(ItemDuplifier.SETTINGS_TAG);
             require(!screenSettings.hasKey(ProgrammableSettings.JOIN),
                     "new snapshot retained Join from the previous block");
