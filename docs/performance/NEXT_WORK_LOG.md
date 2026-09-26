@@ -7,7 +7,7 @@
 > When you're at 80% quota left, find a good stopping point and leave it there.
 
 The previous work was clean and committed through `0f10158d` before this pass.
-Quota was 100% at the start. Stop at a tested commit near 80%.
+Quota was 100% at the start. Stop at a tested commit no later than 80%.
 
 ## Before-state coverage
 
@@ -90,3 +90,9 @@ median submissions fell from 0.0601/0.0520/0.0318 to
 0.0313/0.0369 to 0.0261/0.0243 ms. Zero tile renderers are submitted for
 these cases; Programmable Trigger keeps its tile renderer. Final full live
 suite passed in `testclient/render-run.j0sGtn` for this filter.
+
+The tested change set is committed through `b99893de` with a clean worktree.
+The final quota check showed 96% remaining, above the requested 80% stop limit.
+Further door frame batching remains a follow-up because the tested terrain
+approach changed the rendered image and the item VBO approach showed no
+reliable timing gain.
