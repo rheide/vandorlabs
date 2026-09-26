@@ -53,3 +53,8 @@ use 768 vertices. These are synthetic submission times, not FPS.
 Door frame before-state: `testclient/render-benchmark.MCgQ3i` passed with
 41 static images (including glass, sliding, center placement, no hinges, and
 paired doors). The door images and complete timing CSV are in `next/`.
+
+The door benchmark now includes both half tiles and honors the pass-0 render
+filter, matching ordinary world dispatch. Before changing the upper-half
+filter, `testclient/render-benchmark.xZmRaI` passed all 41 image comparisons
+against the earlier fixture; its CSV is `next/door-upper-before.csv`.

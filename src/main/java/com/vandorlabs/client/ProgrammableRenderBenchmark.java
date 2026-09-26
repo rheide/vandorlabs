@@ -179,6 +179,9 @@ final class ProgrammableRenderBenchmark {
                     }
                     mc.world.setBlockState(upper, upperState, 2);
                     extraPositions.add(upper);
+                    TileEntity upperTile = mc.world.getTileEntity(upper);
+                    if (upperTile != null && TileEntityRendererDispatcher.instance.getRenderer(upperTile) != null)
+                        tiles.add(upperTile);
                 } else if (block instanceof com.vandorlabs.blocks.BlockBridgeChair) {
                     BlockPos upper = pos.up();
                     mc.world.setBlockState(upper, block.getDefaultState().withProperty(
@@ -255,6 +258,7 @@ final class ProgrammableRenderBenchmark {
                 drawBaked(baked);
                 TileEntityRendererDispatcher.instance.preDrawBatch();
                 for (TileEntity tile : tiles) {
+                    if (!tile.shouldRenderInPass(0)) continue;
                     GlStateManager.color(1F, 1F, 1F, 1F);
                     BlockPos pos = tile.getPos();
                     TileEntityRendererDispatcher.instance.render(tile, pos.getX()-ORIGIN.getX(),
