@@ -1,0 +1,5 @@
+GL renderer: llvmpipe (LLVM 21.1.8, 256 bits)
+GL version: 4.5 (Compatibility Profile) Mesa 26.0.8-1ubuntu0.3
+Java: 1.8.0_504
+Backend: cached VBOs for baked geometry plus actual Forge-batched TESRs
+15 warmups, 31 samples; glFinish before/after each batch; no FPS claim
