@@ -26,6 +26,8 @@ task compilePortableTests(type: JavaCompile) {
             fileTree('src/portableTest/java') {
                 include '**/*.java'
             })
+    source files('src/main/java/com/vandorlabs/client/PortholeHex.java',
+            'src/main/java/com/vandorlabs/client/PortholeRectangles.java')
     classpath = files()
     destinationDir = file("$buildDir/portable-tests")
     sourceCompatibility = '1.8'
@@ -306,3 +308,16 @@ publishing {
         }
     }
 }
+
+task testPortholeGeometry(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.client.PortholeGeometryTest'
+}
+check.dependsOn testPortholeGeometry
+task testPortholePartitions(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.client.PortholePartitionTest'
+}
+check.dependsOn testPortholePartitions

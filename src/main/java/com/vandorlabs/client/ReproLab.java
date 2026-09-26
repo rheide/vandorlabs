@@ -472,6 +472,11 @@ public class ReproLab {
                 if (--holdTicks > 0) {
                     break;
                 }
+                ProgrammableRenderBenchmark.run(outDir);
+                if (Boolean.getBoolean("vandorlabs.benchmarkOnly")) {
+                    mc.shutdown();
+                    return;
+                }
                 beginShot(mc, SHOTS.get(shotIndex), true);
                 state = 3;
                 holdTicks = CAPTURE_SETTLE_TICKS;

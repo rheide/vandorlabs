@@ -1,0 +1,212 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.client.ForgeHooksClient;
+import org.lwjgl.opengl.GL11;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
+/** Opt-in submission microbenchmark; run only in the disposable ReproLab world. */
+final class ProgrammableRenderBenchmark {
+    private static final BlockPos ORIGIN = new BlockPos(-8, 80, -8);
+    private static File outputDirectory;
+    private static final int WARMUP = 15, SAMPLES = 31;
+    private ProgrammableRenderBenchmark() { }
+
+    static void run(File output) {
+        if (!Boolean.getBoolean("vandorlabs.renderBenchmark")) return;
+        outputDirectory = output;
+        Minecraft mc = Minecraft.getMinecraft();
+        List<String> ids = new ArrayList<>();
+        for (ResourceLocation id : Block.REGISTRY.getKeys()) {
+            if (id.getResourceDomain().equals("vandorlabs")
+                    && (id.getResourcePath().startsWith("programmable_")
+                    || Arrays.asList("space_door", "rocket_thruster", "ion_drive",
+                            "plasma_vent", "impulse_engine").contains(id.getResourcePath())))
+                ids.add(id.toString());
+        }
+        Collections.sort(ids);
+        ids.addAll(0, Arrays.asList("minecraft:stone", "minecraft:stone_slab",
+                "minecraft:glass", "minecraft:glass_pane", "minecraft:oak_stairs",
+                "minecraft:redstone_lamp", "minecraft:chest"));
+        try (PrintWriter csv = new PrintWriter(new File(output, "render-benchmark.csv"));
+                PrintWriter info = new PrintWriter(new File(output, "render-benchmark.txt"))) {
+            info.println("GL renderer: " + GL11.glGetString(GL11.GL_RENDERER));
+            info.println("GL version: " + GL11.glGetString(GL11.GL_VERSION));
+            info.println("Java: " + System.getProperty("java.version"));
+            info.println("Backend: cached display list for baked geometry plus actual TESRs");
+            info.println("15 warmups, 31 samples; glFinish before/after each batch; no FPS claim");
+            csv.println("block,variant,count,baked_vertices,tile_renderers,build_ms,submit_p50_ms,submit_p95_ms,complete_p50_ms,complete_p95_ms");
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GlStateManager.matrixMode(GL11.GL_PROJECTION);
+            GlStateManager.pushMatrix();
+            GlStateManager.loadIdentity();
+            GlStateManager.ortho(-2, 20, -2, 20, -100, 100);
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+            GlStateManager.pushMatrix();
+            GlStateManager.loadIdentity();
+            GlStateManager.translate(16, 0, 0);
+            GlStateManager.rotate(180, 0, 1, 0);
+            GlStateManager.rotate(15, 1, 0, 0);
+            GlStateManager.rotate(-20, 0, 1, 0);
+            mc.entityRenderer.enableLightmap();
+            GlStateManager.enableDepth();
+            GlStateManager.clearColor(0, 0, 0, 1);
+            try {
+                for (String id : ids) {
+                    measure(mc, csv, id, "default", 16);
+                    measure(mc, csv, id, "default", 64);
+                    if (Arrays.asList("vandorlabs:programmable_block", "vandorlabs:programmable_slab",
+                            "vandorlabs:programmable_light").contains(id)) {
+                        for (net.minecraft.util.EnumFacing facing : net.minecraft.util.EnumFacing.values())
+                            measure(mc, csv, id, "facing_" + facing.getName(), 16);
+                    }
+                    if (id.endsWith("programmable_slab")) measure(mc, csv, id, "upper_tiled", 16);
+                    if (id.endsWith("programmable_light")) measure(mc, csv, id, "light_joined", 64);
+                    if (id.contains("porthole")) {
+                        measure(mc, csv, id, "round_joined", 64);
+                        measure(mc, csv, id, "round_unjoined", 64);
+                    }
+                }
+            } finally {
+                mc.entityRenderer.disableLightmap();
+                GlStateManager.popMatrix();
+                GlStateManager.matrixMode(GL11.GL_PROJECTION);
+                GlStateManager.popMatrix();
+                GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+                GL11.glPopAttrib();
+                mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("render benchmark failed", e);
+        }
+        System.out.println("[vandorlabs][reprolab] render-benchmark PASS");
+    }
+
+    private static void measure(Minecraft mc, PrintWriter csv, String id,
+            String variant, int count) {
+        Block block = Block.REGISTRY.getObject(new ResourceLocation(id));
+        if (block == null || block == net.minecraft.init.Blocks.AIR)
+            throw new IllegalStateException("missing benchmark block " + id);
+        List<BlockPos> positions = new ArrayList<>();
+        List<TileEntity> tiles = new ArrayList<>();
+        List<BlockPos> extraPositions = new ArrayList<>();
+        int side = count == 16 ? 4 : 8;
+        int spacing = variant.endsWith("_joined") && !variant.endsWith("unjoined") ? 1 : 2;
+        int list = GL11.glGenLists(1);
+        try {
+            for (int i = 0; i < count; i++) {
+                BlockPos pos = ORIGIN.add((i % side) * spacing, (i / side) * spacing, 0);
+                if (!mc.world.isBlockLoaded(pos)) throw new IllegalStateException("fixture chunk not loaded");
+                positions.add(pos);
+                IBlockState fixture = block.getDefaultState();
+                if (variant.startsWith("facing_")) fixture = fixture.withProperty(
+                        com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,
+                        net.minecraft.util.EnumFacing.byName(variant.substring(7)));
+                if (variant.equals("upper_tiled")) fixture = fixture.withProperty(
+                        com.vandorlabs.blocks.BlockProgrammableSlab.HALF,
+                        net.minecraft.block.BlockSlab.EnumBlockHalf.TOP);
+                mc.world.setBlockState(pos, fixture, 2);
+                if (block instanceof com.vandorlabs.blocks.BlockVandorDoor) {
+                    BlockPos upper = pos.up();
+                    mc.world.setBlockState(upper, block.getDefaultState().withProperty(
+                            com.vandorlabs.blocks.BlockVandorDoor.HALF, net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER), 2);
+                    extraPositions.add(upper);
+                } else if (block instanceof com.vandorlabs.blocks.BlockBridgeChair) {
+                    BlockPos upper = pos.up();
+                    mc.world.setBlockState(upper, block.getDefaultState().withProperty(
+                            com.vandorlabs.blocks.BlockBridgeChair.UPPER, true), 2);
+                    extraPositions.add(upper);
+                }
+                TileEntity tile = mc.world.getTileEntity(pos);
+                if (variant.startsWith("facing_") && tile instanceof TileEntityAnimatedScreenSelector)
+                    ((TileEntityAnimatedScreenSelector) tile).setHousingTexture(3);
+                if (variant.equals("light_joined"))
+                    ((com.vandorlabs.tiles.TileEntityProgrammableLight) tile).configure(0, 15, true, 0);
+                if (variant.equals("upper_tiled")) ((TileEntityAnimatedScreenSelector) tile).setSlabTileSides(true);
+                if (tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("round")) {
+                    ((TileEntityAnimatedScreenSelector) tile).setPortholeShape(3);
+                    ((TileEntityAnimatedScreenSelector) tile).setJoinPortholes(variant.equals("round_joined"));
+                }
+                if (tile != null && TileEntityRendererDispatcher.instance.getRenderer(tile) != null)
+                    tiles.add(tile);
+            }
+            positions.addAll(extraPositions);
+            long start = System.nanoTime();
+            int vertices = 0;
+            GL11.glNewList(list, GL11.GL_COMPILE);
+            for (BlockRenderLayer layer : BlockRenderLayer.values()) {
+                ForgeHooksClient.setRenderLayer(layer);
+                BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+                buffer.setTranslation(-ORIGIN.getX(), -ORIGIN.getY(), -ORIGIN.getZ());
+                for (BlockPos pos : positions) {
+                    IBlockState state = mc.world.getBlockState(pos);
+                    if (state.getRenderType() == EnumBlockRenderType.MODEL && block.canRenderInLayer(state, layer))
+                        mc.getBlockRendererDispatcher().renderBlock(state, pos, mc.world, buffer);
+                }
+                vertices += buffer.getVertexCount();
+                Tessellator.getInstance().draw();
+                buffer.setTranslation(0, 0, 0);
+            }
+            ForgeHooksClient.setRenderLayer(null);
+            GL11.glEndList();
+            double build = (System.nanoTime() - start) / 1E6;
+            double[] submit = new double[SAMPLES], complete = new double[SAMPLES];
+            for (int i = -WARMUP; i < SAMPLES; i++) {
+                GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+                GL11.glFinish();
+                long before = System.nanoTime();
+                mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                GL11.glCallList(list);
+                TileEntityRendererDispatcher.instance.preDrawBatch();
+                for (TileEntity tile : tiles) {
+                    BlockPos pos = tile.getPos();
+                    TileEntityRendererDispatcher.instance.render(tile, pos.getX()-ORIGIN.getX(),
+                            pos.getY()-ORIGIN.getY(), pos.getZ()-ORIGIN.getZ(), .5F);
+                }
+                TileEntityRendererDispatcher.instance.drawBatch(0);
+                long submitted = System.nanoTime();
+                GL11.glFinish();
+                if (i >= 0) {
+                    submit[i] = (submitted - before) / 1E6;
+                    complete[i] = (System.nanoTime() - before) / 1E6;
+                }
+            }
+            int error = GL11.glGetError();
+            if (error != GL11.GL_NO_ERROR) throw new IllegalStateException("GL error " + error + " in " + id);
+            if (count == 64 || !variant.equals("default"))
+                net.minecraft.util.ScreenShotHelper.saveScreenshot(outputDirectory, "benchmark-"
+                        + id.replace(':', '-') + "-" + variant + ".png", mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
+            Arrays.sort(submit);
+            Arrays.sort(complete);
+            csv.printf(Locale.ROOT, "%s,%s,%d,%d,%d,%.6f,%.6f,%.6f,%.6f,%.6f%n",
+                    id, variant, count, vertices, tiles.size(), build,
+                    submit[15], submit[29], complete[15], complete[29]);
+            csv.flush();
+        } finally {
+            GL11.glDeleteLists(list, 1);
+            for (BlockPos pos : positions) mc.world.setBlockToAir(pos);
+        }
+    }
+}

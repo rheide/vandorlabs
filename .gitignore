@@ -17,3 +17,4 @@ __pycache__/
 /testclient/shots/
 /testclient/archive/
 /testclient/*.log
+/testclient/render-benchmark.*/

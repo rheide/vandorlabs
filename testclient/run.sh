@@ -11,6 +11,8 @@ mkdir -p game
 exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" \
   env LIBGL_ALWAYS_SOFTWARE=1 \
   "$JAVA" -Xmx2G \
+  -Dvandorlabs.benchmarkOnly="${VANDOR_LABS_BENCHMARK_ONLY:-false}" \
+  -Dvandorlabs.renderBenchmark="${VANDOR_LABS_RENDER_BENCHMARK:-false}" \
   -Dforge.logging.console.level=info \
   -Dvandorlabs.reprolab="$REPRO_OUT" \
   -Djava.library.path="$PWD/natives" \
