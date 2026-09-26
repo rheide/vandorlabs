@@ -49,3 +49,7 @@ medians fell from 0.1624/0.1191 ms to 0.0437/0.0271 ms. Programmable slab
 floor/volume medians fell from 0.1769/0.1484 ms to 0.0339/0.0299 ms.
 Dense 4x4x4 block geometry is 384 vertices, matching vanilla stone; slabs
 use 768 vertices. These are synthetic submission times, not FPS.
+
+Door frame before-state: `testclient/render-benchmark.MCgQ3i` passed with
+41 static images (including glass, sliding, center placement, no hinges, and
+paired doors). The door images and complete timing CSV are in `next/`.

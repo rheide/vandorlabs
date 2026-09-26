@@ -29,8 +29,8 @@ def main():
         if fraction > 0.0001:
             failures.append(f'{before.name}: {fraction:.3%} pixels differ by more than 3/255')
         count += 1
-    if count != 36:
-        raise SystemExit(f'Expected 36 static fixture images, found {count}')
+    if count != 41:
+        raise SystemExit(f'Expected 41 static fixture images, found {count}')
     if failures:
         raise SystemExit('\n'.join(failures))
     print(f'PASS: {count} static benchmark images; at least 99.99% of pixels within 3/255 per channel')

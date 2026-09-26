@@ -87,6 +87,10 @@ final class ProgrammableRenderBenchmark {
                     if (id.equals("minecraft:iron_door")
                             || id.equals("vandorlabs:programmable_door"))
                         measure(mc, csv, id, "door_open", 64);
+                    if (id.equals("vandorlabs:programmable_door"))
+                        for (String doorVariant : Arrays.asList("door_glass", "door_sliding",
+                                "door_hingeless", "door_center", "door_paired"))
+                            measure(mc,csv,id,doorVariant,64);
                     if (Arrays.asList("vandorlabs:rocket_thruster", "vandorlabs:ion_drive",
                             "vandorlabs:plasma_vent", "vandorlabs:impulse_engine").contains(id)) {
                         measure(mc, csv, id + "_hexagonal", "default", 64);
@@ -138,6 +142,8 @@ final class ProgrammableRenderBenchmark {
                 BlockPos pos = variant.equals("solid_4x4x4")
                         ? ORIGIN.add(i % 4, (i / 16) % 4, (i / 4) % 4)
                         : variant.equals("floor_8x8") ? ORIGIN.add(i % 8, 0, i / 8)
+                        : variant.equals("door_paired")
+                                ? ORIGIN.add((i % 8 / 2) * 3 + i % 2, (i / 8) * 2, 0)
                         : ORIGIN.add((i % side) * spacing, (i / side) * spacing, 0);
                 if (!mc.world.isBlockLoaded(pos)) throw new IllegalStateException("fixture chunk not loaded");
                 positions.add(pos);
@@ -148,6 +154,10 @@ final class ProgrammableRenderBenchmark {
                     else if (block instanceof net.minecraft.block.BlockDoor)
                         fixture = fixture.withProperty(net.minecraft.block.BlockDoor.OPEN,true);
                 }
+                if (variant.equals("door_paired")) fixture = fixture.withProperty(
+                        com.vandorlabs.blocks.BlockVandorDoor.HINGE,
+                        i % 2 == 0 ? net.minecraft.block.BlockDoor.EnumHingePosition.LEFT
+                                : net.minecraft.block.BlockDoor.EnumHingePosition.RIGHT);
                 if (variant.startsWith("facing_")) fixture = fixture.withProperty(
                         com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,
                         net.minecraft.util.EnumFacing.byName(variant.substring(7)));
@@ -176,6 +186,18 @@ final class ProgrammableRenderBenchmark {
                     extraPositions.add(upper);
                 }
                 TileEntity tile = mc.world.getTileEntity(pos);
+                if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor) {
+                    com.vandorlabs.tiles.TileEntitySpaceDoor door =
+                            (com.vandorlabs.tiles.TileEntitySpaceDoor)tile;
+                    if (variant.equals("door_glass"))
+                        door.configure(0,1,true,0,false,false,true,0,false);
+                    else if (variant.equals("door_sliding"))
+                        door.configure(2,1,true,1,true,true,true,0,false);
+                    else if (variant.equals("door_hingeless"))
+                        door.configure(2,1,true,0,false,false,false,0,false);
+                    else if (variant.equals("door_center"))
+                        door.configure(2,1,true,0,true,false,true,0,false);
+                }
                 if (variant.startsWith("facing_") && tile instanceof TileEntityAnimatedScreenSelector)
                     ((TileEntityAnimatedScreenSelector) tile).setHousingTexture(3);
                 if (variant.equals("light_joined"))
