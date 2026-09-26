@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IRI", "LEL", "IRI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "L": {"item": "minecraft:dye", "data": 4},
+    "E": {"item": "minecraft:end_rod"}
+  },
+  "result": {"item": "vandorlabs:ion_drive"}
+}

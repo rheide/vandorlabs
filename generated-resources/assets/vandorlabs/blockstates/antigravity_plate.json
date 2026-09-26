@@ -1,106 +1,3122 @@
 {
   "variants": {
-    "facing=up,particles=false,powered=false": {
+    "facing=up,part=single,particles=false,powered=false": {
       "model": "vandorlabs:antigravity_plate_off"
     },
-    "facing=up,particles=true,powered=false": {
+    "facing=up,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left"
+    },
+    "facing=up,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right"
+    },
+    "facing=up,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left"
+    },
+    "facing=up,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right"
+    },
+    "facing=up,part=s3_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0"
+    },
+    "facing=up,part=s3_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0"
+    },
+    "facing=up,part=s3_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0"
+    },
+    "facing=up,part=s3_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1"
+    },
+    "facing=up,part=s3_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1"
+    },
+    "facing=up,part=s3_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1"
+    },
+    "facing=up,part=s3_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2"
+    },
+    "facing=up,part=s3_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2"
+    },
+    "facing=up,part=s3_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2"
+    },
+    "facing=up,part=s4_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0"
+    },
+    "facing=up,part=s4_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0"
+    },
+    "facing=up,part=s4_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0"
+    },
+    "facing=up,part=s4_x3_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0"
+    },
+    "facing=up,part=s4_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1"
+    },
+    "facing=up,part=s4_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1"
+    },
+    "facing=up,part=s4_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1"
+    },
+    "facing=up,part=s4_x3_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1"
+    },
+    "facing=up,part=s4_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2"
+    },
+    "facing=up,part=s4_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2"
+    },
+    "facing=up,part=s4_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2"
+    },
+    "facing=up,part=s4_x3_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2"
+    },
+    "facing=up,part=s4_x0_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3"
+    },
+    "facing=up,part=s4_x1_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3"
+    },
+    "facing=up,part=s4_x2_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3"
+    },
+    "facing=up,part=s4_x3_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3"
+    },
+    "facing=down,part=single,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off",
+      "x": 180
+    },
+    "facing=down,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
+      "x": 180
+    },
+    "facing=down,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 180
+    },
+    "facing=down,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 180
+    },
+    "facing=down,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 180
+    },
+    "facing=north,part=single,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off",
+      "x": 90
+    },
+    "facing=north,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
+      "x": 90
+    },
+    "facing=north,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90
+    },
+    "facing=north,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90
+    },
+    "facing=north,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90
+    },
+    "facing=east,part=single,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=south,part=single,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west,part=single,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y0,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y1,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y2,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y3,particles=false,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=up,part=single,particles=true,powered=false": {
       "model": "vandorlabs:antigravity_plate_off"
     },
-    "facing=down,particles=false,powered=false": {
+    "facing=up,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left"
+    },
+    "facing=up,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right"
+    },
+    "facing=up,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left"
+    },
+    "facing=up,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right"
+    },
+    "facing=up,part=s3_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0"
+    },
+    "facing=up,part=s3_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0"
+    },
+    "facing=up,part=s3_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0"
+    },
+    "facing=up,part=s3_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1"
+    },
+    "facing=up,part=s3_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1"
+    },
+    "facing=up,part=s3_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1"
+    },
+    "facing=up,part=s3_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2"
+    },
+    "facing=up,part=s3_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2"
+    },
+    "facing=up,part=s3_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2"
+    },
+    "facing=up,part=s4_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0"
+    },
+    "facing=up,part=s4_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0"
+    },
+    "facing=up,part=s4_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0"
+    },
+    "facing=up,part=s4_x3_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0"
+    },
+    "facing=up,part=s4_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1"
+    },
+    "facing=up,part=s4_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1"
+    },
+    "facing=up,part=s4_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1"
+    },
+    "facing=up,part=s4_x3_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1"
+    },
+    "facing=up,part=s4_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2"
+    },
+    "facing=up,part=s4_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2"
+    },
+    "facing=up,part=s4_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2"
+    },
+    "facing=up,part=s4_x3_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2"
+    },
+    "facing=up,part=s4_x0_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3"
+    },
+    "facing=up,part=s4_x1_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3"
+    },
+    "facing=up,part=s4_x2_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3"
+    },
+    "facing=up,part=s4_x3_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3"
+    },
+    "facing=down,part=single,particles=true,powered=false": {
       "model": "vandorlabs:antigravity_plate_off",
       "x": 180
     },
-    "facing=down,particles=true,powered=false": {
-      "model": "vandorlabs:antigravity_plate_off",
+    "facing=down,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
       "x": 180
     },
-    "facing=north,particles=false,powered=false": {
+    "facing=down,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 180
+    },
+    "facing=down,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 180
+    },
+    "facing=down,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 180
+    },
+    "facing=north,part=single,particles=true,powered=false": {
       "model": "vandorlabs:antigravity_plate_off",
       "x": 90
     },
-    "facing=north,particles=true,powered=false": {
-      "model": "vandorlabs:antigravity_plate_off",
+    "facing=north,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
       "x": 90
     },
-    "facing=east,particles=false,powered=false": {
+    "facing=north,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90
+    },
+    "facing=north,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90
+    },
+    "facing=north,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90
+    },
+    "facing=east,part=single,particles=true,powered=false": {
       "model": "vandorlabs:antigravity_plate_off",
       "x": 90,
       "y": 90
     },
-    "facing=east,particles=true,powered=false": {
-      "model": "vandorlabs:antigravity_plate_off",
+    "facing=east,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
       "x": 90,
       "y": 90
     },
-    "facing=south,particles=false,powered=false": {
+    "facing=east,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=south,part=single,particles=true,powered=false": {
       "model": "vandorlabs:antigravity_plate_off",
       "x": 90,
       "y": 180
     },
-    "facing=south,particles=true,powered=false": {
-      "model": "vandorlabs:antigravity_plate_off",
+    "facing=south,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
       "x": 90,
       "y": 180
     },
-    "facing=west,particles=false,powered=false": {
+    "facing=south,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west,part=single,particles=true,powered=false": {
       "model": "vandorlabs:antigravity_plate_off",
       "x": 90,
       "y": 270
     },
-    "facing=west,particles=true,powered=false": {
-      "model": "vandorlabs:antigravity_plate_off",
+    "facing=west,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_left",
       "x": 90,
       "y": 270
     },
-    "facing=up,particles=false,powered=true": {
+    "facing=west,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_bottom_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_top_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s3_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y0,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y1,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y2,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x0_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x1_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x2_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y3,particles=true,powered=false": {
+      "model": "vandorlabs:antigravity_plate_off_s4_x3_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=up,part=single,particles=false,powered=true": {
       "model": "vandorlabs:antigravity_plate_on"
     },
-    "facing=up,particles=true,powered=true": {
-      "model": "vandorlabs:antigravity_plate_on"
+    "facing=up,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left"
     },
-    "facing=down,particles=false,powered=true": {
+    "facing=up,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right"
+    },
+    "facing=up,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left"
+    },
+    "facing=up,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right"
+    },
+    "facing=up,part=s3_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0"
+    },
+    "facing=up,part=s3_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0"
+    },
+    "facing=up,part=s3_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0"
+    },
+    "facing=up,part=s3_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1"
+    },
+    "facing=up,part=s3_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1"
+    },
+    "facing=up,part=s3_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1"
+    },
+    "facing=up,part=s3_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2"
+    },
+    "facing=up,part=s3_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2"
+    },
+    "facing=up,part=s3_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2"
+    },
+    "facing=up,part=s4_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0"
+    },
+    "facing=up,part=s4_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0"
+    },
+    "facing=up,part=s4_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0"
+    },
+    "facing=up,part=s4_x3_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0"
+    },
+    "facing=up,part=s4_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1"
+    },
+    "facing=up,part=s4_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1"
+    },
+    "facing=up,part=s4_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1"
+    },
+    "facing=up,part=s4_x3_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1"
+    },
+    "facing=up,part=s4_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2"
+    },
+    "facing=up,part=s4_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2"
+    },
+    "facing=up,part=s4_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2"
+    },
+    "facing=up,part=s4_x3_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2"
+    },
+    "facing=up,part=s4_x0_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3"
+    },
+    "facing=up,part=s4_x1_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3"
+    },
+    "facing=up,part=s4_x2_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3"
+    },
+    "facing=up,part=s4_x3_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3"
+    },
+    "facing=down,part=single,particles=false,powered=true": {
       "model": "vandorlabs:antigravity_plate_on",
       "x": 180
     },
-    "facing=down,particles=true,powered=true": {
-      "model": "vandorlabs:antigravity_plate_on",
+    "facing=down,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
       "x": 180
     },
-    "facing=north,particles=false,powered=true": {
+    "facing=down,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 180
+    },
+    "facing=down,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 180
+    },
+    "facing=down,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 180
+    },
+    "facing=north,part=single,particles=false,powered=true": {
       "model": "vandorlabs:antigravity_plate_on",
       "x": 90
     },
-    "facing=north,particles=true,powered=true": {
-      "model": "vandorlabs:antigravity_plate_on",
+    "facing=north,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
       "x": 90
     },
-    "facing=east,particles=false,powered=true": {
+    "facing=north,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90
+    },
+    "facing=north,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90
+    },
+    "facing=north,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90
+    },
+    "facing=east,part=single,particles=false,powered=true": {
       "model": "vandorlabs:antigravity_plate_on",
       "x": 90,
       "y": 90
     },
-    "facing=east,particles=true,powered=true": {
-      "model": "vandorlabs:antigravity_plate_on",
+    "facing=east,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
       "x": 90,
       "y": 90
     },
-    "facing=south,particles=false,powered=true": {
+    "facing=east,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=south,part=single,particles=false,powered=true": {
       "model": "vandorlabs:antigravity_plate_on",
       "x": 90,
       "y": 180
     },
-    "facing=south,particles=true,powered=true": {
-      "model": "vandorlabs:antigravity_plate_on",
+    "facing=south,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
       "x": 90,
       "y": 180
     },
-    "facing=west,particles=false,powered=true": {
+    "facing=south,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west,part=single,particles=false,powered=true": {
       "model": "vandorlabs:antigravity_plate_on",
       "x": 90,
       "y": 270
     },
-    "facing=west,particles=true,powered=true": {
+    "facing=west,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y0,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y1,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y2,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y3,particles=false,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=up,part=single,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on"
+    },
+    "facing=up,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left"
+    },
+    "facing=up,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right"
+    },
+    "facing=up,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left"
+    },
+    "facing=up,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right"
+    },
+    "facing=up,part=s3_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0"
+    },
+    "facing=up,part=s3_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0"
+    },
+    "facing=up,part=s3_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0"
+    },
+    "facing=up,part=s3_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1"
+    },
+    "facing=up,part=s3_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1"
+    },
+    "facing=up,part=s3_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1"
+    },
+    "facing=up,part=s3_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2"
+    },
+    "facing=up,part=s3_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2"
+    },
+    "facing=up,part=s3_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2"
+    },
+    "facing=up,part=s4_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0"
+    },
+    "facing=up,part=s4_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0"
+    },
+    "facing=up,part=s4_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0"
+    },
+    "facing=up,part=s4_x3_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0"
+    },
+    "facing=up,part=s4_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1"
+    },
+    "facing=up,part=s4_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1"
+    },
+    "facing=up,part=s4_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1"
+    },
+    "facing=up,part=s4_x3_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1"
+    },
+    "facing=up,part=s4_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2"
+    },
+    "facing=up,part=s4_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2"
+    },
+    "facing=up,part=s4_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2"
+    },
+    "facing=up,part=s4_x3_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2"
+    },
+    "facing=up,part=s4_x0_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3"
+    },
+    "facing=up,part=s4_x1_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3"
+    },
+    "facing=up,part=s4_x2_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3"
+    },
+    "facing=up,part=s4_x3_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3"
+    },
+    "facing=down,part=single,particles=true,powered=true": {
       "model": "vandorlabs:antigravity_plate_on",
+      "x": 180
+    },
+    "facing=down,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
+      "x": 180
+    },
+    "facing=down,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 180
+    },
+    "facing=down,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 180
+    },
+    "facing=down,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s3_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s3_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 180
+    },
+    "facing=down,part=s4_x0_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x1_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x2_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 180
+    },
+    "facing=down,part=s4_x3_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 180
+    },
+    "facing=north,part=single,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on",
+      "x": 90
+    },
+    "facing=north,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
+      "x": 90
+    },
+    "facing=north,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90
+    },
+    "facing=north,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90
+    },
+    "facing=north,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s3_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s3_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90
+    },
+    "facing=north,part=s4_x0_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x1_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x2_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90
+    },
+    "facing=north,part=s4_x3_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90
+    },
+    "facing=east,part=single,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s3_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x0_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x1_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x2_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,part=s4_x3_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90,
+      "y": 90
+    },
+    "facing=south,part=single,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s3_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x0_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x1_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x2_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,part=s4_x3_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
+      "x": 90,
+      "y": 180
+    },
+    "facing=west,part=single,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_bottom_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_left",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_top_right",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s3_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s3_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y0,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y0",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y1,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y1",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y2,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y2",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x0_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x0_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x1_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x1_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x2_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x2_y3",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,part=s4_x3_y3,particles=true,powered=true": {
+      "model": "vandorlabs:antigravity_plate_on_s4_x3_y3",
       "x": 90,
       "y": 270
     }

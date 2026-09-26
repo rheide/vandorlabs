@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IRI", "FUF", "IRI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "F": {"item": "minecraft:feather"},
+    "U": {"item": "minecraft:furnace"}
+  },
+  "result": {"item": "vandorlabs:vertical_hover_thruster"}
+}

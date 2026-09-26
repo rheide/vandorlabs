@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IRI", "BFB", "IRI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "B": {"item": "minecraft:blaze_powder"},
+    "F": {"item": "minecraft:furnace"}
+  },
+  "result": {"item": "vandorlabs:rocket_thruster"}
+}

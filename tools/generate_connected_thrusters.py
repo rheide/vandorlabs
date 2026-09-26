@@ -16,7 +16,9 @@ THRUSTERS = (
     "plasma_vent",
     "impulse_engine",
 )
+HOVER_BLOCKS = ("antigravity_plate", "repulsor_array", "vertical_hover_thruster")
 MAX_SIZE = 8
+HOVER_MAX_SIZE = 4
 ROTATIONS = {
     "north": {},
     "east": {"y": 90},
@@ -24,6 +26,14 @@ ROTATIONS = {
     "west": {"y": 270},
     "up": {"x": 270},
     "down": {"x": 90},
+}
+HOVER_ROTATIONS = {
+    "up": {},
+    "down": {"x": 180},
+    "north": {"x": 90},
+    "east": {"x": 90, "y": 90},
+    "south": {"x": 90, "y": 180},
+    "west": {"x": 90, "y": 270},
 }
 
 
@@ -44,8 +54,8 @@ def part_name(size, x, y):
     return f"s{size}_x{x}_y{y}"
 
 
-def parts():
-    for size in range(2, MAX_SIZE + 1):
+def parts(max_size=MAX_SIZE):
+    for size in range(2, max_size + 1):
         for y in range(size):
             for x in range(size):
                 yield part_name(size, x, y), size, x, y
@@ -123,13 +133,68 @@ def clipped_model(source, size, origin_x, origin_y):
     return output
 
 
-def blockstate(name):
+def hover_clipped_model(source, size, origin_x, origin_z):
+    """Expand the top-facing fixture across X/Z and clip one block-sized piece."""
+    output = {key: copy.deepcopy(value) for key, value in source.items()
+              if key != "elements"}
+    output["ambientocclusion"] = False
+    output["elements"] = []
+    clip_x0, clip_z0 = origin_x, origin_z
+    clip_x1, clip_z1 = origin_x + 16.0, origin_z + 16.0
+    epsilon = 1.0e-7
+    for element in source["elements"]:
+        if "rotation" in element:
+            raise ValueError("connected hover generator does not support rotated elements")
+        x0, y0, z0 = element["from"]
+        x1, y1, z1 = element["to"]
+        x0, x1 = x0 * size, x1 * size
+        z0, z1 = z0 * size, z1 * size
+        cx0, cz0 = max(x0, clip_x0), max(z0, clip_z0)
+        cx1, cz1 = min(x1, clip_x1), min(z1, clip_z1)
+        if cx1 - cx0 <= epsilon or cz1 - cz0 <= epsilon or y1 - y0 <= epsilon:
+            continue
+        faces = {}
+        for direction, face in element["faces"].items():
+            if direction == "west" and abs(cx0 - x0) > epsilon:
+                continue
+            if direction == "east" and abs(cx1 - x1) > epsilon:
+                continue
+            if direction == "north" and abs(cz0 - z0) > epsilon:
+                continue
+            if direction == "south" and abs(cz1 - z1) > epsilon:
+                continue
+            generated_face = copy.deepcopy(face)
+            if direction in ("up", "down"):
+                u0, v0, u1, v1 = face["uv"]
+                generated_face["uv"] = [clean_number(value) for value in (
+                    lerp(u0, u1, (cx0 - x0) / (x1 - x0)),
+                    lerp(v0, v1, (cz0 - z0) / (z1 - z0)),
+                    lerp(u0, u1, (cx1 - x0) / (x1 - x0)),
+                    lerp(v0, v1, (cz1 - z0) / (z1 - z0)),
+                )]
+            faces[direction] = generated_face
+        if not faces:
+            continue
+        generated = {key: copy.deepcopy(value) for key, value in element.items()
+                     if key not in ("from", "to", "faces")}
+        generated["from"] = [clean_number(cx0 - origin_x), clean_number(y0),
+                             clean_number(cz0 - origin_z)]
+        generated["to"] = [clean_number(cx1 - origin_x), clean_number(y1),
+                           clean_number(cz1 - origin_z)]
+        generated["faces"] = faces
+        output["elements"].append(generated)
+    return output
+
+
+def blockstate(name, hover=False):
     variants = {}
+    available_parts = tuple(parts(HOVER_MAX_SIZE if hover else MAX_SIZE))
     for powered in (False, True):
         for particles in (False, True):
-            mode = "stream" if powered and particles else "on" if powered else "off"
-            for facing, rotation in ROTATIONS.items():
-                for part in ("single",) + tuple(p[0] for p in parts()):
+            mode = "stream" if powered and particles and not hover else "on" if powered else "off"
+            rotations = HOVER_ROTATIONS if hover else ROTATIONS
+            for facing, rotation in rotations.items():
+                for part in ("single",) + tuple(p[0] for p in available_parts):
                     model = f"vandorlabs:{name}_{mode}"
                     if part != "single":
                         model += f"_{part}"
@@ -172,7 +237,22 @@ def main():
                 generated += 1
         (STATE_DIR / f"{name}.json").write_text(
             json.dumps(blockstate(name), indent=2) + "\n")
-    print(f"Generated {generated} connected-part models and {len(THRUSTERS)} blockstates")
+    for name in HOVER_BLOCKS:
+        for mode in ("off", "on"):
+            for size in range(HOVER_MAX_SIZE + 1, MAX_SIZE + 1):
+                for stale in MODEL_DIR.glob(f"{name}_{mode}_s{size}_x*_y*.json"):
+                    stale.unlink()
+            source_path = MODEL_DIR / f"{name}_{mode}.json"
+            source = json.loads(source_path.read_text())
+            for part, size, x, y in parts(HOVER_MAX_SIZE):
+                target = MODEL_DIR / f"{name}_{mode}_{part}.json"
+                target.write_text(json.dumps(hover_clipped_model(
+                    source, size, x * 16.0, y * 16.0), indent=2) + "\n")
+                generated += 1
+        (STATE_DIR / f"{name}.json").write_text(
+            json.dumps(blockstate(name, hover=True), indent=2) + "\n")
+    print(f"Generated {generated} connected-part models and "
+          f"{len(THRUSTERS) + len(HOVER_BLOCKS)} blockstates")
 
 
 if __name__ == "__main__":

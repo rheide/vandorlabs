@@ -30,6 +30,7 @@ import java.util.List;
 public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     public static final int MAX_CONNECTED_SIZE = 8;
     public static final PropertyConnectedPart PART = PropertyConnectedPart.create("part");
+    private final int maxConnectedSize;
 
     public static final class ConnectedPart
             implements Comparable<ConnectedPart>, IStringSerializable {
@@ -102,15 +103,24 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         private final ImmutableList<ConnectedPart> values;
         private final Map<String, ConnectedPart> byName;
 
-        private PropertyConnectedPart(String name) {
+        private PropertyConnectedPart(String name, int maxSize) {
             super(name, ConnectedPart.class);
-            values = ConnectedPart.VALUES;
+            ImmutableList.Builder<ConnectedPart> allowed = ImmutableList.builder();
             byName = new LinkedHashMap<>();
-            for (ConnectedPart part : values) byName.put(part.getName(), part);
+            for (ConnectedPart part : ConnectedPart.VALUES)
+                if (part.size <= maxSize) {
+                    allowed.add(part);
+                    byName.put(part.getName(), part);
+                }
+            values = allowed.build();
         }
 
         public static PropertyConnectedPart create(String name) {
-            return new PropertyConnectedPart(name);
+            return new PropertyConnectedPart(name, MAX_CONNECTED_SIZE);
+        }
+
+        public static PropertyConnectedPart create(String name, int maxSize) {
+            return new PropertyConnectedPart(name, maxSize);
         }
 
         @Override public Collection<ConnectedPart> getAllowedValues() { return values; }
@@ -121,13 +131,25 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     }
 
     public BlockConnectedPropulsionLight(String name) {
-        super(name, false, 1.0F);
-        setDefaultState(getDefaultState().withProperty(PART, ConnectedPart.SINGLE));
+        this(name, false, 1.0F, MAX_CONNECTED_SIZE);
     }
+
+    public BlockConnectedPropulsionLight(String name, boolean pointsUp, float depth) {
+        this(name, pointsUp, depth, MAX_CONNECTED_SIZE);
+    }
+
+    public BlockConnectedPropulsionLight(String name, boolean pointsUp, float depth,
+            int maxConnectedSize) {
+        super(name, pointsUp, depth);
+        this.maxConnectedSize = Math.max(1, Math.min(MAX_CONNECTED_SIZE, maxConnectedSize));
+        setDefaultState(getDefaultState().withProperty(partProperty(), ConnectedPart.SINGLE));
+    }
+
+    public PropertyConnectedPart partProperty() { return PART; }
 
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this,
-                new IProperty<?>[]{FACING, POWERED, PARTICLES, PART},
+                new IProperty<?>[]{FACING, POWERED, PARTICLES, partProperty()},
                 new IUnlistedProperty<?>[]{SIDE_TEXTURE});
     }
 
@@ -137,15 +159,15 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         net.minecraft.tileentity.TileEntity self = source.getTileEntity(pos);
         if (self instanceof TileEntityRedstoneLight
                 && !((TileEntityRedstoneLight) self).isJoin())
-            return state.withProperty(PART, ConnectedPart.SINGLE);
+            return state.withProperty(partProperty(), ConnectedPart.SINGLE);
         EnumFacing facing = state.getValue(FACING);
         EnumFacing right = localRight(facing);
         EnumFacing up = localUp(facing);
         int mode = renderMode(source, pos);
         final IBlockState expected=state;
-        ConnectedSquare.Part part=ConnectedSquare.find(MAX_CONNECTED_SIZE,(x,y)->
+        ConnectedSquare.Part part=ConnectedSquare.find(maxConnectedSize,(x,y)->
                 matches(source,move(move(pos,right,x),up,y),expected,mode));
-        return state.withProperty(PART,ConnectedPart.at(part.size,part.x,part.y));
+        return state.withProperty(partProperty(),ConnectedPart.at(part.size,part.x,part.y));
     }
 
     private boolean matches(IBlockAccess source, BlockPos pos, IBlockState expected, int mode) {
@@ -209,7 +231,7 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     private List<TileEntityRedstoneLight> assemblyTiles(World world, BlockPos pos,
             IBlockState state) {
         List<TileEntityRedstoneLight> result = new ArrayList<>();
-        ConnectedPart part = getActualState(state, world, pos).getValue(PART);
+        ConnectedPart part = getActualState(state, world, pos).getValue(partProperty());
         if (part == ConnectedPart.SINGLE) {
             net.minecraft.tileentity.TileEntity tile = world.getTileEntity(pos);
             if (tile instanceof TileEntityRedstoneLight)
@@ -295,10 +317,10 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     public void refreshConnectedModels(World world, BlockPos center, EnumFacing facing) {
         EnumFacing right = localRight(facing);
         EnumFacing up = localUp(facing);
-        BlockPos first = move(move(center, right, -MAX_CONNECTED_SIZE), up,
-                -MAX_CONNECTED_SIZE);
-        BlockPos last = move(move(center, right, MAX_CONNECTED_SIZE), up,
-                MAX_CONNECTED_SIZE);
+        BlockPos first = move(move(center, right, -maxConnectedSize), up,
+                -maxConnectedSize);
+        BlockPos last = move(move(center, right, maxConnectedSize), up,
+                maxConnectedSize);
         if (world.isRemote) {
             world.markBlockRangeForRenderUpdate(
                     new BlockPos(Math.min(first.getX(), last.getX()),
@@ -307,8 +329,8 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
                             Math.max(first.getY(), last.getY()), Math.max(first.getZ(), last.getZ())));
             return;
         }
-        for (int x = -MAX_CONNECTED_SIZE; x <= MAX_CONNECTED_SIZE; x++) {
-            for (int y = -MAX_CONNECTED_SIZE; y <= MAX_CONNECTED_SIZE; y++) {
+        for (int x = -maxConnectedSize; x <= maxConnectedSize; x++) {
+            for (int y = -maxConnectedSize; y <= maxConnectedSize; y++) {
                 BlockPos target = move(move(center, right, x), up, y);
                 if (!world.isBlockLoaded(target)) continue;
                 IBlockState nearby = world.getBlockState(target);

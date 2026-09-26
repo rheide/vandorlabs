@@ -37,6 +37,7 @@ final class RedstoneChannelRuntimeChecks {
         checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);
         checkProgrammableThrusterShapes(world, player);
+        checkAuxiliaryPropulsionJoin(world, player);
         checkLeverPlacement(world,player);
         checkFloorLeverPower(world,player);
         checkFlatSwitchRotation(world,player);
@@ -554,6 +555,15 @@ final class RedstoneChannelRuntimeChecks {
                                 .getRegistryName().getResourcePath()),
                         "programmable wedge lost click-position placement: " + family);
                 world.setBlockState(pos, placed, 3);
+                net.minecraft.util.NonNullList<ItemStack> drops =
+                        net.minecraft.util.NonNullList.create();
+                placed.getBlock().getDrops(drops, world, pos, placed, 0);
+                require(drops.size() == 1 && drops.get(0).getItem()
+                                == net.minecraft.item.Item.getItemFromBlock(block)
+                                && drops.get(0).getSubCompound("BlockEntityTag") != null
+                                && drops.get(0).getSubCompound("BlockEntityTag")
+                                .getInteger("PropulsionShape") == 2,
+                        "programmable wedge drop lost shape: " + family);
                 TileEntityRedstoneLight tile = (TileEntityRedstoneLight) world.getTileEntity(pos);
                 tile.setRedstoneChannel(37);
                 BlockPropulsionLight.configureShape(world, pos, 1);
@@ -572,6 +582,54 @@ final class RedstoneChannelRuntimeChecks {
         } finally {
             player.inventory.setInventorySlotContents(slot, previous);
             world.setBlockToAir(pos);
+        }
+    }
+
+    private static void checkAuxiliaryPropulsionJoin(World world, EntityPlayer player) {
+        BlockPos first = new BlockPos(45, 25, 45);
+        boolean sneaking = player.isSneaking();
+        player.setSneaking(false);
+        try {
+            for (String id : new String[] {"antigravity_plate", "repulsor_array",
+                    "vertical_hover_thruster"}) {
+                BlockConnectedPropulsionLight block = (BlockConnectedPropulsionLight) Block.REGISTRY.getObject(
+                        new ResourceLocation("vandorlabs", id));
+                require(block.hasJoinMode(), id + " has no Join mode");
+                IBlockState state = block.getDefaultState()
+                        .withProperty(BlockPropulsionLight.FACING, EnumFacing.UP);
+                for (int x = 0; x < 2; x++)
+                    for (int z = 0; z < 2; z++)
+                        world.setBlockState(first.add(x, 0, z), state, 3);
+                TileEntityRedstoneLight a = (TileEntityRedstoneLight) world.getTileEntity(first);
+                TileEntityRedstoneLight b = (TileEntityRedstoneLight) world.getTileEntity(
+                        first.add(1, 0, 1));
+                require(a.isJoin() && b.isJoin(), id + " does not default to Join On");
+                require(block.getActualState(world.getBlockState(first), world, first)
+                                .getValue(block.partProperty())
+                                == BlockConnectedPropulsionLight.ConnectedPart.BOTTOM_LEFT,
+                        id + " does not render as a joined 2x2 block");
+                block.onBlockActivated(world, first, state, player, EnumHand.MAIN_HAND,
+                        EnumFacing.UP, .5F, .5F, .5F);
+                require(a.getManualMode() == b.getManualMode(),
+                        id + " joined fixtures did not toggle together");
+                block.configureAssembly(world, first, 31, true, true,
+                        true, false, false, 0);
+                require(a.getRedstoneChannel() == 31 && b.getRedstoneChannel() == 31
+                                && !a.isJoin() && !b.isJoin(),
+                        id + " Join settings did not apply to the group");
+                require(block.getActualState(world.getBlockState(first), world, first)
+                                .getValue(block.partProperty())
+                                == BlockConnectedPropulsionLight.ConnectedPart.SINGLE,
+                        id + " Join Off still renders a combined block");
+                for (int x = 0; x < 2; x++)
+                    for (int z = 0; z < 2; z++)
+                        world.setBlockToAir(first.add(x, 0, z));
+            }
+        } finally {
+            player.setSneaking(sneaking);
+            for (int x = 0; x < 2; x++)
+                for (int z = 0; z < 2; z++)
+                    world.setBlockToAir(first.add(x, 0, z));
         }
     }
 

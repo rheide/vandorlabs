@@ -298,7 +298,14 @@ public class ModBlocks {
                         e.has("points_up") && e.get("points_up").getAsBoolean(),
                         e.has("depth") ? e.get("depth").getAsFloat() : 1.0F);
             case "BlockConnectedPropulsionLight":
-                return new BlockConnectedPropulsionLight(id);
+                return new BlockConnectedPropulsionLight(id,
+                        e.has("points_up") && e.get("points_up").getAsBoolean(),
+                        e.has("depth") ? e.get("depth").getAsFloat() : 1.0F,
+                        e.has("max_connected_size") ? e.get("max_connected_size").getAsInt()
+                                : BlockConnectedPropulsionLight.MAX_CONNECTED_SIZE);
+            case "BlockConnectedHoverPropulsionLight":
+                return new BlockConnectedHoverPropulsionLight(id,
+                        e.has("depth") ? e.get("depth").getAsFloat() : 1.0F);
             case "BlockTrianglePropulsionLight":
                 return new BlockTrianglePropulsionLight(id,
                         e.get("triangle_base").getAsString());

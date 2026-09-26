@@ -4,22 +4,16 @@ import com.vandorlabs.VandorLabs;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-
-import java.util.Random;
 
 /**
  * One of four registered meshes that together form a click-positioned triangular
- * thruster. Only the bottom-left block has an ItemBlock; placement of that item
- * selects the appropriate sibling mesh in the facing's local X/Y plane.
+ * thruster. The programmable family item selects the sibling mesh from the
+ * placement click in the facing's local X/Y plane.
  */
 public class BlockTrianglePropulsionLight extends BlockPropulsionLight {
     private final String baseId;

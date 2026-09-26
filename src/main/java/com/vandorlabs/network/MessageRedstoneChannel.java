@@ -112,9 +112,15 @@ public class MessageRedstoneChannel implements IMessage {
                         ((TileEntityRedstoneLight) tile).setSideTexture(message.sideTexture);
                 }
                 if (message.updateShape && block instanceof BlockPropulsionLight
-                        && !((BlockPropulsionLight) block).familyId().isEmpty())
+                        && !((BlockPropulsionLight) block).familyId().isEmpty()) {
                     BlockPropulsionLight.configureShape(player.world, message.pos,
                             message.shape);
+                    if (message.updateJoin && message.shape == 0) {
+                        TileEntity changed = player.world.getTileEntity(message.pos);
+                        if (changed instanceof TileEntityRedstoneLight)
+                            ((TileEntityRedstoneLight) changed).setJoin(message.join);
+                    }
+                }
             });
             return null;
         }

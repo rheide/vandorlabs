@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IRI", "GBG", "IRI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "G": {"item": "minecraft:glowstone_dust"},
+    "B": {"item": "minecraft:blaze_rod"}
+  },
+  "result": {"item": "vandorlabs:plasma_vent"}
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IRI", "QPQ", "IRI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "Q": {"item": "minecraft:quartz"},
+    "P": {"item": "minecraft:piston"}
+  },
+  "result": {"item": "vandorlabs:impulse_engine"}
+}

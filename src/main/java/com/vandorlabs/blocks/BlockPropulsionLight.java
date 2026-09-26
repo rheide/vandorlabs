@@ -18,6 +18,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.Mirror;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -114,6 +115,10 @@ public class BlockPropulsionLight extends BlockVandor {
         return id.endsWith("_hexagonal") ? 1 : 0;
     }
 
+    public boolean hasJoinMode() {
+        return this instanceof BlockConnectedPropulsionLight;
+    }
+
     private static Block shapeBlock(String family, int shape, EnumFacing facing,
             float hitX, float hitY, float hitZ) {
         if (family.isEmpty() || shape < 0 || shape > 2) return null;
@@ -163,6 +168,16 @@ public class BlockPropulsionLight extends BlockVandor {
 
     @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
             World world, BlockPos pos, EntityPlayer player) {
+        return configuredStack();
+    }
+
+    @Override public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world,
+            BlockPos pos, IBlockState state, int fortune) {
+        if (familyId().isEmpty()) super.getDrops(drops, world, pos, state, fortune);
+        else drops.add(configuredStack());
+    }
+
+    private ItemStack configuredStack() {
         Block base = shapeBlock(familyId(), 0, EnumFacing.NORTH, 0, 0, 0);
         ItemStack stack = new ItemStack(base == null ? this : base);
         if (shape() > 0) {

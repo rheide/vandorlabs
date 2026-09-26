@@ -221,7 +221,8 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         BlockConnectedPropulsionLight.ConnectedPart connectedPart = null;
         if (state.getBlock() instanceof BlockConnectedPropulsionLight) {
             IBlockState actual = state.getBlock().getActualState(state, world, pos);
-            connectedPart = actual.getValue(BlockConnectedPropulsionLight.PART);
+            connectedPart = actual.getValue(
+                    ((BlockConnectedPropulsionLight) state.getBlock()).partProperty());
             assemblySize = connectedPart.size;
             // Only the local bottom-left member owns the assembly plume. Every
             // member calculates the same geometric center, but exactly one emits.

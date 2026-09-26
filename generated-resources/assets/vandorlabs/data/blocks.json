@@ -1626,7 +1626,7 @@
   {
     "id": "antigravity_plate",
     "type": "propulsion_light",
-    "class": "BlockPropulsionLight",
+    "class": "BlockConnectedHoverPropulsionLight",
     "item": true,
     "points_up": true,
     "depth": 0.25
@@ -1634,7 +1634,7 @@
   {
     "id": "repulsor_array",
     "type": "propulsion_light",
-    "class": "BlockPropulsionLight",
+    "class": "BlockConnectedHoverPropulsionLight",
     "item": true,
     "points_up": true,
     "depth": 0.5
@@ -1642,7 +1642,7 @@
   {
     "id": "vertical_hover_thruster",
     "type": "propulsion_light",
-    "class": "BlockPropulsionLight",
+    "class": "BlockConnectedHoverPropulsionLight",
     "item": true,
     "points_up": true
   },

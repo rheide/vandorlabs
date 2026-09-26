@@ -109,6 +109,7 @@ final class ItemRuntimeChecks {
         checkSlabRecipe(grid, player);
         checkSwitchRecipes(grid, player);
         checkLeverAndTableRecipes(grid, player);
+        checkPropulsionRecipes(grid, player);
         for (String finish : com.vandorlabs.tiles.ScreenHousingTextures.IDS)
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", finish)),
                     "retired finish remains a separate block: " + finish);
@@ -151,6 +152,43 @@ final class ItemRuntimeChecks {
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", removed)),
                     "retired block remains registered: " + removed);
         System.out.println("[vandorlabs][reprolab] item-runtime PASS");
+    }
+
+    private static void checkPropulsionRecipes(InventoryCrafting grid, EntityPlayer player) {
+        String[] ids = {"rocket_thruster", "ion_drive", "plasma_vent",
+                "impulse_engine", "antigravity_plate", "repulsor_array",
+                "vertical_hover_thruster"};
+        ItemStack[] centers = {new ItemStack(Blocks.FURNACE), new ItemStack(Blocks.END_ROD),
+                new ItemStack(Items.BLAZE_ROD), new ItemStack(Blocks.PISTON),
+                new ItemStack(Items.ENDER_PEARL), new ItemStack(Blocks.IRON_BLOCK),
+                new ItemStack(Blocks.FURNACE)};
+        ItemStack[] sides = {new ItemStack(Items.BLAZE_POWDER),
+                new ItemStack(Items.DYE, 1, 4), new ItemStack(Items.GLOWSTONE_DUST),
+                new ItemStack(Items.QUARTZ), new ItemStack(Items.FEATHER),
+                new ItemStack(Blocks.PISTON), new ItemStack(Items.FEATHER)};
+        for (int variant = 0; variant < ids.length; variant++) {
+            String id = ids[variant];
+            IRecipe recipe = CraftingManager.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs", id));
+            require(recipe != null, id + " recipe missing");
+            for (int slot = 0; slot < 9; slot++) {
+                ItemStack ingredient = slot == 4 ? centers[variant]
+                        : slot == 3 || slot == 5 ? sides[variant]
+                        : slot == 1 || slot == 7 ? new ItemStack(Items.REDSTONE)
+                        : new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT);
+                grid.setInventorySlotContents(slot, ingredient.copy());
+            }
+            require(recipe.matches(grid, player.world), id + " recipe does not match");
+            ItemStack result = CraftingManager.findMatchingResult(grid, player.world);
+            require(result.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(
+                            new ResourceLocation("vandorlabs", id))) && result.getCount() == 1,
+                    id + " recipe crafts the wrong result");
+            grid.setInventorySlotContents(4, ItemStack.EMPTY);
+            require(!recipe.matches(grid, player.world), id + " accepts a missing center");
+            grid.setInventorySlotContents(4, centers[variant].copy());
+            grid.setInventorySlotContents(0, ItemStack.EMPTY);
+            require(!recipe.matches(grid, player.world), id + " accepts a missing alloy ingot");
+        }
     }
 
     private static void checkConfiguredItemModels(Minecraft mc) {

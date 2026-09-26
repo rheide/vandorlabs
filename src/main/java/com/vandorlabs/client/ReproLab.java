@@ -286,6 +286,8 @@ public class ReproLab {
                 -32.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_connected_thruster", GALLERY_X,
                 galleryFeet + 1.0D, -26.0D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("gallery_connected_hover", GALLERY_X,
+                galleryFeet + 4.0D, -24.0D, 0.0F, 24.0F));
         SHOTS.add(new Shot("gallery_lighting_controls", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_joined_lights", GALLERY_X,
@@ -1249,6 +1251,19 @@ public class ReproLab {
                         ((com.vandorlabs.tiles.TileEntityRedstoneLight) tile)
                                 .setParticleStreamSelected(true);
                 }
+            }
+        } else if (shot.equals("gallery_connected_hover")) {
+            String[] hover = {"antigravity_plate", "repulsor_array",
+                    "vertical_hover_thruster"};
+            for (int i = 0; i < hover.length; i++) {
+                Block block = block(hover[i]);
+                for (int x = 0; x < 2; x++)
+                    for (int z = 0; z < 2; z++)
+                        world.setBlockState(new BlockPos(GALLERY_X - 5 + i * 4 + x,
+                                        GALLERY_Y + 1, -18 + z),
+                                block.getDefaultState().withProperty(
+                                        com.vandorlabs.blocks.BlockPropulsionLight.FACING,
+                                        EnumFacing.UP), 2);
             }
         } else if (shot.equals("gallery_lighting_controls")) {
             for (int i = 0; i < com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length; i++) {

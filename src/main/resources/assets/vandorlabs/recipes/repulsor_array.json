@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["IRI", "PBP", "IRI"],
+  "key": {
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "P": {"item": "minecraft:piston"},
+    "B": {"item": "minecraft:iron_block"}
+  },
+  "result": {"item": "vandorlabs:repulsor_array"}
+}
