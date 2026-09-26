@@ -4,12 +4,15 @@ import net.minecraft.block.BlockSlab;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.property.ExtendedBlockState;
+import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Half-height programmable block with vanilla-style top and bottom placement. */
 public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
@@ -30,7 +33,18 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
     }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, HALF);
+        return new ExtendedBlockState(this, new IProperty<?>[]{FACING, HALF},
+                new IUnlistedProperty<?>[]{ProgrammableHousingState.FINISH,
+                        ProgrammableHousingState.TILE_SIDES, ProgrammableHousingState.VISIBLE,
+                        ProgrammableHousingState.LIGHT});
+    }
+
+    @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return ProgrammableHousingState.extend(state, world, pos, true);
+    }
+
+    @Override public int getPackedLightmapCoords(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return ProgrammableHousingState.light(state, world, pos);
     }
 
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,

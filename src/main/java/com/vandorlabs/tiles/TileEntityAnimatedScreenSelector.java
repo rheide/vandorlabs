@@ -28,8 +28,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public boolean hasFastRenderer() {
         if (world == null) return false;
         net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
-        return block instanceof com.vandorlabs.blocks.BlockProgrammableBlock
-                || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab
+        return block instanceof com.vandorlabs.blocks.BlockProgrammableTrigger
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableLight;
     }
 
@@ -133,8 +132,11 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 world.getBlockState(pos), 3);
     }
     public void setHousingTexture(int choice) {
-        housingTexture = ScreenHousingTextures.clamp(choice);
+        int next = ScreenHousingTextures.clamp(choice);
+        if (housingTexture == next) return;
+        housingTexture = next;
         markDirty();
+        if (world != null && world.isRemote) world.markBlockRangeForRenderUpdate(pos,pos);
     }
 
     @Override public TileEntity channelTile() { return this; }
@@ -303,6 +305,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public void readFromNBT(NBTTagCompound compound) {
+        int previousHousing = housingTexture;
+        boolean previousSlabSides = slabTileSides;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
         // NBT is world data, never trust it blindly. The portable codec keeps
@@ -334,6 +338,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
         slabTileSides = compound.getBoolean("SlabTileSides");
+        if (world != null && world.isRemote
+                && (previousHousing != housingTexture || previousSlabSides != slabTileSides))
+            world.markBlockRangeForRenderUpdate(pos,pos);
         portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             RedstoneChannels.channelChanged(this, oldChannel);

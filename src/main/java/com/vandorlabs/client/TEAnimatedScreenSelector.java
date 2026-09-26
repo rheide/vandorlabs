@@ -361,6 +361,9 @@ public class TEAnimatedScreenSelector
         if (!(state.getBlock() instanceof BlockAnimatedScreenSelector)) {
             return;
         }
+        if (state.getBlock().getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
+                || state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableSlab)
+            return; // These housings are cached in the chunk mesh.
         if (state.getBlock() instanceof BlockProgrammableWall) {
             renderProgrammableWall(te, state, x, y, z);
             return;

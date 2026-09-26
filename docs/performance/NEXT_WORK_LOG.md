@@ -18,8 +18,8 @@ Quota was 100% at the start. Stop at a tested commit near 80%.
 
 ## Implementation
 
-- [ ] Move programmable blocks and slabs to cached chunk geometry.
-- [ ] Cull hidden full faces while preserving partial slab faces.
+- [x] Move programmable blocks and slabs to cached chunk geometry.
+- [x] Cull hidden full faces while preserving partial slab faces.
 - [ ] Reduce programmable door stationary and moving rendering costs.
 - [ ] Run full live suite and compare before/after images and performance.
 
@@ -34,3 +34,18 @@ block floor 0.1624 ms / volume 0.1191 ms. Vanilla slab floor 0.0575 ms /
 volume 0.0373 ms; programmable slab floor 0.1769 ms / volume 0.1484 ms.
 Open iron door 0.0523 ms; open programmable door 1.129 ms. These are
 synthetic submission times, not FPS.
+
+Door resource-cache slice: Java 8 build PASS; live benchmark PASS in
+`testclient/render-benchmark.2vGIU0`; all 36 baseline images match. An initial
+shortcut around Minecraft's item rendering changed door pixels, so the opaque
+path retains the standard renderer while reusing stable stacks. Glass models
+are cached and cleared when models reload. The first altered run is excluded.
+
+Block/slab chunk geometry: live benchmark PASS in
+`testclient/render-benchmark.VbEemt`; all 36 baseline images match within the
+3/255 tolerance. The full `testclient/test_viewscreen.sh` suite passed in
+`testclient/render-run.pgAphy`. Programmable block floor/volume submission
+medians fell from 0.1624/0.1191 ms to 0.0437/0.0271 ms. Programmable slab
+floor/volume medians fell from 0.1769/0.1484 ms to 0.0339/0.0299 ms.
+Dense 4x4x4 block geometry is 384 vertices, matching vanilla stone; slabs
+use 768 vertices. These are synthetic submission times, not FPS.

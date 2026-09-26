@@ -583,6 +583,24 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
         com.vandorlabs.client.DoorRenderModels.clear();
+        com.vandorlabs.client.ProgrammableHousingModel cube = null, slab = null;
+        for (ModelResourceLocation location : new java.util.ArrayList<>(
+                event.getModelRegistry().getKeys())) {
+            if (!VandorLabs.MODID.equals(location.getResourceDomain())
+                    || "inventory".equals(location.getVariant())) continue;
+            String path = location.getResourcePath();
+            if (!"programmable_block".equals(path) && !"programmable_slab".equals(path)) continue;
+            net.minecraft.client.renderer.block.model.IBakedModel original =
+                    event.getModelRegistry().getObject(location);
+            if (original == null) continue;
+            if ("programmable_block".equals(path)) {
+                if (cube == null) cube = new com.vandorlabs.client.ProgrammableHousingModel(original,false);
+                event.getModelRegistry().putObject(location,cube);
+            } else {
+                if (slab == null) slab = new com.vandorlabs.client.ProgrammableHousingModel(original,true);
+                event.getModelRegistry().putObject(location,slab);
+            }
+        }
         for (ModelResourceLocation location : new java.util.ArrayList<>(
                 event.getModelRegistry().getKeys())) {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())) continue;
