@@ -23,7 +23,6 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
@@ -140,7 +139,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 ? ((BlockConnectingDetailedDoor) placedDoor)
                         .getLeafMetadata(right, state)
                 : DoorLeaf.fromRight(right).legacyMetadata;
-        ItemStack leaf = new ItemStack(placedDoor, 1, metadata);
+        DoorRenderModels.Entry leaf = DoorRenderModels.get(placedDoor, metadata);
         RenderItem renderer = Minecraft.getMinecraft().getRenderItem();
 
         int combined = te.getWorld().getCombinedLight(te.getPos(), 0);
@@ -164,7 +163,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 && net.minecraftforge.client.MinecraftForgeClient.getRenderPass() == 1) {
             // The normal item entry point forces alpha >= 0.1 and loses the
             // pack's faint reflections. Draw the isolated glass in pass 1.
-            ItemStack glass = new ItemStack(placedDoor, 1, metadata + 4);
+            DoorRenderModels.Entry glass = DoorRenderModels.get(placedDoor, metadata + 4);
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.enableBlend();
@@ -173,13 +172,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003F);
             GlStateManager.depthMask(false);
-            renderer.renderItem(glass, renderer.getItemModelWithOverrides(glass, te.getWorld(), null));
+            renderer.renderItem(glass.stack, glass.model);
             GlStateManager.depthMask(true);
             GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
             GlStateManager.disableBlend();
-        } else {
-            renderer.renderItem(leaf, ItemCameraTransforms.TransformType.NONE);
-        }
+        } else renderer.renderItem(leaf.stack, ItemCameraTransforms.TransformType.NONE);
         GlStateManager.enableLighting();
         GlStateManager.popMatrix();
     }
@@ -207,7 +204,8 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             }
             GlStateManager.translate(.5,.5,.5);
             GlStateManager.disableLighting();
-            ItemStack item=new ItemStack(state.getBlock(),1,tile.metadata(paired,right,part));
+            DoorRenderModels.Entry item=DoorRenderModels.get(state.getBlock(),
+                    tile.metadata(paired,right,part));
             if (glass) {
                 Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
                 GlStateManager.color(1,1,1,1);
@@ -216,11 +214,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                         GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
                 GlStateManager.depthMask(false);
-                renderer.renderItem(item,renderer.getItemModelWithOverrides(item,tile.getWorld(),null));
+                renderer.renderItem(item.stack,item.model);
                 GlStateManager.depthMask(true);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 GlStateManager.disableBlend();
-            } else renderer.renderItem(item,ItemCameraTransforms.TransformType.NONE);
+            } else renderer.renderItem(item.stack,ItemCameraTransforms.TransformType.NONE);
             GlStateManager.enableLighting();
             GlStateManager.popMatrix();
         }

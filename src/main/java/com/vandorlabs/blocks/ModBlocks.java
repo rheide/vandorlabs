@@ -582,6 +582,7 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
+        com.vandorlabs.client.DoorRenderModels.clear();
         for (ModelResourceLocation location : new java.util.ArrayList<>(
                 event.getModelRegistry().getKeys())) {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())) continue;
