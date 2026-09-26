@@ -20,8 +20,10 @@ Quota was 100% at the start. Stop at a tested commit near 80%.
 
 - [x] Move programmable blocks and slabs to cached chunk geometry.
 - [x] Cull hidden full faces while preserving partial slab faces.
-- [ ] Reduce programmable door stationary and moving rendering costs.
-- [ ] Run full live suite and compare before/after images and performance.
+- [x] Avoid submitting the unused upper tile of every two-block door.
+- [x] Cache the four immutable door motion model lookups.
+- [ ] Reduce programmable door stationary and moving rendering costs further.
+- [ ] Run final full live suite and compare before/after images and performance.
 
 Report limits and any remaining work at the requested quota threshold.
 
@@ -58,3 +60,24 @@ The door benchmark now includes both half tiles and honors the pass-0 render
 filter, matching ordinary world dispatch. Before changing the upper-half
 filter, `testclient/render-benchmark.xZmRaI` passed all 41 image comparisons
 against the earlier fixture; its CSV is `next/door-upper-before.csv`.
+
+Rejected door experiments: baking the frame into terrain changed roughly 4%
+of door fixture pixels after matching its item tint, due to differences between
+the item and terrain render paths. Reusing opaque item VBOs and combining a
+closed frame and leaf preserved all 41 images but gave no reliable submission
+gain in this benchmark. Those experimental changes were removed.
+
+Upper tile filter: `testclient/render-benchmark.WR8NLZ` passed the 41-image
+comparison against `xZmRaI`. For 64 closed default doors, median submission
+fell from 1.256 to 1.130 ms and median allocation from 219,168 to 185,888
+bytes. The benchmark includes 128 candidate tiles for 64 two-block doors;
+the upper 64 no longer reach the renderer. Other variants showed smaller or
+noisy timing changes. The full live suite passed in `testclient/render-run.JR082q`.
+
+Door motion model lookup cache: `testclient/render-benchmark.SudWW7` matched
+all 41 images. For 64 default doors, median allocation fell from 185,888 to
+161,312 bytes per measured submission; median submission time was 1.130 vs
+1.155 ms, within run-to-run noise. The four registry models are resolved once
+and reused. A first benchmark launch crashed in vanilla's concurrent chunk
+packet iteration before measurement; the retry passed. Final live suite is
+PASS in `testclient/render-run.hFvzt6` for this small cache change.

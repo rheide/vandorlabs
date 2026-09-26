@@ -282,8 +282,10 @@ final class ProgrammableRenderBenchmark {
             Arrays.sort(submit);
             Arrays.sort(complete);
             Arrays.sort(allocated);
+            int renderedTiles = 0;
+            for (TileEntity tile : tiles) if (tile.shouldRenderInPass(0)) renderedTiles++;
             csv.printf(Locale.ROOT, "%s,%s,%d,%d,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%d%n",
-                    id, variant, count, vertices, tiles.size(), build,
+                    id, variant, count, vertices, renderedTiles, build,
                     submit[15], submit[29], complete[15], complete[29], allocated[15]);
             csv.flush();
         } finally {

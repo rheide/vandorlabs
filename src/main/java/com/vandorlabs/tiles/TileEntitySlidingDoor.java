@@ -43,7 +43,7 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
         sync();
     }
 
-    private boolean isLowerDoor() {
+    protected final boolean isLowerDoor() {
         if (world == null || pos == null) return false;
         IBlockState state = world.getBlockState(pos);
         return state.getBlock() instanceof BlockVandorDoor
@@ -110,6 +110,7 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
 
     @Override
     public boolean shouldRenderInPass(int pass) {
+        if (!isLowerDoor()) return false;
         if (pass == 0) return true;
         if (pass != 1 || world == null) return false;
         net.minecraft.block.Block block = world.getBlockState(pos).getBlock();

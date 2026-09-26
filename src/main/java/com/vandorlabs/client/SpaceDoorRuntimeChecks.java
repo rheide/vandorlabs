@@ -59,6 +59,14 @@ final class SpaceDoorRuntimeChecks {
         check(tile(world,source).isSliding() && tile(world,source).getPlacementDepth()==1
                 && tile(world,source).getSlideDirection()==0,
                 "new door without a placement hit defaults to the near edge");
+        check(tile(world,source).shouldRenderInPass(0)
+                && !tile(world,source.up()).shouldRenderInPass(0),
+                "only the lower door tile may submit the opaque pass");
+        tile(world,source).configure(0,1,true,0,false,false);
+        check(tile(world,source).shouldRenderInPass(1)
+                && !tile(world,source.up()).shouldRenderInPass(1),
+                "only the lower glass door tile may submit the translucent pass");
+        tile(world,source).configure(2,1,true,0,true,true);
         float oldYaw = player.rotationYaw;
         player.rotationYaw = 0F;
         for (float hitZ : new float[]{.1F,.5F,.9F}) {

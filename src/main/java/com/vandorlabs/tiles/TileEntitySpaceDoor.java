@@ -15,6 +15,14 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
             "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter"};
     public static final String[] DETAILS={"low","medium","high"};
+    private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
+    private static final java.util.concurrent.atomic.AtomicReferenceArray<BlockSpaceDoor>
+            RESOLVED_MODELS = new java.util.concurrent.atomic.AtomicReferenceArray<>(4);
+    static {
+        for (int i = 0; i < MOTION_MODELS.length; i++)
+            MOTION_MODELS[i] = new ResourceLocation("vandorlabs",
+                    modelId(2, (i & 2) != 0, (i & 1) != 0));
+    }
     private int design=2, detail=1;
     private int slideDirection;
     private boolean framed=true, sliding;
@@ -57,8 +65,12 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static boolean valid(int design,int detail) { return design>=0 && design<DESIGNS.length && detail>=0 && detail<DETAILS.length; }
 
     public BlockSpaceDoor model(boolean sliding) {
-        return (BlockSpaceDoor)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",
-                modelId(2, sliding, framed)));
+        int key = (sliding ? 2 : 0) | (framed ? 1 : 0);
+        BlockSpaceDoor resolved = RESOLVED_MODELS.get(key);
+        if (resolved != null) return resolved;
+        resolved = (BlockSpaceDoor)Block.REGISTRY.getObject(MOTION_MODELS[key]);
+        if (resolved != null) RESOLVED_MODELS.compareAndSet(key, null, resolved);
+        return resolved;
     }
     public static String modelId(int design, boolean sliding, boolean framed) {
         String family = DESIGNS[design];
@@ -171,7 +183,9 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override public void onLoad() { super.onLoad(); migrateLegacyMotion(); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11; }
     public boolean hasGlass() { return hasGlassDesign(design); }
-    @Override public boolean shouldRenderInPass(int pass) { return pass==0 || pass==1 && hasGlass(); }
+    @Override public boolean shouldRenderInPass(int pass) {
+        return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
+    }
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         return slideDirection==0?super.getRenderBoundingBox():
                 new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,-2,-1),pos.add(2,4,2));
