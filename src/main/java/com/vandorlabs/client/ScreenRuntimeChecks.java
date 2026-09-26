@@ -51,6 +51,7 @@ final class ScreenRuntimeChecks {
         checkViewscreenPlacement(player);
         checkDiagonalPlacement(player);
         checkProgrammableWalls(player);
+        checkDiagonalWallWidths(player);
         checkPortholeBlock(player);
         checkInputPlacement(player);
         checkInputScrollbar();
@@ -1030,6 +1031,58 @@ final class ScreenRuntimeChecks {
                 player.world.setBlockToAir(pos.offset(rightSide.getOpposite()));
             }
         }
+    }
+
+    private static void checkDiagonalWallWidths(EntityPlayer player) {
+        BlockProgrammableWall wall = (BlockProgrammableWall)
+                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+        BlockPos pos = new BlockPos(30, 250, 12);
+        IBlockState lower = wall.getDefaultState().withProperty(
+                BlockProgrammableWall.FACING, EnumFacing.NORTH);
+        player.world.setBlockState(pos, lower, 2);
+        TileEntityAnimatedScreenSelector tile = (TileEntityAnimatedScreenSelector)
+                player.world.getTileEntity(pos);
+        require(!tile.isDiagonalFullWidth()
+                        && wall.getBoundingBox(lower, player.world, pos).maxZ == 10 / 16D,
+                "existing diagonal walls must retain their half-width slope");
+        tile.setDiagonalFullWidth(true);
+        require(BlockProgrammableWall.diagonalSpan(player.world, pos) == 12
+                        && wall.getBoundingBox(lower, player.world, pos).maxZ == 1,
+                "full-width diagonal does not reach the far block edge");
+        for (boolean inverted : new boolean[] {false, true}) {
+            IBlockState state = lower.withProperty(BlockProgrammableWall.INVERTED, inverted);
+            java.util.List<AxisAlignedBB> boxes = new java.util.ArrayList<>();
+            wall.addCollisionBoxToList(state, player.world, pos,
+                    new AxisAlignedBB(pos).grow(2), boxes, null, false);
+            require(boxes.size() == 16 && (inverted
+                            ? boxes.get(0).minZ > boxes.get(15).minZ
+                            : boxes.get(0).minZ < boxes.get(15).minZ)
+                            && boxes.get(inverted ? 0 : 15).maxZ == pos.getZ() + 1,
+                    "full-width diagonal collision does not follow the rendered slope");
+        }
+        NBTTagCompound saved = tile.writeToNBT(new NBTTagCompound());
+        TileEntityAnimatedScreenSelector restored = new TileEntityAnimatedScreenSelector();
+        restored.readFromNBT(saved);
+        require(restored.isDiagonalFullWidth(), "diagonal width was not persisted");
+        BlockPos turnPos = pos.north();
+        player.world.setBlockState(turnPos, lower.withProperty(
+                BlockProgrammableWall.FACING, EnumFacing.EAST), 2);
+        require(wall.corner(lower, player.world, pos) == null,
+                "diagonal walls joined across different widths");
+        ((TileEntityAnimatedScreenSelector) player.world.getTileEntity(turnPos))
+                .setDiagonalFullWidth(true);
+        require(wall.corner(lower, player.world, pos) != null,
+                "full-width diagonal walls failed to make a corner");
+        NBTTagCompound settings = com.vandorlabs.items.ProgrammableSettings.capture(
+                player.world, pos);
+        TileEntityAnimatedScreenSelector turnTile = (TileEntityAnimatedScreenSelector)
+                player.world.getTileEntity(turnPos);
+        turnTile.setDiagonalFullWidth(false);
+        require(com.vandorlabs.items.ProgrammableSettings.apply(player.world, turnPos,
+                        settings) && turnTile.isDiagonalFullWidth(),
+                "diagonal width was not copied as a programmable setting");
+        player.world.setBlockToAir(turnPos);
+        player.world.setBlockToAir(pos);
     }
 
     private static void checkPortholePartitions() {

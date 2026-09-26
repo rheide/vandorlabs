@@ -54,6 +54,19 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         return shape == Shape.DIAGONAL;
     }
 
+    /** Pixel span of the slope; missing tile data keeps old walls at half width. */
+    public static double diagonalSpan(IBlockAccess world, BlockPos pos) {
+        net.minecraft.tileentity.TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                && ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector) tile)
+                .isDiagonalFullWidth() ? 12D : 6D;
+    }
+
+    private static boolean sameDiagonalWidth(IBlockAccess world, BlockPos a,
+            BlockPos b) {
+        return diagonalSpan(world, a) == diagonalSpan(world, b);
+    }
+
     @Override protected IProperty<EnumFacing> facingProperty() { return FACING; }
 
     @Override protected BlockStateContainer createBlockState() {
@@ -96,7 +109,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         Corner corner = corner(state, world, pos);
         if (isDiagonalShape())
             return rotate(new AxisAlignedBB(0, 0, 0, 1, 1,
-                    corner != null && corner.backRight != null ? 1 : 10 / 16D),
+                    corner != null && corner.backRight != null ? 1
+                            : (diagonalSpan(world, pos) + 4) / 16D),
                     state.getValue(FACING));
         FlatCorner flat = flatCorner(state, world, pos);
         double near = PanelDepth.start(state.getValue(DEPTH));
@@ -240,7 +254,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                 continue;
             IBlockState neighbor = world.getBlockState(neighborPos);
             if (neighbor.getBlock() != this
-                    || neighbor.getValue(INVERTED) != state.getValue(INVERTED)) continue;
+                    || neighbor.getValue(INVERTED) != state.getValue(INVERTED)
+                    || !sameDiagonalWidth(world, pos, neighborPos)) continue;
             EnumFacing neighborFacing = neighbor.getValue(FACING);
             Boolean right = neighborFacing == facing.rotateY() ? Boolean.TRUE
                     : neighborFacing == facing.rotateYCCW() ? Boolean.FALSE : null;
@@ -266,7 +281,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         EnumFacing neighborFacing = neighbor.getValue(FACING);
         if (isDiagonalShape())
             return neighborFacing == facing
-                    && neighbor.getValue(INVERTED) == state.getValue(INVERTED);
+                    && neighbor.getValue(INVERTED) == state.getValue(INVERTED)
+                    && sameDiagonalWidth(world, pos, neighborPos);
         // Opposite facings still occupy the same world plane when their
         // depth values mirror each other (near meets far; middle meets middle).
         return neighborFacing.getAxis() == facing.getAxis()
@@ -302,11 +318,12 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             return;
         }
         Corner corner = corner(state, world, pos);
+        double span = diagonalSpan(world, pos);
         // Thin vertical slices follow the rendered slope and its short arm.
         for (int slice = 0; slice < 16; slice++) {
-            double a = 6D * slice / 16D, b = 6D * (slice + 1) / 16D;
-            double near0 = state.getValue(INVERTED) ? 6D - b : a;
-            double near1 = state.getValue(INVERTED) ? 6D - a : b;
+            double a = span * slice / 16D, b = span * (slice + 1) / 16D;
+            double near0 = state.getValue(INVERTED) ? span - b : a;
+            double near1 = state.getValue(INVERTED) ? span - a : b;
             double left = corner == null ? 0 : Math.min(corner.left(near0),
                     corner.left(near1));
             double right = corner == null ? 16 : Math.max(corner.right(near0),

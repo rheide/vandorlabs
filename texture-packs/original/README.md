@@ -6,5 +6,5 @@ only by retired blocks have been removed from both texture trees.
 
 Build a one-off jar with this archived set using
 `./gradlew clean buildOriginalTextures --no-daemon`. The resulting
-`vandorlabs-1.0-original-textures.jar` is separate from the normal jar, which uses
+`vandorlabs-1.1-original-textures.jar` is separate from the normal jar, which uses
 the selected default textures under `texture-packs/default`.

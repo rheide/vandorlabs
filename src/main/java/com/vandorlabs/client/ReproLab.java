@@ -218,6 +218,14 @@ public class ReproLab {
                 Y + 10.5D - 1.62D, -0.7D, 0.0F, 0.0F));
         SHOTS.add(new Shot("programmable_corner_side", WALL_DISPLAY.getX() + 5.1D,
                 Y + 10.6D - 1.62D, -0.4D, -35.0F, 4.0F));
+        SHOTS.add(new Shot("programmable_corner_full_width", WALL_DISPLAY.getX() + 7.5D,
+                Y + 10.5D - 1.62D, -0.7D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_corner_full_width_top", WALL_DISPLAY.getX() + 7.5D,
+                Y + 13D - 1.62D, WALL_DISPLAY.getZ() + .5D, 0.0F, 90.0F));
+        for (int offset : new int[] {130, 134})
+            SHOTS.add(new Shot("programmable_corner_outside_"
+                    + (offset == 130 ? "half" : "full"), WALL_DISPLAY.getX() + offset - 1.5D,
+                    Y + 11.5D - 1.62D, WALL_DISPLAY.getZ() + 2.5D, 225F, 20F));
         SHOTS.add(new Shot("programmable_corner_turn", WALL_DISPLAY.getX() + 12.4D,
                 Y + 11.1D - 1.62D, -0.1D, 42.0F, 20.0F));
         SHOTS.add(new Shot("programmable_corner_three_back", WALL_DISPLAY.getX() + 10.5D,
@@ -577,6 +585,22 @@ public class ReproLab {
             case 15:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "programmable_wall_gui");
+                BlockPos diagonalWall = WALL_DISPLAY.add(7, 0, 0);
+                rebuildGuiFixture(mc, diagonalWall,
+                        ModBlocks.PROGRAMMABLE_DIAGONAL_WALL);
+                TileEntity diagonalRaw = mc.world.getTileEntity(diagonalWall);
+                if (!(diagonalRaw instanceof TileEntityAnimatedScreenSelector))
+                    throw new IllegalStateException("diagonal wall tile unavailable");
+                ((TileEntityAnimatedScreenSelector) diagonalRaw)
+                        .setDiagonalFullWidth(true);
+                mc.displayGuiScreen(new GuiProgrammableWall(mc.player.inventory,
+                        (TileEntityAnimatedScreenSelector) diagonalRaw));
+                state = 30;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 30:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "programmable_diagonal_width_gui");
                 rebuildGuiFixture(mc, CONTROL, ModBlocks.PROGRAMMABLE_BLOCK);
                 TileEntity blockRaw = mc.world.getTileEntity(CONTROL);
                 if (!(blockRaw instanceof TileEntityAnimatedScreenSelector))
@@ -1032,14 +1056,35 @@ public class ReproLab {
             world.setBlockState(cornerPos, cornerState, 2);
             ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerPos))
                     .setHousingTexture(offset == 6 ? 1 : 2);
+            if (offset == 7)
+                ((TileEntityAnimatedScreenSelector) world.getTileEntity(cornerPos))
+                        .setDiagonalFullWidth(true);
             BlockPos turnPos = cornerPos.north();
             world.setBlockState(turnPos, cornerState.withProperty(
                     com.vandorlabs.blocks.BlockProgrammableWall.FACING,
                     EnumFacing.EAST), 2);
             ((TileEntityAnimatedScreenSelector) world.getTileEntity(turnPos))
                     .setHousingTexture(offset == 6 ? 1 : 2);
+            if (offset == 7)
+                ((TileEntityAnimatedScreenSelector) world.getTileEntity(turnPos))
+                        .setDiagonalFullWidth(true);
         }
         BlockPos cornerTurn = WALL_DISPLAY.add(10, 0, 0);
+        for (int offset : new int[] {130, 134}) {
+            BlockPos outsideCorner = WALL_DISPLAY.add(offset, 0, 0);
+            for (int arm = 0; arm < 2; arm++) {
+                BlockPos at = arm == 0 ? outsideCorner : outsideCorner.north();
+                world.setBlockState(at.down(), Blocks.STONE.getDefaultState(), 2);
+                world.setBlockState(at, ModBlocks.PROGRAMMABLE_DIAGONAL_WALL
+                        .getDefaultState().withProperty(
+                                com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                                arm == 0 ? EnumFacing.NORTH : EnumFacing.EAST), 2);
+                TileEntityAnimatedScreenSelector cornerTile =
+                        (TileEntityAnimatedScreenSelector) world.getTileEntity(at);
+                cornerTile.setHousingTexture(2);
+                cornerTile.setDiagonalFullWidth(offset == 134);
+            }
+        }
         IBlockState turnState = ModBlocks.PROGRAMMABLE_DIAGONAL_WALL
                 .getDefaultState().withProperty(
                         com.vandorlabs.blocks.BlockProgrammableWall.FACING,

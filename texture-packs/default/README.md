@@ -12,4 +12,4 @@ has exactly the same 441 runtime texture paths as the generated build: 332 PNG
 textures and 109 compact animations.
 Models, blockstates, catalogs, and code continue to come from the generated
 canonical build. The normal `./gradlew clean build --no-daemon` command
-packages this texture tree into `vandorlabs-1.0.jar`.
+packages this texture tree into `vandorlabs-1.1.jar`.

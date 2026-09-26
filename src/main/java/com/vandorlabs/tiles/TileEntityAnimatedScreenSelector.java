@@ -94,6 +94,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean channelSignal;
     private int housingTexture;
     private boolean slabTileSides;
+    private boolean diagonalFullWidth;
     private int glassShade = 2;
     private boolean joinPortholes;
     private int portholeShape;
@@ -131,6 +132,14 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     public int getHousingTexture() { return housingTexture; }
     public boolean isSlabTileSides() { return slabTileSides; }
+    public boolean isDiagonalFullWidth() { return diagonalFullWidth; }
+    public void setDiagonalFullWidth(boolean fullWidth) {
+        if (diagonalFullWidth == fullWidth) return;
+        diagonalFullWidth = fullWidth;
+        markDirty();
+        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
+                world.getBlockState(pos), 3);
+    }
     public void setSlabTileSides(boolean tileSides) {
         if (slabTileSides == tileSides) return;
         slabTileSides = tileSides;
@@ -306,6 +315,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setInteger("PortholeShape", portholeShape);
         compound.setBoolean("SlabTileSides", slabTileSides);
+        compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setInteger("HousingTextureVersion", 1);
         return compound;
     }
@@ -314,6 +324,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void readFromNBT(NBTTagCompound compound) {
         int previousHousing = housingTexture;
         boolean previousSlabSides = slabTileSides;
+        boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
         // NBT is world data, never trust it blindly. The portable codec keeps
@@ -345,8 +356,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
         slabTileSides = compound.getBoolean("SlabTileSides");
+        diagonalFullWidth = compound.getBoolean("DiagonalFullWidth");
         if (world != null && world.isRemote
-                && (previousHousing != housingTexture || previousSlabSides != slabTileSides))
+                && (previousHousing != housingTexture || previousSlabSides != slabTileSides
+                || previousDiagonalWidth != diagonalFullWidth))
             world.markBlockRangeForRenderUpdate(pos,pos);
         portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)

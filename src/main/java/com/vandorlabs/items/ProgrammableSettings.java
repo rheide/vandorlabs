@@ -39,6 +39,7 @@ public final class ProgrammableSettings {
     public static final String GLASS_SHADE = "glass_shade";
     public static final String GLASS_SIZE = "glass_size";
     public static final String SLAB_TILE_SIDES = "slab_tile_sides";
+    public static final String DIAGONAL_FULL_WIDTH = "diagonal_full_width";
     public static final String TRIGGER_ON_TEXTURE = "trigger_on_texture";
     public static final String DISPLAY_MODE = "display_mode";
     public static final String ANIMATION_SPEED = "animation_speed";
@@ -139,6 +140,10 @@ public final class ProgrammableSettings {
             }
             if (block instanceof BlockProgrammableSlab)
                 out.setBoolean(SLAB_TILE_SIDES, screen.isSlabTileSides());
+            if (block instanceof BlockProgrammableWall
+                    && ((BlockProgrammableWall) block).getShape()
+                    == BlockProgrammableWall.Shape.DIAGONAL)
+                out.setBoolean(DIAGONAL_FULL_WIDTH, screen.isDiagonalFullWidth());
             if (isPorthole(block)) {
                 out.setBoolean(JOIN, screen.isJoinPortholes());
                 out.setInteger(PORTHOLE_SHAPE, screen.getPortholeShape());
@@ -301,6 +306,13 @@ public final class ProgrammableSettings {
             }
             if (block instanceof BlockProgrammableSlab && values.hasKey(SLAB_TILE_SIDES, 1)) {
                 screen.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES)); applicable = true;
+            }
+            if (block instanceof BlockProgrammableWall
+                    && ((BlockProgrammableWall) block).getShape()
+                    == BlockProgrammableWall.Shape.DIAGONAL
+                    && values.hasKey(DIAGONAL_FULL_WIDTH, 1)) {
+                screen.setDiagonalFullWidth(values.getBoolean(DIAGONAL_FULL_WIDTH));
+                applicable = true;
             }
             if (isPorthole(block)) {
                 if (values.hasKey(JOIN, 1)) {

@@ -795,7 +795,8 @@ public class TEAnimatedScreenSelector
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
             renderDiagonalWall(buf, wall, metal,
                     state.getValue(BlockProgrammableWall.INVERTED),
-                    wallBlock.corner(state, te.getWorld(), te.getPos()));
+                    wallBlock.corner(state, te.getWorld(), te.getPos()),
+                    BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()));
         } else if (flat != null) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -928,8 +929,8 @@ public class TEAnimatedScreenSelector
 
     private static void renderDiagonalWall(BufferBuilder buf,
             TextureAtlasSprite wall, TextureAtlasSprite metal, boolean inverted,
-            BlockProgrammableWall.Corner corner) {
-        double bottom = inverted ? 6 : 0, top = inverted ? 0 : 6;
+            BlockProgrammableWall.Corner corner, double span) {
+        double bottom = inverted ? span : 0, top = inverted ? 0 : span;
         double[][] lower = diagonalOutline(bottom, corner);
         double[][] upper = diagonalOutline(top, corner);
         for (int i = 0; i < lower.length; i++) {
@@ -941,6 +942,9 @@ public class TEAnimatedScreenSelector
                 continue;
             boolean endCap = Math.abs(a[0] - b[0]) < 1.0E-7
                     && Math.abs(c[0] - d[0]) < 1.0E-7
+                    // A moving edge is the sloped outside of a bend, not an
+                    // exposed panel end. Its narrow strip continues the wall.
+                    && Math.abs(a[0] - d[0]) < 1.0E-7
                     && Math.abs(Math.abs(a[1] - b[1]) - 4) < 1.0E-7
                     && Math.abs(Math.abs(c[1] - d[1]) - 4) < 1.0E-7;
             TextureAtlasSprite sprite = endCap ? metal : wall;

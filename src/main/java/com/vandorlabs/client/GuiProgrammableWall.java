@@ -4,6 +4,7 @@ import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.MessageSyncScreenSelector;
 import com.vandorlabs.network.MessageProgrammableWallShade;
 import com.vandorlabs.network.MessageProgrammableSlabSides;
+import com.vandorlabs.network.MessageProgrammableDiagonalWidth;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
@@ -32,11 +33,13 @@ public class GuiProgrammableWall extends GuiContainer {
     private final boolean porthole;
     private final boolean fullBlock;
     private final boolean slab;
+    private final boolean diagonal;
     private int selected;
     private int shade;
     private int shape;
     private boolean join;
     private boolean tileSides;
+    private boolean fullWidth;
     private int scroll;
     private int listX;
     private int listY;
@@ -53,6 +56,10 @@ public class GuiProgrammableWall extends GuiContainer {
                 .getBlock()).getShape() == BlockProgrammableWall.Shape.PORTHOLE;
         slab = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableSlab;
+        diagonal = tile.getWorld().getBlockState(tile.getPos()).getBlock()
+                instanceof BlockProgrammableWall
+                && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
+                .getBlock()).getShape() == BlockProgrammableWall.Shape.DIAGONAL;
         fullBlock = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableBlock
                 || slab;
@@ -61,8 +68,9 @@ public class GuiProgrammableWall extends GuiContainer {
         shape = tile.getPortholeShape();
         join = tile.isJoinPortholes();
         tileSides = tile.isSlabTileSides();
+        fullWidth = tile.isDiagonalFullWidth();
         xSize = 340;
-        ySize = porthole ? 272 : slab ? 216 : 190;
+        ySize = porthole ? 272 : slab || diagonal ? 216 : 190;
     }
 
     @Override public void initGui() {
@@ -79,6 +87,8 @@ public class GuiProgrammableWall extends GuiContainer {
                 guiTop + 77, 312, 20, shapeLabel()));
         if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
                 guiTop + 163, 312, 20, slabSidesLabel()));
+        if (diagonal) buttonList.add(new GuiButton(105, guiLeft + 14,
+                guiTop + 163, 312, 20, diagonalWidthLabel()));
         buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + ySize - 25, 312, 20,
                 I18n.format("gui.done")));
     }
@@ -87,6 +97,9 @@ public class GuiProgrammableWall extends GuiContainer {
     private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
     private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
     private String slabSidesLabel() { return "Side layout: " + (tileSides ? "Tile" : "Fit"); }
+    private String diagonalWidthLabel() {
+        return "Diagonal width: " + (fullWidth ? "Full block" : "Half block");
+    }
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
@@ -194,6 +207,13 @@ public class GuiProgrammableWall extends GuiContainer {
             tile.setPortholeShape(shape);
             button.displayString = shapeLabel();
             sendPortholeSettings();
+        }
+        if (button.id == 105) {
+            fullWidth = !fullWidth;
+            tile.setDiagonalFullWidth(fullWidth);
+            button.displayString = diagonalWidthLabel();
+            PacketHandler.INSTANCE.sendToServer(new MessageProgrammableDiagonalWidth(
+                    tile.getPos(), fullWidth));
         }
     }
 
