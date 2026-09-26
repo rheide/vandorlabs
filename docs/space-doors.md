@@ -1,10 +1,11 @@
 # Space doors and glass
 
 The Space family is independent of the Detailed doors. The creative menu has one
-Programmable Door item, defaulting to Sliding Sideways in the Middle position.
+Programmable Door item, initially set to Sliding Sideways. Its initial depth
+follows the placement click and can be changed in the settings.
 Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
 the design, Small/Medium/Large texture detail, framed/bare appearance, placement
-position, Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
+position (Near, Middle, or Far), Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
 scrollbar and up/down-key navigation. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
 Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
@@ -32,7 +33,8 @@ below Hinges and applies immediately to both leaves. Existing doors default
 to Panel: On; the choice is saved and included in creative pick-block items.
 Creative pick-block on either half copies all selector settings, including the
 channel, into the item. Placement restores these settings before considering
-neighbor inheritance; it does not copy coordinates, power or open state, or
+neighbor inheritance; the placement click sets the initial Near/Middle/Far
+depth. It does not copy coordinates, power or open state, or
 reconfigure the neighbor. Ordinary unconfigured items still inherit a matching mate.
 Vertical travel is 31/16
 block: framed leaves retract one pixel beyond the inner frame edge, while bare
@@ -40,11 +42,11 @@ leaves preserve their one-pixel open-edge reveal. Sideways travel is 15/16 for
 single framed leaves and 16/16 for paired framed leaves; bare leaves retain 15/16.
 Frames remain fixed and glazed panes move with their leaf. The renderer's
 bounds cover the full vertical travel; the tile still has no tick loop.
-Both motions offer Edge / Middle placement. Rotating art is edge-native and
-sliding art is middle-native, so the renderer applies the corresponding 5.24/16
-offset to the whole assembly, including frame, hinge geometry and collision.
-Existing sliding-block saves migrate to Middle; rotating saves retain their
-previous position. A middle-positioned open rotating leaf can naturally extend
+All motion modes offer Near / Middle / Far placement. Rotating art is edge-native and
+sliding art is middle-native, so the renderer offsets the whole assembly,
+including frame, hinge geometry and collision. Near and Far mirror the same
+distance around Middle. Existing sliding-block saves migrate to Middle;
+rotating saves retain their previous position. A middle-positioned open rotating leaf can naturally extend
 beyond the back of the door block during its swing.
 
 Fifteen designs are available: Observation, Airlock, Standard, Security, Reactor
@@ -79,7 +81,7 @@ UV accessors expose only the original rectangle. PNGs are never resized.
 Glass mipmaps preserve low alpha instead of using vanilla's cutout threshold.
 Texture reloads use the same loader.
 
-Edge-positioned rotating leaves occupy the player-facing block edge.
+Near-positioned rotating leaves occupy the player-facing block edge.
 Hinges use the original thin-door hardware, with one pixel removed from the
 frame-side mounting arm. The whole hinge and pivot move one pixel toward the
 jamb: the shared pin axis is X=1/Z=11.24 (mirrored X=15 on the right), with
@@ -101,7 +103,7 @@ Door and Space Glass frames are now exactly 4/16 block deep (previously 4.45/16)
 Rotating and sliding leaf bodies are uniformly 2/16 block deep, centered with
 one pixel on either side. Rotating leaves occupy Z=12.24..14.24 inside
 Z=11.24..15.24 frames; sliding leaves occupy Z=7..9 inside Z=6..10 frames, preserving the same
-5.24/16 assembly offset for Edge/Middle. With surface-mounted
+5.24/16 assembly offset for Near/Middle. With surface-mounted
 hinges, the fully open rectangular leaf tip can project 3.76/16 beyond the
 block's front edge; open collision bounds follow the actual slab rather than
 trimming its geometry.

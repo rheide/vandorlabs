@@ -17,7 +17,7 @@ cp "$HOME/MC-Forge12-2/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
     testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar
 cp "$HOME/MC-Forge12-2/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     testclient/runtime/game/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar
-VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 240 testclient/run.sh \
+VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 600 testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
 ANALYZE_ARGS=("$RUN_OUT" --texture-variant)
 if [[ "${VANDOR_LABS_TEXTURE_VARIANT:-default}" == "original" ]]; then

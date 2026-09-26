@@ -273,6 +273,8 @@ task buildOriginalTextures(type: Exec) {
     outputs.file("$buildDir/libs/vandorlabs-${version}-original-textures.jar")
 }
 jar {
+    from('LICENSE') { into 'META-INF' }
+    from('THIRD_PARTY_NOTICES.md') { into 'META-INF' }
     manifest {
         attributes([
             "Specification-Title": "Vandor Labs",

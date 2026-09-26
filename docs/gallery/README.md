@@ -1,27 +1,28 @@
-# Vandor Labs block gallery
+# Vandor Labs block guide
 
-These screenshots are produced by a real Forge 1.12.2 client running the
-deterministic ReproLab scene. They show representative states and functions;
-the dozens of selectable screen animations are intentionally summarized rather
-than documented one by one.
+These images come from a real Forge 1.12.2 client in the repeatable ReproLab
+world. The close-ups show individual shapes, controls, and states. Open an image
+at full size to inspect its texture and model.
 
-> **Acquisition:** the Programmable Door can be crafted from six Programmable
-> Matter Ingots. Other blocks shown here use the `vandorlabs` Creative tab and
-> the deterministic test harness.
+## Blocks and systems
 
 - [Programmable displays and consoles](programmable.md)
-- [Doors](doors.md)
-- [Propulsion and hover systems](propulsion.md)
+- [Programmable Door](doors.md)
+- [Rocket Thruster, Ion Drive, Plasma Vent, and Impulse Engine](propulsion.md)
 - [Programmable Ramp](ramp-controller.md)
-- [Controls, lighting, furniture, and building blocks](systems-and-building.md)
-- [Maintaining and regenerating the gallery](CONTRIBUTING.md)
+- [Lights](lights.md)
+- [Buttons, switches, and levers](controls.md)
+- [Chairs](chairs.md)
+- [Building blocks, finishes, and glass](building.md)
 
-Regenerate every checked-in image with:
+The [Configurizer](../CONFIGURIZER.md) opens programmable block settings. The
+[Duplifier](../DUPLIFIER.md) copies selected settings between compatible blocks.
+Crafting recipes are listed in the in-game recipe book and in the main
+[README](../../README.md).
 
-```bash
-testclient/generate_gallery.sh
-```
+## Regenerating screenshots
 
-The gallery run builds the current jar, boots the software-rendered client,
-executes the live runtime contracts, captures the scenes, and exports the
-curated shots to `docs/images/gallery`.
+Run `bash testclient/generate_gallery.sh` from the repository root. This builds
+the current jar, starts the software-rendered client, checks live behavior, and
+exports the selected screenshots to `docs/images/gallery`. See the
+[gallery maintenance guide](CONTRIBUTING.md) for details.

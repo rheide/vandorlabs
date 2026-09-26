@@ -341,6 +341,47 @@ public class ReproLab {
                         down ? 40.0F : 35.0F));
             }
         }
+        for (String name : new String[]{"viewscreen", "console", "diagonal_up",
+                "diagonal_down", "input_wall", "input_keyboard", "half_console",
+                "full_input_wall", "full_input_floor"})
+            SHOTS.add(new Shot("gallery_close_display_" + name,
+                    GALLERY_X + .7D, galleryFeet + .75D, -19.8D, 12.0F,
+                    name.contains("floor") || name.contains("console") ? 35.0F : 29.0F));
+        for (String family : new String[]{"rocket_thruster", "ion_drive",
+                "plasma_vent", "impulse_engine"})
+            for (String shape : new String[]{"block", "hexagon", "wedge"})
+                SHOTS.add(new Shot("gallery_close_thruster_" + family + "_" + shape,
+                        GALLERY_X + .7D, galleryFeet + 1.65D, -19.8D, 17.0F, 18.0F));
+        for (int style=0;style<com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length;style++)
+            SHOTS.add(new Shot("gallery_close_light_" + style,
+                    GALLERY_X, galleryFeet + 1.2D, -20.1D, 0, 8));
+        for (String control : new String[]{"push_button", "rocker_switch",
+                "compact_power_lever", "industrial_power_lever"})
+            SHOTS.add(new Shot("gallery_close_control_" + control,
+                    GALLERY_X, galleryFeet + 1.2D, -20.1D, 0, 8));
+        for (int style=0;style<5;style++)
+            SHOTS.add(new Shot("gallery_close_chair_" + style,
+                    GALLERY_X + .8D, galleryFeet + .6D, -19.9D, 18, 5));
+        for (String group : new String[]{"hull", "padding", "pipes", "glass"})
+            SHOTS.add(new Shot("gallery_close_material_" + group,
+                    GALLERY_X + .5D, galleryFeet + 1.8D, -20.6D, 0, 26));
+        for (int design=0;design<15;design++)
+            SHOTS.add(new Shot("gallery_door_design_" + design,
+                    GALLERY_X + .5D, galleryFeet + .25D, -20.4D, 0, 0));
+        for (String motion : new String[]{"rotating", "sideways", "up", "down"})
+            for (String pose : new String[]{"closed", "open"})
+                SHOTS.add(new Shot("gallery_door_motion_" + motion + "_" + pose,
+                        GALLERY_X + 1.1D, galleryFeet + .25D, -19.9D, 18, 0));
+        for (String depth : new String[]{"near", "middle", "far"})
+            SHOTS.add(new Shot("gallery_door_position_" + depth,
+                    GALLERY_X + 1.3D, galleryFeet + .3D, -20.1D, 38, 0));
+        for (String panel : new String[]{"on", "off"})
+            SHOTS.add(new Shot("gallery_door_panel_" + panel,
+                    GALLERY_X + 1.2D, galleryFeet + .3D, -19.9D, 32, 0));
+        for (String mode : new String[]{"ramp", "filled", "lift", "extend"})
+            for (String pose : new String[]{"off", "on"})
+                SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
+                        GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
     }
 
     private final File outDir;
@@ -1225,6 +1266,17 @@ public class ReproLab {
         for (Entity entity : new ArrayList<Entity>(world.loadedEntityList)) {
             if (!(entity instanceof EntityPlayer)) entity.setDead();
         }
+        if (shot.equals("gallery_close_display_viewscreen")) {
+            // The earlier ramp examples reserve cells beyond the ordinary
+            // one-scene area. Clear those before starting the close-up guide.
+            BlockPos.getAllInBox(new BlockPos(GALLERY_X - 20, GALLERY_Y, -30),
+                    new BlockPos(GALLERY_X + 20, GALLERY_Y + 12, -10))
+                    .forEach(world::setBlockToAir);
+            BlockPos.getAllInBox(new BlockPos(GALLERY_X - 20, GALLERY_Y - 1, -30),
+                    new BlockPos(GALLERY_X + 20, GALLERY_Y - 1, -10))
+                    .forEach(pos -> world.setBlockState(pos,
+                            Blocks.GRASS.getDefaultState(), 2));
+        }
         BlockPos.getAllInBox(new BlockPos(GALLERY_X - 14, GALLERY_Y, -22),
                 new BlockPos(GALLERY_X + 14, GALLERY_Y + 9, -14))
                 .forEach(world::setBlockToAir);
@@ -1232,7 +1284,116 @@ public class ReproLab {
                 new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
-        if (shot.equals("gallery_programmable_displays")) {
+        if (shot.startsWith("gallery_close_display_")) {
+            String kind = shot.substring("gallery_close_display_".length());
+            BlockPos at = new BlockPos(GALLERY_X, GALLERY_Y, -18);
+            if (kind.equals("viewscreen") || kind.equals("console"))
+                place(world, at, kind.equals("console") ? ModBlocks.PROGRAMMABLE_CONSOLE
+                        : ModBlocks.ANIMATED_SCREEN_SELECTOR,
+                        BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
+            else if (kind.equals("diagonal_up") || kind.equals("diagonal_down"))
+                placeDiagonal(world, at, kind.equals("diagonal_down"));
+            else if (kind.equals("half_console")) {
+                place(world, at, ModBlocks.PROGRAMMABLE_HALF_CONSOLE,
+                        BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
+                configureInputs(world, at, 4, 14);
+            } else if (kind.equals("input_wall") || kind.equals("input_keyboard")) {
+                boolean keyboard = kind.equals("input_keyboard");
+                world.setBlockState(at, ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
+                                EnumFacing.NORTH)
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,
+                                keyboard)
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER,
+                                !keyboard), 2);
+                configureInputs(world, at, keyboard ? 3 : 2, keyboard ? 3 : 2);
+                setInputSmall(world, at, true);
+            } else if (kind.equals("full_input_wall") || kind.equals("full_input_floor")) {
+                world.setBlockState(at, ModBlocks.PROGRAMMABLE_FULL_INPUT.getDefaultState()
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
+                                EnumFacing.NORTH)
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,
+                                kind.equals("full_input_floor"))
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER,
+                                false), 2);
+                configureScreen(world, at, "engineering_screen");
+            }
+        } else if (shot.startsWith("gallery_close_thruster_")) {
+            String suffix = shot.substring("gallery_close_thruster_".length());
+            int split = suffix.lastIndexOf('_');
+            String family = suffix.substring(0, split);
+            String shape = suffix.substring(split + 1);
+            BlockPos at = new BlockPos(GALLERY_X, GALLERY_Y + 1, -18);
+            world.setBlockState(at, block(family).getDefaultState().withProperty(
+                    com.vandorlabs.blocks.BlockPropulsionLight.FACING, EnumFacing.NORTH), 3);
+            com.vandorlabs.blocks.BlockPropulsionLight.configureShape(world, at,
+                    shape.equals("block") ? 0 : shape.equals("hexagon") ? 1 : 2);
+            ((com.vandorlabs.tiles.TileEntityRedstoneLight)world.getTileEntity(at))
+                    .setManualMode(1, true);
+        } else if (shot.startsWith("gallery_close_light_")) {
+            int style=Integer.parseInt(shot.substring("gallery_close_light_".length()));
+            for (int i=0;i<2;i++) {
+                BlockPos at=new BlockPos(GALLERY_X-1+i,GALLERY_Y+1,-18);
+                world.setBlockState(at,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
+                com.vandorlabs.tiles.TileEntityProgrammableLight light=
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight)world.getTileEntity(at);
+                light.configure(style,15);
+                light.setOn(i==0);
+            }
+        } else if (shot.startsWith("gallery_close_control_")) {
+            Block block=block(shot.substring("gallery_close_control_".length()));
+            for (int i=0;i<2;i++) {
+                BlockPos at=new BlockPos(GALLERY_X-1+i,GALLERY_Y+1,-18);
+                world.setBlockState(at.south(),Blocks.STONEBRICK.getDefaultState(),3);
+                IBlockState state=block.getDefaultState();
+                if (block instanceof com.vandorlabs.blocks.BlockVandorSwitch)
+                    state=state.withProperty(com.vandorlabs.blocks.BlockVandorSwitch.FACING,
+                                    EnumFacing.NORTH)
+                            .withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ON,i==1);
+                else if (block instanceof com.vandorlabs.blocks.BlockIndustrialLever)
+                    state=state.withProperty(net.minecraft.block.BlockHorizontal.FACING,
+                                    EnumFacing.NORTH)
+                            .withProperty(com.vandorlabs.blocks.BlockIndustrialLever.POWERED,
+                                    i==1);
+                world.setBlockState(at,state,3);
+            }
+        } else if (shot.startsWith("gallery_close_chair_")) {
+            placeChair(world,new BlockPos(GALLERY_X,GALLERY_Y,-18),
+                    Integer.parseInt(shot.substring("gallery_close_chair_".length())));
+        } else if (shot.startsWith("gallery_close_material_")) {
+            String group=shot.substring("gallery_close_material_".length());
+            String[] ids=group.equals("hull")
+                    ?new String[]{"light_alloy_hull","dark_gunmetal_hull","midnight_satin_hull"}
+                    :group.equals("padding")
+                    ?new String[]{"seamed_padding","ribbed_padding","stitched_padding"}
+                    :group.equals("pipes")
+                    ?new String[]{"wall_pipes","framed_wall_pipes","wall_vent"}
+                    :new String[]{"clear_cockpit_glass","pale_cyan_cockpit_glass",
+                            "smoked_cockpit_glass"};
+            for (int i=0;i<ids.length;i++) {
+                BlockPos at=new BlockPos(GALLERY_X-2+i*2,GALLERY_Y+1,-18);
+                int finish=java.util.Arrays.asList(
+                        com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf(ids[i]);
+                world.setBlockState(at,finish<0?block(ids[i]).getDefaultState()
+                        :ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
+                if (finish>=0) ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
+                        .setHousingTexture(finish);
+            }
+        } else if (shot.startsWith("gallery_door_")) {
+            buildCloseDoorGallery(world,shot);
+        } else if (shot.startsWith("gallery_ramp_mode_") && !world.isRemote) {
+            EntityPlayerMP player=null;
+            for (EntityPlayer candidate:world.playerEntities)
+                if (candidate instanceof EntityPlayerMP) { player=(EntityPlayerMP)candidate; break; }
+            if (player==null) throw new IllegalStateException("gallery ramp player unavailable");
+            String[] parts=shot.split("_");
+            String mode=parts[3];
+            ControllerRuntimeChecks.buildGalleryModeFixture(world,player,
+                    new BlockPos(GALLERY_X,GALLERY_Y,-21),
+                    mode.equals("lift") || mode.equals("extend"),
+                    mode.equals("filled") || mode.equals("extend"),
+                    parts[4].equals("on"));
+        } else if (shot.equals("gallery_programmable_displays")) {
             place(world, new BlockPos(GALLERY_X - 6, GALLERY_Y, -18),
                     ModBlocks.ANIMATED_SCREEN_SELECTOR,
                     BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
@@ -1524,6 +1685,46 @@ public class ReproLab {
         world.setBlockState(fullFloor, full.withProperty(
                 com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD, true), 2);
         configureScreen(world, fullFloor, "engineering_screen");
+    }
+
+    private static void buildCloseDoorGallery(World world, String shot) {
+        BlockPos centre=new BlockPos(GALLERY_X,GALLERY_Y,-18);
+        if (shot.startsWith("gallery_door_design_")) {
+            int design=Integer.parseInt(shot.substring("gallery_door_design_".length()));
+            for (int i=0;i<2;i++) {
+                BlockPos at=centre.add(i==0?-1:1,0,0);
+                placeDoor(world,at,"programmable_door",false);
+                com.vandorlabs.tiles.TileEntitySpaceDoor door=
+                        (com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(at);
+                door.configure(design,1,i==1,0,true,true,true,
+                        com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,true);
+                door.setPlacementDepth(0);
+            }
+            return;
+        }
+        boolean motion=shot.startsWith("gallery_door_motion_");
+        boolean position=shot.startsWith("gallery_door_position_");
+        boolean panel=shot.startsWith("gallery_door_panel_");
+        if (!motion && !position && !panel) return;
+        if (position) {
+            for (int y=0;y<3;y++) for (int x=-1;x<=1;x++)
+                if (x!=0 || y==2)
+                    world.setBlockState(centre.add(x,y,0),
+                            Blocks.STONEBRICK.getDefaultState(),3);
+        }
+        boolean open=motion && shot.endsWith("_open");
+        placeDoor(world,centre,"programmable_door",open);
+        String movement=motion?shot.split("_")[3]:"sideways";
+        boolean sliding=!movement.equals("rotating");
+        int direction=movement.equals("up")?1:movement.equals("down")?2:0;
+        com.vandorlabs.tiles.TileEntitySpaceDoor door=
+                (com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(centre);
+        door.configure(0,1,true,direction,true,sliding,true,
+                com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,
+                !panel || shot.endsWith("_on"));
+        int depth=position?(shot.endsWith("_middle")?0:shot.endsWith("_far")?2:1)
+                :0;
+        door.setPlacementDepth(depth);
     }
 
     private static Block block(String id) {

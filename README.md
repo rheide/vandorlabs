@@ -17,7 +17,8 @@ lighting, furniture, ramps, glass, and building materials.
 
 ## What's in the mod
 
-- **Structure**: tritanium hull, wall panels/ribs/vents/pipes, border trims.
+- **Structure**: programmable hull, padding, pipe, and vent finishes, wall
+  panels, ribs, and cockpit glass.
 - **Screens**: static planet/ship/science viewscreens (directional) and
   sequenced animated displays with static/animated/off modes that wake on
   redstone and sleep when power drops.
@@ -67,11 +68,11 @@ lighting, furniture, ramps, glass, and building materials.
   Footprints are capped at 8 wide × 16 long; each offset ranges from -8 to +8 blocks.
   Ramp direction is independent of the controller's platform-selection arrow.
   See [placement, geometry and tests](docs/landing-ramps.md).
-- **Hull materials**: Dark Gunmetal Hull and Light Alloy Hull blocks from the
-  supplied 256px static textures.
+- **Hull materials**: Dark Gunmetal, Light Alloy, and Midnight Satin finishes
+  in the shared programmable texture selector.
 - **Switches**: rocker/button wall plates and 3D throw levers, real
-  redstone power, pop-off without support. Plus hand-built 3D Industrial,
-  Compact and Glass levers (the glass one has a real seethrough window).
+  redstone power, pop-off without support. The Compact and Industrial levers
+  use separate models.
   Flat-mounted switches rotate with the player's facing; floor-mounted levers
   can be selected from every side.
 - **Redstone channels**: loaded blocks in the same dimension can share a
@@ -223,7 +224,10 @@ state/model pairing, and every referenced texture file.
 
 Except for third-party components identified in
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), the Vandor Labs source code and
-assets are dedicated to the public domain under
-[CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-The visual assets were generated with ChatGPT and are included in that
-dedication. CC0 does not grant rights in third-party names or trademarks.
+assets are licensed under [Creative Commons Attribution 4.0 International](LICENSE)
+([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). If you share or adapt them,
+credit Vandor Labs, link to the license, and indicate whether you made changes.
+The visual assets were generated with ChatGPT and are included under this
+license. The license does not grant rights in third-party names or trademarks.
+Earlier releases published under CC0 remain available under that irrevocable
+dedication.

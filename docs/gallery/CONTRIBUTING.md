@@ -22,6 +22,12 @@ When adding or changing a showcased block:
 3. Reference that stable path from the appropriate page in `docs/gallery`.
 4. Run `testclient/generate_gallery.sh` and visually inspect every changed PNG.
 
+Frame individual blocks tightly enough to show their geometry and texture.
+Show both states when appearance changes with activation. Use matching camera
+angles for before/after comparisons and include the relevant GUI when its
+controls are described. The full gallery takes several minutes because each
+image is a separate live-client scene.
+
 Keep documentation scenes in the isolated gallery area, use a non-ship screen
 such as `engineering_screen` for programmable blocks, and allow enough settle
 ticks for chunks, animated models, and block-change particles to stabilize.

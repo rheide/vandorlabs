@@ -737,4 +737,32 @@ public final class ControllerRuntimeChecks {
         elapsed(controller,controller.durationTicks()+1);
         player.setPosition(px,py,pz);
     }
+
+    /** Documentation pair for Ramp, Filled Ramp, Lift, or Extend at rest. */
+    public static void buildGalleryModeFixture(World world, EntityPlayerMP player,
+            BlockPos root, boolean lift, boolean extend, boolean on) {
+        double px=player.posX,py=player.posY,pz=player.posZ;
+        try {
+            player.setPosition(root.getX()+.5,root.getY()+1,root.getZ()+.5);
+            clear(world,root);
+            for (BlockPos floor:BlockPos.getAllInBox(root.add(-5,-1,-5),
+                    root.add(5,-1,5)))
+                world.setBlockState(floor,Blocks.STONEBRICK.getDefaultState(),2);
+            TileEntityRampController controller=place(world,root,EnumFacing.SOUTH);
+            for (int row=1;row<=4;row++) for (int width=-1;width<=1;width++)
+                world.setBlockState(root.south(row).west(width),
+                        Blocks.STONE_SLAB.getDefaultState(),3);
+            if (!controller.configureTreads(player,0,3,2,true,false,lift,
+                    EnumFacing.SOUTH,0,extend,1))
+                throw new IllegalStateException("gallery ramp mode configuration failed: "
+                        +controller.status);
+            if (on) {
+                world.setBlockState(root.north(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+                controller.updatePower();
+                elapsed(controller,controller.durationTicks()+1);
+            }
+        } finally {
+            player.setPosition(px,py,pz);
+        }
+    }
 }

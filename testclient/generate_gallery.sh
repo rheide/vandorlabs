@@ -15,7 +15,7 @@ cp "$HOME/MC-Forge12-2/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
     testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar
 cp "$HOME/MC-Forge12-2/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     testclient/runtime/game/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar
-VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout --kill-after=15 240 testclient/run.sh \
+VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout --kill-after=15 600 testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
 grep -q '\[vandorlabs\]\[reprolab\] redstone-channel-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] screen-runtime PASS' "$RUN_OUT/client.log"
