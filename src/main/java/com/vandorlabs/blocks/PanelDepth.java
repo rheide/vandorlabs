@@ -8,6 +8,14 @@ public final class PanelDepth {
         return coordinate < 1F / 3F ? 1 : coordinate > 2F / 3F ? 2 : 0;
     }
 
+    /** Convert a world-space click to the local front-to-back panel coordinate. */
+    public static int fromHit(net.minecraft.util.EnumFacing facing, float hitX, float hitZ) {
+        float normal = facing == net.minecraft.util.EnumFacing.SOUTH ? 1F-hitZ
+                : facing == net.minecraft.util.EnumFacing.EAST ? 1F-hitX
+                : facing == net.minecraft.util.EnumFacing.WEST ? hitX : hitZ;
+        return fromHit(normal);
+    }
+
     public static int start(int depth) {
         return depth == 1 ? 0 : depth == 2 ? 12 : 6;
     }

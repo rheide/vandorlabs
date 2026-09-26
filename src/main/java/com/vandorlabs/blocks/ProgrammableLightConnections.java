@@ -1,20 +1,33 @@
 package com.vandorlabs.blocks;
 
 import com.vandorlabs.tiles.TileEntityProgrammableLight;
+import com.vandorlabs.redstone.SignalUpdateBatch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 /** Adjacent light members shared by rendering and manual switching. */
 public final class ProgrammableLightConnections {
     private ProgrammableLightConnections() { }
+    private static final ThreadLocal<java.util.Map<World, PendingRefresh>> PENDING =
+            ThreadLocal.withInitial(java.util.IdentityHashMap::new);
+
+    private static final class PendingRefresh implements Runnable {
+        final World world;
+        final Set<BlockPos> positions = new LinkedHashSet<>();
+        PendingRefresh(World world) { this.world=world; }
+        @Override public void run() {
+            java.util.Map<World,PendingRefresh> pending=PENDING.get();
+            pending.remove(world);
+            if (pending.isEmpty()) PENDING.remove();
+            refreshAround(world,positions);
+        }
+    }
 
     public static Set<BlockPos> members(TileEntityProgrammableLight first,
             IBlockState state) {
@@ -24,31 +37,17 @@ public final class ProgrammableLightConnections {
     private static Set<BlockPos> members(TileEntityProgrammableLight first,
             IBlockState state, boolean matchOn) {
         World world = first.getWorld();
-        Set<BlockPos> members = new LinkedHashSet<>();
-        members.add(first.getPos());
-        if (!first.isJoin()) return members;
+        if (!first.isJoin()) {
+            Set<BlockPos> single = new LinkedHashSet<>();
+            single.add(first.getPos());
+            return single;
+        }
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
-        EnumFacing right = facing.getAxis().isHorizontal()
-                ? facing.rotateY() : EnumFacing.EAST;
-        EnumFacing up = facing == EnumFacing.UP ? EnumFacing.SOUTH
-                : facing == EnumFacing.DOWN ? EnumFacing.NORTH : EnumFacing.UP;
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        queue.add(first.getPos());
-        while (!queue.isEmpty()) {
-            BlockPos current = queue.removeFirst();
-            for (EnumFacing side : new EnumFacing[]{right, right.getOpposite(),
-                    up, up.getOpposite()}) {
-                BlockPos next = current.offset(side);
-                if (members.contains(next) || !world.isBlockLoaded(next)
-                        || !eligible(world, next, facing, first, matchOn)) continue;
-                members.add(next);
-                queue.addLast(next);
-                if (members.size() >= 4096) {
-                    members.clear();
-                    members.add(first.getPos());
-                    return members;
-                }
-            }
+        Set<BlockPos> members = LoadedPlaneConnections.collect(first.getPos(), PanelPlane.of(facing),
+                world::isBlockLoaded, next -> eligible(world, next, facing, first, matchOn));
+        if (members.size() >= LoadedPlaneConnections.LIMIT) {
+            members.clear();
+            members.add(first.getPos());
         }
         return members;
     }
@@ -56,10 +55,27 @@ public final class ProgrammableLightConnections {
     /** Reconcile only loaded assemblies touched by a signal or topology change. */
     public static void refreshAround(World world, BlockPos pos) {
         if (world == null || world.isRemote || pos == null) return;
+        if (SignalUpdateBatch.isActive()) {
+            java.util.Map<World,PendingRefresh> pending=PENDING.get();
+            PendingRefresh refresh=pending.get(world);
+            if (refresh==null) {
+                refresh=new PendingRefresh(world);
+                pending.put(world,refresh);
+                SignalUpdateBatch.afterSignals(refresh,refresh);
+            }
+            refresh.positions.add(pos.toImmutable());
+            return;
+        }
+        refreshAround(world,java.util.Collections.singleton(pos));
+    }
+
+    private static void refreshAround(World world, Set<BlockPos> positions) {
         Set<BlockPos> visited = new LinkedHashSet<>();
         Set<BlockPos> seeds = new LinkedHashSet<>();
-        seeds.add(pos);
-        for (EnumFacing side : EnumFacing.values()) seeds.add(pos.offset(side));
+        for (BlockPos pos:positions) {
+            seeds.add(pos);
+            for (EnumFacing side : EnumFacing.values()) seeds.add(pos.offset(side));
+        }
         for (BlockPos seed : seeds) {
             if (visited.contains(seed) || !world.isBlockLoaded(seed)) continue;
             TileEntity raw = world.getTileEntity(seed);

@@ -9,6 +9,8 @@ import com.vandorlabs.render.ScreenHousingMesh;
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.ModBlocks;
+import com.vandorlabs.blocks.PanelPlane;
+import com.vandorlabs.blocks.LoadedPlaneConnections;
 import com.vandorlabs.blocks.BlockProgrammableConsole;
 import com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;
 import com.vandorlabs.blocks.BlockProgrammableHalfConsole;
@@ -43,9 +45,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -131,12 +130,28 @@ public class TEAnimatedScreenSelector
         LightGroup cached = LIGHT_GROUPS.get(tile.getPos());
         if (cached != null) return cached;
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
-        EnumFacing right = facing.getAxis().isHorizontal()
-                ? facing.rotateY() : EnumFacing.EAST;
-        EnumFacing up = facing == EnumFacing.UP ? EnumFacing.SOUTH
-                : facing == EnumFacing.DOWN ? EnumFacing.NORTH : EnumFacing.UP;
+        PanelPlane plane = PanelPlane.of(facing);
+        EnumFacing right = plane.right;
+        EnumFacing up = plane.up;
+        if (!tile.isJoin()) {
+            LightGroup group = new LightGroup(axis(tile.getPos(), right), axis(tile.getPos(), up),
+                    1, 1, right, up);
+            LIGHT_GROUPS.put(tile.getPos(), group);
+            return group;
+        }
         Set<BlockPos> members = com.vandorlabs.blocks.ProgrammableLightConnections
                 .members(tile, state);
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        for (BlockPos pos : members) {
+            minX = Math.min(minX, axis(pos, right)); maxX = Math.max(maxX, axis(pos, right));
+            minY = Math.min(minY, axis(pos, up)); maxY = Math.max(maxY, axis(pos, up));
+        }
+        if ((long)(maxX-minX+1)*(maxY-minY+1) == members.size()) {
+            LightGroup group = new LightGroup(minX, minY, maxX-minX+1, maxY-minY+1, right, up);
+            for (BlockPos pos : members) LIGHT_GROUPS.put(pos, group);
+            return group;
+        }
         Map<Long, BlockPos> positions = new HashMap<>();
         for (BlockPos pos : members)
             positions.put(PortholeRectangles.cell(axis(pos, right), axis(pos, up)), pos);
@@ -154,6 +169,7 @@ public class TEAnimatedScreenSelector
         final int minAxis, minY, columns, rows;
         final EnumFacing right;
         final PortholeHex hex;
+        final int shape, extraBorder;
 
         PortholeGroup(int minAxis, int minY, int columns, int rows,
                 EnumFacing right, int shape, int extraBorder) {
@@ -162,18 +178,19 @@ public class TEAnimatedScreenSelector
             this.columns = columns;
             this.rows = rows;
             this.right = right;
-            this.hex = new PortholeHex(columns, rows, shape, extraBorder);
+            this.shape = shape;
+            this.extraBorder = extraBorder;
+            this.hex = PortholeGeometryCache.outline(columns, rows, shape, extraBorder);
         }
 
         PortholeHex.Slice slice(BlockPos pos) {
-            return hex.slice(axis(pos, right) - minAxis, pos.getY() - minY);
+            return PortholeGeometryCache.slice(columns, rows, shape, extraBorder,
+                    axis(pos, right) - minAxis, pos.getY() - minY, hex);
         }
     }
 
     private static int axis(BlockPos pos, EnumFacing right) {
-        return pos.getX() * right.getFrontOffsetX()
-                + pos.getY() * right.getFrontOffsetY()
-                + pos.getZ() * right.getFrontOffsetZ();
+        return PanelPlane.axis(pos, right);
     }
 
     static PortholeGroup portholeGroup(TileEntityAnimatedScreenSelector tile,
@@ -195,37 +212,18 @@ public class TEAnimatedScreenSelector
         int extraBorder = state.getBlock() instanceof BlockProgrammablePortholeBlock ? 1 : 0;
         int minimum = axis(tile.getPos(), right), maximum = minimum;
         int minY = tile.getPos().getY(), maxY = minY;
-        Set<BlockPos> members = new HashSet<>();
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        members.add(tile.getPos());
-        queue.add(tile.getPos());
-        boolean capped = false;
-        if (tile.isJoinPortholes()) {
-            while (!queue.isEmpty()) {
-                BlockPos current = queue.removeFirst();
-                for (EnumFacing side : new EnumFacing[] {right,
-                        right.getOpposite(), EnumFacing.UP, EnumFacing.DOWN}) {
-                    BlockPos next = current.offset(side);
-                    if (members.contains(next) || !world.isBlockLoaded(next)
-                            || !eligiblePorthole(world, next, facing,
-                                    state.getValue(BlockProgrammableWall.DEPTH),
-                                    state.getBlock(),
-                                    tile.getPortholeShape())) continue;
-                    members.add(next);
-                    queue.addLast(next);
-                    int coordinate = axis(next, right);
-                    minimum = Math.min(minimum, coordinate);
-                    maximum = Math.max(maximum, coordinate);
-                    minY = Math.min(minY, next.getY());
-                    maxY = Math.max(maxY, next.getY());
-                    if (members.size() >= 4096) {
-                        capped = true;
-                        queue.clear();
-                        break;
-                    }
-                }
-            }
+        Set<BlockPos> members = tile.isJoinPortholes()
+                ? LoadedPlaneConnections.collect(tile.getPos(), PanelPlane.of(facing),
+                        world::isBlockLoaded, next -> eligiblePorthole(world, next, facing,
+                                state.getValue(BlockProgrammableWall.DEPTH), state.getBlock(),
+                                tile.getPortholeShape()))
+                : java.util.Collections.singleton(tile.getPos());
+        for (BlockPos member : members) {
+            int coordinate = axis(member, right);
+            minimum = Math.min(minimum, coordinate); maximum = Math.max(maximum, coordinate);
+            minY = Math.min(minY, member.getY()); maxY = Math.max(maxY, member.getY());
         }
+        boolean capped = members.size() >= LoadedPlaneConnections.LIMIT;
         if (capped) {
             for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos,
                     new PortholeGroup(axis(pos, right), pos.getY(), 1, 1, right,
@@ -345,6 +343,12 @@ public class TEAnimatedScreenSelector
         InputStream resource = manager.getResource(packed).getInputStream();
         CompactAnimationDecoder.Result decoded = CompactAnimationDecoder.decode(base, resource);
         return new DecodedAnimation(decoded.strip, decoded.frameCount);
+    }
+
+    @Override
+    public void renderTileEntityFast(TileEntityAnimatedScreenSelector tile, double x, double y,
+            double z, float partialTicks, int destroyStage, float alpha, BufferBuilder buffer) {
+        ProgrammableSolidRenderer.emit(tile, x, y, z, buffer);
     }
 
     @Override
@@ -506,7 +510,7 @@ public class TEAnimatedScreenSelector
         }
         GlStateManager.translate(-0.5D, -0.5D, -0.5D);
         GlStateManager.scale(1.0F / 16.0F, 1.0F / 16.0F, 1.0F / 16.0F);
-        GL11.glDisable(GL11.GL_CULL_FACE);
+        GlStateManager.disableCull();
 
         GlStateManager.disableLighting();
         if (state.getBlock() instanceof BlockProgrammableConsole) {
@@ -545,7 +549,7 @@ public class TEAnimatedScreenSelector
         }
         GlStateManager.enableLighting();
 
-        GL11.glEnable(GL11.GL_CULL_FACE);
+        GlStateManager.enableCull();
         GlStateManager.popMatrix();
     }
 
@@ -556,7 +560,7 @@ public class TEAnimatedScreenSelector
         GlStateManager.rotate(180.0F - facing.getHorizontalAngle(), 0, 1, 0);
         GlStateManager.translate(-0.5D, -0.5D, -0.5D);
         GlStateManager.scale(1.0F / 16.0F, 1.0F / 16.0F, 1.0F / 16.0F);
-        GL11.glDisable(GL11.GL_CULL_FACE);
+        GlStateManager.disableCull();
     }
 
     private static void beginLightTransform(double x, double y, double z,
@@ -570,11 +574,11 @@ public class TEAnimatedScreenSelector
         GlStateManager.rotate(facing == EnumFacing.UP ? 90F : -90F, 1, 0, 0);
         GlStateManager.translate(-.5D, -.5D, -.5D);
         GlStateManager.scale(1F / 16F, 1F / 16F, 1F / 16F);
-        GL11.glDisable(GL11.GL_CULL_FACE);
+        GlStateManager.disableCull();
     }
 
     private static void endLocalTransform() {
-        GL11.glEnable(GL11.GL_CULL_FACE);
+        GlStateManager.enableCull();
         GlStateManager.popMatrix();
     }
 
@@ -697,6 +701,11 @@ public class TEAnimatedScreenSelector
 
     /** A full opaque cube has no useful light value at its own position. */
     private static void setNeighborWorldLight(TileEntityAnimatedScreenSelector te) {
+        int combined = neighborLight(te);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, combined & 65535, combined >>> 16);
+    }
+
+    static int neighborLight(TileEntityAnimatedScreenSelector te) {
         int sky = 0;
         int block = 0;
         for (EnumFacing side : EnumFacing.values()) {
@@ -706,7 +715,7 @@ public class TEAnimatedScreenSelector
             sky = Math.max(sky, combined >>> 16);
             block = Math.max(block, combined & 65535);
         }
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, block, sky);
+        return (sky << 16) | block;
     }
 
     private static void renderWallBox(TextureAtlasSprite wall, double x0, double y0,
@@ -716,26 +725,7 @@ public class TEAnimatedScreenSelector
 
     private static void renderSlab(TextureAtlasSprite sprite, boolean upper,
             boolean tileSides) {
-        double low = upper ? 8 : 0;
-        double high = upper ? 16 : 8;
-        double v0 = tileSides && !upper ? 8 : 0;
-        double v1 = tileSides && upper ? 8 : 16;
-        Tessellator tess = Tessellator.getInstance();
-        BufferBuilder b = tess.getBuffer();
-        b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(b, sprite, 0,high,0, 16,high,0, 16,high,16, 0,high,16,
-                0,0,16,16);
-        spriteQuad(b, sprite, 0,low,16, 16,low,16, 16,low,0, 0,low,0,
-                0,0,16,16);
-        spriteQuad(b, sprite, 0,high,0, 0,high,16, 0,low,16, 0,low,0,
-                0,v0,16,v1);
-        spriteQuad(b, sprite, 16,high,16, 16,high,0, 16,low,0, 16,low,16,
-                0,v0,16,v1);
-        spriteQuad(b, sprite, 16,high,0, 0,high,0, 0,low,0, 16,low,0,
-                0,v0,16,v1);
-        spriteQuad(b, sprite, 0,high,16, 16,high,16, 16,low,16, 0,low,16,
-                0,v0,16,v1);
-        tess.draw();
+        drawWallMesh(sprite, ScreenHousingMesh.slab(upper, tileSides));
     }
 
     /** Broad faces use the selected wall art; exposed thickness uses frame metal. */
@@ -831,22 +821,7 @@ public class TEAnimatedScreenSelector
         if (!tile.isJoinPortholes()) return false;
         EnumFacing side = state.getValue(BlockProgrammableWall.FACING).rotateY();
         if (!right) side = side.getOpposite();
-        net.minecraft.util.math.BlockPos next = tile.getPos().offset(side);
-        if (!tile.getWorld().isBlockLoaded(next)) return false;
-        IBlockState neighbor = tile.getWorld().getBlockState(next);
-        if (neighbor.getBlock() != state.getBlock()
-                || !(neighbor.getBlock() instanceof BlockProgrammableWall)
-                || ((BlockProgrammableWall) neighbor.getBlock()).getShape()
-                != BlockProgrammableWall.Shape.PORTHOLE
-                || neighbor.getValue(BlockProgrammableWall.FACING)
-                != state.getValue(BlockProgrammableWall.FACING)
-                || neighbor.getValue(BlockProgrammableWall.DEPTH)
-                != state.getValue(BlockProgrammableWall.DEPTH)) return false;
-        net.minecraft.tileentity.TileEntity other = tile.getWorld().getTileEntity(next);
-        return other instanceof TileEntityAnimatedScreenSelector
-                && ((TileEntityAnimatedScreenSelector) other).isJoinPortholes()
-                && ((TileEntityAnimatedScreenSelector) other).getPortholeShape()
-                == tile.getPortholeShape();
+        return adjacentPorthole(tile, state, side);
     }
 
     private static void wallVertex(BufferBuilder buf, TextureAtlasSprite sprite,
@@ -905,19 +880,11 @@ public class TEAnimatedScreenSelector
     private static boolean adjacentPorthole(TileEntityAnimatedScreenSelector tile,
             IBlockState state, EnumFacing side) {
         BlockPos next = tile.getPos().offset(side);
-        if (!tile.getWorld().isBlockLoaded(next)) return false;
-        IBlockState other = tile.getWorld().getBlockState(next);
-        return other.getBlock() == state.getBlock()
-                && other.getValue(BlockProgrammableWall.FACING)
-                == state.getValue(BlockProgrammableWall.FACING)
-                && other.getValue(BlockProgrammableWall.DEPTH)
-                == state.getValue(BlockProgrammableWall.DEPTH)
-                && tile.isJoinPortholes()
-                && tile.getWorld().getTileEntity(next) instanceof TileEntityAnimatedScreenSelector
-                && ((TileEntityAnimatedScreenSelector)tile.getWorld().getTileEntity(next))
-                .isJoinPortholes()
-                && ((TileEntityAnimatedScreenSelector)tile.getWorld().getTileEntity(next))
-                .getPortholeShape() == tile.getPortholeShape();
+        return tile.isJoinPortholes() && tile.getWorld().isBlockLoaded(next)
+                && eligiblePorthole(tile.getWorld(), next,
+                        state.getValue(BlockProgrammableWall.FACING),
+                        state.getValue(BlockProgrammableWall.DEPTH), state.getBlock(),
+                        tile.getPortholeShape());
     }
 
     private static void topRim(BufferBuilder buf, TextureAtlasSprite metal,
@@ -1165,7 +1132,7 @@ public class TEAnimatedScreenSelector
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
     }
 
-    private static TextureAtlasSprite wallSprite(TileEntityAnimatedScreenSelector te) {
+    static TextureAtlasSprite wallSprite(TileEntityAnimatedScreenSelector te) {
         int choice = te instanceof com.vandorlabs.tiles.TileEntityProgrammableTrigger
                 ? ((com.vandorlabs.tiles.TileEntityProgrammableTrigger) te).getVisibleTexture()
                 : te.getHousingTexture();

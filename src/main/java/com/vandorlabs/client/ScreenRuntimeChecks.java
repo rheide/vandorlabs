@@ -31,6 +31,8 @@ final class ScreenRuntimeChecks {
     private ScreenRuntimeChecks() {}
 
     static void run(EntityPlayer player) {
+        PanelConnectionRuntimeChecks.run();
+        PanelConnectionRuntimeChecks.checkPackedLighting(player);
         checkTilePersistence();
         checkProgrammableLight(player);
         checkProgrammableLightJoin(player);

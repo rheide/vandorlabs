@@ -67,17 +67,10 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                 || (side.getAxis().isHorizontal() && hitY > .5F));
         EnumFacing facing = isDiagonalShape() ? placer.getHorizontalFacing().getOpposite()
                 : placementFacing(world, pos, side, placer);
-        float normalHit;
-        switch (facing) {
-            case SOUTH: normalHit = 1F - hitZ; break;
-            case EAST: normalHit = 1F - hitX; break;
-            case WEST: normalHit = hitX; break;
-            default: normalHit = hitZ;
-        }
         return getDefaultState()
                 .withProperty(FACING, facing)
                 .withProperty(INVERTED, inverted)
-                .withProperty(DEPTH, isDiagonalShape() ? 0 : PanelDepth.fromHit(normalHit));
+                .withProperty(DEPTH, isDiagonalShape() ? 0 : PanelDepth.fromHit(facing, hitX, hitZ));
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -357,14 +350,6 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
 
     private static AxisAlignedBB rotate(AxisAlignedBB box, EnumFacing facing) {
-        switch (facing) {
-            case SOUTH: return new AxisAlignedBB(1 - box.maxX, box.minY, 1 - box.maxZ,
-                    1 - box.minX, box.maxY, 1 - box.minZ);
-            case EAST: return new AxisAlignedBB(1 - box.maxZ, box.minY, box.minX,
-                    1 - box.minZ, box.maxY, box.maxX);
-            case WEST: return new AxisAlignedBB(box.minZ, box.minY, 1 - box.maxX,
-                    box.maxZ, box.maxY, 1 - box.minX);
-            default: return box;
-        }
+        return PanelPlacement.rotateFromNorth(box, facing);
     }
 }

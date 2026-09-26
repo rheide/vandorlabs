@@ -26,10 +26,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
             EnumFacing side, float hitX, float hitY, float hitZ, int meta,
             EntityLivingBase placer, EnumHand hand) {
         EnumFacing front = placer.getHorizontalFacing().getOpposite();
-        float normalHit = front == EnumFacing.SOUTH ? 1F - hitZ
-                : front == EnumFacing.EAST ? 1F - hitX
-                : front == EnumFacing.WEST ? hitX : hitZ;
-        PLACEMENT_DEPTH.set(PanelDepth.fromHit(normalHit));
+        PLACEMENT_DEPTH.set(PanelDepth.fromHit(front, hitX, hitZ));
         return super.getStateForPlacement(world, pos, side, hitX, hitY, hitZ,
                 meta, placer, hand);
     }

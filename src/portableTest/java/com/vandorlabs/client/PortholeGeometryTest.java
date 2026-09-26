@@ -6,14 +6,33 @@ import java.util.List;
 public final class PortholeGeometryTest {
     private PortholeGeometryTest() { }
     public static void main(String[] args) {
+        verify(false);
+        verify(true);
+        for (int i = 1; i <= 1500; i++) {
+            PortholeHex outline = PortholeGeometryCache.outline(i, 1, i % 4, i % 2);
+            PortholeGeometryCache.slice(i, 1, i % 4, i % 2, 0, 0, outline);
+        }
+        require(PortholeGeometryCache.retainedCoordinates() <= 65536, "coordinate budget exceeded");
+        require(PortholeGeometryCache.retainedSlices() <= 1024, "entry budget exceeded");
+        verify(true); // Same results after eviction and recreation.
+        PortholeGeometryCache.clear();
+        require(PortholeGeometryCache.retainedSlices() == 0
+                && PortholeGeometryCache.retainedCoordinates() == 0, "cache clear leaked geometry");
+        verify(true);
+    }
+    private static void verify(boolean cached) {
         long hash = 1;
         int slices = 0;
         for (int shape = 0; shape < 4; shape++) {
             for (int border = 0; border < 2; border++) {
                 for (int[] size : new int[][] {{1,1},{2,1},{1,3},{3,2},{8,8},{16,2}}) {
-                    PortholeHex hex = new PortholeHex(size[0], size[1], shape, border);
+                    PortholeHex hex = cached
+                            ? PortholeGeometryCache.outline(size[0], size[1], shape, border)
+                            : new PortholeHex(size[0], size[1], shape, border);
                     for (int y = 0; y < size[1]; y++) for (int x = 0; x < size[0]; x++) {
-                        PortholeHex.Slice slice = hex.slice(x,y);
+                        PortholeHex.Slice slice = cached
+                                ? PortholeGeometryCache.slice(size[0], size[1], shape, border, x, y, hex)
+                                : hex.slice(x,y);
                         hash = hash(hash, slice.polygon);
                         hash = hash(hash, slice.frameQuads);
                         hash = hash(hash, slice.hexEdges);
@@ -33,7 +52,7 @@ public final class PortholeGeometryTest {
         }
         System.out.println("Porthole geometry slices=" + slices + " fingerprint=" + hash);
         // Filled with the measured baseline before production changes.
-        if (args.length == 0) require(hash == EXPECTED, "geometry changed: " + hash);
+        require(hash == EXPECTED, "geometry changed: " + hash);
     }
     private static final long EXPECTED = -8752866524235774271L;
     private static long hash(long hash, List<double[]> values) {

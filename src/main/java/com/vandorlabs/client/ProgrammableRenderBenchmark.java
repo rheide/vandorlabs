@@ -48,15 +48,17 @@ final class ProgrammableRenderBenchmark {
         Collections.sort(ids);
         ids.addAll(0, Arrays.asList("minecraft:stone", "minecraft:stone_slab",
                 "minecraft:glass", "minecraft:glass_pane", "minecraft:oak_stairs",
-                "minecraft:redstone_lamp", "minecraft:chest"));
+                "minecraft:redstone_lamp", "minecraft:chest", "minecraft:iron_door"));
         try (PrintWriter csv = new PrintWriter(new File(output, "render-benchmark.csv"));
                 PrintWriter info = new PrintWriter(new File(output, "render-benchmark.txt"))) {
+            ProgrammableRedstoneBenchmark.run(mc, output);
             info.println("GL renderer: " + GL11.glGetString(GL11.GL_RENDERER));
             info.println("GL version: " + GL11.glGetString(GL11.GL_VERSION));
             info.println("Java: " + System.getProperty("java.version"));
-            info.println("Backend: cached display list for baked geometry plus actual TESRs");
+            info.println("Backend: cached VBOs for baked geometry plus actual Forge-batched TESRs");
             info.println("15 warmups, 31 samples; glFinish before/after each batch; no FPS claim");
-            csv.println("block,variant,count,baked_vertices,tile_renderers,build_ms,submit_p50_ms,submit_p95_ms,complete_p50_ms,complete_p95_ms");
+            csv.println("block,variant,count,baked_vertices,tile_renderers,build_ms,submit_p50_ms,submit_p95_ms,complete_p50_ms,complete_p95_ms,allocated_bytes_p50");
+            mc.getFramebuffer().bindFramebuffer(true);
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GlStateManager.matrixMode(GL11.GL_PROJECTION);
             GlStateManager.pushMatrix();
@@ -76,6 +78,12 @@ final class ProgrammableRenderBenchmark {
                 for (String id : ids) {
                     measure(mc, csv, id, "default", 16);
                     measure(mc, csv, id, "default", 64);
+                    if (Arrays.asList("vandorlabs:rocket_thruster", "vandorlabs:ion_drive",
+                            "vandorlabs:plasma_vent", "vandorlabs:impulse_engine").contains(id)) {
+                        measure(mc, csv, id + "_hexagonal", "default", 64);
+                        measure(mc, csv, id + "_wedge", "default", 64);
+                        measure(mc, csv, id, "engine_joined", 64);
+                    }
                     if (Arrays.asList("vandorlabs:programmable_block", "vandorlabs:programmable_slab",
                             "vandorlabs:programmable_light").contains(id)) {
                         for (net.minecraft.util.EnumFacing facing : net.minecraft.util.EnumFacing.values())
@@ -95,6 +103,7 @@ final class ProgrammableRenderBenchmark {
                 GlStateManager.popMatrix();
                 GlStateManager.matrixMode(GL11.GL_MODELVIEW);
                 GL11.glPopAttrib();
+                mc.getFramebuffer().unbindFramebuffer();
                 mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             }
         } catch (Exception e) {
@@ -113,7 +122,7 @@ final class ProgrammableRenderBenchmark {
         List<BlockPos> extraPositions = new ArrayList<>();
         int side = count == 16 ? 4 : 8;
         int spacing = variant.endsWith("_joined") && !variant.endsWith("unjoined") ? 1 : 2;
-        int list = GL11.glGenLists(1);
+        List<net.minecraft.client.renderer.vertex.VertexBuffer> baked = new ArrayList<>();
         try {
             for (int i = 0; i < count; i++) {
                 BlockPos pos = ORIGIN.add((i % side) * spacing, (i / side) * spacing, 0);
@@ -127,10 +136,13 @@ final class ProgrammableRenderBenchmark {
                         com.vandorlabs.blocks.BlockProgrammableSlab.HALF,
                         net.minecraft.block.BlockSlab.EnumBlockHalf.TOP);
                 mc.world.setBlockState(pos, fixture, 2);
-                if (block instanceof com.vandorlabs.blocks.BlockVandorDoor) {
+                if (block instanceof com.vandorlabs.blocks.BlockVandorDoor
+                        || block instanceof net.minecraft.block.BlockDoor) {
                     BlockPos upper = pos.up();
                     mc.world.setBlockState(upper, block.getDefaultState().withProperty(
-                            com.vandorlabs.blocks.BlockVandorDoor.HALF, net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER), 2);
+                            block instanceof com.vandorlabs.blocks.BlockVandorDoor
+                                    ? com.vandorlabs.blocks.BlockVandorDoor.HALF : net.minecraft.block.BlockDoor.HALF,
+                            net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER), 2);
                     extraPositions.add(upper);
                 } else if (block instanceof com.vandorlabs.blocks.BlockBridgeChair) {
                     BlockPos upper = pos.up();
@@ -154,7 +166,7 @@ final class ProgrammableRenderBenchmark {
             positions.addAll(extraPositions);
             long start = System.nanoTime();
             int vertices = 0;
-            GL11.glNewList(list, GL11.GL_COMPILE);
+
             for (BlockRenderLayer layer : BlockRenderLayer.values()) {
                 ForgeHooksClient.setRenderLayer(layer);
                 BufferBuilder buffer = Tessellator.getInstance().getBuffer();
@@ -165,30 +177,48 @@ final class ProgrammableRenderBenchmark {
                     if (state.getRenderType() == EnumBlockRenderType.MODEL && block.canRenderInLayer(state, layer))
                         mc.getBlockRendererDispatcher().renderBlock(state, pos, mc.world, buffer);
                 }
-                vertices += buffer.getVertexCount();
-                Tessellator.getInstance().draw();
+                int countInLayer = buffer.getVertexCount();
+                vertices += countInLayer;
+                buffer.finishDrawing();
+                if (countInLayer > 0) {
+                    net.minecraft.client.renderer.vertex.VertexBuffer vbo =
+                            new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.BLOCK);
+                    vbo.bufferData(buffer.getByteBuffer());
+                    baked.add(vbo);
+                }
+                buffer.reset();
                 buffer.setTranslation(0, 0, 0);
             }
             ForgeHooksClient.setRenderLayer(null);
-            GL11.glEndList();
+
             double build = (System.nanoTime() - start) / 1E6;
             double[] submit = new double[SAMPLES], complete = new double[SAMPLES];
+            long[] allocated = new long[SAMPLES];
             for (int i = -WARMUP; i < SAMPLES; i++) {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+                // Normal terrain starts with fixed-function lighting off and culling on.
+                // Reset between cases so a legacy renderer cannot tint the next case.
+                GlStateManager.disableLighting();
+                GlStateManager.enableCull();
+                GlStateManager.color(1F,1F,1F,1F);
                 GL11.glFinish();
+                long bytesBefore = BenchmarkAllocations.currentThreadBytes();
                 long before = System.nanoTime();
                 mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-                GL11.glCallList(list);
+                drawBaked(baked);
                 TileEntityRendererDispatcher.instance.preDrawBatch();
                 for (TileEntity tile : tiles) {
+                    GlStateManager.color(1F, 1F, 1F, 1F);
                     BlockPos pos = tile.getPos();
                     TileEntityRendererDispatcher.instance.render(tile, pos.getX()-ORIGIN.getX(),
                             pos.getY()-ORIGIN.getY(), pos.getZ()-ORIGIN.getZ(), .5F);
                 }
                 TileEntityRendererDispatcher.instance.drawBatch(0);
                 long submitted = System.nanoTime();
+                long bytesAfter = BenchmarkAllocations.currentThreadBytes();
                 GL11.glFinish();
                 if (i >= 0) {
+                    allocated[i] = bytesBefore < 0 ? -1 : bytesAfter - bytesBefore;
                     submit[i] = (submitted - before) / 1E6;
                     complete[i] = (System.nanoTime() - before) / 1E6;
                 }
@@ -200,13 +230,47 @@ final class ProgrammableRenderBenchmark {
                         + id.replace(':', '-') + "-" + variant + ".png", mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
             Arrays.sort(submit);
             Arrays.sort(complete);
-            csv.printf(Locale.ROOT, "%s,%s,%d,%d,%d,%.6f,%.6f,%.6f,%.6f,%.6f%n",
+            Arrays.sort(allocated);
+            csv.printf(Locale.ROOT, "%s,%s,%d,%d,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%d%n",
                     id, variant, count, vertices, tiles.size(), build,
-                    submit[15], submit[29], complete[15], complete[29]);
+                    submit[15], submit[29], complete[15], complete[29], allocated[15]);
             csv.flush();
         } finally {
-            GL11.glDeleteLists(list, 1);
+            for (net.minecraft.client.renderer.vertex.VertexBuffer vbo : baked) vbo.deleteGlBuffers();
             for (BlockPos pos : positions) mc.world.setBlockToAir(pos);
         }
     }
+    /** Same BLOCK vertex layout/client arrays used by the 1.12 VBO chunk renderer. */
+    private static void drawBaked(List<net.minecraft.client.renderer.vertex.VertexBuffer> baked) {
+        if (baked.isEmpty()) return;
+        net.minecraft.client.renderer.OpenGlHelper.setClientActiveTexture(
+                net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);
+        GlStateManager.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+        GlStateManager.glEnableClientState(GL11.GL_COLOR_ARRAY);
+        GlStateManager.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+        net.minecraft.client.renderer.OpenGlHelper.setClientActiveTexture(
+                net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit);
+        GlStateManager.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+        for (net.minecraft.client.renderer.vertex.VertexBuffer vbo : baked) {
+            vbo.bindBuffer();
+            GlStateManager.glVertexPointer(3,GL11.GL_FLOAT,28,0);
+            GlStateManager.glColorPointer(4,GL11.GL_UNSIGNED_BYTE,28,12);
+            net.minecraft.client.renderer.OpenGlHelper.setClientActiveTexture(
+                    net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);
+            GlStateManager.glTexCoordPointer(2,GL11.GL_FLOAT,28,16);
+            net.minecraft.client.renderer.OpenGlHelper.setClientActiveTexture(
+                    net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit);
+            GlStateManager.glTexCoordPointer(2,GL11.GL_SHORT,28,24);
+            vbo.drawArrays(GL11.GL_QUADS);
+            vbo.unbindBuffer();
+        }
+        GlStateManager.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+        net.minecraft.client.renderer.OpenGlHelper.setClientActiveTexture(
+                net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);
+        GlStateManager.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+        GlStateManager.glDisableClientState(GL11.GL_COLOR_ARRAY);
+        GlStateManager.glDisableClientState(GL11.GL_VERTEX_ARRAY);
+        GlStateManager.resetColor();
+    }
+
 }

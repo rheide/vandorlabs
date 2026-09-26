@@ -38,9 +38,13 @@ public final class ScreenHousingTextures {
             new Finish("stitched_padding", "stitched_padding")
     };
     public static final String[] IDS = new String[FINISHES.length];
+    private static final String[] TEXTURES = new String[FINISHES.length];
 
     static {
-        for (int i = 0; i < FINISHES.length; i++) IDS[i] = FINISHES[i].id;
+        for (int i = 0; i < FINISHES.length; i++) {
+            IDS[i] = FINISHES[i].id;
+            TEXTURES[i] = "vandorlabs:blocks/" + FINISHES[i].texture;
+        }
     }
 
     public static final int INDUSTRIAL_BLOCK = 9;
@@ -56,6 +60,6 @@ public final class ScreenHousingTextures {
     }
 
     public static String texture(int choice) {
-        return "vandorlabs:blocks/" + FINISHES[clamp(choice)].texture;
+        return TEXTURES[clamp(choice)];
     }
 }

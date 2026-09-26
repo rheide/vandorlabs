@@ -194,21 +194,11 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     }
 
     private static EnumFacing localRight(EnumFacing facing) {
-        switch (facing) {
-            case EAST: return EnumFacing.SOUTH;
-            case SOUTH: return EnumFacing.WEST;
-            case WEST: return EnumFacing.NORTH;
-            case NORTH:
-            case UP:
-            case DOWN:
-            default: return EnumFacing.EAST;
-        }
+        return PanelPlane.of(facing).right;
     }
 
     private static EnumFacing localUp(EnumFacing facing) {
-        if (facing == EnumFacing.UP) return EnumFacing.SOUTH;
-        if (facing == EnumFacing.DOWN) return EnumFacing.NORTH;
-        return EnumFacing.UP;
+        return PanelPlane.of(facing).up;
     }
 
     /** Exact world-space center shared by every member of a connected assembly. */

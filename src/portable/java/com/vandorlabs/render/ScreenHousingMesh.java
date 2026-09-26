@@ -18,10 +18,29 @@ public final class ScreenHousingMesh {
         this.quads=quads; this.triangles=triangles;
     }
 
+    private static final ScreenHousingMesh CUBE=buildBox(0,16,0,16);
+    private static final ScreenHousingMesh[] SLABS = {
+            buildBox(0,8,0,16), buildBox(0,8,8,16),
+            buildBox(8,16,0,16), buildBox(8,16,0,8)};
     private static final ScreenHousingMesh CONSOLE=buildConsole();
     private static final ScreenHousingMesh HALF_CONSOLE=buildHalfConsole();
     private static final ScreenHousingMesh DIAGONAL=buildDiagonal(false);
     private static final ScreenHousingMesh DIAGONAL_INVERTED=buildDiagonal(true);
+
+    public static ScreenHousingMesh cube() { return CUBE; }
+    public static ScreenHousingMesh slab(boolean upper, boolean tileSides) {
+        return SLABS[(upper?2:0)+(tileSides?1:0)];
+    }
+    private static ScreenHousingMesh buildBox(double low, double high, double v0, double v1) {
+        return new ScreenHousingMesh(new Face[] {
+                quad(0,high,0, 16,high,0, 16,high,16, 0,high,16, 0,0,16,16),
+                quad(0,low,16, 16,low,16, 16,low,0, 0,low,0, 0,0,16,16),
+                quad(0,high,0, 0,high,16, 0,low,16, 0,low,0, 0,v0,16,v1),
+                quad(16,high,16, 16,high,0, 16,low,0, 16,low,16, 0,v0,16,v1),
+                quad(16,high,0, 0,high,0, 0,low,0, 16,low,0, 0,v0,16,v1),
+                quad(0,high,16, 16,high,16, 16,low,16, 0,low,16, 0,v0,16,v1)
+        }, new Face[0]);
+    }
 
     public static ScreenHousingMesh console() { return CONSOLE; }
     public static ScreenHousingMesh halfConsole() { return HALF_CONSOLE; }

@@ -171,7 +171,9 @@ public final class RedstoneChannels {
         private void notifyChannel(int channel, boolean powered) {
             Set<RedstoneChannelMember> set = members.get(channel);
             if (set == null) return;
-            for (RedstoneChannelMember member : new ArrayList<>(set)) member.setChannelSignal(powered);
+            SignalUpdateBatch.apply(() -> {
+                for (RedstoneChannelMember member : new ArrayList<>(set)) member.setChannelSignal(powered);
+            });
         }
     }
 }

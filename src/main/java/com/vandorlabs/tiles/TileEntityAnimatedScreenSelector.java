@@ -24,6 +24,15 @@ import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
 
+    /** Only atlas-backed opaque solids can join Forge's shared tile vertex buffer. */
+    @Override public boolean hasFastRenderer() {
+        if (world == null) return false;
+        net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
+        return block instanceof com.vandorlabs.blocks.BlockProgrammableBlock
+                || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab
+                || block instanceof com.vandorlabs.blocks.BlockProgrammableLight;
+    }
+
     public static final int MODE_OFF = ScreenBehavior.OFF;
     public static final int MODE_STATIC = ScreenBehavior.STATIC;
     public static final int MODE_ANIMATED = ScreenBehavior.ANIMATED;

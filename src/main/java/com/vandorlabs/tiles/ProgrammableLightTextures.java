@@ -6,6 +6,13 @@ public final class ProgrammableLightTextures {
             "porthole", "light_column_wall", "slatted_lamp", "window_lamp", "lightbar_wall", "logo"
     };
 
+    private static final String[][] TEXTURES = new String[IDS.length][2];
+    static {
+        for (int i=0; i<IDS.length; i++) {
+            TEXTURES[i][0] = "vandorlabs:blocks/" + IDS[i] + "_off";
+            TEXTURES[i][1] = "vandorlabs:blocks/" + IDS[i] + "_on";
+        }
+    }
     private ProgrammableLightTextures() { }
 
     public static int clamp(int choice) {
@@ -13,6 +20,6 @@ public final class ProgrammableLightTextures {
     }
 
     public static String texture(int choice, boolean lit) {
-        return "vandorlabs:blocks/" + IDS[clamp(choice)] + (lit ? "_on" : "_off");
+        return TEXTURES[clamp(choice)][lit ? 1 : 0];
     }
 }

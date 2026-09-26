@@ -74,10 +74,9 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     }
 
     /**
-     * BlockContainer defaults to INVISIBLE because most legacy container
-     * blocks are drawn entirely by a tile renderer.  This block is hybrid:
-     * the baked model owns the opaque housing and the TESR owns only the
-     * changing screen quad.
+     * MODEL keeps the registered block model and its particle texture available.
+     * The programmable family uses empty world meshes where its configurable
+     * housing and artwork are supplied by the tile renderer.
      */
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {
