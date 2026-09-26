@@ -20,10 +20,11 @@ Quota was 100% at the start. Stop at a tested commit near 80%.
 
 - [x] Move programmable blocks and slabs to cached chunk geometry.
 - [x] Cull hidden full faces while preserving partial slab faces.
+- [x] Remove no-op tile renderer submissions for baked blocks/slabs.
 - [x] Avoid submitting the unused upper tile of every two-block door.
 - [x] Cache the four immutable door motion model lookups.
 - [ ] Reduce programmable door stationary and moving rendering costs further.
-- [ ] Run final full live suite and compare before/after images and performance.
+- [x] Run final full live suite and compare before/after images and performance.
 
 Report limits and any remaining work at the requested quota threshold.
 
@@ -81,3 +82,11 @@ all 41 images. For 64 default doors, median allocation fell from 185,888 to
 and reused. A first benchmark launch crashed in vanilla's concurrent chunk
 packet iteration before measurement; the retry passed. Final live suite is
 PASS in `testclient/render-run.hFvzt6` for this small cache change.
+
+Baked housing renderer filter: `testclient/render-benchmark.3C80oM` matched
+all 41 images against `SudWW7`. Programmable Block default/floor/volume
+median submissions fell from 0.0601/0.0520/0.0318 to
+0.0445/0.0362/0.0212 ms for 64 blocks. Slab floor/volume fell from
+0.0313/0.0369 to 0.0261/0.0243 ms. Zero tile renderers are submitted for
+these cases; Programmable Trigger keeps its tile renderer. Final full live
+suite passed in `testclient/render-run.j0sGtn` for this filter.

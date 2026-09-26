@@ -39,6 +39,8 @@ final class PanelConnectionRuntimeChecks {
         try {
             world.setBlockState(pos,com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
             require(renderedVertices(world,pos)==24,"baked cube is missing faces");
+            require(!world.getTileEntity(pos).shouldRenderInPass(0),
+                    "baked cube still submits an empty tile renderer");
             world.setBlockState(east,net.minecraft.init.Blocks.STONE.getDefaultState(),2);
             require(renderedVertices(world,pos)==20,"solid neighbor did not hide cube face");
             world.setBlockToAir(east);
@@ -46,12 +48,18 @@ final class PanelConnectionRuntimeChecks {
                     .getDefaultState();
             world.setBlockState(pos,bottom,2);
             require(renderedVertices(world,pos)==24,"baked bottom slab is missing faces");
+            require(!world.getTileEntity(pos).shouldRenderInPass(0),
+                    "baked slab still submits an empty tile renderer");
             world.setBlockState(east,bottom,2);
             require(renderedVertices(world,pos)==20,"matching slab halves retained internal face");
             world.setBlockState(east,bottom.withProperty(
                     com.vandorlabs.blocks.BlockProgrammableSlab.HALF,
                     net.minecraft.block.BlockSlab.EnumBlockHalf.TOP),2);
             require(renderedVertices(world,pos)==24,"opposite slab halves lost a visible face");
+            world.setBlockState(pos,
+                    com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),2);
+            require(world.getTileEntity(pos).shouldRenderInPass(0),
+                    "programmable trigger lost its tile renderer");
             for (int x=-1;x<=1;x++) for (int z=-1;z<=1;z++)
                 world.setBlockState(pos.add(x,0,z),
                         com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
