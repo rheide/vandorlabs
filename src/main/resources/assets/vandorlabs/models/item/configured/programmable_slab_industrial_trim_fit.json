@@ -1,4 +1,5 @@
 {
+  "parent": "block/half_slab",
   "textures": {
     "all": "vandorlabs:blocks/thrusters/top",
     "particle": "vandorlabs:blocks/thrusters/top"

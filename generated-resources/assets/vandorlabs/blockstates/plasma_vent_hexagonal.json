@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:plasma_vent_hexagonal_on.obj",
+        "model": "vandorlabs:plasma_vent_hexagonal_inventory.obj",
+        "y": 0,
         "transform": "forge:default-block"
       }
     ]

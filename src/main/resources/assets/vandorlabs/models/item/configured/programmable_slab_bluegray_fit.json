@@ -1,4 +1,5 @@
 {
+  "parent": "block/half_slab",
   "textures": {
     "all": "vandorlabs:blocks/bluegray_carpet",
     "particle": "vandorlabs:blocks/bluegray_carpet"

@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["GGG", "GIG", "GGG"],
+  "key": {
+    "G": {"item": "minecraft:glass"},
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"}
+  },
+  "result": {"item": "vandorlabs:clear_cockpit_glass", "count": 9}
+}

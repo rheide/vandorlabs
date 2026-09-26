@@ -4,16 +4,12 @@
 > It is provided as-is, with no warranty of any kind and no guarantee of
 > correctness, compatibility, maintenance, future updates, or support.
 
-> **Acquisition:** Programmable Matter Ingots and Programmable Doors have Survival
-> crafting recipes. Other blocks have no recipe, loot, trading, or Survival
-> acquisition path; use the `vandorlabs` Creative tab to access them.
-
 A Minecraft Forge 1.12.2 mod (Forge `1.12.2-14.23.5.2860`) adding
 science-fiction ship blocks: hull and wall panels, animated bridge/engineering
 displays, planet and ship viewscreens, consoles, toggleable lamps, hinged and
 sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
-lives in the `vandorlabs` creative tab.
+is available in the `vandorlabs` creative tab.
 
 See the [screenshot and functionality gallery](docs/gallery/README.md) for a
 visual tour of the programmable blocks, doors, propulsion systems, controls,

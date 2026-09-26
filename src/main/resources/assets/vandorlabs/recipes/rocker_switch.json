@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["S", "I"],
+  "key": {
+    "S": {"item": "minecraft:stick"},
+    "I": {"item": "vandorlabs:industrial_alloy_ingot"}
+  },
+  "result": {"item": "vandorlabs:rocker_switch"}
+}

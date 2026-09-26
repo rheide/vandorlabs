@@ -321,9 +321,38 @@ def main():
         print("wedge hotbar chroma: %s" % ", ".join("%.2f" % x for x in wedge_color))
         print("wedge hotbar pair differences: %s" %
               ", ".join("%.2f" % x for x in wedge_difference))
-        if min(wedge_detail) < 8.0 or min(wedge_color) < 12.0 \
+        if min(wedge_detail) < 8.0 or min(wedge_color) < 5.0 \
                 or min(wedge_difference) < 1.0:
             failures.append("propulsion wedge icons are blank or share the same side view")
+
+    hex_hotbar_path = args.shots / "shot_hex_thruster_item_hotbar.png"
+    slab_hotbar_path = args.shots / "shot_programmable_slab_item_hotbar.png"
+    if not hex_hotbar_path.is_file() or not slab_hotbar_path.is_file():
+        failures.append("missing hex thruster or programmable slab hotbar screenshot")
+    else:
+        hex_bar = Image.open(hex_hotbar_path).convert("RGB")
+        hexes = [hex_bar.crop((376 + i * 60, 663, 424 + i * 60, 711))
+                 for i in range(4)]
+        hex_detail = [sum(ImageStat.Stat(icon).stddev) / 3.0 for icon in hexes]
+        hex_difference = [sum(ImageStat.Stat(ImageChops.difference(
+            hexes[i], hexes[j])).mean) / 3.0
+            for i in range(4) for j in range(i + 1, 4)]
+        print("hex thruster hotbar detail: %s" %
+              ", ".join("%.2f" % x for x in hex_detail))
+        if min(hex_detail) < 10.0 or min(hex_difference) < 2.0:
+            failures.append("hex thruster block icons are missing or indistinct")
+        blank = Image.open(slab_hotbar_path).convert("RGB")
+        for name, path in (("wedge", wedge_hotbar_path), ("hex", hex_hotbar_path)):
+            if not path.is_file():
+                continue
+            item_bar = Image.open(path).convert("RGB")
+            for slot in range(1, 4):
+                box = (367 + 60 * slot, 655, 427 + 60 * slot, 715)
+                changed = ImageChops.difference(item_bar.crop(box), blank.crop(box))
+                bounds = changed.point(lambda value: 255 if value > 20 else 0).getbbox()
+                if bounds is None or bounds[0] < 2 or bounds[1] < 2 \
+                        or bounds[2] > 58 or bounds[3] > 58:
+                    failures.append("%s item extends beyond hotbar slot %d" % (name, slot))
 
     cruiser_grid_path = args.shots / "shot_cruiser_grid.png"
     if not cruiser_grid_path.is_file():

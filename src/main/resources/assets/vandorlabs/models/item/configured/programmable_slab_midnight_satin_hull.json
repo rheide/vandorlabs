@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/midnight_satin_hull",
+    "top": "vandorlabs:blocks/midnight_satin_hull",
+    "side": "vandorlabs:blocks/midnight_satin_hull"
+  }
+}

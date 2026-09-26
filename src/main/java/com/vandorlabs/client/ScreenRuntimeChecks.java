@@ -48,6 +48,7 @@ final class ScreenRuntimeChecks {
         checkViewscreenPlacement(player);
         checkDiagonalPlacement(player);
         checkProgrammableWalls(player);
+        checkPortholeBlock(player);
         checkInputPlacement(player);
         checkInputScrollbar();
         checkFullInputPlacement(player);
@@ -608,6 +609,48 @@ final class ScreenRuntimeChecks {
                         == EnumFacing.WEST,
                 "view screen did not inherit the orientation of an extended panel");
         player.world.setBlockToAir(pos.down());
+    }
+
+    private static void checkPortholeBlock(EntityPlayer player) {
+        BlockProgrammableWall block = (BlockProgrammableWall)
+                ModBlocks.PROGRAMMABLE_PORTHOLE_BLOCK;
+        BlockPos pos = new BlockPos(36, 250, 0);
+        player.rotationYaw = EnumFacing.SOUTH.getHorizontalAngle();
+        for (float hit : new float[] {.1F, .5F, .9F}) {
+            IBlockState placed = block.getStateForPlacement(player.world, pos,
+                    EnumFacing.UP, .5F, .5F, hit, 0, player);
+            require(placed.getValue(BlockProgrammableWall.FACING) == EnumFacing.NORTH
+                            && placed.getValue(BlockProgrammableWall.DEPTH) == 0,
+                    "porthole block placement changed depth");
+            require(block.getBoundingBox(placed, player.world, pos)
+                            .equals(new AxisAlignedBB(0, 0, 0, 1, 1, 1)),
+                    "porthole block collision is not full depth");
+        }
+        IBlockState state = block.getDefaultState();
+        player.world.setBlockState(pos, state, 2);
+        player.world.setBlockState(pos.east(), state, 2);
+        TileEntityAnimatedScreenSelector tile =
+                (TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos);
+        require(tile.isJoinPortholes(), "porthole block should join by default");
+        for (int shape : new int[] {PortholeHex.HEXAGON, PortholeHex.OCTAGON,
+                PortholeHex.ROUND}) {
+            tile.setPortholeShape(shape);
+            TEAnimatedScreenSelector.PortholeGroup group =
+                    TEAnimatedScreenSelector.portholeGroup(tile, state);
+            for (double[] vertex : group.hex.vertices)
+                require(vertex[0] >= 3 && vertex[0] <= group.columns * 16 - 3
+                                && vertex[1] >= 5 && vertex[1] <= group.rows * 16 - 5,
+                        "porthole block opening extends into its border");
+        }
+        tile.setPortholeShape(PortholeHex.HEXAGON);
+        require(TEAnimatedScreenSelector.portholeGroup(tile, state).columns == 2,
+                "adjacent porthole blocks did not join");
+        player.world.setBlockState(pos.east(),
+                ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState(), 2);
+        require(!TEAnimatedScreenSelector.joinsPorthole(tile, state, true),
+                "porthole block joined a thin wall");
+        player.world.setBlockToAir(pos);
+        player.world.setBlockToAir(pos.east());
     }
 
     private static void checkProgrammableWalls(EntityPlayer player) {

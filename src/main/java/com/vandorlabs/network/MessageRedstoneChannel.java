@@ -22,6 +22,8 @@ public class MessageRedstoneChannel implements IMessage {
     private boolean join;
     private boolean updateSide;
     private int sideTexture;
+    private boolean updateShape;
+    private int shape;
 
     public MessageRedstoneChannel() { }
     public MessageRedstoneChannel(BlockPos pos, int channel) { this.pos = pos; this.channel = channel; }
@@ -36,6 +38,12 @@ public class MessageRedstoneChannel implements IMessage {
     public MessageRedstoneChannel(BlockPos pos, int channel, boolean updateParticles,
             boolean particles, boolean updateJoin, boolean join,
             boolean updateSide, int sideTexture) {
+        this(pos, channel, updateParticles, particles, updateJoin, join,
+                updateSide, sideTexture, false, 0);
+    }
+    public MessageRedstoneChannel(BlockPos pos, int channel, boolean updateParticles,
+            boolean particles, boolean updateJoin, boolean join,
+            boolean updateSide, int sideTexture, boolean updateShape, int shape) {
         this.pos = pos;
         this.channel = channel;
         this.updateParticles = updateParticles;
@@ -44,6 +52,8 @@ public class MessageRedstoneChannel implements IMessage {
         this.join = join;
         this.updateSide = updateSide;
         this.sideTexture = sideTexture;
+        this.updateShape = updateShape;
+        this.shape = shape;
     }
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
@@ -54,6 +64,8 @@ public class MessageRedstoneChannel implements IMessage {
         join = buf.readableBytes() > 0 && buf.readBoolean();
         updateSide = buf.readableBytes() > 0 && buf.readBoolean();
         sideTexture = buf.readableBytes() >= 4 ? buf.readInt() : 0;
+        updateShape = buf.readableBytes() > 0 && buf.readBoolean();
+        shape = buf.readableBytes() >= 4 ? buf.readInt() : 0;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -64,6 +76,8 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeBoolean(join);
         buf.writeBoolean(updateSide);
         buf.writeInt(sideTexture);
+        buf.writeBoolean(updateShape);
+        buf.writeInt(shape);
     }
 
     public static class Handler implements IMessageHandler<MessageRedstoneChannel, IMessage> {
@@ -72,7 +86,9 @@ public class MessageRedstoneChannel implements IMessage {
             player.getServerWorld().addScheduledTask(() -> {
                 if (message.pos == null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)
                         || (message.updateSide && (message.sideTexture < 0
-                        || message.sideTexture >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length))) return;
+                        || message.sideTexture >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length))
+                        || (message.updateShape && (message.shape < 0 || message.shape > 2
+                        || !player.capabilities.isCreativeMode))) return;
                 TileEntity tile = player.world.getTileEntity(message.pos);
                 if (!(tile instanceof RedstoneChannelMember)
                         || !(player.openContainer instanceof ContainerRedstoneChannel)) return;
@@ -95,6 +111,10 @@ public class MessageRedstoneChannel implements IMessage {
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile).setSideTexture(message.sideTexture);
                 }
+                if (message.updateShape && block instanceof BlockPropulsionLight
+                        && !((BlockPropulsionLight) block).familyId().isEmpty())
+                    BlockPropulsionLight.configureShape(player.world, message.pos,
+                            message.shape);
             });
             return null;
         }

@@ -103,7 +103,9 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:rocket_thruster_wedge_icon"
+        "model": "vandorlabs:rocket_thruster_wedge_inventory.obj",
+        "y": 0,
+        "transform": "forge:default-block"
       }
     ]
   }

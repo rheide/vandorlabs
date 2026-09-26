@@ -21,9 +21,7 @@ texture:id=industrial_power_lever,filename=assets/vandorlabs/textures/blocks/ind
 texture:id=clear_cockpit_glass,filename=assets/vandorlabs/textures/blocks/clear_cockpit_glass.png,xcount=1,ycount=1
 texture:id=pale_cyan_cockpit_glass,filename=assets/vandorlabs/textures/blocks/pale_cyan_cockpit_glass.png,xcount=1,ycount=1
 texture:id=bridge_chair_atlas,filename=assets/vandorlabs/textures/blocks/bridge_chair_atlas.png,xcount=1,ycount=1
-texture:id=cyan_light_strip,filename=assets/vandorlabs/textures/blocks/cyan_light_strip.png,xcount=1,ycount=1
 texture:id=metal_floor,filename=assets/vandorlabs/textures/blocks/metal_floor.png,xcount=1,ycount=1
-texture:id=amber_light_strip,filename=assets/vandorlabs/textures/blocks/amber_light_strip.png,xcount=1,ycount=1
 texture:id=rocket_off,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_off.png,xcount=1,ycount=1
 texture:id=rocket_stream,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_stream.png,xcount=1,ycount=1
 texture:id=rocket_on,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_on.png,xcount=1,ycount=1
@@ -41,7 +39,6 @@ texture:id=wall_vent,filename=assets/vandorlabs/textures/blocks/wall_vent.png,xc
 texture:id=lightbar_wall_on,filename=assets/vandorlabs/textures/blocks/lightbar_wall_on.png,xcount=1,ycount=1
 texture:id=push_button_unlit,filename=assets/vandorlabs/textures/blocks/push_button_unlit.png,xcount=1,ycount=1
 texture:id=push_button_lit,filename=assets/vandorlabs/textures/blocks/push_button_lit.png,xcount=1,ycount=1
-texture:id=cushion_padding,filename=assets/vandorlabs/textures/blocks/cushion_padding.png,xcount=1,ycount=1
 texture:id=light_column_wall_off,filename=assets/vandorlabs/textures/blocks/light_column_wall_off.png,xcount=1,ycount=1
 texture:id=ramp_elevator_controller_left_on,filename=assets/vandorlabs/textures/block/ramp_elevator_controller_left_on.png,xcount=1,ycount=1
 texture:id=ramp_elevator_controller_bottom_on,filename=assets/vandorlabs/textures/block/ramp_elevator_controller_bottom_on.png,xcount=1,ycount=1
@@ -139,7 +136,6 @@ block:id=%rocket_thruster_wedge,state=facing:up/particles:true/powered:true,tran
 block:id=%rocket_thruster_wedge,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_stream
-block:id=%framed_wall_pipes,patch0=0:framed_wall_pipes,patch1=0:framed_wall_pipes,patch2=0:framed_wall_pipes,patch3=0:framed_wall_pipes,patch4=0:framed_wall_pipes,patch5=0:framed_wall_pipes,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%rocket_thruster_wedge_bottom_right,state=facing:west/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge_bottom_right,state=facing:north/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_stream
 block:id=%rocket_thruster_wedge_bottom_right,state=facing:north/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
@@ -164,11 +160,6 @@ block:id=%rocket_thruster_wedge_bottom_right,state=facing:up/particles:true/powe
 block:id=%rocket_thruster_wedge_bottom_right,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge_bottom_right,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge_bottom_right,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_stream
-block:id=%border_corner_right,state=facing:west,patch0=0:border_corner_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_corner_right,state=facing:east,patch0=0:border_corner_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_corner_right,state=facing:south,patch0=0:border_corner_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_corner_right,state=facing:north,patch0=0:border_corner_right,patch1=0:border_corner_right,patch2=0:border_corner_right,patch3=0:border_corner_right,patch4=0:border_corner_right,patch5=0:border_corner_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%seamed_padding,patch0=0:seamed_padding,patch1=0:seamed_padding,patch2=0:seamed_padding,patch3=0:seamed_padding,patch4=0:seamed_padding,patch5=0:seamed_padding,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%antigravity_plate,state=facing:west/particles:false/powered:false,patch0=0:side,patch1=0:rear,patch2=0:plate_off,transparency=TRANSPARENT,stdrot=true
 block:id=%antigravity_plate,state=facing:north/particles:true/powered:true,patch0=0:side,patch1=0:rear,patch2=0:plate_on,transparency=TRANSPARENT,stdrot=true
 block:id=%antigravity_plate,state=facing:north/particles:false/powered:false,patch0=0:side,patch1=0:rear,patch2=0:plate_off,transparency=TRANSPARENT,stdrot=true
@@ -5211,11 +5202,7 @@ block:id=%plasma_vent_wedge,state=facing:up/particles:true/powered:true,transpar
 block:id=%plasma_vent_wedge,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_stream
-block:id=%cyan_light_strip,state=vertical:true,patch0=6000:cyan_light_strip,patch1=6000:cyan_light_strip,patch2=6000:cyan_light_strip,patch3=6000:cyan_light_strip,patch4=6000:cyan_light_strip,patch5=6000:cyan_light_strip,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%cyan_light_strip,state=vertical:false,patch0=0:cyan_light_strip,patch1=0:cyan_light_strip,patch2=0:cyan_light_strip,patch3=0:cyan_light_strip,patch4=0:cyan_light_strip,patch5=0:cyan_light_strip,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%metal_floor,patch0=0:metal_floor,patch1=0:metal_floor,patch2=0:metal_floor,patch3=0:metal_floor,patch4=0:metal_floor,patch5=0:metal_floor,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%amber_light_strip,state=vertical:true,patch0=6000:amber_light_strip,patch1=6000:amber_light_strip,patch2=6000:amber_light_strip,patch3=6000:amber_light_strip,patch4=6000:amber_light_strip,patch5=6000:amber_light_strip,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%amber_light_strip,state=vertical:false,patch0=0:amber_light_strip,patch1=0:amber_light_strip,patch2=0:amber_light_strip,patch3=0:amber_light_strip,patch4=0:amber_light_strip,patch5=0:amber_light_strip,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%rocket_thruster,state=facing:south/particles:true/powered:true/part:s7_x1_y0,patch0=0:rear,patch1=0:cavity,patch2=0:dark_trim,transparency=TRANSPARENT,stdrot=true
 block:id=%rocket_thruster,state=facing:south/particles:true/powered:true/part:s7_x1_y1,patch0=0:rear,patch1=0:cavity,patch2=0:dark_trim,patch3=0:trim,transparency=TRANSPARENT,stdrot=true
 block:id=%rocket_thruster,state=facing:up/particles:false/powered:false/part:s3_x0_y1,patch0=0:side,patch1=0:rear,patch2=0:cavity,patch3=0:dark_trim,patch4=0:trim,patch5=0:rocket_off,transparency=TRANSPARENT,stdrot=true
@@ -10136,10 +10123,6 @@ block:id=%rocket_thruster_wedge_top_right,state=facing:up/particles:true/powered
 block:id=%rocket_thruster_wedge_top_right,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge_top_right,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_off
 block:id=%rocket_thruster_wedge_top_right,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:rocket_stream
-block:id=%border_light_vertical,state=facing:west,patch0=0:border_light_vertical,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light_vertical,state=facing:east,patch0=0:border_light_vertical,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light_vertical,state=facing:south,patch0=0:border_light_vertical,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light_vertical,state=facing:north,patch0=0:border_light_vertical,patch1=0:border_light_vertical,patch2=0:border_light_vertical,patch3=0:border_light_vertical,patch4=0:border_light_vertical,patch5=0:border_light_vertical,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%dark_wall_panel,state=facing:west,patch0=0:dark_wall_panel,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%dark_wall_panel,state=facing:east,patch0=0:dark_wall_panel,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%dark_wall_panel,state=facing:south,patch0=0:dark_wall_panel,transparency=SEMITRANSPARENT,stdrot=true
@@ -10168,7 +10151,6 @@ block:id=%impulse_engine_wedge_top_left,state=facing:up/particles:true/powered:t
 block:id=%impulse_engine_wedge_top_left,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:impulse_off
 block:id=%impulse_engine_wedge_top_left,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:impulse_off
 block:id=%impulse_engine_wedge_top_left,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:impulse_stream
-block:id=%stitched_padding,patch0=0:stitched_padding,patch1=0:stitched_padding,patch2=0:stitched_padding,patch3=0:stitched_padding,patch4=0:stitched_padding,patch5=0:stitched_padding,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%ribbed_wall,state=facing:west,patch0=0:ribbed_wall,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%ribbed_wall,state=facing:east,patch0=0:ribbed_wall,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%ribbed_wall,state=facing:south,patch0=0:ribbed_wall,transparency=SEMITRANSPARENT,stdrot=true
@@ -10258,7 +10240,6 @@ block:id=%push_button,state=facing:east/on:true,patch0=0:dark_wall_panel,patch1=
 block:id=%push_button,state=facing:down/on:false,patch0=0:dark_wall_panel,patch1=0:push_button_unlit,transparency=TRANSPARENT,stdrot=true
 block:id=%push_button,state=facing:west/on:true,patch0=0:dark_wall_panel,patch1=0:push_button_lit,transparency=TRANSPARENT,stdrot=true
 block:id=%push_button,state=facing:west/on:false,patch0=0:dark_wall_panel,patch1=0:push_button_unlit,transparency=TRANSPARENT,stdrot=true
-block:id=%cushion_padding,patch0=0:cushion_padding,patch1=0:cushion_padding,patch2=0:cushion_padding,patch3=0:cushion_padding,patch4=0:cushion_padding,patch5=0:cushion_padding,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_ramp,state=active:true/facing:west,patch0=0:ramp_elevator_controller_left_on,patch1=0:ramp_elevator_controller_bottom_on,patch2=0:ramp_elevator_controller_back_on,patch3=0:ramp_elevator_controller_top_on,patch4=0:ramp_elevator_controller_right_on,patch5=0:ramp_elevator_controller_front_on,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_ramp,state=active:false/facing:north,patch0=0:ramp_elevator_controller_left_off,patch1=0:ramp_elevator_controller_bottom_off,patch2=0:ramp_elevator_controller_front_off,patch3=0:ramp_elevator_controller_right_off,patch4=0:ramp_elevator_controller_top_off,patch5=0:ramp_elevator_controller_back_off,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_ramp,state=active:false/facing:west,patch0=0:ramp_elevator_controller_left_off,patch1=0:ramp_elevator_controller_bottom_off,patch2=0:ramp_elevator_controller_back_off,patch3=0:ramp_elevator_controller_top_off,patch4=0:ramp_elevator_controller_right_off,patch5=0:ramp_elevator_controller_front_off,transparency=SEMITRANSPARENT,stdrot=true
@@ -10284,21 +10265,12 @@ block:id=%programmable_input,state=facing:south/keyboard:false/upper:true,transp
 block:id=%programmable_input,state=facing:north/keyboard:false/upper:true,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
 block:id=%programmable_input,state=facing:west/keyboard:true/upper:false,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
 block:id=%smoked_cockpit_glass,patch0=0:smoked_cockpit_glass,patch1=0:smoked_cockpit_glass,patch2=0:smoked_cockpit_glass,patch3=0:smoked_cockpit_glass,patch4=0:smoked_cockpit_glass,patch5=0:smoked_cockpit_glass,transparency=TRANSPARENT,stdrot=true
-block:id=%border_base_left,state=facing:west,patch0=0:border_base_left,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_base_left,state=facing:east,patch0=0:border_base_left,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_base_left,state=facing:south,patch0=0:border_base_left,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_base_left,state=facing:north,patch0=0:border_base_left,patch1=0:border_base_left,patch2=0:border_base_left,patch3=0:border_base_left,patch4=0:border_base_left,patch5=0:border_base_left,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:west,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:up,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:down,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:east,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:south,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:north,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%wall_pipes,patch0=0:wall_pipes,patch1=0:wall_pipes,patch2=0:wall_pipes,patch3=0:wall_pipes,patch4=0:wall_pipes,patch5=0:wall_pipes,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light,state=facing:west,patch0=0:border_light,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light,state=facing:east,patch0=0:border_light,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light,state=facing:south,patch0=0:border_light,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_light,state=facing:north,patch0=0:border_light,patch1=0:border_light,patch2=0:border_light,patch3=0:border_light,patch4=0:border_light,patch5=0:border_light,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%impulse_engine,state=facing:south/particles:true/powered:true/part:s7_x1_y0,patch0=0:rear,patch1=0:cavity,patch2=0:trim,patch3=0:impulse_stream,transparency=TRANSPARENT,stdrot=true
 block:id=%impulse_engine,state=facing:south/particles:true/powered:true/part:s7_x1_y1,patch0=0:rear,patch1=0:cavity,patch2=0:impulse_stream,patch3=0:dark_trim,transparency=TRANSPARENT,stdrot=true
 block:id=%impulse_engine,state=facing:up/particles:false/powered:false/part:s3_x0_y1,patch0=0:side,patch1=0:rear,patch2=0:cavity,patch3=0:trim,patch4=0:impulse_off,patch5=0:dark_trim,transparency=TRANSPARENT,stdrot=true
@@ -15219,7 +15191,6 @@ block:id=%plasma_vent_wedge_top_left,state=facing:up/particles:true/powered:true
 block:id=%plasma_vent_wedge_top_left,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge_top_left,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge_top_left,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_stream
-block:id=%midnight_satin_hull,patch0=0:midnight_satin_hull,patch1=0:midnight_satin_hull,patch2=0:midnight_satin_hull,patch3=0:midnight_satin_hull,patch4=0:midnight_satin_hull,patch5=0:midnight_satin_hull,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_viewscreen,state=facing:west,patch0=0:dark_wall_panel,patch1=0:programmable_viewscreen,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_viewscreen,state=facing:up,patch0=0:dark_wall_panel,patch1=0:programmable_viewscreen,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%programmable_viewscreen,state=facing:down,patch0=0:dark_wall_panel,patch1=0:programmable_viewscreen,transparency=SEMITRANSPARENT,stdrot=true
@@ -20146,7 +20117,6 @@ block:id=%plasma_vent_wedge_top_right,state=facing:up/particles:true/powered:tru
 block:id=%plasma_vent_wedge_top_right,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge_top_right,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge_top_right,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_stream
-block:id=%ribbed_padding,patch0=0:ribbed_padding,patch1=0:ribbed_padding,patch2=0:ribbed_padding,patch3=0:ribbed_padding,patch4=0:ribbed_padding,patch5=0:ribbed_padding,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%ion_drive_wedge_bottom_right,state=facing:west/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:ion_off
 block:id=%ion_drive_wedge_bottom_right,state=facing:north/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:ion_stream
 block:id=%ion_drive_wedge_bottom_right,state=facing:north/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:ion_off
@@ -20231,10 +20201,6 @@ block:id=%impulse_engine_hexagonal,state=facing:up/particles:true/powered:true,t
 block:id=%impulse_engine_hexagonal,state=facing:east/particles:true/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:impulse_off
 block:id=%impulse_engine_hexagonal,state=facing:east/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:impulse_off
 block:id=%impulse_engine_hexagonal,state=facing:down/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:impulse_stream
-block:id=%border_base_right,state=facing:west,patch0=0:border_base_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_base_right,state=facing:east,patch0=0:border_base_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_base_right,state=facing:south,patch0=0:border_base_right,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_base_right,state=facing:north,patch0=0:border_base_right,patch1=0:border_base_right,patch2=0:border_base_right,patch3=0:border_base_right,patch4=0:border_base_right,patch5=0:border_base_right,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%ion_drive_wedge,state=facing:west/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:ion_off
 block:id=%ion_drive_wedge,state=facing:north/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:ion_stream
 block:id=%ion_drive_wedge,state=facing:north/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:ion_off
@@ -20344,10 +20310,6 @@ block:id=%vertical_hover_thruster,state=facing:up/particles:true/powered:true,pa
 block:id=%vertical_hover_thruster,state=facing:east/particles:true/powered:false,patch0=0:side,patch1=0:rear,patch2=0:cavity,patch3=0:trim,patch4=0:ion_off,patch5=0:dark_trim,transparency=TRANSPARENT,stdrot=true
 block:id=%vertical_hover_thruster,state=facing:east/particles:false/powered:false,patch0=0:side,patch1=0:rear,patch2=0:cavity,patch3=0:trim,patch4=0:ion_off,patch5=0:dark_trim,transparency=TRANSPARENT,stdrot=true
 block:id=%vertical_hover_thruster,state=facing:down/particles:true/powered:true,patch0=0:side,patch1=0:rear,patch2=0:cavity,patch3=0:trim,patch4=0:ion_on,patch5=0:dark_trim,transparency=TRANSPARENT,stdrot=true
-block:id=%border_corner_left,state=facing:west,patch0=0:border_corner_left,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_corner_left,state=facing:east,patch0=0:border_corner_left,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_corner_left,state=facing:south,patch0=0:border_corner_left,transparency=SEMITRANSPARENT,stdrot=true
-block:id=%border_corner_left,state=facing:north,patch0=0:border_corner_left,patch1=0:border_corner_left,patch2=0:border_corner_left,patch3=0:border_corner_left,patch4=0:border_corner_left,patch5=0:border_corner_left,transparency=SEMITRANSPARENT,stdrot=true
 block:id=%plasma_vent_hexagonal,state=facing:west/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_hexagonal,state=facing:north/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_stream
 block:id=%plasma_vent_hexagonal,state=facing:north/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off

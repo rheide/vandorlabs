@@ -11,13 +11,18 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.property.ExtendedBlockState;
@@ -81,7 +86,91 @@ public class BlockPropulsionLight extends BlockVandor {
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
             EnumFacing facing, float hitX, float hitY, float hitZ, int meta,
             EntityLivingBase placer, EnumHand hand) {
+        if (this instanceof BlockConnectedPropulsionLight && placer instanceof EntityPlayer) {
+            ItemStack held = ((EntityPlayer) placer).getHeldItem(hand);
+            NBTTagCompound tag = held.getSubCompound("BlockEntityTag");
+            int shape = tag == null ? 0 : tag.getInteger("PropulsionShape");
+            Block selected = shapeBlock(familyId(), shape, facing, hitX, hitY, hitZ);
+            if (selected != null && selected != this)
+                return selected.getDefaultState().withProperty(FACING, facing)
+                        .withProperty(POWERED, true);
+        }
         return getDefaultState().withProperty(FACING, facing).withProperty(POWERED, true);
+    }
+
+    public String familyId() {
+        ResourceLocation name = getRegistryName();
+        String id = name == null ? "" : name.getResourcePath();
+        for (String family : new String[] {"rocket_thruster", "ion_drive",
+                "plasma_vent", "impulse_engine"})
+            if (id.equals(family) || id.startsWith(family + "_")) return family;
+        return "";
+    }
+
+    public int shape() {
+        ResourceLocation name = getRegistryName();
+        String id = name == null ? "" : name.getResourcePath();
+        if (id.contains("_wedge")) return 2;
+        return id.endsWith("_hexagonal") ? 1 : 0;
+    }
+
+    private static Block shapeBlock(String family, int shape, EnumFacing facing,
+            float hitX, float hitY, float hitZ) {
+        if (family.isEmpty() || shape < 0 || shape > 2) return null;
+        String id = shape == 0 ? family : shape == 1 ? family + "_hexagonal"
+                : BlockTrianglePropulsionLight.variantIdForHit(family + "_wedge",
+                        facing, hitX, hitY, hitZ);
+        Block block = Block.REGISTRY.getObject(new ResourceLocation(VandorLabs.MODID, id));
+        return block instanceof BlockPropulsionLight ? block : null;
+    }
+
+    public static void configureShape(World world, BlockPos pos, int shape) {
+        if (shape < 0 || shape > 2 || !world.isBlockLoaded(pos)) return;
+        IBlockState before = world.getBlockState(pos);
+        if (!(before.getBlock() instanceof BlockPropulsionLight)) return;
+        BlockPropulsionLight current = (BlockPropulsionLight) before.getBlock();
+        if (current.familyId().isEmpty() || current.shape() == shape) return;
+        Block target = shapeBlock(current.familyId(), shape, before.getValue(FACING),
+                0.25F, 0.25F, 0.25F);
+        if (target == null) return;
+        TileEntity tile = world.getTileEntity(pos);
+        NBTTagCompound saved = tile instanceof TileEntityRedstoneLight
+                ? tile.writeToNBT(new NBTTagCompound()) : null;
+        IBlockState after = target.getDefaultState()
+                .withProperty(FACING, before.getValue(FACING))
+                .withProperty(POWERED, before.getValue(POWERED));
+        if (!world.setBlockState(pos, after, 3)) return;
+        TileEntity replacement = world.getTileEntity(pos);
+        if (saved != null && replacement != tile && replacement instanceof TileEntityRedstoneLight) {
+            replacement.readFromNBT(saved);
+            replacement.markDirty();
+        }
+        if (current instanceof BlockConnectedPropulsionLight)
+            ((BlockConnectedPropulsionLight) current).refreshConnectedModels(world, pos,
+                    before.getValue(FACING));
+        if (target instanceof BlockConnectedPropulsionLight)
+            ((BlockConnectedPropulsionLight) target).refreshConnectedModels(world, pos,
+                    before.getValue(FACING));
+        world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
+        world.notifyBlockUpdate(pos, after, after, 3);
+    }
+
+    @Override public Item getItemDropped(IBlockState state, java.util.Random random,
+            int fortune) {
+        Block base = shapeBlock(familyId(), 0, EnumFacing.NORTH, 0, 0, 0);
+        return Item.getItemFromBlock(base == null ? this : base);
+    }
+
+    @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
+            World world, BlockPos pos, EntityPlayer player) {
+        Block base = shapeBlock(familyId(), 0, EnumFacing.NORTH, 0, 0, 0);
+        ItemStack stack = new ItemStack(base == null ? this : base);
+        if (shape() > 0) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setInteger("PropulsionShape", shape());
+            stack.setTagInfo("BlockEntityTag", tag);
+        }
+        return stack;
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -135,7 +224,8 @@ public class BlockPropulsionLight extends BlockVandor {
             EntityPlayer player, EnumHand hand, EnumFacing facing,
             float hitX, float hitY, float hitZ) {
         if (player.isSneaking()) {
-            if (!world.isRemote && world.getTileEntity(pos) instanceof TileEntityRedstoneLight)
+            if (!world.isRemote && player.capabilities.isCreativeMode
+                    && world.getTileEntity(pos) instanceof TileEntityRedstoneLight)
                 player.openGui(VandorLabs.instance, GuiHandler.GUI_REDSTONE_CHANNEL,
                         world, pos.getX(), pos.getY(), pos.getZ());
             return true;

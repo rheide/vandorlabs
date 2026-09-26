@@ -96,42 +96,6 @@
     "programmable_only": true
   },
   {
-    "id": "border_base_left",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "border_base_right",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "border_corner_left",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "border_corner_right",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "border_light",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
-    "id": "border_light_vertical",
-    "type": "regular",
-    "class": "BlockVandorDirectional",
-    "item": true
-  },
-  {
     "id": "bridge_bare_engineering",
     "type": "display",
     "class": "BlockDisplaySequenced",
@@ -632,12 +596,6 @@
     "item": false,
     "framed": true,
     "programmable_only": true
-  },
-  {
-    "id": "framed_wall_pipes",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
   },
   {
     "id": "freighter_1",
@@ -1332,12 +1290,6 @@
     "item": true
   },
   {
-    "id": "wall_pipes",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
     "id": "ribbed_wall",
     "programmable_only": true,
     "type": "regular",
@@ -1411,42 +1363,6 @@
     "grid_column": 2
   },
   {
-    "id": "stitched_padding",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "seamed_padding",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "ribbed_padding",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "cushion_padding",
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "cyan_light_strip",
-    "type": "regular",
-    "class": "BlockLightStrip",
-    "item": true
-  },
-  {
-    "id": "amber_light_strip",
-    "type": "regular",
-    "class": "BlockLightStrip",
-    "item": true
-  },
-  {
     "id": "light_alloy_hull",
     "programmable_only": true,
     "type": "regular",
@@ -1463,12 +1379,6 @@
   {
     "id": "midnight_matte_hull",
     "programmable_only": true,
-    "type": "regular",
-    "class": "BlockVandor",
-    "item": true
-  },
-  {
-    "id": "midnight_satin_hull",
     "type": "regular",
     "class": "BlockVandor",
     "item": true
@@ -1561,137 +1471,157 @@
     "id": "rocket_thruster_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "ion_drive_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "plasma_vent_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "impulse_engine_hexagonal",
     "type": "propulsion_light",
     "class": "BlockPropulsionLight",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "rocket_thruster_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "rocket_thruster_wedge",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "rocket_thruster_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "rocket_thruster_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "rocket_thruster_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "rocket_thruster_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "rocket_thruster_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "rocket_thruster_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "ion_drive_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "ion_drive_wedge",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "ion_drive_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "ion_drive_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "ion_drive_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "ion_drive_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "ion_drive_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "ion_drive_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "plasma_vent_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "plasma_vent_wedge",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "plasma_vent_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "plasma_vent_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "plasma_vent_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "plasma_vent_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "plasma_vent_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "plasma_vent_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "impulse_engine_wedge",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "impulse_engine_wedge",
-    "item": true
+    "item": false,
+    "hidden": true
   },
   {
     "id": "impulse_engine_wedge_bottom_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "impulse_engine_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "impulse_engine_wedge_top_right",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "impulse_engine_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "impulse_engine_wedge_top_left",
     "type": "propulsion_light",
     "class": "BlockTrianglePropulsionLight",
     "triangle_base": "impulse_engine_wedge",
-    "item": false
+    "item": false,
+    "hidden": true
   },
   {
     "id": "antigravity_plate",
@@ -3493,6 +3423,13 @@
     "programmable_only": true,
     "type": "block",
     "class": "BlockVandor",
+    "item": true
+  },
+  {
+    "id": "programmable_porthole_block",
+    "programmable_only": true,
+    "type": "block",
+    "class": "BlockProgrammablePortholeBlock",
     "item": true
   }
 ]

@@ -78,17 +78,4 @@ public class BlockTrianglePropulsionLight extends BlockPropulsionLight {
         return right ? baseId + "_bottom_right" : baseId;
     }
 
-    private Block baseBlock() {
-        Block block = Block.REGISTRY.getObject(new ResourceLocation(VandorLabs.MODID, baseId));
-        return block instanceof BlockTrianglePropulsionLight ? block : this;
-    }
-
-    @Override public Item getItemDropped(IBlockState state, Random random, int fortune) {
-        return Item.getItemFromBlock(baseBlock());
-    }
-
-    @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
-            World world, BlockPos pos, EntityPlayer player) {
-        return new ItemStack(baseBlock());
-    }
 }

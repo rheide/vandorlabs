@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:impulse_engine_hexagonal_on.obj",
+        "model": "vandorlabs:impulse_engine_hexagonal_inventory.obj",
+        "y": 0,
         "transform": "forge:default-block"
       }
     ]

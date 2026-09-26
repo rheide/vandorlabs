@@ -1,9 +1,8 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["III", "IRI", "III"],
-  "key": {
-    "I": { "item": "vandorlabs:programmable_matter_ingot" },
-    "R": { "item": "minecraft:redstone" }
-  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "vandorlabs:programmable_block"},
+    {"item": "minecraft:redstone"}
+  ],
   "result": { "item": "vandorlabs:programmable_trigger_block" }
 }

@@ -200,6 +200,10 @@ public class ReproLab {
                 Y + 10.7D - 1.62D, -0.5D, -45.0F, 3.0F));
         SHOTS.add(new Shot("programmable_porthole", -0.5D,
                 Y + 10.5D - 1.62D, 0.2D, 18.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_block", WALL_DISPLAY.getX() + 64.5D,
+                Y + 10.5D - 1.62D, -2.0D, 0.0F, 0.0F));
+        SHOTS.add(new Shot("programmable_porthole_block_side", WALL_DISPLAY.getX() + 63.2D,
+                Y + 10.5D - 1.62D, -1.2D, -45.0F, 0.0F));
         SHOTS.add(new Shot("programmable_porthole_joined", -0.5D,
                 Y + 10.5D - 1.62D, -0.9D, 0.0F, 0.0F));
         SHOTS.add(new Shot("programmable_porthole_vertical", WALL_DISPLAY.getX() + 13.5D,
@@ -564,6 +568,20 @@ public class ReproLab {
             case 18:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "wedge_item_hotbar");
+                prepareHexHotbar(mc);
+                state=25;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 25:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "hex_thruster_item_hotbar");
+                prepareSlabHotbar(mc);
+                state=26;
+                holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 26:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "programmable_slab_item_hotbar");
                 TileEntity controllerRaw=mc.world.getTileEntity(ControllerRuntimeChecks.FIXTURE);
                 if (!(controllerRaw instanceof com.vandorlabs.tiles.TileEntityRampController))
                     throw new IllegalStateException("controller GUI fixture missing");
@@ -756,12 +774,38 @@ public class ReproLab {
     }
 
     private static void prepareWedgeHotbar(Minecraft mc) {
-        String[] ids={"rocket_thruster_wedge","ion_drive_wedge",
-                "plasma_vent_wedge","impulse_engine_wedge"};
+        String[] ids={"rocket_thruster","ion_drive",
+                "plasma_vent","impulse_engine"};
         for (int slot=0;slot<9;slot++)
             mc.player.inventory.setInventorySlotContents(slot,ItemStack.EMPTY);
         for (int slot=0;slot<ids.length;slot++)
-            mc.player.inventory.setInventorySlotContents(slot,new ItemStack(block(ids[slot])));
+            mc.player.inventory.setInventorySlotContents(slot,thrusterStack(ids[slot],2));
+        mc.player.inventory.currentItem=8;
+    }
+
+    private static void prepareHexHotbar(Minecraft mc) {
+        String[] ids={"rocket_thruster","ion_drive",
+                "plasma_vent","impulse_engine"};
+        for (int slot=0;slot<9;slot++)
+            mc.player.inventory.setInventorySlotContents(slot,ItemStack.EMPTY);
+        for (int slot=0;slot<ids.length;slot++)
+            mc.player.inventory.setInventorySlotContents(slot,thrusterStack(ids[slot],1));
+        mc.player.inventory.currentItem=8;
+    }
+
+    private static ItemStack thrusterStack(String id, int shape) {
+        ItemStack stack = new ItemStack(block(id));
+        net.minecraft.nbt.NBTTagCompound tag = new net.minecraft.nbt.NBTTagCompound();
+        tag.setInteger("PropulsionShape", shape);
+        stack.setTagInfo("BlockEntityTag", tag);
+        return stack;
+    }
+
+    private static void prepareSlabHotbar(Minecraft mc) {
+        for (int slot=0;slot<9;slot++)
+            mc.player.inventory.setInventorySlotContents(slot,ItemStack.EMPTY);
+        mc.player.inventory.setInventorySlotContents(0,
+                new ItemStack(ModBlocks.PROGRAMMABLE_SLAB));
         mc.player.inventory.currentItem=8;
     }
 
@@ -817,6 +861,16 @@ public class ReproLab {
         IBlockState plainNorth = ModBlocks.PROGRAMMABLE_WALL.getDefaultState()
                 .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.FACING,
                         EnumFacing.NORTH);
+        BlockPos thickPorthole = WALL_DISPLAY.add(64, 0, 0);
+        IBlockState thickState = ModBlocks.PROGRAMMABLE_PORTHOLE_BLOCK.getDefaultState()
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.FACING,
+                        EnumFacing.NORTH);
+        world.setBlockState(thickPorthole, thickState, 2);
+        TileEntityAnimatedScreenSelector thickTile =
+                (TileEntityAnimatedScreenSelector) world.getTileEntity(thickPorthole);
+        thickTile.setHousingTexture(2);
+        thickTile.setGlassShade(1);
+        world.notifyBlockUpdate(thickPorthole, thickState, thickState, 3);
         IBlockState plainEast = plainNorth.withProperty(
                 com.vandorlabs.blocks.BlockProgrammableWall.FACING, EnumFacing.EAST);
         for (int dx : new int[] {52, 53, 56, 57})
@@ -1050,15 +1104,16 @@ public class ReproLab {
         placeChair(world, CHAIR_CONFERENCE, 3);
         placeChair(world, CHAIR_MESS_HALL, 4);
         String[] materials = {"stitched_padding", "seamed_padding",
-                "ribbed_padding", "cushion_padding",
-                "cyan_light_strip", "border_light",
-                "amber_light_strip",
-                                "wall_pipes", "framed_wall_pipes"};
+                "ribbed_padding", "wall_pipes", "framed_wall_pipes"};
         for (int index = 0; index < materials.length; index++) {
-            Block material = Block.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs", materials[index]));
-            world.setBlockState(MATERIAL_GRID.add(index % 4, 3 - index / 4, 0),
-                    material.getDefaultState(), 2);
+            int finish = java.util.Arrays.asList(
+                    com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf(materials[index]);
+            Block material = finish >= 0 ? ModBlocks.PROGRAMMABLE_BLOCK
+                    : Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", materials[index]));
+            BlockPos location = MATERIAL_GRID.add(index % 4, 3 - index / 4, 0);
+            world.setBlockState(location, material.getDefaultState(), 2);
+            if (finish >= 0) ((TileEntityAnimatedScreenSelector)
+                    world.getTileEntity(location)).setHousingTexture(finish);
         }
         String[] hullFloors = {"light_alloy_hull", "dark_gunmetal_hull",
                 "midnight_matte_hull", "midnight_satin_hull",
@@ -1260,11 +1315,10 @@ public class ReproLab {
             }
         } else if (shot.equals("gallery_structure")) {
             String[] ids = {"dark_wall_panel", "light_wall_panel",
-                    "bolted_wall_plate", "ribbed_wall", "wall_vent", "border_base_left",
-                    "border_base_right", "border_corner_left", "border_corner_right",
-                    "border_light", "border_light_vertical", "framed_wall_pipes",
+                    "bolted_wall_plate", "ribbed_wall", "wall_vent",
+                    "framed_wall_pipes",
                     "wall_pipes", "stitched_padding", "seamed_padding",
-                    "ribbed_padding", "cushion_padding", "border_light",
+                    "ribbed_padding",
                     "matter", "light_alloy_hull",
                     "dark_gunmetal_hull", "midnight_matte_hull", "midnight_satin_hull",
                     "bluegray", "burgundy",

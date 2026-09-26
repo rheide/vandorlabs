@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/stitched_padding",
+    "top": "vandorlabs:blocks/stitched_padding",
+    "side": "vandorlabs:blocks/stitched_padding"
+  }
+}

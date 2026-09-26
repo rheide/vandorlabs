@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:ion_drive_wedge_top_left_off.obj",
+        "model": "vandorlabs:ion_drive_wedge_top_left_inventory.obj",
+        "y": 0,
         "transform": "forge:default-block"
       }
     ]

@@ -1,4 +1,5 @@
 {
+  "parent": "block/half_slab",
   "textures": {
     "all": "vandorlabs:blocks/bolted_wall_plate",
     "particle": "vandorlabs:blocks/bolted_wall_plate"

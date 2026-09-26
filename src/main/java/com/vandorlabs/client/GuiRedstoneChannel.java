@@ -23,6 +23,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     private boolean particles;
     private final boolean connected;
     private boolean join;
+    private final boolean programmableThruster;
+    private int shape;
     private int sideTexture;
     private HousingTextureList housingList;
     private GuiButton particleButton;
@@ -39,6 +41,10 @@ public class GuiRedstoneChannel extends GuiContainer {
         this.connected = thruster && member.channelTile().getWorld()
                 .getBlockState(member.channelTile().getPos()).getBlock()
                 instanceof BlockConnectedPropulsionLight;
+        BlockPropulsionLight block = thruster ? (BlockPropulsionLight) member.channelTile()
+                .getWorld().getBlockState(member.channelTile().getPos()).getBlock() : null;
+        this.programmableThruster = block != null && !block.familyId().isEmpty();
+        this.shape = programmableThruster ? block.shape() : 0;
         this.join = connected && ((TileEntityRedstoneLight) member).isJoin();
         this.sideTexture = thruster ? ((TileEntityRedstoneLight) member).getSideTexture() : 0;
         xSize = thruster ? 410 : 240;
@@ -63,6 +69,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
         if (connected) buttonList.add(new GuiButton(3, guiLeft + 116,
                 guiTop + 96, 106, 20, joinLabel()));
+        if (programmableThruster) buttonList.add(new GuiButton(4, guiLeft + 116,
+                guiTop + 124, 106, 20, shapeLabel()));
         buttonList.add(new GuiButton(1, guiLeft + (xSize - 200) / 2,
                 guiTop + (thruster ? 158 : 72),
                 200, 20, "Done"));
@@ -81,7 +89,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         int value = channel();
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
-                        thruster, particles, connected, join, thruster, sideTexture));
+                        thruster, particles, connected, join, thruster, sideTexture,
+                        programmableThruster, shape));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
@@ -97,10 +106,17 @@ public class GuiRedstoneChannel extends GuiContainer {
             join = !join;
             button.displayString = joinLabel();
         }
+        if (button.id == 4 && programmableThruster) {
+            shape = (shape + 1) % 3;
+            button.displayString = shapeLabel();
+        }
     }
 
     private String particleLabel() { return particles ? "Particles: On" : "Particles: Off"; }
     private String joinLabel() { return join ? "Join: On" : "Join: Off"; }
+    private String shapeLabel() {
+        return "Shape: " + (shape == 1 ? "Hexagon" : shape == 2 ? "Wedge" : "Block");
+    }
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
@@ -149,6 +165,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         fontRenderer.drawString("Channel (0 = none)", 14, 43, 0xFFD8D8D8);
         if (thruster) fontRenderer.drawString("Active mode", 14, 74, 0xFFD8D8D8);
         if (connected) fontRenderer.drawString("Adjacent", 14, 102, 0xFFD8D8D8);
+        if (programmableThruster) fontRenderer.drawString("Shape", 14, 130, 0xFFD8D8D8);
         if (thruster) fontRenderer.drawString("Side Texture", 250, 34, 0xFFD8D8D8);
     }
 

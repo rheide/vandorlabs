@@ -36,6 +36,7 @@ final class RedstoneChannelRuntimeChecks {
         checkLightTriggers(world, player);
         checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);
+        checkProgrammableThrusterShapes(world, player);
         checkLeverPlacement(world,player);
         checkFloorLeverPower(world,player);
         checkFlatSwitchRotation(world,player);
@@ -531,6 +532,47 @@ final class RedstoneChannelRuntimeChecks {
                         && placed.getValue(BlockPropulsionLight.FACING) == EnumFacing.NORTH
                         && placed.getValue(BlockPropulsionLight.POWERED),
                 "triangle ItemBlock placement did not select the registered corner state");
+    }
+
+    private static void checkProgrammableThrusterShapes(World world, EntityPlayer player) {
+        BlockPos pos = new BlockPos(45, 25, 45);
+        int slot = player.inventory.currentItem;
+        ItemStack previous = player.inventory.getStackInSlot(slot);
+        try {
+            for (String family : new String[] {"rocket_thruster", "ion_drive",
+                    "plasma_vent", "impulse_engine"}) {
+                BlockPropulsionLight block = (BlockPropulsionLight) Block.REGISTRY.getObject(
+                        new ResourceLocation("vandorlabs", family));
+                ItemStack wedge = new ItemStack(block);
+                net.minecraft.nbt.NBTTagCompound tag = new net.minecraft.nbt.NBTTagCompound();
+                tag.setInteger("PropulsionShape", 2);
+                wedge.setTagInfo("BlockEntityTag", tag);
+                player.inventory.setInventorySlotContents(slot, wedge);
+                IBlockState placed = block.getStateForPlacement(world, pos,
+                        EnumFacing.NORTH, .75F, .75F, 0, 0, player, EnumHand.MAIN_HAND);
+                require((family + "_wedge_top_right").equals(placed.getBlock()
+                                .getRegistryName().getResourcePath()),
+                        "programmable wedge lost click-position placement: " + family);
+                world.setBlockState(pos, placed, 3);
+                TileEntityRedstoneLight tile = (TileEntityRedstoneLight) world.getTileEntity(pos);
+                tile.setRedstoneChannel(37);
+                BlockPropulsionLight.configureShape(world, pos, 1);
+                require((family + "_hexagonal").equals(world.getBlockState(pos).getBlock()
+                                .getRegistryName().getResourcePath())
+                                && ((TileEntityRedstoneLight) world.getTileEntity(pos))
+                                .getRedstoneChannel() == 37,
+                        "programmable hexagon lost settings: " + family);
+                BlockPropulsionLight.configureShape(world, pos, 0);
+                require(world.getBlockState(pos).getBlock() == block
+                                && world.getBlockState(pos).getValue(BlockPropulsionLight.FACING)
+                                == EnumFacing.NORTH,
+                        "programmable block lost facing: " + family);
+                world.setBlockToAir(pos);
+            }
+        } finally {
+            player.inventory.setInventorySlotContents(slot, previous);
+            world.setBlockToAir(pos);
+        }
     }
 
     private static void checkConnectedThrusters(World world, EntityPlayer player,

@@ -2,6 +2,7 @@
 """Build the brighter particle-stream texture/model variants."""
 
 import json
+import math
 from pathlib import Path
 
 from PIL import Image
@@ -74,6 +75,32 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n")
 
 
+def inventory_obj(source, target):
+    """Turn the complete thruster toward the inventory camera and keep it in-slot."""
+    yaw = math.radians(195)
+    pitch = math.radians(18)
+    lines = []
+    for line in source.read_text().splitlines():
+        if line.startswith(("v ", "vn ")):
+            kind, *values = line.split()
+            x, y, z = (float(value) for value in values[:3])
+            if kind == "v":
+                x -= .5
+                y -= .5
+                z -= .5
+            turned_x = math.cos(yaw) * x + math.sin(yaw) * z
+            turned_z = -math.sin(yaw) * x + math.cos(yaw) * z
+            turned_y = math.cos(pitch) * y - math.sin(pitch) * turned_z
+            turned_z = math.sin(pitch) * y + math.cos(pitch) * turned_z
+            if kind == "v":
+                turned_x = .5 + .70 * turned_x
+                turned_y = .5 + .70 * turned_y
+                turned_z = .5 + .70 * turned_z
+            line = f"{kind} {turned_x:.8f} {turned_y:.8f} {turned_z:.8f}"
+        lines.append(line)
+    target.write_text("\n".join(lines) + "\n")
+
+
 def square_models():
     for block, family in SQUARES.items():
         source = json.loads((MODEL_DIR / f"{block}_on.json").read_text())
@@ -97,6 +124,7 @@ def obj_models_and_states():
         target_mtl.write_text(source_mtl.read_text().replace(
                 f"blocks/thrusters/{family}_on",
                 f"blocks/thrusters/{family}_stream"))
+        inventory_obj(source_obj, MODEL_DIR / f"{block}_inventory.obj")
 
         old_state = json.loads((STATE_DIR / f"{block}.json").read_text())
         variants = {}
@@ -108,18 +136,13 @@ def obj_models_and_states():
                     value.update(rotation)
                     variants[(f"facing={facing},particles={str(particles).lower()},"
                               f"powered={str(powered).lower()}")] = value
-        if block.endswith("_wedge"):
-            # The wedge OBJ's shared side panel dominates the tiny hotbar view.
-            # A flat nozzle icon keeps the family artwork legible at 16 pixels.
-            write_json(MODEL_DIR / f"{block}_icon.json", {
-                "parent": "item/generated",
-                "textures": {"layer0": f"vandorlabs:blocks/thrusters/{family}_on"},
-            })
-            variants["inventory"] = [{
-                "model": f"vandorlabs:{block}_icon",
-            }]
-        else:
-            variants["inventory"] = old_state["variants"]["inventory"]
+        # The nozzle is on the local north face. Turn it toward the GUI camera
+        # so both the illuminated opening and the housing depth remain visible.
+        variants["inventory"] = [{
+            "model": f"vandorlabs:{block}_inventory.obj",
+            "y": 0,
+            "transform": "forge:default-block",
+        }]
         old_state["variants"] = variants
         write_json(STATE_DIR / f"{block}.json", old_state)
 
@@ -151,7 +174,7 @@ def main():
     obj_models_and_states()
     hover_states()
     print("Generated 8 stream textures, 4 JSON models, 40 OBJ/MTL files, "
-          "20 OBJ blockstates and 3 hover blockstates")
+          "20 inventory OBJ models, 20 OBJ blockstates and 3 hover blockstates")
 
 
 if __name__ == "__main__":

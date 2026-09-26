@@ -19,7 +19,8 @@ out = models / 'configured'
 out.mkdir(exist_ok=True)
 for block in ('programmable_block', 'programmable_trigger_block',
               'programmable_slab', 'programmable_wall',
-              'programmable_diagonal_wall', 'programmable_porthole_wall'):
+              'programmable_diagonal_wall', 'programmable_porthole_wall',
+              'programmable_porthole_block'):
     base = json.loads((models / (block + '.json')).read_text())
     for choice, texture in zip(ids, textures):
         model = json.loads(json.dumps(base))

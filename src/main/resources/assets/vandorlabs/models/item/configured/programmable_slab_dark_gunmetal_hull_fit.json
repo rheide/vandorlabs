@@ -1,4 +1,5 @@
 {
+  "parent": "block/half_slab",
   "textures": {
     "all": "vandorlabs:blocks/dark_gunmetal_hull",
     "particle": "vandorlabs:blocks/dark_gunmetal_hull"

@@ -1,6 +1,7 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.items.ModItems;
+import com.vandorlabs.blocks.ModBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -103,6 +104,11 @@ final class ItemRuntimeChecks {
         require(!glassRecipe.matches(grid,player.world),"missing glass does not craft glass");
         checkProgrammableRecipes(grid, player);
         checkWallRecipes(grid, player);
+        checkCockpitGlassRecipes(grid, player);
+        checkTriggerBlockRecipe(grid, player);
+        checkSlabRecipe(grid, player);
+        checkSwitchRecipes(grid, player);
+        checkLeverAndTableRecipes(grid, player);
         for (String finish : com.vandorlabs.tiles.ScreenHousingTextures.IDS)
             require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs", finish)),
                     "retired finish remains a separate block: " + finish);
@@ -113,14 +119,19 @@ final class ItemRuntimeChecks {
                         != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
                 "programmable block item/name/model");
         checkConfiguredItemModels(mc);
-        for (String wedgeId : new String[]{"rocket_thruster_wedge","ion_drive_wedge",
-                "plasma_vent_wedge","impulse_engine_wedge"}) {
-            ItemStack wedge = new ItemStack(Block.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs",wedgeId)));
-            require(mc.getRenderItem().getItemModelMesher().getItemModel(wedge)
-                            != mc.getRenderItem().getItemModelMesher()
-                            .getModelManager().getMissingModel(),
-                    wedgeId + " hotbar model missing");
+        for (String family : new String[]{"rocket_thruster","ion_drive",
+                "plasma_vent","impulse_engine"}) {
+            Block base = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", family));
+            for (int shape = 0; shape < 3; shape++) {
+                ItemStack stack = new ItemStack(base);
+                net.minecraft.nbt.NBTTagCompound tag = new net.minecraft.nbt.NBTTagCompound();
+                tag.setInteger("PropulsionShape", shape);
+                stack.setTagInfo("BlockEntityTag", tag);
+                require(mc.getRenderItem().getItemModelMesher().getItemModel(stack)
+                                != mc.getRenderItem().getItemModelMesher()
+                                .getModelManager().getMissingModel(),
+                        family + " shape " + shape + " hotbar model missing");
+            }
         }
         for (String removed : new String[]{"plasma_vent_side", "plasma_vent_top",
                 "plasma_vent_rear", "plasma_vent_trim", "plasma_vent_dark_trim",
@@ -239,6 +250,141 @@ final class ItemRuntimeChecks {
                 "industrial alloy recipe accepted a missing iron ingot");
     }
 
+    private static void checkCockpitGlassRecipes(InventoryCrafting grid,
+            EntityPlayer player) {
+        String[] names = {"smoked_cockpit_glass", "pale_cyan_cockpit_glass",
+                "clear_cockpit_glass"};
+        int[] stainedMetadata = {7, 9, -1};
+        for (int variant = 0; variant < names.length; variant++) {
+            ResourceLocation id = new ResourceLocation("vandorlabs", names[variant]);
+            IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
+            require(recipe != null, "missing cockpit glass recipe: " + id);
+            for (int slot = 0; slot < 9; slot++)
+                grid.setInventorySlotContents(slot, slot == 4
+                        ? new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT)
+                        : stainedMetadata[variant] < 0 ? new ItemStack(Blocks.GLASS)
+                        : new ItemStack(Blocks.STAINED_GLASS, 1, stainedMetadata[variant]));
+            require(recipe.matches(grid, player.world), "cockpit glass recipe does not match: " + id);
+            ItemStack crafted = CraftingManager.findMatchingResult(grid, player.world);
+            require(crafted.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(id))
+                            && crafted.getCount() == 9,
+                    "cockpit glass recipe yields wrong blocks: " + id);
+            grid.setInventorySlotContents(0, new ItemStack(Blocks.STAINED_GLASS, 1,
+                    stainedMetadata[variant] == 7 ? 9 : 7));
+            require(!recipe.matches(grid, player.world),
+                    "cockpit glass recipe accepts wrong glass color: " + id);
+            grid.setInventorySlotContents(4, new ItemStack(Items.IRON_INGOT));
+            require(!recipe.matches(grid, player.world),
+                    "cockpit glass recipe accepts iron instead of alloy: " + id);
+        }
+    }
+
+    private static void checkTriggerBlockRecipe(InventoryCrafting grid,
+            EntityPlayer player) {
+        ResourceLocation id = new ResourceLocation("vandorlabs", "programmable_trigger_block");
+        IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
+        require(recipe != null, "missing Programmable Trigger Block recipe");
+        for (int slot = 0; slot < 9; slot++)
+            grid.setInventorySlotContents(slot, ItemStack.EMPTY);
+        grid.setInventorySlotContents(0, new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK));
+        grid.setInventorySlotContents(8, new ItemStack(Items.REDSTONE));
+        require(recipe.matches(grid, player.world),
+                "Programmable Block and redstone do not craft Trigger Block");
+        ItemStack crafted = CraftingManager.findMatchingResult(grid, player.world);
+        require(crafted.getItem() == Item.getItemFromBlock(ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK)
+                        && crafted.getCount() == 1,
+                "Trigger Block recipe yields wrong block");
+        grid.setInventorySlotContents(8, ItemStack.EMPTY);
+        require(!recipe.matches(grid, player.world),
+                "Trigger Block recipe accepts missing redstone");
+    }
+
+    private static void checkSlabRecipe(InventoryCrafting grid,
+            EntityPlayer player) {
+        ResourceLocation id = new ResourceLocation("vandorlabs", "programmable_slab");
+        IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
+        require(recipe != null, "missing Programmable Slab recipe");
+        for (int slot = 0; slot < 9; slot++)
+            grid.setInventorySlotContents(slot, slot < 3
+                    ? new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK) : ItemStack.EMPTY);
+        require(recipe.matches(grid, player.world),
+                "three Programmable Blocks do not craft slabs");
+        ItemStack crafted = CraftingManager.findMatchingResult(grid, player.world);
+        require(crafted.getItem() == Item.getItemFromBlock(ModBlocks.PROGRAMMABLE_SLAB)
+                        && crafted.getCount() == 6,
+                "Programmable Slab recipe does not yield six slabs");
+        grid.setInventorySlotContents(1, ItemStack.EMPTY);
+        require(!recipe.matches(grid, player.world),
+                "Programmable Slab recipe accepts fewer than three blocks");
+    }
+
+    private static void checkSwitchRecipes(InventoryCrafting grid,
+            EntityPlayer player) {
+        ResourceLocation buttonId = new ResourceLocation("vandorlabs", "push_button");
+        ResourceLocation rockerId = new ResourceLocation("vandorlabs", "rocker_switch");
+        IRecipe button = CraftingManager.REGISTRY.getObject(buttonId);
+        IRecipe rocker = CraftingManager.REGISTRY.getObject(rockerId);
+        require(button != null && rocker != null, "switch recipes missing");
+        for (int slot = 0; slot < 9; slot++)
+            grid.setInventorySlotContents(slot, ItemStack.EMPTY);
+        grid.setInventorySlotContents(4, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+        require(button.matches(grid, player.world),
+                "one Industrial Alloy Ingot does not craft Push Button");
+        ItemStack crafted = button.getCraftingResult(grid);
+        require(crafted.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(buttonId))
+                        && crafted.getCount() == 1,
+                "Push Button recipe yields wrong item");
+        grid.setInventorySlotContents(4, new ItemStack(Items.IRON_INGOT));
+        require(!button.matches(grid, player.world),
+                "Push Button recipe accepts iron instead of alloy");
+        grid.setInventorySlotContents(1, new ItemStack(Items.STICK));
+        grid.setInventorySlotContents(4, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+        require(rocker.matches(grid, player.world),
+                "stick above Industrial Alloy Ingot does not craft Rocker Switch");
+        crafted = rocker.getCraftingResult(grid);
+        require(crafted.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(rockerId))
+                        && crafted.getCount() == 1,
+                "Rocker Switch recipe yields wrong item");
+        grid.setInventorySlotContents(4, new ItemStack(Blocks.COBBLESTONE));
+        require(!rocker.matches(grid, player.world),
+                "Rocker Switch recipe accepts cobblestone instead of alloy");
+    }
+
+    private static void checkLeverAndTableRecipes(InventoryCrafting grid,
+            EntityPlayer player) {
+        for (String id : new String[] {"compact_power_lever", "industrial_power_lever"}) {
+            IRecipe recipe = CraftingManager.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs", id));
+            require(recipe != null, "missing lever recipe: " + id);
+            for (int slot = 0; slot < 9; slot++)
+                grid.setInventorySlotContents(slot, ItemStack.EMPTY);
+            grid.setInventorySlotContents(0, new ItemStack(Blocks.LEVER));
+            grid.setInventorySlotContents(1, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+            if (id.equals("industrial_power_lever"))
+                grid.setInventorySlotContents(2, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+            require(recipe.matches(grid, player.world), "lever recipe does not match: " + id);
+            ItemStack result = recipe.getCraftingResult(grid);
+            require(result.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(
+                            new ResourceLocation("vandorlabs", id))) && result.getCount() == 1,
+                    "lever recipe crafts wrong result: " + id);
+            grid.setInventorySlotContents(1, ItemStack.EMPTY);
+            require(!recipe.matches(grid, player.world), "lever recipe needs alloy: " + id);
+        }
+        IRecipe table = CraftingManager.REGISTRY.getObject(
+                new ResourceLocation("vandorlabs", "industrial_table"));
+        require(table != null, "missing Industrial Table recipe");
+        for (int slot = 0; slot < 9; slot++)
+            grid.setInventorySlotContents(slot, ItemStack.EMPTY);
+        for (int slot : new int[] {0, 1, 2, 3, 5})
+            grid.setInventorySlotContents(slot, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+        require(table.matches(grid, player.world), "helmet-shaped alloy does not craft table");
+        ItemStack result = table.getCraftingResult(grid);
+        require(result.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(
+                        new ResourceLocation("vandorlabs", "industrial_table")))
+                        && result.getCount() == 1,
+                "Industrial Table recipe crafts wrong result");
+    }
+
     private static void checkProgrammableRecipes(InventoryCrafting grid,
             EntityPlayer player) {
         String[] blocks = {"programmable_viewscreen", "programmable_console",
@@ -273,8 +419,9 @@ final class ItemRuntimeChecks {
     private static void checkWallRecipes(InventoryCrafting grid,
             EntityPlayer player) {
         String[] names = {"programmable_block", "programmable_wall", "programmable_porthole_wall",
+                "programmable_porthole_block",
                 "programmable_diagonal_wall"};
-        int[] counts = {4, 4, 2, 4, 4};
+        int[] counts = {4, 4, 2, 2, 4};
         for (int variant = 0; variant < names.length; variant++) {
             for (int slot = 0; slot < 9; slot++)
                 grid.setInventorySlotContents(slot, ItemStack.EMPTY);
@@ -294,6 +441,12 @@ final class ItemRuntimeChecks {
                 grid.setInventorySlotContents(2,
                         new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
             } else if (variant == 3) {
+                grid.setInventorySlotContents(0,
+                        new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+                grid.setInventorySlotContents(1, new ItemStack(Blocks.GLASS));
+                grid.setInventorySlotContents(2,
+                        new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+            } else if (variant == 4) {
                 for (int slot : new int[] {0, 3, 4})
                     grid.setInventorySlotContents(slot,
                             new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));

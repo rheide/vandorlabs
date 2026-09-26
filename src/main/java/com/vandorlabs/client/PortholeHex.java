@@ -16,13 +16,19 @@ final class PortholeHex {
     PortholeHex(int columns, int rows) { this(columns, rows, HEXAGON); }
 
     PortholeHex(int columns, int rows, int shape) {
+        this(columns, rows, shape, 0);
+    }
+
+    PortholeHex(int columns, int rows, int shape, int extraBorder) {
         if (columns < 1 || rows < 1) throw new IllegalArgumentException("empty porthole group");
         if (!validShape(shape)) throw new IllegalArgumentException("unknown porthole shape");
+        if (extraBorder < 0 || extraBorder > 1)
+            throw new IllegalArgumentException("invalid porthole border");
         double width = columns * 16D;
         double height = rows * 16D;
-        double x0 = 2, x1 = width - 2;
-        double y0 = 4;
-        double y1 = height - 4;
+        double x0 = 2 + extraBorder, x1 = width - x0;
+        double y0 = 4 + extraBorder;
+        double y1 = height - y0;
         if (shape == SQUARE) {
             vertices = new double[][] {{x0,y0},{x1,y0},{x1,y1},{x0,y1}};
         } else if (shape == OCTAGON) {
@@ -34,8 +40,10 @@ final class PortholeHex {
         } else if (shape == ROUND) {
             vertices = pixelEllipse((int)x0, (int)y0, (int)x1, (int)y1);
         } else if (columns == 1 && rows == 1) {
+            double shoulder = (x1 - x0) / 4D;
             vertices = new double[][] {
-                    {5, 4}, {11, 4}, {14, 8}, {11, 12}, {5, 12}, {2, 8}
+                    {x0 + shoulder, y0}, {x1 - shoulder, y0}, {x1, 8},
+                    {x1 - shoulder, y1}, {x0 + shoulder, y1}, {x0, 8}
             };
         } else if (width >= height) {
             double bevel = Math.min((x1 - x0) * .27D, (y1 - y0) * .48D);

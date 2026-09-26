@@ -1,0 +1,100 @@
+{
+  "variants": {
+    "depth=0,facing=north,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 0
+    },
+    "depth=0,facing=north,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 0
+    },
+    "depth=0,facing=east,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 90
+    },
+    "depth=0,facing=east,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 90
+    },
+    "depth=0,facing=south,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 180
+    },
+    "depth=0,facing=south,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 180
+    },
+    "depth=0,facing=west,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 270
+    },
+    "depth=0,facing=west,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 270
+    },
+    "depth=1,facing=north,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 0
+    },
+    "depth=1,facing=north,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 0
+    },
+    "depth=1,facing=east,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 90
+    },
+    "depth=1,facing=east,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 90
+    },
+    "depth=1,facing=south,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 180
+    },
+    "depth=1,facing=south,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 180
+    },
+    "depth=1,facing=west,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 270
+    },
+    "depth=1,facing=west,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 270
+    },
+    "depth=2,facing=north,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 0
+    },
+    "depth=2,facing=north,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 0
+    },
+    "depth=2,facing=east,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 90
+    },
+    "depth=2,facing=east,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 90
+    },
+    "depth=2,facing=south,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 180
+    },
+    "depth=2,facing=south,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 180
+    },
+    "depth=2,facing=west,inverted=false": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 270
+    },
+    "depth=2,facing=west,inverted=true": {
+      "model": "vandorlabs:programmable_porthole_block",
+      "y": 270
+    }
+  }
+}

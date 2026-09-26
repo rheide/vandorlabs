@@ -1,4 +1,5 @@
 {
+  "parent": "block/half_slab",
   "textures": {
     "all": "vandorlabs:blocks/light_wall_panel",
     "particle": "vandorlabs:blocks/light_wall_panel"

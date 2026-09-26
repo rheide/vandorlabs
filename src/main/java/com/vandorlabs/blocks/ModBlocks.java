@@ -42,6 +42,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_SLAB;
     public static Block PROGRAMMABLE_CHAIR;
     public static Block PROGRAMMABLE_PORTHOLE_WALL;
+    public static Block PROGRAMMABLE_PORTHOLE_BLOCK;
     public static Block PROGRAMMABLE_DIAGONAL_WALL;
     public static Block PROGRAMMABLE_DIAGONAL_SCREEN;
     public static Block PROGRAMMABLE_INPUT;
@@ -180,6 +181,7 @@ public class ModBlocks {
         PROGRAMMABLE_SLAB = add(new BlockProgrammableSlab());
         PROGRAMMABLE_PORTHOLE_WALL = add(new BlockProgrammableWall("programmable_porthole_wall",
                 BlockProgrammableWall.Shape.PORTHOLE));
+        PROGRAMMABLE_PORTHOLE_BLOCK = add(new BlockProgrammablePortholeBlock());
         PROGRAMMABLE_DIAGONAL_WALL = add(new BlockProgrammableWall("programmable_diagonal_wall",
                 BlockProgrammableWall.Shape.DIAGONAL));
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
@@ -245,8 +247,6 @@ public class ModBlocks {
                 return new BlockGlassWall(id);
             case "BlockVandorDirectional":
                 return new BlockVandorDirectional(id);
-            case "BlockLightStrip":
-                return new BlockLightStrip(id);
             case "BlockVandorConsole":
                 return new BlockVandorConsole(id);
             case "BlockDisplaySequenced":
@@ -419,7 +419,8 @@ public class ModBlocks {
                 if (block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_TRIGGER_BLOCK
                         || block == PROGRAMMABLE_SLAB
                         || block == PROGRAMMABLE_WALL || block == PROGRAMMABLE_DIAGONAL_WALL
-                        || block == PROGRAMMABLE_PORTHOLE_WALL) {
+                        || block == PROGRAMMABLE_PORTHOLE_WALL
+                        || block == PROGRAMMABLE_PORTHOLE_BLOCK) {
                     if (block == PROGRAMMABLE_SLAB) registerSlabItemModels(item);
                     else registerHousingItemModels(block, item);
                     continue;
@@ -430,6 +431,22 @@ public class ModBlocks {
                 }
                 if (block == PROGRAMMABLE_CHAIR) {
                     registerChairItemModels(item);
+                    continue;
+                }
+                if (block instanceof BlockConnectedPropulsionLight
+                        && !((BlockConnectedPropulsionLight) block).familyId().isEmpty()) {
+                    String family = ((BlockConnectedPropulsionLight) block).familyId();
+                    ResourceLocation[] shapes = {
+                            new ResourceLocation(VandorLabs.MODID, family),
+                            new ResourceLocation(VandorLabs.MODID, family + "_hexagonal"),
+                            new ResourceLocation(VandorLabs.MODID, family + "_wedge")};
+                    ModelLoader.registerItemVariants(item, shapes);
+                    ModelLoader.setCustomMeshDefinition(item, stack -> {
+                        net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+                        int shape = tag == null ? 0 : tag.getInteger("PropulsionShape");
+                        return new ModelResourceLocation(shapes[
+                                Math.max(0, Math.min(2, shape))], "inventory");
+                    });
                     continue;
                 }
                 ModelLoader.setCustomModelResourceLocation(

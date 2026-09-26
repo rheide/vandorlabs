@@ -1,4 +1,5 @@
 {
+  "parent": "block/half_slab",
   "textures": {
     "all": "vandorlabs:blocks/light_alloy_hull",
     "particle": "vandorlabs:blocks/light_alloy_hull"

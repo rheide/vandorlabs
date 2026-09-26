@@ -1,6 +1,5 @@
 package com.vandorlabs.client;
 
-import com.vandorlabs.blocks.BlockLightStrip;
 import com.vandorlabs.blocks.BlockGlassWall;
 import com.vandorlabs.blocks.BlockProgrammableGlass;
 import com.vandorlabs.tiles.TileEntityProgrammableGlass;
@@ -20,23 +19,6 @@ final class MaterialRuntimeChecks {
     private MaterialRuntimeChecks() {}
 
     static void run(EntityPlayer player) {
-        for (String id : new String[] {"cyan_light_strip", "amber_light_strip"}) {
-            Block raw = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
-            require(raw instanceof BlockLightStrip, id + " is not a light strip");
-            BlockLightStrip strip = (BlockLightStrip) raw;
-            IBlockState vertical = strip.getStateForPlacement(player.world, BlockPos.ORIGIN,
-                    EnumFacing.NORTH, 0.5F, 0.5F, 0.5F, 0, player);
-            IBlockState horizontal = strip.getStateForPlacement(player.world, BlockPos.ORIGIN,
-                    EnumFacing.UP, 0.5F, 0.5F, 0.5F, 0, player);
-            require(vertical.getValue(BlockLightStrip.VERTICAL),
-                    id + " wall placement is not vertical");
-            require(!horizontal.getValue(BlockLightStrip.VERTICAL),
-                    id + " floor placement is not horizontal");
-            require(strip.getLightValue(vertical, player.world, BlockPos.ORIGIN) == 15,
-                    id + " does not emit maximum block light");
-            require(strip.getStateFromMeta(strip.getMetaFromState(vertical)).equals(vertical),
-                    id + " vertical state does not survive metadata");
-        }
         checkGlassPlacement(player);
         BlockGlassWall space = (BlockGlassWall) Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "programmable_glass"));

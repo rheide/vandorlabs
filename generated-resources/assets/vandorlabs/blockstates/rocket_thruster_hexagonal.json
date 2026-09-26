@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:rocket_thruster_hexagonal_on.obj",
+        "model": "vandorlabs:rocket_thruster_hexagonal_inventory.obj",
+        "y": 0,
         "transform": "forge:default-block"
       }
     ]

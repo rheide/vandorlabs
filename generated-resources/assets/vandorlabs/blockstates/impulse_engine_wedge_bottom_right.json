@@ -103,7 +103,8 @@
     },
     "inventory": [
       {
-        "model": "vandorlabs:impulse_engine_wedge_bottom_right_off.obj",
+        "model": "vandorlabs:impulse_engine_wedge_bottom_right_inventory.obj",
+        "y": 0,
         "transform": "forge:default-block"
       }
     ]
