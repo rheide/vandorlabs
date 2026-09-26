@@ -18,8 +18,8 @@ def main():
     before, after = read(args.before), read(args.after)
     if before.keys() != after.keys():
         raise SystemExit('Benchmark cases do not match')
-    print('| Block / variant (64 instances) | Before submission ms | After submission ms | Change | After completion ms |')
-    print('| --- | ---: | ---: | ---: | ---: |')
+    print('| Block / variant (64 instances) | Before submission ms | After submission ms | Change | After completion ms | Before / after heap B |')
+    print('| --- | ---: | ---: | ---: | ---: | ---: |')
     for key, a in after.items():
         if key[2] != '64':
             continue
@@ -28,7 +28,8 @@ def main():
         label = key[0].replace('vandorlabs:', '').replace('minecraft:', 'vanilla ')
         if key[1] != 'default':
             label += ' / ' + key[1]
-        print(f'| {label} | {old:.3f} | {new:.3f} | {(new/old-1)*100:+.1f}% | {float(a["complete_p50_ms"]):.3f} |')
+        allocation = b.get('allocated_bytes_p50', 'n/a') + ' / ' + a.get('allocated_bytes_p50', 'n/a')
+        print(f'| {label} | {old:.3f} | {new:.3f} | {(new/old-1)*100:+.1f}% | {float(a["complete_p50_ms"]):.3f} | {allocation} |')
 
 
 if __name__ == '__main__':

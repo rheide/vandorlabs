@@ -33,6 +33,17 @@ public final class SignalUpdateBatchTest {
         }
         SignalUpdateBatch.apply(()->SignalUpdateBatch.afterSignals(sameJob,()->events.add("clean batch")));
         require(events.get(4).equals("clean batch"),"later batch lost job");
+        try {
+            SignalUpdateBatch.apply(()-> {
+                SignalUpdateBatch.afterSignals(sameJob,()->events.add("partial signals settled"));
+                throw new IllegalArgumentException("receiver failed after an earlier signal");
+            });
+            throw new AssertionError("receiver exception swallowed");
+        } catch (IllegalArgumentException expected) {
+            require(!SignalUpdateBatch.isActive(),"partial update leaked batch state");
+            require(events.get(5).equals("partial signals settled"),
+                    "already applied signals did not settle after another receiver failed");
+        }
         System.out.println("Signal batch PASS: nested updates, coalescing, synchronous settlement, cleanup");
     }
     private static void require(boolean result,String message) {
