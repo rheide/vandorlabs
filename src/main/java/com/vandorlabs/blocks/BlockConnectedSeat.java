@@ -79,7 +79,7 @@ public final class BlockConnectedSeat extends BlockVandorDirectional {
             if (seat.getPassengers().isEmpty()) player.startRiding(seat, true);
             return true;
         }
-        EntityChairSeat seat = new EntityChairSeat(world, lower, 8D / 16D);
+        EntityChairSeat seat = new EntityChairSeat(world, lower, height == 1.5 ? 9D / 16D : 8D / 16D);
         seat.rotationYaw = state.getValue(FACING).getHorizontalAngle();
         if (world.spawnEntity(seat)) player.startRiding(seat, true);
         return true;

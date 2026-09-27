@@ -30,6 +30,10 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 - For the Programmable Block texture list, can we include the texture that we use for the inside of the frame for Programmable Glass and Programmable Door? The door should have two: a frame texture and a door texture that's slightly darker. I want both.
 
 
+## Follow-up requests
+
+- Another client crash: inspect `~/LLMShareDrive/debug2.log` and `latest2.log`.
+
 ## Status and findings
 
 | Work | Status | Findings / validation |
@@ -42,8 +46,8 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Landing gear | Implemented, validating | Four static gear designs; telescopic gear animates over one second, checks obstruction, reserves its lower cell, responds to redstone/right-click. |
 | Diagonal inside/outside fill | Implemented, validating | Independent inside/outside toggles, saved/copied with diagonal geometry; collision follows fill. |
 | Connected seating | Implemented, validating | Two styles with automatic single/end/middle variants, reserved backrest cell, sitting and cleanup. |
-| Ramp edge gap | Pending | Reproduce and inspect geometry. |
-| Distance rendering | Pending | Investigate and record cost before changing. |
+| Ramp edge gap | Fixed, validating | User identified controller cube. Front/right-edge PNG alpha creates the seam; atlas loader repairs all 24 faces across both packs. Pixel regression passed (17,224 cutoff pixels), preserving solid RGB. |
+| Distance rendering | Report complete | `docs/performance/render-distance-1.2.md`: full block/slab already use chunk meshes; diagonals inherit a 64-block tile cutoff. Recommended chunk-model work documented; no costly range increase. |
 | Copifier crafting | Implemented, validating | Shapeless tool + programmable item; tool retained. Normal crafting consumption processes stacks with shift-click; output respects selected copy settings. |
 | Half Input slab placement | Live suite passed | Side placement matches the support slab half, including its wall slot. |
 | Diagonal Half Console | Implemented, validating | Half-height/depth incline; upper/lower placement matching slabs; configurable input artwork. |
@@ -52,3 +56,8 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Client crash | Regression passed | Mutable custom-sprite frame lists; load/mipmap/clear check and full live suite passed. Full external TextureFix pack not installed in test client. |
 | Extra housing textures | Implemented, validating | Added existing glass frame interior and door interior with actual 0xA8 tint; appended indices preserve saved choices. |
 | Final validation / docs | In progress | Baseline and first 1.2 live suite passed. New asset/geometry tests and eight new screenshot scenes added; final suite pending. |
+
+### Validation follow-ups
+
+- Second crash logs: `latest2.log:23695` identifies build t49; its crash report lists version 1.1. `debug2.log:184139` and `184709` repeat TextureFix unloading an immutable frame list (`AbstractList.clear`). Covered by the mutable-frame-list fix and sprite cleanup regression in 1.2; the full external modpack remains outside the isolated suite.
+- Second live run (`render-run.gtA6dE`) passed new runtime assertions but failed the model-loading gate. Corrected telescopic gear blockstate property ordering; final rerun required. Enabled face dialog now fits the test viewport.

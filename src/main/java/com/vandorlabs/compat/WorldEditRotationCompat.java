@@ -54,7 +54,7 @@ public final class WorldEditRotationCompat {
                     && !isDiagonal(block)) continue;
             String id=block.getRegistryName().toString();
             int numericId=Block.getIdFromBlock(block);
-            Object entry=gson.fromJson(isDiagonal(block) ? diagonalEntry(id, numericId)
+            Object entry=gson.fromJson(isDiagonal(block) ? diagonalEntry(id, numericId, block)
                     : entryJson(id,numericId,block instanceof BlockVandorDoor),entryClass);
             Method post=entryClass.getDeclaredMethod("postDeserialization"); post.setAccessible(true); post.invoke(entry);
             if (block instanceof BlockVandorDoor) guardUpperDoor(entry,entryClass);
@@ -70,19 +70,21 @@ public final class WorldEditRotationCompat {
     }
 
     private static boolean isDiagonal(Block block) {
-        return block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalScreen
+        return block instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole
+                || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalScreen
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableWall
                 && ((com.vandorlabs.blocks.BlockProgrammableWall)block).isDiagonalShape();
     }
 
-    private static JsonObject diagonalEntry(String id, int numericId) {
+    private static JsonObject diagonalEntry(String id, int numericId, Block block) {
         JsonObject entry = new JsonObject();
         entry.addProperty("id", id); entry.addProperty("legacyId", numericId);
-        JsonObject state = new JsonObject(); state.addProperty("dataMask", 7);
+        boolean halfConsole=block instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole;
+        JsonObject state = new JsonObject(); state.addProperty("dataMask", halfConsole?15:7);
         JsonObject values = new JsonObject();
         for (EnumFacing facing : EnumFacing.HORIZONTALS) for (int inverted = 0; inverted < 2; inverted++) {
             JsonObject value = new JsonObject();
-            value.addProperty("data", facing.getHorizontalIndex() | inverted * 4);
+            value.addProperty("data", halfConsole ? facing.getIndex() | inverted * 8 : facing.getHorizontalIndex() | inverted * 4);
             JsonArray direction = new JsonArray();
             direction.add(facing.getFrontOffsetX() * 2);
             direction.add(inverted == 0 ? 1 : -1);

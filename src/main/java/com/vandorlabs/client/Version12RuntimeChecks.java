@@ -64,6 +64,30 @@ final class Version12RuntimeChecks {
                 TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);
                 require(restored.getDiagonalFill()==fill && restored.isDiagonalHalfHeight()==(mode==2),"diagonal saved geometry");
             }
+            BlockProgrammableWall porthole=(BlockProgrammableWall)block("programmable_diagonal_porthole");
+            for (int shape=0;shape<4;shape++) {
+                world.setBlockState(p,porthole.getDefaultState(),3);
+                world.setBlockState(p.east(),porthole.getDefaultState(),3);
+                TileEntityAnimatedScreenSelector a=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+                TileEntityAnimatedScreenSelector b=(TileEntityAnimatedScreenSelector)world.getTileEntity(p.east());
+                a.setPortholeShape(shape);b.setPortholeShape(shape);
+                require(TEAnimatedScreenSelector.portholeGroup(a,world.getBlockState(p)).columns==2,"diagonal portholes did not join");
+                b.setDiagonalFullWidth(true);
+                require(TEAnimatedScreenSelector.portholeGroup(a,world.getBlockState(p)).columns==1,"different-width portholes joined");
+                b.setDiagonalFullWidth(false);a.setJoinPortholes(false);
+                require(TEAnimatedScreenSelector.portholeGroup(a,world.getBlockState(p)).columns==1,"disabled porthole join");
+                world.setBlockToAir(p.east());world.setBlockToAir(p);
+            }
+            Block half=block("programmable_diagonal_half_console");
+            for (boolean upper:new boolean[]{false,true}) {
+                world.setBlockState(p.south(),ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(BlockProgrammableSlab.HALF,
+                        upper?net.minecraft.block.BlockSlab.EnumBlockHalf.TOP:net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),3);
+                IBlockState placed=half.getStateForPlacement(world,p,EnumFacing.NORTH,.5F,upper?.2F:.8F,.5F,0,player);
+                require(placed.getValue(BlockDiagonalHalfConsole.UPPER)==upper,"half console mismatched support half");
+                AxisAlignedBB bounds=half.getBoundingBox(placed,world,p);
+                require(bounds.maxY-bounds.minY==.5 && bounds.maxZ-bounds.minZ==.5,"half console dimensions");
+                world.setBlockToAir(p.south());
+            }
             checkCrafting(world,p,player);
             for (Block block:Block.REGISTRY) if (block.getRegistryName()!=null && block.getRegistryName().getResourceDomain().equals("vandorlabs")
                     && block.getRegistryName().getResourcePath().startsWith("space_") && block.getRegistryName().getResourcePath().contains("door"))

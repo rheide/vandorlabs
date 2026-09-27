@@ -302,6 +302,7 @@ public class ReproLab {
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
+        SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "seating", "gear", "gear_extended", "portholes", "half_height", "fill", "half_console"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
                     galleryFeet+3, -26, -20, 15));

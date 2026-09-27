@@ -22,6 +22,7 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         GlStateManager.pushMatrix();GlStateManager.translate(x+.5,y,z+.5);
         GlStateManager.rotate(180-state.getValue(BlockTelescopicLandingGear.FACING).getHorizontalAngle(),0,1,0);
         GlStateManager.translate(-.5,0,-.5);
+        float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
         GlStateManager.disableLighting();GlStateManager.disableCull();
@@ -29,7 +30,8 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         GlStateManager.pushMatrix();GlStateManager.translate(0,-t,0);draw(WHEEL);GlStateManager.popMatrix();
         GlStateManager.pushMatrix();GlStateManager.translate(0,.75,0);GlStateManager.scale(1,1+8*t,1);
         GlStateManager.translate(0,-.75,0);draw(PISTON);GlStateManager.popMatrix();
-        GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
+        GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
     }
     private void draw(ModelResourceLocation model) {
         Minecraft mc=Minecraft.getMinecraft();

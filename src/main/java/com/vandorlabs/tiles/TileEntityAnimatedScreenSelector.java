@@ -160,8 +160,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
     public boolean isDiagonalFullWidth() { return diagonalFullWidth; }
     public void setDiagonalFullWidth(boolean fullWidth) {
-        if (diagonalFullWidth == fullWidth) return;
+        if (diagonalFullWidth == fullWidth && !diagonalHalfHeight) return;
+        diagonalHalfHeight = false;
         diagonalFullWidth = fullWidth;
+        portholeRevision++;
         markDirty();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);

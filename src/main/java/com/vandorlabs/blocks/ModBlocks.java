@@ -401,6 +401,10 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        for (String face : new String[]{"front","back","left","right","top","bottom"})
+            for (String state : new String[]{"on","off"})
+                event.getMap().setTextureEntry(new com.vandorlabs.client.ControllerTextureSprite(
+                        "vandorlabs:block/ramp_elevator_controller_"+face+"_"+state));
         // Door control panels still use this sprite after the standalone
         // Control Buttons block and its model were retired.
         event.getMap().registerSprite(new ResourceLocation(

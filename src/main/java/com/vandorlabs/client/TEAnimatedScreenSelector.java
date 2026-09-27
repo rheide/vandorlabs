@@ -925,6 +925,11 @@ public class TEAnimatedScreenSelector
             IBlockState state, EnumFacing side) {
         BlockPos next = tile.getPos().offset(side);
         return tile.isJoinPortholes() && tile.getWorld().isBlockLoaded(next)
+                && (!((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
+                    || side.getAxis()!=EnumFacing.Axis.Y
+                    && tile.getWorld().getBlockState(next).getBlock()==state.getBlock()
+                    && tile.getWorld().getBlockState(next).getValue(BlockProgrammableWall.INVERTED)==state.getValue(BlockProgrammableWall.INVERTED)
+                    && BlockProgrammableWall.diagonalSpan(tile.getWorld(),next)==BlockProgrammableWall.diagonalSpan(tile.getWorld(),tile.getPos()))
                 && eligiblePorthole(tile.getWorld(), next,
                         state.getValue(BlockProgrammableWall.FACING),
                         state.getValue(BlockProgrammableWall.DEPTH), state.getBlock(),

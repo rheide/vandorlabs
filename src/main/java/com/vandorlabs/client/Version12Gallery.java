@@ -11,7 +11,11 @@ import net.minecraft.world.World;
 final class Version12Gallery {
     static void build(World world,String scene,int x,int y) {
         BlockPos origin=new BlockPos(x-3,y+1,-18);
-        if (scene.equals("seating")) {
+        if (scene.equals("controller")) {
+            BlockPos p=new BlockPos(x,y+1,-18);
+            world.setBlockState(p,block("programmable_ramp").getDefaultState(),3);
+            world.setBlockState(p.east(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+        } else if (scene.equals("seating")) {
             for (int style=0;style<2;style++) for (int col=0;col<3;col++) {
                 Block block=block(style==0?"luxury_seat":"military_seat");BlockPos p=origin.add(style*5+col,0,0);
                 IBlockState state=block.getDefaultState();world.setBlockState(p,state,3);
@@ -39,7 +43,7 @@ final class Version12Gallery {
             }
         } else if (scene.equals("half_height") || scene.equals("fill")) {
             for (int i=0;i<4;i++) {
-                BlockPos p=origin.add(i*2,0,0);
+                BlockPos p=origin.add(scene.equals("half_height") ? (i/2)*4+i%2 : i*2,0,0);
                 world.setBlockState(p,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState()
                         .withProperty(BlockProgrammableWall.INVERTED,scene.equals("half_height") && i>=2),3);
                 TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);

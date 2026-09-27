@@ -77,6 +77,12 @@ task testBlockStateReference(type: JavaExec) {
     classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.persistence.BlockStateReferenceTest'
 }
+task testControllerTexturePixels(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.ControllerTexturePixelsTest'
+}
+check.dependsOn testControllerTexturePixels
 check.dependsOn testRamps
 check.dependsOn testCompactAnimation
 check.dependsOn testSaveSchema

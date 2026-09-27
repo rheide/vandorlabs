@@ -45,6 +45,15 @@ final class ScreenRuntimeChecks {
                 "new programmable portholes should join by default");
         SpaceDoorTextures.checkFrameCleanup(Minecraft.getMinecraft().getResourceManager());
         FaceTextureRuntimeChecks.run(player);
+        for (String face : new String[]{"front","back","left","right","top","bottom"})
+            for (String on : new String[]{"on","off"}) {
+                net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks()
+                        .getAtlasSprite("vandorlabs:block/ramp_elevator_controller_"+face+"_"+on);
+                require(sprite instanceof ControllerTextureSprite,"controller sprite repair not installed");
+                for (int frame=0;frame<sprite.getFrameCount();frame++)
+                    for (int[] level:sprite.getFrameTextureData(frame)) if (level!=null)
+                        for (int pixel:level) require((pixel>>>24)==255,"controller atlas still has alpha holes");
+            }
         checkHousingSprites();
         checkHousingCycling();
         checkSurvivalDropRoundTrip(player);
