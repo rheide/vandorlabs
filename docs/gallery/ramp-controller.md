@@ -18,19 +18,22 @@ The Programmable Ramp controls a platform of matching slabs or solid blocks. It 
 
 Place a piston in the center of a crafting grid and surround it with eight Programmable Matter Ingots. Place the controller beside a flat platform and point its top arrow toward the first slab or block. It selects face-connected blocks of the same type and complete block state on that level. Diagonal contact does not count; gaps remain gaps. Different slab halves and material variants stay separate.
 
+Immersive Engineering regular and scaffold slabs are supported. Their material and half settings survive movement.
+
 The platform can be up to **8 blocks wide and 16 blocks long**. Its length follows the Ramp direction setting, independent of the controller arrow. The controller protects moving cells and restores the source blocks when it retracts or is removed.
 
 ## Configure motion
 
-Right-click the controller to open its settings. Valid changes apply immediately.
+Creative shift-right-click the controller to open its settings, or use the Configurizer. Valid changes apply immediately.
 
-![Programmable Ramp settings](../images/gallery/systems/ramp-controller-config.png)
+![Programmable Ramp settings](../images/gallery/v1.2/ramp-matching-config.png)
 
 1. Choose **Ramp**, **Filled Ramp**, **Lift**, or **Extend**.
 2. Choose **Up/Down** or **Left/Right** travel. Left and right are relative to the selected ramp direction.
 3. Set **Start / off offset** and **End / on offset** from `-8` to `+8` blocks. Positive vertical offsets rise; negative ones descend. Positive horizontal offsets move right. Opposite endpoints can create a 16-block stroke.
 4. Choose whether redstone **On** or **Off** deploys the platform. Physical power and virtual redstone channels are supported.
-5. Choose **Fast**, **Medium**, or **Slow**. Ramp and Filled Ramp offer **1, 2, 4, 8, or 16 pixel** treads. Lift and Extend have no treads.
+5. Set **Match textures** (On by default). Turn it Off to include differently textured Programmable Blocks or Slabs; block type and slab half still must match. Individual finishes are preserved.
+6. Choose **Fast**, **Medium**, or **Slow**. Ramp and Filled Ramp offer **1, 2, 4, 8, or 16 pixel** treads. Lift and Extend have no treads.
 
 The off endpoint can be displaced too: Start `2`, End `-3` moves from two blocks above the original platform to three below it. Equal endpoints are valid. An edit first resets the previous platform, then evaluates the current signal with the new settings.
 

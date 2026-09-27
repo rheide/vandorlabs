@@ -14,6 +14,7 @@ SHOTS = {
     "half_console_gui": "programmable/half-console-config.png",
     "full_input_gui": "programmable/full-input-config.png",
     "gallery_connected_thruster": "propulsion/connected-particle-mode.png",
+    "ramp_matching_gui": "v1.2/ramp-matching-config.png",
     "ramp_controller_gui": "systems/ramp-controller-config.png",
     "gallery_ramp_up_smooth": "ramp-controller/up-smooth.png",
     "gallery_ramp_up_stairs": "ramp-controller/up-stairs.png",
@@ -79,8 +80,10 @@ SHOTS.update({
 
 for name in ("faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes",
              "half_height", "fill", "half_console", "controller", "stairs",
-             "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "filled_corners_inside", "filled_corners_outside"):
+             "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "shallow_fill_under", "light_depth_near", "light_depth_far", "light_depth_oblique",
+             "round_glass_front", "round_glass_left", "round_glass_right", "round_glass_back", "filled_corners_inside", "filled_corners_outside"):
     SHOTS[f"gallery_v12_{name}"] = f"v1.2/{name.replace('_', '-')}.png"
+SHOTS["diagonal_direction_gui"] = "v1.2/diagonal-direction-config.png"
 SHOTS["connected_seat_hotbar"] = "v1.2/seat-and-gear-icons.png"
 SHOTS["connected_seat_gui"] = "v1.2/connected-seat-config.png"
 SHOTS["landing_gear_gui"] = "v1.2/landing-gear-config.png"

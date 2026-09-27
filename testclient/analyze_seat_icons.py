@@ -18,7 +18,25 @@ for slot in range(9):
     y=(240-19)*scale
     # Include the surrounding frame in the search so oversize pixels cannot hide.
     mask=changed[max(0,top-24):720,x-2*scale:x+18*scale]
-    yy,xx=np.nonzero(mask)
+    # The selected ninth slot also equips the item. Ignore disconnected hand
+    # geometry above/beside the hotbar; retain every component touching the
+    # slot interior, including any icon pixels extending outside its frame.
+    selected=np.zeros_like(mask)
+    unseen=mask.copy()
+    for row,col in zip(*np.nonzero(mask)):
+        if not unseen[row,col]: continue
+        pending=[(row,col)];unseen[row,col]=False;component=[];touches=False
+        while pending:
+            r,c=pending.pop();component.append((r,c))
+            px=c+x-2*scale;py=r+max(0,top-24)
+            touches |= x<=px<x+16*scale and y<=py<y+16*scale
+            for dr,dc in ((-1,0),(1,0),(0,-1),(0,1)):
+                nr,nc=r+dr,c+dc
+                if 0<=nr<mask.shape[0] and 0<=nc<mask.shape[1] and unseen[nr,nc]:
+                    unseen[nr,nc]=False;pending.append((nr,nc))
+        if touches:
+            for r,c in component:selected[r,c]=True
+    yy,xx=np.nonzero(selected)
     assert len(xx)>40,f'Slot {slot}: invisible item icon'
     xx=xx+x-2*scale;yy=yy+max(0,top-24)
     assert xx.min()>=x-scale and xx.max()<x+17*scale, f'Slot {slot}: icon crosses side frame'

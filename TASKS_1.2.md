@@ -147,17 +147,25 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 ### Unified landing gear
 
-- [ ] Replace Small/Large block IDs with one `landing_gear` block, no remaps. Add Small/Medium/Large size in its dialog; Medium retains the old Large design, and new Large has a bigger wheel and full-block width. Keep size consistent across rendering, collision, inventory, copying and saved settings.
+- [x] Replace Small/Large block IDs with one `landing_gear` block, no remaps. Add Small/Medium/Large size in its dialog; Medium retains the old Large design, and new Large has a bigger wheel and full-block width. Keep size consistent across rendering, collision, inventory, copying and saved settings.
 
 - Startup regression refinement: capture the light's own initial block state during loading without marking dirty; defer channel registration and visual/power work until the first normal tick. This preserves same-tick placement/connected-model behavior while avoiding neighbour reads during chunk tile-map iteration.
 
 ### Light and porthole rendering reports
 
-- [ ] Fix distant front-face shimmering on single and joined Programmable Lights; inspect shared `face.png` and verify mixed housing textures.
-- [ ] Check joined Circular Programmable Porthole Block glass for flickering and missing texture at seams from oblique angles.
+- [x] Fix distant front-face shimmering on single and joined Programmable Lights; inspect shared `face.png` and verify mixed housing textures.
+- [x] Check joined Circular Programmable Porthole Block glass for flickering and missing texture at seams from oblique angles.
 
 - Full live suite passed in `render-run.MThBBJ`: diagonal direction, filled-face UVs, optional ramp matching, startup load safety, and all existing checks. Unified landing gear and the new rendering reports require the next build.
 
 - Unified gear build passed; all three sizes passed runtime motion, reservation, collision, pick-block and saved-size checks. Small and Medium model JSONs exactly retain the previous Small and Large geometry. New Large: 14-pixel wheel, 16-pixel overall width. Full visual/GUI validation is running in `render-run.y7UL92`.
 
 - Rendering checkpoint: removed the redundant light housing front; moved porthole glass to the translucent pass after opaque tiles. Near/far/oblique light captures and front/rear/both-side Circular porthole captures inspected. Pixel checks find no dark housing stripes in distant light centers and no untinted/opaque gaps across sampled joined glass seams. Small/Medium gear pixels match the prior build exactly in all five poses.
+
+
+### Final validation and documentation
+
+- [x] Update the main README and block guides for all latest additions/options, recipes and copying behavior; refresh configuration and gallery screenshots.
+- Java 8 build and all live gameplay/GUI checks passed in `render-run.y7UL92`. All screenshot checks pass, including three gear sizes, distant lights and four views of joined Circular glass. The ninth-slot icon check was corrected to exclude disconnected held-item geometry; the actual Large icon fits its frame.
+- Exported 127 gallery captures and reviewed the changed images. Kept unchanged reference images where only tiny unrelated differences occurred. Checked all 183 local documentation links, including heading anchors; `git diff --check` passes.
+- Standard `build/libs/vandorlabs-1.2.jar` exactly matches the tested client JAR (SHA-256 `ef7eabb0fbf328797a16de45f184e638d46e2b59ab91aec944d267b898ceca3a`). Registry/packaged recipes verified; version remains 1.2. No remaps or alternative texture JARs added.

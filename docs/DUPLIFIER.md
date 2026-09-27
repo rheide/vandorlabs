@@ -35,9 +35,12 @@ chair style and height, door design and motion settings, and switch mount
 rotation transfer only to targets that expose those settings. Framing and glass
 shade also transfer across block types that share those controls.
 Ramp controllers carry their offsets, tread size, speed, lift and extend modes,
-direction, travel axis, trigger polarity, and redstone channel. Applying ramp
+direction, travel axis, texture matching, trigger polarity, and redstone channel. Applying ramp
 geometry uses the controller's normal validation and reset path; an obstructed
 platform can reject the change.
+
+Landing Gear supports independent **Gear Size**, **Gear Extension**, and
+**Gear Redstone Mode** switches, plus the shared redstone channel.
 
 Placement facing, physical position, live redstone signal, current door motion,
 and ownership are not stored. The item uses semantic setting keys rather than

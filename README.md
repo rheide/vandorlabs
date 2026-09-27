@@ -22,7 +22,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
 
 - **Structure**: programmable hull, padding, pipe, and vent finishes, wall
   panels, ribs, and cockpit glass. Shift-right-click a Programmable Diagonal
-  Wall in creative mode to choose half/full width, half height, and inside/outside fill.
+  Wall in creative mode to choose half/full width, half height, slope direction, and inside/outside fill. Programmable Stairs support the same optional face overrides as Block and Slab; matching slabs combine into a full block. Diagonal Portholes support joined openings in both tall and shallow arrangements.
 - **Screens**: static planet/ship/science viewscreens (directional) and
   sequenced animated displays with static/animated/off modes that wake on
   redstone and sleep when power drops.
@@ -64,13 +64,19 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
 - **Bridge furniture**: simplified Command, Companion, Operator, Conference
   and Mess Hall chairs; right-click to sit and sneak to dismount. Includes all
   sixteen buildable materials from their independent 4x4 source sheet.
+- **Connected seats**: Luxury and Military Seats have Join and height controls.
+  Their recipes use Industrial Alloy and wool. See [seating](docs/gallery/chairs.md).
+- **Landing Gear**: one block with Small, Medium and Large sizes. Configure
+  redstone mode/channel and extension from 0–4 blocks in half-block steps;
+  size and length changes preview immediately. See [Landing Gear](docs/gallery/version-1.2.md#landing-gear).
 - **Ramp / Elevator Controller**: turns matching existing slabs or blocks into
   a ramp or moving lift. Configure signed start/end offsets, redstone polarity and
-  fast/slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and
+  Fast/Medium/Slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and
   a zero start offset restores the original blocks on retraction. Travel-space locks follow the moving
   platform, and setting edits reset it automatically. Uses the supplied HD-2 art.
   Footprints are capped at 8 wide × 16 long; each offset ranges from -8 to +8 blocks.
   Ramp direction is independent of the controller's platform-selection arrow.
+  **Match textures** is optional and defaults On; Immersive Engineering slabs are supported.
   See [placement, geometry and tests](docs/landing-ramps.md).
 - **Hull materials**: Dark Gunmetal, Light Alloy, and Midnight Satin finishes
   in the shared programmable texture selector.

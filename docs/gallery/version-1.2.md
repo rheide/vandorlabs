@@ -46,6 +46,16 @@ thickness, with lower/upper height bands of 0–10 and 6–16 pixels. This overl
 lets the slope endpoints meet. Existing shallow pieces adopt these corrected
 bounds.
 
+Use **Slope rises** in the diagonal dialog to reverse a shallow incline while
+keeping its upper/lower position. For tall diagonals, the button is labeled
+**Slope leans**. The compass direction tells you which way the slope rises or
+leans. Changes apply immediately and update joining and collision.
+
+![Diagonal slope control](../images/gallery/v1.2/diagonal-direction-config.png)
+
+Craft two diagonal portholes from two Industrial Alloy Ingots and one glass
+block in the diagonal recipe pattern.
+
 ![Half-height portholes joined along the slope](../images/gallery/v1.2/portholes-half-height.png)
 ![The same shallow pieces with joining disabled](../images/gallery/v1.2/portholes-half-height-unjoined.png)
 
@@ -53,7 +63,12 @@ bounds.
 
 **Programmable Diagonal Wall** adds a full-depth, half-height option, with
 matching straight runs in lower or upper positions. It also offers independent
-inside and outside fill options. Collision follows the configured shape.
+inside and outside fill options. Filled faces use the selected main texture,
+including the underside of an upper shallow panel. Collision follows the
+configured shape.
+
+![Filled shallow walls from above](../images/gallery/v1.2/shallow-fill.png)
+![Filled shallow walls from below](../images/gallery/v1.2/shallow-fill-under.png)
 
 ![Diagonal shape and fill controls](../images/gallery/v1.2/diagonal-config.png)
 
@@ -77,6 +92,8 @@ Creative shift-right-click opens Join On/Off and Low/Default/High height control
 Low and High are two pixels below/above the new default. Collision, rider height,
 mining drops and pick-block follow the chosen height.
 
+Luxury and Military Seat recipes use Industrial Alloy and blue/green wool.
+
 Right-click to sit; sneak to dismount. Leave the cell above clear for the backrest.
 
 ![Luxury and military connected seating](../images/gallery/v1.2/seating.png)
@@ -90,12 +107,15 @@ Seat inventory icons fit their slots at all three configured heights.
 
 ## Landing gear
 
-**Small Landing Gear** (`small_landing_gear`) and **Large Landing Gear**
-(`large_landing_gear`) are both telescopic top-mounted designs. They replace all
-five previous gear IDs, without remaps. Right-click to extend or retract.
+**Landing Gear** (`landing_gear`) is a telescopic top-mounted fixture with three
+sizes. It replaces the separate Small/Large blocks without remaps.
+Right-click to extend or retract. Craft one with three Industrial Alloy Ingots
+across the top row, a piston in the center, and black wool below it.
 
 Creative shift-right-click opens these settings:
 
+- **Size:** Small (default), Medium (the previous Large design), or Large. Large
+  has a 14-pixel wheel and spans the full block width. Size changes apply immediately.
 - **Redstone Disabled:** move manually with right-click.
 - **Redstone On** (default): extend with power and retract when power stops.
 - **Redstone Off:** extend without power and retract with power.
@@ -112,9 +132,9 @@ below; occupied cells remain reserved until the piston and wheel clear them.
 Breaking any occupied part removes the fixture. Saved settings survive mining
 and pick-block. Dynmap shows the default retracted model.
 
-![Small and large gear retracted](../images/gallery/v1.2/gear.png)
-![Both gear sizes extended one block](../images/gallery/v1.2/gear-extended.png)
-![Both gear sizes extended four blocks](../images/gallery/v1.2/gear-four.png)
+![Small, Medium and Large gear retracted](../images/gallery/v1.2/gear.png)
+![All three sizes extended one block](../images/gallery/v1.2/gear-extended.png)
+![All three sizes extended four blocks](../images/gallery/v1.2/gear-four.png)
 ![Half-block extension](../images/gallery/v1.2/gear-half.png)
 ![Returned to the retracted pose](../images/gallery/v1.2/gear-retracted.png)
 ![Landing gear configuration](../images/gallery/v1.2/landing-gear-config.png)
@@ -178,10 +198,13 @@ corrections no longer stall the visual transition. This changes animation timing
 it does not reduce the cost of drawing door models. Ramps retain server-timed
 motion because their moving collision and passengers must stay synchronized.
 
-Ramp discovery now compares effective textures on all six faces and stored side layout.
-Different finishes stop the flood fill; disabled face choices do not split an
-otherwise matching platform. Moving programmable platforms also render their
-face overrides. Immersive Engineering's regular and scaffold slabs are accepted,
+The Ramp dialog has **Match textures: On/Off**, On by default. With it On,
+discovery compares effective textures on all six faces and stored side layout.
+Different finishes stop selection; disabled face choices do not split an
+otherwise matching platform. With it Off, differently textured Programmable
+Blocks or Slabs can share a platform; block type and slab half still must match.
+Each block keeps its own finish when restored. The option is saved and copied.
+Moving programmable platforms also render their face overrides. Immersive Engineering's regular and scaffold slabs are accepted,
 with their upper/lower/double slab settings saved and restored.
 
 New Better Builder's Wands operations record the restored block states for
@@ -189,3 +212,21 @@ New Better Builder's Wands operations record the restored block states for
 operations are grouped for BBW's normal removal and refund logic. Undo skips
 unloaded or protected positions and cannot run in another dimension. Old undo
 records created before this fix do not contain the restored-state information.
+
+
+![Ramp texture matching option](../images/gallery/v1.2/ramp-matching-config.png)
+
+### Rendering and startup fixes
+
+Programmable Lights draw their artwork as the front face of the housing. There
+is no second housing face underneath it to cause distant depth flickering.
+Porthole glass uses the existing glass texture and renders after opaque blocks,
+preventing neighboring housings from overwriting portions of joined panes.
+
+![Single and joined lights](../images/gallery/v1.2/light-depth-near.png)
+![Joined Circular porthole glass](../images/gallery/v1.2/round-glass-front.png)
+![Glass viewed at an angle](../images/gallery/v1.2/round-glass-left.png)
+
+Redstone lights defer channel registration and power checks until their first
+normal tick. Power checks only inspect loaded neighbors, avoiding the chunk-load
+iteration crash found in the supplied startup logs.

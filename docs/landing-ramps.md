@@ -8,7 +8,7 @@ arrow points to the seed block it will select.
 Craft the controller with a piston in the center of a 3×3 crafting grid and
 Programmable Matter Ingots in the eight surrounding slots.
 
-Right-click to configure. Every valid setting edit is sent immediately; there is
+Creative shift-right-click to configure, or use the Configurizer. Every valid setting edit is sent immediately; there is
 no Apply button. An edit resets the platform to its original position, then
 evaluates the redstone signal using the new settings:
 
@@ -71,6 +71,12 @@ also counts toward these spans. Length follows the configured ramp direction;
 width is perpendicular to it, independently of the controller’s selection arrow. Diagonal contact does not connect;
 holes remain holes. Bounds are shown in the dialog. Previously deployed larger
 platforms retain their saved blocks until restored; new deployments use these limits.
+
+**Match textures** is On by default: programmable sources must also match their
+effective face textures and slab side layout. Turn it Off to include different
+finishes without mixing block types or slab halves. Each source retains its
+own finish. Immersive Engineering regular and scaffold slabs are supported,
+including their material and half settings. The option is saved and copied.
 
 Before any mutation, the controller checks the whole selection and its
 movement space. That space must be air, all involved chunks must be loaded,

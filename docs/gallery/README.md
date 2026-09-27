@@ -14,7 +14,8 @@ at full size to inspect its texture and model.
 - [Programmable Ramp](ramp-controller.md)
 - [Lights](lights.md)
 - [Buttons, switches, and levers](controls.md)
-- [Chairs](chairs.md)
+- [Chairs and connected seats](chairs.md)
+- [Landing Gear](version-1.2.md#landing-gear)
 - [Building blocks, finishes, and glass](building.md)
 
 The [Configurizer](../CONFIGURIZER.md) opens programmable block settings. The
