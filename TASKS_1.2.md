@@ -55,7 +55,7 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Door slab support | Done | Both slab halves accepted by door placement/support checks. |
 | Client crash | Done | Mutable custom-sprite frame lists; load/mipmap/clear check and full live suite passed. Full external TextureFix pack not installed in test client. |
 | Extra housing textures | Done | Added existing glass frame interior and door interior with actual 0xA8 tint; appended indices preserve saved choices. |
-| Final validation / docs | Done | Java 8 build, original-texture packaging, final live runtime checks and pixel analyzers passed (`render-run.OoewtY`); illustrated guide and local documentation links checked. |
+| Final validation / docs | Done | Java 8 standard build, final live runtime checks and pixel analyzers passed (`render-run.OoewtY`); illustrated guide and local documentation links checked. |
 
 ### Validation follow-ups
 
