@@ -613,6 +613,15 @@ public class ReproLab {
             case 16:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "programmable_block_gui");
+                TileEntityAnimatedScreenSelector faceTile = (TileEntityAnimatedScreenSelector)mc.world.getTileEntity(CONTROL);
+                faceTile.setFaceTextures(new com.vandorlabs.tiles.FaceTextures(true, new int[]{-1,1,3,-1,4,-1}));
+                mc.displayGuiScreen(new GuiProgrammableWall(mc.player.inventory, faceTile));
+                state = 31;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 31:
+                if (--holdTicks > 0) break;
+                saveNamed(mc, "programmable_face_overrides_gui");
                 prepareItemHotbar(mc);
                 state = 8;
                 holdTicks = GUI_SETTLE_TICKS;

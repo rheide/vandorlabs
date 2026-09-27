@@ -26,5 +26,6 @@ public class PacketHandler {
                 MessageProgrammableTrigger.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageDuplifierOptions.Handler.class,
                 MessageDuplifierOptions.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageFaceTextures.Handler.class, MessageFaceTextures.class, id++, Side.SERVER);
     }
 }

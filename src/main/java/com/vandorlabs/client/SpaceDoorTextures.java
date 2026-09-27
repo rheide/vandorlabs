@@ -30,6 +30,16 @@ public final class SpaceDoorTextures {
         }
     }
 
+    static void checkFrameCleanup(IResourceManager manager) {
+        for (String name : new String[]{"standard", "observation_glass"}) {
+            RectangularSprite sprite = new RectangularSprite("vandorlabs:blocks/space_doors/medium/" + name);
+            sprite.load(manager, new ResourceLocation("vandorlabs", "textures/blocks/space_doors/medium/" + name + ".png"), ignored -> null);
+            sprite.generateMipmaps(2);
+            sprite.clearFramesTextureData();
+            if (sprite.getFrameCount() != 0) throw new IllegalStateException("Door sprite frames were not cleared");
+        }
+    }
+
     private static final class RectangularSprite extends TextureAtlasSprite {
         private float usedU = 1, usedV = 1;
         RectangularSprite(String name) { super(name); }
@@ -57,7 +67,7 @@ public final class SpaceDoorTextures {
         public void generateMipmaps(int levels) {
             int[][] pixels = Arrays.copyOf(getFrameTextureData(0), levels + 1);
             if (!getIconName().endsWith("_glass")) {
-                setFramesTextureData(Collections.singletonList(pixels));
+                setFramesTextureData(new java.util.ArrayList<>(Collections.singletonList(pixels)));
                 super.generateMipmaps(levels);
                 return;
             }
@@ -86,7 +96,7 @@ public final class SpaceDoorTextures {
                     }
                 }
             }
-            setFramesTextureData(Collections.singletonList(pixels));
+            setFramesTextureData(new java.util.ArrayList<>(Collections.singletonList(pixels)));
         }
 
         @Override
@@ -116,7 +126,7 @@ public final class SpaceDoorTextures {
                 }
                 if (getIconName().endsWith("/double_frame_metal"))
                     com.vandorlabs.render.SpaceFramePixels.repair(pixels[0], size, size);
-                setFramesTextureData(Collections.singletonList(pixels));
+                setFramesTextureData(new java.util.ArrayList<>(Collections.singletonList(pixels)));
                 // Forge 1.12's caller stitches custom sprites when load returns false.
                 return false;
             } catch (IOException exception) {

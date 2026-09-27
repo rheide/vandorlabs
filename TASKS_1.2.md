@@ -34,8 +34,8 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 
 | Work | Status | Findings / validation |
 | --- | --- | --- |
-| Version / tracking | In progress | Baseline live suite started before implementation. |
-| Face overrides and Copifier | Pending | Existing tile data and chunk model support this; cache individual faces. |
+| Version / tracking | Done | Version 1.2 set in Gradle and mod metadata; baseline captured in `testclient/render-run.RA4YaV`. |
+| Face overrides and Copifier | Implemented, validating | Default off; per-face inheritance; local orientation; individual-face cache; disabled copies omit face choices. Java 8 build passed. |
 | WorldEdit diagonal flip | Pending | Exercise actual WorldEdit transform boundary. |
 | Diagonal porthole | Pending | Four shapes, joining, full/half width. |
 | Diagonal half height | Pending | Add full-width half-height geometry and matching joins. |
@@ -49,6 +49,6 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Diagonal Half Console | Pending | New half-height, half-depth block, top/bottom placement. |
 | Creative door cleanup | Pending | Keep only Programmable Door visible. |
 | Door slab support | Pending | Placement and neighbor support checks. |
-| Client crash | Investigating | Supplied log shows TextureFix clearing an immutable sprite frame list. |
+| Client crash | Implemented, validating | Supplied `latest.log:82224` shows TextureFix clearing an immutable sprite frame list. Replaced all three custom-sprite singleton lists with mutable lists; added load/mipmap/clear regression check. |
 | Extra housing textures | Pending | Add glass/door inner frame and darker door texture. |
 | Final validation / docs | Pending | Java 8 build, targeted runtime cases, full live suite, screenshots, JAR inspection. |

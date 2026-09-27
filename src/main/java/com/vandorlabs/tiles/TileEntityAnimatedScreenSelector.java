@@ -93,6 +93,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int redstoneChannel;
     private boolean channelSignal;
     private int housingTexture;
+    private FaceTextures faceTextures = FaceTextures.DEFAULT;
     private boolean slabTileSides;
     private boolean diagonalFullWidth;
     private int glassShade = 2;
@@ -128,6 +129,17 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         markDirty();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
+    }
+
+    public FaceTextures getFaceTextures() { return faceTextures; }
+    public void setFaceTextures(FaceTextures value) {
+        if (faceTextures.equals(value)) return;
+        faceTextures = value;
+        markDirty();
+        if (world != null) {
+            world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
+            if (world.isRemote) world.markBlockRangeForRenderUpdate(pos, pos);
+        }
     }
 
     public int getHousingTexture() { return housingTexture; }
@@ -314,6 +326,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("GlassShade", glassShade);
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setInteger("PortholeShape", portholeShape);
+        compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
+        compound.setIntArray("FaceTextures", faceTextures.choices());
         compound.setBoolean("SlabTileSides", slabTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setInteger("HousingTextureVersion", 1);
@@ -322,6 +336,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public void readFromNBT(NBTTagCompound compound) {
+        FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
         boolean previousSlabSides = slabTileSides;
         boolean previousDiagonalWidth = diagonalFullWidth;
@@ -355,10 +370,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
+        faceTextures = new FaceTextures(compound.getBoolean("FaceTexturesEnabled"),
+                compound.getIntArray("FaceTextures"));
         slabTileSides = compound.getBoolean("SlabTileSides");
         diagonalFullWidth = compound.getBoolean("DiagonalFullWidth");
         if (world != null && world.isRemote
-                && (previousHousing != housingTexture || previousSlabSides != slabTileSides
+                && (!previousFaces.equals(faceTextures) || previousHousing != housingTexture || previousSlabSides != slabTileSides
                 || previousDiagonalWidth != diagonalFullWidth))
             world.markBlockRangeForRenderUpdate(pos,pos);
         portholeRevision++;

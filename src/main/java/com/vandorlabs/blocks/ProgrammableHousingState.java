@@ -18,6 +18,14 @@ public final class ProgrammableHousingState {
     public static final IUnlistedProperty<Integer> TILE_SIDES = integer("housing_tile_sides");
     public static final IUnlistedProperty<Integer> LIGHT = integer("housing_light");
 
+    public static final IUnlistedProperty<com.vandorlabs.tiles.FaceTextures> FACES =
+            new IUnlistedProperty<com.vandorlabs.tiles.FaceTextures>() {
+                public String getName() { return "housing_face_textures"; }
+                public boolean isValid(com.vandorlabs.tiles.FaceTextures value) { return value != null; }
+                public Class<com.vandorlabs.tiles.FaceTextures> getType() { return com.vandorlabs.tiles.FaceTextures.class; }
+                public String valueToString(com.vandorlabs.tiles.FaceTextures value) { return value.toString(); }
+            };
+
     private ProgrammableHousingState() { }
 
     private static IUnlistedProperty<Integer> integer(String name) {
@@ -56,6 +64,7 @@ public final class ProgrammableHousingState {
             if (hide) visible &= ~(1 << side.getIndex());
         }
         return ((IExtendedBlockState)state).withProperty(FINISH, finish)
+                .withProperty(FACES, tile == null ? com.vandorlabs.tiles.FaceTextures.DEFAULT : tile.getFaceTextures())
                 .withProperty(TILE_SIDES, tileSides).withProperty(VISIBLE, visible)
                 .withProperty(LIGHT, neighborLight(world, pos));
     }

@@ -68,7 +68,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.RAMP_LIFT, "Lift Mode", 4),
             option(ProgrammableSettings.RAMP_EXTEND, "Extend Mode", 4),
             option(ProgrammableSettings.RAMP_DIRECTION, "Ramp Direction", 4),
-            option(ProgrammableSettings.RAMP_TRAVEL, "Travel Direction", 4)
+            option(ProgrammableSettings.RAMP_TRAVEL, "Travel Direction", 4),
+            option(ProgrammableSettings.FACE_TEXTURES, "Face Overrides", 2)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;

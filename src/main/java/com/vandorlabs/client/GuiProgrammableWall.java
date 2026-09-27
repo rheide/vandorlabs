@@ -35,6 +35,20 @@ public class GuiProgrammableWall extends GuiContainer {
     private final boolean slab;
     private final boolean diagonal;
     private int selected;
+    private int faceTarget = -1;
+    private static final String[] FACE_NAMES = {"Bottom", "Top", "Front", "Back", "Left", "Right"};
+    private boolean supportsFaces() {
+        net.minecraft.block.Block block = tile.getBlockType();
+        return block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
+    }
+    private int selectedTexture() {
+        return faceTarget < 0 ? tile.getHousingTexture()
+                : tile.getFaceTextures().texture(faceTarget, tile.getHousingTexture());
+    }
+    private void sendFaces(com.vandorlabs.tiles.FaceTextures faces) {
+        tile.setFaceTextures(faces);
+        PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageFaceTextures(tile.getPos(), faces));
+    }
     private int shade;
     private int shape;
     private boolean join;
@@ -74,11 +88,26 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override public void initGui() {
+        if (supportsFaces())
+            ySize = (slab ? 242 : 216) + (tile.getFaceTextures().enabled ? 52 : 0);
         super.initGui();
         buttonList.clear();
         listX = guiLeft + 11;
-        listY = guiTop + (porthole ? 106 : 27);
+        listY = guiTop + (porthole ? 106 : supportsFaces() && tile.getFaceTextures().enabled ? 79 : 27);
         scroll = Math.min(Math.max(0, selected - ROWS / 2), maxScroll());
+        if (supportsFaces()) {
+            buttonList.add(new GuiButton(106, guiLeft + 14, guiTop + ySize - 51, 312, 20,
+                    "Face overrides: " + (tile.getFaceTextures().enabled ? "On" : "Off")));
+            if (tile.getFaceTextures().enabled) {
+                buttonList.add(new GuiButton(107, guiLeft + 14, guiTop + 25, 312, 20,
+                        "Texture for: " + (faceTarget < 0 ? "Main" : FACE_NAMES[faceTarget])));
+                GuiButton inherit = new GuiButton(108, guiLeft + 14, guiTop + 51, 312, 20,
+                        faceTarget < 0 ? "Select a face to override" : tile.getFaceTextures().choice(faceTarget) < 0
+                                ? "Using main texture" : "Use main texture");
+                inherit.enabled = faceTarget >= 0 && tile.getFaceTextures().choice(faceTarget) >= 0;
+                buttonList.add(inherit);
+            }
+        }
         if (porthole) buttonList.add(new GuiButton(101, guiLeft + 14,
                 guiTop + 25, 312, 20, shadeLabel()));
         if (porthole) buttonList.add(new GuiButton(102, guiLeft + 14,
@@ -86,7 +115,7 @@ public class GuiProgrammableWall extends GuiContainer {
         if (porthole) buttonList.add(new GuiButton(104, guiLeft + 14,
                 guiTop + 77, 312, 20, shapeLabel()));
         if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
-                guiTop + 163, 312, 20, slabSidesLabel()));
+                guiTop + ySize - 77, 312, 20, slabSidesLabel()));
         if (diagonal) buttonList.add(new GuiButton(105, guiLeft + 14,
                 guiTop + 163, 312, 20, diagonalWidthLabel()));
         buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + ySize - 25, 312, 20,
@@ -134,6 +163,13 @@ public class GuiProgrammableWall extends GuiContainer {
 
     private void choose(int choice) {
         selected = choice;
+        if (supportsFaces() && tile.getFaceTextures().enabled && faceTarget >= 0) {
+            int[] choices = tile.getFaceTextures().choices();
+            choices[faceTarget] = choice;
+            sendFaces(new com.vandorlabs.tiles.FaceTextures(true, choices));
+            initGui();
+            return;
+        }
         tile.setHousingTexture(choice);
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(tile.getPos(),
                 tile.getSelectedScreen(), tile.isRedstoneEnabled(), tile.getDisplayMode(),
@@ -182,6 +218,25 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if (button.id == 106) {
+            sendFaces(new com.vandorlabs.tiles.FaceTextures(!tile.getFaceTextures().enabled,
+                    tile.getFaceTextures().choices()));
+            faceTarget = -1;
+            selected = selectedTexture();
+            initGui();
+        }
+        if (button.id == 107) {
+            faceTarget = (faceTarget + 2) % 7 - 1;
+            selected = selectedTexture();
+            initGui();
+        }
+        if (button.id == 108 && faceTarget >= 0) {
+            int[] choices = tile.getFaceTextures().choices();
+            choices[faceTarget] = -1;
+            sendFaces(new com.vandorlabs.tiles.FaceTextures(true, choices));
+            selected = selectedTexture();
+            initGui();
+        }
         if (button.id == 100) mc.player.closeScreen();
         if (button.id == 101) {
             shade = (shade + 1) % SHADES.length;

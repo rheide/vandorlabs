@@ -43,6 +43,8 @@ final class ScreenRuntimeChecks {
                                 ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState()))
                         .isJoinPortholes(),
                 "new programmable portholes should join by default");
+        SpaceDoorTextures.checkFrameCleanup(Minecraft.getMinecraft().getResourceManager());
+        FaceTextureRuntimeChecks.run(player);
         checkHousingSprites();
         checkHousingCycling();
         checkSurvivalDropRoundTrip(player);

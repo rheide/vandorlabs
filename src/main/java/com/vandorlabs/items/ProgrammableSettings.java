@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String FACE_TEXTURES = "face_textures";
     public static final String WALL_TEXTURE = "wall_texture";
     public static final String PRIMARY_TEXTURE = "primary_texture";
     public static final String PRIMARY_KIND = "primary_kind";
@@ -124,6 +125,13 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
+            if (block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB) {
+                NBTTagCompound faces = new NBTTagCompound();
+                faces.setBoolean("enabled", screen.getFaceTextures().enabled);
+                if (screen.getFaceTextures().enabled)
+                    faces.setIntArray("choices", screen.getFaceTextures().choices());
+                out.setTag(FACE_TEXTURES, faces);
+            }
             if (isDisplay(block)) {
                 out.setString(PRIMARY_KIND, "screen");
                 out.setString(PRIMARY_TEXTURE, screen.getSelectedScreen());
@@ -267,6 +275,14 @@ public final class ProgrammableSettings {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             if (values.hasKey(WALL_TEXTURE, 3)) {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
+                applicable = true;
+            }
+            if ((block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB)
+                    && values.hasKey(FACE_TEXTURES, 10)) {
+                NBTTagCompound faces = values.getCompoundTag(FACE_TEXTURES);
+                boolean enabled = faces.getBoolean("enabled");
+                screen.setFaceTextures(new com.vandorlabs.tiles.FaceTextures(enabled,
+                        enabled ? faces.getIntArray("choices") : screen.getFaceTextures().choices()));
                 applicable = true;
             }
             if (isDisplay(block)) {

@@ -108,7 +108,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.1.jar`.
+`build/libs/vandorlabs-1.2.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
@@ -126,8 +126,8 @@ one-off jar with those original textures, run:
 ./gradlew clean buildOriginalTextures --no-daemon
 ```
 
-This produces `build/libs/vandorlabs-1.1-original-textures.jar`. The normal
-`vandorlabs-1.1.jar` remains the selected default.
+This produces `build/libs/vandorlabs-1.2-original-textures.jar`. The normal
+`vandorlabs-1.2.jar` remains the selected default.
 
 ## Texture dimensions
 

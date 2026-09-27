@@ -30,7 +30,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             EnumFacing.WEST, EnumFacing.EAST, EnumFacing.NORTH, EnumFacing.SOUTH};
     private final IBakedModel delegate;
     private final boolean slab;
-    private final Map<Integer, BakedQuad[]> variants = new ConcurrentHashMap<>();
+    private final Map<Integer, BakedQuad> variants = new ConcurrentHashMap<>();
 
     public ProgrammableHousingModel(IBakedModel delegate, boolean slab) {
         this.delegate = delegate;
@@ -42,8 +42,11 @@ public final class ProgrammableHousingModel implements IBakedModel {
         if (state == null) return delegate.getQuads(null, side, rand);
         if (side != null) return Collections.emptyList();
         int finish = 0, visible = 63, tileSides = 0;
+        com.vandorlabs.tiles.FaceTextures faces = com.vandorlabs.tiles.FaceTextures.DEFAULT;
         if (state instanceof IExtendedBlockState) {
             IExtendedBlockState extended = (IExtendedBlockState)state;
+            if (extended.getValue(ProgrammableHousingState.FACES) != null)
+                faces = extended.getValue(ProgrammableHousingState.FACES);
             Integer f = extended.getValue(ProgrammableHousingState.FINISH);
             Integer v = extended.getValue(ProgrammableHousingState.VISIBLE);
             Integer t = extended.getValue(ProgrammableHousingState.TILE_SIDES);
@@ -54,27 +57,28 @@ public final class ProgrammableHousingModel implements IBakedModel {
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
         boolean upper = slab && state.getValue(BlockProgrammableSlab.HALF)
                 == BlockSlab.EnumBlockHalf.TOP;
-        int key = (((finish * 6 + facing.getIndex()) * 2 + (upper ? 1 : 0)) * 2
-                + (tileSides != 0 ? 1 : 0));
-        final int texture = finish;
-        final boolean top = upper, tiled = tileSides != 0;
-        BakedQuad[] quads = variants.computeIfAbsent(key,
-                ignored -> build(texture, facing, top, tiled));
         List<BakedQuad> result = new ArrayList<>(6);
-        for (EnumFacing face : EnumFacing.values())
-            if ((visible & (1 << face.getIndex())) != 0)
-                result.add(quads[face.getIndex()]);
+        for (int local = 0; local < 6; local++) {
+            EnumFacing worldFace = worldFace(FACE[local], facing);
+            if ((visible & (1 << worldFace.getIndex())) == 0) continue;
+            int texture = faces.texture(FACE[local].getIndex(), finish);
+            int key = ((((texture * 6 + facing.getIndex()) * 2 + (upper ? 1 : 0)) * 2
+                    + (tileSides != 0 ? 1 : 0)) * 6 + local);
+            final int faceIndex = local;
+            final boolean tiled = tileSides != 0;
+            result.add(variants.computeIfAbsent(key,
+                    ignored -> build(texture, facing, upper, tiled, faceIndex)));
+        }
         return result;
     }
 
-    private BakedQuad[] build(int finish, EnumFacing facing, boolean upper, boolean tileSides) {
+    private BakedQuad build(int finish, EnumFacing facing, boolean upper, boolean tileSides, int i) {
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(ScreenHousingTextures.texture(finish));
         ScreenHousingMesh mesh = slab ? ScreenHousingMesh.slab(upper, tileSides)
                 : ScreenHousingMesh.cube();
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
-        BakedQuad[] result = new BakedQuad[6];
-        for (int i = 0; i < result.length; i++) {
+
             int[] data = new int[28];
             ScreenHousingMesh.Vertex[] points = mesh.quads[i].vertices;
             for (int j = 0; j < 4; j++) {
@@ -101,19 +105,19 @@ public final class ProgrammableHousingModel implements IBakedModel {
             // maximum-neighbor light rule for every face.
             EnumFacing sampleFace = FACE[i].getAxis() == EnumFacing.Axis.Y
                     ? EnumFacing.NORTH : EnumFacing.UP;
-            EnumFacing worldFace = FACE[i];
-            if (worldFace.getAxis() != EnumFacing.Axis.Y) {
-                switch (rotation) {
-                    case 1: worldFace = worldFace.rotateYCCW(); break;
-                    case 2: worldFace = worldFace.getOpposite(); break;
-                    case 3: worldFace = worldFace.rotateY(); break;
-                    default: break;
-                }
-            }
-            result[worldFace.getIndex()] = new BakedQuad(data, -1, sampleFace,
+            return new BakedQuad(data, -1, sampleFace,
                     sprite, false, DefaultVertexFormats.BLOCK);
+    }
+
+    private static EnumFacing worldFace(EnumFacing face, EnumFacing facing) {
+        int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
+        if (face.getAxis() == EnumFacing.Axis.Y) return face;
+        switch (rotation) {
+            case 1: return face.rotateYCCW();
+            case 2: return face.getOpposite();
+            case 3: return face.rotateY();
+            default: return face;
         }
-        return result;
     }
 
     @Override public boolean isAmbientOcclusion() { return false; }
