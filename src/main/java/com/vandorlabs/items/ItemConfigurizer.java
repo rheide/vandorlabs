@@ -43,6 +43,7 @@ public final class ItemConfigurizer extends Item {
         if (tile instanceof TileEntitySpaceDoor) gui = GuiHandler.GUI_SPACE_DOOR;
         else if (tile instanceof TileEntityProgrammableGlass) gui = GuiHandler.GUI_PROGRAMMABLE_GLASS;
         else if (tile instanceof TileEntityProgrammableLight) gui = GuiHandler.GUI_PROGRAMMABLE_LIGHT;
+        else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) gui = GuiHandler.GUI_LANDING_GEAR;
         else if (tile instanceof TileEntityProgrammableChair) gui = GuiHandler.GUI_PROGRAMMABLE_CHAIR;
         else if (state.getBlock() instanceof BlockRampController) gui = GuiHandler.GUI_RAMP_CONTROLLER;
         else if (tile instanceof TileEntityAnimatedScreenSelector)

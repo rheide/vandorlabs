@@ -88,6 +88,15 @@ final class Version12RuntimeChecks {
                 TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");
                 require(!tile.configure(3,0,65),"gear accepted invalid settings");
+                BlockPos remote=p.add(2,0,0);
+                world.setBlockState(remote,gear.getDefaultState(),3);
+                TileEntityLandingGear linked=(TileEntityLandingGear)world.getTileEntity(remote);
+                require(linked.configure(1,731,16),"linked gear configuration");
+                require(world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"gear did not receive remote channel signal");
+                world.setBlockToAir(p.east());tile.inputChanged();
+                require(!world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"gear channel remained powered");
+                world.setBlockToAir(remote);
+
                 tile.configure(0,0,16);world.setBlockToAir(p.east());
                 gear.setExtended(world,p,true);world.destroyBlock(p.down(),false);
                 require(world.isAirBlock(p),"gear root survived wheel removal");

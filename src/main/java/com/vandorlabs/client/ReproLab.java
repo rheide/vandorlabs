@@ -503,7 +503,8 @@ public class ReproLab {
                 if (shotIndex < SHOTS.size()) {
                     Shot next = SHOTS.get(shotIndex);
                     beginShot(mc, next, false);
-                    holdTicks = next.name.endsWith("opening_mid") ? 4
+                    holdTicks = next.name.equals("gallery_v12_gear_four") ? 100
+                            : next.name.endsWith("opening_mid") ? 4
                             : next.name.startsWith("gallery_") ? 60
                             : CAPTURE_SETTLE_TICKS;
                 } else {
@@ -887,7 +888,9 @@ public class ReproLab {
                     World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
                     owner.setPositionAndUpdate(gearGui.getX(),gearGui.getY(),gearGui.getZ()-2);
-                    owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LANDING_GEAR,w,gearGui.getX(),gearGui.getY(),gearGui.getZ());
+                    owner.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));
+                    com.vandorlabs.items.ItemConfigurizer.onRightClickBlock(new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock(
+                            owner,EnumHand.MAIN_HAND,gearGui,EnumFacing.NORTH,new net.minecraft.util.math.Vec3d(gearGui)));
                 });
                 state=34;holdTicks=20;break;
             case 34:

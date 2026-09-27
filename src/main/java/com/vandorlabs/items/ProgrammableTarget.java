@@ -21,6 +21,10 @@ public final class ProgrammableTarget {
         if ((state.getBlock() instanceof com.vandorlabs.blocks.BlockConnectedSeat
                 || state.getBlock() instanceof com.vandorlabs.blocks.BlockBridgeChair)
                 && state.getValue(com.vandorlabs.blocks.BlockBridgeChair.UPPER))return clicked.down();
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear){
+            com.vandorlabs.tiles.TileEntityLandingGear tile=((com.vandorlabs.blocks.BlockTelescopicLandingGear)state.getBlock()).root(world,clicked);
+            if(tile!=null)return tile.getPos();
+        }
         return clicked;
     }
 }
