@@ -159,3 +159,5 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - Full live suite passed in `render-run.MThBBJ`: diagonal direction, filled-face UVs, optional ramp matching, startup load safety, and all existing checks. Unified landing gear and the new rendering reports require the next build.
 
 - Unified gear build passed; all three sizes passed runtime motion, reservation, collision, pick-block and saved-size checks. Small and Medium model JSONs exactly retain the previous Small and Large geometry. New Large: 14-pixel wheel, 16-pixel overall width. Full visual/GUI validation is running in `render-run.y7UL92`.
+
+- Rendering checkpoint: removed the redundant light housing front; moved porthole glass to the translucent pass after opaque tiles. Near/far/oblique light captures and front/rear/both-side Circular porthole captures inspected. Pixel checks find no dark housing stripes in distant light centers and no untinted/opaque gaps across sampled joined glass seams. Small/Medium gear pixels match the prior build exactly in all five poses.

@@ -32,6 +32,7 @@ python3 testclient/analyze_viewscreen.py "$RUN_OUT" --texture-variant
 python3 testclient/analyze_space_doors.py "$RUN_OUT"
 python3 testclient/analyze_landing_gear.py "$RUN_OUT"
 python3 testclient/analyze_seat_icons.py "$RUN_OUT"
+python3 testclient/analyze_light_and_glass.py "$RUN_OUT"
 python3 testclient/analyze_diagonal_joins.py "$RUN_OUT"
 grep -q 'diagonal-fill-textures PASS' "$RUN_OUT/client.log"
 grep -q 'diagonal-direction-gui PASS' "$RUN_OUT/client.log"
