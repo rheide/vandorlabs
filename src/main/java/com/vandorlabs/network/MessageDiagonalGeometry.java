@@ -48,7 +48,7 @@ public final class MessageDiagonalGeometry implements IMessage {
                 if (tile != container.getTileEntity()
                         || !container.canInteractWith(player)) return;
                 com.vandorlabs.blocks.BlockProgrammableWall block = (com.vandorlabs.blocks.BlockProgrammableWall)player.world.getBlockState(msg.pos).getBlock();
-                if (block.isPortholeShape() && (msg.mode == 2 || msg.fill != 0)) return;
+                if (block.isPortholeShape() && msg.fill != 0) return;
                 ((TileEntityAnimatedScreenSelector) tile).setDiagonalGeometry(msg.mode, msg.fill);
             });
             return null;

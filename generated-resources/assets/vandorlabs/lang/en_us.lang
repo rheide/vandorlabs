@@ -429,3 +429,6 @@ tile.vandorlabs.landing_gear_top_small.name=Landing Gear Top Small
 tile.vandorlabs.landing_gear_top_small_telescopic.name=Landing Gear Top Small Telescopic
 tile.vandorlabs.programmable_diagonal_half_console.name=Programmable Diagonal Half Console
 tile.vandorlabs.programmable_diagonal_porthole.name=Programmable Diagonal Porthole
+
+tile.vandorlabs.programmable_stairs.name=Programmable Stairs
+gui.vandorlabs.stairs.title=Programmable Stairs Texture

@@ -40,6 +40,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_TRIGGER_BLOCK;
     public static Block PROGRAMMABLE_LIGHT;
     public static Block PROGRAMMABLE_SLAB;
+    public static Block PROGRAMMABLE_STAIRS;
     public static Block PROGRAMMABLE_CHAIR;
     public static Block PROGRAMMABLE_PORTHOLE_WALL;
     public static Block PROGRAMMABLE_PORTHOLE_BLOCK;
@@ -179,6 +180,7 @@ public class ModBlocks {
         PROGRAMMABLE_LIGHT = add(new BlockProgrammableLight());
         PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
         PROGRAMMABLE_SLAB = add(new BlockProgrammableSlab());
+        PROGRAMMABLE_STAIRS = add(new BlockProgrammableStairs());
         PROGRAMMABLE_PORTHOLE_WALL = add(new BlockProgrammableWall("programmable_porthole_wall",
                 BlockProgrammableWall.Shape.PORTHOLE));
         PROGRAMMABLE_PORTHOLE_BLOCK = add(new BlockProgrammablePortholeBlock());
@@ -601,6 +603,11 @@ public class ModBlocks {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())
                     || "inventory".equals(location.getVariant())) continue;
             String path = location.getResourcePath();
+            if ("programmable_stairs".equals(path)) {
+                event.getModelRegistry().putObject(location,new com.vandorlabs.client.ProgrammableStairsModel(
+                        event.getModelRegistry().getObject(location)));
+                continue;
+            }
             if (!"programmable_block".equals(path) && !"programmable_slab".equals(path)) continue;
             net.minecraft.client.renderer.block.model.IBakedModel original =
                     event.getModelRegistry().getObject(location);
@@ -625,6 +632,9 @@ public class ModBlocks {
             if (model != null) event.getModelRegistry().putObject(location,
                     new com.vandorlabs.client.PropulsionSideModel(model));
         }
+        ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");
+        if (event.getModelRegistry().getObject(stairItem)!=null)
+            event.getModelRegistry().putObject(stairItem,new com.vandorlabs.client.ProgrammableStairsModel(event.getModelRegistry().getObject(stairItem)));
         for (int design = 0; design < com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;
                 design++) for (String detail : com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS)
             for (boolean framed : new boolean[]{false, true})

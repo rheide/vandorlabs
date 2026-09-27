@@ -83,3 +83,11 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 - [ ] Make ramp selection distinguish programmable finishes; verify behavior.
 
 Initial findings: door easing uses synchronized world time; BBW undo compares exact state strings after our orientation fix; IE slabs use `TileEntityIESlab`; ramp flood fill compares only IBlockState.
+
+- [ ] Join half-width diagonal portholes stacked into one continuous slope (reversed upper piece).
+- [ ] Add half-height, full-width diagonal portholes.
+
+- [ ] Fix inside/outside fill on joined diagonal corners: retain arms and clip fill to the corner.
+
+
+Follow-up implementation checkpoint: stairs use vanilla corner/collision geometry with cached per-face retexturing; door visuals use a monotonic paused-aware client clock; BBW undo retains restored state groups; IE slab NBT is preserved and its half matched; ramp discovery compares effective face textures. Stacked portholes now compare actual surface planes, and the half-height option is enabled. Corner fill retains arms and clips to the joined span. Java 8 build passed; expanded live validation is running with the read-only source IE JAR copied into the isolated test client.

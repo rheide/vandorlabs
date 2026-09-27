@@ -17,12 +17,14 @@ cp "$HOME/MC-Forge12-2/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
     testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar
 cp "$HOME/MC-Forge12-2/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     testclient/runtime/game/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar
+cp "$HOME/MC-Forge12-2/mods/ImmersiveEngineering-0.12-98.jar" testclient/runtime/game/mods/
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 600 testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
 if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     echo "FAIL: missing or invalid baked model; see $RUN_OUT/client.log"
     exit 1
 fi
+grep -q '\[vandorlabs\]\[reprolab\] followup-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] version-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] face-textures-runtime PASS' "$RUN_OUT/client.log"
 ANALYZE_ARGS=("$RUN_OUT" --texture-variant)

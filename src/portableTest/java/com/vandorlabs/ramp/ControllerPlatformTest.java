@@ -27,6 +27,15 @@ public final class ControllerPlatformTest {
         return result;
     }
     public static void main(String[] args) {
+        com.vandorlabs.animation.VisualClock clock=new com.vandorlabs.animation.VisualClock();
+        com.vandorlabs.animation.DoorAnimation visual=new com.vandorlabs.animation.DoorAnimation(9);
+        visual.sample(false,clock.sample(0,false));
+        visual.sample(true,clock.sample(0,false));
+        close(visual.sample(true,clock.sample(225000000,false)),.5,"door half open despite frozen server time");
+        close(visual.sample(true,clock.sample(900000000,true)),.5,"paused door");
+        close(visual.sample(true,clock.sample(2000000000L,false)),.5,"resume without jump");
+        close(visual.sample(true,clock.sample(2225000000L,false)),1,"door finishes on visual clock");
+
         for (RampGeometry.Direction face:RampGeometry.Direction.values()) {
             RampGeometry.Box initial=RampGeometry.movingTread(face,10,40,20,0,1,0,1,0,2,16,0,
                     0,0,true,RampGeometry.LEFT,false);

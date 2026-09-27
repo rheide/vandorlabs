@@ -149,13 +149,19 @@ public class TileEntityControlledRamp extends TileEntity {
         return RampGeometry.Direction.valueOf(face.getName().toUpperCase(java.util.Locale.ROOT));
     }
     public boolean belongsTo(BlockPos owner) { return controller.equals(owner); }
-    public int sourceHousing(RampGeometry.Box box,double partial) {
+    public int sourceHousing(RampGeometry.Box box,double partial,EnumFacing face) {
         if (sourceTileTags.isEmpty()) return -1;
         BlockPos origin=originFor(box,partial);
         NBTTagCompound saved=sourceTileTags.get(origin);
         if (saved==null) saved=sourceTileTags.values().iterator().next();
-        return ScreenHousingTextures.clamp(saved.getInteger(
-                com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+        if (!saved.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE)) return -1;
+        int main=ScreenHousingTextures.clamp(saved.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+        FaceTextures faces=new FaceTextures(saved.getBoolean("FaceTexturesEnabled"),saved.getIntArray("FaceTextures"));
+        EnumFacing facing=source.getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
+        EnumFacing local=face;
+        int rotation=((int)(180-facing.getHorizontalAngle())/90)&3;
+        if (local.getAxis()!=EnumFacing.Axis.Y) for (int i=0;i<rotation;i++) local=local.rotateY();
+        return faces.texture(local.getIndex(),main);
     }
 
     private BlockPos originFor(RampGeometry.Box box,double partial) {

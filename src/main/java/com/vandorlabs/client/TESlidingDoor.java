@@ -36,6 +36,11 @@ import net.minecraft.world.World;
 @SideOnly(Side.CLIENT)
 public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDoor> {
 
+    private static final com.vandorlabs.animation.VisualClock CLOCK = new com.vandorlabs.animation.VisualClock();
+    private static double visualTime() {
+        return CLOCK.sample(System.nanoTime(), Minecraft.getMinecraft().isGamePaused());
+    }
+
     private static final float ANIM_TICKS = 9.0F;
     private static final int ANIMS_CAP = 1024;
     private static final Map<World, LinkedHashMap<net.minecraft.util.math.BlockPos, DoorAnimation>>
@@ -83,7 +88,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 && state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor) {
             if (!upper) {
                 float progress=animPose(te.getWorld(),te.getPos(),state.getValue(BlockVandorDoor.OPEN),
-                        te.getWorld().getTotalWorldTime()+partialTicks);
+                        visualTime());
                 renderSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)te,state,facing,progress,x,y,z);
             }
             return;
@@ -93,7 +98,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 net.minecraft.util.math.BlockPos doorKey = te.getPos();
                 float p = animPose(te.getWorld(), doorKey,
                         state.getValue(BlockVandorDoor.OPEN),
-                        te.getWorld().getTotalWorldTime() + partialTicks);
+                        visualTime());
                 BlockDetailedDoor placedDoor = (BlockDetailedDoor) state.getBlock();
                 BlockDetailedDoor visualDoor = placedDoor;
                 if (visualDoor instanceof BlockConnectingDetailedDoor) {

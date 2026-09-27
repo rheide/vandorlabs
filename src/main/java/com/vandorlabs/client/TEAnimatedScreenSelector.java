@@ -183,9 +183,12 @@ public class TEAnimatedScreenSelector
             this.hex = PortholeGeometryCache.outline(columns, rows, shape, extraBorder);
         }
 
-        PortholeHex.Slice slice(BlockPos pos) {
+        PortholeHex.Slice slice(BlockPos pos) { return slice(pos,right); }
+        PortholeHex.Slice slice(BlockPos pos,EnumFacing localRight) {
+            int column=axis(pos,right)-minAxis;
+            if(localRight!=right)column=columns-1-column;
             return PortholeGeometryCache.slice(columns, rows, shape, extraBorder,
-                    axis(pos, right) - minAxis, pos.getY() - minY, hex);
+                    column, pos.getY() - minY, hex);
         }
     }
 
@@ -214,14 +217,7 @@ public class TEAnimatedScreenSelector
         int minY = tile.getPos().getY(), maxY = minY;
         Set<BlockPos> members = tile.isJoinPortholes()
                 ? LoadedPlaneConnections.collect(tile.getPos(), PanelPlane.of(facing),
-                        world::isBlockLoaded, next -> (!((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
-                                || next.getY() == tile.getPos().getY()
-                                && world.getBlockState(next).getBlock() == state.getBlock()
-                                && world.getBlockState(next).getValue(BlockProgrammableWall.INVERTED) == state.getValue(BlockProgrammableWall.INVERTED)
-                                && BlockProgrammableWall.diagonalSpan(world,next) == BlockProgrammableWall.diagonalSpan(world,tile.getPos()))
-                                && eligiblePorthole(world, next, facing,
-                                state.getValue(BlockProgrammableWall.DEPTH), state.getBlock(),
-                                tile.getPortholeShape()))
+                        world::isBlockLoaded, next -> compatiblePorthole(world,tile.getPos(),next))
                 : java.util.Collections.singleton(tile.getPos());
         for (BlockPos member : members) {
             int coordinate = axis(member, right);
@@ -807,6 +803,11 @@ public class TEAnimatedScreenSelector
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE) {
             double span = BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos());
             boolean inverted = state.getValue(BlockProgrammableWall.INVERTED);
+            if(te.isDiagonalHalfHeight()) {
+                java.nio.FloatBuffer transform=org.lwjgl.BufferUtils.createFloatBuffer(16);
+                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,.8F,0,0, 0,inverted?8:0,0,1}).flip();
+                GlStateManager.multMatrix(transform);
+            }
             java.nio.FloatBuffer shear = org.lwjgl.BufferUtils.createFloatBuffer(16);
             shear.put(new float[]{1,0,0,0, 0,1,(float)((inverted?-span:span)/16),0,
                     0,0,1,0, 0,0,(float)(inverted?span-6:-6),1}).flip();
@@ -820,7 +821,7 @@ public class TEAnimatedScreenSelector
                 .getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         double rimDepthUv = wallBlock instanceof BlockProgrammablePortholeBlock ? 16 : 4;
         PortholeHex.Slice porthole = wallBlock.isPortholeShape()
-                ? portholeGroup(te, state).slice(te.getPos()) : null;
+                ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY()) : null;
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
@@ -921,19 +922,33 @@ public class TEAnimatedScreenSelector
         }
     }
 
+    /** Compare actual planes, including reversed upper half-width pieces. */
+    private static boolean compatiblePorthole(World world,BlockPos root,BlockPos next) {
+        if(!world.isBlockLoaded(next))return false;
+        IBlockState a=world.getBlockState(root),b=world.getBlockState(next);
+        if(a.getBlock()!=b.getBlock() || !(a.getBlock() instanceof BlockProgrammableWall))return false;
+        net.minecraft.tileentity.TileEntity ar=world.getTileEntity(root),br=world.getTileEntity(next);
+        if(!(ar instanceof TileEntityAnimatedScreenSelector)||!(br instanceof TileEntityAnimatedScreenSelector))return false;
+        TileEntityAnimatedScreenSelector at=(TileEntityAnimatedScreenSelector)ar,bt=(TileEntityAnimatedScreenSelector)br;
+        if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
+        EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
+        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
+        if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
+        boolean ai=a.getValue(BlockProgrammableWall.INVERTED),bi=b.getValue(BlockProgrammableWall.INVERTED);
+        if(at.isDiagonalHalfHeight())return root.getY()==next.getY()&&af==bf&&ai==bi;
+        if(bf!=af&&bf!=af.getOpposite())return false;
+        double span=BlockProgrammableWall.diagonalSpan(world,root)/16;
+        double slopeA=ai?-span:span,slopeB=bi?-span:span;
+        double baseA=ai?span+.125:.125,baseB=bi?span+.125:.125;
+        if(bf!=af){baseB=1-baseB;slopeB=-slopeB;}
+        return Math.abs(slopeA-slopeB)<1e-8
+                && Math.abs(baseA-(baseB-slopeB*(next.getY()-root.getY())))<1e-8;
+    }
+
     private static boolean adjacentPorthole(TileEntityAnimatedScreenSelector tile,
             IBlockState state, EnumFacing side) {
         BlockPos next = tile.getPos().offset(side);
-        return tile.isJoinPortholes() && tile.getWorld().isBlockLoaded(next)
-                && (!((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
-                    || side.getAxis()!=EnumFacing.Axis.Y
-                    && tile.getWorld().getBlockState(next).getBlock()==state.getBlock()
-                    && tile.getWorld().getBlockState(next).getValue(BlockProgrammableWall.INVERTED)==state.getValue(BlockProgrammableWall.INVERTED)
-                    && BlockProgrammableWall.diagonalSpan(tile.getWorld(),next)==BlockProgrammableWall.diagonalSpan(tile.getWorld(),tile.getPos()))
-                && eligiblePorthole(tile.getWorld(), next,
-                        state.getValue(BlockProgrammableWall.FACING),
-                        state.getValue(BlockProgrammableWall.DEPTH), state.getBlock(),
-                        tile.getPortholeShape());
+        return compatiblePorthole(tile.getWorld(),tile.getPos(),next);
     }
 
     private static void topRim(BufferBuilder buf, TextureAtlasSprite metal,
@@ -1005,11 +1020,11 @@ public class TEAnimatedScreenSelector
             roofRect(buf, metal, y, corner == null ? 0 : corner.left(near),
                     corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4);
             if (corner != null) {
-                if (corner.frontRight != null) {
+                if (corner.frontRight != null && (fill&1)==0) {
                     double armX = corner.armLeft(near, corner.frontRight);
                     roofRect(buf, metal, y, armX, armX + 4, 0, near);
                 }
-                if (corner.backRight != null) {
+                if (corner.backRight != null && (fill&2)==0) {
                     double armX = corner.armLeft(near, corner.backRight);
                     roofRect(buf, metal, y, armX, armX + 4, near + 4, 16);
                 }
@@ -1077,7 +1092,22 @@ public class TEAnimatedScreenSelector
             int fill, double low, double high) {
         if (fill == 0) return diagonalOutline(near, corner);
         double front=(fill&1)!=0?low:near, back=(fill&2)!=0?high:near+4;
-        return new double[][]{{0,front},{16,front},{16,back},{0,back}};
+        double left=corner==null?0:corner.left(near),right=corner==null?16:corner.right(near);
+        java.util.List<double[]> points=new java.util.ArrayList<>();
+        points.add(new double[]{left,front});
+        if(corner!=null && corner.frontRight!=null && (fill&1)==0) {
+            double arm=corner.armLeft(near,corner.frontRight);
+            points.add(new double[]{arm,front});points.add(new double[]{arm,0});
+            points.add(new double[]{arm+4,0});points.add(new double[]{arm+4,front});
+        }
+        points.add(new double[]{right,front});points.add(new double[]{right,back});
+        if(corner!=null && corner.backRight!=null && (fill&2)==0) {
+            double arm=corner.armLeft(near,corner.backRight);
+            points.add(new double[]{arm+4,back});points.add(new double[]{arm+4,16});
+            points.add(new double[]{arm,16});points.add(new double[]{arm,back});
+        }
+        points.add(new double[]{left,back});
+        return points.toArray(new double[points.size()][]);
     }
 
     private static double[][] diagonalOutline(double near,

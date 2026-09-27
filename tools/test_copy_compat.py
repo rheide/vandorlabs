@@ -57,6 +57,9 @@ def main():
     if "TileEntity" in wand:
         raise AssertionError("BBW placement unexpectedly gained tile-entity handling; review adapter")
 
+    undo = javap(bbw, "portablejim.bbw.core.OopsCommand")
+    require(undo, ["String lastBlock", "Object.toString", "String.equals", "World.func_175698_g", "String lastPerBlock"], "BBW undo")
+
     print("PASS: external copy-engine contracts (WorldEdit 6.1.10, BBW 0.11.1)")
 
 

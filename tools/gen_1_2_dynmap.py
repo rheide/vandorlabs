@@ -56,5 +56,12 @@ for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
             for x0,x1 in ([(0,16)] if edge==8 else [(0,edge),(16-edge,16)]):
                 elements.append({'from':[x0,y,z],'to':[x1,y+1,z+4],'faces':{f:{'texture':'#wall'} for f in ['up','down','north','south','east','west']}})
         emit('programmable_diagonal_porthole',f'facing:{face}/inverted:{str(upper).lower()}/depth:0',{'textures':{'wall':'vandorlabs:blocks/dark_wall_panel'},'elements':elements},rot)
+for state,variant in json.loads((assets/'blockstates/programmable_stairs.json').read_text())['variants'].items():
+    data=load_model(variant['model'].split(':')[1])
+    if variant.get('x')==180:
+        for e in data['elements']:
+            e['from'][1],e['to'][1]=16-e['to'][1],16-e['from'][1]
+            e['from'][2],e['to'][2]=16-e['to'][2],16-e['from'][2]
+    emit('programmable_stairs',state.replace('=',':').replace(',','/'),data,variant.get('y',0))
 for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[f'texture:id={k},filename=assets/vandorlabs/textures/{v},xcount=1,ycount=1' for k,v in textures.items()]+blocks)]:
     p=assets/filename;p.write_text(p.read_text().split(marker)[0].rstrip()+'\n\n'+marker+'\n'.join(lines)+'\n')

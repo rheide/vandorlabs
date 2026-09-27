@@ -67,7 +67,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     private static boolean sameDiagonalWidth(IBlockAccess world, BlockPos a,
             BlockPos b) {
         return diagonalSpan(world, a) == diagonalSpan(world, b)
-                && halfHeight(world,a) == halfHeight(world,b) && fill(world,a) == fill(world,b);
+                && halfHeight(world,a) == halfHeight(world,b);
     }
 
     public static boolean halfHeight(IBlockAccess world, BlockPos pos) {
@@ -269,7 +269,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
 
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {
-        if (!isDiagonalShape() || isPortholeShape() || halfHeight(world,pos) || fill(world,pos)!=0) return null;
+        if (!isDiagonalShape() || isPortholeShape() || halfHeight(world,pos)) return null;
         EnumFacing facing = state.getValue(FACING);
         Boolean frontRight = null, backRight = null;
         for (boolean front : new boolean[] {true, false}) {
@@ -364,8 +364,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                 if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,0,slice/16D,1,base+(near1+4)/20D,(slice+1)/16D),state.getValue(FACING)));
                 if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,base+near0/20D,slice/16D,1,1,(slice+1)/16D),state.getValue(FACING)));
             } else {
-                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,slice/16D,0,1,(slice+1)/16D,near1/16D),state.getValue(FACING)));
-                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,slice/16D,(near0+4)/16D,1,(slice+1)/16D,1),state.getValue(FACING)));
+                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,0,right/16D,(slice+1)/16D,near1/16D),state.getValue(FACING)));
+                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,(near0+4)/16D,right/16D,(slice+1)/16D,1),state.getValue(FACING)));
             }
             if (corner != null) {
                 if (corner.frontRight != null)

@@ -69,7 +69,7 @@ public class GuiProgrammableWall extends GuiContainer {
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
                 .getBlock()).isPortholeShape();
         slab = tile.getWorld().getBlockState(tile.getPos()).getBlock()
-                instanceof BlockProgrammableSlab;
+                instanceof BlockProgrammableSlab || tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs;
         diagonal = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableWall
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
@@ -274,7 +274,7 @@ public class GuiProgrammableWall extends GuiContainer {
         if (button.id == 105 || button.id == 109 || button.id == 110) {
             int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
             int fill=tile.getDiagonalFill();
-            if (button.id==105) mode=(mode+1)%(porthole?2:3);
+            if (button.id==105) mode=(mode+1)%3;
             if (button.id==109) fill^=1;
             if (button.id==110) fill^=2;
             tile.setDiagonalGeometry(mode,fill);
@@ -291,7 +291,8 @@ public class GuiProgrammableWall extends GuiContainer {
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 18, 0xFF202028);
         fontRenderer.drawString(I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
-                        instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
+                        instanceof com.vandorlabs.blocks.BlockProgrammableStairs ? "gui.vandorlabs.stairs.title"
+                : tile.getBlockType() instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
                         : fullBlock ? "gui.vandorlabs.block.title"
                         : "gui.vandorlabs.wall.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);

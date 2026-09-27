@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "B  ",
+    "BB ",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "vandorlabs:programmable_block"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:programmable_stairs",
+    "count": 4
+  }
+}

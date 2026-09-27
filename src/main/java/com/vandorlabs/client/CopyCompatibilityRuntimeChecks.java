@@ -35,6 +35,7 @@ final class CopyCompatibilityRuntimeChecks {
 
     static void run(World world, EntityPlayerMP player) {
         Version12RuntimeChecks.run(world,player);
+        FollowupRuntimeChecks.run(world,player);
         checkEveryMetadataCodec();
         checkBetterBuildersWandsBoundary(world, player);
         if (Loader.isModLoaded("worldedit")) {

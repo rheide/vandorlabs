@@ -81,7 +81,7 @@ public final class ProgrammableSettings {
     private static boolean isDisplay(Block block) {
         return !(block instanceof BlockProgrammableWall)
                 && !(block instanceof BlockProgrammableBlock)
-                && !(block instanceof BlockProgrammableSlab);
+                && !((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs));
     }
 
     private static boolean validScreen(String id) {
@@ -125,7 +125,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
-            if (block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB) {
+            if (block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS) {
                 NBTTagCompound faces = new NBTTagCompound();
                 faces.setBoolean("enabled", screen.getFaceTextures().enabled);
                 if (screen.getFaceTextures().enabled)
@@ -146,7 +146,7 @@ public final class ProgrammableSettings {
                 out.setBoolean(SMALL_INPUT, screen.isSmallInput());
                 out.setInteger(WALL_POSITION, screen.getWallPosition(1));
             }
-            if (block instanceof BlockProgrammableSlab)
+            if ((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs))
                 out.setBoolean(SLAB_TILE_SIDES, screen.isSlabTileSides());
             if (block instanceof BlockProgrammableWall
                     && ((BlockProgrammableWall) block).isDiagonalShape())
@@ -322,7 +322,7 @@ public final class ProgrammableSettings {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
                 applicable = true;
             }
-            if ((block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB)
+            if ((block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS)
                     && values.hasKey(FACE_TEXTURES, 10)) {
                 NBTTagCompound faces = values.getCompoundTag(FACE_TEXTURES);
                 boolean enabled = faces.getBoolean("enabled");
@@ -365,7 +365,7 @@ public final class ProgrammableSettings {
                     screen.setWallPosition(values.getInteger(WALL_POSITION)); applicable = true;
                 }
             }
-            if (block instanceof BlockProgrammableSlab && values.hasKey(SLAB_TILE_SIDES, 1)) {
+            if ((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs) && values.hasKey(SLAB_TILE_SIDES, 1)) {
                 screen.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES)); applicable = true;
             }
             if (block instanceof BlockProgrammableWall
@@ -378,7 +378,7 @@ public final class ProgrammableSettings {
                     && values.hasKey(DIAGONAL_GEOMETRY,10)) {
                 NBTTagCompound geometry=values.getCompoundTag(DIAGONAL_GEOMETRY);
                 int mode=Math.max(0,Math.min(2,geometry.getInteger("mode")));
-                screen.setDiagonalGeometry(isPorthole(block)?Math.min(1,mode):mode,
+                screen.setDiagonalGeometry(mode,
                         isPorthole(block)?0:geometry.getInteger("fill"));
                 applicable=true;
             }

@@ -37,8 +37,8 @@ public final class MessageProgrammableSlabSides implements IMessage {
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || !player.world.isBlockLoaded(msg.pos)
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
-                        || player.world.getBlockState(msg.pos).getBlock()
-                        != ModBlocks.PROGRAMMABLE_SLAB
+                        || (player.world.getBlockState(msg.pos).getBlock() != ModBlocks.PROGRAMMABLE_SLAB
+                        && player.world.getBlockState(msg.pos).getBlock() != ModBlocks.PROGRAMMABLE_STAIRS)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector))
                     return;
                 ContainerAnimatedScreenSelector container =

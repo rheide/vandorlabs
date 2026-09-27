@@ -3505,5 +3505,12 @@
     "type": "diagonal_porthole",
     "class": "BlockDiagonalPorthole",
     "item": true
+  },
+  {
+    "id": "programmable_stairs",
+    "type": "stairs",
+    "class": "BlockProgrammableStairs",
+    "programmable_only": true,
+    "item": true
   }
 ]

@@ -303,7 +303,7 @@ public class ReproLab {
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
-        for (String scene : new String[]{"faces", "seating", "gear", "gear_extended", "portholes", "half_height", "fill", "half_console"})
+        for (String scene : new String[]{"faces", "seating", "gear", "gear_extended", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "filled_corners_inside", "filled_corners_outside"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
                     galleryFeet+3, -26, -20, 15));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,

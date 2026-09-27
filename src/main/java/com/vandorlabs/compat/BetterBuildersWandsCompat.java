@@ -86,8 +86,66 @@ public final class BetterBuildersWandsCompat {
             return false;
         }
         boolean copied = pending.apply(player.world, destinations);
+        if (copied) recordUndo(player.world,wand,destinations);
         PENDING.remove(player.getUniqueID());
         return copied;
+    }
+
+    private static final String UNDO = "VandorUndoStates";
+    private static void recordUndo(World world, ItemStack wand, int[] destinations) {
+        net.minecraft.nbt.NBTTagList entries=new net.minecraft.nbt.NBTTagList();
+        for (int i=0;i+2<destinations.length;i+=3) {
+            BlockPos pos=new BlockPos(destinations[i],destinations[i+1],destinations[i+2]);
+            NBTTagCompound entry=new NBTTagCompound();
+            entry.setIntArray("Pos",new int[]{pos.getX(),pos.getY(),pos.getZ()});
+            entry.setString("State",world.getBlockState(pos).toString());
+            entries.appendTag(entry);
+        }
+        NBTTagCompound bbw=wand.getTagCompound().getCompoundTag("bbw");
+        bbw.setTag(UNDO,entries);
+        bbw.setIntArray("VandorUndoPositions",destinations.clone());
+        bbw.setInteger("VandorUndoDimension",world.provider.getDimension());
+    }
+
+    /** Let BBW itself perform removal/refunds, once per restored state. */
+    @SubscribeEvent
+    public void onCommand(net.minecraftforge.event.CommandEvent event) {
+        if (!event.getCommand().getName().equals("wandOops")
+                || !(event.getSender() instanceof EntityPlayer)) return;
+        EntityPlayer player=(EntityPlayer)event.getSender();
+        finishPending(player);
+        ItemStack wand=player.getHeldItemMainhand();
+        if (!isBbwWand(wand)) wand=player.getHeldItemOffhand();
+        if (!isBbwWand(wand) || !wand.hasTagCompound()) return;
+        NBTTagCompound bbw=wand.getTagCompound().getCompoundTag("bbw");
+        if (!bbw.hasKey(UNDO,9) || !Arrays.equals(bbw.getIntArray("lastPlaced"),bbw.getIntArray("VandorUndoPositions"))) return;
+        event.setCanceled(true);
+        if (bbw.getInteger("VandorUndoDimension")!=player.dimension) return;
+        net.minecraft.nbt.NBTTagList entries=bbw.getTagList(UNDO,10);
+        Map<String,List<Integer>> groups=new java.util.LinkedHashMap<>();
+        for (int i=0;i<entries.tagCount();i++) {
+            NBTTagCompound entry=entries.getCompoundTagAt(i);int[] xyz=entry.getIntArray("Pos");
+            if (xyz.length!=3) continue;
+            BlockPos pos=new BlockPos(xyz[0],xyz[1],xyz[2]);
+            if (!player.world.isBlockLoaded(pos) || !player.world.isBlockModifiable(player,pos)
+                    || !player.canPlayerEdit(pos,EnumFacing.UP,wand)) continue;
+            List<Integer> group=groups.computeIfAbsent(entry.getString("State"),key->new ArrayList<>());
+            for (int n:xyz) group.add(n);
+        }
+        NBTTagCompound original=bbw.copy();
+        try {
+            for (Map.Entry<String,List<Integer>> group:groups.entrySet()) {
+                bbw.merge(original);
+                bbw.setString("lastBlock",group.getKey());
+                bbw.setIntArray("lastPlaced",group.getValue().stream().mapToInt(Integer::intValue).toArray());
+                event.getCommand().execute(player.getServer(),player,event.getParameters());
+            }
+        } catch (net.minecraft.command.CommandException e) {
+            event.setException(e);
+        } finally {
+            bbw.removeTag(UNDO);bbw.removeTag("VandorUndoPositions");
+            bbw.setIntArray("lastPlaced",new int[0]);
+        }
     }
 
     private static boolean isBbwWand(ItemStack stack) {

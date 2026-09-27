@@ -226,9 +226,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         IBlockState material=world.getBlockState(seed);
         boolean programmable = material.getBlock() == ModBlocks.PROGRAMMABLE_BLOCK
                 || material.getBlock() == ModBlocks.PROGRAMMABLE_SLAB;
-        if ((material.getBlock().hasTileEntity(material) && !programmable)
+        boolean ieSlab = com.vandorlabs.compat.RampMaterials.isIESlab(world, seed);
+        if ((material.getBlock().hasTileEntity(material) && !programmable && !ieSlab)
                 || material.getBlockHardness(world,seed)<0
-                || (!programmable && !(material.getBlock() instanceof BlockSlab)
+                || (!programmable && !ieSlab && !(material.getBlock() instanceof BlockSlab)
                         && !material.isFullCube()))
             return fail("Front block must be a slab, Programmable Block, or ordinary solid block");
         boolean[] loaded={true};
@@ -236,7 +237,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->{
             BlockPos p=new BlockPos(c.x,c.y,c.z);
             if (!world.isBlockLoaded(p)) { loaded[0]=false; return false; }
-            return world.getBlockState(p).equals(material);
+            return com.vandorlabs.compat.RampMaterials.matches(world, seed, p);
         });
         if (!loaded[0]) return fail("Load all platform chunks first");
         if (platform.isEmpty()) return fail("No platform blocks found");
@@ -250,9 +251,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             min=Math.min(min,along); max=Math.max(max,along);
         }
         Map<BlockPos,NBTTagCompound> capturedTiles=new LinkedHashMap<>();
-        if (programmable) for (BlockPos source:selected) {
+        if (programmable || ieSlab) for (BlockPos source:selected) {
             TileEntity sourceTile=world.getTileEntity(source);
-            if (!(sourceTile instanceof TileEntityAnimatedScreenSelector))
+            if (sourceTile == null || programmable && !(sourceTile instanceof TileEntityAnimatedScreenSelector))
                 return fail("Programmable source tile is missing");
             capturedTiles.put(source,sourceTile.writeToNBT(new NBTTagCompound()));
         }

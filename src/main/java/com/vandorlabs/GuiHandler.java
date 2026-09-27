@@ -141,7 +141,8 @@ public class GuiHandler implements IGuiHandler {
                         instanceof BlockProgrammableWall || world.getBlockState(
                         new BlockPos(x, y, z)).getBlock() instanceof BlockProgrammableBlock
                         || world.getBlockState(new BlockPos(x, y, z)).getBlock()
-                        instanceof BlockProgrammableSlab) {
+                        instanceof BlockProgrammableSlab || world.getBlockState(new BlockPos(x,y,z)).getBlock()
+                        instanceof com.vandorlabs.blocks.BlockProgrammableStairs) {
                     return new com.vandorlabs.client.GuiProgrammableWall(player.inventory,
                             (TileEntityAnimatedScreenSelector) te);
                 }
