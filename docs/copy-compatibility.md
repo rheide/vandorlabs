@@ -46,6 +46,13 @@ BBW installed.
 Programmable configuration dialogs open with shift-right-click in creative
 mode. Ordinary right-click retains each block's normal interaction.
 
+BBW undo stores an exact block-state string. After restoring Vandor Labs state,
+we record the final states with the destination journal. `/wandOops` invokes
+BBW's normal undo for each state group, preserving its removal/refund behavior.
+Only newly recorded operations have this information; old undo records cannot
+be reconstructed safely. Unloaded/protected targets are skipped, and the journal
+is restricted to the dimension where placement happened.
+
 ## Regression tests
 
 - `tools/test_copy_compat.py` disassembles the installed jars and pins the

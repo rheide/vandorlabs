@@ -16,7 +16,7 @@ visual tour of the programmable blocks, doors, propulsion systems, controls,
 lighting, furniture, ramps, glass, and building materials.
 
 See [what changed in 1.2](docs/gallery/version-1.2.md) for face texture overrides,
-diagonal options, connected seats, landing gear, and placement fixes.
+programmable stairs, diagonal options, connected seats, landing gear, and placement fixes.
 
 ## What's in the mod
 

@@ -1,4 +1,8 @@
-# MCTrek landing gear
+# MCTrek landing gear source archive
+
+This document describes the supplied source ZIP. Current game blocks are
+Small Landing Gear and Large Landing Gear, both telescopic; the old IDs and
+static variants are removed. See the [current gear guide](../gallery/version-1.2.md#landing-gear).
 
 Five designs, intentionally simple. All geometry is axis-aligned; all endpoint coordinates are whole voxels. One Minecraft block is 16 model units. Small wheels are 8 units in diameter and 4 wide; large wheels are 12 in diameter and 6 wide. Wheel rotation axis is X, rolling direction is Z. The 16×16 textures use restrained grey shading, with a cyan indicator and amber button on mounting plates. The colored pixels are not emissive by themselves.
 

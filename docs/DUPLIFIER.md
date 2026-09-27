@@ -19,9 +19,9 @@ to the empty state; the Apply Settings choices remain in place.
 
 | Shared setting | Sources and targets |
 | --- | --- |
-| Wall Texture | Programmable block, slab, wall, porthole, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
+| Wall Texture | Programmable block, slab, stairs, wall, porthole, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
 | Redstone Channel | Every configured block that implements `RedstoneChannelMember`. |
-| Join | Portholes, Programmable Glass, Programmable Light, and connected propulsion blocks. |
+| Join | Portholes, Programmable Glass, Programmable Light, connected propulsion blocks, and Luxury/Military Seats. |
 | Trigger | Programmable Light and Door support Disabled, Redstone ON, and Redstone OFF. Displays support Disabled and Redstone ON. |
 | Active | Manual light state, propulsion state, and switch or lever latch. |
 
@@ -46,7 +46,7 @@ remain intact.
 
 ## Face overrides and diagonal geometry (1.2)
 
-Programmable Block and Slab have a separate **Face Overrides** copy switch.
+Programmable Block, Slab and Stairs have a separate **Face Overrides** copy switch.
 When the source has overrides enabled, it copies the six face choices and
 turns them on. When the source has overrides disabled, it turns them off on
 the target while preserving that target's stored face choices. The **Wall

@@ -77,9 +77,12 @@ SHOTS.update({
     "programmable_glass_gui": "building/glass-config.png",
 })
 
-for name in ("faces", "seating", "gear", "gear_extended", "portholes",
-             "half_height", "fill", "half_console", "controller"):
+for name in ("faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes",
+             "half_height", "fill", "half_console", "controller", "stairs",
+             "portholes_stacked", "portholes_half_height", "filled_corners_inside", "filled_corners_outside"):
     SHOTS[f"gallery_v12_{name}"] = f"v1.2/{name.replace('_', '-')}.png"
+SHOTS["connected_seat_gui"] = "v1.2/connected-seat-config.png"
+SHOTS["landing_gear_gui"] = "v1.2/landing-gear-config.png"
 SHOTS["programmable_face_overrides_gui"] = "v1.2/face-overrides-config.png"
 SHOTS["programmable_diagonal_width_gui"] = "v1.2/diagonal-config.png"
 
