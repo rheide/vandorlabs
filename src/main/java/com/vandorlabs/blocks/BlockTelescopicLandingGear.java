@@ -69,7 +69,7 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
         return true;
     }
     public void onBlockPlacedBy(World world,BlockPos pos,IBlockState s,EntityLivingBase placer,ItemStack stack){
-        if(!world.isRemote){TileEntityLandingGear tile=root(world,pos);if(tile!=null)tile.inputChanged();}
+        if(!world.isRemote){TileEntityLandingGear tile=root(world,pos);if(tile!=null)tile.placed();}
     }
     public void neighborChanged(IBlockState s,World world,BlockPos pos,Block block,BlockPos from){
         if(world.isRemote)return;

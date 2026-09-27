@@ -54,6 +54,11 @@ final class Version12RuntimeChecks {
                 BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block(name);
                 world.setBlockState(p,gear.getDefaultState(),3);
                 TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
+                NBTTagCompound itemSettings=tile.writeToNBT(new NBTTagCompound());
+                itemSettings.setInteger("RedstoneMode",2);itemSettings.setInteger("ExtensionPixels",0);
+                tile.readFromNBT(itemSettings);gear.onBlockPlacedBy(world,p,world.getBlockState(p),player,new ItemStack(gear));
+                require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"placed Off-mode gear ignored saved settings");
+                gear.setExtended(world,p,false);
                 require(tile.configure(0,0,64),"gear configuration");
                 world.setBlockState(p.down(4),Blocks.STONE.getDefaultState(),3);
                 require(!gear.setExtended(world,p,true),"gear extended through stone");

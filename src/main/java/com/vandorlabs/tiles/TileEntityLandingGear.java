@@ -49,6 +49,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
                 ((BlockTelescopicLandingGear)getBlockType()).releaseBelow(world,pos,(int)Math.ceil(Math.max(progress,target)));}
         }
     }
+    public void placed(){if(isRoot()){RedstoneChannels.register(this);evaluateSignal(true);}}
     public void inputChanged(){RedstoneChannels.inputChanged(this);evaluateSignal(false);}
     private void evaluateSignal(boolean force){
         if(!isRoot()||world.isRemote)return;
@@ -65,7 +66,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     }
     public boolean hasLocalRedstoneSignal(){return isRoot()&&world.isBlockPowered(pos);}
     public void setChannelSignal(boolean value){if(channelSignal!=value){channelSignal=value;evaluateSignal(false);}}
-    public void onLoad(){super.onLoad();if(isRoot()){RedstoneChannels.register(this);evaluateSignal(true);}}
+    public void onLoad(){super.onLoad();placed();}
     public void invalidate(){RedstoneChannels.unregister(this);super.invalidate();}
     public void onChunkUnload(){RedstoneChannels.unregister(this);super.onChunkUnload();}
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
