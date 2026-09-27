@@ -172,9 +172,9 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 ### Landing gear arm finish
 
-- [ ] Use the thickest existing extending arm (4×4 pixels) for all three sizes. Apply Glass Frame Interior / diagonal-side metal, tiled along the extension instead of stretched.
+- [x] Use the thickest existing extending arm (4×4 pixels) for all three sizes. Apply Glass Frame Interior / diagonal-side metal, tiled along the extension instead of stretched.
 
-- [ ] Investigate remaining Programmable Light flickering reported after the first front-face fix (user clarified lights, not glass). Distinguish remaining housing overlap from texture sampling shimmer.
+- [x] Investigate remaining Programmable Light flickering reported after the first front-face fix (user clarified lights, not glass). Distinguish remaining housing overlap from texture sampling shimmer.
 
 - Light follow-up: user confirmed housing bleed, not texture-detail shimmer. Removed shared faces between adjacent light cubes and culled back-facing surfaces. Added a live offscreen comparison with depth disabled and draw order reversed, covering all six facings, single/2×2 joined groups, and front/rear oblique views. Build passed; live validation pending.
 
@@ -188,4 +188,12 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 ### Release name and changelog
 
-- [ ] Rebadge the release as 1.1, update current documentation and add a concise CHANGELOG.md covering this task set; 1.0 is the initial release.
+- [x] Rebadge the release as 1.1, update current documentation and add a concise CHANGELOG.md covering this task set; 1.0 is the initial release.
+
+### Final 1.1 verification
+
+- Full Java 8 build and live client suite passed in `render-run.eebqxB`, including the actual Forge light batch with all six facings, Porthole/Logo, single/joined groups and front/rear views. Reversing draw order with depth disabled changes zero pixels. All gameplay, GUI and screenshot checks passed, including gear extension/retraction and inventory icons.
+- Release rebadged to 1.1 after that run began. Compared every packaged entry: the final JAR differs only in the mod version constant, `mcmod.info`, and manifest version/build timestamp; all other code and resources are identical.
+- Added `CHANGELOG.md` with 1.0 as the initial release and concise Added/Changed/Fixed notes for 1.1. Renamed the current guide, gallery directory, render-distance report and this tracker; historical test evidence retains its original labels. All 185 local documentation links/anchors and `git diff --check` pass.
+- Final standard artifact: `build/libs/vandorlabs-1.1.jar`, SHA-256 `ce8d1282b65e7181fc89e39e4bb327dfc8289f423cb8aedf30d3c9ce698dbeeb`. No alternate texture JAR or copy to the shared drive.
+- Final 1.1 JAR also launched and joined successfully (`vandorlabs@1.1`); the complete batched-light overlap regression passed again in `render-run.release-1.1`.
