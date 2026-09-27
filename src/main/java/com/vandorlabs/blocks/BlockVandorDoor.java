@@ -183,11 +183,16 @@ public class BlockVandorDoor extends BlockVandorDirectional {
         return getBoundingBox(state, worldIn, pos);
     }
 
+    private static boolean hasDoorSupport(World world, BlockPos support) {
+        return world.isSideSolid(support, EnumFacing.UP)
+                || world.getBlockState(support).getBlock() instanceof BlockProgrammableSlab;
+    }
+
     @Override
     public boolean canPlaceBlockAt(World world, BlockPos pos) {
         return super.canPlaceBlockAt(world, pos)
                 && world.getBlockState(pos.up()).getBlock().isReplaceable(world, pos.up())
-                && world.isSideSolid(pos.down(), EnumFacing.UP);
+                && hasDoorSupport(world, pos.down());
     }
 
     @Override
@@ -292,7 +297,7 @@ public class BlockVandorDoor extends BlockVandorDirectional {
                 world.setBlockToAir(pos);
                 return;
             }
-        } else if (!world.isSideSolid(pos.down(), EnumFacing.UP)) {
+        } else if (!hasDoorSupport(world, pos.down())) {
             world.destroyBlock(pos, true);
             return;
         }

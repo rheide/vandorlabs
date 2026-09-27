@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "IMI",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    },
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "B": {
+      "item": "minecraft:wool",
+      "data": 11
+    }
+  },
+  "result": {
+    "item": "vandorlabs:luxury_seat"
+  }
+}

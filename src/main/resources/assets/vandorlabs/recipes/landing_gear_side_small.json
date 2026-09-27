@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I  ",
+    "IM ",
+    " R "
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    },
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "R": {
+      "item": "minecraft:wool",
+      "data": 15
+    }
+  },
+  "result": {
+    "item": "vandorlabs:landing_gear_side_small"
+  }
+}

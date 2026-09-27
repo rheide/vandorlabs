@@ -50,10 +50,12 @@ public final class WorldEditRotationCompat {
         Map<String,int[]> triangles=triangleFamilies();
         int count=0;
         for (Block block:Block.REGISTRY) {
-            if (!(block instanceof BlockVandorDoor) && !(block instanceof BlockPropulsionLight)) continue;
+            if (!(block instanceof BlockVandorDoor) && !(block instanceof BlockPropulsionLight)
+                    && !isDiagonal(block)) continue;
             String id=block.getRegistryName().toString();
             int numericId=Block.getIdFromBlock(block);
-            Object entry=gson.fromJson(entryJson(id,numericId,block instanceof BlockVandorDoor),entryClass);
+            Object entry=gson.fromJson(isDiagonal(block) ? diagonalEntry(id, numericId)
+                    : entryJson(id,numericId,block instanceof BlockVandorDoor),entryClass);
             Method post=entryClass.getDeclaredMethod("postDeserialization"); post.setAccessible(true); post.invoke(entry);
             if (block instanceof BlockVandorDoor) guardUpperDoor(entry,entryClass);
             if (block instanceof BlockTrianglePropulsionLight) {
@@ -65,6 +67,31 @@ public final class WorldEditRotationCompat {
             count++;
         }
         VandorLabs.logger.info("Registered {} door and propulsion orientations with WorldEdit",count);
+    }
+
+    private static boolean isDiagonal(Block block) {
+        return block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalScreen
+                || block instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                && ((com.vandorlabs.blocks.BlockProgrammableWall)block).isDiagonalShape();
+    }
+
+    private static JsonObject diagonalEntry(String id, int numericId) {
+        JsonObject entry = new JsonObject();
+        entry.addProperty("id", id); entry.addProperty("legacyId", numericId);
+        JsonObject state = new JsonObject(); state.addProperty("dataMask", 7);
+        JsonObject values = new JsonObject();
+        for (EnumFacing facing : EnumFacing.HORIZONTALS) for (int inverted = 0; inverted < 2; inverted++) {
+            JsonObject value = new JsonObject();
+            value.addProperty("data", facing.getHorizontalIndex() | inverted * 4);
+            JsonArray direction = new JsonArray();
+            direction.add(facing.getFrontOffsetX() * 2);
+            direction.add(inverted == 0 ? 1 : -1);
+            direction.add(facing.getFrontOffsetZ() * 2);
+            value.add("direction", direction); values.add(facing.getName() + inverted, value);
+        }
+        state.add("values", values);
+        JsonObject states = new JsonObject(); states.add("slope", state); entry.add("states", states);
+        return entry;
     }
 
     private static JsonObject entryJson(String id,int numericId,boolean door) {

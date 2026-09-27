@@ -35,20 +35,20 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Work | Status | Findings / validation |
 | --- | --- | --- |
 | Version / tracking | Done | Version 1.2 set in Gradle and mod metadata; baseline captured in `testclient/render-run.RA4YaV`. |
-| Face overrides and Copifier | Implemented, validating | Default off; per-face inheritance; local orientation; individual-face cache; disabled copies omit face choices. Java 8 build passed. |
-| WorldEdit diagonal flip | Pending | Exercise actual WorldEdit transform boundary. |
-| Diagonal porthole | Pending | Four shapes, joining, full/half width. |
-| Diagonal half height | Pending | Add full-width half-height geometry and matching joins. |
-| Landing gear | Pending | Archive includes four static designs and a telescopic design with animation instructions. |
-| Diagonal inside/outside fill | Pending | Preserve collision and visual agreement. |
-| Connected seating | Pending | Two styles, four automatic connection variants each; tall backs need headroom. |
+| Face overrides and Copifier | Live suite passed; layout follow-up | `render-run.AlF3qw`: runtime checks passed. Screenshot exposed tall enabled dialog; responsive list/preview added for next run. |
+| WorldEdit diagonal flip | Live suite passed | WorldEdit actual transform tests cover all 8 metadata poses and X/Y/Z flips; diagonal wall and diagonal screen. |
+| Diagonal porthole | Implemented, validating | Four shapes, full/half width, lateral coplanar joining. Vertically adjacent slopes are not coplanar and do not join. |
+| Diagonal half height | Implemented, validating | Full-depth incline within eight pixels of height; upper/lower positions; matching straight runs. |
+| Landing gear | Implemented, validating | Four static gear designs; telescopic gear animates over one second, checks obstruction, reserves its lower cell, responds to redstone/right-click. |
+| Diagonal inside/outside fill | Implemented, validating | Independent inside/outside toggles, saved/copied with diagonal geometry; collision follows fill. |
+| Connected seating | Implemented, validating | Two styles with automatic single/end/middle variants, reserved backrest cell, sitting and cleanup. |
 | Ramp edge gap | Pending | Reproduce and inspect geometry. |
 | Distance rendering | Pending | Investigate and record cost before changing. |
-| Copifier crafting | Pending | Preserve tool and copied properties; inspect vanilla crafting count limits. |
-| Half Input slab placement | Pending | Match upper/lower slab half. |
-| Diagonal Half Console | Pending | New half-height, half-depth block, top/bottom placement. |
-| Creative door cleanup | Pending | Keep only Programmable Door visible. |
-| Door slab support | Pending | Placement and neighbor support checks. |
-| Client crash | Implemented, validating | Supplied `latest.log:82224` shows TextureFix clearing an immutable sprite frame list. Replaced all three custom-sprite singleton lists with mutable lists; added load/mipmap/clear regression check. |
-| Extra housing textures | Pending | Add glass/door inner frame and darker door texture. |
-| Final validation / docs | Pending | Java 8 build, targeted runtime cases, full live suite, screenshots, JAR inspection. |
+| Copifier crafting | Implemented, validating | Shapeless tool + programmable item; tool retained. Normal crafting consumption processes stacks with shift-click; output respects selected copy settings. |
+| Half Input slab placement | Live suite passed | Side placement matches the support slab half, including its wall slot. |
+| Diagonal Half Console | Implemented, validating | Half-height/depth incline; upper/lower placement matching slabs; configurable input artwork. |
+| Creative door cleanup | Implemented, validating | 42 legacy catalog entries hidden; registrations retained for existing worlds. |
+| Door slab support | Live suite passed | Both slab halves accepted by door placement/support checks. |
+| Client crash | Regression passed | Mutable custom-sprite frame lists; load/mipmap/clear check and full live suite passed. Full external TextureFix pack not installed in test client. |
+| Extra housing textures | Implemented, validating | Added existing glass frame interior and door interior with actual 0xA8 tint; appended indices preserve saved choices. |
+| Final validation / docs | In progress | Baseline and first 1.2 live suite passed. New asset/geometry tests and eight new screenshot scenes added; final suite pending. |

@@ -31,8 +31,9 @@ public class ItemProgrammableInput extends ItemBlock {
                 && !newState.getValue(BlockProgrammableInput.KEYBOARD)) {
             TileEntity tile = world.getTileEntity(pos);
             if (tile instanceof TileEntityAnimatedScreenSelector) {
-                ((TileEntityAnimatedScreenSelector) tile).setWallPosition(
-                        BlockProgrammableInput.wallPositionForHit(hitY));
+                Boolean slabUpper = SlabPlacement.upperHalf(world.getBlockState(pos.offset(side.getOpposite())));
+                ((TileEntityAnimatedScreenSelector) tile).setWallPosition(slabUpper == null
+                        ? BlockProgrammableInput.wallPositionForHit(hitY) : slabUpper ? 2 : 0);
                 IBlockState placed = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, placed, placed, 3);
             }

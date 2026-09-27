@@ -34,6 +34,7 @@ final class CopyCompatibilityRuntimeChecks {
     private CopyCompatibilityRuntimeChecks() {}
 
     static void run(World world, EntityPlayerMP player) {
+        Version12RuntimeChecks.run(world,player);
         checkEveryMetadataCodec();
         checkBetterBuildersWandsBoundary(world, player);
         if (Loader.isModLoaded("worldedit")) {
@@ -328,6 +329,22 @@ final class CopyCompatibilityRuntimeChecks {
         Constructor<?> vector=vectorClass.getConstructor(int.class,int.class,int.class);
         Object fromVector=vector.newInstance(from.getX(),from.getY(),from.getZ());
         Object toVector=vector.newInstance(to.getX(),to.getY(),to.getZ());
+        for (Block diagonal : new Block[]{ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,
+                ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN}) {
+            for (int meta = 0; meta < 8; meta++) for (int axis = 0; axis < 3; axis++) {
+                Object flip = Class.forName("com.sk89q.worldedit.math.transform.AffineTransform")
+                        .getMethod("scale", double.class, double.class, double.class)
+                        .invoke(Class.forName("com.sk89q.worldedit.math.transform.AffineTransform").newInstance(),
+                                axis == 0 ? -1D : 1D, axis == 1 ? -1D : 1D, axis == 2 ? -1D : 1D);
+                Object transformed = transform.invoke(null, base.newInstance(Block.getIdFromBlock(diagonal), meta), flip, registry);
+                int actualMeta = (Integer)data.invoke(transformed);
+                EnumFacing before = EnumFacing.getHorizontal(meta & 3);
+                EnumFacing after = (axis == 0 && before.getAxis() == EnumFacing.Axis.X
+                        || axis == 2 && before.getAxis() == EnumFacing.Axis.Z) ? before.getOpposite() : before;
+                int expected = after.getHorizontalIndex() | ((meta & 4) ^ (axis == 1 ? 4 : 0));
+                require(actualMeta == expected, "WorldEdit diagonal flip " + diagonal + " meta=" + meta + " axis=" + axis + " got=" + actualMeta);
+            }
+        }
         int checked=0;
         for (Block block:Block.REGISTRY) {
             if (!(block instanceof BlockVandorDoor) && !(block instanceof BlockPropulsionLight)) continue;

@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String DIAGONAL_GEOMETRY = "diagonal_geometry";
     public static final String FACE_TEXTURES = "face_textures";
     public static final String WALL_TEXTURE = "wall_texture";
     public static final String PRIMARY_TEXTURE = "primary_texture";
@@ -74,8 +75,7 @@ public final class ProgrammableSettings {
 
     private static boolean isPorthole(Block block) {
         return block instanceof BlockProgrammableWall
-                && ((BlockProgrammableWall) block).getShape()
-                == BlockProgrammableWall.Shape.PORTHOLE;
+                && ((BlockProgrammableWall) block).isPortholeShape();
     }
 
     private static boolean isDisplay(Block block) {
@@ -149,9 +149,14 @@ public final class ProgrammableSettings {
             if (block instanceof BlockProgrammableSlab)
                 out.setBoolean(SLAB_TILE_SIDES, screen.isSlabTileSides());
             if (block instanceof BlockProgrammableWall
-                    && ((BlockProgrammableWall) block).getShape()
-                    == BlockProgrammableWall.Shape.DIAGONAL)
+                    && ((BlockProgrammableWall) block).isDiagonalShape())
+            {
                 out.setBoolean(DIAGONAL_FULL_WIDTH, screen.isDiagonalFullWidth());
+                NBTTagCompound geometry=new NBTTagCompound();
+                geometry.setInteger("mode",screen.isDiagonalHalfHeight()?2:screen.isDiagonalFullWidth()?1:0);
+                geometry.setInteger("fill",screen.getDiagonalFill());
+                out.setTag(DIAGONAL_GEOMETRY,geometry);
+            }
             if (isPorthole(block)) {
                 out.setBoolean(JOIN, screen.isJoinPortholes());
                 out.setInteger(PORTHOLE_SHAPE, screen.getPortholeShape());
@@ -206,6 +211,41 @@ public final class ProgrammableSettings {
         return out.hasNoTags() ? null : out;
     }
 
+    /** Configure an isolated tile so crafting never mutates the world or its input stacks. */
+    public static net.minecraft.item.ItemStack applyToItem(net.minecraft.item.ItemStack input, NBTTagCompound values) {
+        if (!(input.getItem() instanceof net.minecraft.item.ItemBlock)) return net.minecraft.item.ItemStack.EMPTY;
+        Block block = ((net.minecraft.item.ItemBlock)input.getItem()).getBlock();
+        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_"))
+            return net.minecraft.item.ItemStack.EMPTY;
+        TileEntity tile = block.createTileEntity(null, block.getStateFromMeta(input.getMetadata()));
+        if (tile == null) return net.minecraft.item.ItemStack.EMPTY;
+        NBTTagCompound existing = input.getSubCompound("BlockEntityTag");
+        if (existing != null) tile.readFromNBT(existing.copy());
+        if (tile instanceof TileEntitySpaceDoor && input.getSubCompound("SpaceDoorSettings") != null)
+            ((TileEntitySpaceDoor)tile).applyItemSettings(input.getSubCompound("SpaceDoorSettings"));
+        if (tile instanceof TileEntityProgrammableGlass && input.getSubCompound("ProgrammableGlassSettings") != null) {
+            NBTTagCompound glass = input.getSubCompound("ProgrammableGlassSettings");
+            ((TileEntityProgrammableGlass)tile).setSize(glass.getInteger("Size"));
+            ((TileEntityProgrammableGlass)tile).setShade(glass.getInteger("Shade"));
+            ((TileEntityProgrammableGlass)tile).setJoin(!glass.hasKey("Join") || glass.getBoolean("Join"));
+        }
+        boolean applied = applyToTile(null, BlockPos.ORIGIN, values, null, tile, block);
+        if (!applied && !(tile instanceof TileEntityRampController)) return net.minecraft.item.ItemStack.EMPTY;
+        net.minecraft.item.ItemStack output = input.copy(); output.setCount(1);
+        NBTTagCompound data = tile.writeToNBT(new NBTTagCompound());
+        data.removeTag("x"); data.removeTag("y"); data.removeTag("z"); data.removeTag("id");
+        output.setTagInfo("BlockEntityTag", data);
+        if (tile instanceof TileEntitySpaceDoor) output.setTagInfo("SpaceDoorSettings", ((TileEntitySpaceDoor)tile).itemSettings());
+        if (tile instanceof TileEntityProgrammableGlass) {
+            TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass)tile;
+            NBTTagCompound settings = new NBTTagCompound();
+            settings.setInteger("Size", glass.getSize());settings.setInteger("Shade",glass.getShade());settings.setBoolean("Join",glass.isJoin());
+            output.setTagInfo("ProgrammableGlassSettings",settings);
+        }
+        if (tile instanceof TileEntityRampController) output.setTagInfo("CopiedRampSettings", values.copy());
+        return output;
+    }
+
     /** Apply only settings supported by the target; placement orientation is untouched. */
     public static boolean apply(World world, BlockPos pos, NBTTagCompound values) {
         return apply(world, pos, values, null);
@@ -215,11 +255,16 @@ public final class ProgrammableSettings {
             EntityPlayer player) {
         TileEntity tile = world.getTileEntity(pos);
         Block block = world.getBlockState(pos).getBlock();
+        return applyToTile(world, pos, values, player, tile, block);
+    }
+
+    private static boolean applyToTile(World world, BlockPos pos, NBTTagCompound values,
+            EntityPlayer player, TileEntity tile, Block block) {
         if (tile == null || values == null || values.hasNoTags()) return false;
         boolean applicable = false;
         if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
             BlockPropulsionLight fixture = (BlockPropulsionLight) block;
-            if (values.hasKey(PROPULSION_SHAPE, 3) && !fixture.familyId().isEmpty()) {
+            if (world != null && values.hasKey(PROPULSION_SHAPE, 3) && !fixture.familyId().isEmpty()) {
                 BlockPropulsionLight.configureShape(world, pos,
                         values.getInteger(PROPULSION_SHAPE));
                 tile = world.getTileEntity(pos);
@@ -324,11 +369,18 @@ public final class ProgrammableSettings {
                 screen.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES)); applicable = true;
             }
             if (block instanceof BlockProgrammableWall
-                    && ((BlockProgrammableWall) block).getShape()
-                    == BlockProgrammableWall.Shape.DIAGONAL
+                    && ((BlockProgrammableWall) block).isDiagonalShape()
                     && values.hasKey(DIAGONAL_FULL_WIDTH, 1)) {
                 screen.setDiagonalFullWidth(values.getBoolean(DIAGONAL_FULL_WIDTH));
                 applicable = true;
+            }
+            if (block instanceof BlockProgrammableWall && ((BlockProgrammableWall)block).isDiagonalShape()
+                    && values.hasKey(DIAGONAL_GEOMETRY,10)) {
+                NBTTagCompound geometry=values.getCompoundTag(DIAGONAL_GEOMETRY);
+                int mode=Math.max(0,Math.min(2,geometry.getInteger("mode")));
+                screen.setDiagonalGeometry(isPorthole(block)?Math.min(1,mode):mode,
+                        isPorthole(block)?0:geometry.getInteger("fill"));
+                applicable=true;
             }
             if (isPorthole(block)) {
                 if (values.hasKey(JOIN, 1)) {
@@ -341,7 +393,7 @@ public final class ProgrammableSettings {
                     screen.setGlassShade(values.getInteger(GLASS_SHADE)); applicable = true;
                 }
             }
-            if (applicable) {
+            if (applicable && world != null) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
                 world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
@@ -421,7 +473,7 @@ public final class ProgrammableSettings {
         }
         if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL, 3)) {
             ((RedstoneChannelMember) tile).setRedstoneChannel(values.getInteger(CHANNEL));
-            if (tile instanceof TileEntityAnimatedScreenSelector) {
+            if (world != null && tile instanceof TileEntityAnimatedScreenSelector) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
             }

@@ -40,6 +40,7 @@ public class VandorLabs {
     public void preInit(FMLPreInitializationEvent event) {
         proxy.preInit(event);
         logger = event.getModLog();
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
         GameRegistry.registerTileEntity(TileEntitySlidingDoor.class, "vandorlabs:sliding_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableGlass.class, "vandorlabs:programmable_glass");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:programmable_door");

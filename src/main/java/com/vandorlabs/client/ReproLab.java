@@ -302,6 +302,9 @@ public class ReproLab {
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
+        for (String scene : new String[]{"faces", "seating", "gear", "gear_extended", "portholes", "half_height", "fill", "half_console"})
+            SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
+                    galleryFeet+3, -26, -20, 15));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {
@@ -1572,6 +1575,8 @@ public class ReproLab {
                                 style == 0 ? 15 : 9, true, 0);
                     }
             }
+        } else if (shot.startsWith("gallery_v12_")) {
+            Version12Gallery.build(world,shot.substring("gallery_v12_".length()),GALLERY_X,GALLERY_Y);
         } else if (shot.equals("gallery_programmable_slabs")) {
             for (int i = 0; i < 6; i++) {
                 boolean top = i >= 3;

@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/programmable_glass/metal_side",
+    "top": "vandorlabs:blocks/programmable_glass/metal_side",
+    "side": "vandorlabs:blocks/programmable_glass/metal_side"
+  }
+}

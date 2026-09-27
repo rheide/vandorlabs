@@ -151,7 +151,8 @@ public class GuiHandler implements IGuiHandler {
                             (TileEntityAnimatedScreenSelector) te);
                 }
                 if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
-                        instanceof BlockProgrammableInput) {
+                        instanceof BlockProgrammableInput
+                        || world.getBlockState(new BlockPos(x,y,z)).getBlock() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole) {
                     return new GuiProgrammableInput(player.inventory,
                             (TileEntityAnimatedScreenSelector) te);
                 }

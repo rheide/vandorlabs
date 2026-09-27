@@ -38,8 +38,8 @@ public final class MessageProgrammableDiagonalWidth implements IMessage {
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || !player.world.isBlockLoaded(msg.pos)
                         || !ConfigurationAccess.canConfigure(player)
-                        || player.world.getBlockState(msg.pos).getBlock()
-                        != ModBlocks.PROGRAMMABLE_DIAGONAL_WALL
+                        || !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall)
+                        || !((com.vandorlabs.blocks.BlockProgrammableWall)player.world.getBlockState(msg.pos).getBlock()).isDiagonalShape()
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector))
                     return;
                 ContainerAnimatedScreenSelector container =

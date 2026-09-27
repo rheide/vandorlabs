@@ -1,0 +1,112 @@
+{
+  "variants": {
+    "facing=north,part=single,upper=false": {
+      "model": "vandorlabs:seating/military_seat_single"
+    },
+    "facing=north,part=left,upper=false": {
+      "model": "vandorlabs:seating/military_seat_left"
+    },
+    "facing=north,part=middle,upper=false": {
+      "model": "vandorlabs:seating/military_seat_middle"
+    },
+    "facing=north,part=right,upper=false": {
+      "model": "vandorlabs:seating/military_seat_right"
+    },
+    "facing=east,part=single,upper=false": {
+      "model": "vandorlabs:seating/military_seat_single",
+      "y": 90
+    },
+    "facing=east,part=left,upper=false": {
+      "model": "vandorlabs:seating/military_seat_left",
+      "y": 90
+    },
+    "facing=east,part=middle,upper=false": {
+      "model": "vandorlabs:seating/military_seat_middle",
+      "y": 90
+    },
+    "facing=east,part=right,upper=false": {
+      "model": "vandorlabs:seating/military_seat_right",
+      "y": 90
+    },
+    "facing=south,part=single,upper=false": {
+      "model": "vandorlabs:seating/military_seat_single",
+      "y": 180
+    },
+    "facing=south,part=left,upper=false": {
+      "model": "vandorlabs:seating/military_seat_left",
+      "y": 180
+    },
+    "facing=south,part=middle,upper=false": {
+      "model": "vandorlabs:seating/military_seat_middle",
+      "y": 180
+    },
+    "facing=south,part=right,upper=false": {
+      "model": "vandorlabs:seating/military_seat_right",
+      "y": 180
+    },
+    "facing=west,part=single,upper=false": {
+      "model": "vandorlabs:seating/military_seat_single",
+      "y": 270
+    },
+    "facing=west,part=left,upper=false": {
+      "model": "vandorlabs:seating/military_seat_left",
+      "y": 270
+    },
+    "facing=west,part=middle,upper=false": {
+      "model": "vandorlabs:seating/military_seat_middle",
+      "y": 270
+    },
+    "facing=west,part=right,upper=false": {
+      "model": "vandorlabs:seating/military_seat_right",
+      "y": 270
+    },
+    "facing=north,part=single,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=north,part=left,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=north,part=right,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=north,part=middle,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=south,part=single,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=south,part=left,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=south,part=right,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=south,part=middle,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=east,part=single,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=east,part=left,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=east,part=right,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=east,part=middle,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=west,part=single,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=west,part=left,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=west,part=right,upper=true": {
+      "model": "vandorlabs:empty"
+    },
+    "facing=west,part=middle,upper=true": {
+      "model": "vandorlabs:empty"
+    }
+  }
+}

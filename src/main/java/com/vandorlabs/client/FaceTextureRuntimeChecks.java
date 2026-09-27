@@ -41,6 +41,19 @@ final class FaceTextureRuntimeChecks {
         } finally {
             player.world.setBlockToAir(source); player.world.setBlockToAir(target);
         }
+        BlockPos support = source.down();
+        for (net.minecraft.block.BlockSlab.EnumBlockHalf half : net.minecraft.block.BlockSlab.EnumBlockHalf.values()) {
+            player.world.setBlockState(support, ModBlocks.PROGRAMMABLE_SLAB.getDefaultState()
+                    .withProperty(com.vandorlabs.blocks.BlockProgrammableSlab.HALF, half), 3);
+            net.minecraft.block.Block door = net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs", "programmable_door"));
+            require(door.canPlaceBlockAt(player.world, source), "door rejected slab " + half);
+            net.minecraft.block.state.IBlockState input = ModBlocks.PROGRAMMABLE_INPUT.getStateForPlacement(
+                    player.world, support.north(), net.minecraft.util.EnumFacing.NORTH, .5F,
+                    half == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP ? .2F : .8F, .5F, 0, player);
+            require(input.getValue(com.vandorlabs.blocks.BlockProgrammableInput.UPPER)
+                    == (half == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP), "input slab half mismatch");
+        }
+        player.world.setBlockToAir(support);
         System.out.println("[vandorlabs][reprolab] face-textures-runtime PASS");
     }
     private static void require(boolean value, String message) {

@@ -315,6 +315,9 @@ def main(archive, detail, expansion, lift):
         write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
         write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_door_framed'})
     # One block id carries three sizes in metadata; all frames share fixed textures.
+    for entry in catalog:
+        if entry['id'].startswith('space_') and 'door' in entry['id']:
+            entry['hidden'] = True
     catalog.append(dict(id='programmable_glass',type='connected_glass_wall',
                         **{'class':'BlockProgrammableGlass'},item=True))
     names.append(('programmable_glass','Programmable Glass'))

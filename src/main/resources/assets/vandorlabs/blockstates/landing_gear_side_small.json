@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:landing_gear_side_small"
+    },
+    "facing=east": {
+      "model": "vandorlabs:landing_gear_side_small",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "vandorlabs:landing_gear_side_small",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:landing_gear_side_small",
+      "y": 270
+    }
+  }
+}

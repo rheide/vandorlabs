@@ -21,7 +21,7 @@ import java.util.List;
 
 /** Programmable panels with the four-pixel depth of Programmable Glass. */
 public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
-    public enum Shape { PLAIN, PORTHOLE, DIAGONAL }
+    public enum Shape { PLAIN, PORTHOLE, DIAGONAL, DIAGONAL_PORTHOLE }
 
     public static final PropertyDirection FACING = PropertyDirection.create(
             "facing", EnumFacing.Plane.HORIZONTAL);
@@ -46,25 +46,47 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             World world, int meta) {
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
                 new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
-        if (shape == Shape.PORTHOLE) tile.setJoinPortholes(true);
+        if (isPortholeShape()) tile.setJoinPortholes(true);
         return tile;
     }
 
-    private boolean isDiagonalShape() {
-        return shape == Shape.DIAGONAL;
+    public boolean isDiagonalShape() {
+        return shape == Shape.DIAGONAL || shape == Shape.DIAGONAL_PORTHOLE;
     }
+
+    public boolean isPortholeShape() { return shape == Shape.PORTHOLE || shape == Shape.DIAGONAL_PORTHOLE; }
 
     /** Pixel span of the slope; missing tile data keeps old walls at half width. */
     public static double diagonalSpan(IBlockAccess world, BlockPos pos) {
         net.minecraft.tileentity.TileEntity tile = world.getTileEntity(pos);
         return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                 && ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector) tile)
-                .isDiagonalFullWidth() ? 12D : 6D;
+                .isDiagonalFullWidth() && !((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight() ? 12D : 6D;
     }
 
     private static boolean sameDiagonalWidth(IBlockAccess world, BlockPos a,
             BlockPos b) {
-        return diagonalSpan(world, a) == diagonalSpan(world, b);
+        return diagonalSpan(world, a) == diagonalSpan(world, b)
+                && halfHeight(world,a) == halfHeight(world,b) && fill(world,a) == fill(world,b);
+    }
+
+    public static boolean halfHeight(IBlockAccess world, BlockPos pos) {
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                && ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight();
+    }
+    public static int fill(IBlockAccess world, BlockPos pos) {
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                ? ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).getDiagonalFill() : 0;
+    }
+    private AxisAlignedBB diagonalBox(AxisAlignedBB box,IBlockState state,IBlockAccess world,BlockPos pos) {
+        if (halfHeight(world,pos)) {
+            double base=state.getValue(INVERTED)?.5:0;
+            box=new AxisAlignedBB(box.minX,base+box.minZ*.8,box.minY,
+                    box.maxX,base+box.maxZ*.8,box.maxY);
+        }
+        return rotate(box,state.getValue(FACING));
     }
 
     @Override protected IProperty<EnumFacing> facingProperty() { return FACING; }
@@ -107,11 +129,13 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
             BlockPos pos) {
         Corner corner = corner(state, world, pos);
-        if (isDiagonalShape())
-            return rotate(new AxisAlignedBB(0, 0, 0, 1, 1,
-                    corner != null && corner.backRight != null ? 1
-                            : (diagonalSpan(world, pos) + 4) / 16D),
-                    state.getValue(FACING));
+        if (isDiagonalShape()) {
+            boolean half=halfHeight(world,pos);
+            if (fill(world,pos)!=0) return FULL_BLOCK_AABB;
+            if (half) return new AxisAlignedBB(0,state.getValue(INVERTED)?.5:0,0,1,state.getValue(INVERTED)?1:.5,1);
+            return rotate(new AxisAlignedBB(0,0,0,1,1,
+                    corner != null && corner.backRight != null ? 1 : (diagonalSpan(world,pos)+4)/16D),state.getValue(FACING));
+        }
         FlatCorner flat = flatCorner(state, world, pos);
         double near = PanelDepth.start(state.getValue(DEPTH));
         return rotate(new AxisAlignedBB((flat == null ? 0 : flat.left()) / 16D, 0,
@@ -245,7 +269,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
 
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {
-        if (!isDiagonalShape()) return null;
+        if (!isDiagonalShape() || isPortholeShape() || halfHeight(world,pos) || fill(world,pos)!=0) return null;
         EnumFacing facing = state.getValue(FACING);
         Boolean frontRight = null, backRight = null;
         for (boolean front : new boolean[] {true, false}) {
@@ -332,14 +356,24 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                     near0 / 16D, right / 16D,
                     (slice + 1) / 16D, (near1 + 4D) / 16D);
             addCollisionBoxToList(pos, entityBox, boxes,
-                    rotate(box, state.getValue(FACING)));
+                    diagonalBox(box, state, world, pos));
+            int fill = fill(world,pos);
+            if (halfHeight(world,pos)) {
+                // Fill below/above the rotated incline, including the unused half of the cell.
+                double base=state.getValue(INVERTED)?.5:0;
+                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,0,slice/16D,1,base+(near1+4)/20D,(slice+1)/16D),state.getValue(FACING)));
+                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,base+near0/20D,slice/16D,1,1,(slice+1)/16D),state.getValue(FACING)));
+            } else {
+                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,slice/16D,0,1,(slice+1)/16D,near1/16D),state.getValue(FACING)));
+                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,slice/16D,(near0+4)/16D,1,(slice+1)/16D,1),state.getValue(FACING)));
+            }
             if (corner != null) {
                 if (corner.frontRight != null)
                     addCornerArm(pos, entityBox, boxes, state, corner.frontRight,
-                            true, slice, near0, near1);
+                            true, slice, near0, near1, world);
                 if (corner.backRight != null)
                     addCornerArm(pos, entityBox, boxes, state, corner.backRight,
-                            false, slice, near0, near1);
+                            false, slice, near0, near1, world);
             }
         }
     }
@@ -355,15 +389,15 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     private void addCornerArm(BlockPos pos, AxisAlignedBB entityBox,
             List<AxisAlignedBB> boxes, IBlockState state, boolean right,
-            boolean front, int slice, double near0, double near1) {
+            boolean front, int slice, double near0, double near1, IBlockAccess world) {
         double x0 = right ? 12D - near1 : near0;
         double x1 = right ? 16D - near0 : near1 + 4D;
         double z0 = front ? 0 : near0;
         double z1 = front ? near1 + 4D : 16D;
         addCollisionBoxToList(pos, entityBox, boxes,
-                rotate(new AxisAlignedBB(x0 / 16D, slice / 16D,
+                diagonalBox(new AxisAlignedBB(x0 / 16D, slice / 16D,
                         z0 / 16D, x1 / 16D, (slice + 1) / 16D,
-                        z1 / 16D), state.getValue(FACING)));
+                        z1 / 16D), state, world, pos));
     }
 
     private static AxisAlignedBB rotate(AxisAlignedBB box, EnumFacing facing) {

@@ -1662,7 +1662,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_observation_rotating_door_bare",
@@ -1691,7 +1692,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_observation_rotating_door_framed",
@@ -1720,7 +1722,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_observation_sliding_door_bare",
@@ -1749,7 +1752,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_observation_sliding_door_framed",
@@ -1778,7 +1782,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_airlock_rotating_door_bare",
@@ -1807,7 +1812,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_airlock_rotating_door_framed",
@@ -1836,7 +1842,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_airlock_sliding_door_bare",
@@ -1865,7 +1872,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_airlock_sliding_door_framed",
@@ -1894,7 +1902,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_standard_rotating_door_bare",
@@ -1923,7 +1932,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_standard_rotating_door_framed",
@@ -1952,7 +1962,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_standard_sliding_door_bare",
@@ -1981,7 +1992,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_standard_sliding_door_framed",
@@ -2010,7 +2022,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_security_rotating_door_bare",
@@ -2039,7 +2052,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_security_rotating_door_framed",
@@ -2068,7 +2082,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_security_sliding_door_bare",
@@ -2097,7 +2112,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_security_sliding_door_framed",
@@ -2126,7 +2142,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_reactor_service_rotating_door_bare",
@@ -2155,7 +2172,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_reactor_service_rotating_door_framed",
@@ -2184,7 +2202,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -15,
-    "right_slide": 15
+    "right_slide": 15,
+    "hidden": true
   },
   {
     "id": "space_reactor_service_sliding_door_bare",
@@ -2213,7 +2232,8 @@
     "left_angle": 90,
     "right_angle": -90,
     "left_slide": -16,
-    "right_slide": 16
+    "right_slide": 16,
+    "hidden": true
   },
   {
     "id": "space_reactor_service_sliding_door_framed",
@@ -3430,6 +3450,60 @@
     "programmable_only": true,
     "type": "block",
     "class": "BlockProgrammablePortholeBlock",
+    "item": true
+  },
+  {
+    "id": "luxury_seat",
+    "class": "BlockConnectedSeat",
+    "type": "connected_seat",
+    "item": true
+  },
+  {
+    "id": "military_seat",
+    "class": "BlockConnectedSeat",
+    "type": "connected_seat",
+    "item": true
+  },
+  {
+    "id": "landing_gear_side_large",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
+    "item": true
+  },
+  {
+    "id": "landing_gear_side_small",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
+    "item": true
+  },
+  {
+    "id": "landing_gear_top_large",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
+    "item": true
+  },
+  {
+    "id": "landing_gear_top_small",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
+    "item": true
+  },
+  {
+    "id": "landing_gear_top_small_telescopic",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
+    "item": true
+  },
+  {
+    "id": "programmable_diagonal_half_console",
+    "type": "diagonal_half_console",
+    "class": "BlockDiagonalHalfConsole",
+    "item": true
+  },
+  {
+    "id": "programmable_diagonal_porthole",
+    "type": "diagonal_porthole",
+    "class": "BlockDiagonalPorthole",
     "item": true
   }
 ]

@@ -417,3 +417,15 @@ gui.vandorlabs.light.join=Join Adjacent Lights
 gui.vandorlabs.light.channel=Redstone Channel
 tile.vandorlabs.programmable_slab.name=Programmable Slab
 gui.vandorlabs.slab.title=Programmable Slab Texture
+
+tile.vandorlabs.glass_frame_inner.name=Glass Frame Interior
+tile.vandorlabs.door_inner.name=Door Interior (Dark)
+tile.vandorlabs.luxury_seat.name=Luxury Seat
+tile.vandorlabs.military_seat.name=Military Seat
+tile.vandorlabs.landing_gear_side_large.name=Landing Gear Side Large
+tile.vandorlabs.landing_gear_side_small.name=Landing Gear Side Small
+tile.vandorlabs.landing_gear_top_large.name=Landing Gear Top Large
+tile.vandorlabs.landing_gear_top_small.name=Landing Gear Top Small
+tile.vandorlabs.landing_gear_top_small_telescopic.name=Landing Gear Top Small Telescopic
+tile.vandorlabs.programmable_diagonal_half_console.name=Programmable Diagonal Half Console
+tile.vandorlabs.programmable_diagonal_porthole.name=Programmable Diagonal Porthole

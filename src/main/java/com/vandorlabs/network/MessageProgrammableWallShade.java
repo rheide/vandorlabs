@@ -55,8 +55,8 @@ public final class MessageProgrammableWallShade implements IMessage {
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock()
                         instanceof BlockProgrammableWall)
-                        || ((BlockProgrammableWall) player.world.getBlockState(msg.pos)
-                        .getBlock()).getShape() != BlockProgrammableWall.Shape.PORTHOLE) return;
+                        || !((BlockProgrammableWall) player.world.getBlockState(msg.pos)
+                        .getBlock()).isPortholeShape()) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);
                 ((TileEntityAnimatedScreenSelector) raw).setPortholeShape(msg.shape);

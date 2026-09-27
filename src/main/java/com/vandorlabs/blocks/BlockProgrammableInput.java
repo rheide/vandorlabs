@@ -70,6 +70,9 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
         // click selects the upper plane; top-face and sneak/lower clicks use
         // the mid-height shelf at the top of the lower half.
         boolean upper = side == EnumFacing.DOWN || (sideFace && hitY > 0.5F);
+        IBlockState support = world.getBlockState(pos.offset(side.getOpposite()));
+        Boolean slabUpper = SlabPlacement.upperHalf(support);
+        if (sideFace && slabUpper != null) upper = slabUpper;
         return getDefaultState().withProperty(FACING, facing)
                 .withProperty(KEYBOARD, keyboard)
                 .withProperty(UPPER, upper);

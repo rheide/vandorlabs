@@ -71,9 +71,9 @@ public class GuiProgrammableInput extends GuiContainer {
                 I18n.format("gui.vandorlabs.selector.normal")));
         buttonList.add(new GuiButton(12, x + 168, y + 150, 74, 18,
                 I18n.format("gui.vandorlabs.selector.fast")));
-        buttonList.add(new GuiButton(30, x + 8, y + 178, 114, 18,
+        if (!(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole)) buttonList.add(new GuiButton(30, x + 8, y + 178, 114, 18,
                 I18n.format("gui.vandorlabs.input.small")));
-        buttonList.add(new GuiButton(31, x + 128, y + 178, 114, 18,
+        if (!(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole)) buttonList.add(new GuiButton(31, x + 128, y + 178, 114, 18,
                 I18n.format("gui.vandorlabs.selector.normal")));
         buttonList.add(new GuiButton(0, x + 8, y + 202, 234, 18, ""));
         channelField = new GuiTextField(40, fontRenderer, x + 168, y + 92, 74, 18);

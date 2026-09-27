@@ -214,7 +214,12 @@ public class TEAnimatedScreenSelector
         int minY = tile.getPos().getY(), maxY = minY;
         Set<BlockPos> members = tile.isJoinPortholes()
                 ? LoadedPlaneConnections.collect(tile.getPos(), PanelPlane.of(facing),
-                        world::isBlockLoaded, next -> eligiblePorthole(world, next, facing,
+                        world::isBlockLoaded, next -> (!((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
+                                || next.getY() == tile.getPos().getY()
+                                && world.getBlockState(next).getBlock() == state.getBlock()
+                                && world.getBlockState(next).getValue(BlockProgrammableWall.INVERTED) == state.getValue(BlockProgrammableWall.INVERTED)
+                                && BlockProgrammableWall.diagonalSpan(world,next) == BlockProgrammableWall.diagonalSpan(world,tile.getPos()))
+                                && eligiblePorthole(world, next, facing,
                                 state.getValue(BlockProgrammableWall.DEPTH), state.getBlock(),
                                 tile.getPortholeShape()))
                 : java.util.Collections.singleton(tile.getPos());
@@ -256,8 +261,7 @@ public class TEAnimatedScreenSelector
         IBlockState state = world.getBlockState(pos);
         if (state.getBlock() != block
                 || !(state.getBlock() instanceof BlockProgrammableWall)
-                || ((BlockProgrammableWall) state.getBlock()).getShape()
-                != BlockProgrammableWall.Shape.PORTHOLE
+                || !((BlockProgrammableWall) state.getBlock()).isPortholeShape()
                 || state.getValue(BlockProgrammableWall.FACING) != facing
                 || state.getValue(BlockProgrammableWall.DEPTH) != depth) return false;
         net.minecraft.tileentity.TileEntity raw = world.getTileEntity(pos);
@@ -428,6 +432,25 @@ public class TEAnimatedScreenSelector
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
+        }
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole) {
+            beginLocalTransform(x,y,z,state.getValue(BlockAnimatedScreenSelector.FACING));
+            GlStateManager.disableLighting();
+            if (state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER)) {
+                GlStateManager.translate(0,16,0); GlStateManager.scale(1,-1,1);
+            }
+            GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
+            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false));
+            double[] uv=bindInput(te,te.getInputPanel());
+            com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
+            BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+            b.pos(q.topLeft.x,q.topLeft.y,q.topLeft.z).tex(1,uv[0]).endVertex();
+            b.pos(q.topRight.x,q.topRight.y,q.topRight.z).tex(0,uv[0]).endVertex();
+            b.pos(q.bottomRight.x,q.bottomRight.y,q.bottomRight.z).tex(0,uv[1]).endVertex();
+            b.pos(q.bottomLeft.x,q.bottomLeft.y,q.bottomLeft.z).tex(1,uv[1]).endVertex();
+            GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
+            Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+            GlStateManager.enableLighting();endLocalTransform();return;
         }
         if (state.getBlock() instanceof BlockProgrammableHalfConsole) {
             EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
@@ -778,9 +801,17 @@ public class TEAnimatedScreenSelector
         if (wallBlock instanceof BlockProgrammablePortholeBlock) {
             GlStateManager.translate(0, 0, -24);
             GlStateManager.scale(1, 1, 4);
-        } else if (wallBlock.getShape() != BlockProgrammableWall.Shape.DIAGONAL && flat == null)
+        } else if (!wallBlock.isDiagonalShape() && flat == null)
             GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(
                     state.getValue(BlockProgrammableWall.DEPTH)));
+        if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE) {
+            double span = BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos());
+            boolean inverted = state.getValue(BlockProgrammableWall.INVERTED);
+            java.nio.FloatBuffer shear = org.lwjgl.BufferUtils.createFloatBuffer(16);
+            shear.put(new float[]{1,0,0,0, 0,1,(float)((inverted?-span:span)/16),0,
+                    0,0,1,0, 0,0,(float)(inverted?span-6:-6),1}).flip();
+            GlStateManager.multMatrix(shear);
+        }
         GlStateManager.disableLighting();
         bindAtlas();
         setWorldLight(te);
@@ -788,15 +819,24 @@ public class TEAnimatedScreenSelector
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         double rimDepthUv = wallBlock instanceof BlockProgrammablePortholeBlock ? 16 : 4;
-        PortholeHex.Slice porthole = wallBlock.getShape() == BlockProgrammableWall.Shape.PORTHOLE
+        PortholeHex.Slice porthole = wallBlock.isPortholeShape()
                 ? portholeGroup(te, state).slice(te.getPos()) : null;
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
+            boolean halfHeight=te.isDiagonalHalfHeight();
+            if (halfHeight) {
+                java.nio.FloatBuffer transform=org.lwjgl.BufferUtils.createFloatBuffer(16);
+                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,.8F,0,0,
+                        0,state.getValue(BlockProgrammableWall.INVERTED)?8:0,0,1}).flip();
+                GlStateManager.multMatrix(transform);
+            }
             renderDiagonalWall(buf, wall, metal,
                     state.getValue(BlockProgrammableWall.INVERTED),
                     wallBlock.corner(state, te.getWorld(), te.getPos()),
-                    BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()));
+                    BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()),
+                    te.getDiagonalFill(), halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?-10:0) : 0,
+                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?10:20) : 16);
         } else if (flat != null) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -929,10 +969,10 @@ public class TEAnimatedScreenSelector
 
     private static void renderDiagonalWall(BufferBuilder buf,
             TextureAtlasSprite wall, TextureAtlasSprite metal, boolean inverted,
-            BlockProgrammableWall.Corner corner, double span) {
+            BlockProgrammableWall.Corner corner, double span, int fill, double fillLow, double fillHigh) {
         double bottom = inverted ? span : 0, top = inverted ? 0 : span;
-        double[][] lower = diagonalOutline(bottom, corner);
-        double[][] upper = diagonalOutline(top, corner);
+        double[][] lower = filledDiagonalOutline(bottom, corner, fill, fillLow, fillHigh);
+        double[][] upper = filledDiagonalOutline(top, corner, fill, fillLow, fillHigh);
         for (int i = 0; i < lower.length; i++) {
             int next = (i + 1) % lower.length;
             double[] a = lower[i], b = lower[next];
@@ -958,7 +998,7 @@ public class TEAnimatedScreenSelector
         for (int y : new int[] {0, 16}) {
             double near = y == 0 ? bottom : top;
             roofRect(buf, metal, y, corner == null ? 0 : corner.left(near),
-                    corner == null ? 16 : corner.right(near), near, near + 4);
+                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4);
             if (corner != null) {
                 if (corner.frontRight != null) {
                     double armX = corner.armLeft(near, corner.frontRight);
@@ -1026,6 +1066,13 @@ public class TEAnimatedScreenSelector
         }
         points.add(new double[] {corner.left(), near + 4});
         return points.toArray(new double[points.size()][]);
+    }
+
+    private static double[][] filledDiagonalOutline(double near, BlockProgrammableWall.Corner corner,
+            int fill, double low, double high) {
+        if (fill == 0) return diagonalOutline(near, corner);
+        double front=(fill&1)!=0?low:near, back=(fill&2)!=0?high:near+4;
+        return new double[][]{{0,front},{16,front},{16,back},{0,back}};
     }
 
     private static double[][] diagonalOutline(double near,

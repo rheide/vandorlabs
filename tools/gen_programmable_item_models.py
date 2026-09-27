@@ -10,10 +10,10 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 java = (root / 'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text()
-arrays = re.findall(r'\{([^{}]+)\};', java, re.S)
-ids = re.findall(r'"([^"]+)"', arrays[0])
-textures = re.findall(r'"([^"]+)"', arrays[1])
-assert len(ids) == len(textures)
+finishes = re.findall(r'new Finish\("([^"]+)", "([^"]+)"\)', java)
+ids = [entry[0] for entry in finishes]
+textures = [entry[1] for entry in finishes]
+assert ids
 models = root / 'src/main/resources/assets/vandorlabs/models/item'
 out = models / 'configured'
 out.mkdir(exist_ok=True)

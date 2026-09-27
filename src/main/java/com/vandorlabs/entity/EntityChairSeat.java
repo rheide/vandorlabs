@@ -55,6 +55,7 @@ public class EntityChairSeat extends Entity {
             IBlockState state = chairPos == null ? null
                     : world.getBlockState(chairPos);
             if (state == null || !(state.getBlock() instanceof BlockBridgeChair)
+                    && !(state.getBlock() instanceof com.vandorlabs.blocks.BlockConnectedSeat)
                     || state.getValue(BlockBridgeChair.UPPER)
                     || (ticksExisted > 5 && getPassengers().isEmpty())) {
                 setDead();

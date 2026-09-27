@@ -35,7 +35,9 @@ public final class ScreenHousingTextures {
             new Finish("midnight_satin_hull", "midnight_satin_hull"),
             new Finish("seamed_padding", "seamed_padding"),
             new Finish("ribbed_padding", "ribbed_padding"),
-            new Finish("stitched_padding", "stitched_padding")
+            new Finish("stitched_padding", "stitched_padding"),
+            new Finish("glass_frame_inner", "programmable_glass/metal_side"),
+            new Finish("door_inner", "programmable_glass/door_side")
     };
     public static final String[] IDS = new String[FINISHES.length];
     private static final String[] TEXTURES = new String[FINISHES.length];

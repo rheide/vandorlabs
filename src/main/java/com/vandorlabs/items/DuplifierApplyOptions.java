@@ -69,7 +69,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.RAMP_EXTEND, "Extend Mode", 4),
             option(ProgrammableSettings.RAMP_DIRECTION, "Ramp Direction", 4),
             option(ProgrammableSettings.RAMP_TRAVEL, "Travel Direction", 4),
-            option(ProgrammableSettings.FACE_TEXTURES, "Face Overrides", 2)
+            option(ProgrammableSettings.FACE_TEXTURES, "Face Overrides", 2),
+            option(ProgrammableSettings.DIAGONAL_GEOMETRY, "Diagonal Geometry", 2)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;
@@ -97,6 +98,7 @@ public final class DuplifierApplyOptions {
         NBTTagCompound selected = captured.copy();
         for (int i = 0; i < OPTIONS.length; i++)
             if (!enabled(mask, i)) selected.removeTag(OPTIONS[i].key);
+        if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
         if (!selected.hasKey(ProgrammableSettings.PRIMARY_TEXTURE))
             selected.removeTag(ProgrammableSettings.PRIMARY_KIND);
         return selected;

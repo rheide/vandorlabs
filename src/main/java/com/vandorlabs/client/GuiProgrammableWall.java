@@ -25,7 +25,7 @@ import java.io.IOException;
 /** Scrollable finish picker shared by programmable walls and the full block. */
 public class GuiProgrammableWall extends GuiContainer {
     private static final int ROW_H = 16;
-    private static final int ROWS = 8;
+    private int rows = 8;
     private static final int LIST_W = 190;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
     private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
@@ -67,13 +67,13 @@ public class GuiProgrammableWall extends GuiContainer {
         porthole = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableWall
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
-                .getBlock()).getShape() == BlockProgrammableWall.Shape.PORTHOLE;
+                .getBlock()).isPortholeShape();
         slab = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableSlab;
         diagonal = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableWall
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
-                .getBlock()).getShape() == BlockProgrammableWall.Shape.DIAGONAL;
+                .getBlock()).isDiagonalShape();
         fullBlock = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableBlock
                 || slab;
@@ -88,13 +88,15 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override public void initGui() {
-        if (supportsFaces())
-            ySize = (slab ? 242 : 216) + (tile.getFaceTextures().enabled ? 52 : 0);
+        rows=8;
+        ySize = porthole ? (diagonal ? 298 : 272) : diagonal ? 242 : slab ? 242 : supportsFaces() ? 216 : 190;
+        if (supportsFaces() && tile.getFaceTextures().enabled) ySize+=52;
+        while (ySize > height-8 && rows > 3) { rows--; ySize-=ROW_H; }
         super.initGui();
         buttonList.clear();
         listX = guiLeft + 11;
         listY = guiTop + (porthole ? 106 : supportsFaces() && tile.getFaceTextures().enabled ? 79 : 27);
-        scroll = Math.min(Math.max(0, selected - ROWS / 2), maxScroll());
+        scroll = Math.min(Math.max(0, selected - rows / 2), maxScroll());
         if (supportsFaces()) {
             buttonList.add(new GuiButton(106, guiLeft + 14, guiTop + ySize - 51, 312, 20,
                     "Face overrides: " + (tile.getFaceTextures().enabled ? "On" : "Off")));
@@ -116,8 +118,13 @@ public class GuiProgrammableWall extends GuiContainer {
                 guiTop + 77, 312, 20, shapeLabel()));
         if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
                 guiTop + ySize - 77, 312, 20, slabSidesLabel()));
-        if (diagonal) buttonList.add(new GuiButton(105, guiLeft + 14,
-                guiTop + 163, 312, 20, diagonalWidthLabel()));
+        if (diagonal) {
+            buttonList.add(new GuiButton(105,guiLeft+14,guiTop+ySize-(porthole?51:77),312,20,diagonalWidthLabel()));
+            if (!porthole) {
+                buttonList.add(new GuiButton(109,guiLeft+14,guiTop+ySize-51,153,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off")));
+                buttonList.add(new GuiButton(110,guiLeft+173,guiTop+ySize-51,153,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
+            }
+        }
         buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + ySize - 25, 312, 20,
                 I18n.format("gui.done")));
     }
@@ -127,7 +134,8 @@ public class GuiProgrammableWall extends GuiContainer {
     private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
     private String slabSidesLabel() { return "Side layout: " + (tileSides ? "Tile" : "Fit"); }
     private String diagonalWidthLabel() {
-        return "Diagonal width: " + (fullWidth ? "Full block" : "Half block");
+        return tile.isDiagonalHalfHeight() ? "Shape: Half height, full width"
+                : "Shape: " + (tile.isDiagonalFullWidth() ? "Full height, full width" : "Full height, half width");
     }
 
     private void sendPortholeSettings() {
@@ -136,15 +144,15 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     private int maxScroll() {
-        return Math.max(0, ScreenHousingTextures.IDS.length - ROWS);
+        return Math.max(0, ScreenHousingTextures.IDS.length - rows);
     }
 
     private int thumbHeight() {
-        return Math.max(8, ROW_H * ROWS * ROWS / ScreenHousingTextures.IDS.length);
+        return Math.max(8, ROW_H * rows * rows / ScreenHousingTextures.IDS.length);
     }
 
     private int thumbY() {
-        return listY + (ROW_H * ROWS - thumbHeight()) * scroll / maxScroll();
+        return listY + (ROW_H * rows - thumbHeight()) * scroll / maxScroll();
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -157,7 +165,7 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     private void dragTo(int mouseY) {
-        scroll = scrollForDrag(mouseY, listY, ROW_H * ROWS,
+        scroll = scrollForDrag(mouseY, listY, ROW_H * rows,
                 thumbHeight(), maxScroll(), scrollbarDragOffset);
     }
 
@@ -180,7 +188,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if (button == 0 && mouseY >= listY && mouseY < listY + ROW_H * ROWS) {
+        if (button == 0 && mouseY >= listY && mouseY < listY + ROW_H * rows) {
             if (mouseX >= listX + LIST_W && mouseX < listX + LIST_W + 7
                     && maxScroll() > 0) {
                 int top = thumbY();
@@ -263,12 +271,15 @@ public class GuiProgrammableWall extends GuiContainer {
             button.displayString = shapeLabel();
             sendPortholeSettings();
         }
-        if (button.id == 105) {
-            fullWidth = !fullWidth;
-            tile.setDiagonalFullWidth(fullWidth);
-            button.displayString = diagonalWidthLabel();
-            PacketHandler.INSTANCE.sendToServer(new MessageProgrammableDiagonalWidth(
-                    tile.getPos(), fullWidth));
+        if (button.id == 105 || button.id == 109 || button.id == 110) {
+            int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
+            int fill=tile.getDiagonalFill();
+            if (button.id==105) mode=(mode+1)%(porthole?2:3);
+            if (button.id==109) fill^=1;
+            if (button.id==110) fill^=2;
+            tile.setDiagonalGeometry(mode,fill);
+            PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDiagonalGeometry(tile.getPos(),mode,fill));
+            initGui();
         }
     }
 
@@ -285,9 +296,9 @@ public class GuiProgrammableWall extends GuiContainer {
                         : "gui.vandorlabs.wall.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
         drawRect(listX - 1, listY - 1, listX + LIST_W + 8,
-                listY + ROW_H * ROWS + 1, 0xFF000000);
-        drawRect(listX, listY, listX + LIST_W, listY + ROW_H * ROWS, 0xFF0A0A0C);
-        for (int row = 0; row < ROWS; row++) {
+                listY + ROW_H * rows + 1, 0xFF000000);
+        drawRect(listX, listY, listX + LIST_W, listY + ROW_H * rows, 0xFF0A0A0C);
+        for (int row = 0; row < rows; row++) {
             int index = scroll + row;
             if (index >= ScreenHousingTextures.IDS.length) break;
             int yy = listY + row * ROW_H;
@@ -304,20 +315,21 @@ public class GuiProgrammableWall extends GuiContainer {
         }
         if (maxScroll() > 0) {
             drawRect(listX + LIST_W, listY, listX + LIST_W + 7,
-                    listY + ROW_H * ROWS, 0xFF303038);
+                    listY + ROW_H * rows, 0xFF303038);
             drawRect(listX + LIST_W, thumbY(), listX + LIST_W + 7,
                     thumbY() + thumbHeight(), 0xFF808090);
         }
         int previewX = listX + LIST_W + 18;
         int previewY = listY + 16;
         fontRenderer.drawString("Preview", previewX, listY + 2, 0xFFD8D8D8);
-        drawRect(previewX - 2, previewY - 2, previewX + 98,
-                previewY + 98, 0xFF505058);
+        int previewSize=Math.min(96,rows*ROW_H-20);
+        drawRect(previewX - 2, previewY - 2, previewX + previewSize+2,
+                previewY + previewSize+2, 0xFF505058);
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(
                 ScreenHousingTextures.texture(selected));
         mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1F, 1F, 1F, 1F);
-        drawTexturedModalRect(previewX, previewY, sprite, 96, 96);
+        drawTexturedModalRect(previewX, previewY, sprite, previewSize, previewSize);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 

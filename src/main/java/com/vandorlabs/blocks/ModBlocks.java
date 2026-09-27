@@ -230,6 +230,10 @@ public class ModBlocks {
     private static Block create(String cls, JsonObject e, Map<String, Block> byId) {
         String id = e.get("id").getAsString();
         switch (cls) {
+            case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
+            case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
+            case "BlockConnectedSeat": return new BlockConnectedSeat(id);
+            case "BlockLandingGear": return id.endsWith("telescopic") ? new BlockTelescopicLandingGear(id) : new BlockLandingGear(id);
             case "BlockConfigurableSpaceDoor":
                 return new BlockConfigurableSpaceDoor(id,e.get("sliding").getAsBoolean(),
                         (BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
@@ -418,6 +422,10 @@ public class ModBlocks {
         for (Block block : BLOCKS) {
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);
+                if (block instanceof BlockTelescopicLandingGear) {
+                    for (String group : new String[]{"fixed", "wheel", "piston"})
+                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID, "landing_gear_"+group));
+                }
                 if (block instanceof BlockConfigurableSpaceDoor) {
                     registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
                     ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
