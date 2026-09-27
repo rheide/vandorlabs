@@ -385,7 +385,7 @@ public class TEAnimatedScreenSelector
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite(com.vandorlabs.tiles.ProgrammableLightTextures.texture(
                             light.getTexture(), light.isOn() && light.getLightLevel() > 0));
-            renderWallBox(housing, 0, 0, 0, 16, 16, 16);
+            renderWallBox(housing, housing, true, 0, 0, 0, 16, 16, 16, false);
             renderProgrammableLightFace(face, lightGroup(light, state), te.getPos());
             GlStateManager.enableLighting();
             endLocalTransform();
@@ -760,6 +760,12 @@ public class TEAnimatedScreenSelector
     private static void renderWallBox(TextureAtlasSprite face, TextureAtlasSprite side,
             boolean faceAlongZ, double x0, double y0, double z0,
             double x1, double y1, double z1) {
+        renderWallBox(face, side, faceAlongZ, x0, y0, z0, x1, y1, z1, true);
+    }
+
+    private static void renderWallBox(TextureAtlasSprite face, TextureAtlasSprite side,
+            boolean faceAlongZ, double x0, double y0, double z0,
+            double x1, double y1, double z1, boolean front) {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder b = tess.getBuffer();
         b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
@@ -769,7 +775,7 @@ public class TEAnimatedScreenSelector
         TextureAtlasSprite zFace = faceAlongZ ? face : side;
         spriteQuad(b, xFace, x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0, 0,0,16,16);
         spriteQuad(b, xFace, x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1, 0,0,16,16);
-        spriteQuad(b, zFace, x1,y1,z0, x0,y1,z0, x0,y0,z0, x1,y0,z0, 0,0,16,16);
+        if (front) spriteQuad(b, zFace, x1,y1,z0, x0,y1,z0, x0,y0,z0, x1,y0,z0, 0,0,16,16);
         spriteQuad(b, zFace, x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1, 0,0,16,16);
         tess.draw();
     }
@@ -830,6 +836,14 @@ public class TEAnimatedScreenSelector
                 ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),
                         wallBlock.isDiagonalShape() && te.isDiagonalHalfHeight()
                                 ? state.getValue(BlockProgrammableWall.FACING).getOpposite() : EnumFacing.UP) : null;
+        // Draw glass after all opaque tile housings, so adjacent blocks cannot
+        // overwrite an earlier tile's transparent surface at oblique angles.
+        if (net.minecraftforge.client.MinecraftForgeClient.getRenderPass() == 1) {
+            if (porthole != null) renderPortholeGlass(te.getGlassShade(), porthole);
+            GlStateManager.enableLighting();
+            endLocalTransform();
+            return;
+        }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
@@ -864,7 +878,6 @@ public class TEAnimatedScreenSelector
             panelOuterRim(buf, metal, porthole, te, state, rimDepthUv);
         }
         Tessellator.getInstance().draw();
-        if (porthole != null) renderPortholeGlass(te.getGlassShade(), porthole);
         GlStateManager.enableLighting();
         endLocalTransform();
     }
@@ -1226,8 +1239,8 @@ public class TEAnimatedScreenSelector
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(buf, face, 16,16,-.002, 0,16,-.002,
-                0,0,-.002, 16,0,-.002, group.right(pos), group.top(pos),
+        spriteQuad(buf, face, 16,16,0, 0,16,0,
+                0,0,0, 16,0,0, group.right(pos), group.top(pos),
                 group.left(pos), group.bottom(pos));
         tess.draw();
     }

@@ -29,6 +29,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab)) return false;
+        if (block instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                && ((com.vandorlabs.blocks.BlockProgrammableWall) block).isPortholeShape())
+            return pass == 0 || pass == 1;
         return super.shouldRenderInPass(pass);
     }
 

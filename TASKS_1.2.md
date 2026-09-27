@@ -150,3 +150,10 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - [ ] Replace Small/Large block IDs with one `landing_gear` block, no remaps. Add Small/Medium/Large size in its dialog; Medium retains the old Large design, and new Large has a bigger wheel and full-block width. Keep size consistent across rendering, collision, inventory, copying and saved settings.
 
 - Startup regression refinement: capture the light's own initial block state during loading without marking dirty; defer channel registration and visual/power work until the first normal tick. This preserves same-tick placement/connected-model behavior while avoiding neighbour reads during chunk tile-map iteration.
+
+### Light and porthole rendering reports
+
+- [ ] Fix distant front-face shimmering on single and joined Programmable Lights; inspect shared `face.png` and verify mixed housing textures.
+- [ ] Check joined Circular Programmable Porthole Block glass for flickering and missing texture at seams from oblique angles.
+
+- Full live suite passed in `render-run.MThBBJ`: diagonal direction, filled-face UVs, optional ramp matching, startup load safety, and all existing checks. Unified landing gear and the new rendering reports require the next build.
