@@ -500,6 +500,7 @@ public class ReproLab {
                 if (--holdTicks > 0) {
                     break;
                 }
+                LightOcclusionChecks.run(outDir);
                 ProgrammableRenderBenchmark.run(outDir);
                 if (Boolean.getBoolean("vandorlabs.benchmarkOnly")) {
                     mc.shutdown();

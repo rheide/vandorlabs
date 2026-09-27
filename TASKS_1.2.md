@@ -175,3 +175,5 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - [ ] Use the thickest existing extending arm (4×4 pixels) for all three sizes. Apply Glass Frame Interior / diagonal-side metal, tiled along the extension instead of stretched.
 
 - [ ] Investigate remaining Programmable Light flickering reported after the first front-face fix (user clarified lights, not glass). Distinguish remaining housing overlap from texture sampling shimmer.
+
+- Light follow-up: user confirmed housing bleed, not texture-detail shimmer. Removed shared faces between adjacent light cubes and culled back-facing surfaces. Added a live offscreen comparison with depth disabled and draw order reversed, covering all six facings, single/2×2 joined groups, and front/rear oblique views. Build passed; live validation pending.

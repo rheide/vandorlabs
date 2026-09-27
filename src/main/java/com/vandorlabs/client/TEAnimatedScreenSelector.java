@@ -385,8 +385,16 @@ public class TEAnimatedScreenSelector
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite(com.vandorlabs.tiles.ProgrammableLightTextures.texture(
                             light.getTexture(), light.isOn() && light.getLightLevel() > 0));
-            renderWallBox(housing, housing, true, 0, 0, 0, 16, 16, 16, false);
-            renderProgrammableLightFace(face, lightGroup(light, state), te.getPos());
+            // The shared box/art quads have inward winding. Cull their front
+            // sides so hidden rear housing cannot compete with the artwork
+            // when distance reduces depth-buffer precision.
+            GlStateManager.enableCull();
+            GlStateManager.cullFace(GlStateManager.CullFace.FRONT);
+            int visible=lightVisibleFaces(light,state.getValue(BlockAnimatedScreenSelector.FACING));
+            renderLightHousing(housing,visible);
+            if ((visible & (1 << EnumFacing.NORTH.getIndex())) != 0)
+                renderProgrammableLightFace(face, lightGroup(light, state), te.getPos());
+            GlStateManager.cullFace(GlStateManager.CullFace.BACK);
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
@@ -1232,6 +1240,38 @@ public class TEAnimatedScreenSelector
         // Explicit upper/lower geometry keeps the artwork upright. Reflecting
         // the model matrix would also reflect the texture.
         drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted));
+    }
+
+    /** Adjacent light cubes fully cover these surfaces, regardless of Join. */
+    private static int lightVisibleFaces(TileEntityAnimatedScreenSelector tile,EnumFacing facing) {
+        PanelPlane plane=PanelPlane.of(facing);
+        int visible=0;
+        for(EnumFacing local:EnumFacing.values()) {
+            EnumFacing worldSide=local==EnumFacing.NORTH?facing:local==EnumFacing.SOUTH?facing.getOpposite()
+                    :local==EnumFacing.EAST?plane.right:local==EnumFacing.WEST?plane.right.getOpposite()
+                    :local==EnumFacing.UP?plane.up:plane.up.getOpposite();
+            BlockPos neighbor=tile.getPos().offset(worldSide);
+            if(!tile.getWorld().isBlockLoaded(neighbor)
+                    || !(tile.getWorld().getBlockState(neighbor).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLight))
+                visible |= 1 << local.getIndex();
+        }
+        return visible;
+    }
+
+    private static void renderLightHousing(TextureAtlasSprite sprite,int visible) {
+        BufferBuilder b=Tessellator.getInstance().getBuffer();
+        b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+        if ((visible & (1 << EnumFacing.UP.getIndex())) != 0)
+            spriteQuad(b,sprite,0,16,0, 16,16,0, 16,16,16, 0,16,16,0,0,16,16);
+        if ((visible & (1 << EnumFacing.DOWN.getIndex())) != 0)
+            spriteQuad(b,sprite,0,0,16, 16,0,16, 16,0,0, 0,0,0,0,0,16,16);
+        if ((visible & (1 << EnumFacing.WEST.getIndex())) != 0)
+            spriteQuad(b,sprite,0,16,0, 0,16,16, 0,0,16, 0,0,0,0,0,16,16);
+        if ((visible & (1 << EnumFacing.EAST.getIndex())) != 0)
+            spriteQuad(b,sprite,16,16,16, 16,16,0, 16,0,0, 16,0,16,0,0,16,16);
+        if ((visible & (1 << EnumFacing.SOUTH.getIndex())) != 0)
+            spriteQuad(b,sprite,0,16,16, 16,16,16, 16,0,16, 0,0,16,0,0,16,16);
+        Tessellator.getInstance().draw();
     }
 
     private static void renderProgrammableLightFace(TextureAtlasSprite face,
