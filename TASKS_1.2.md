@@ -123,8 +123,12 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 ### Diagonal placement and shallow joins
 
-- [ ] Anchor tall/shallow diagonal walls at the clicked edge and continue an existing diagonal's plane and proportions.
-- [ ] Join half-height/full-width portholes along their slope, including reversed upper pieces; check all shapes/directions and Join Off.
+- [x] Anchor tall/shallow diagonal walls at the clicked edge and continue an existing diagonal's plane and proportions.
+- [x] Join half-height/full-width portholes along their slope, including reversed upper pieces; check all shapes/directions and Join Off.
 - Geometry correction: shallow panels use the tall half-width geometry rotated onto its side, keeping four-pixel thickness and matching endpoints. Their overlapping height bands are 0–10 and 6–16 pixels, matching the tall form's depth bands.
 
 - Java 8 build passed. Live item placement and join checks passed in `render-run.fWcuxx` for both proportions, both extension directions, every facing and opening shape, Join Off and incompatible proportions. Full gallery and pixel checks are still running.
+
+- Visual check: all four shallow openings merge with Join On and retain separate frames with Join Off. Existing tall stacked and sideways porthole captures match the prior build exactly in the 600×240 fixture region (zero pixels changed beyond 3/255). Guide screenshots updated.
+
+- Final validation: full Java 8 build and live client suite passed in `render-run.fWcuxx`, including diagonal Join On/Off pixels and all existing rendering, gameplay, copying and GUI checks. Packaged JAR remains version 1.2 and matches the tested artifact. All 170 local documentation links pass.
