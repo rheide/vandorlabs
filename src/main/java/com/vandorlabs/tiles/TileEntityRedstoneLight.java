@@ -26,6 +26,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private boolean manualOn;
     private boolean particleStreamSelected;
     private boolean initialized;
+    private boolean loadPending, initialStateDirty;
     private boolean join = true;
     private int sideTexture = ScreenHousingTextures.INDUSTRIAL_BLOCK;
 
@@ -91,6 +92,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     }
 
     @Override public void setRedstoneChannel(int value) {
+        initializeManualState();
         int next = Math.max(0, value);
         if (next == channel) return;
         int old = channel;
@@ -102,7 +104,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     }
 
     @Override public boolean hasLocalRedstoneSignal() {
-        return world != null && pos != null && world.isBlockPowered(pos);
+        return world != null && pos != null && com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }
 
     @Override public void setChannelSignal(boolean powered) {
@@ -121,6 +123,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
 
     public void toggleManualState() {
         if (channel > 0) return;
+        initializeManualState();
         IBlockState state = world == null || pos == null ? null : world.getBlockState(pos);
         if (state != null && state.getBlock() instanceof BlockPropulsionLight) {
             setManualMode((getManualMode() + 1) % 3, true);
@@ -163,7 +166,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         if (world == null || world.isRemote || pos == null) return;
         IBlockState state = world.getBlockState(pos);
         if (!isLamp(state)) return;
-        boolean powered = world.isBlockPowered(pos) || channelSignal;
+        boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
         boolean shouldBeOn = channel > 0 ? powered : manualOn;
         if (state.getBlock() instanceof BlockPropulsionLight) {
             if (state.getValue(BlockPropulsionLight.POWERED) != shouldBeOn) {
@@ -197,19 +200,36 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
 
     @Override public void onLoad() {
         super.onLoad();
+        // Chunk.onLoad iterates its tile map here. Power/visual callbacks can
+        // load neighbours or alter that map, so initialize on the first tick.
+        initializeManualState(); // Own chunk is already installed; this only captures its block state.
+        loadPending = true;
+    }
+
+    private void initializeManualState() {
         if (!initialized && world != null) {
             IBlockState state = world.getBlockState(pos);
             manualOn = state.getBlock() instanceof BlockPropulsionLight
                     ? state.getValue(BlockPropulsionLight.POWERED)
                     : state.getBlock() instanceof BlockLamp;
             initialized = true;
-            if (!world.isRemote) markDirty();
+            initialStateDirty = true;
         }
+    }
+
+    private void finishLoading() {
+        initializeManualState();
+        if (initialStateDirty && !world.isRemote) markDirty();
+        initialStateDirty = false;
         RedstoneChannels.register(this);
         updateVisualState();
     }
 
     @Override public void update() {
+        if (loadPending && world != null && pos != null) {
+            loadPending = false;
+            finishLoading();
+        }
         if (world == null || !world.isRemote || pos == null || !particleStreamSelected) return;
         IBlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockPropulsionLight)

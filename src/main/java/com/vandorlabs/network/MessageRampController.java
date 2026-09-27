@@ -14,6 +14,7 @@ public class MessageRampController implements IMessage {
     private BlockPos pos;
     private int treadPixels,startOffset,drop,segments,direction,channel,travelAxis,speed;
     private boolean top,powerOn,slow,elevator,extendSegments;
+    private boolean matchTextures=true;
     public MessageRampController() { }
     public MessageRampController(BlockPos pos,int drop,int segments,boolean top,boolean powerOn,boolean slow,boolean elevator,
             net.minecraft.util.EnumFacing direction) {
@@ -45,6 +46,12 @@ public class MessageRampController implements IMessage {
         this(pos,start,end,pixels,powerOn,slow,elevator,direction,channel,travelAxis,extendSegments);
         this.speed=speed;
     }
+    public MessageRampController(BlockPos pos,int start,int end,int pixels,boolean powerOn,
+            boolean slow,boolean elevator,net.minecraft.util.EnumFacing direction,int channel,
+            int travelAxis,boolean extendSegments,int speed,boolean matchTextures) {
+        this(pos,start,end,pixels,powerOn,slow,elevator,direction,channel,travelAxis,extendSegments,speed);
+        this.matchTextures=matchTextures;
+    }
     @Override public void fromBytes(ByteBuf buf) {
         pos=BlockPos.fromLong(buf.readLong()); drop=buf.readInt(); segments=buf.readInt();
         top=buf.readBoolean(); powerOn=buf.readBoolean(); slow=buf.readBoolean(); elevator=buf.readBoolean();
@@ -55,13 +62,14 @@ public class MessageRampController implements IMessage {
         travelAxis=buf.readableBytes()>=4?buf.readInt():0;
         extendSegments=buf.readableBytes()>=1 && buf.readBoolean();
         speed=buf.readableBytes()>=4?buf.readInt():(slow?2:1);
+        matchTextures=!buf.isReadable()||buf.readBoolean();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong()); buf.writeInt(drop); buf.writeInt(segments);
         buf.writeBoolean(top); buf.writeBoolean(powerOn); buf.writeBoolean(slow); buf.writeBoolean(elevator);
         buf.writeInt(direction);
         buf.writeInt(channel); buf.writeInt(startOffset); buf.writeInt(treadPixels);
-        buf.writeInt(travelAxis); buf.writeBoolean(extendSegments); buf.writeInt(speed);
+        buf.writeInt(travelAxis); buf.writeBoolean(extendSegments); buf.writeInt(speed); buf.writeBoolean(matchTextures);
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
@@ -75,7 +83,7 @@ public class MessageRampController implements IMessage {
                 if (((ContainerRampController)player.openContainer).controller!=te || !te.usable(player)) return;
                 if (message.direction<0 || message.direction>3 || message.channel<0) return;
                 te.configureTreads(player,message.startOffset,message.top?-message.drop:message.drop,message.treadPixels,message.powerOn,message.slow,message.elevator,
-                        net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed);
+                        net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures);
                 te.setRedstoneChannel(message.channel);
                 player.connection.sendPacket(te.getUpdatePacket());
             });

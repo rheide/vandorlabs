@@ -63,6 +63,12 @@ public final class RampControllerDataTest {
             MemoryPrimitiveData copy=new MemoryPrimitiveData(); value.write(copy);
             check(RampControllerData.read(copy).treadPixels==pixels,"every pixel tread size round trips");
         }
+        check(RampControllerData.read(new MemoryPrimitiveData()).matchTextures,"old saves match textures by default");
+        for(boolean match:new boolean[]{false,true}) {
+            MemoryPrimitiveData tag=new MemoryPrimitiveData();tag.putBoolean(SaveSchema.Ramp.MATCH_TEXTURES,match);
+            MemoryPrimitiveData copy=new MemoryPrimitiveData();RampControllerData.read(tag).write(copy);
+            check(RampControllerData.read(copy).matchTextures==match,"texture matching flag round trips");
+        }
         System.out.println("Ramp controller save codec PASS");
     }
 }

@@ -948,6 +948,9 @@ public class ReproLab {
                 if(--holdTicks>0)break;
                 saveNamed(mc,"connected_seat_hotbar");
                 BlockPos directionPos = CONSOLE.add(10,0,3);
+                mc.world.setBlockState(directionPos,block("programmable_diagonal_porthole").getDefaultState()
+                        .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.INVERTED,true),3);
+                ((TileEntityAnimatedScreenSelector)mc.world.getTileEntity(directionPos)).setDiagonalGeometry(2,0);
                 mc.getIntegratedServer().addScheduledTask(()->{
                     World w=mc.getIntegratedServer().getWorld(0);
                     w.setBlockState(directionPos,block("programmable_diagonal_porthole").getDefaultState()
@@ -976,6 +979,30 @@ public class ReproLab {
                     throw new IllegalStateException("slope control did not preserve upper half");
                 saveNamed(mc,"diagonal_direction_gui");
                 System.out.println("[vandorlabs][reprolab] diagonal-direction-gui PASS");
+                mc.player.closeScreen();
+                BlockPos rampOptionPos=CONSOLE.add(12,0,3);
+                mc.world.setBlockState(rampOptionPos,block("programmable_ramp").getDefaultState(),3);
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getWorld(0);
+                    w.setBlockState(rampOptionPos,block("programmable_ramp").getDefaultState(),3);
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.setPositionAndUpdate(rampOptionPos.getX(),rampOptionPos.getY(),rampOptionPos.getZ()-2);
+                    owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_RAMP_CONTROLLER,
+                            w,rampOptionPos.getX(),rampOptionPos.getY(),rampOptionPos.getZ());
+                });
+                state=42;holdTicks=20;break;
+            case 42:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiRampController))throw new IllegalStateException("ramp matching GUI missing");
+                ((GuiRampController)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(18,0,0,"Match"));
+                state=43;holdTicks=20;break;
+            case 43:
+                if(--holdTicks>0)break;
+                if(((com.vandorlabs.tiles.TileEntityRampController)mc.getIntegratedServer().getWorld(0)
+                        .getTileEntity(CONSOLE.add(12,0,3))).matchTextures)
+                    throw new IllegalStateException("ramp matching option packet failed");
+                saveNamed(mc,"ramp_matching_gui");
+                System.out.println("[vandorlabs][reprolab] ramp-matching-gui PASS");
                 mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;

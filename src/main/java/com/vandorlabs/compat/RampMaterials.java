@@ -14,9 +14,12 @@ public final class RampMaterials {
                 "blusunrize.immersiveengineering.common.blocks.TileEntityIESlab");
     }
     public static boolean matches(World world, BlockPos seed, BlockPos candidate) {
+        return matches(world, seed, candidate, true);
+    }
+    public static boolean matches(World world, BlockPos seed, BlockPos candidate, boolean matchTextures) {
         if (!world.getBlockState(seed).equals(world.getBlockState(candidate))) return false;
         TileEntity a=world.getTileEntity(seed),b=world.getTileEntity(candidate);
-        if (a instanceof TileEntityAnimatedScreenSelector) {
+        if (matchTextures && a instanceof TileEntityAnimatedScreenSelector) {
             if (!(b instanceof TileEntityAnimatedScreenSelector)) return false;
             TileEntityAnimatedScreenSelector x=(TileEntityAnimatedScreenSelector)a,y=(TileEntityAnimatedScreenSelector)b;
             if (x.isSlabTileSides()!=y.isSlabTileSides()) return false;

@@ -33,6 +33,7 @@ public final class SaveSchema {
         public static final String START_OFFSET="StartOffset",END_OFFSET="EndOffset";
         public static final String TRAVEL_AXIS="TravelAxis",EXTEND_SEGMENTS="ExtendSegments";
         public static final String SPEED_MODE="SpeedMode";
+        public static final String MATCH_TEXTURES="MatchTextures";
         public static final String ORIGINS="Origins";
         public static final String START_POSE="StartPose",START_TICK="StartTick";
         public static final String LAST_STEP_TICK="LastStepTick",STATUS="Status";

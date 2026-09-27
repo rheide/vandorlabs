@@ -6,6 +6,7 @@ public final class RampControllerData {
     public final int travelAxis;
     public final int speed;
     public final boolean extendSegments;
+    public final boolean matchTextures;
     public final int savedVersion,drop,segments,duration,length,minAlong,facing,direction,redstoneChannel;
     public final String status;
     public final boolean top,activateOnPower,slow,elevator,error,open,moving;
@@ -66,6 +67,17 @@ public final class RampControllerData {
             double low,double high,boolean latched,boolean signalKnown,boolean recoveryPending,
             int redstoneChannel,boolean channelSignal,int startOffset,int endOffset,int treadPixels,
             int travelAxis,boolean extendSegments,int speed) {
+        this(savedVersion,drop,segments,status,top,activateOnPower,slow,elevator,error,open,moving,startPose,startTick,lastStepTick,duration,length,minAlong,facing,hasDirection,direction,low,high,latched,signalKnown,recoveryPending,redstoneChannel,channelSignal,startOffset,endOffset,treadPixels,travelAxis,extendSegments,speed,true);
+    }
+
+    public RampControllerData(int savedVersion,int drop,int segments,String status,
+            boolean top,boolean activateOnPower,boolean slow,boolean elevator,boolean error,
+            boolean open,boolean moving,double startPose,long startTick,long lastStepTick,
+            int duration,int length,int minAlong,int facing,boolean hasDirection,int direction,
+            double low,double high,boolean latched,boolean signalKnown,boolean recoveryPending,
+            int redstoneChannel,boolean channelSignal,int startOffset,int endOffset,int treadPixels,
+            int travelAxis,boolean extendSegments,int speed,boolean matchTextures) {
+        this.matchTextures=matchTextures;
         this.treadPixels=Math.max(1,Math.min(16,treadPixels));
         this.startOffset=Math.max(-8,Math.min(8,startOffset));
         this.endOffset=Math.max(-16,Math.min(16,endOffset));
@@ -99,6 +111,7 @@ public final class RampControllerData {
         data.putInt(SaveSchema.Ramp.TRAVEL_AXIS,travelAxis);
         data.putBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS,extendSegments);
         data.putInt(SaveSchema.Ramp.SPEED_MODE,speed);
+        data.putBoolean(SaveSchema.Ramp.MATCH_TEXTURES,matchTextures);
         data.putInt(SaveSchema.Ramp.CONTROLLER_VERSION_KEY,SaveSchema.Ramp.CONTROLLER_VERSION);
         data.putInt(SaveSchema.Ramp.DROP,drop); data.putInt(SaveSchema.Ramp.SEGMENTS,segments);
         data.putString(SaveSchema.Ramp.STATUS,status); data.putBoolean(SaveSchema.Ramp.TOP,top);
@@ -142,6 +155,7 @@ public final class RampControllerData {
                         :(data.getInt(SaveSchema.Ramp.SEGMENTS)==8?2:8),
                 data.getInt(SaveSchema.Ramp.TRAVEL_AXIS),data.getBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS),
                 data.contains(SaveSchema.Ramp.SPEED_MODE)?data.getInt(SaveSchema.Ramp.SPEED_MODE)
-                        :(data.getBoolean(SaveSchema.Ramp.SLOW)?2:1));
+                        :(data.getBoolean(SaveSchema.Ramp.SLOW)?2:1),
+                !data.contains(SaveSchema.Ramp.MATCH_TEXTURES)||data.getBoolean(SaveSchema.Ramp.MATCH_TEXTURES));
     }
 }

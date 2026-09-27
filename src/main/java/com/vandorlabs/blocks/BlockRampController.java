@@ -70,7 +70,8 @@ public class BlockRampController extends BlockVandorDirectional {
                         settings.getInteger("Speed") == 2, settings.getBoolean("Elevator"),
                         EnumFacing.getHorizontal(settings.getInteger("Direction") & 3),
                         settings.getInteger("TravelAxis"),
-                        settings.getBoolean("ExtendSegments"), settings.getInteger("Speed"));
+                        settings.getBoolean("ExtendSegments"), settings.getInteger("Speed"),
+                        !settings.hasKey("MatchTextures") || settings.getBoolean("MatchTextures"));
                 ramp.setRedstoneChannel(settings.getInteger("Channel"));
             } else ramp.updatePower();
         }
@@ -91,6 +92,7 @@ public class BlockRampController extends BlockVandorDirectional {
             settings.setInteger("TravelAxis", ramp.travelAxis);
             settings.setBoolean("ExtendSegments", ramp.extendSegments);
             settings.setInteger("Speed", ramp.speed);
+            settings.setBoolean("MatchTextures", ramp.matchTextures);
             settings.setInteger("Channel", ramp.getRedstoneChannel());
             stack.setTagInfo("RampSettings", settings);
         }

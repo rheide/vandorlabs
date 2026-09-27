@@ -70,6 +70,7 @@ public final class ProgrammableSettings {
     public static final String RAMP_EXTEND = "ramp_extend";
     public static final String RAMP_DIRECTION = "ramp_direction";
     public static final String RAMP_TRAVEL = "ramp_travel";
+    public static final String RAMP_MATCH_TEXTURES = "ramp_match_textures";
 
     private ProgrammableSettings() { }
 
@@ -209,6 +210,7 @@ public final class ProgrammableSettings {
             out.setBoolean(RAMP_EXTEND, ramp.extendSegments);
             out.setInteger(RAMP_DIRECTION, ramp.rampDirection().getIndex());
             out.setInteger(RAMP_TRAVEL, ramp.travelAxis);
+            out.setBoolean(RAMP_MATCH_TEXTURES, ramp.matchTextures);
         }
         return out.hasNoTags() ? null : out;
     }
@@ -456,7 +458,7 @@ public final class ProgrammableSettings {
             if (values.hasKey(RAMP_START) || values.hasKey(RAMP_END)
                     || values.hasKey(RAMP_TREAD_PIXELS) || values.hasKey(RAMP_SPEED)
                     || values.hasKey(RAMP_LIFT) || values.hasKey(RAMP_EXTEND)
-                    || values.hasKey(RAMP_DIRECTION) || values.hasKey(RAMP_TRAVEL)
+                    || values.hasKey(RAMP_DIRECTION) || values.hasKey(RAMP_TRAVEL) || values.hasKey(RAMP_MATCH_TEXTURES)
                     || (values.hasKey(TRIGGER, 3)
                     && (values.getInteger(TRIGGER) == SpaceDoorData.TRIGGER_REDSTONE_ON
                     || values.getInteger(TRIGGER) == SpaceDoorData.TRIGGER_REDSTONE_OFF))) {
@@ -473,7 +475,8 @@ public final class ProgrammableSettings {
                         flag(values, RAMP_LIFT, ramp.elevator), direction,
                         number(values, RAMP_TRAVEL, ramp.travelAxis),
                         flag(values, RAMP_EXTEND, ramp.extendSegments),
-                        number(values, RAMP_SPEED, ramp.speed));
+                        number(values, RAMP_SPEED, ramp.speed),
+                        flag(values, RAMP_MATCH_TEXTURES, ramp.matchTextures));
             }
         }
         if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL, 3)) {

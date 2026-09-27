@@ -39,7 +39,7 @@ public final class SaveSchemaTest {
                 "ControllerZ", "Source", "SourceState", "SourceY", "Row",
                 "Length", "Drop", "Segments", "Duration", "Low", "High", "Top",
                 "Elevator", "Open", "Moving", "StartPose", "StartTick", "StartOffset", "EndOffset", "TreadPixels",
-                "TravelAxis", "ExtendSegments", "Origins", "SpeedMode",
+                "TravelAxis", "ExtendSegments", "Origins", "SpeedMode", "MatchTextures",
                 "LastStepTick", "Status", "ActivateOnPower", "Slow", "Error",
                 "MinAlong", "Facing", "RampDirection", "Latched", "SignalKnown",
                 "RecoveryPending", "Original", "OriginalState", "Owner", "OwnerId", "Sources", "Cells",

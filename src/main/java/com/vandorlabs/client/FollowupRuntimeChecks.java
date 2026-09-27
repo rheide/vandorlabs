@@ -114,6 +114,8 @@ final class FollowupRuntimeChecks {
             }
             checkDiagonalPlacement(world,player,p);
             DiagonalSurfaceChecks.run();
+            checkRampTextureOption(world,player,p);
+            RedstoneLoadChecks.run(world);
             checkUndo(world,player,p);
         } catch(ReflectiveOperationException e) { throw new IllegalStateException(e); }
         finally {
@@ -204,6 +206,32 @@ final class FollowupRuntimeChecks {
             }
             System.out.println("[vandorlabs][reprolab] diagonal-placement-joins PASS");
         } finally { player.rotationYaw = yaw; player.setHeldItem(EnumHand.OFF_HAND, offhand); }
+    }
+
+    private static void checkRampTextureOption(World world,EntityPlayerMP player,BlockPos p) {
+        for(Block material:new Block[]{ModBlocks.PROGRAMMABLE_BLOCK,ModBlocks.PROGRAMMABLE_SLAB}) {
+            world.setBlockState(p,material.getDefaultState(),3);
+            world.setBlockState(p.east(),material.getDefaultState(),3);
+            ((TileEntityAnimatedScreenSelector)world.getTileEntity(p.east())).setHousingTexture(4);
+            Block controller=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_ramp"));
+            world.setBlockState(p.north(),controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),3);
+            TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(p.north());
+            require(ramp.matchTextures,"ramp texture matching default");
+            require(ramp.request(true)&&ramp.area()==1,"matching ramp included different finish");
+            require(ramp.recover(true),"matching ramp recovery");
+            ramp.matchTextures=false;
+            require(ramp.request(true)&&ramp.area()==2,"optional matching did not include both finishes");
+            require(ramp.recover(true),"mixed finish ramp recovery");
+            require(((TileEntityAnimatedScreenSelector)world.getTileEntity(p.east())).getHousingTexture()==4,
+                    "mixed ramp lost a source finish");
+            require(!ramp.writeToNBT(new NBTTagCompound()).getBoolean("MatchTextures"),"ramp matching persistence");
+            require(!controller.getPickBlock(world.getBlockState(p.north()),null,world,p.north(),player)
+                    .getSubCompound("RampSettings").getBoolean("MatchTextures"),"ramp matching pick-block");
+            require(!com.vandorlabs.items.ProgrammableSettings.capture(world,p.north())
+                    .getBoolean(com.vandorlabs.items.ProgrammableSettings.RAMP_MATCH_TEXTURES),"ramp matching copy capture");
+            world.setBlockToAir(p.north());world.setBlockToAir(p);world.setBlockToAir(p.east());
+        }
+        System.out.println("[vandorlabs][reprolab] ramp-texture-option PASS");
     }
 
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException(message);}

@@ -140,3 +140,13 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - [ ] Use the main texture on filled diagonal faces and prevent upper-half UVs from sampling neighbouring atlas textures.
 
 - Java 8 build passed. Packaged recipe ingredients verified. Live filled-face UV checks passed for lower/upper tall and shallow panels with Inside, Outside and Both fill. Full visual and direction-dialog validation is running in `render-run.p8ps8k`.
+- [ ] Ramp dialog: optional matching of programmable textures (On by default), persisted and supported by copying; Off retains block/slab type and half checks.
+- [ ] Fix startup crash in shared `latest.log`/`debug.log`: redstone-light power lookup loads a neighbouring chunk during tile-map iteration (`TileEntityRedstoneLight.onLoad` → `updateVisualState` → `World.isBlockPowered`). Defer initialization until the first tile tick and use loaded-neighbour power reads.
+
+- First direction/fill run completed the gallery and filled-texture assertions, then the new direction GUI fixture opened before the client had its block. Prepared the client fixture before opening, as the existing GUI fixtures do. The next full run also includes optional ramp matching and the startup regression guard.
+
+### Unified landing gear
+
+- [ ] Replace Small/Large block IDs with one `landing_gear` block, no remaps. Add Small/Medium/Large size in its dialog; Medium retains the old Large design, and new Large has a bigger wheel and full-block width. Keep size consistent across rendering, collision, inventory, copying and saved settings.
+
+- Startup regression refinement: capture the light's own initial block state during loading without marking dirty; defer channel registration and visual/power work until the first normal tick. This preserves same-tick placement/connected-model behavior while avoiding neighbour reads during chunk tile-map iteration.

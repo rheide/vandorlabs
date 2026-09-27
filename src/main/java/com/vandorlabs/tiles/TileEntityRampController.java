@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 /** Event-driven controller. Only active animation schedules subsequent block ticks. */
 public class TileEntityRampController extends TileEntity implements RedstoneChannelMember {
     public int startOffset,treadPixels=8;
+    public boolean matchTextures=true;
     // Keep the legacy magnitude/sign fields for old saves and integrations.
     public int endOffset() { return top?-drop:drop; }
     public int drop=3,segments=2,speed=1;
@@ -149,6 +150,11 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public boolean configureTreads(EntityPlayer player,int start,int end,int pixels,
             boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
             boolean extend,int selectedSpeed) {
+        return configureTreads(player,start,end,pixels,powerOn,slower,lift,direction,travel,extend,selectedSpeed,matchTextures);
+    }
+    public boolean configureTreads(EntityPlayer player,int start,int end,int pixels,
+            boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
+            boolean extend,int selectedSpeed,boolean matchTextures) {
         if (world.isRemote || !usable(player)) return false;
         if (direction==null || !direction.getAxis().isHorizontal()) return fail("Choose a horizontal ramp direction");
         if (travel<RampGeometry.VERTICAL || travel>RampGeometry.RIGHT) return fail("Choose a travel direction");
@@ -170,6 +176,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         startOffset=start; drop=Math.abs(end); treadPixels=pixels; segments=ControllerPlatform.treadCount(pixels); top=end<0; activateOnPower=powerOn; slow=slower; elevator=lift;
         travelAxis=travel; extendSegments=extend; elevator=lift;
         speed=selectedSpeed; slow=speed==2;
+        this.matchTextures=matchTextures;
         configuredFacing=direction;
         owner=player.getUniqueID();
         sync();
@@ -237,7 +244,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->{
             BlockPos p=new BlockPos(c.x,c.y,c.z);
             if (!world.isBlockLoaded(p)) { loaded[0]=false; return false; }
-            return com.vandorlabs.compat.RampMaterials.matches(world, seed, p);
+            return com.vandorlabs.compat.RampMaterials.matches(world, seed, p, matchTextures);
         });
         if (!loaded[0]) return fail("Load all platform chunks first");
         if (platform.isEmpty()) return fail("No platform blocks found");
@@ -627,7 +634,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 lastStepTick,duration,length,minAlong,facing.getHorizontalIndex(),
                 configuredFacing!=null,configuredFacing==null?0:configuredFacing.getHorizontalIndex(),
                 low,high,latched,signalKnown,recoveryPending,redstoneChannel,channelSignal,startOffset,endOffset(),treadPixels,
-                travelAxis,extendSegments,speed)
+                travelAxis,extendSegments,speed,matchTextures)
                 .write(new NbtPrimitiveData(tag));
         tag.setTag(SaveSchema.Ramp.ORIGINAL,NBTUtil.writeBlockState(new NBTTagCompound(),original));
         tag.setString(SaveSchema.Ramp.ORIGINAL_STATE,LegacyBlockStates.encode(original));
@@ -669,7 +676,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         int signedEnd=data.travelAxis==RampGeometry.LEFT?-data.endOffset:data.endOffset;
         drop=Math.abs(signedEnd); top=signedEnd<0;
         travelAxis=data.travelAxis==RampGeometry.LEFT?RampGeometry.RIGHT:data.travelAxis;
-        extendSegments=data.extendSegments; speed=data.speed; slow=speed==2;
+        extendSegments=data.extendSegments; matchTextures=data.matchTextures; speed=data.speed; slow=speed==2;
         if (world!=null && !world.isRemote && oldChannel!=redstoneChannel)
             RedstoneChannels.channelChanged(this,oldChannel);
         original=tag.hasKey(SaveSchema.Ramp.ORIGINAL_STATE)

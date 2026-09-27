@@ -16,14 +16,14 @@ public class GuiRampController extends GuiContainer {
     private GuiTextField endField,startField;
     private GuiTextField channelField;
     private GuiTextField treadField;
-    private boolean powerOn,elevator,extendSegments;
+    private boolean powerOn,elevator,extendSegments,matchTextures;
     private int travelAxis,speed;
     private int lastUpdate;
     private net.minecraft.util.EnumFacing direction;
     public GuiRampController(TileEntityRampController controller) {
         super(new ContainerRampController(controller));
         this.controller=controller;
-        powerOn=controller.activateOnPower;
+        powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;
         speed=controller.speed; elevator=controller.elevator;
         travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
         lastUpdate=controller.clientUpdates;
@@ -53,6 +53,7 @@ public class GuiRampController extends GuiContainer {
         buttonList.add(new GuiButton(6,guiLeft+164,guiTop+78,142,20,""));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+126,142,20,""));
         buttonList.add(new GuiButton(17,guiLeft+164,guiTop+102,142,20,""));
+        buttonList.add(new GuiButton(18,guiLeft+14,guiTop+183,122,20,""));
         buttonList.add(new GuiButton(7,guiLeft+14,guiTop+208,292,20,"Done"));
         refresh();
     }
@@ -66,6 +67,7 @@ public class GuiRampController extends GuiContainer {
             if (b.id==3) b.displayString=powerOn?"Trigger: redstone ON":"Trigger: redstone OFF";
             if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
             if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
+            if (b.id==18) b.displayString="Match textures: "+(matchTextures?"On":"Off");
             if (b.id==17) b.displayString="Travel: "+(travelAxis==0?"up / down":"left / right");
         }
     }
@@ -79,6 +81,7 @@ public class GuiRampController extends GuiContainer {
         if (button.id==3) powerOn=!powerOn;
         if (button.id==4) speed=(speed+1)%3;
         if (button.id==6) direction=direction.rotateY();
+        if (button.id==18) matchTextures=!matchTextures;
         if (button.id==17) travelAxis=travelAxis==0?2:0;
         if (button.id==7) mc.player.closeScreen();
         if (button.id>=10 && button.id<=13) {
@@ -110,7 +113,7 @@ public class GuiRampController extends GuiContainer {
         int start=parseOffset(startField),end=parseOffset(endField),pixels=parseOffset(treadField);
         if (start>=-8 && start<=8 && end>=-8 && end<=8 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0)
             PacketHandler.INSTANCE.sendToServer(new MessageRampController(controller.getPos(),start,end,
-                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed));
+                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures));
     }
     private int channel() {
         try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
@@ -122,7 +125,7 @@ public class GuiRampController extends GuiContainer {
             lastUpdate=controller.clientUpdates;
             if (controller.error) {
                 // A rejected reset retains old server settings; do not display unsaved toggles.
-                powerOn=controller.activateOnPower;
+                powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;
                 speed=controller.speed; elevator=controller.elevator;
                 travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
                 direction=controller.rampDirection();

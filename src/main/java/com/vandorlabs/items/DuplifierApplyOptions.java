@@ -70,7 +70,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.RAMP_DIRECTION, "Ramp Direction", 4),
             option(ProgrammableSettings.RAMP_TRAVEL, "Travel Direction", 4),
             option(ProgrammableSettings.FACE_TEXTURES, "Face Overrides", 2),
-            option(ProgrammableSettings.DIAGONAL_GEOMETRY, "Diagonal Geometry", 2)
+            option(ProgrammableSettings.DIAGONAL_GEOMETRY, "Diagonal Geometry", 2),
+            option(ProgrammableSettings.RAMP_MATCH_TEXTURES, "Match Textures", 4)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;
