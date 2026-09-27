@@ -73,3 +73,13 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 - Reviewed default/enabled face dialogs and diagonal shape/fill dialog at 1280x720. Exported the new scenes to `docs/images/gallery/v1.2/`; kept unrelated existing gallery images to avoid timestamp/animation churn.
 - Both `build/libs/vandorlabs-1.2.jar` and `build/libs/vandorlabs-1.2-original-textures.jar` are ready. Full live rendering used default textures; the original pack passed packaging and the controller pixel regression.
 - All requested implementation tasks are complete. Distance rendering is report-only as authorized. Remaining acceptance is visual review in the owner's world/modpack; the isolated client does not include that full modpack.
+
+## Follow-up batch (version remains 1.2)
+
+- [ ] Add Programmable Stairs with the block/slab texture options, including optional face overrides.
+- [ ] Explain and improve Programmable Door animation on slow servers; compare ramp timing.
+- [ ] Fix Better Builder's Wands `/wandOops` undo for restored diagonal states.
+- [ ] Support Immersive Engineering slabs as ramp material (inspect installed mod read-only).
+- [ ] Make ramp selection distinguish programmable finishes; verify behavior.
+
+Initial findings: door easing uses synchronized world time; BBW undo compares exact state strings after our orientation fix; IE slabs use `TileEntityIESlab`; ramp flood fill compares only IBlockState.
