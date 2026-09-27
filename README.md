@@ -121,16 +121,9 @@ Matter Ingot, an Industrial Alloy Ingot, or another non-vanilla block. The
 Programmable Matter Ingot's own recipe is exempt from that ingredient rule.
 
 The selected mixed-resolution texture set with crisp 128px single-door art is
-the default and is included by the normal build above. The complete previous
-runtime texture set is preserved under `texture-packs/original`. To make a
-one-off jar with those original textures, run:
-
-```bash
-./gradlew clean buildOriginalTextures --no-daemon
-```
-
-This produces `build/libs/vandorlabs-1.2-original-textures.jar`. The normal
-`vandorlabs-1.2.jar` remains the selected default.
+included by the normal build above. Build only the standard JAR; do not produce
+original-textures variants. The previous artwork under `texture-packs/original`
+is retained as an archive and for texture completeness checks.
 
 ## Texture dimensions
 

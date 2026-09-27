@@ -266,22 +266,6 @@ processResources {
     }
 }
 
-// The archived original texture set remains available as a one-off build.
-task buildOriginalTextures(type: Exec) {
-    group = 'build'
-    description = 'Build an original-textures JAR with the archived original textures'
-    dependsOn build
-    workingDir projectDir
-    commandLine 'python3', 'tools/build_texture_variant.py',
-            '--base', "$buildDir/libs/vandorlabs-${version}.jar",
-            '--textures', 'texture-packs/original/assets/vandorlabs/textures',
-            '--output', "$buildDir/libs/vandorlabs-${version}-original-textures.jar",
-            '--name', 'original-textures'
-    inputs.file("$buildDir/libs/vandorlabs-${version}.jar")
-    inputs.dir('texture-packs/original/assets/vandorlabs/textures')
-    inputs.file('tools/build_texture_variant.py')
-    outputs.file("$buildDir/libs/vandorlabs-${version}-original-textures.jar")
-}
 jar {
     from('LICENSE') { into 'META-INF' }
     from('THIRD_PARTY_NOTICES.md') { into 'META-INF' }
