@@ -34,6 +34,14 @@ final class Version12Gallery {
                 if(scene.startsWith("portholes_half_height"))tile.setDiagonalGeometry(2,0);
                 if(scene.endsWith("unjoined"))tile.setJoinPortholes(false);
             }
+        } else if(scene.startsWith("shallow_fill")) {
+            for(int i=0;i<6;i++) {
+                BlockPos p=origin.add(i*2-2,2,0);
+                world.setBlockState(p,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState()
+                        .withProperty(BlockProgrammableWall.INVERTED,i>=3),3);
+                TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+                tile.setDiagonalGeometry(2,1+i%3); tile.setHousingTexture(3);
+            }
         } else if(scene.startsWith("filled_corners")) {
             for(int i=0;i<4;i++) {
                 BlockPos p=origin.add(i*3-2,0,0);Block block=ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;

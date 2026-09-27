@@ -91,7 +91,8 @@ public class GuiProgrammableWall extends GuiContainer {
         rows=8;
         ySize = porthole ? (diagonal ? 298 : 272) : diagonal ? 242 : slab ? 242 : supportsFaces() ? 216 : 190;
         if (supportsFaces() && tile.getFaceTextures().enabled) ySize+=52;
-        while (ySize > height-8 && rows > 3) { rows--; ySize-=ROW_H; }
+        if (diagonal) ySize += 26;
+        while (ySize > height-8 && rows > (diagonal && porthole ? 2 : 3)) { rows--; ySize-=ROW_H; }
         super.initGui();
         buttonList.clear();
         listX = guiLeft + 11;
@@ -119,7 +120,9 @@ public class GuiProgrammableWall extends GuiContainer {
         if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
                 guiTop + ySize - 77, 312, 20, slabSidesLabel()));
         if (diagonal) {
-            buttonList.add(new GuiButton(105,guiLeft+14,guiTop+ySize-(porthole?51:77),312,20,diagonalWidthLabel()));
+            buttonList.add(new GuiButton(105,guiLeft+14,guiTop+ySize-(porthole?77:103),312,20,diagonalWidthLabel()));
+            buttonList.add(new GuiButton(111, guiLeft+14,
+                    guiTop+ySize-(porthole?51:77), 312, 20, slopeLabel()));
             if (!porthole) {
                 buttonList.add(new GuiButton(109,guiLeft+14,guiTop+ySize-51,153,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off")));
                 buttonList.add(new GuiButton(110,guiLeft+173,guiTop+ySize-51,153,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
@@ -133,6 +136,15 @@ public class GuiProgrammableWall extends GuiContainer {
     private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
     private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
     private String slabSidesLabel() { return "Side layout: " + (tileSides ? "Tile" : "Fit"); }
+    private String slopeLabel() {
+        net.minecraft.block.state.IBlockState state = tile.getWorld().getBlockState(tile.getPos());
+        net.minecraft.util.EnumFacing direction = state.getValue(BlockProgrammableWall.FACING);
+        if (!state.getValue(BlockProgrammableWall.INVERTED)) direction = direction.getOpposite();
+        String name = direction.getName();
+        return (tile.isDiagonalHalfHeight() ? "Slope rises: " : "Slope leans: ")
+                + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
     private String diagonalWidthLabel() {
         return tile.isDiagonalHalfHeight() ? "Shape: Half height, full width"
                 : "Shape: " + (tile.isDiagonalFullWidth() ? "Full height, full width" : "Full height, half width");
@@ -226,6 +238,16 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if (button.id == 111 && diagonal) {
+            net.minecraft.block.state.IBlockState next = com.vandorlabs.blocks.DiagonalPanelGeometry.reverseSlope(
+                    tile.getWorld().getBlockState(tile.getPos()), tile.isDiagonalHalfHeight());
+            tile.getWorld().setBlockState(tile.getPos(), next, 3);
+            int mode = tile.isDiagonalHalfHeight() ? 2 : tile.isDiagonalFullWidth() ? 1 : 0;
+            tile.setDiagonalGeometry(mode, tile.getDiagonalFill());
+            PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDiagonalGeometry(
+                    tile.getPos(), mode, tile.getDiagonalFill(), next.getBlock().getMetaFromState(next)));
+            initGui();
+        }
         if (button.id == 106) {
             sendFaces(new com.vandorlabs.tiles.FaceTextures(!tile.getFaceTextures().enabled,
                     tile.getFaceTextures().choices()));

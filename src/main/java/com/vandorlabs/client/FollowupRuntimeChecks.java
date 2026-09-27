@@ -113,6 +113,7 @@ final class FollowupRuntimeChecks {
                 world.setBlockToAir(neighbor);world.setBlockToAir(p);
             }
             checkDiagonalPlacement(world,player,p);
+            DiagonalSurfaceChecks.run();
             checkUndo(world,player,p);
         } catch(ReflectiveOperationException e) { throw new IllegalStateException(e); }
         finally {

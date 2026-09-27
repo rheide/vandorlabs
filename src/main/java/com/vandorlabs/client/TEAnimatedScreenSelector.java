@@ -1016,18 +1016,19 @@ public class TEAnimatedScreenSelector
                     && Math.abs(a[0] - d[0]) < 1.0E-7
                     && Math.abs(Math.abs(a[1] - b[1]) - 4) < 1.0E-7
                     && Math.abs(Math.abs(c[1] - d[1]) - 4) < 1.0E-7;
-            TextureAtlasSprite sprite = endCap ? metal : wall;
+            TextureAtlasSprite sprite = endCap && fill == 0 ? metal : wall;
+            double uvOrigin = fill == 0 ? 0 : fillLow;
             boolean acrossX = Math.abs(a[0] - b[0]) + Math.abs(c[0] - d[0])
                     > Math.abs(a[1] - b[1]) + Math.abs(c[1] - d[1]);
-            wallVertex(buf, sprite, a[0], 0, a[1], acrossX ? a[0] : a[1], 16);
-            wallVertex(buf, sprite, b[0], 0, b[1], acrossX ? b[0] : b[1], 16);
-            wallVertex(buf, sprite, c[0], 16, c[1], acrossX ? c[0] : c[1], 0);
-            wallVertex(buf, sprite, d[0], 16, d[1], acrossX ? d[0] : d[1], 0);
+            wallVertex(buf, sprite, a[0], 0, a[1], acrossX ? a[0] : a[1] - uvOrigin, 16);
+            wallVertex(buf, sprite, b[0], 0, b[1], acrossX ? b[0] : b[1] - uvOrigin, 16);
+            wallVertex(buf, sprite, c[0], 16, c[1], acrossX ? c[0] : c[1] - uvOrigin, 0);
+            wallVertex(buf, sprite, d[0], 16, d[1], acrossX ? d[0] : d[1] - uvOrigin, 0);
         }
         for (int y : new int[] {0, 16}) {
             double near = y == 0 ? bottom : top;
-            roofRect(buf, metal, y, corner == null ? 0 : corner.left(near),
-                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4);
+            roofRect(buf, fill == 0 ? metal : wall, y, corner == null ? 0 : corner.left(near),
+                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4, fill == 0 ? 0 : fillLow);
             if (corner != null) {
                 if (corner.frontRight != null && (fill&1)==0) {
                     double armX = corner.armLeft(near, corner.frontRight);
@@ -1148,11 +1149,16 @@ public class TEAnimatedScreenSelector
 
     private static void roofRect(BufferBuilder buf, TextureAtlasSprite metal,
             double y, double x0, double x1, double z0, double z1) {
+        roofRect(buf, metal, y, x0, x1, z0, z1, 0);
+    }
+
+    private static void roofRect(BufferBuilder buf, TextureAtlasSprite sprite,
+            double y, double x0, double x1, double z0, double z1, double uvOrigin) {
         if (z1 - z0 < 1.0E-7) return;
-        wallVertex(buf, metal, x0, y, z0, x0, z0);
-        wallVertex(buf, metal, x1, y, z0, x1, z0);
-        wallVertex(buf, metal, x1, y, z1, x1, z1);
-        wallVertex(buf, metal, x0, y, z1, x0, z1);
+        wallVertex(buf, sprite, x0, y, z0, x0, z0 - uvOrigin);
+        wallVertex(buf, sprite, x1, y, z0, x1, z0 - uvOrigin);
+        wallVertex(buf, sprite, x1, y, z1, x1, z1 - uvOrigin);
+        wallVertex(buf, sprite, x0, y, z1, x0, z1 - uvOrigin);
     }
 
     private void renderPortholeGlass(int shade, PortholeHex.Slice opening) {

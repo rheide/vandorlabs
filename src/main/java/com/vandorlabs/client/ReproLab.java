@@ -303,9 +303,11 @@ public class ReproLab {
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
-        for (String scene : new String[]{"faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "filled_corners_inside", "filled_corners_outside"})
+        for (String scene : new String[]{"faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
                     galleryFeet+3, -26, -20, 15));
+        SHOTS.add(new Shot("gallery_v12_shallow_fill_under", GALLERY_X-3,
+                galleryFeet, -26, -20, -12));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {
@@ -945,6 +947,36 @@ public class ReproLab {
             case 38:
                 if(--holdTicks>0)break;
                 saveNamed(mc,"connected_seat_hotbar");
+                BlockPos directionPos = CONSOLE.add(10,0,3);
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getWorld(0);
+                    w.setBlockState(directionPos,block("programmable_diagonal_porthole").getDefaultState()
+                            .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.INVERTED,true),3);
+                    ((TileEntityAnimatedScreenSelector)w.getTileEntity(directionPos)).setDiagonalGeometry(2,0);
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.capabilities.isCreativeMode=true;
+                    owner.setPositionAndUpdate(directionPos.getX(),directionPos.getY(),directionPos.getZ()-2);
+                    owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,
+                            w,directionPos.getX(),directionPos.getY(),directionPos.getZ());
+                });
+                state=40;holdTicks=20;break;
+            case 40:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiProgrammableWall))throw new IllegalStateException("diagonal direction GUI missing");
+                ((GuiProgrammableWall)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(111,0,0,"Slope"));
+                state=41;holdTicks=20;break;
+            case 41:
+                if(--holdTicks>0)break;
+                World directionWorld=mc.getIntegratedServer().getWorld(0);
+                BlockPos checkedDirectionPos=CONSOLE.add(10,0,3);
+                net.minecraft.block.state.IBlockState directionState=directionWorld.getBlockState(checkedDirectionPos);
+                if(directionState.getValue(com.vandorlabs.blocks.BlockProgrammableWall.FACING)!=EnumFacing.SOUTH
+                        ||!directionState.getValue(com.vandorlabs.blocks.BlockProgrammableWall.INVERTED)
+                        ||!((TileEntityAnimatedScreenSelector)directionWorld.getTileEntity(checkedDirectionPos)).isDiagonalHalfHeight())
+                    throw new IllegalStateException("slope control did not preserve upper half");
+                saveNamed(mc,"diagonal_direction_gui");
+                System.out.println("[vandorlabs][reprolab] diagonal-direction-gui PASS");
+                mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;

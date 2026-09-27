@@ -132,3 +132,11 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - Visual check: all four shallow openings merge with Join On and retain separate frames with Join Off. Existing tall stacked and sideways porthole captures match the prior build exactly in the 600×240 fixture region (zero pixels changed beyond 3/255). Guide screenshots updated.
 
 - Final validation: full Java 8 build and live client suite passed in `render-run.fWcuxx`, including diagonal Join On/Off pixels and all existing rendering, gameplay, copying and GUI checks. Packaged JAR remains version 1.2 and matches the tested artifact. All 170 local documentation links pass.
+
+### Diagonal direction and recipes
+
+- [ ] Add a dialog control to reverse a diagonal's slope, retaining the upper/lower band of shallow panels.
+- [x] Replace Programmable Matter with Industrial Alloy in diagonal porthole, Luxury Seat and Military Seat recipes.
+- [ ] Use the main texture on filled diagonal faces and prevent upper-half UVs from sampling neighbouring atlas textures.
+
+- Java 8 build passed. Packaged recipe ingredients verified. Live filled-face UV checks passed for lower/upper tall and shallow panels with Inside, Outside and Both fill. Full visual and direction-dialog validation is running in `render-run.p8ps8k`.

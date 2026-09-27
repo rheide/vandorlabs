@@ -8,6 +8,14 @@ import net.minecraft.util.math.BlockPos;
 public final class DiagonalPanelGeometry {
     private DiagonalPanelGeometry() { }
 
+    /** Reverse the slope while retaining the shallow panel's upper/lower band. */
+    public static IBlockState reverseSlope(IBlockState state, boolean shallow) {
+        return shallow ? state.withProperty(BlockProgrammableWall.FACING,
+                state.getValue(BlockProgrammableWall.FACING).getOpposite())
+                : state.withProperty(BlockProgrammableWall.INVERTED,
+                        !state.getValue(BlockProgrammableWall.INVERTED));
+    }
+
     public static boolean samePlane(BlockPos a, IBlockState as, BlockPos b,
             IBlockState bs, int mode) {
         EnumFacing af = as.getValue(BlockProgrammableWall.FACING);
