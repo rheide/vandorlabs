@@ -127,10 +127,9 @@ is retained as an archive and for texture completeness checks.
 
 ## Texture dimensions
 
-The default pack contains 465 texture resources. Its predominant size is
-**128x128**: 212 resources (135 PNG files and 77 VLTA animations) use that
-canvas. The pack deliberately mixes resolutions according to the job each
-texture performs; 128x128 is not a blanket requirement for every block.
+The default pack mixes resolutions according to the job each texture performs.
+128x128 is not a blanket requirement for every block; imported model artwork
+keeps its authored dimensions.
 
 Use these dimensions for new or replacement art:
 
