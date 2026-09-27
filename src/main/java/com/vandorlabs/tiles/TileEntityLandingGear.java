@@ -14,7 +14,8 @@ import net.minecraft.world.World;
 /** Progress is extension distance in blocks. Lower cells only store their owner. */
 public final class TileEntityLandingGear extends TileEntity implements ITickable, RedstoneChannelMember {
     public float progress, previous;
-    private int extensionPixels=16, mode=1, channel;
+    private int extensionPixels=16, mode=1, channel, configurationRevision;
+    public int getConfigurationRevision(){return configurationRevision;}
     private boolean channelSignal, lastSignal;
     private int ownerDistance;
     public BlockPos owner(){return ownerDistance>0?pos.up(ownerDistance):null;}
@@ -31,12 +32,13 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         return before.getBlock()!=after.getBlock() || before.getValue(BlockTelescopicLandingGear.LOWER)!=after.getValue(BlockTelescopicLandingGear.LOWER);
     }
     public boolean configure(int nextMode,int nextChannel,int pixels){
-        if(!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64)return false;
+        if(!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
         if(world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED)
                 && !block.reserve(world,pos,Math.max(progress,pixels/16F)))return false;
+        boolean automationChanged=mode!=nextMode||channel!=nextChannel;
         mode=nextMode;extensionPixels=pixels;setRedstoneChannel(nextChannel);
-        evaluateSignal(true);markDirty();sync();return true;
+        evaluateSignal(automationChanged);markDirty();sync();return true;
     }
     public void update(){
         if(!isRoot())return;
@@ -77,13 +79,13 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     }
     public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
-        extensionPixels=tag.hasKey("ExtensionPixels")?Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels"))):16;
+        extensionPixels=tag.hasKey("ExtensionPixels")?Math.round(Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels")))/8F)*8:16;
         mode=tag.hasKey("RedstoneMode")?Math.max(0,Math.min(2,tag.getInteger("RedstoneMode"))):1;
         channel=Math.max(0,tag.getInteger("RedstoneChannel"));lastSignal=tag.getBoolean("LastSignal");
         ownerDistance=Math.max(0,Math.min(4,tag.getInteger("GearOwnerDistance")));
     }
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
-    public void onDataPacket(NetworkManager net,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}
+    public void onDataPacket(NetworkManager net,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());configurationRevision++;}
     public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.down(4),pos.add(1,1,1));}
 }

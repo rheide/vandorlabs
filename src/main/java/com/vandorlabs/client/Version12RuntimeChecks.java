@@ -96,7 +96,7 @@ final class Version12RuntimeChecks {
                 require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"On mode with power");
                 TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");
-                require(!tile.configure(3,0,65),"gear accepted invalid settings");
+                require(!tile.configure(3,0,65)&&!tile.configure(0,0,7),"gear accepted invalid settings or non-half-block length");
                 BlockPos remote=p.add(2,0,0);
                 world.setBlockState(remote,gear.getDefaultState(),3);
                 TileEntityLandingGear linked=(TileEntityLandingGear)world.getTileEntity(remote);
@@ -106,6 +106,8 @@ final class Version12RuntimeChecks {
                 require(!world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"gear channel remained powered");
                 world.setBlockToAir(remote);
 
+                tile.configure(1,0,16);gear.setExtended(world,p,true);
+                require(tile.configure(1,0,24)&&world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"length edit canceled manual extension");
                 tile.configure(0,0,16);world.setBlockToAir(p.east());
                 gear.setExtended(world,p,true);world.destroyBlock(p.down(),false);
                 require(world.isAirBlock(p),"gear root survived wheel removal");

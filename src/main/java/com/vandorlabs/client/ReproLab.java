@@ -884,8 +884,11 @@ public class ReproLab {
                 saveNamed(mc,"connected_seat_gui");mc.displayGuiScreen(null);
                 BlockPos gearGui=CONSOLE.add(9,5,3);
                 mc.world.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
+                ((com.vandorlabs.tiles.TileEntityLandingGear)mc.world.getTileEntity(gearGui)).configure(0,0,16);
                 mc.getIntegratedServer().addScheduledTask(()->{
                     World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
+                    ((com.vandorlabs.tiles.TileEntityLandingGear)w.getTileEntity(gearGui)).configure(0,0,16);
+                    ((com.vandorlabs.blocks.BlockTelescopicLandingGear)block("large_landing_gear")).setExtended(w,gearGui,true);
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
                     owner.setPositionAndUpdate(gearGui.getX(),gearGui.getY(),gearGui.getZ()-2);
                     owner.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));
@@ -896,10 +899,24 @@ public class ReproLab {
             case 34:
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiLandingGear))throw new IllegalStateException("gear GUI missing");
-                ((GuiLandingGear)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Mode"));
+                GuiLandingGear gearScreen=(GuiLandingGear)mc.currentScreen;
+                gearScreen.length.setValue(6);gearScreen.length.updateSlider();
+                gearScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Mode"));
+                gearScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Mode"));
                 state=35;holdTicks=20;break;
             case 35:
                 if(--holdTicks>0)break;
+                com.vandorlabs.tiles.TileEntityLandingGear previewGear=(com.vandorlabs.tiles.TileEntityLandingGear)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(9,5,3));
+                if(previewGear.getExtensionPixels()!=48||previewGear.progress<=1||previewGear.getMode()!=0)
+                    throw new IllegalStateException("gear length did not preview before Done, or changed redstone mode");
+                mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getWorld(0).setBlockState(CONSOLE.add(9,1,3),Blocks.STONE.getDefaultState(),3));
+                GuiLandingGear blockedGearScreen=(GuiLandingGear)mc.currentScreen;
+                blockedGearScreen.length.setValue(8);blockedGearScreen.length.updateSlider();
+                state=39;holdTicks=20;break;
+            case 39:
+                if(--holdTicks>0)break;
+                if(((GuiLandingGear)mc.currentScreen).length.getValueInt()!=6)
+                    throw new IllegalStateException("blocked gear length did not return to accepted value");
                 saveNamed(mc,"landing_gear_gui");
                 ((GuiLandingGear)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Done"));
                 state=36;holdTicks=20;break;
@@ -908,6 +925,26 @@ public class ReproLab {
                 if(((com.vandorlabs.tiles.TileEntityLandingGear)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(9,5,3))).getMode()!=2)
                     throw new IllegalStateException("gear GUI packet did not apply");
                 System.out.println("[vandorlabs][reprolab] seat-gear-gui PASS");
+                mc.displayGuiScreen(null);mc.gameSettings.hideGUI=false;
+                for(int slot=0;slot<9;slot++)mc.player.inventory.setInventorySlotContents(slot,ItemStack.EMPTY);
+                mc.player.inventory.currentItem=8;
+                beginShot(mc,new Shot("seat_icon_return",CONSOLE.getX(),Y+12,CONSOLE.getZ()-2,0,-70),false);
+                state=37;holdTicks=GUI_SETTLE_TICKS;break;
+            case 37:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"connected_seat_hotbar_empty");
+                for(int slot=0;slot<6;slot++){
+                    ItemStack icon=new ItemStack(block(slot<3?"luxury_seat":"military_seat"));
+                    net.minecraft.nbt.NBTTagCompound data=new net.minecraft.nbt.NBTTagCompound();
+                    data.setInteger("ChairHeight",slot%3);icon.setTagInfo("BlockEntityTag",data);
+                    mc.player.inventory.setInventorySlotContents(slot,icon);
+                }
+                mc.player.inventory.setInventorySlotContents(6,new ItemStack(block("small_landing_gear")));
+                mc.player.inventory.setInventorySlotContents(7,new ItemStack(block("large_landing_gear")));
+                state=38;holdTicks=GUI_SETTLE_TICKS;break;
+            case 38:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"connected_seat_hotbar");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;

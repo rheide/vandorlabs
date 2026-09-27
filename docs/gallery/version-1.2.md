@@ -82,8 +82,10 @@ Creative shift-right-click opens these settings:
 - **Redstone Off:** extend without power and retract with power.
 - **Channel:** share a signal with other loaded members in the same dimension;
   zero uses local power only.
-- **Extended length:** 0–4 blocks in one-pixel steps, default one block. This is
+- **Extended length:** 0–4 blocks in half-block steps, default one block. This is
   the travel below the retracted pose, not the total height including the mount.
+  Length changes apply while dragging; extended gear moves immediately toward
+  the new length. Redstone mode/channel changes apply with Done.
 
 Both directions animate at one block per second at normal tick speed. The
 mount keeps its motion state when direction changes. Extension requires air

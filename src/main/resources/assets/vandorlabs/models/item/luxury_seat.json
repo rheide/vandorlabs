@@ -1,3 +1,22 @@
 {
-  "parent": "vandorlabs:block/seating/luxury_seat_single"
+  "parent": "vandorlabs:block/seating/luxury_seat_single",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        -2,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  }
 }

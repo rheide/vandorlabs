@@ -76,32 +76,32 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 
 ## Follow-up batch (version remains 1.2)
 
-- [ ] Add Programmable Stairs with the block/slab texture options, including optional face overrides.
-- [ ] Explain and improve Programmable Door animation on slow servers; compare ramp timing.
-- [ ] Fix Better Builder's Wands `/wandOops` undo for restored diagonal states.
-- [ ] Support Immersive Engineering slabs as ramp material (inspect installed mod read-only).
-- [ ] Make ramp selection distinguish programmable finishes; verify behavior.
+- [x] Add Programmable Stairs with the block/slab texture options, including optional face overrides.
+- [x] Explain and improve Programmable Door animation on slow servers; compare ramp timing.
+- [x] Fix Better Builder's Wands `/wandOops` undo for restored diagonal states.
+- [x] Support Immersive Engineering slabs as ramp material (inspect installed mod read-only).
+- [x] Make ramp selection distinguish programmable finishes; verify behavior.
 
 Initial findings: door easing uses synchronized world time; BBW undo compares exact state strings after our orientation fix; IE slabs use `TileEntityIESlab`; ramp flood fill compares only IBlockState.
 
-- [ ] Join half-width diagonal portholes stacked into one continuous slope (reversed upper piece).
-- [ ] Add half-height, full-width diagonal portholes.
+- [x] Join half-width diagonal portholes stacked into one continuous slope (reversed upper piece).
+- [x] Add half-height, full-width diagonal portholes.
 
-- [ ] Fix inside/outside fill on joined diagonal corners: retain arms and clip fill to the corner.
+- [x] Fix inside/outside fill on joined diagonal corners: retain arms and clip fill to the corner.
 
 
 Follow-up implementation checkpoint: stairs use vanilla corner/collision geometry with cached per-face retexturing; door visuals use a monotonic paused-aware client clock; BBW undo retains restored state groups; IE slab NBT is preserved and its half matched; ramp discovery compares effective face textures. Stacked portholes now compare actual surface planes, and the half-height option is enabled. Corner fill retains arms and clips to the joined span. Java 8 build passed; expanded live validation is running with the read-only source IE JAR copied into the isolated test client.
 
-- [ ] Combine two Programmable Slabs into a Programmable Block, preserving placed settings.
+- [x] Combine two Programmable Slabs into a Programmable Block, preserving placed settings.
 
 Live follow-up checks passed in `render-run.toeUYM`: upper/lower slab combining, stair metadata/corners/configured drops, effective ramp texture matching, real IE slab deploy/recover for each slab type, stacked porthole joins in four directions and shapes, half-height collision, filled-corner bounds, and the actual BBW undo command. The first attempt needed Trove 3 on the minimal client's classpath; the restarted client runs successfully. Visual capture and analyzers remain in progress.
 
 Door timing scope: visual transitions now complete in 9 client visual ticks (450 ms) after receipt of an open/closed change, independent of server world-time corrections. Pausing an integrated game freezes the visual clock. This improves smoothness, not server response latency or model draw cost; ramp motion remains tied to server collision time.
 
-- [ ] Luxury and Military Seats: default legs +1 pixel; creative shift-right-click Join toggle and height −2/default/+2 pixels; keep model, collision, rider height and saved settings consistent.
+- [x] Luxury and Military Seats: default legs +1 pixel; creative shift-right-click Join toggle and height −2/default/+2 pixels; keep model, collision, rider height and saved settings consistent.
 
 - [x] Remove original-textures packaging workflow and extra JAR; build only the standard JAR (owner instruction).
-- [ ] Replace all old landing gear IDs with `small_landing_gear` (Small Landing Gear) and `large_landing_gear` (Large Landing Gear), no remaps. Both telescopic; fix retraction, add creative shift-right-click redstone Disabled/On/Off, channel and 0–4 block extension slider.
+- [x] Replace all old landing gear IDs with `small_landing_gear` (Small Landing Gear) and `large_landing_gear` (Large Landing Gear), no remaps. Both telescopic; fix retraction, add creative shift-right-click redstone Disabled/On/Off, channel and 0–4 block extension slider.
 
 ### Seat and landing gear implementation checkpoint
 
@@ -112,3 +112,8 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 - `render-run.jcH1Oq`: gameplay and seat/gear GUI packet checks passed; retraction matched the starting pose exactly in a 61,200-pixel region. The model-loading gate caught two missing `block/` prefixes in the new gear item parents; fixed in `dbf58133`.
 - `render-run.wA6JGS`: corrected models loaded without errors; expanded gameplay checks passed, including relative gear ownership after copying, linked channels and saved Off-mode placement. Host slowdown near the last gallery shots exhausted the old 600-second harness timeout. Increased the harness limit to 1,200 seconds for the full rerun; production code is unchanged.
+
+- [ ] Shrink and center Luxury Seat and Military Seat hotbar icons so default and configured heights fit the slot; keep world and held-item geometry unchanged.
+
+- Full Java 8 build and live suite passed for the completed feature batch in `render-run.IQzQBo`; runtime assertions, all existing pixel analyzers, gear retraction pixels and seat/gear configuration packets passed. Subsequent owner requests below need their own final validation.
+- [ ] Gear slider: use half-block increments from 0–4 and update the world immediately during dragging, preserving extended/retracted state. Validate live updates before Done and blocked-extension feedback.

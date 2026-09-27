@@ -31,6 +31,7 @@ grep -q '\[vandorlabs\]\[reprolab\] face-textures-runtime PASS' "$RUN_OUT/client
 python3 testclient/analyze_viewscreen.py "$RUN_OUT" --texture-variant
 python3 testclient/analyze_space_doors.py "$RUN_OUT"
 python3 testclient/analyze_landing_gear.py "$RUN_OUT"
+python3 testclient/analyze_seat_icons.py "$RUN_OUT"
 grep -q '\[vandorlabs\]\[reprolab\] door-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: live door state, pairing, and collision contracts"
 grep -q '\[vandorlabs\]\[reprolab\] space-door-settings PASS' "$RUN_OUT/client.log"
