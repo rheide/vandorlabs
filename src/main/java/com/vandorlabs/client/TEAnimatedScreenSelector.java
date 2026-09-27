@@ -167,12 +167,13 @@ public class TEAnimatedScreenSelector
 
     static final class PortholeGroup {
         final int minAxis, minY, columns, rows;
-        final EnumFacing right;
+        final EnumFacing right, up;
         final PortholeHex hex;
         final int shape, extraBorder;
 
         PortholeGroup(int minAxis, int minY, int columns, int rows,
-                EnumFacing right, int shape, int extraBorder) {
+                EnumFacing right, EnumFacing up, int shape, int extraBorder) {
+            this.up = up;
             this.minAxis = minAxis;
             this.minY = minY;
             this.columns = columns;
@@ -183,12 +184,14 @@ public class TEAnimatedScreenSelector
             this.hex = PortholeGeometryCache.outline(columns, rows, shape, extraBorder);
         }
 
-        PortholeHex.Slice slice(BlockPos pos) { return slice(pos,right); }
-        PortholeHex.Slice slice(BlockPos pos,EnumFacing localRight) {
+        PortholeHex.Slice slice(BlockPos pos) { return slice(pos,right,up); }
+        PortholeHex.Slice slice(BlockPos pos,EnumFacing localRight,EnumFacing localUp) {
             int column=axis(pos,right)-minAxis;
             if(localRight!=right)column=columns-1-column;
+            int row = axis(pos, up) - minY;
+            if (localUp != up) row = rows - 1 - row;
             return PortholeGeometryCache.slice(columns, rows, shape, extraBorder,
-                    column, pos.getY() - minY, hex);
+                    column, row, hex);
         }
     }
 
@@ -212,32 +215,35 @@ public class TEAnimatedScreenSelector
         if (cached != null) return cached;
         EnumFacing facing = state.getValue(BlockProgrammableWall.FACING);
         EnumFacing right = facing.rotateY();
+        boolean shallow = ((BlockProgrammableWall) state.getBlock()).isDiagonalShape()
+                && tile.isDiagonalHalfHeight();
+        EnumFacing up = shallow ? facing.getOpposite() : EnumFacing.UP;
         int extraBorder = state.getBlock() instanceof BlockProgrammablePortholeBlock ? 1 : 0;
         int minimum = axis(tile.getPos(), right), maximum = minimum;
-        int minY = tile.getPos().getY(), maxY = minY;
+        int minY = axis(tile.getPos(), up), maxY = minY;
         Set<BlockPos> members = tile.isJoinPortholes()
-                ? LoadedPlaneConnections.collect(tile.getPos(), PanelPlane.of(facing),
+                ? LoadedPlaneConnections.collect(tile.getPos(), PanelPlane.of(shallow ? EnumFacing.UP : facing),
                         world::isBlockLoaded, next -> compatiblePorthole(world,tile.getPos(),next))
                 : java.util.Collections.singleton(tile.getPos());
         for (BlockPos member : members) {
             int coordinate = axis(member, right);
             minimum = Math.min(minimum, coordinate); maximum = Math.max(maximum, coordinate);
-            minY = Math.min(minY, member.getY()); maxY = Math.max(maxY, member.getY());
+            minY = Math.min(minY, axis(member, up)); maxY = Math.max(maxY, axis(member, up));
         }
         boolean capped = members.size() >= LoadedPlaneConnections.LIMIT;
         if (capped) {
             for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos,
-                    new PortholeGroup(axis(pos, right), pos.getY(), 1, 1, right,
+                    new PortholeGroup(axis(pos, right), axis(pos, up), 1, 1, right, up,
                             tile.getPortholeShape(), extraBorder));
             return PORTHOLE_GROUPS.get(tile.getPos());
         }
         if ((long) (maximum - minimum + 1) * (maxY - minY + 1) != members.size()) {
             Map<Long, BlockPos> positions = new HashMap<>();
             for (BlockPos pos : members)
-                positions.put(PortholeRectangles.cell(axis(pos, right), pos.getY()), pos);
+                positions.put(PortholeRectangles.cell(axis(pos, right), axis(pos, up)), pos);
             for (PortholeRectangles.Rect rect : PortholeRectangles.partition(positions.keySet())) {
                 PortholeGroup part = new PortholeGroup(rect.x, rect.y,
-                        rect.width, rect.height, right, tile.getPortholeShape(),
+                        rect.width, rect.height, right, up, tile.getPortholeShape(),
                         extraBorder);
                 for (int row = rect.y; row < rect.y + rect.height; row++)
                     for (int column = rect.x; column < rect.x + rect.width; column++)
@@ -246,7 +252,7 @@ public class TEAnimatedScreenSelector
             return PORTHOLE_GROUPS.get(tile.getPos());
         }
         PortholeGroup group = new PortholeGroup(minimum, minY,
-                maximum - minimum + 1, maxY - minY + 1, right,
+                maximum - minimum + 1, maxY - minY + 1, right, up,
                 tile.getPortholeShape(), extraBorder);
         for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos, group);
         return group;
@@ -805,7 +811,7 @@ public class TEAnimatedScreenSelector
             boolean inverted = state.getValue(BlockProgrammableWall.INVERTED);
             if(te.isDiagonalHalfHeight()) {
                 java.nio.FloatBuffer transform=org.lwjgl.BufferUtils.createFloatBuffer(16);
-                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,.8F,0,0, 0,inverted?8:0,0,1}).flip();
+                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,1,0,0, 0,inverted?6:0,0,1}).flip();
                 GlStateManager.multMatrix(transform);
             }
             java.nio.FloatBuffer shear = org.lwjgl.BufferUtils.createFloatBuffer(16);
@@ -821,23 +827,25 @@ public class TEAnimatedScreenSelector
                 .getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         double rimDepthUv = wallBlock instanceof BlockProgrammablePortholeBlock ? 16 : 4;
         PortholeHex.Slice porthole = wallBlock.isPortholeShape()
-                ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY()) : null;
+                ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),
+                        wallBlock.isDiagonalShape() && te.isDiagonalHalfHeight()
+                                ? state.getValue(BlockProgrammableWall.FACING).getOpposite() : EnumFacing.UP) : null;
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
             boolean halfHeight=te.isDiagonalHalfHeight();
             if (halfHeight) {
                 java.nio.FloatBuffer transform=org.lwjgl.BufferUtils.createFloatBuffer(16);
-                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,.8F,0,0,
-                        0,state.getValue(BlockProgrammableWall.INVERTED)?8:0,0,1}).flip();
+                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,1,0,0,
+                        0,state.getValue(BlockProgrammableWall.INVERTED)?6:0,0,1}).flip();
                 GlStateManager.multMatrix(transform);
             }
             renderDiagonalWall(buf, wall, metal,
                     state.getValue(BlockProgrammableWall.INVERTED),
                     wallBlock.corner(state, te.getWorld(), te.getPos()),
                     BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()),
-                    te.getDiagonalFill(), halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?-10:0) : 0,
-                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?10:20) : 16);
+                    te.getDiagonalFill(), halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?-6:0) : 0,
+                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?10:16) : 16);
         } else if (flat != null) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -901,7 +909,7 @@ public class TEAnimatedScreenSelector
             IBlockState state, double depthUv) {
         for (int y : new int[] {0, 16}) {
             if (opening != null && adjacentPorthole(tile, state,
-                    y == 0 ? EnumFacing.DOWN : EnumFacing.UP)) continue;
+                    portholeRowDirection(tile, state, y != 0))) continue;
             double[] cut = opening == null ? null : opening.edgeOpening(1, y);
             if (cut == null) topRim(buf, metal, y, 0, 16, depthUv);
             else {
@@ -934,15 +942,16 @@ public class TEAnimatedScreenSelector
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
         if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
         if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
-        boolean ai=a.getValue(BlockProgrammableWall.INVERTED),bi=b.getValue(BlockProgrammableWall.INVERTED);
-        if(at.isDiagonalHalfHeight())return root.getY()==next.getY()&&af==bf&&ai==bi;
-        if(bf!=af&&bf!=af.getOpposite())return false;
-        double span=BlockProgrammableWall.diagonalSpan(world,root)/16;
-        double slopeA=ai?-span:span,slopeB=bi?-span:span;
-        double baseA=ai?span+.125:.125,baseB=bi?span+.125:.125;
-        if(bf!=af){baseB=1-baseB;slopeB=-slopeB;}
-        return Math.abs(slopeA-slopeB)<1e-8
-                && Math.abs(baseA-(baseB-slopeB*(next.getY()-root.getY())))<1e-8;
+        return com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(root, a, next, b,
+                at.isDiagonalHalfHeight() ? 2 : at.isDiagonalFullWidth() ? 1 : 0);
+    }
+
+    private static EnumFacing portholeRowDirection(TileEntityAnimatedScreenSelector tile,
+            IBlockState state, boolean positive) {
+        EnumFacing up = ((BlockProgrammableWall) state.getBlock()).isDiagonalShape()
+                && tile.isDiagonalHalfHeight() ? state.getValue(BlockProgrammableWall.FACING).getOpposite()
+                : EnumFacing.UP;
+        return positive ? up : up.getOpposite();
     }
 
     private static boolean adjacentPorthole(TileEntityAnimatedScreenSelector tile,

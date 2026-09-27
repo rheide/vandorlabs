@@ -22,16 +22,17 @@ final class Version12Gallery {
                 tile.setFaceTextures(new FaceTextures(true,new int[]{1,2,3,4,5,6}));
                 if(i%3>0)world.setBlockState(p.offset(i%3==1?EnumFacing.SOUTH:EnumFacing.NORTH),state.withProperty(net.minecraft.block.BlockStairs.FACING,EnumFacing.EAST),3);
             }
-        } else if(scene.equals("portholes_stacked")||scene.equals("portholes_half_height")) {
+        } else if(scene.equals("portholes_stacked")||scene.startsWith("portholes_half_height")) {
             for(int shape=0;shape<4;shape++)for(int row=0;row<2;row++) {
-                BlockPos p=origin.add(shape*3-1,scene.endsWith("stacked")?row:0,scene.endsWith("stacked")?0:row*2);
+                BlockPos p=origin.add(shape*3-1,scene.endsWith("stacked")?row:0,scene.endsWith("stacked")?0:row);
                 Block block=block("programmable_diagonal_porthole");
                 IBlockState state=block.getDefaultState().withProperty(BlockProgrammableWall.INVERTED,row==1);
-                if(scene.endsWith("stacked")&&row==1)state=state.withProperty(BlockProgrammableWall.FACING,EnumFacing.SOUTH);
+                if(row==1)state=state.withProperty(BlockProgrammableWall.FACING,EnumFacing.SOUTH);
                 world.setBlockState(p,state,3);
                 TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
                 tile.setPortholeShape(shape);tile.setGlassShade(1);
-                if(scene.endsWith("height"))tile.setDiagonalGeometry(2,0);
+                if(scene.startsWith("portholes_half_height"))tile.setDiagonalGeometry(2,0);
+                if(scene.endsWith("unjoined"))tile.setJoinPortholes(false);
             }
         } else if(scene.startsWith("filled_corners")) {
             for(int i=0;i<4;i++) {

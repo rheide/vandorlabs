@@ -82,9 +82,9 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
     private AxisAlignedBB diagonalBox(AxisAlignedBB box,IBlockState state,IBlockAccess world,BlockPos pos) {
         if (halfHeight(world,pos)) {
-            double base=state.getValue(INVERTED)?.5:0;
-            box=new AxisAlignedBB(box.minX,base+box.minZ*.8,box.minY,
-                    box.maxX,base+box.maxZ*.8,box.maxY);
+            double base=state.getValue(INVERTED)?.375:0;
+            box=new AxisAlignedBB(box.minX,base+box.minZ,box.minY,
+                    box.maxX,base+box.maxZ,box.maxY);
         }
         return rotate(box,state.getValue(FACING));
     }
@@ -98,14 +98,60 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
             EnumFacing side, float hitX, float hitY, float hitZ, int meta,
             EntityLivingBase placer) {
-        boolean inverted = isDiagonalShape() && (side == EnumFacing.DOWN
-                || (side.getAxis().isHorizontal() && hitY > .5F));
-        EnumFacing facing = isDiagonalShape() ? placer.getHorizontalFacing().getOpposite()
-                : placementFacing(world, pos, side, placer);
-        return getDefaultState()
-                .withProperty(FACING, facing)
-                .withProperty(INVERTED, inverted)
-                .withProperty(DEPTH, isDiagonalShape() ? 0 : PanelDepth.fromHit(facing, hitX, hitZ));
+        return getStateForPlacement(world, pos, side, hitX, hitY, hitZ, meta,
+                placer, net.minecraft.util.EnumHand.MAIN_HAND);
+    }
+
+    @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
+            EnumFacing side, float hitX, float hitY, float hitZ, int meta,
+            EntityLivingBase placer, net.minecraft.util.EnumHand hand) {
+        if (!isDiagonalShape()) {
+            EnumFacing facing = placementFacing(world, pos, side, placer);
+            return getDefaultState().withProperty(FACING, facing)
+                    .withProperty(DEPTH, PanelDepth.fromHit(facing, hitX, hitZ));
+        }
+        BlockPos support = pos.offset(side.getOpposite());
+        int mode = placementGeometry(world, support, placer.getHeldItem(hand));
+        IBlockState clicked = world.getBlockState(support);
+        if (clicked.getBlock() == this && geometry(world, support) == mode) {
+            // Prefer a continuation of the clicked surface, in either direction.
+            for (EnumFacing facing : new EnumFacing[]{clicked.getValue(FACING),
+                    clicked.getValue(FACING).getOpposite()}) {
+                for (boolean inverted : new boolean[]{false, true}) {
+                    IBlockState candidate = getDefaultState().withProperty(FACING, facing)
+                            .withProperty(INVERTED, inverted);
+                    if (DiagonalPanelGeometry.samePlane(support, clicked, pos, candidate, mode))
+                        return candidate;
+                }
+            }
+        }
+        EnumFacing facing = placer.getHorizontalFacing().getOpposite();
+        boolean inverted = side == EnumFacing.DOWN
+                || (side.getAxis().isHorizontal() && hitY > .5F);
+        if (mode != 2) {
+            // Keep the player's wall axis, but anchor the panel at the clicked edge.
+            float normal = facing.getAxis() == EnumFacing.Axis.X ? hitX : hitZ;
+            if (normal < 1F / 3F) facing = facing.getAxis() == EnumFacing.Axis.X
+                    ? EnumFacing.WEST : EnumFacing.NORTH;
+            else if (normal > 2F / 3F) facing = facing.getAxis() == EnumFacing.Axis.X
+                    ? EnumFacing.EAST : EnumFacing.SOUTH;
+        }
+        return getDefaultState().withProperty(FACING, facing).withProperty(INVERTED, inverted);
+    }
+
+    public static int geometry(IBlockAccess world, BlockPos pos) {
+        net.minecraft.tileentity.TileEntity raw = world.getTileEntity(pos);
+        if (!(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)) return 0;
+        com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
+                (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector) raw;
+        return tile.isDiagonalHalfHeight() ? 2 : tile.isDiagonalFullWidth() ? 1 : 0;
+    }
+
+    int placementGeometry(World world, BlockPos support, net.minecraft.item.ItemStack stack) {
+        net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
+        if (tag != null) return tag.getBoolean("DiagonalHalfHeight") ? 2
+                : tag.getBoolean("DiagonalFullWidth") ? 1 : 0;
+        return world.getBlockState(support).getBlock() == this ? geometry(world, support) : 0;
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -132,7 +178,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         if (isDiagonalShape()) {
             boolean half=halfHeight(world,pos);
             if (fill(world,pos)!=0) return FULL_BLOCK_AABB;
-            if (half) return new AxisAlignedBB(0,state.getValue(INVERTED)?.5:0,0,1,state.getValue(INVERTED)?1:.5,1);
+            if (half) return new AxisAlignedBB(0,state.getValue(INVERTED)?.375:0,0,1,state.getValue(INVERTED)?1:.625,1);
             return rotate(new AxisAlignedBB(0,0,0,1,1,
                     corner != null && corner.backRight != null ? 1 : (diagonalSpan(world,pos)+4)/16D),state.getValue(FACING));
         }
@@ -360,9 +406,9 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             int fill = fill(world,pos);
             if (halfHeight(world,pos)) {
                 // Fill below/above the rotated incline, including the unused half of the cell.
-                double base=state.getValue(INVERTED)?.5:0;
-                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,0,slice/16D,1,base+(near1+4)/20D,(slice+1)/16D),state.getValue(FACING)));
-                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,base+near0/20D,slice/16D,1,1,(slice+1)/16D),state.getValue(FACING)));
+                double base=state.getValue(INVERTED)?.375:0;
+                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,0,slice/16D,1,base+(near1+4)/16D,(slice+1)/16D),state.getValue(FACING)));
+                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,base+near0/16D,slice/16D,1,1,(slice+1)/16D),state.getValue(FACING)));
             } else {
                 if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,0,right/16D,(slice+1)/16D,near1/16D),state.getValue(FACING)));
                 if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,(near0+4)/16D,right/16D,(slice+1)/16D,1),state.getValue(FACING)));

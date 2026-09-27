@@ -96,7 +96,7 @@ final class FollowupRuntimeChecks {
                 a.setDiagonalGeometry(2,0);
                 java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
                 port.addCollisionBoxToList(lower,world,p,new AxisAlignedBB(p),boxes,null,false);
-                for(AxisAlignedBB box:boxes)require(box.maxY<=p.getY()+.5+1e-7,"half-height porthole collision");
+                for(AxisAlignedBB box:boxes)require(box.maxY<=p.getY()+.625+1e-7,"half-height porthole collision");
                 world.setBlockToAir(p);world.setBlockToAir(p.up());
             }
             BlockProgrammableWall wall=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
@@ -112,6 +112,7 @@ final class FollowupRuntimeChecks {
                 for(AxisAlignedBB box:boxes) require(box.minX>=p.getX()&&box.maxX<=p.getX()+1&&box.minZ>=p.getZ()&&box.maxZ<=p.getZ()+1,"corner fill escaped cell");
                 world.setBlockToAir(neighbor);world.setBlockToAir(p);
             }
+            checkDiagonalPlacement(world,player,p);
             checkUndo(world,player,p);
         } catch(ReflectiveOperationException e) { throw new IllegalStateException(e); }
         finally {
@@ -138,5 +139,71 @@ final class FollowupRuntimeChecks {
         BetterBuildersWandsCompat.INSTANCE.onCommand(event);
         require(event.isCanceled()&&world.isAirBlock(p.south())&&world.getBlockState(p).equals(source),"actual wandOops undo");
     }
+    private static void checkDiagonalPlacement(World world, EntityPlayerMP player, BlockPos p) {
+        float yaw = player.rotationYaw;
+        ItemStack offhand = player.getHeldItemOffhand();
+        try {
+            BlockProgrammableWall port = (BlockProgrammableWall) Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs:programmable_diagonal_porthole"));
+            for (BlockProgrammableWall block : new BlockProgrammableWall[]{port,
+                    (BlockProgrammableWall) ModBlocks.PROGRAMMABLE_DIAGONAL_WALL}) {
+                for (EnumFacing facing : EnumFacing.HORIZONTALS) for (int mode : new int[]{0, 2}) {
+                    player.rotationYaw = facing.getOpposite().getHorizontalAngle();
+                    // Fresh placement chooses the clicked edge, also with a configured offhand item.
+                    ItemStack configured = new ItemStack(block);
+                    configured.getOrCreateSubCompound("BlockEntityTag").setBoolean("DiagonalHalfHeight", mode == 2);
+                    player.setHeldItem(EnumHand.OFF_HAND, configured);
+                    for (boolean far : new boolean[]{false, true}) {
+                        float coordinate = far ? .9F : .1F;
+                        IBlockState edge = block.getStateForPlacement(world, p, EnumFacing.NORTH,
+                                coordinate, coordinate, coordinate, 0, player, EnumHand.OFF_HAND);
+                        if (mode == 2) require(edge.getValue(BlockProgrammableWall.INVERTED) == far,
+                                "shallow placement ignored click height");
+                        else require(edge.getValue(BlockProgrammableWall.FACING) ==
+                                (facing.getAxis() == EnumFacing.Axis.X ? (far ? EnumFacing.EAST : EnumFacing.WEST)
+                                        : (far ? EnumFacing.SOUTH : EnumFacing.NORTH)), "tall placement ignored edge");
+                        require(block.getStateFromMeta(block.getMetaFromState(edge)).equals(edge), "diagonal placement metadata");
+                    }
+                    for (int shape = 0; shape < (block == port ? 4 : 1); shape++) {
+                        EnumFacing along = mode == 2 ? facing.getOpposite() : EnumFacing.UP;
+                        BlockPos q = p.offset(along);
+                        IBlockState lower = block.getDefaultState().withProperty(BlockProgrammableWall.FACING, facing);
+                        IBlockState upper = lower.withProperty(BlockProgrammableWall.FACING, facing.getOpposite())
+                                .withProperty(BlockProgrammableWall.INVERTED, true);
+                        for (boolean reverse : new boolean[]{false, true}) {
+                            BlockPos start = reverse ? q : p, end = reverse ? p : q;
+                            EnumFacing side = reverse ? along.getOpposite() : along;
+                            world.setBlockState(start, reverse ? upper : lower, 3);
+                            TileEntityAnimatedScreenSelector a = (TileEntityAnimatedScreenSelector) world.getTileEntity(start);
+                            a.setDiagonalGeometry(mode, 0); a.setPortholeShape(shape);
+                            // Exercise normal item use, including geometry inheritance and tile initialization.
+                            ItemStack plain = new ItemStack(block, 2);
+                            player.setHeldItem(EnumHand.MAIN_HAND, plain);
+                            require(plain.getItem().onItemUse(player, world, start, EnumHand.MAIN_HAND,
+                                    side, .5F, .5F, .5F) == EnumActionResult.SUCCESS, "diagonal item placement failed");
+                            require(world.getBlockState(end).equals(reverse ? lower : upper), "diagonal continuation chose wrong plane");
+                            TileEntityAnimatedScreenSelector b = (TileEntityAnimatedScreenSelector) world.getTileEntity(end);
+                            require(BlockProgrammableWall.geometry(world, end) == mode, "plain item did not inherit proportions");
+                            b.setPortholeShape(shape);
+                            require(DiagonalPanelGeometry.samePlane(start, world.getBlockState(start), end,
+                                    world.getBlockState(end), mode), "continued surfaces differ");
+                            if (block == port) {
+                                TEAnimatedScreenSelector.PortholeGroup group = TEAnimatedScreenSelector.portholeGroup(a, world.getBlockState(start));
+                                require(group.rows == 2 && group.columns == 1, "continued portholes did not join");
+                                require(TEAnimatedScreenSelector.portholeGroup(b, world.getBlockState(end)) == group, "join depends on render order");
+                                b.setJoinPortholes(false);
+                                require(TEAnimatedScreenSelector.portholeGroup(a, world.getBlockState(start)).rows == 1, "Join Off ignored");
+                                b.setJoinPortholes(true); b.setDiagonalGeometry(mode == 2 ? 0 : 2, 0);
+                                require(TEAnimatedScreenSelector.portholeGroup(a, world.getBlockState(start)).rows == 1, "different proportions joined");
+                            }
+                            world.setBlockToAir(p); world.setBlockToAir(q);
+                        }
+                    }
+                }
+            }
+            System.out.println("[vandorlabs][reprolab] diagonal-placement-joins PASS");
+        } finally { player.rotationYaw = yaw; player.setHeldItem(EnumHand.OFF_HAND, offhand); }
+    }
+
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException(message);}
 }

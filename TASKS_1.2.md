@@ -120,3 +120,11 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 - Final follow-up validation: Java 8 build and full live suite passed in `render-run.kWQbar`. Half-block settings, immediate movement before Done, blocked-length feedback, seat icon frame bounds for all three heights, gear retraction pixels and existing gameplay/rendering checks passed.
 - Recipe audit: all 40 player-facing blocks have base crafting recipes. Hidden propulsion variants, legacy doors and the internal controlled-ramp block intentionally have no separate recipes.
+
+### Diagonal placement and shallow joins
+
+- [ ] Anchor tall/shallow diagonal walls at the clicked edge and continue an existing diagonal's plane and proportions.
+- [ ] Join half-height/full-width portholes along their slope, including reversed upper pieces; check all shapes/directions and Join Off.
+- Geometry correction: shallow panels use the tall half-width geometry rotated onto its side, keeping four-pixel thickness and matching endpoints. Their overlapping height bands are 0–10 and 6–16 pixels, matching the tall form's depth bands.
+
+- Java 8 build passed. Live item placement and join checks passed in `render-run.fWcuxx` for both proportions, both extension directions, every facing and opening shape, Join Off and incompatible proportions. Full gallery and pixel checks are still running.
