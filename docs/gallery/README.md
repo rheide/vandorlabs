@@ -4,7 +4,7 @@ These images come from a real Forge 1.12.2 client in the repeatable ReproLab
 world. The close-ups show individual shapes, controls, and states. Open an image
 at full size to inspect its texture and model.
 
-- [New in 1.2](version-1.2.md)
+- [New in 1.1](version-1.1.md)
 
 ## Blocks and systems
 
@@ -15,7 +15,7 @@ at full size to inspect its texture and model.
 - [Lights](lights.md)
 - [Buttons, switches, and levers](controls.md)
 - [Chairs and connected seats](chairs.md)
-- [Landing Gear](version-1.2.md#landing-gear)
+- [Landing Gear](version-1.1.md#landing-gear)
 - [Building blocks, finishes, and glass](building.md)
 
 The [Configurizer](../CONFIGURIZER.md) opens programmable block settings. The

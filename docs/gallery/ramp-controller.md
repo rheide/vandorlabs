@@ -1,7 +1,7 @@
 # Programmable Ramp
 
-Version 1.2 seals transparent controller texture edges. See the
-[controller close-up](version-1.2.md#placement-and-compatibility-fixes).
+Version 1.1 seals transparent controller texture edges. See the
+[controller close-up](version-1.1.md#placement-and-compatibility-fixes).
 
 The Programmable Ramp controls a platform of matching slabs or solid blocks. It can form a slope, fill the space beneath that slope, lift the whole platform, or extend it into a solid run. The images show each mode in its off and on positions.
 
@@ -26,7 +26,7 @@ The platform can be up to **8 blocks wide and 16 blocks long**. Its length follo
 
 Creative shift-right-click the controller to open its settings, or use the Configurizer. Valid changes apply immediately.
 
-![Programmable Ramp settings](../images/gallery/v1.2/ramp-matching-config.png)
+![Programmable Ramp settings](../images/gallery/v1.1/ramp-matching-config.png)
 
 1. Choose **Ramp**, **Filled Ramp**, **Lift**, or **Extend**.
 2. Choose **Up/Down** or **Left/Right** travel. Left and right are relative to the selected ramp direction.

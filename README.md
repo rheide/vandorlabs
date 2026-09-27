@@ -15,7 +15,8 @@ See the [screenshot and functionality gallery](docs/gallery/README.md) for a
 visual tour of the programmable blocks, doors, propulsion systems, controls,
 lighting, furniture, ramps, glass, and building materials.
 
-See [what changed in 1.2](docs/gallery/version-1.2.md) for face texture overrides,
+See the [changelog](CHANGELOG.md) for release notes and the
+[1.1 guide](docs/gallery/version-1.1.md) for face texture overrides,
 programmable stairs, diagonal options, connected seats, landing gear, and placement fixes.
 
 ## What's in the mod
@@ -68,7 +69,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   Their recipes use Industrial Alloy and wool. See [seating](docs/gallery/chairs.md).
 - **Landing Gear**: one block with Small, Medium and Large sizes. Configure
   redstone mode/channel and extension from 0–4 blocks in half-block steps;
-  size and length changes preview immediately. See [Landing Gear](docs/gallery/version-1.2.md#landing-gear).
+  size and length changes preview immediately. See [Landing Gear](docs/gallery/version-1.1.md#landing-gear).
 - **Ramp / Elevator Controller**: turns matching existing slabs or blocks into
   a ramp or moving lift. Configure signed start/end offsets, redstone polarity and
   Fast/Medium/Slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and
@@ -117,7 +118,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.2.jar`.
+`build/libs/vandorlabs-1.1.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 

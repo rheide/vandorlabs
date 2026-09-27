@@ -1,7 +1,7 @@
 # Chairs
 
 Luxury and military seats now join into benches. See
-[connected seating in 1.2](version-1.2.md#connected-seating).
+[connected seating in 1.1](version-1.1.md#connected-seating).
 
 Programmable Chair includes five sittable designs. Right-click a chair to sit; sneak to get up. Choose the appearance that fits the room: command and operator seats for workstations, or companion, conference, and mess hall seats for shared spaces.
 
@@ -22,5 +22,5 @@ three heights: default, two pixels lower, or two pixels higher. The default legs
 are one pixel taller than the original models. Each recipe uses five Industrial
 Alloy Ingots and matching blue (Luxury) or green (Military) wool.
 
-![Seat sizes and joining](../images/gallery/v1.2/seating-heights.png)
-![Seat settings](../images/gallery/v1.2/connected-seat-config.png)
+![Seat sizes and joining](../images/gallery/v1.1/seating-heights.png)
+![Seat settings](../images/gallery/v1.1/connected-seat-config.png)

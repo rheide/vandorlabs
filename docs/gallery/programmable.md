@@ -1,7 +1,7 @@
 # Programmable displays and consoles
 
 The standalone diagonal half console and per-face block/slab finishes are
-covered in [the 1.2 guide](version-1.2.md).
+covered in [the 1.1 guide](version-1.1.md).
 
 Programmable displays let you choose the visible artwork and how it behaves. Their settings persist with the block. Screen-capable blocks can choose **Off**, **Static**, or **Animated** display, animation speed, and redstone behavior. Many also offer a separate wall or side texture so the housing can match nearby construction.
 

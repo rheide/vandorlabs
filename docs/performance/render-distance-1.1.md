@@ -1,4 +1,4 @@
-# Render distance in 1.2
+# Render distance in 1.1
 
 ## Finding
 
@@ -35,6 +35,6 @@ four times as many fixtures across a uniformly populated horizontal area. It
 adds per-frame work and does not give these blocks the terrain rendering path.
 No distance increase was made, as requested for changes with a performance cost.
 
-If full cubes still disappear in the user's instance with the 1.2 JAR, reproduce
+If full cubes still disappear in the user's instance with the 1.1 JAR, reproduce
 that separately with its renderer mods/settings; the 64-block tile cutoff does
 not explain it in this checkout. The supplied client log includes OptiFine.

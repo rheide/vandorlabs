@@ -1,6 +1,6 @@
-# Vandor Labs 1.2 task tracker
+# Vandor Labs 1.1 task tracker
 
-Version stays at **1.2** for this entire task set. Finished JARs stay in `build/libs/`.
+This release is **1.1**, renamed from the development label **1.2** at the user’s request. Earlier validation records below retain their original version labels. Finished JARs stay in `build/libs/`.
 
 ## Conversation request
 
@@ -38,16 +38,16 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 
 | Work | Status | Findings / validation |
 | --- | --- | --- |
-| Version / tracking | Done | Version 1.2 set in Gradle and mod metadata; baseline captured in `testclient/render-run.RA4YaV`. |
+| Version / tracking | Done | Release renamed to 1.1 in Gradle and mod metadata; earlier development records use 1.2. Baseline captured in `testclient/render-run.RA4YaV`. |
 | Face overrides and Copifier | Done | Default-off behavior, inheritance, save/copy and responsive dialog verified in `render-run.OoewtY`. |
 | WorldEdit diagonal flip | Done | WorldEdit actual transform tests cover all 8 metadata poses and X/Y/Z flips; diagonal wall and diagonal screen. |
 | Diagonal porthole | Done | Four shapes, full/half width, lateral coplanar joining. Matching stacked half-width pieces join when the reversed upper piece continues the same surface plane. |
 | Diagonal half height | Done | Full-depth incline within eight pixels of height; upper/lower positions; matching straight runs. |
-| Landing gear | Done | Four static gear designs; telescopic gear animates over one second, checks obstruction, reserves its lower cell, responds to redstone/right-click. |
+| Landing gear | Done | One configurable block, Small/Medium/Large, half-block extension steps from 0–4 blocks, animated in both directions; redstone mode/channel and immediate preview. Uniform 4×4 arms with tiled interior metal. |
 | Diagonal inside/outside fill | Done | Independent inside/outside toggles, saved/copied with diagonal geometry; collision follows fill. |
 | Connected seating | Done | Two styles with automatic single/end/middle variants, reserved backrest cell, sitting and cleanup. |
 | Ramp edge gap | Done | User identified controller cube. Front/right-edge PNG alpha creates the seam; atlas loader repairs all 24 faces across both packs. Pixel regression passed (17,224 cutoff pixels), preserving solid RGB. |
-| Distance rendering | Report complete | `docs/performance/render-distance-1.2.md`: full block/slab already use chunk meshes; diagonals inherit a 64-block tile cutoff. Recommended chunk-model work documented; no costly range increase. |
+| Distance rendering | Report complete | `docs/performance/render-distance-1.1.md`: full block/slab already use chunk meshes; diagonals inherit a 64-block tile cutoff. Recommended chunk-model work documented; no costly range increase. |
 | Copifier crafting | Done | Shapeless tool + programmable item; tool retained. Normal crafting consumption processes stacks with shift-click; output respects selected copy settings. |
 | Half Input slab placement | Done | Side placement matches the support slab half, including its wall slot. |
 | Diagonal Half Console | Done | Half-height/depth incline; upper/lower placement matching slabs; configurable input artwork. |
@@ -183,3 +183,9 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - `face2.png` exposed the missing rendering path: lights advertise `hasFastRenderer()` and normally render through `ProgrammableSolidRenderer`, which still emitted the front housing plus offset artwork. Previous changes/checks exercised only the fallback renderer. The regression now goes through Forge's real batched dispatcher; reproducing its failure before changing that path.
 
 - Batched negative control reproduced the bug: disabling depth/reversing order changed 2,502 pixels on a single light. The corrected fast renderer passes the same check across all six facings and both single/joined groups. It removes the housing front and offset, skips shared faces, and omits back-facing quads before batching because Forge disables GL culling for the shared batch. Added the Logo appearance from `face2.png` to the final regression run.
+
+- First full batched-renderer run (`render-run.HEgwep`) hit the known isolated-client fixture race in vanilla `SPacketChunkData` iteration before graphics checks. Retrying the same build; the targeted batched-renderer check already passed.
+
+### Release name and changelog
+
+- [ ] Rebadge the release as 1.1, update current documentation and add a concise CHANGELOG.md covering this task set; 1.0 is the initial release.

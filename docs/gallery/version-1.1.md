@@ -1,4 +1,4 @@
-# New in 1.2
+# New in 1.1
 
 [Back to the block guide](README.md)
 
@@ -13,8 +13,8 @@ Turn it on to reveal **Texture for**, choose a face, and select its texture.
 for all unassigned faces. Front/back/left/right follow the block's facing.
 Turning overrides off preserves the choices for later use.
 
-![Face override dialog](../images/gallery/v1.2/face-overrides-config.png)
-![From right: main texture, overridden block, lower slab and upper slab](../images/gallery/v1.2/faces.png)
+![Face override dialog](../images/gallery/v1.1/face-overrides-config.png)
+![From right: main texture, overridden block, lower slab and upper slab](../images/gallery/v1.1/faces.png)
 
 The texture list also includes **Glass Frame Interior** and **Door Interior**,
 the darker surface used inside the door. The existing door-frame finish remains
@@ -51,15 +51,15 @@ keeping its upper/lower position. For tall diagonals, the button is labeled
 **Slope leans**. The compass direction tells you which way the slope rises or
 leans. Changes apply immediately and update joining and collision.
 
-![Diagonal slope control](../images/gallery/v1.2/diagonal-direction-config.png)
+![Diagonal slope control](../images/gallery/v1.1/diagonal-direction-config.png)
 
 Craft two diagonal portholes from two Industrial Alloy Ingots and one glass
 block in the diagonal recipe pattern.
 
-![Half-height portholes joined along the slope](../images/gallery/v1.2/portholes-half-height.png)
-![The same shallow pieces with joining disabled](../images/gallery/v1.2/portholes-half-height-unjoined.png)
+![Half-height portholes joined along the slope](../images/gallery/v1.1/portholes-half-height.png)
+![The same shallow pieces with joining disabled](../images/gallery/v1.1/portholes-half-height-unjoined.png)
 
-![Four diagonal porthole shapes, joined sideways](../images/gallery/v1.2/portholes.png)
+![Four diagonal porthole shapes, joined sideways](../images/gallery/v1.1/portholes.png)
 
 **Programmable Diagonal Wall** adds a full-depth, half-height option, with
 matching straight runs in lower or upper positions. It also offers independent
@@ -67,19 +67,19 @@ inside and outside fill options. Filled faces use the selected main texture,
 including the underside of an upper shallow panel. Collision follows the
 configured shape.
 
-![Filled shallow walls from above](../images/gallery/v1.2/shallow-fill.png)
-![Filled shallow walls from below](../images/gallery/v1.2/shallow-fill-under.png)
+![Filled shallow walls from above](../images/gallery/v1.1/shallow-fill.png)
+![Filled shallow walls from below](../images/gallery/v1.1/shallow-fill-under.png)
 
-![Diagonal shape and fill controls](../images/gallery/v1.2/diagonal-config.png)
+![Diagonal shape and fill controls](../images/gallery/v1.1/diagonal-config.png)
 
-![Joined lower and upper half-height walls](../images/gallery/v1.2/half-height.png)
-![From right: no fill, inside, outside, both](../images/gallery/v1.2/fill.png)
+![Joined lower and upper half-height walls](../images/gallery/v1.1/half-height.png)
+![From right: no fill, inside, outside, both](../images/gallery/v1.1/fill.png)
 
 **Programmable Diagonal Half Console** is a separate block, half a block tall
 and deep. Side placement against a slab matches its upper/lower half, with the
 slope inverted for the upper position. It uses programmable input artwork.
 
-![Lower and upper diagonal half consoles beside slabs](../images/gallery/v1.2/half-console.png)
+![Lower and upper diagonal half consoles beside slabs](../images/gallery/v1.1/half-console.png)
 
 WorldEdit flips now transform diagonal facing and slope together. Include both
 cells when copying any two-cell fixture. See [copy compatibility](../copy-compatibility.md).
@@ -96,14 +96,14 @@ Luxury and Military Seat recipes use Industrial Alloy and blue/green wool.
 
 Right-click to sit; sneak to dismount. Leave the cell above clear for the backrest.
 
-![Luxury and military connected seating](../images/gallery/v1.2/seating.png)
-![Low, default and high seats](../images/gallery/v1.2/seating-heights.png)
-![Joining disabled](../images/gallery/v1.2/seating-unjoined.png)
-![Seat configuration](../images/gallery/v1.2/connected-seat-config.png)
+![Luxury and military connected seating](../images/gallery/v1.1/seating.png)
+![Low, default and high seats](../images/gallery/v1.1/seating-heights.png)
+![Joining disabled](../images/gallery/v1.1/seating-unjoined.png)
+![Seat configuration](../images/gallery/v1.1/connected-seat-config.png)
 
 Seat inventory icons fit their slots at all three configured heights.
 
-![Seat and landing gear inventory icons](../images/gallery/v1.2/seat-and-gear-icons.png)
+![Seat and landing gear inventory icons](../images/gallery/v1.1/seat-and-gear-icons.png)
 
 ## Landing gear
 
@@ -126,18 +126,22 @@ Creative shift-right-click opens these settings:
   Length changes apply while dragging; extended gear moves immediately toward
   the new length. Redstone mode/channel changes apply with Done.
 
+All three sizes use a 4×4-pixel extending arm with the Glass Frame Interior
+metal texture, also used on diagonal wall sides. The texture repeats at a fixed
+scale along the arm as it extends.
+
 Both directions animate at one block per second at normal tick speed. The
 mount keeps its motion state when direction changes. Extension requires air
 below; occupied cells remain reserved until the piston and wheel clear them.
 Breaking any occupied part removes the fixture. Saved settings survive mining
 and pick-block. Dynmap shows the default retracted model.
 
-![Small, Medium and Large gear retracted](../images/gallery/v1.2/gear.png)
-![All three sizes extended one block](../images/gallery/v1.2/gear-extended.png)
-![All three sizes extended four blocks](../images/gallery/v1.2/gear-four.png)
-![Half-block extension](../images/gallery/v1.2/gear-half.png)
-![Returned to the retracted pose](../images/gallery/v1.2/gear-retracted.png)
-![Landing gear configuration](../images/gallery/v1.2/landing-gear-config.png)
+![Small, Medium and Large gear retracted](../images/gallery/v1.1/gear.png)
+![All three sizes extended one block](../images/gallery/v1.1/gear-extended.png)
+![All three sizes extended four blocks](../images/gallery/v1.1/gear-four.png)
+![Half-block extension](../images/gallery/v1.1/gear-half.png)
+![Returned to the retracted pose](../images/gallery/v1.1/gear-retracted.png)
+![Landing gear configuration](../images/gallery/v1.1/landing-gear-config.png)
 
 ## Placement and compatibility fixes
 
@@ -152,13 +156,13 @@ and pick-block. Dynmap shows the default retracted model.
   The isolated client verifies sprite cleanup; the full external modpack has
   not been tested here.
 
-![Ramp controller touching a stone block](../images/gallery/v1.2/controller.png)
+![Ramp controller touching a stone block](../images/gallery/v1.1/controller.png)
 
 ## Render distance
 
 Full Programmable Blocks and Slabs already use terrain meshes. Diagonals and
 some other programmable shapes still use a renderer with a 64-block cutoff.
-The [render-distance report](../performance/render-distance-1.2.md) describes
+The [render-distance report](../performance/render-distance-1.1.md) describes
 moving static geometry into terrain meshes and the cost of increasing the
 current renderer's range. This release leaves that broader change for later.
 
@@ -174,7 +178,7 @@ placed. The Duplifier, crafting with copied settings, pick-block and mining
 preserve the configuration. Craft four stairs from six Programmable Blocks
 arranged in a stair pattern.
 
-![Straight and corner stairs in both halves](../images/gallery/v1.2/stairs.png)
+![Straight and corner stairs in both halves](../images/gallery/v1.1/stairs.png)
 
 Place a second Programmable Slab into the empty half of an existing slab to
 make a Programmable Block. It keeps the placed slab's settings, including its
@@ -182,13 +186,13 @@ stored face overrides. Survival placement consumes one additional slab.
 
 ### More diagonal porthole shapes
 
-![Four tall joined diagonal portholes](../images/gallery/v1.2/portholes-stacked.png)
+![Four tall joined diagonal portholes](../images/gallery/v1.1/portholes-stacked.png)
 
 Inside/outside fill now retains the diagonal corner's connecting arm and stays
 within the corner span. A filled wall can still connect to an unfilled neighbor.
 
-![Corner fill combinations, first arrangement](../images/gallery/v1.2/filled-corners-inside.png)
-![Corner fill combinations, opposite arrangement](../images/gallery/v1.2/filled-corners-outside.png)
+![Corner fill combinations, first arrangement](../images/gallery/v1.1/filled-corners-inside.png)
+![Corner fill combinations, opposite arrangement](../images/gallery/v1.1/filled-corners-outside.png)
 
 ### Slow servers and compatibility
 
@@ -214,18 +218,21 @@ unloaded or protected positions and cannot run in another dimension. Old undo
 records created before this fix do not contain the restored-state information.
 
 
-![Ramp texture matching option](../images/gallery/v1.2/ramp-matching-config.png)
+![Ramp texture matching option](../images/gallery/v1.1/ramp-matching-config.png)
 
 ### Rendering and startup fixes
 
 Programmable Lights draw their artwork as the front face of the housing. There
-is no second housing face underneath it to cause distant depth flickering.
+is no second housing face underneath it. Hidden back faces and shared faces
+between adjacent lights are culled in both the batched and fallback renderers,
+preventing housing textures from bleeding
+through when depth precision drops at a distance.
 Porthole glass uses the existing glass texture and renders after opaque blocks,
 preventing neighboring housings from overwriting portions of joined panes.
 
-![Single and joined lights](../images/gallery/v1.2/light-depth-near.png)
-![Joined Circular porthole glass](../images/gallery/v1.2/round-glass-front.png)
-![Glass viewed at an angle](../images/gallery/v1.2/round-glass-left.png)
+![Single and joined lights](../images/gallery/v1.1/light-depth-near.png)
+![Joined Circular porthole glass](../images/gallery/v1.1/round-glass-front.png)
+![Glass viewed at an angle](../images/gallery/v1.1/round-glass-left.png)
 
 Redstone lights defer channel registration and power checks until their first
 normal tick. Power checks only inspect loaded neighbors, avoiding the chunk-load

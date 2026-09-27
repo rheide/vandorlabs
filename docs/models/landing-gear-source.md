@@ -3,7 +3,8 @@
 This document describes the supplied source ZIP. Current game blocks are
 one Landing Gear block with Small, Medium and Large sizes. Small and Medium
 retain the authored Small and Large models; the new Large has a 14-pixel wheel
-and full-block width. Old IDs and static variants are removed. See the [current gear guide](../gallery/version-1.2.md#landing-gear).
+and full-block width. Runtime arms are uniformly 4×4 pixels and tile the glass-frame interior metal.
+Old IDs and static variants are removed. See the [current gear guide](../gallery/version-1.1.md#landing-gear).
 
 Five designs, intentionally simple. All geometry is axis-aligned; all endpoint coordinates are whole voxels. One Minecraft block is 16 model units. Small wheels are 8 units in diameter and 4 wide; large wheels are 12 in diameter and 6 wide. Wheel rotation axis is X, rolling direction is Z. The 16×16 textures use restrained grey shading, with a cyan indicator and amber button on mounting plates. The colored pixels are not emissive by themselves.
 

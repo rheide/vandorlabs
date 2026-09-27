@@ -47,7 +47,7 @@ and ownership are not stored. The item uses semantic setting keys rather than
 copying tile NBT, so existing saved-world field names and placement behavior
 remain intact.
 
-## Face overrides and diagonal geometry (1.2)
+## Face overrides and diagonal geometry (1.1)
 
 Programmable Block, Slab and Stairs have a separate **Face Overrides** copy switch.
 When the source has overrides enabled, it copies the six face choices and

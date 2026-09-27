@@ -1,7 +1,7 @@
 # Building blocks, finishes, and glass
 
 For face texture overrides, diagonal portholes, half-height walls and fill
-options, see [the 1.2 additions](version-1.2.md).
+options, see [the 1.1 additions](version-1.1.md).
 
 Programmable Block, Wall, Slab, Stairs, Ramp, and other compatible shapes use a shared finish list. Choose a material in the Creative-mode shift-right-click dialog. Some screen blocks use the same list for their wall or side texture while keeping a separate primary screen selection. The [Duplifier](../DUPLIFIER.md) can carry a compatible finish to another shape.
 
@@ -38,4 +38,4 @@ Programmable Glass provides selectable frame detail and glass shade in one block
 ![Programmable Glass settings](../images/gallery/building/glass-config.png)
 
 Diagonal placement follows the clicked edge; the dialog can reverse the slope.
-See [placement, joining and recipes](version-1.2.md#diagonal-building-blocks).
+See [placement, joining and recipes](version-1.1.md#diagonal-building-blocks).
