@@ -431,8 +431,17 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);
                 if (block instanceof BlockTelescopicLandingGear) {
-                    for (String group : new String[]{"fixed", "wheel", "piston"})
-                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID, block.getRegistryName().getResourcePath()+"_"+group));
+                    for (String size : BlockTelescopicLandingGear.SIZES) {
+                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,"landing_gear_"+size));
+                        for (String group : new String[]{"fixed", "wheel", "piston"})
+                            ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,"landing_gear_"+size+"_"+group));
+                    }
+                    ModelLoader.setCustomMeshDefinition(item, stack -> {
+                        net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
+                        int size=tag==null?0:Math.max(0,Math.min(2,tag.getInteger("GearSize")));
+                        return new ModelResourceLocation("vandorlabs:landing_gear_"+BlockTelescopicLandingGear.SIZES[size],"inventory");
+                    });
+                    continue;
                 }
                 if (block instanceof BlockConfigurableSpaceDoor) {
                     registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);

@@ -50,11 +50,13 @@ final class Version12RuntimeChecks {
                 world.setBlockToAir(p);require(world.isAirBlock(p.up()),"orphan seat back");
             }
             java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
-            for(String name:new String[]{"small_landing_gear","large_landing_gear"}) {
-                BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block(name);
+            for(int size=0;size<3;size++) {
+                BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear");
                 world.setBlockState(p,gear.getDefaultState(),3);
                 TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
+                require(tile.configure(0,0,16,size),"gear size configuration");
                 NBTTagCompound itemSettings=tile.writeToNBT(new NBTTagCompound());
+                require(itemSettings.getInteger("GearSize")==size,"gear saved size");
                 itemSettings.setInteger("RedstoneMode",2);itemSettings.setInteger("ExtensionPixels",0);
                 tile.readFromNBT(itemSettings);gear.onBlockPlacedBy(world,p,world.getBlockState(p),player,new ItemStack(gear));
                 require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"placed Off-mode gear ignored saved settings");
@@ -77,6 +79,7 @@ final class Version12RuntimeChecks {
                     require(!boxes.isEmpty(),"gear lacks piston/wheel collision");
                 }
                 ItemStack picked=gear.getPickBlock(world.getBlockState(p.down(4)),null,world,p.down(4),player);
+                require(picked.getSubCompound("BlockEntityTag").getInteger("GearSize")==size,"gear picked size");
                 require(picked.getSubCompound("BlockEntityTag").getInteger("ExtensionPixels")==64,"gear lower pick settings");
                 require(gear.setExtended(world,p,false),"gear retraction rejected");
                 require(world.getTileEntity(p)==tile,"retraction replaced gear tile");
@@ -95,7 +98,7 @@ final class Version12RuntimeChecks {
                 require(tile.configure(1,731,16),"On mode settings");
                 require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"On mode with power");
                 TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
-                require(restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");
+                require(restored.getSize()==size&&restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");
                 require(!tile.configure(3,0,65)&&!tile.configure(0,0,7),"gear accepted invalid settings or non-half-block length");
                 BlockPos remote=p.add(2,0,0);
                 world.setBlockState(remote,gear.getDefaultState(),3);

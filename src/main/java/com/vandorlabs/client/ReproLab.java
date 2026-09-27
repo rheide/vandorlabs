@@ -308,6 +308,20 @@ public class ReproLab {
                     galleryFeet+3, -26, -20, 15));
         SHOTS.add(new Shot("gallery_v12_shallow_fill_under", GALLERY_X-3,
                 galleryFeet, -26, -20, -12));
+        SHOTS.add(new Shot("gallery_v12_light_depth_near", GALLERY_X,
+                galleryFeet+3, -27, 0, 7));
+        SHOTS.add(new Shot("gallery_v12_light_depth_far", GALLERY_X,
+                galleryFeet+3, -64, 0, 1));
+        SHOTS.add(new Shot("gallery_v12_light_depth_oblique", GALLERY_X-15,
+                galleryFeet+3, -52, -23, 2));
+        SHOTS.add(new Shot("gallery_v12_round_glass_front", GALLERY_X-2,
+                galleryFeet+2, -25, 0, 5));
+        SHOTS.add(new Shot("gallery_v12_round_glass_left", GALLERY_X-8,
+                galleryFeet+2, -23, -45, 5));
+        SHOTS.add(new Shot("gallery_v12_round_glass_right", GALLERY_X+4,
+                galleryFeet+2, -23, 45, 5));
+        SHOTS.add(new Shot("gallery_v12_round_glass_back", GALLERY_X-2,
+                galleryFeet+2, -11, 180, 5));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {
@@ -885,12 +899,12 @@ public class ReproLab {
                 if(configuredSeat.isJoin()||configuredSeat.getHeight()!=2)throw new IllegalStateException("seat GUI packet did not apply");
                 saveNamed(mc,"connected_seat_gui");mc.displayGuiScreen(null);
                 BlockPos gearGui=CONSOLE.add(9,5,3);
-                mc.world.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
-                ((com.vandorlabs.tiles.TileEntityLandingGear)mc.world.getTileEntity(gearGui)).configure(0,0,16);
+                mc.world.setBlockState(gearGui,block("landing_gear").getDefaultState(),3);
+                ((com.vandorlabs.tiles.TileEntityLandingGear)mc.world.getTileEntity(gearGui)).configure(0,0,16,1);
                 mc.getIntegratedServer().addScheduledTask(()->{
-                    World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
-                    ((com.vandorlabs.tiles.TileEntityLandingGear)w.getTileEntity(gearGui)).configure(0,0,16);
-                    ((com.vandorlabs.blocks.BlockTelescopicLandingGear)block("large_landing_gear")).setExtended(w,gearGui,true);
+                    World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(gearGui,block("landing_gear").getDefaultState(),3);
+                    ((com.vandorlabs.tiles.TileEntityLandingGear)w.getTileEntity(gearGui)).configure(0,0,16,1);
+                    ((com.vandorlabs.blocks.BlockTelescopicLandingGear)block("landing_gear")).setExtended(w,gearGui,true);
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
                     owner.setPositionAndUpdate(gearGui.getX(),gearGui.getY(),gearGui.getZ()-2);
                     owner.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));
@@ -902,6 +916,7 @@ public class ReproLab {
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiLandingGear))throw new IllegalStateException("gear GUI missing");
                 GuiLandingGear gearScreen=(GuiLandingGear)mc.currentScreen;
+                gearScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(4,0,0,"Size"));
                 gearScreen.length.setValue(6);gearScreen.length.updateSlider();
                 gearScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Mode"));
                 gearScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Mode"));
@@ -909,7 +924,7 @@ public class ReproLab {
             case 35:
                 if(--holdTicks>0)break;
                 com.vandorlabs.tiles.TileEntityLandingGear previewGear=(com.vandorlabs.tiles.TileEntityLandingGear)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(9,5,3));
-                if(previewGear.getExtensionPixels()!=48||previewGear.progress<=1||previewGear.getMode()!=0)
+                if(previewGear.getSize()!=2||previewGear.getExtensionPixels()!=48||previewGear.progress<=1||previewGear.getMode()!=0)
                     throw new IllegalStateException("gear length did not preview before Done, or changed redstone mode");
                 mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getWorld(0).setBlockState(CONSOLE.add(9,1,3),Blocks.STONE.getDefaultState(),3));
                 GuiLandingGear blockedGearScreen=(GuiLandingGear)mc.currentScreen;
@@ -941,8 +956,12 @@ public class ReproLab {
                     data.setInteger("ChairHeight",slot%3);icon.setTagInfo("BlockEntityTag",data);
                     mc.player.inventory.setInventorySlotContents(slot,icon);
                 }
-                mc.player.inventory.setInventorySlotContents(6,new ItemStack(block("small_landing_gear")));
-                mc.player.inventory.setInventorySlotContents(7,new ItemStack(block("large_landing_gear")));
+                for(int size=0;size<3;size++) {
+                    ItemStack icon=new ItemStack(block("landing_gear"));
+                    net.minecraft.nbt.NBTTagCompound data=new net.minecraft.nbt.NBTTagCompound();
+                    data.setInteger("GearSize",size);icon.setTagInfo("BlockEntityTag",data);
+                    mc.player.inventory.setInventorySlotContents(6+size,icon);
+                }
                 state=38;holdTicks=GUI_SETTLE_TICKS;break;
             case 38:
                 if(--holdTicks>0)break;

@@ -16,8 +16,18 @@ import java.util.*;
 /** A mount and up to four owned cells reserved for its moving piston and wheel. */
 public final class BlockTelescopicLandingGear extends BlockLandingGear {
     public static final PropertyBool LOWER=PropertyBool.create("lower"),EXTENDED=PropertyBool.create("extended");
+    public static final String[] SIZES={"small","medium","large"};
+    private final List<List<List<AxisAlignedBB>>> geometry=new ArrayList<>();
+    public static float pistonAnchor(int size){return (size==0?12:size==1?14:15)/16F;}
+    public static float pistonLength(int size){return (size==0?2:size==1?1:.5F)/16F;}
     public BlockTelescopicLandingGear(String name){
-        super(name);setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(LOWER,false).withProperty(EXTENDED,false));
+        super(name);
+        for(String size:SIZES){
+            List<List<AxisAlignedBB>> groups=new ArrayList<>();
+            for(String group:new String[]{"fixed","wheel","piston"})groups.add(loadParts("item/landing_gear_"+size+"_"+group));
+            geometry.add(groups);
+        }
+        setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(LOWER,false).withProperty(EXTENDED,false));
     }
     protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING,LOWER,EXTENDED);}
     public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,EnumFacing.getHorizontal(meta&3)).withProperty(LOWER,(meta&4)!=0).withProperty(EXTENDED,(meta&8)!=0);}
@@ -90,14 +100,12 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
     protected List<AxisAlignedBB> boxes(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntityLandingGear tile=root(world,pos);double t=tile==null?0:tile.progress;
         int offset=tile==null?0:tile.getPos().getY()-pos.getY();
-        boolean large=getRegistryName().getResourcePath().startsWith("large");
-        double anchor=large?14/16D:12/16D,pistonBottom=large?13/16D:10/16D;
+        int size=tile==null?0:tile.getSize();
         List<AxisAlignedBB> result=new ArrayList<>();
-        for(AxisAlignedBB source:parts){
+        for(int group=0;group<3;group++)for(AxisAlignedBB source:geometry.get(size).get(group)){
             AxisAlignedBB b=source;
-            if(b.minY>=anchor){}
-            else if(b.minY==pistonBottom&&b.maxY==anchor)b=new AxisAlignedBB(b.minX,b.minY-t,b.minZ,b.maxX,b.maxY,b.maxZ);
-            else b=b.offset(0,-t,0);
+            if(group==1)b=b.offset(0,-t,0);
+            else if(group==2)b=new AxisAlignedBB(b.minX,b.minY-t,b.minZ,b.maxX,b.maxY,b.maxZ);
             b=b.offset(0,offset,0);
             if(b.maxY>0&&b.minY<1)result.add(new AxisAlignedBB(b.minX,Math.max(0,b.minY),b.minZ,b.maxX,Math.min(1,b.maxY),b.maxZ));
         }
@@ -114,7 +122,7 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
     private ItemStack configured(TileEntityLandingGear tile){
         ItemStack stack=new ItemStack(this);
         if(tile!=null){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();
-            tag.setInteger("ExtensionPixels",tile.getExtensionPixels());tag.setInteger("RedstoneMode",tile.getMode());tag.setInteger("RedstoneChannel",tile.getRedstoneChannel());stack.setTagInfo("BlockEntityTag",tag);}
+            tag.setInteger("GearSize",tile.getSize());tag.setInteger("ExtensionPixels",tile.getExtensionPixels());tag.setInteger("RedstoneMode",tile.getMode());tag.setInteger("RedstoneChannel",tile.getRedstoneChannel());stack.setTagInfo("BlockEntityTag",tag);}
         return stack;
     }
     public ItemStack getPickBlock(IBlockState s,RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){return configured(root(world,pos));}

@@ -71,6 +71,7 @@ public final class ProgrammableSettings {
     public static final String RAMP_DIRECTION = "ramp_direction";
     public static final String RAMP_TRAVEL = "ramp_travel";
     public static final String RAMP_MATCH_TEXTURES = "ramp_match_textures";
+    public static final String GEAR_SIZE = "gear_size", GEAR_LENGTH = "gear_length", GEAR_MODE = "gear_mode";
 
     private ProgrammableSettings() { }
 
@@ -198,6 +199,9 @@ public final class ProgrammableSettings {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
             out.setBoolean(ACTIVE, switchTile.isLocalOn());
             out.setInteger(SWITCH_ROTATION, switchTile.getMountRotation());
+        } else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) {
+            com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
+            out.setInteger(GEAR_SIZE,gear.getSize());out.setInteger(GEAR_LENGTH,gear.getExtensionPixels());out.setInteger(GEAR_MODE,gear.getMode());
         } else if (tile instanceof TileEntityRampController) {
             TileEntityRampController ramp = (TileEntityRampController) tile;
             out.setInteger(TRIGGER, ramp.activateOnPower
@@ -452,6 +456,17 @@ public final class ProgrammableSettings {
             }
             if (values.hasKey(SWITCH_ROTATION, 3)) {
                 switchTile.setMountRotation(values.getInteger(SWITCH_ROTATION)); applicable = true;
+            }
+        } else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) {
+            com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
+            if(values.hasKey(GEAR_SIZE)||values.hasKey(GEAR_LENGTH)||values.hasKey(GEAR_MODE)) {
+                int size=number(values,GEAR_SIZE,gear.getSize()),length=number(values,GEAR_LENGTH,gear.getExtensionPixels()),mode=number(values,GEAR_MODE,gear.getMode());
+                if(world!=null) applicable=gear.configure(mode,number(values,CHANNEL,gear.getRedstoneChannel()),length,size);
+                else if(size>=0&&size<=2&&length>=0&&length<=64&&length%8==0&&mode>=0&&mode<=2) {
+                    NBTTagCompound tag=gear.writeToNBT(new NBTTagCompound());
+                    tag.setInteger("GearSize",size);tag.setInteger("ExtensionPixels",length);tag.setInteger("RedstoneMode",mode);
+                    gear.readFromNBT(tag);applicable=true;
+                }
             }
         } else if (tile instanceof TileEntityRampController && player != null) {
             TileEntityRampController ramp = (TileEntityRampController) tile;

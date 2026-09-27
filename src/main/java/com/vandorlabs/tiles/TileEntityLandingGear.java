@@ -14,7 +14,8 @@ import net.minecraft.world.World;
 /** Progress is extension distance in blocks. Lower cells only store their owner. */
 public final class TileEntityLandingGear extends TileEntity implements ITickable, RedstoneChannelMember {
     public float progress, previous;
-    private int extensionPixels=16, mode=1, channel, configurationRevision;
+    private int extensionPixels=16, mode=1, channel, configurationRevision, size;
+    public int getSize(){return size;}
     public int getConfigurationRevision(){return configurationRevision;}
     private boolean channelSignal, lastSignal;
     private int ownerDistance;
@@ -31,13 +32,14 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     @Override public boolean shouldRefresh(World world,BlockPos pos,IBlockState before,IBlockState after){
         return before.getBlock()!=after.getBlock() || before.getValue(BlockTelescopicLandingGear.LOWER)!=after.getValue(BlockTelescopicLandingGear.LOWER);
     }
-    public boolean configure(int nextMode,int nextChannel,int pixels){
-        if(!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
+    public boolean configure(int nextMode,int nextChannel,int pixels){return configure(nextMode,nextChannel,pixels,size);}
+    public boolean configure(int nextMode,int nextChannel,int pixels,int nextSize){
+        if(nextSize<0||nextSize>2||!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
         if(world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED)
                 && !block.reserve(world,pos,Math.max(progress,pixels/16F)))return false;
         boolean automationChanged=mode!=nextMode||channel!=nextChannel;
-        mode=nextMode;extensionPixels=pixels;setRedstoneChannel(nextChannel);
+        mode=nextMode;extensionPixels=pixels;size=nextSize;setRedstoneChannel(nextChannel);
         evaluateSignal(automationChanged);markDirty();sync();return true;
     }
     public void update(){
@@ -74,12 +76,13 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
-        tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
+        tag.setInteger("GearSize",size);tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
         if(ownerDistance>0)tag.setInteger("GearOwnerDistance",ownerDistance);return tag;
     }
     public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
         extensionPixels=tag.hasKey("ExtensionPixels")?Math.round(Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels")))/8F)*8:16;
+        size=Math.max(0,Math.min(2,tag.getInteger("GearSize")));
         mode=tag.hasKey("RedstoneMode")?Math.max(0,Math.min(2,tag.getInteger("RedstoneMode"))):1;
         channel=Math.max(0,tag.getInteger("RedstoneChannel"));lastSignal=tag.getBoolean("LastSignal");
         ownerDistance=Math.max(0,Math.min(4,tag.getInteger("GearOwnerDistance")));

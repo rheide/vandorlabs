@@ -427,5 +427,4 @@ tile.vandorlabs.programmable_diagonal_porthole.name=Programmable Diagonal Portho
 
 tile.vandorlabs.programmable_stairs.name=Programmable Stairs
 gui.vandorlabs.stairs.title=Programmable Stairs Texture
-tile.vandorlabs.small_landing_gear.name=Small Landing Gear
-tile.vandorlabs.large_landing_gear.name=Large Landing Gear
+tile.vandorlabs.landing_gear.name=Landing Gear

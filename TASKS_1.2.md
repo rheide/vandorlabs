@@ -135,13 +135,13 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 
 ### Diagonal direction and recipes
 
-- [ ] Add a dialog control to reverse a diagonal's slope, retaining the upper/lower band of shallow panels.
+- [x] Add a dialog control to reverse a diagonal's slope, retaining the upper/lower band of shallow panels.
 - [x] Replace Programmable Matter with Industrial Alloy in diagonal porthole, Luxury Seat and Military Seat recipes.
-- [ ] Use the main texture on filled diagonal faces and prevent upper-half UVs from sampling neighbouring atlas textures.
+- [x] Use the main texture on filled diagonal faces and prevent upper-half UVs from sampling neighbouring atlas textures.
 
 - Java 8 build passed. Packaged recipe ingredients verified. Live filled-face UV checks passed for lower/upper tall and shallow panels with Inside, Outside and Both fill. Full visual and direction-dialog validation is running in `render-run.p8ps8k`.
-- [ ] Ramp dialog: optional matching of programmable textures (On by default), persisted and supported by copying; Off retains block/slab type and half checks.
-- [ ] Fix startup crash in shared `latest.log`/`debug.log`: redstone-light power lookup loads a neighbouring chunk during tile-map iteration (`TileEntityRedstoneLight.onLoad` → `updateVisualState` → `World.isBlockPowered`). Defer initialization until the first tile tick and use loaded-neighbour power reads.
+- [x] Ramp dialog: optional matching of programmable textures (On by default), persisted and supported by copying; Off retains block/slab type and half checks.
+- [x] Fix startup crash in shared `latest.log`/`debug.log`: redstone-light power lookup loads a neighbouring chunk during tile-map iteration (`TileEntityRedstoneLight.onLoad` → `updateVisualState` → `World.isBlockPowered`). Defer initialization until the first tile tick and use loaded-neighbour power reads.
 
 - First direction/fill run completed the gallery and filled-texture assertions, then the new direction GUI fixture opened before the client had its block. Prepared the client fixture before opening, as the existing GUI fixtures do. The next full run also includes optional ramp matching and the startup regression guard.
 
@@ -157,3 +157,5 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - [ ] Check joined Circular Programmable Porthole Block glass for flickering and missing texture at seams from oblique angles.
 
 - Full live suite passed in `render-run.MThBBJ`: diagonal direction, filled-face UVs, optional ramp matching, startup load safety, and all existing checks. Unified landing gear and the new rendering reports require the next build.
+
+- Unified gear build passed; all three sizes passed runtime motion, reservation, collision, pick-block and saved-size checks. Small and Medium model JSONs exactly retain the previous Small and Large geometry. New Large: 14-pixel wheel, 16-pixel overall width. Full visual/GUI validation is running in `render-run.y7UL92`.

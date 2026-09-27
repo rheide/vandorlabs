@@ -39,10 +39,10 @@ for name in ['luxury_seat','military_seat']:
                 for point in ['from','to']:
                     if e[point][1]>=5:e[point][1]+=1
             emit(name,f'facing:{face}/part:{part}/upper:false',data,rot)
-for name in ['small_landing_gear','large_landing_gear']:
+for name in ['landing_gear']:
     for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
         for extended in [False,True]:
-            emit(name,f'facing:{face}/extended:{str(extended).lower()}/lower:false',load_model(name+'_retracted'),rot)
+            emit(name,f'facing:{face}/extended:{str(extended).lower()}/lower:false',load_model(name+'_small_retracted'),rot)
 
 for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
     for upper in [False,True]:

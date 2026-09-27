@@ -11,7 +11,25 @@ import net.minecraft.world.World;
 final class Version12Gallery {
     static void build(World world,String scene,int x,int y) {
         BlockPos origin=new BlockPos(x-3,y+1,-18);
-        if(scene.equals("stairs")) {
+        if(scene.startsWith("light_depth")) {
+            for(int col=0;col<2;col++)for(int row=0;row<2;row++) {
+                BlockPos p=origin.add(col,row+2,0);
+                world.setBlockState(p,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
+                ((TileEntityProgrammableLight)world.getTileEntity(p)).configure(0,15,true,0,1+col+row*2);
+            }
+            for(int i=0;i<6;i++) {
+                BlockPos p=origin.add(4+i%3,i/3+2,0);
+                world.setBlockState(p,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
+                ((TileEntityProgrammableLight)world.getTileEntity(p)).configure(i,15,false,0,i);
+            }
+        } else if(scene.startsWith("round_glass")) {
+            for(int col=0;col<3;col++)for(int row=0;row<2;row++) {
+                BlockPos p=origin.add(col,row+1,0);
+                world.setBlockState(p,block("programmable_porthole_block").getDefaultState(),3);
+                TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+                tile.setPortholeShape(3);tile.setGlassShade(1);
+            }
+        } else if(scene.equals("stairs")) {
             for(int i=0;i<6;i++) {
                 BlockPos p=origin.add(i*2-2,0,0);
                 net.minecraft.block.state.IBlockState state=ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState()
@@ -65,12 +83,11 @@ final class Version12Gallery {
                 if(scene.equals("seating_unjoined"))tile.setJoin(false);
             }
         } else if (scene.startsWith("gear")) {
-            String[] ids={"small_landing_gear","large_landing_gear"};
-            for(int i=0;i<ids.length;i++) {
-                BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block(ids[i]);
+            for(int i=0;i<3;i++) {
+                BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear");
                 BlockPos p=origin.add(i*4,4,0);world.setBlockState(p,gear.getDefaultState(),3);
                 TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
-                tile.configure(0,0,scene.equals("gear_four")?64:scene.equals("gear_half")?8:16);
+                tile.configure(0,0,scene.equals("gear_four")?64:scene.equals("gear_half")?8:16,i);
                 if(!scene.equals("gear"))gear.setExtended(world,p,true);
                 if(scene.equals("gear_retracted")){tile.progress=tile.previous=1;gear.setExtended(world,p,false);}
             }

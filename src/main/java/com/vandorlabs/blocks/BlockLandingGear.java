@@ -10,21 +10,25 @@ import net.minecraft.world.*;
 import java.io.*;
 import java.util.*;
 
-/** Static gear uses the supplied cuboids for both rendering and collision. */
+/** Gear collision uses the same cuboids as its rendered models. */
 public class BlockLandingGear extends BlockVandorDirectional {
     protected final List<AxisAlignedBB> parts = new ArrayList<>();
     public BlockLandingGear(String name) {
         super(name);
         setLightOpacity(0);
-        String model = name + "_retracted";
+        parts.addAll(loadParts("block/" + name + "_small_retracted"));
+    }
+    protected static List<AxisAlignedBB> loadParts(String model) {
+        List<AxisAlignedBB> result = new ArrayList<>();
         try (Reader reader = new InputStreamReader(BlockLandingGear.class.getResourceAsStream(
-                "/assets/vandorlabs/models/block/" + model + ".json"), java.nio.charset.StandardCharsets.UTF_8)) {
+                "/assets/vandorlabs/models/" + model + ".json"), java.nio.charset.StandardCharsets.UTF_8)) {
             for (JsonElement raw : new JsonParser().parse(reader).getAsJsonObject().getAsJsonArray("elements")) {
                 JsonObject e = raw.getAsJsonObject(); JsonArray a = e.getAsJsonArray("from"), b = e.getAsJsonArray("to");
-                parts.add(new AxisAlignedBB(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16,
+                result.add(new AxisAlignedBB(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16,
                         b.get(0).getAsDouble()/16,b.get(1).getAsDouble()/16,b.get(2).getAsDouble()/16));
             }
-        } catch (IOException e) { throw new IllegalStateException("Cannot load gear geometry " + name, e); }
+        } catch (IOException e) { throw new IllegalStateException("Cannot load gear geometry " + model, e); }
+        return result;
     }
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float x, float y, float z, int meta, EntityLivingBase placer) {
