@@ -64,6 +64,10 @@ final class Version12RuntimeChecks {
                 require(tile.progress==4,"four block endpoint");
                 for(int i=1;i<=4;i++) {
                     require(gear.root(world,p.down(i))==tile,"gear reservation owner");
+                    NBTTagCompound movedTag=world.getTileEntity(p.down(i)).writeToNBT(new NBTTagCompound());
+                    movedTag.setInteger("x",p.getX()+10);
+                    TileEntityLandingGear moved=new TileEntityLandingGear();moved.readFromNBT(movedTag);
+                    require(moved.owner().equals(p.east(10)),"copied gear reservation retained old owner position");
                     boxes.clear();gear.addCollisionBoxToList(world.getBlockState(p.down(i)),world,p.down(i),new AxisAlignedBB(p.down(i)),boxes,null,false);
                     require(!boxes.isEmpty(),"gear lacks piston/wheel collision");
                 }

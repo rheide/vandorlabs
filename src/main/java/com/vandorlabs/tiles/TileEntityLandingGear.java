@@ -16,9 +16,13 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public float progress, previous;
     private int extensionPixels=16, mode=1, channel;
     private boolean channelSignal, lastSignal;
-    private BlockPos owner;
-    public BlockPos owner(){return owner;}
-    public void setOwner(BlockPos root){owner=root;markDirty();sync();}
+    private int ownerDistance;
+    public BlockPos owner(){return ownerDistance>0?pos.up(ownerDistance):null;}
+    public void setOwner(BlockPos root){
+        if(root.getX()!=pos.getX()||root.getZ()!=pos.getZ()||root.getY()<=pos.getY()||root.getY()-pos.getY()>4)
+            throw new IllegalArgumentException("Landing gear owner must be 1-4 cells above");
+        ownerDistance=root.getY()-pos.getY();markDirty();sync();
+    }
     public int getExtensionPixels(){return extensionPixels;}
     public int getMode(){return mode;}
     public boolean isRoot(){return world!=null && world.getBlockState(pos).getBlock() instanceof BlockTelescopicLandingGear
@@ -68,14 +72,14 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
         tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
-        if(owner!=null)tag.setLong("GearOwner",owner.toLong());return tag;
+        if(ownerDistance>0)tag.setInteger("GearOwnerDistance",ownerDistance);return tag;
     }
     public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
         extensionPixels=tag.hasKey("ExtensionPixels")?Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels"))):16;
         mode=tag.hasKey("RedstoneMode")?Math.max(0,Math.min(2,tag.getInteger("RedstoneMode"))):1;
         channel=Math.max(0,tag.getInteger("RedstoneChannel"));lastSignal=tag.getBoolean("LastSignal");
-        owner=tag.hasKey("GearOwner")?BlockPos.fromLong(tag.getLong("GearOwner")):null;
+        ownerDistance=Math.max(0,Math.min(4,tag.getInteger("GearOwnerDistance")));
     }
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
