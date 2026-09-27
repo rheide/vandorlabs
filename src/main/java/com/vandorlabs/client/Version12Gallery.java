@@ -46,17 +46,24 @@ final class Version12Gallery {
             BlockPos p=new BlockPos(x,y+1,-18);
             world.setBlockState(p,block("programmable_ramp").getDefaultState(),3);
             world.setBlockState(p.east(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
-        } else if (scene.equals("seating")) {
+        } else if (scene.startsWith("seating")) {
             for (int style=0;style<2;style++) for (int col=0;col<3;col++) {
                 Block block=block(style==0?"luxury_seat":"military_seat");BlockPos p=origin.add(style*5+col,0,0);
                 IBlockState state=block.getDefaultState();world.setBlockState(p,state,3);
                 world.setBlockState(p.up(),state.withProperty(BlockBridgeChair.UPPER,true),3);
+                TileEntityConnectedSeat tile=(TileEntityConnectedSeat)world.getTileEntity(p);
+                if(scene.equals("seating_heights")){tile.setHeight(col);tile.setJoin(false);}
+                if(scene.equals("seating_unjoined"))tile.setJoin(false);
             }
         } else if (scene.startsWith("gear")) {
-            String[] ids={"landing_gear_top_small","landing_gear_top_large","landing_gear_side_small","landing_gear_side_large","landing_gear_top_small_telescopic"};
-            for (int i=0;i<ids.length;i++) {
-                Block gear=block(ids[i]);BlockPos p=origin.add(i*2-1,2,0);world.setBlockState(p,gear.getDefaultState(),3);
-                if (i==4 && scene.endsWith("extended")) ((BlockTelescopicLandingGear)gear).setExtended(world,p,true);
+            String[] ids={"small_landing_gear","large_landing_gear"};
+            for(int i=0;i<ids.length;i++) {
+                BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block(ids[i]);
+                BlockPos p=origin.add(i*4,4,0);world.setBlockState(p,gear.getDefaultState(),3);
+                TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
+                tile.configure(0,0,scene.equals("gear_four")?64:scene.equals("gear_half")?8:16);
+                if(!scene.equals("gear"))gear.setExtended(world,p,true);
+                if(scene.equals("gear_retracted")){tile.progress=tile.previous=1;gear.setExtended(world,p,false);}
             }
         } else if (scene.equals("faces")) {
             for (int i=0;i<4;i++) {

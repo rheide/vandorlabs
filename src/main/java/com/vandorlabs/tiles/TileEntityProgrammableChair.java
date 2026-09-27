@@ -10,7 +10,7 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 
 /** Selected chair model, shared by the lower and upper chair cells. */
-public final class TileEntityProgrammableChair extends TileEntity {
+public class TileEntityProgrammableChair extends TileEntity {
     private int style;
     private int height = 1;
 
@@ -32,7 +32,9 @@ public final class TileEntityProgrammableChair extends TileEntity {
         notifyChairChanged();
     }
 
-    private void notifyChairChanged() {
+    protected double seatHeight() { return BlockBridgeChair.Style.byIndex(style).seatY + getHeightOffsetPixels()/16D; }
+
+    protected void notifyChairChanged() {
         markDirty();
         if (world != null) {
             IBlockState state = world.getBlockState(pos);
@@ -40,8 +42,7 @@ public final class TileEntityProgrammableChair extends TileEntity {
             IBlockState upper = world.getBlockState(pos.up());
             world.notifyBlockUpdate(pos.up(), upper, upper, 3);
             if (!world.isRemote) {
-                double seatY = BlockBridgeChair.Style.byIndex(style).seatY
-                        + getHeightOffsetPixels() / 16D;
+                double seatY = seatHeight();
                 for (EntityChairSeat seat : world.getEntitiesWithinAABB(
                         EntityChairSeat.class, new AxisAlignedBB(pos).grow(0.25D, 1D, 0.25D)))
                     if (pos.equals(seat.getChairPos())) seat.setSeatY(seatY);

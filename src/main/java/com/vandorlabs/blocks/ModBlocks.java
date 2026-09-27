@@ -235,7 +235,7 @@ public class ModBlocks {
             case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
             case "BlockConnectedSeat": return new BlockConnectedSeat(id);
-            case "BlockLandingGear": return id.endsWith("telescopic") ? new BlockTelescopicLandingGear(id) : new BlockLandingGear(id);
+            case "BlockLandingGear": return new BlockTelescopicLandingGear(id);
             case "BlockConfigurableSpaceDoor":
                 return new BlockConfigurableSpaceDoor(id,e.get("sliding").getAsBoolean(),
                         (BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
@@ -430,7 +430,7 @@ public class ModBlocks {
                 Item item = Item.getItemFromBlock(block);
                 if (block instanceof BlockTelescopicLandingGear) {
                     for (String group : new String[]{"fixed", "wheel", "piston"})
-                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID, "landing_gear_"+group));
+                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID, block.getRegistryName().getResourcePath()+"_"+group));
                 }
                 if (block instanceof BlockConfigurableSpaceDoor) {
                     registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
@@ -597,6 +597,10 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
         com.vandorlabs.client.DoorRenderModels.clear();
+        for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())) {
+            if(VandorLabs.MODID.equals(location.getResourceDomain()) && (location.getResourcePath().equals("luxury_seat")||location.getResourcePath().equals("military_seat")))
+                event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConnectedSeatModel(event.getModelRegistry().getObject(location)));
+        }
         com.vandorlabs.client.ProgrammableHousingModel cube = null, slab = null;
         for (ModelResourceLocation location : new java.util.ArrayList<>(
                 event.getModelRegistry().getKeys())) {

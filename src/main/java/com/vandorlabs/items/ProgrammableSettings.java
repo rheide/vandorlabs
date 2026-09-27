@@ -189,7 +189,9 @@ public final class ProgrammableSettings {
             out.setInteger(DOOR_DEPTH, door.getPlacementDepth());
         } else if (tile instanceof TileEntityProgrammableChair) {
             TileEntityProgrammableChair chair = (TileEntityProgrammableChair) tile;
-            out.setInteger(CHAIR_STYLE, chair.getStyle());
+            if (chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat)
+                out.setBoolean(JOIN,((com.vandorlabs.tiles.TileEntityConnectedSeat)chair).isJoin());
+            else out.setInteger(CHAIR_STYLE, chair.getStyle());
             out.setInteger(CHAIR_HEIGHT, chair.getHeight());
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
@@ -432,7 +434,10 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntityProgrammableChair) {
             TileEntityProgrammableChair chair = (TileEntityProgrammableChair) tile;
-            if (values.hasKey(CHAIR_STYLE, 3)) {
+            if (chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat && values.hasKey(JOIN,1)) {
+                ((com.vandorlabs.tiles.TileEntityConnectedSeat)chair).setJoin(values.getBoolean(JOIN));applicable=true;
+            }
+            if (!(chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat) && values.hasKey(CHAIR_STYLE, 3)) {
                 chair.setStyle(values.getInteger(CHAIR_STYLE)); applicable = true;
             }
             if (values.hasKey(CHAIR_HEIGHT, 3)) {

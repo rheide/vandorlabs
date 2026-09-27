@@ -3465,36 +3465,6 @@
     "item": true
   },
   {
-    "id": "landing_gear_side_large",
-    "class": "BlockLandingGear",
-    "type": "landing_gear",
-    "item": true
-  },
-  {
-    "id": "landing_gear_side_small",
-    "class": "BlockLandingGear",
-    "type": "landing_gear",
-    "item": true
-  },
-  {
-    "id": "landing_gear_top_large",
-    "class": "BlockLandingGear",
-    "type": "landing_gear",
-    "item": true
-  },
-  {
-    "id": "landing_gear_top_small",
-    "class": "BlockLandingGear",
-    "type": "landing_gear",
-    "item": true
-  },
-  {
-    "id": "landing_gear_top_small_telescopic",
-    "class": "BlockLandingGear",
-    "type": "landing_gear",
-    "item": true
-  },
-  {
     "id": "programmable_diagonal_half_console",
     "type": "diagonal_half_console",
     "class": "BlockDiagonalHalfConsole",
@@ -3511,6 +3481,18 @@
     "type": "stairs",
     "class": "BlockProgrammableStairs",
     "programmable_only": true,
+    "item": true
+  },
+  {
+    "id": "small_landing_gear",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
+    "item": true
+  },
+  {
+    "id": "large_landing_gear",
+    "class": "BlockLandingGear",
+    "type": "landing_gear",
     "item": true
   }
 ]

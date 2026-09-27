@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "extended=false,facing=north,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=north,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=north,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=north,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=east,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=east,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=east,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=east,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=south,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=south,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=south,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=south,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=west,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=false,facing=west,lower=true": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=west,lower=false": {
+      "model": "vandorlabs:empty"
+    },
+    "extended=true,facing=west,lower=true": {
+      "model": "vandorlabs:empty"
+    }
+  }
+}

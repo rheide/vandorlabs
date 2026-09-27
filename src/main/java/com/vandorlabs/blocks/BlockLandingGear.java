@@ -16,7 +16,7 @@ public class BlockLandingGear extends BlockVandorDirectional {
     public BlockLandingGear(String name) {
         super(name);
         setLightOpacity(0);
-        String model = name.endsWith("telescopic") ? name + "_retracted" : name;
+        String model = name + "_retracted";
         try (Reader reader = new InputStreamReader(BlockLandingGear.class.getResourceAsStream(
                 "/assets/vandorlabs/models/block/" + model + ".json"), java.nio.charset.StandardCharsets.UTF_8)) {
             for (JsonElement raw : new JsonParser().parse(reader).getAsJsonObject().getAsJsonArray("elements")) {

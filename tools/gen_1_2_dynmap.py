@@ -34,14 +34,16 @@ def emit(name,state,data,rotation=0):
 for name in ['luxury_seat','military_seat']:
     for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
         for part in ['single','left','middle','right']:
-            emit(name,f'facing:{face}/part:{part}/upper:false',load_model('seating/'+name+'_'+part),rot)
-for name in ['landing_gear_top_small','landing_gear_top_large','landing_gear_side_small','landing_gear_side_large','landing_gear_top_small_telescopic']:
+            data=load_model('seating/'+name+'_'+part)
+            for e in data['elements']:
+                for point in ['from','to']:
+                    if e[point][1]>=5:e[point][1]+=1
+            emit(name,f'facing:{face}/part:{part}/upper:false',data,rot)
+for name in ['small_landing_gear','large_landing_gear']:
     for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
-        telescopic=name.endswith('telescopic')
-        for extended in ([False,True] if telescopic else [False]):
-            model=name+('_extended' if extended else '_retracted') if telescopic else name
-            state=f'facing:{face}'+(f'/extended:{str(extended).lower()}/lower:false' if telescopic else '')
-            emit(name,state,load_model(model),rot)
+        for extended in [False,True]:
+            emit(name,f'facing:{face}/extended:{str(extended).lower()}/lower:false',load_model(name+'_retracted'),rot)
+
 for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
     for upper in [False,True]:
         data=load_model('programmable_diagonal_half_console',True)

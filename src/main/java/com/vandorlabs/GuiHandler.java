@@ -31,6 +31,7 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_PROGRAMMABLE_LIGHT = 5;
     public static final int GUI_PROGRAMMABLE_CHAIR = 6;
     public static final int GUI_DUPLIFIER = 7;
+    public static final int GUI_LANDING_GEAR = 8;
 
     private static TileEntity doorTile(World world, BlockPos pos) {
         net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
@@ -42,8 +43,8 @@ public class GuiHandler implements IGuiHandler {
 
     private static TileEntity chairTile(World world, BlockPos pos) {
         net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockBridgeChair
-                && state.getValue(com.vandorlabs.blocks.BlockBridgeChair.UPPER)) pos = pos.down();
+        if ((state.getBlock() instanceof com.vandorlabs.blocks.BlockBridgeChair
+                || state.getBlock() instanceof com.vandorlabs.blocks.BlockConnectedSeat) && state.getValue(com.vandorlabs.blocks.BlockBridgeChair.UPPER)) pos = pos.down();
         return world.getTileEntity(pos);
     }
 
@@ -52,6 +53,11 @@ public class GuiHandler implements IGuiHandler {
         if (ID == GUI_DUPLIFIER && player.getHeldItemMainhand().getItem()
                 == com.vandorlabs.items.ModItems.DUPLIFIER)
             return new com.vandorlabs.container.ContainerDuplifier(player.inventory);
+        if(ID==GUI_LANDING_GEAR && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityLandingGear && ((com.vandorlabs.tiles.TileEntityLandingGear)tile).isRoot())
+                return new ContainerRedstoneChannel((com.vandorlabs.tiles.TileEntityLandingGear)tile);
+        }
         if (ID == GUI_PROGRAMMABLE_CHAIR) {
             TileEntity tile = chairTile(world, new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
@@ -98,8 +104,15 @@ public class GuiHandler implements IGuiHandler {
         if (ID == GUI_DUPLIFIER && player.getHeldItemMainhand().getItem()
                 == com.vandorlabs.items.ModItems.DUPLIFIER)
             return new com.vandorlabs.client.GuiDuplifier(player.inventory);
+        if(ID==GUI_LANDING_GEAR && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityLandingGear && ((com.vandorlabs.tiles.TileEntityLandingGear)tile).isRoot())
+                return new com.vandorlabs.client.GuiLandingGear((com.vandorlabs.tiles.TileEntityLandingGear)tile);
+        }
         if (ID == GUI_PROGRAMMABLE_CHAIR) {
             TileEntity tile = chairTile(world, new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityConnectedSeat)
+                return new com.vandorlabs.client.GuiConnectedSeat((com.vandorlabs.tiles.TileEntityConnectedSeat)tile);
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair)
                 return new com.vandorlabs.client.GuiProgrammableChair(
                         (com.vandorlabs.tiles.TileEntityProgrammableChair) tile);

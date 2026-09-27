@@ -28,5 +28,7 @@ public class PacketHandler {
                 MessageDuplifierOptions.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageDiagonalGeometry.Handler.class, MessageDiagonalGeometry.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageFaceTextures.Handler.class, MessageFaceTextures.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageConnectedSeat.Handler.class, MessageConnectedSeat.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageLandingGear.Handler.class, MessageLandingGear.class, id++, Side.SERVER);
     }
 }

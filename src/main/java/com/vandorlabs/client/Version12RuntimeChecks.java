@@ -31,26 +31,67 @@ final class Version12RuntimeChecks {
                 require(seat.getActualState(state,world,p).getValue(BlockConnectedSeat.PART)==BlockConnectedSeat.Part.LEFT,"seat left end");
                 world.setBlockState(p.offset(right.getOpposite()),state,3);
                 require(seat.getActualState(state,world,p).getValue(BlockConnectedSeat.PART)==BlockConnectedSeat.Part.MIDDLE,"seat middle");
+                TileEntityConnectedSeat settings=(TileEntityConnectedSeat)world.getTileEntity(p);
+                require(settings.getHeightOffsetPixels()==1,"default seat leg height");
+                settings.setJoin(false);require(seat.getActualState(state,world,p).getValue(BlockConnectedSeat.PART)==BlockConnectedSeat.Part.SINGLE,"seat Join Off");
+                settings.setJoin(true);
+                for(int h=0;h<3;h++){
+                    settings.setHeight(h);require(settings.getHeightOffsetPixels()==2*h-1,"seat height offset");
+                    require(seat.seatHeight(world,p)==(8+2*h)/16D,"seat rider height");
+                    require(seat.getBoundingBox(world.getBlockState(p.up()),world,p.up()).maxY==.5+(2*h-1)/16D,"seat collision height");
+                    require((seat.getActualState(state,world,p).getValue(BlockConnectedSeat.PART)==BlockConnectedSeat.Part.MIDDLE)==(h==1),"different seat heights joined");
+                    TileEntityConnectedSeat restored=new TileEntityConnectedSeat();restored.readFromNBT(settings.writeToNBT(new NBTTagCompound()));
+                    require(restored.getHeight()==h&&restored.isJoin(),"seat saved settings");
+                }
+                settings.setHeight(1);
                 world.setBlockState(p.offset(right),military.getDefaultState(),3);
                 require(seat.getActualState(state,world,p).getValue(BlockConnectedSeat.PART)==BlockConnectedSeat.Part.RIGHT,"mixed seat styles joined");
                 world.setBlockToAir(p.offset(right));world.setBlockToAir(p.offset(right.getOpposite()));
                 world.setBlockToAir(p);require(world.isAirBlock(p.up()),"orphan seat back");
             }
-            BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear_top_small_telescopic");
-            world.setBlockState(p,gear.getDefaultState(),3);world.setBlockState(p.down(),Blocks.STONE.getDefaultState(),3);
-            require(!gear.setExtended(world,p,true),"gear extended through stone");world.setBlockToAir(p.down());
-            require(gear.setExtended(world,p,true),"gear failed clear extension");
-            TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
-            for (int i=0;i<21;i++) tile.update();
-            require(tile.progress==1 && world.getBlockState(p.down()).getValue(BlockTelescopicLandingGear.LOWER),"gear extension endpoint");
             java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
-            gear.addCollisionBoxToList(world.getBlockState(p.down()),world,p.down(),new AxisAlignedBB(p.down()),boxes,null,false);
-            require(!boxes.isEmpty(),"extended wheel has no lower collision");
-            require(gear.setExtended(world,p,false),"gear retraction rejected");
-            for (int i=0;i<21;i++) tile.update();
-            require(world.getBlockState(p).getBlock()==gear && world.isAirBlock(p.down()),"gear removed root on retract");
-            gear.setExtended(world,p,true);world.destroyBlock(p.down(),false);
-            require(world.isAirBlock(p),"gear root survived wheel removal");
+            for(String name:new String[]{"small_landing_gear","large_landing_gear"}) {
+                BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block(name);
+                world.setBlockState(p,gear.getDefaultState(),3);
+                TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
+                require(tile.configure(0,0,64),"gear configuration");
+                world.setBlockState(p.down(4),Blocks.STONE.getDefaultState(),3);
+                require(!gear.setExtended(world,p,true),"gear extended through stone");
+                require(world.isAirBlock(p.down()),"blocked gear left partial reservations");world.setBlockToAir(p.down(4));
+                require(gear.setExtended(world,p,true),"gear failed clear extension");
+                require(world.getTileEntity(p)==tile,"extension replaced gear tile");
+                for(int i=0;i<81;i++)tile.update();
+                require(tile.progress==4,"four block endpoint");
+                for(int i=1;i<=4;i++) {
+                    require(gear.root(world,p.down(i))==tile,"gear reservation owner");
+                    boxes.clear();gear.addCollisionBoxToList(world.getBlockState(p.down(i)),world,p.down(i),new AxisAlignedBB(p.down(i)),boxes,null,false);
+                    require(!boxes.isEmpty(),"gear lacks piston/wheel collision");
+                }
+                ItemStack picked=gear.getPickBlock(world.getBlockState(p.down(4)),null,world,p.down(4),player);
+                require(picked.getSubCompound("BlockEntityTag").getInteger("ExtensionPixels")==64,"gear lower pick settings");
+                require(gear.setExtended(world,p,false),"gear retraction rejected");
+                require(world.getTileEntity(p)==tile,"retraction replaced gear tile");
+                tile.update();require(tile.progress>3.9F&&tile.progress<4,"retraction did not animate");
+                for(int i=0;i<81;i++)tile.update();
+                require(world.getBlockState(p).getBlock()==gear,"retraction removed root");
+                for(int i=1;i<=4;i++)require(world.isAirBlock(p.down(i)),"retraction left reservation");
+                require(tile.configure(0,0,8),"fractional extension settings");gear.setExtended(world,p,true);
+                for(int i=0;i<11;i++)tile.update();require(tile.progress==.5F,"half block endpoint");
+                require(tile.configure(0,0,0),"zero extension settings");for(int i=0;i<11;i++)tile.update();
+                require(tile.progress==0&&world.isAirBlock(p.down()),"zero extension reservation");
+                require(tile.configure(2,0,16),"inverse redstone settings");
+                require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"Off mode without power");
+                world.setBlockState(p.east(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);tile.inputChanged();
+                require(!world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"Off mode with power");
+                require(tile.configure(1,731,16),"On mode settings");
+                require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"On mode with power");
+                TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                require(restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");
+                require(!tile.configure(3,0,65),"gear accepted invalid settings");
+                tile.configure(0,0,16);world.setBlockToAir(p.east());
+                gear.setExtended(world,p,true);world.destroyBlock(p.down(),false);
+                require(world.isAirBlock(p),"gear root survived wheel removal");
+            }
             BlockProgrammableWall diagonal=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
             for (int mode=0;mode<3;mode++) for (int fill=0;fill<4;fill++) {
                 world.setBlockState(p,diagonal.getDefaultState(),3);
@@ -93,7 +134,7 @@ final class Version12RuntimeChecks {
                     && block.getRegistryName().getResourcePath().startsWith("space_") && block.getRegistryName().getResourcePath().contains("door"))
                 require(block.getCreativeTabToDisplayOn()==null,"legacy door remains creative: "+block.getRegistryName());
         } finally {
-            for (BlockPos clear:BlockPos.getAllInBox(p.add(-2,-2,-2),p.add(2,2,2))) world.setBlockToAir(clear);
+            for (BlockPos clear:BlockPos.getAllInBox(p.add(-2,-4,-2),p.add(2,2,2))) world.setBlockToAir(clear);
         }
         System.out.println("[vandorlabs][reprolab] version-1.2-runtime PASS");
     }

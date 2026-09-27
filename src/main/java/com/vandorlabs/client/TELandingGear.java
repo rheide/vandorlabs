@@ -11,12 +11,15 @@ import net.minecraft.block.state.IBlockState;
 
 /** Applies the three transforms supplied with the telescopic model. */
 public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLandingGear> {
-    private static final ModelResourceLocation FIXED=new ModelResourceLocation("vandorlabs:landing_gear_fixed","inventory");
-    private static final ModelResourceLocation WHEEL=new ModelResourceLocation("vandorlabs:landing_gear_wheel","inventory");
-    private static final ModelResourceLocation PISTON=new ModelResourceLocation("vandorlabs:landing_gear_piston","inventory");
     public void render(TileEntityLandingGear tile,double x,double y,double z,float partial,int stage,float alpha) {
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock() instanceof BlockTelescopicLandingGear) || state.getValue(BlockTelescopicLandingGear.LOWER)) return;
+        String name=state.getBlock().getRegistryName().getResourcePath();
+        ModelResourceLocation FIXED=new ModelResourceLocation("vandorlabs:"+name+"_fixed","inventory");
+        ModelResourceLocation WHEEL=new ModelResourceLocation("vandorlabs:"+name+"_wheel","inventory");
+        ModelResourceLocation PISTON=new ModelResourceLocation("vandorlabs:"+name+"_piston","inventory");
+        float anchor=name.startsWith("large")?14/16F:12/16F;
+        float pistonLength=name.startsWith("large")?1/16F:2/16F;
         float t=tile.previous+(tile.progress-tile.previous)*partial;
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();GlStateManager.translate(x+.5,y,z+.5);
@@ -28,8 +31,8 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         GlStateManager.disableLighting();GlStateManager.disableCull();
         draw(FIXED);
         GlStateManager.pushMatrix();GlStateManager.translate(0,-t,0);draw(WHEEL);GlStateManager.popMatrix();
-        GlStateManager.pushMatrix();GlStateManager.translate(0,.75,0);GlStateManager.scale(1,1+8*t,1);
-        GlStateManager.translate(0,-.75,0);draw(PISTON);GlStateManager.popMatrix();
+        GlStateManager.pushMatrix();GlStateManager.translate(0,anchor,0);GlStateManager.scale(1,1+t/pistonLength,1);
+        GlStateManager.translate(0,-anchor,0);draw(PISTON);GlStateManager.popMatrix();
         GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
     }

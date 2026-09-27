@@ -223,7 +223,7 @@ public final class BetterBuildersWandsCompat {
                     positions.add(root);
                     positions.add(root.up());
                 }
-            } else if (clicked.getBlock() instanceof BlockBridgeChair) {
+            } else if (clicked.getBlock() instanceof BlockBridgeChair || clicked.getBlock() instanceof com.vandorlabs.blocks.BlockConnectedSeat) {
                 if (clicked.getValue(BlockBridgeChair.UPPER)) {
                     root = clickedPos.down();
                 }

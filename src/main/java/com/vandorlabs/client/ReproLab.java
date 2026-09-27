@@ -303,7 +303,7 @@ public class ReproLab {
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
-        for (String scene : new String[]{"faces", "seating", "gear", "gear_extended", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "filled_corners_inside", "filled_corners_outside"})
+        for (String scene : new String[]{"faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "filled_corners_inside", "filled_corners_outside"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
                     galleryFeet+3, -26, -20, 15));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
@@ -859,6 +859,52 @@ public class ReproLab {
             case 22:
                 if (--holdTicks > 0) break;
                 saveNamed(mc,"thruster_gui");
+                mc.displayGuiScreen(null);
+                BlockPos seatGui=CONSOLE.add(8,0,3);
+                mc.world.setBlockState(seatGui,block("luxury_seat").getDefaultState(),3);
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getWorld(0);
+                    w.setBlockState(seatGui,block("luxury_seat").getDefaultState(),3);
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.capabilities.isCreativeMode=true;owner.setPositionAndUpdate(seatGui.getX(),seatGui.getY(),seatGui.getZ()-2);
+                    owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_CHAIR,w,seatGui.getX(),seatGui.getY(),seatGui.getZ());
+                });
+                state=32;holdTicks=20;break;
+            case 32:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiConnectedSeat))throw new IllegalStateException("seat GUI missing");
+                ((GuiConnectedSeat)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Join"));
+                ((GuiConnectedSeat)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Height"));
+                state=33;holdTicks=20;break;
+            case 33:
+                if(--holdTicks>0)break;
+                com.vandorlabs.tiles.TileEntityConnectedSeat configuredSeat=(com.vandorlabs.tiles.TileEntityConnectedSeat)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(8,0,3));
+                if(configuredSeat.isJoin()||configuredSeat.getHeight()!=2)throw new IllegalStateException("seat GUI packet did not apply");
+                saveNamed(mc,"connected_seat_gui");mc.displayGuiScreen(null);
+                BlockPos gearGui=CONSOLE.add(9,5,3);
+                mc.world.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(gearGui,block("large_landing_gear").getDefaultState(),3);
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.setPositionAndUpdate(gearGui.getX(),gearGui.getY(),gearGui.getZ()-2);
+                    owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LANDING_GEAR,w,gearGui.getX(),gearGui.getY(),gearGui.getZ());
+                });
+                state=34;holdTicks=20;break;
+            case 34:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiLandingGear))throw new IllegalStateException("gear GUI missing");
+                ((GuiLandingGear)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Mode"));
+                state=35;holdTicks=20;break;
+            case 35:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"landing_gear_gui");
+                ((GuiLandingGear)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Done"));
+                state=36;holdTicks=20;break;
+            case 36:
+                if(--holdTicks>0)break;
+                if(((com.vandorlabs.tiles.TileEntityLandingGear)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(9,5,3))).getMode()!=2)
+                    throw new IllegalStateException("gear GUI packet did not apply");
+                System.out.println("[vandorlabs][reprolab] seat-gear-gui PASS");
                 System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
                 state = 9;
                 holdTicks = 10;

@@ -27,11 +27,7 @@ fi
 grep -q '\[vandorlabs\]\[reprolab\] followup-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] version-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] face-textures-runtime PASS' "$RUN_OUT/client.log"
-ANALYZE_ARGS=("$RUN_OUT" --texture-variant)
-if [[ "${VANDOR_LABS_TEXTURE_VARIANT:-default}" == "original" ]]; then
-    ANALYZE_ARGS=("$RUN_OUT")
-fi
-python3 testclient/analyze_viewscreen.py "${ANALYZE_ARGS[@]}"
+python3 testclient/analyze_viewscreen.py "$RUN_OUT" --texture-variant
 python3 testclient/analyze_space_doors.py "$RUN_OUT"
 grep -q '\[vandorlabs\]\[reprolab\] door-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: live door state, pairing, and collision contracts"

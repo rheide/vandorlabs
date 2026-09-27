@@ -18,6 +18,9 @@ public final class ProgrammableTarget {
         if (state.getBlock() instanceof BlockDoor
                 && state.getValue(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER)
             return clicked.down();
+        if ((state.getBlock() instanceof com.vandorlabs.blocks.BlockConnectedSeat
+                || state.getBlock() instanceof com.vandorlabs.blocks.BlockBridgeChair)
+                && state.getValue(com.vandorlabs.blocks.BlockBridgeChair.UPPER))return clicked.down();
         return clicked;
     }
 }

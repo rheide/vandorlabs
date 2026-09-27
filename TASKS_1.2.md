@@ -63,7 +63,7 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 - Second live run (`render-run.gtA6dE`) passed new runtime assertions but failed the model-loading gate. Corrected telescopic gear blockstate property ordering; final rerun required. Enabled face dialog now fits the test viewport.
 
 - Final candidate (`render-run.OoewtY`): all runtime assertions passed, including new diagonal porthole join eligibility and slab-matched half-console placement. New screenshots visually checked: face overrides, joined seats, gear endpoints, four joined porthole shapes, half-height runs, fill modes, half consoles, and controller against stone. No missing-model errors. Remaining gallery/GUI capture and pixel analyzers are still running.
-- Java 8 build and original-texture packaging passed; both JARs report 1.2. Packaged bytecode/assets match the live client's JAR; only the manifest build timestamp differs after packaging the original-texture variant.
+- Java 8 build passed; the standard JAR reports 1.2. Packaged bytecode/assets match the live client's JAR.
 - Baseline comparison: the existing wall corner in `shot_programmable_corner_pair_top.png`, rectangle `(545,170)-(670,495)`, has zero pixels differing by more than 3/255. Whole-frame differences include moving mobs and the intended controller texture repair.
 
 
@@ -71,7 +71,7 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 
 - Final candidate completed normally at 15:26. All live pixel analyzers and runtime gates passed, including the missing-model gate. The launching shell ended early while its client continued; after normal client shutdown the remaining checks from `test_viewscreen.sh` were run directly against the same output directory. Evidence: `/tmp/vandorlabs-1.2-final.log` and `testclient/render-run.OoewtY/client.log`.
 - Reviewed default/enabled face dialogs and diagonal shape/fill dialog at 1280x720. Exported the new scenes to `docs/images/gallery/v1.2/`; kept unrelated existing gallery images to avoid timestamp/animation churn.
-- Both `build/libs/vandorlabs-1.2.jar` and `build/libs/vandorlabs-1.2-original-textures.jar` are ready. Full live rendering used default textures; the original pack passed packaging and the controller pixel regression.
+- `build/libs/vandorlabs-1.2.jar` is the release artifact. Full live rendering used its default textures.
 - All requested implementation tasks are complete. Distance rendering is report-only as authorized. Remaining acceptance is visual review in the owner's world/modpack; the isolated client does not include that full modpack.
 
 ## Follow-up batch (version remains 1.2)
@@ -95,3 +95,17 @@ Follow-up implementation checkpoint: stairs use vanilla corner/collision geometr
 - [ ] Combine two Programmable Slabs into a Programmable Block, preserving placed settings.
 
 Live follow-up checks passed in `render-run.toeUYM`: upper/lower slab combining, stair metadata/corners/configured drops, effective ramp texture matching, real IE slab deploy/recover for each slab type, stacked porthole joins in four directions and shapes, half-height collision, filled-corner bounds, and the actual BBW undo command. The first attempt needed Trove 3 on the minimal client's classpath; the restarted client runs successfully. Visual capture and analyzers remain in progress.
+
+Door timing scope: visual transitions now complete in 9 client visual ticks (450 ms) after receipt of an open/closed change, independent of server world-time corrections. Pausing an integrated game freezes the visual clock. This improves smoothness, not server response latency or model draw cost; ramp motion remains tied to server collision time.
+
+- [ ] Luxury and Military Seats: default legs +1 pixel; creative shift-right-click Join toggle and height −2/default/+2 pixels; keep model, collision, rider height and saved settings consistent.
+
+- [x] Remove original-textures packaging workflow and extra JAR; build only the standard JAR (owner instruction).
+- [ ] Replace all old landing gear IDs with `small_landing_gear` (Small Landing Gear) and `large_landing_gear` (Large Landing Gear), no remaps. Both telescopic; fix retraction, add creative shift-right-click redstone Disabled/On/Off, channel and 0–4 block extension slider.
+
+### Seat and landing gear implementation checkpoint
+
+- Seats: implemented default +1px legs, Join On/Off and −2/default/+2px height. Mesh, collision, rider height, NBT, drops and copy settings share the selected height; unlike heights do not join.
+- Gear: only `small_landing_gear` and `large_landing_gear` are registered. Both animate with preserved tile identity; extension is 0–64 pixels. Owned lower cells reserve the entire path and are released as retraction clears them. Added redstone modes/channel and validated configuration packet.
+- Java 8 build and portable checks passed. Expanded live suite is running; final screenshots and GUI packet assertions still pending.
+- The isolated suite now loads the installed Immersive Engineering JAR read-only for real slab coverage. Its known optional `revolver_einhorn.png` cosmetic texture is absent; only that exact texture report is exempted. All other texture/model errors still fail the suite.

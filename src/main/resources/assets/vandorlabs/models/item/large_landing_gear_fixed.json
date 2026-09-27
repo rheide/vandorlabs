@@ -1,0 +1,84 @@
+{
+  "credit": "MCTrek landing gear \u2014 integer voxel grid",
+  "parent": "block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "metal": "vandorlabs:blocks/landing_gear/metal",
+    "strut": "vandorlabs:blocks/landing_gear/strut",
+    "rubber": "vandorlabs:blocks/landing_gear/rubber",
+    "hub": "vandorlabs:blocks/landing_gear/hub",
+    "panel": "vandorlabs:blocks/landing_gear/panel",
+    "particle": "vandorlabs:blocks/landing_gear/metal"
+  },
+  "elements": [
+    {
+      "name": "mount_plate",
+      "from": [
+        2,
+        14,
+        2
+      ],
+      "to": [
+        14,
+        16,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            0,
+            13,
+            2
+          ],
+          "texture": "#panel"
+        },
+        "south": {
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            2,
+            2,
+            14,
+            14
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            2,
+            2,
+            14,
+            14
+          ],
+          "texture": "#metal"
+        }
+      }
+    }
+  ]
+}

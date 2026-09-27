@@ -28,7 +28,7 @@ public final class ProgrammableHousingState {
 
     private ProgrammableHousingState() { }
 
-    private static IUnlistedProperty<Integer> integer(String name) {
+    public static IUnlistedProperty<Integer> integer(String name) {
         return new IUnlistedProperty<Integer>() {
             @Override public String getName() { return name; }
             @Override public boolean isValid(Integer value) { return value != null; }
