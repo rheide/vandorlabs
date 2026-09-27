@@ -15,11 +15,14 @@ See the [screenshot and functionality gallery](docs/gallery/README.md) for a
 visual tour of the programmable blocks, doors, propulsion systems, controls,
 lighting, furniture, ramps, glass, and building materials.
 
+See [what changed in 1.2](docs/gallery/version-1.2.md) for face texture overrides,
+diagonal options, connected seats, landing gear, and placement fixes.
+
 ## What's in the mod
 
 - **Structure**: programmable hull, padding, pipe, and vent finishes, wall
   panels, ribs, and cockpit glass. Shift-right-click a Programmable Diagonal
-  Wall in creative mode to choose a half-block or full-block diagonal width.
+  Wall in creative mode to choose half/full width, half height, and inside/outside fill.
 - **Screens**: static planet/ship/science viewscreens (directional) and
   sequenced animated displays with static/animated/off modes that wake on
   redstone and sleep when power drops.

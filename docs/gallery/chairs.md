@@ -1,5 +1,8 @@
 # Chairs
 
+Luxury and military seats now join into benches. See
+[connected seating in 1.2](version-1.2.md#connected-seating).
+
 Vandor Labs includes five sittable chair designs. Right-click a chair to sit; sneak to get up. Choose the appearance that fits the room: command and operator seats for workstations, or companion, conference, and mess hall seats for shared spaces.
 
 | Chair | Close-up |

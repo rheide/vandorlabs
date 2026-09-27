@@ -39,25 +39,37 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Work | Status | Findings / validation |
 | --- | --- | --- |
 | Version / tracking | Done | Version 1.2 set in Gradle and mod metadata; baseline captured in `testclient/render-run.RA4YaV`. |
-| Face overrides and Copifier | Live suite passed; layout follow-up | `render-run.AlF3qw`: runtime checks passed. Screenshot exposed tall enabled dialog; responsive list/preview added for next run. |
-| WorldEdit diagonal flip | Live suite passed | WorldEdit actual transform tests cover all 8 metadata poses and X/Y/Z flips; diagonal wall and diagonal screen. |
-| Diagonal porthole | Implemented, validating | Four shapes, full/half width, lateral coplanar joining. Vertically adjacent slopes are not coplanar and do not join. |
-| Diagonal half height | Implemented, validating | Full-depth incline within eight pixels of height; upper/lower positions; matching straight runs. |
-| Landing gear | Implemented, validating | Four static gear designs; telescopic gear animates over one second, checks obstruction, reserves its lower cell, responds to redstone/right-click. |
-| Diagonal inside/outside fill | Implemented, validating | Independent inside/outside toggles, saved/copied with diagonal geometry; collision follows fill. |
-| Connected seating | Implemented, validating | Two styles with automatic single/end/middle variants, reserved backrest cell, sitting and cleanup. |
-| Ramp edge gap | Fixed, validating | User identified controller cube. Front/right-edge PNG alpha creates the seam; atlas loader repairs all 24 faces across both packs. Pixel regression passed (17,224 cutoff pixels), preserving solid RGB. |
+| Face overrides and Copifier | Done | Default-off behavior, inheritance, save/copy and responsive dialog verified in `render-run.OoewtY`. |
+| WorldEdit diagonal flip | Done | WorldEdit actual transform tests cover all 8 metadata poses and X/Y/Z flips; diagonal wall and diagonal screen. |
+| Diagonal porthole | Done | Four shapes, full/half width, lateral coplanar joining. Vertically adjacent slopes are not coplanar and do not join. |
+| Diagonal half height | Done | Full-depth incline within eight pixels of height; upper/lower positions; matching straight runs. |
+| Landing gear | Done | Four static gear designs; telescopic gear animates over one second, checks obstruction, reserves its lower cell, responds to redstone/right-click. |
+| Diagonal inside/outside fill | Done | Independent inside/outside toggles, saved/copied with diagonal geometry; collision follows fill. |
+| Connected seating | Done | Two styles with automatic single/end/middle variants, reserved backrest cell, sitting and cleanup. |
+| Ramp edge gap | Done | User identified controller cube. Front/right-edge PNG alpha creates the seam; atlas loader repairs all 24 faces across both packs. Pixel regression passed (17,224 cutoff pixels), preserving solid RGB. |
 | Distance rendering | Report complete | `docs/performance/render-distance-1.2.md`: full block/slab already use chunk meshes; diagonals inherit a 64-block tile cutoff. Recommended chunk-model work documented; no costly range increase. |
-| Copifier crafting | Implemented, validating | Shapeless tool + programmable item; tool retained. Normal crafting consumption processes stacks with shift-click; output respects selected copy settings. |
-| Half Input slab placement | Live suite passed | Side placement matches the support slab half, including its wall slot. |
-| Diagonal Half Console | Implemented, validating | Half-height/depth incline; upper/lower placement matching slabs; configurable input artwork. |
-| Creative door cleanup | Implemented, validating | 42 legacy catalog entries hidden; registrations retained for existing worlds. |
-| Door slab support | Live suite passed | Both slab halves accepted by door placement/support checks. |
-| Client crash | Regression passed | Mutable custom-sprite frame lists; load/mipmap/clear check and full live suite passed. Full external TextureFix pack not installed in test client. |
-| Extra housing textures | Implemented, validating | Added existing glass frame interior and door interior with actual 0xA8 tint; appended indices preserve saved choices. |
-| Final validation / docs | In progress | Baseline and first 1.2 live suite passed. New asset/geometry tests and eight new screenshot scenes added; final suite pending. |
+| Copifier crafting | Done | Shapeless tool + programmable item; tool retained. Normal crafting consumption processes stacks with shift-click; output respects selected copy settings. |
+| Half Input slab placement | Done | Side placement matches the support slab half, including its wall slot. |
+| Diagonal Half Console | Done | Half-height/depth incline; upper/lower placement matching slabs; configurable input artwork. |
+| Creative door cleanup | Done | 42 legacy catalog entries hidden; registrations retained for existing worlds. |
+| Door slab support | Done | Both slab halves accepted by door placement/support checks. |
+| Client crash | Done | Mutable custom-sprite frame lists; load/mipmap/clear check and full live suite passed. Full external TextureFix pack not installed in test client. |
+| Extra housing textures | Done | Added existing glass frame interior and door interior with actual 0xA8 tint; appended indices preserve saved choices. |
+| Final validation / docs | Done | Java 8 build, original-texture packaging, final live runtime checks and pixel analyzers passed (`render-run.OoewtY`); illustrated guide and local documentation links checked. |
 
 ### Validation follow-ups
 
 - Second crash logs: `latest2.log:23695` identifies build t49; its crash report lists version 1.1. `debug2.log:184139` and `184709` repeat TextureFix unloading an immutable frame list (`AbstractList.clear`). Covered by the mutable-frame-list fix and sprite cleanup regression in 1.2; the full external modpack remains outside the isolated suite.
 - Second live run (`render-run.gtA6dE`) passed new runtime assertions but failed the model-loading gate. Corrected telescopic gear blockstate property ordering; final rerun required. Enabled face dialog now fits the test viewport.
+
+- Final candidate (`render-run.OoewtY`): all runtime assertions passed, including new diagonal porthole join eligibility and slab-matched half-console placement. New screenshots visually checked: face overrides, joined seats, gear endpoints, four joined porthole shapes, half-height runs, fill modes, half consoles, and controller against stone. No missing-model errors. Remaining gallery/GUI capture and pixel analyzers are still running.
+- Java 8 build and original-texture packaging passed; both JARs report 1.2. Packaged bytecode/assets match the live client's JAR; only the manifest build timestamp differs after packaging the original-texture variant.
+- Baseline comparison: the existing wall corner in `shot_programmable_corner_pair_top.png`, rectangle `(545,170)-(670,495)`, has zero pixels differing by more than 3/255. Whole-frame differences include moving mobs and the intended controller texture repair.
+
+
+### Completed validation
+
+- Final candidate completed normally at 15:26. All live pixel analyzers and runtime gates passed, including the missing-model gate. The launching shell ended early while its client continued; after normal client shutdown the remaining checks from `test_viewscreen.sh` were run directly against the same output directory. Evidence: `/tmp/vandorlabs-1.2-final.log` and `testclient/render-run.OoewtY/client.log`.
+- Reviewed default/enabled face dialogs and diagonal shape/fill dialog at 1280x720. Exported the new scenes to `docs/images/gallery/v1.2/`; kept unrelated existing gallery images to avoid timestamp/animation churn.
+- Both `build/libs/vandorlabs-1.2.jar` and `build/libs/vandorlabs-1.2-original-textures.jar` are ready. Full live rendering used default textures; the original pack passed packaging and the controller pixel regression.
+- All requested implementation tasks are complete. Distance rendering is report-only as authorized. Remaining acceptance is visual review in the owner's world/modpack; the isolated client does not include that full modpack.

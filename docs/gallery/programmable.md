@@ -1,5 +1,8 @@
 # Programmable displays and consoles
 
+The standalone diagonal half console and per-face block/slab finishes are
+covered in [the 1.2 guide](version-1.2.md).
+
 Programmable displays let you choose the visible artwork and how it behaves. Their settings persist with the block. Screen-capable blocks can choose **Off**, **Static**, or **Animated** display, animation speed, and redstone behavior. Many also offer a separate wall or side texture so the housing can match nearby construction.
 
 In Creative mode, shift-right-click a block to open its configuration. Lists scroll to show all available choices; a valid change applies immediately. The [Configurizer](../CONFIGURIZER.md) provides another way to open settings, and the [Duplifier](../DUPLIFIER.md) can copy compatible settings to another block.

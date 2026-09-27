@@ -77,6 +77,12 @@ SHOTS.update({
     "programmable_glass_gui": "building/glass-config.png",
 })
 
+for name in ("faces", "seating", "gear", "gear_extended", "portholes",
+             "half_height", "fill", "half_console", "controller"):
+    SHOTS[f"gallery_v12_{name}"] = f"v1.2/{name.replace('_', '-')}.png"
+SHOTS["programmable_face_overrides_gui"] = "v1.2/face-overrides-config.png"
+SHOTS["programmable_diagonal_width_gui"] = "v1.2/diagonal-config.png"
+
 
 def main():
     if len(sys.argv) != 2:

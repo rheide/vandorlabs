@@ -4,6 +4,8 @@ These images come from a real Forge 1.12.2 client in the repeatable ReproLab
 world. The close-ups show individual shapes, controls, and states. Open an image
 at full size to inspect its texture and model.
 
+- [New in 1.2](version-1.2.md)
+
 ## Blocks and systems
 
 - [Programmable displays and consoles](programmable.md)

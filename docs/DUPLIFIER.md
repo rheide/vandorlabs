@@ -43,3 +43,23 @@ Placement facing, physical position, live redstone signal, current door motion,
 and ownership are not stored. The item uses semantic setting keys rather than
 copying tile NBT, so existing saved-world field names and placement behavior
 remain intact.
+
+## Face overrides and diagonal geometry (1.2)
+
+Programmable Block and Slab have a separate **Face Overrides** copy switch.
+When the source has overrides enabled, it copies the six face choices and
+turns them on. When the source has overrides disabled, it turns them off on
+the target while preserving that target's stored face choices. The **Wall
+Texture** switch controls the main texture independently. Each unassigned face
+continues to use that main texture. Front/back/left/right follow block facing.
+
+Diagonal width, half height and inside/outside fill transfer through the
+**Diagonal Geometry** switch where the target supports them.
+
+## Apply settings while crafting
+
+Put a configured Duplifier and a programmable block item in any crafting grid.
+The output receives compatible settings selected in Apply Settings. The tool
+is returned unchanged. Shift-click the output to process a stack using normal
+Minecraft crafting; each craft consumes one block. Existing target settings
+that are not selected or supported remain intact.

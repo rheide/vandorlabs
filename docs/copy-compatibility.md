@@ -17,6 +17,9 @@ settings in `TileEntityAnimatedScreenSelector.writeToNBT/readFromNBT`.
 WorldEdit 6.1.10 uses its own vanilla-only direction registry for `//rotate`.
 When WorldEdit is installed, Vandor Labs adds the facing metadata for every
 Vandor Labs door and propulsion block to that registry after block registration.
+Diagonal walls, diagonal screens, diagonal portholes and diagonal half consoles
+also register their facing and slope together, so horizontal and vertical
+`//flip` preserve the intended angle.
 The upper half of a door keeps its hinge, open, and power bits; its facing comes
 from the rotated lower half. Triangular thrusters also rotate their corner block
 variant on floors and ceilings. WorldEdit is optional: the integration loads only
@@ -40,9 +43,8 @@ It also reconstructs both cells of Vandor Labs doors and chairs. The integration
 reflection-free and has no hard dependency, so Vandor Labs loads normally without
 BBW installed.
 
-Programmable blocks open a GUI on an ordinary empty-hand right-click. As with
-other interactive Minecraft blocks, sneak-right-click with the wand when the
-GUI would otherwise consume the interaction.
+Programmable configuration dialogs open with shift-right-click in creative
+mode. Ordinary right-click retains each block's normal interaction.
 
 ## Regression tests
 

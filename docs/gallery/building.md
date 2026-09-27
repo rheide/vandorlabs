@@ -1,5 +1,8 @@
 # Building blocks, finishes, and glass
 
+For face texture overrides, diagonal portholes, half-height walls and fill
+options, see [the 1.2 additions](version-1.2.md).
+
 Programmable Block, Wall, Slab, Ramp, and other compatible shapes use a shared finish list. Choose a material in the Creative-mode shift-right-click dialog. Some screen blocks use the same list for their wall or side texture while keeping a separate primary screen selection. The [Duplifier](../DUPLIFIER.md) can carry a compatible finish to another shape.
 
 ## Choose a form
