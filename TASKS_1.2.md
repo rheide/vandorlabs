@@ -41,7 +41,7 @@ Version stays at **1.2** for this entire task set. Finished JARs stay in `build/
 | Version / tracking | Done | Version 1.2 set in Gradle and mod metadata; baseline captured in `testclient/render-run.RA4YaV`. |
 | Face overrides and Copifier | Done | Default-off behavior, inheritance, save/copy and responsive dialog verified in `render-run.OoewtY`. |
 | WorldEdit diagonal flip | Done | WorldEdit actual transform tests cover all 8 metadata poses and X/Y/Z flips; diagonal wall and diagonal screen. |
-| Diagonal porthole | Done | Four shapes, full/half width, lateral coplanar joining. Vertically adjacent slopes are not coplanar and do not join. |
+| Diagonal porthole | Done | Four shapes, full/half width, lateral coplanar joining. Matching stacked half-width pieces join when the reversed upper piece continues the same surface plane. |
 | Diagonal half height | Done | Full-depth incline within eight pixels of height; upper/lower positions; matching straight runs. |
 | Landing gear | Done | Four static gear designs; telescopic gear animates over one second, checks obstruction, reserves its lower cell, responds to redstone/right-click. |
 | Diagonal inside/outside fill | Done | Independent inside/outside toggles, saved/copied with diagonal geometry; collision follows fill. |
@@ -113,7 +113,10 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - `render-run.jcH1Oq`: gameplay and seat/gear GUI packet checks passed; retraction matched the starting pose exactly in a 61,200-pixel region. The model-loading gate caught two missing `block/` prefixes in the new gear item parents; fixed in `dbf58133`.
 - `render-run.wA6JGS`: corrected models loaded without errors; expanded gameplay checks passed, including relative gear ownership after copying, linked channels and saved Off-mode placement. Host slowdown near the last gallery shots exhausted the old 600-second harness timeout. Increased the harness limit to 1,200 seconds for the full rerun; production code is unchanged.
 
-- [ ] Shrink and center Luxury Seat and Military Seat hotbar icons so default and configured heights fit the slot; keep world and held-item geometry unchanged.
+- [x] Shrink and center Luxury Seat and Military Seat hotbar icons so default and configured heights fit the slot; keep world and held-item geometry unchanged.
 
 - Full Java 8 build and live suite passed for the completed feature batch in `render-run.IQzQBo`; runtime assertions, all existing pixel analyzers, gear retraction pixels and seat/gear configuration packets passed. Subsequent owner requests below need their own final validation.
-- [ ] Gear slider: use half-block increments from 0–4 and update the world immediately during dragging, preserving extended/retracted state. Validate live updates before Done and blocked-extension feedback.
+- [x] Gear slider: use half-block increments from 0–4 and update the world immediately during dragging, preserving extended/retracted state. Validate live updates before Done and blocked-extension feedback.
+
+- Final follow-up validation: Java 8 build and full live suite passed in `render-run.kWQbar`. Half-block settings, immediate movement before Done, blocked-length feedback, seat icon frame bounds for all three heights, gear retraction pixels and existing gameplay/rendering checks passed.
+- Recipe audit: all 40 player-facing blocks have base crafting recipes. Hidden propulsion variants, legacy doors and the internal controlled-ramp block intentionally have no separate recipes.

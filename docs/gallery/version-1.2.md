@@ -69,6 +69,10 @@ Right-click to sit; sneak to dismount. Leave the cell above clear for the backre
 ![Joining disabled](../images/gallery/v1.2/seating-unjoined.png)
 ![Seat configuration](../images/gallery/v1.2/connected-seat-config.png)
 
+Seat inventory icons fit their slots at all three configured heights.
+
+![Seat and landing gear inventory icons](../images/gallery/v1.2/seat-and-gear-icons.png)
+
 ## Landing gear
 
 **Small Landing Gear** (`small_landing_gear`) and **Large Landing Gear**
