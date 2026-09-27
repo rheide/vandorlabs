@@ -169,3 +169,9 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - Java 8 build and all live gameplay/GUI checks passed in `render-run.y7UL92`. All screenshot checks pass, including three gear sizes, distant lights and four views of joined Circular glass. The ninth-slot icon check was corrected to exclude disconnected held-item geometry; the actual Large icon fits its frame.
 - Exported 127 gallery captures and reviewed the changed images. Kept unchanged reference images where only tiny unrelated differences occurred. Checked all 183 local documentation links, including heading anchors; `git diff --check` passes.
 - Standard `build/libs/vandorlabs-1.2.jar` exactly matches the tested client JAR (SHA-256 `ef7eabb0fbf328797a16de45f184e638d46e2b59ab91aec944d267b898ceca3a`). Registry/packaged recipes verified; version remains 1.2. No remaps or alternative texture JARs added.
+
+### Landing gear arm finish
+
+- [ ] Use the thickest existing extending arm (4×4 pixels) for all three sizes. Apply Glass Frame Interior / diagonal-side metal, tiled along the extension instead of stretched.
+
+- [ ] Investigate remaining Programmable Light flickering reported after the first front-face fix (user clarified lights, not glass). Distinguish remaining housing overlap from texture sampling shimmer.

@@ -8,7 +8,8 @@
     "rubber": "vandorlabs:blocks/landing_gear/rubber",
     "hub": "vandorlabs:blocks/landing_gear/hub",
     "panel": "vandorlabs:blocks/landing_gear/panel",
-    "particle": "vandorlabs:blocks/landing_gear/metal"
+    "particle": "vandorlabs:blocks/landing_gear/metal",
+    "arm": "vandorlabs:blocks/programmable_glass/metal_side"
   },
   "elements": [
     {
@@ -441,38 +442,38 @@
         "north": {
           "uv": [
             6,
-            4,
+            0,
             10,
-            6
+            2
           ],
-          "texture": "#strut"
+          "texture": "#arm"
         },
         "south": {
           "uv": [
             6,
-            4,
+            0,
             10,
-            6
+            2
           ],
-          "texture": "#strut"
+          "texture": "#arm"
         },
         "east": {
           "uv": [
             6,
-            4,
+            0,
             10,
-            6
+            2
           ],
-          "texture": "#strut"
+          "texture": "#arm"
         },
         "west": {
           "uv": [
             6,
-            4,
+            0,
             10,
-            6
+            2
           ],
-          "texture": "#strut"
+          "texture": "#arm"
         },
         "up": {
           "uv": [
@@ -481,7 +482,7 @@
             10,
             10
           ],
-          "texture": "#strut"
+          "texture": "#arm"
         },
         "down": {
           "uv": [
@@ -490,7 +491,7 @@
             10,
             10
           ],
-          "texture": "#strut"
+          "texture": "#arm"
         }
       }
     },

@@ -8,7 +8,8 @@
     "rubber": "vandorlabs:blocks/landing_gear/rubber",
     "hub": "vandorlabs:blocks/landing_gear/hub",
     "panel": "vandorlabs:blocks/landing_gear/panel",
-    "particle": "vandorlabs:blocks/landing_gear/metal"
+    "particle": "vandorlabs:blocks/landing_gear/metal",
+    "arm": "vandorlabs:blocks/programmable_glass/metal_side"
   },
   "elements": [
     {

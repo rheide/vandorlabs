@@ -12,7 +12,7 @@ wheel_y=[(0,1),(1,2),(2,4),(4,10),(10,12),(12,13),(13,14)]
 wheel_z=[(6,10),(4,12),(2,14),(1,15),(2,14),(4,12),(6,10)]
 parts={
  'mount_plate':([0,15,0],[16,16,16]),
- 'piston':([7,14.5,7],[9,15,9]),
+ 'piston':([6,14.5,6],[10,15,10]),
  'fork_bridge':([2,14,6],[14,15,10]),
  'fork_left':([2,6,6],[4,14,10]),
  'fork_right':([12,6,6],[14,14,10]),
@@ -28,6 +28,15 @@ for e in large['elements']:
 write(assets/'block/landing_gear_large_retracted.json',large)
 for size in ['small','medium','large']:
  model=read(size)
+ model['textures']['arm']='vandorlabs:blocks/programmable_glass/metal_side'
+ for e in model['elements']:
+  if e['name']=='piston':
+   e['from'][0]=e['from'][2]=6
+   e['to'][0]=e['to'][2]=10
+   for face,values in e['faces'].items():
+    values['texture']='#arm'
+    values['uv']=[6,6,10,10] if face in ['up','down'] else [6,0,10,e['to'][1]-e['from'][1]]
+ write(assets/f'block/landing_gear_{size}_retracted.json',model)
  for group in ['fixed','wheel','piston']:
   data=copy.deepcopy(model)
   def category(e): return 'piston' if e['name']=='piston' else 'fixed' if e['name'] in ['mount_plate','fixed_sleeve'] else 'wheel'
