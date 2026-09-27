@@ -394,7 +394,7 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 ItemBlock item = block == PROGRAMMABLE_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
-                        : new ItemBlock(block);
+                        : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block) : new ItemBlock(block);
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));
             }
         }

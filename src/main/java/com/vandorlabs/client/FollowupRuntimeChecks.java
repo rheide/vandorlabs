@@ -18,6 +18,19 @@ final class FollowupRuntimeChecks {
         BlockPos p=new BlockPos(65,245,40);
         ItemStack held=player.getHeldItemMainhand();
         try {
+            for(boolean upper:new boolean[]{false,true}) {
+                world.setBlockState(p,ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(BlockProgrammableSlab.HALF,upper?BlockSlab.EnumBlockHalf.TOP:BlockSlab.EnumBlockHalf.BOTTOM),3);
+                TileEntityAnimatedScreenSelector slab=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+                slab.setHousingTexture(4);slab.setFaceTextures(new FaceTextures(true,new int[]{1,2,3,4,5,6}));
+                ItemStack stack=new ItemStack(ModBlocks.PROGRAMMABLE_SLAB,2);player.setHeldItem(EnumHand.MAIN_HAND,stack);
+                boolean creative=player.capabilities.isCreativeMode;player.capabilities.isCreativeMode=false;
+                try {
+                    require(stack.getItem().onItemUse(player,world,p,EnumHand.MAIN_HAND,upper?EnumFacing.DOWN:EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"slab merge failed");
+                    require(world.getBlockState(p).getBlock()==ModBlocks.PROGRAMMABLE_BLOCK && stack.getCount()==1,"slab merge consumption");
+                    TileEntityAnimatedScreenSelector full=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+                    require(full.getHousingTexture()==4&&full.getFaceTextures().choice(1)==2,"slab merge lost settings");
+                } finally {player.capabilities.isCreativeMode=creative;world.setBlockToAir(p);}
+            }
             BlockProgrammableStairs stairs=(BlockProgrammableStairs)ModBlocks.PROGRAMMABLE_STAIRS;
             for(EnumFacing facing:EnumFacing.HORIZONTALS) for(BlockStairs.EnumHalf half:BlockStairs.EnumHalf.values()) {
                 IBlockState state=stairs.getDefaultState().withProperty(BlockStairs.FACING,facing).withProperty(BlockStairs.HALF,half);

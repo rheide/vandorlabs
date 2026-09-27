@@ -91,3 +91,7 @@ Initial findings: door easing uses synchronized world time; BBW undo compares ex
 
 
 Follow-up implementation checkpoint: stairs use vanilla corner/collision geometry with cached per-face retexturing; door visuals use a monotonic paused-aware client clock; BBW undo retains restored state groups; IE slab NBT is preserved and its half matched; ramp discovery compares effective face textures. Stacked portholes now compare actual surface planes, and the half-height option is enabled. Corner fill retains arms and clips to the joined span. Java 8 build passed; expanded live validation is running with the read-only source IE JAR copied into the isolated test client.
+
+- [ ] Combine two Programmable Slabs into a Programmable Block, preserving placed settings.
+
+Live follow-up checks passed in `render-run.toeUYM`: upper/lower slab combining, stair metadata/corners/configured drops, effective ramp texture matching, real IE slab deploy/recover for each slab type, stacked porthole joins in four directions and shapes, half-height collision, filled-corner bounds, and the actual BBW undo command. The first attempt needed Trove 3 on the minimal client's classpath; the restarted client runs successfully. Visual capture and analyzers remain in progress.

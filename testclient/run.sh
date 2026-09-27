@@ -7,6 +7,9 @@ REPRO_OUT=$(readlink -f "$REPRO_OUT")
 cd "$(dirname "$0")/runtime"
 JAVA=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 CP=$(paste -sd: cp.txt)
+# IE uses Forge's Trove 3 collection classes, absent from the minimal vanilla classpath.
+TROVE_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" | rg '/trove4j-3.0.3.jar$' | head -n 1)
+CP="$CP:$TROVE_JAR"
 mkdir -p game
 exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" \
   env LIBGL_ALWAYS_SOFTWARE=1 \
