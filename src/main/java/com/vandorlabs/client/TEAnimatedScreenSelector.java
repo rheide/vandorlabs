@@ -1243,19 +1243,23 @@ public class TEAnimatedScreenSelector
     }
 
     /** Adjacent light cubes fully cover these surfaces, regardless of Join. */
-    private static int lightVisibleFaces(TileEntityAnimatedScreenSelector tile,EnumFacing facing) {
-        PanelPlane plane=PanelPlane.of(facing);
+    static int lightVisibleFaces(TileEntityAnimatedScreenSelector tile,EnumFacing facing) {
         int visible=0;
         for(EnumFacing local:EnumFacing.values()) {
-            EnumFacing worldSide=local==EnumFacing.NORTH?facing:local==EnumFacing.SOUTH?facing.getOpposite()
-                    :local==EnumFacing.EAST?plane.right:local==EnumFacing.WEST?plane.right.getOpposite()
-                    :local==EnumFacing.UP?plane.up:plane.up.getOpposite();
+            EnumFacing worldSide=lightWorldSide(facing,local);
             BlockPos neighbor=tile.getPos().offset(worldSide);
             if(!tile.getWorld().isBlockLoaded(neighbor)
                     || !(tile.getWorld().getBlockState(neighbor).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLight))
                 visible |= 1 << local.getIndex();
         }
         return visible;
+    }
+
+    static EnumFacing lightWorldSide(EnumFacing facing,EnumFacing local) {
+        PanelPlane plane=PanelPlane.of(facing);
+        return local==EnumFacing.NORTH?facing:local==EnumFacing.SOUTH?facing.getOpposite()
+                :local==EnumFacing.EAST?plane.right:local==EnumFacing.WEST?plane.right.getOpposite()
+                :local==EnumFacing.UP?plane.up:plane.up.getOpposite();
     }
 
     private static void renderLightHousing(TextureAtlasSprite sprite,int visible) {

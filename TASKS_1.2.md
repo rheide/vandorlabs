@@ -177,3 +177,9 @@ Door timing scope: visual transitions now complete in 9 client visual ticks (450
 - [ ] Investigate remaining Programmable Light flickering reported after the first front-face fix (user clarified lights, not glass). Distinguish remaining housing overlap from texture sampling shimmer.
 
 - Light follow-up: user confirmed housing bleed, not texture-detail shimmer. Removed shared faces between adjacent light cubes and culled back-facing surfaces. Added a live offscreen comparison with depth disabled and draw order reversed, covering all six facings, single/2×2 joined groups, and front/rear oblique views. Build passed; live validation pending.
+
+- `render-run.8eBqwO`: new light regression passed for all six facings, single/joined groups, and front/rear oblique views. Pixels are identical with depth disabled and draw order reversed. This directly verifies that hidden housing does not depend on depth precision to stay hidden. Full gallery/GUI checks are running.
+
+- `face2.png` exposed the missing rendering path: lights advertise `hasFastRenderer()` and normally render through `ProgrammableSolidRenderer`, which still emitted the front housing plus offset artwork. Previous changes/checks exercised only the fallback renderer. The regression now goes through Forge's real batched dispatcher; reproducing its failure before changing that path.
+
+- Batched negative control reproduced the bug: disabling depth/reversing order changed 2,502 pixels on a single light. The corrected fast renderer passes the same check across all six facings and both single/joined groups. It removes the housing front and offset, skips shared faces, and omits back-facing quads before batching because Forge disables GL culling for the shared batch. Added the Logo appearance from `face2.png` to the final regression run.

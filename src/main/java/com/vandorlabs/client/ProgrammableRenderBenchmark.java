@@ -71,6 +71,7 @@ final class ProgrammableRenderBenchmark {
             GlStateManager.rotate(180, 0, 1, 0);
             GlStateManager.rotate(15, 1, 0, 0);
             GlStateManager.rotate(-20, 0, 1, 0);
+            net.minecraft.client.renderer.ActiveRenderInfo.updateRenderInfo(mc.player,false);
             mc.entityRenderer.enableLightmap();
             GlStateManager.enableDepth();
             GlStateManager.clearColor(0, 0, 0, 1);

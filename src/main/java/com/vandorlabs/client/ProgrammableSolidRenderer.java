@@ -15,6 +15,8 @@ import net.minecraft.util.EnumFacing;
 
 /** Emits atlas geometry into Forge's shared buffer without changing GL state. */
 final class ProgrammableSolidRenderer {
+    private static final EnumFacing[] MESH_FACES={EnumFacing.UP,EnumFacing.DOWN,
+            EnumFacing.WEST,EnumFacing.EAST,EnumFacing.NORTH,EnumFacing.SOUTH};
     private ProgrammableSolidRenderer() { }
 
     static void emit(TileEntityAnimatedScreenSelector tile, double x, double y, double z,
@@ -34,22 +36,43 @@ final class ProgrammableSolidRenderer {
                 ? ScreenHousingMesh.slab(state.getValue(BlockProgrammableSlab.HALF)
                         == BlockSlab.EnumBlockHalf.TOP, tile.isSlabTileSides())
                 : ScreenHousingMesh.cube();
-        for (ScreenHousingMesh.Face face : mesh.quads)
-            for (ScreenHousingMesh.Vertex vertex : face.vertices)
+        int visible=light ? TEAnimatedScreenSelector.lightVisibleFaces(tile,facing)
+                & cameraFaces(facing,x,y,z) : 63;
+        for (int i=0;i<mesh.quads.length;i++) {
+            // The artwork IS the front face. Never submit housing underneath.
+            if(light && (MESH_FACES[i]==EnumFacing.NORTH
+                    || (visible & (1 << MESH_FACES[i].getIndex()))==0))continue;
+            for (ScreenHousingMesh.Vertex vertex : mesh.quads[i].vertices)
                 vertex(buffer, housing, rotation, brightness, x,y,z,
                         vertex.x,vertex.y,vertex.z,vertex.u,vertex.v);
-        if (light) {
+        }
+        if (light && (visible & (1 << EnumFacing.NORTH.getIndex()))!=0) {
             TileEntityProgrammableLight lamp = (TileEntityProgrammableLight) tile;
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                     ProgrammableLightTextures.texture(lamp.getTexture(), lamp.isOn() && lamp.getLightLevel()>0));
             TEAnimatedScreenSelector.LightGroup group = TEAnimatedScreenSelector.lightGroup(lamp,state);
             double left=group.left(tile.getPos()), right=group.right(tile.getPos());
             double top=group.top(tile.getPos()), bottom=group.bottom(tile.getPos());
-            vertex(buffer,face,rotation,brightness,x,y,z,16,16,-.002,right,top);
-            vertex(buffer,face,rotation,brightness,x,y,z,0,16,-.002,left,top);
-            vertex(buffer,face,rotation,brightness,x,y,z,0,0,-.002,left,bottom);
-            vertex(buffer,face,rotation,brightness,x,y,z,16,0,-.002,right,bottom);
+            vertex(buffer,face,rotation,brightness,x,y,z,16,16,0,right,top);
+            vertex(buffer,face,rotation,brightness,x,y,z,0,16,0,left,top);
+            vertex(buffer,face,rotation,brightness,x,y,z,0,0,0,left,bottom);
+            vertex(buffer,face,rotation,brightness,x,y,z,16,0,0,right,bottom);
         }
+    }
+
+    /** Forge disables GL culling for the shared batch, so omit back faces here.
+     * x/y/z and ActiveRenderInfo's camera are in the same view-relative space,
+     * including eye height and third-person camera displacement. */
+    private static int cameraFaces(EnumFacing facing,double x,double y,double z) {
+        net.minecraft.util.math.Vec3d camera=net.minecraft.client.renderer.ActiveRenderInfo.getCameraPosition();
+        int visible=0;
+        for(EnumFacing local:MESH_FACES) {
+            EnumFacing side=TEAnimatedScreenSelector.lightWorldSide(facing,local);
+            double distance=(camera.x-x-.5)*side.getFrontOffsetX()
+                    +(camera.y-y-.5)*side.getFrontOffsetY()+(camera.z-z-.5)*side.getFrontOffsetZ();
+            if(distance>.5)visible |= 1 << local.getIndex();
+        }
+        return visible;
     }
 
     private static void vertex(BufferBuilder buffer, TextureAtlasSprite sprite, int rotation,
