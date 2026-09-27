@@ -79,7 +79,7 @@ SHOTS.update({
 
 for name in ("faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes",
              "half_height", "fill", "half_console", "controller", "stairs",
-             "portholes_stacked", "portholes_half_height", "filled_corners_inside", "filled_corners_outside"):
+             "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "filled_corners_inside", "filled_corners_outside"):
     SHOTS[f"gallery_v12_{name}"] = f"v1.2/{name.replace('_', '-')}.png"
 SHOTS["connected_seat_hotbar"] = "v1.2/seat-and-gear-icons.png"
 SHOTS["connected_seat_gui"] = "v1.2/connected-seat-config.png"

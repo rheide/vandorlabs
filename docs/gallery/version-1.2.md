@@ -31,8 +31,23 @@ The tool is retained.
 **Programmable Diagonal Porthole** offers hexagonal, square, octagonal and round
 openings, half/full width, half-height/full-width geometry, glass shade and joining. Matching neighbors join along the same plane. A half-width lower piece can
 join a reversed, inverted upper piece directly above it, producing one tall
-opening. Use the same opening shape and enable joining on both. Other
-arrangements only join when their actual surfaces align.
+opening. Half-height/full-width pieces can likewise join end-to-end into one
+shallow diagonal opening. Use the same opening shape and enable joining on both.
+Other arrangements only join when their actual surfaces align.
+
+For both diagonal walls and portholes, click near the desired edge: tall pieces
+use the horizontal edge, and shallow pieces use the upper/lower edge of a side face. Clicking
+an existing diagonal to extend it chooses the matching orientation automatically.
+Plain items inherit that diagonal's proportions; items with saved settings retain
+their own proportions and textures.
+
+The shallow form uses the tall form's geometry rotated sideways: four-pixel
+thickness, with lower/upper height bands of 0–10 and 6–16 pixels. This overlap
+lets the slope endpoints meet. Existing shallow pieces adopt these corrected
+bounds.
+
+![Half-height portholes joined along the slope](../images/gallery/v1.2/portholes-half-height.png)
+![The same shallow pieces with joining disabled](../images/gallery/v1.2/portholes-half-height-unjoined.png)
 
 ![Four diagonal porthole shapes, joined sideways](../images/gallery/v1.2/portholes.png)
 
@@ -148,7 +163,6 @@ stored face overrides. Survival placement consumes one additional slab.
 ### More diagonal porthole shapes
 
 ![Four tall joined diagonal portholes](../images/gallery/v1.2/portholes-stacked.png)
-![Lower and upper half-height diagonal portholes](../images/gallery/v1.2/portholes-half-height.png)
 
 Inside/outside fill now retains the diagonal corner's connecting arm and stays
 within the corner span. A filled wall can still connect to an unfilled neighbor.
