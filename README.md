@@ -145,10 +145,11 @@ The default pack mixes resolutions according to the job each texture performs.
 128x128 is not a blanket requirement for every block; imported model artwork
 keeps its authored dimensions.
 
-The shared housing finish menu has 60 choices. The 32 imported 140x140
-textures are appended to the existing list so saved finish numbers still select
-the same artwork. Programmable Blocks, Slabs, Stairs, Walls and other housing
-menus use this list.
+The shared housing finish menu has 106 choices. The 32 textures from `textures`
+and 46 from `textures2` are appended to the original 28, so saved finish
+numbers still select the same artwork. The newest set retains its authored
+140x140 and 124x124 dimensions. Programmable Blocks, Slabs, Stairs, Walls and
+other housing menus use this list.
 
 Use these dimensions for new or replacement art:
 
@@ -161,9 +162,9 @@ Use these dimensions for new or replacement art:
 | Half-height console screens and control faces | 128x64 | Keep the authored 2:1 aspect ratio; do not stretch them to square. |
 | Console-control inventory previews | 128x128 | These are the matching `_item.png` files. |
 | Programmable Door face atlases | 128x256, 256x512, or 512x1024 | Low, medium, and high texture tiers; preserve native frame, hinge, and glass atlas proportions. |
-| Connected glass-wall tiles | 64x64 | The generated 6px edge/corner slices are the only intentional non-power-of-two exceptions. |
+| Connected glass-wall tiles | 64x64 | The generated 6px edge/corner slices preserve their model proportions. |
 
-New texture dimensions should otherwise be powers of two. Preserve the native
+New authored texture dimensions should normally be powers of two. Preserve the native
 aspect ratio, use nearest-neighbour scaling for pixel art, and keep paired
 lit/unlit or static/animated assets on the same canvas so their UV coordinates
 do not shift between states. VLTA animation dimensions describe one frame, not

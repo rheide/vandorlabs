@@ -4,6 +4,7 @@
 
 ### Added
 
+- 46 more selectable housing finishes from `textures2`, labeled with their T/R/C source codes. Existing finish numbers remain unchanged.
 - 32 new selectable housing finishes from the shared `textures` artwork folder, covering two variants of 16 metal, floor, wall, conduit and technology materials. They are available across Programmable Blocks and the other blocks that share the housing finish menu.
 - Extra Large Landing Gear doubles Large's model dimensions. Its centered mount and moving parts reserve a three-by-three footprint; extension remains configurable from 0–4 blocks.
 - Programmable Light Frame, a one-pixel-deep light panel, and Programmable Light Slab, a half-height light with top and bottom placement. Both use Programmable Light artwork, brightness, joining, redstone channels and configuration.

@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/textures2_t2_r4_c5",
+    "top": "vandorlabs:blocks/textures2_t2_r4_c5",
+    "side": "vandorlabs:blocks/textures2_t2_r4_c5"
+  }
+}
