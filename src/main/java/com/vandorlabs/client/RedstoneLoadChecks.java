@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.redstone.LoadedRedstonePower;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
+import com.vandorlabs.tiles.TileEntityProgrammableLight;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -30,6 +31,16 @@ final class RedstoneLoadChecks {
                 .withProperty(net.minecraft.block.BlockLever.POWERED,true)
                 .withProperty(net.minecraft.block.BlockLever.FACING,net.minecraft.block.BlockLever.EnumOrientation.UP_X));
         if (!LoadedRedstonePower.isPowered(world,pos)) throw new IllegalStateException("loaded strong power ignored");
+        world.states.clear();
+        world.states.put(pos,Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation(
+                "vandorlabs:programmable_light")).getDefaultState());
+        world.allowReads=false;
+        TileEntityProgrammableLight programmable = new TileEntityProgrammableLight();
+        programmable.setWorld(world); programmable.setPos(pos);
+        net.minecraft.nbt.NBTTagCompound saved = programmable.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+        saved.setInteger("RedstoneChannel", 1);
+        programmable.readFromNBT(saved);
+        programmable.onLoad(); // Joining and channel registration must wait until chunk tile iteration ends.
         System.out.println("[vandorlabs][reprolab] redstone-load-safety PASS");
     }
 

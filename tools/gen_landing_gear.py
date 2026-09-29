@@ -26,16 +26,22 @@ for e in large['elements']:
   e['from'],e['to']=[4,y0,z0],[12,y1,z1]
  else:e['from'],e['to']=parts[name]
 write(assets/'block/landing_gear_large_retracted.json',large)
-for size in ['small','medium','large']:
+extra_large=copy.deepcopy(large)
+for e in extra_large['elements']:
+ for key in ['from','to']:
+  x,y,z=e[key]
+  e[key]=[2*x-8,2*y-16,2*z-8]
+write(assets/'block/landing_gear_extra_large_retracted.json',extra_large)
+for size in ['small','medium','large','extra_large']:
  model=read(size)
  model['textures']['arm']='vandorlabs:blocks/programmable_glass/metal_side'
  for e in model['elements']:
   if e['name']=='piston':
-   e['from'][0]=e['from'][2]=6
-   e['to'][0]=e['to'][2]=10
+   e['from'][0]=e['from'][2]=4 if size=='extra_large' else 6
+   e['to'][0]=e['to'][2]=12 if size=='extra_large' else 10
    for face,values in e['faces'].items():
     values['texture']='#arm'
-    values['uv']=[6,6,10,10] if face in ['up','down'] else [6,0,10,e['to'][1]-e['from'][1]]
+    values['uv']=[4,4,12,12] if size=='extra_large' and face in ['up','down'] else [6,6,10,10] if face in ['up','down'] else [4,0,12,e['to'][1]-e['from'][1]] if size=='extra_large' else [6,0,10,e['to'][1]-e['from'][1]]
  write(assets/f'block/landing_gear_{size}_retracted.json',model)
  for group in ['fixed','wheel','piston']:
   data=copy.deepcopy(model)

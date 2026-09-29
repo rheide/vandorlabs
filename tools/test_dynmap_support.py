@@ -33,6 +33,26 @@ def main():
     mappings = records(texture_path, "block")
     if not models.issubset(mappings):
         raise AssertionError("Dynmap models lack matching texture states")
+    # These Minecraft models have no JSON elements: Dynmap can only see them
+    # when every listed blockstate has an explicit model and texture mapping.
+    dynamic = (
+        "programmable_block", "programmable_light", "programmable_trigger_block",
+        "programmable_slab", "programmable_wall", "programmable_porthole_wall",
+        "programmable_porthole_block", "programmable_diagonal_wall",
+        "programmable_stairs", "controlled_ramp",
+    )
+    for name in dynamic:
+        variants = json.loads((ASSETS / "blockstates" / (name + ".json")).read_text())["variants"]
+        wanted = {(name, state.replace("=", ":").replace(",", "/"))
+                  for state in variants}
+        missing = wanted - models
+        if missing:
+            raise AssertionError("missing Dynmap model states for %s: %s" %
+                                 (name, sorted(missing)[:5]))
+    texture_only = {"dark_wall_panel", "light_wall_panel", "ribbed_wall"}
+    invalid = sorted(name for name, _ in models if name in texture_only)
+    if invalid:
+        raise AssertionError("texture-only names emitted as Dynmap blocks: " + repr(invalid))
     if re.search(r"[eunsdw]/\d+(?:/-?\d+(?:\.\d+)?){4}",
                  model_path.read_text()):
         raise AssertionError("scanner UV bounds were not normalized")

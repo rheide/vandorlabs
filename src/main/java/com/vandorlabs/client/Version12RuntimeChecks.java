@@ -115,6 +115,28 @@ final class Version12RuntimeChecks {
                 gear.setExtended(world,p,true);world.destroyBlock(p.down(),false);
                 require(world.isAirBlock(p),"gear root survived wheel removal");
             }
+            BlockTelescopicLandingGear extra=(BlockTelescopicLandingGear)block("landing_gear");
+            world.setBlockState(p,extra.getDefaultState(),3);
+            TileEntityLandingGear extraTile=(TileEntityLandingGear)world.getTileEntity(p);
+            world.setBlockState(p.add(1,0,1),Blocks.STONE.getDefaultState(),3);
+            require(!extraTile.configure(0,0,32,3),"extra large gear overlapped a corner block");
+            require(world.isAirBlock(p.west()),"failed extra large setup left side cells");
+            world.setBlockToAir(p.add(1,0,1));
+            require(extraTile.configure(0,0,32,3),"extra large gear rejected clear footprint");
+            for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)
+                require(extra.root(world,p.add(x,0,z))==extraTile,"extra large upper footprint owner");
+            require(extra.setExtended(world,p,true),"extra large gear failed to extend");
+            for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)for(int y=1;y<=2;y++)
+                require(extra.root(world,p.add(x,-y,z))==extraTile,"extra large lower footprint owner");
+            boxes.clear();extra.addCollisionBoxToList(world.getBlockState(p.east()),world,p.east(),
+                    new AxisAlignedBB(p.east()),boxes,null,false);
+            require(!boxes.isEmpty(),"extra large side cell lacks collision");
+            require(extraTile.writeToNBT(new NBTTagCompound()).getInteger("GearSize")==3,
+                    "extra large size did not save");
+            require(extraTile.configure(0,0,0,0),"extra large gear could not shrink");
+            require(world.isAirBlock(p.east())&&world.isAirBlock(p.add(1,-1,1)),
+                    "extra large footprint remained after shrinking");
+            world.setBlockToAir(p);
             BlockProgrammableWall diagonal=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
             for (int mode=0;mode<3;mode++) for (int fill=0;fill<4;fill++) {
                 world.setBlockState(p,diagonal.getDefaultState(),3);

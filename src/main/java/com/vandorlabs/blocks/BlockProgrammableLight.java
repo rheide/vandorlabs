@@ -14,9 +14,12 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 /** A single light with selectable face art and brightness. */
-public final class BlockProgrammableLight extends BlockAnimatedScreenSelector {
+public class BlockProgrammableLight extends BlockAnimatedScreenSelector {
     public BlockProgrammableLight() {
-        super("programmable_light");
+        this("programmable_light");
+    }
+    protected BlockProgrammableLight(String name) {
+        super(name);
         setLightLevel(1.0F);
     }
 

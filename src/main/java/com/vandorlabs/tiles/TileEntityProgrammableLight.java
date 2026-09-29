@@ -106,6 +106,10 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     @Override public void onLoad() {
         unloading = false;
         super.onLoad();
+    }
+
+    @Override protected void finishLoading() {
+        super.finishLoading();
         ProgrammableLightConnections.refreshAround(world, pos);
     }
 
@@ -153,8 +157,13 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
                 : getRedstoneChannel() > 0 ? SpaceDoorData.TRIGGER_REDSTONE_ON
                 : SpaceDoorData.TRIGGER_DISABLED;
         if (!SpaceDoorData.validTrigger(trigger)) trigger = SpaceDoorData.TRIGGER_DISABLED;
-        ProgrammableLightConnections.refreshAround(world, pos);
         joinRevision++;
-        if (world != null && pos != null) world.checkLightFor(EnumSkyBlock.BLOCK, pos);
+        if (world != null && pos != null) {
+            if (world.isRemote) world.checkLightFor(EnumSkyBlock.BLOCK, pos);
+            else DeferredTileLoad.schedule(this, () -> {
+                ProgrammableLightConnections.refreshAround(world, pos);
+                world.checkLightFor(EnumSkyBlock.BLOCK, pos);
+            });
+        }
     }
 }

@@ -16,6 +16,8 @@ assert np.count_nonzero(changed)==0, 'Gear did not return to the retracted pose'
 # A nonempty comparison prevents a pair of missing fixtures from passing.
 extended=pixels('gear_extended')
 assert np.count_nonzero(np.max(np.abs(closed-extended),axis=2)>3)>300, 'Gear extension is not visible'
+extra_large=pixels('gear_extra_large')
+assert np.count_nonzero(np.mean(extra_large,axis=2)<75)>4000, 'Extra Large gear is not visible'
 log=(root/'client.log').read_text()
 assert 'seat-gear-gui PASS' in log, 'Seat/gear configuration packets did not pass'
-print('PASS: all three gear sizes return to the same pixels after retraction; extension and configuration dialogs verified')
+print('PASS: legacy gear sizes retract cleanly, Extra Large renders, and configuration dialogs work')

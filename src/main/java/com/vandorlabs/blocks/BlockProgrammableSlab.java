@@ -1,6 +1,7 @@
 package com.vandorlabs.blocks;
 
 import net.minecraft.block.BlockSlab;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -30,6 +31,13 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
                 .withProperty(HALF, BlockSlab.EnumBlockHalf.BOTTOM));
         setLightLevel(0);
         useNeighborBrightness = true;
+    }
+
+    @Override public net.minecraft.tileentity.TileEntity createNewTileEntity(World world, int meta) {
+        com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
+                new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
+        tile.setSlabTileSides(true);
+        return tile;
     }
 
     @Override protected BlockStateContainer createBlockState() {
@@ -78,6 +86,23 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
 
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
     @Override public boolean isFullCube(IBlockState state) { return false; }
+    @Override public boolean isTopSolid(IBlockState state) {
+        return state.getValue(HALF) == BlockSlab.EnumBlockHalf.TOP;
+    }
+
+    @Override public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state,
+            BlockPos pos, EnumFacing face) {
+        BlockSlab.EnumBlockHalf half = state.getValue(HALF);
+        return face == EnumFacing.DOWN && half == BlockSlab.EnumBlockHalf.BOTTOM
+                || face == EnumFacing.UP && half == BlockSlab.EnumBlockHalf.TOP
+                ? BlockFaceShape.SOLID : BlockFaceShape.UNDEFINED;
+    }
+
+    @Override public boolean isSideSolid(IBlockState state, IBlockAccess world, BlockPos pos,
+            EnumFacing side) {
+        return getBlockFaceShape(world, state, pos, side) == BlockFaceShape.SOLID;
+    }
+
     @Override public int getLightValue(IBlockState state, IBlockAccess world,
             BlockPos pos) { return 0; }
 }

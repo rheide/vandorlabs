@@ -30,17 +30,17 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         GlStateManager.disableLighting();GlStateManager.disableCull();
         draw(FIXED);
         GlStateManager.pushMatrix();GlStateManager.translate(0,-t,0);draw(WHEEL);GlStateManager.popMatrix();
-        drawArm(anchor, anchor-pistonLength-t);
+        drawArm(anchor, anchor-pistonLength-t,tile.getSize()==3);
         GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
     }
     /** Split the arm at texture repeats; changing length never scales its UVs. */
-    private void drawArm(double top, double bottom) {
+    private void drawArm(double top, double bottom,boolean extraLarge) {
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = Minecraft.getMinecraft()
                 .getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION_TEX);
-        double low=6/16D,high=10/16D;
+        double low=extraLarge?4/16D:6/16D,high=extraLarge?12/16D:10/16D;
         for(double upper=top;upper>bottom+1E-8;upper-=1) {
             double lower=Math.max(bottom,upper-1),v=(upper-lower)*16;
             armQuad(b,sprite, low,upper,low, high,upper,low, high,lower,low, low,lower,low,6,0,10,v);

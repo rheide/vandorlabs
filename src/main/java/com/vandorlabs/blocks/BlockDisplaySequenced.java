@@ -47,7 +47,7 @@ public class BlockDisplaySequenced extends BlockVandorDirectional {
         if (!world.isRemote) {
             int mode = state.getValue(MODE);
             int next = mode % 3 + 1;
-            if (next == MODE_OFF && world.isBlockPowered(pos)) {
+            if (next == MODE_OFF && com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos)) {
                 next = MODE_ANIMATED;
             }
             world.setBlockState(pos, state.withProperty(MODE, next), 3);
@@ -62,7 +62,7 @@ public class BlockDisplaySequenced extends BlockVandorDirectional {
         // would otherwise kill a hand-set animated screen (same bug class as
         // the old door behavior of slamming shut on nearby block updates).
         if (!world.isRemote) {
-            boolean powered = world.isBlockPowered(pos);
+            boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);
             int mode = state.getValue(MODE);
             if (powered && mode == MODE_OFF) {
                 world.setBlockState(pos, state.withProperty(MODE, MODE_ANIMATED), 3);

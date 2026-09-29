@@ -8,12 +8,14 @@ import com.vandorlabs.tiles.TileEntityRampController;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraftforge.fml.client.config.GuiSlider;
 import org.lwjgl.input.Keyboard;
 import java.io.IOException;
 
 public class GuiRampController extends GuiContainer {
     private final TileEntityRampController controller;
-    private GuiTextField endField,startField;
+    private GuiSlider startSlider,endSlider;
+    private int lastStartHalf,lastEndHalf;
     private GuiTextField channelField;
     private GuiTextField treadField;
     private boolean powerOn,elevator,extendSegments,matchTextures;
@@ -28,16 +30,24 @@ public class GuiRampController extends GuiContainer {
         travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
         lastUpdate=controller.clientUpdates;
         direction=controller.rampDirection();
+        lastStartHalf=controller.startHalfSteps(); lastEndHalf=controller.endHalfSteps();
         xSize=320; ySize=232;
     }
     @Override public void initGui() {
-        super.initGui(); Keyboard.enableRepeatEvents(true);
-        startField=offsetField(0,30,controller.startOffset);
-        endField=offsetField(9,54,controller.endOffset());
-        buttonList.add(new GuiButton(10,guiLeft+266,guiTop+29,20,20,"-"));
-        buttonList.add(new GuiButton(11,guiLeft+288,guiTop+29,20,20,"+"));
-        buttonList.add(new GuiButton(12,guiLeft+266,guiTop+53,20,20,"-"));
-        buttonList.add(new GuiButton(13,guiLeft+288,guiTop+53,20,20,"+"));
+        super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
+        startSlider=new GuiSlider(20,guiLeft+14,guiTop+30,292,20,"","",-16,16,
+                controller.startHalfSteps(),false,true,slider->{
+            int half=slider.getValueInt();slider.setValue(half);
+            slider.displayString=offsetLabel("Start / off",half);
+        });
+        endSlider=new GuiSlider(21,guiLeft+14,guiTop+54,292,20,"","",-16,16,
+                controller.endHalfSteps(),false,true,slider->{
+            int half=slider.getValueInt();slider.setValue(half);
+            slider.displayString=offsetLabel("End / on",half);
+        });
+        startSlider.displayString=offsetLabel("Start / off",controller.startHalfSteps());
+        endSlider.displayString=offsetLabel("End / on",controller.endHalfSteps());
+        buttonList.add(startSlider);buttonList.add(endSlider);
         treadField=new GuiTextField(16,fontRenderer,guiLeft+216,guiTop+127,36,18);
         treadField.setMaxStringLength(2);
         treadField.setValidator(text -> text.matches("[0-9]{0,2}"));
@@ -84,43 +94,35 @@ public class GuiRampController extends GuiContainer {
         if (button.id==18) matchTextures=!matchTextures;
         if (button.id==17) travelAxis=travelAxis==0?2:0;
         if (button.id==7) mc.player.closeScreen();
-        if (button.id>=10 && button.id<=13) {
-            GuiTextField field=button.id<12?startField:endField;
-            int value=parseOffset(field);
-            if (value==Integer.MIN_VALUE) value=button.id<12?controller.startOffset:controller.endOffset();
-            field.setText(Integer.toString(Math.max(-8,Math.min(8,value+(button.id%2==0?-1:1)))));
-        }
         if (button.id==14 || button.id==15) {
             int pixels=parseOffset(treadField);
             if (pixels<1 || pixels>16) pixels=controller.treadPixels;
             treadField.setText(Integer.toString(ControllerPlatform.stepTreadPixels(pixels,button.id==15)));
         }
-        if (button.id!=7) submit();
+        if (button.id!=7 && button.id!=20 && button.id!=21) submit();
         refresh();
     }
-    private GuiTextField offsetField(int id,int y,int value) {
-        GuiTextField field=new GuiTextField(id,fontRenderer,guiLeft+220,guiTop+y,40,18);
-        field.setMaxStringLength(2);
-        field.setValidator(text -> text.matches("-?[0-9]?"));
-        field.setText(Integer.toString(value));
-        return field;
+    private static String offsetLabel(String label,int half) {
+        return label+" offset: "+(half/2D)+" blocks";
     }
     private int parseOffset(GuiTextField field) {
         try { return Integer.parseInt(field.getText()); }
         catch (NumberFormatException e) { return Integer.MIN_VALUE; }
     }
     private void submit() {
-        int start=parseOffset(startField),end=parseOffset(endField),pixels=parseOffset(treadField);
-        if (start>=-8 && start<=8 && end>=-8 && end<=8 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0)
-            PacketHandler.INSTANCE.sendToServer(new MessageRampController(controller.getPos(),start,end,
+        int start=startSlider.getValueInt(),end=endSlider.getValueInt(),pixels=parseOffset(treadField);
+        if (start>=-16 && start<=16 && end>=-16 && end<=16 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
+            lastStartHalf=start;lastEndHalf=end;
+            PacketHandler.INSTANCE.sendToServer(MessageRampController.halfOffsets(controller.getPos(),start,end,
                     pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures));
+        }
     }
     private int channel() {
         try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
         catch (NumberFormatException e) { return -1; }
     }
     @Override public void updateScreen() {
-        super.updateScreen(); endField.updateCursorCounter(); startField.updateCursorCounter(); treadField.updateCursorCounter(); channelField.updateCursorCounter();
+        super.updateScreen(); treadField.updateCursorCounter(); channelField.updateCursorCounter();
         if (lastUpdate!=controller.clientUpdates) {
             lastUpdate=controller.clientUpdates;
             if (controller.error) {
@@ -129,24 +131,27 @@ public class GuiRampController extends GuiContainer {
                 speed=controller.speed; elevator=controller.elevator;
                 travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
                 direction=controller.rampDirection();
-                endField.setText(Integer.toString(controller.endOffset()));
-                startField.setText(Integer.toString(controller.startOffset));
+                lastStartHalf=controller.startHalfSteps();lastEndHalf=controller.endHalfSteps();
+                startSlider.setValue(lastStartHalf);endSlider.setValue(lastEndHalf);
+                startSlider.displayString=offsetLabel("Start / off",lastStartHalf);
+                endSlider.displayString=offsetLabel("End / on",lastEndHalf);
                 treadField.setText(Integer.toString(controller.treadPixels)); refresh();
             }
         }
     }
     @Override protected void keyTyped(char typedChar,int keyCode) throws IOException {
         if (keyCode==Keyboard.KEY_ESCAPE) { super.keyTyped(typedChar,keyCode); return; }
-        String before=endField.getText(),startBefore=startField.getText();
         String channelBefore=channelField.getText(),treadBefore=treadField.getText();
-        if (!endField.textboxKeyTyped(typedChar,keyCode)
-                && !treadField.textboxKeyTyped(typedChar,keyCode)
-                && !startField.textboxKeyTyped(typedChar,keyCode)
+        if (!treadField.textboxKeyTyped(typedChar,keyCode)
                 && !channelField.textboxKeyTyped(typedChar,keyCode)) super.keyTyped(typedChar,keyCode);
-        if (!treadBefore.equals(treadField.getText()) || !startBefore.equals(startField.getText()) || !before.equals(endField.getText()) || !channelBefore.equals(channelField.getText())) submit();
+        if (!treadBefore.equals(treadField.getText()) || !channelBefore.equals(channelField.getText())) submit();
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
-        super.mouseClicked(x,y,button); endField.mouseClicked(x,y,button); startField.mouseClicked(x,y,button); treadField.mouseClicked(x,y,button); channelField.mouseClicked(x,y,button);
+        super.mouseClicked(x,y,button); treadField.mouseClicked(x,y,button); channelField.mouseClicked(x,y,button);
+    }
+    @Override protected void mouseReleased(int x,int y,int button) {
+        super.mouseReleased(x,y,button);
+        if (startSlider.getValueInt()!=lastStartHalf || endSlider.getValueInt()!=lastEndHalf) submit();
     }
     @Override public void onGuiClosed() { super.onGuiClosed(); Keyboard.enableRepeatEvents(false); }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY) {
@@ -155,8 +160,6 @@ public class GuiRampController extends GuiContainer {
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
         fontRenderer.drawString("Programmable Ramp",14,10,0xFFFFFF);
-        fontRenderer.drawString("Start / off offset (-8 to 8)",14,35,0xDAE8F0);
-        fontRenderer.drawString("End / on offset (-8 to 8)",14,59,0xDAE8F0);
         fontRenderer.drawString("Tread px",164,132,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawString(travelAxis==0?"Positive = up; negative = down. Footprint: 8x16.":
                 "Positive = right; negative = left. Footprint: 8x16.",14,153,0xADBECA);
@@ -166,6 +169,6 @@ public class GuiRampController extends GuiContainer {
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();
-        super.drawScreen(mouseX,mouseY,partial); endField.drawTextBox(); startField.drawTextBox(); treadField.drawTextBox(); channelField.drawTextBox();
+        super.drawScreen(mouseX,mouseY,partial); treadField.drawTextBox(); channelField.drawTextBox();
     }
 }

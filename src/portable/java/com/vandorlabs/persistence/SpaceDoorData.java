@@ -42,10 +42,18 @@ public final class SpaceDoorData {
         // retain their one-pixel reveal. Different leaf heights yield the same travel.
         return direction==0?0:31/16.0*(direction==2?-1:1);
     }
-    /** Rotating art is edge-native; sliding art is centre-native. */
-    public static double positionOffset(boolean sliding,boolean middle) {
-        double centre=-5.24/16.0;
-        return sliding?(middle?0:-centre):(middle?centre:0);
+    /**
+     * Native closed-model depth bounds, in pixels: rotating 10.49..14.24
+     * (bare) or 10.49..15.24 (framed), with a different near bound when
+     * hinges are hidden; sliding 7..9 or 6..10.
+     */
+    public static double positionOffset(boolean sliding,boolean framed,boolean hinges,int depth) {
+        if (sliding) {
+            double edge=(framed?6:7)/16.0;
+            return depth==0?0:depth==2?-edge:edge;
+        }
+        if (depth==0) return -5.24/16.0;
+        return (depth==2?-(hinges?10.49:framed?11.24:12.24):(framed?0.76:1.76))/16.0;
     }
     public void write(PrimitiveData data) {
         data.putInt("SpaceDesign",design); data.putInt("SpaceDetail",detail);

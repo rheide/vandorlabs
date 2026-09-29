@@ -18,7 +18,7 @@ public final class MessageLandingGear implements IMessage {
         public IMessage onMessage(MessageLandingGear msg,MessageContext context){
             net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(msg.pos==null||msg.size< -1||msg.size>2||msg.mode< -1||msg.mode>2||msg.channel<0||msg.pixels<0||msg.pixels>64||msg.pixels%8!=0
+                if(msg.pos==null||msg.size< -1||msg.size>=com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES.length||msg.mode< -1||msg.mode>2||msg.channel<0||msg.pixels<0||msg.pixels>64||msg.pixels%8!=0
                         ||!player.world.isBlockLoaded(msg.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         ||!(player.openContainer instanceof ContainerRedstoneChannel))return;
                 ContainerRedstoneChannel c=(ContainerRedstoneChannel)player.openContainer;

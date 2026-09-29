@@ -1,0 +1,40 @@
+{
+  "variants": {
+    "facing=north,half=bottom": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=north,half=top": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=south,half=bottom": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=south,half=top": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=east,half=bottom": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=east,half=top": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=west,half=bottom": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=west,half=top": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=up,half=bottom": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=up,half=top": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=down,half=bottom": {
+      "model": "vandorlabs:programmable_light_slab"
+    },
+    "facing=down,half=top": {
+      "model": "vandorlabs:programmable_light_slab"
+    }
+  }
+}

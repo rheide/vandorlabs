@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "vandorlabs:programmable_light"},
+    {"item": "minecraft:iron_bars"}
+  ],
+  "result": {"item": "vandorlabs:programmable_light_frame"}
+}

@@ -8,6 +8,7 @@ import com.vandorlabs.blocks.BlockPropulsionLight;
 import com.vandorlabs.tiles.TileEntityRedstoneLight;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import org.lwjgl.input.Keyboard;
@@ -45,7 +46,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         this.connected = block != null && block.hasJoinMode();
         this.join = thruster && ((TileEntityRedstoneLight) member).isJoin();
         this.sideTexture = thruster ? ((TileEntityRedstoneLight) member).getSideTexture() : 0;
-        xSize = thruster ? 410 : 240;
+        xSize = thruster ? 400 : 240;
         ySize = thruster ? 190 : 104;
     }
 
@@ -58,8 +59,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(member.getRedstoneChannel()));
         channelField.setFocused(true);
-        if (thruster) housingList = new HousingTextureList(guiLeft + 250,
-                guiTop + 48, 144, sideTexture);
+        if (thruster) housingList = new HousingTextureList(guiLeft + 230,
+                guiTop + 48, 106, sideTexture);
         if (thruster) {
             particleButton = new GuiButton(2, guiLeft + 116, guiTop + 68, 106, 20,
                     particleLabel());
@@ -177,7 +178,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (programmableThruster) fontRenderer.drawString("Shape", 14, 102, 0xFFD8D8D8);
         if (connected) fontRenderer.drawString("Join", 14,
                 programmableThruster ? 130 : 102, 0xFFD8D8D8);
-        if (thruster) fontRenderer.drawString("Wall Texture", 250, 34, 0xFFD8D8D8);
+        if (thruster) fontRenderer.drawString("Wall Texture", 230, 34, 0xFFD8D8D8);
+        if (thruster) fontRenderer.drawString("Preview", 346, 34, 0xFFD8D8D8);
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {
@@ -185,6 +187,14 @@ public class GuiRedstoneChannel extends GuiContainer {
         super.drawScreen(mouseX, mouseY, partial);
         GlStateManager.disableLighting();
         if (housingList != null) housingList.draw(fontRenderer, mouseX, mouseY);
+        if (thruster) {
+            drawRect(guiLeft+344,guiTop+47,guiLeft+394,guiTop+97,0xFF505058);
+            mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            GlStateManager.color(1F,1F,1F,1F);
+            drawTexturedModalRect(guiLeft+347,guiTop+50,
+                    mc.getTextureMapBlocks().getAtlasSprite(
+                            com.vandorlabs.tiles.ScreenHousingTextures.texture(sideTexture)),44,44);
+        }
         channelField.drawTextBox();
     }
 }

@@ -31,6 +31,54 @@ def emit(name,state,data,rotation=0):
     if not boxes:return
     models.append(f'modellist:id=%{name},state={state}'+''.join(boxes))
     blocks.append(f'block:id=%{name},state={state}'+''.join(f',patch{i}=0:{tex}' for tex,i in patches.items())+',transparency=TRANSPARENT,stdrot=true')
+
+def fallback(name, state, bounds, rotation=0):
+    """Give Dynmap geometry for blocks whose Minecraft JSON has no elements."""
+    data={'textures':{'wall':'vandorlabs:blocks/dark_wall_panel'},'elements':[
+        {'from':list(lo),'to':list(hi),'faces':{
+            side:{'texture':'#wall'} for side in ('east','up','north','south','down','west')}}
+        for lo,hi in bounds]}
+    emit(name,state,data,rotation)
+
+for name in ('programmable_block','programmable_light',
+             'programmable_trigger_block'):
+    for facing in ('north','east','south','west','up','down'):
+        fallback(name,'facing:'+facing,[((0,0,0),(16,16,16))])
+for facing in ('north','east','south','west','up','down'):
+    for half in ('bottom','top'):
+        y=8 if half=='top' else 0
+        fallback('programmable_slab',f'facing:{facing}/half:{half}',
+                 [((0,y,0),(16,y+8,16))])
+
+for facing,rotation in (('north',0),('east',90),('south',180),('west',270)):
+    fallback('controlled_ramp','facing:'+facing,
+             [((0,0,z),(16,z+2,z+2)) for z in range(0,16,2)],rotation)
+
+wall_states=json.loads((assets/'blockstates/programmable_wall.json').read_text())['variants']
+for name in ('programmable_wall','programmable_porthole_wall',
+             'programmable_porthole_block',
+             'programmable_diagonal_wall'):
+    for state,variant in wall_states.items():
+        props=dict(item.split('=') for item in state.split(','))
+        rotation=variant.get('y',0)
+        if name=='programmable_diagonal_wall':
+            # The default diagonal spans six pixels front to back. Tile data
+            # can widen or fill it; Dynmap's static model cannot read that.
+            bounds=[]
+            for y in range(16):
+                z=6*(15-y if props['inverted']=='true' else y)/16
+                bounds.append(((0,y,z),(16,y+1,z+4)))
+        elif name=='programmable_porthole_block':
+            bounds=[((0,0,0),(3,16,16)),((13,0,0),(16,16,16)),
+                    ((3,0,0),(13,3,16)),((3,13,0),(13,16,16))]
+        else:
+            z=(6,0,12)[int(props['depth'])]
+            if name=='programmable_porthole_wall':
+                bounds=[((0,0,z),(3,16,z+4)),((13,0,z),(16,16,z+4)),
+                        ((3,0,z),(13,3,z+4)),((3,13,z),(13,16,z+4))]
+            else:
+                bounds=[((0,0,z),(16,16,z+4))]
+        fallback(name,state.replace('=',':').replace(',','/'),bounds,rotation)
 for name in ['luxury_seat','military_seat']:
     for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
         for part in ['single','left','middle','right']:
@@ -43,6 +91,17 @@ for name in ['landing_gear']:
     for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
         for extended in [False,True]:
             emit(name,f'facing:{face}/extended:{str(extended).lower()}/lower:false',load_model(name+'_small_retracted'),rot)
+for name in ['programmable_light_frame','programmable_light_slab']:
+    data=load_model('configured/'+name+'_porthole_on',True)
+    for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
+        if name.endswith('slab'):
+            for half in ['bottom','top']:
+                variant=json.loads(json.dumps(data))
+                if half=='top':
+                    for e in variant['elements']:
+                        e['from'][1]+=8;e['to'][1]+=8
+                emit(name,f'facing:{face}/half:{half}',variant,rot)
+        else:emit(name,f'facing:{face}',data,rot)
 
 for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
     for upper in [False,True]:
@@ -66,4 +125,12 @@ for state,variant in json.loads((assets/'blockstates/programmable_stairs.json').
             e['from'][2],e['to'][2]=16-e['to'][2],16-e['from'][2]
     emit('programmable_stairs',state.replace('=',':').replace(',','/'),data,variant.get('y',0))
 for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[f'texture:id={k},filename=assets/vandorlabs/textures/{v},xcount=1,ycount=1' for k,v in textures.items()]+blocks)]:
-    p=assets/filename;p.write_text(p.read_text().split(marker)[0].rstrip()+'\n\n'+marker+'\n'.join(lines)+'\n')
+    p=assets/filename
+    old=p.read_text().split(marker)[0].splitlines()
+    # These are texture choices, not registered blocks. The old block scan
+    # emitted them as blocks, causing Dynmap to resolve their names to air.
+    texture_only=('dark_wall_panel','light_wall_panel','ribbed_wall')
+    old=[line for line in old if not line.startswith(tuple(
+        prefix+name+',' for prefix in ('modellist:id=%','block:id=%')
+        for name in texture_only))]
+    p.write_text('\n'.join(old).rstrip()+'\n\n'+marker+'\n'.join(lines)+'\n')

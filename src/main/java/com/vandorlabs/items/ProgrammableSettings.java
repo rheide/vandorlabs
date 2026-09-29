@@ -64,6 +64,8 @@ public final class ProgrammableSettings {
     public static final String SWITCH_ROTATION = "switch_rotation";
     public static final String RAMP_START = "ramp_start";
     public static final String RAMP_END = "ramp_end";
+    public static final String RAMP_START_HALF = "ramp_start_half";
+    public static final String RAMP_END_HALF = "ramp_end_half";
     public static final String RAMP_TREAD_PIXELS = "ramp_tread_pixels";
     public static final String RAMP_SPEED = "ramp_speed";
     public static final String RAMP_LIFT = "ramp_lift";
@@ -208,6 +210,8 @@ public final class ProgrammableSettings {
                     ? SpaceDoorData.TRIGGER_REDSTONE_ON : SpaceDoorData.TRIGGER_REDSTONE_OFF);
             out.setInteger(RAMP_START, ramp.startOffset);
             out.setInteger(RAMP_END, ramp.endOffset());
+            out.setInteger(RAMP_START_HALF, ramp.startHalfSteps());
+            out.setInteger(RAMP_END_HALF, ramp.endHalfSteps());
             out.setInteger(RAMP_TREAD_PIXELS, ramp.treadPixels);
             out.setInteger(RAMP_SPEED, ramp.speed);
             out.setBoolean(RAMP_LIFT, ramp.elevator);
@@ -471,6 +475,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityRampController && player != null) {
             TileEntityRampController ramp = (TileEntityRampController) tile;
             if (values.hasKey(RAMP_START) || values.hasKey(RAMP_END)
+                    || values.hasKey(RAMP_START_HALF) || values.hasKey(RAMP_END_HALF)
                     || values.hasKey(RAMP_TREAD_PIXELS) || values.hasKey(RAMP_SPEED)
                     || values.hasKey(RAMP_LIFT) || values.hasKey(RAMP_EXTEND)
                     || values.hasKey(RAMP_DIRECTION) || values.hasKey(RAMP_TRAVEL) || values.hasKey(RAMP_MATCH_TEXTURES)
@@ -481,9 +486,11 @@ public final class ProgrammableSettings {
                         RAMP_DIRECTION, ramp.rampDirection().getIndex()));
                 int trigger = number(values, TRIGGER, ramp.activateOnPower
                         ? SpaceDoorData.TRIGGER_REDSTONE_ON : SpaceDoorData.TRIGGER_REDSTONE_OFF);
-                applicable = ramp.configureTreads(player,
-                        number(values, RAMP_START, ramp.startOffset),
-                        number(values, RAMP_END, ramp.endOffset()),
+                applicable = ramp.configureHalfOffsets(player,
+                        number(values, RAMP_START_HALF,
+                                number(values, RAMP_START, ramp.startOffset)*2),
+                        number(values, RAMP_END_HALF,
+                                number(values, RAMP_END, ramp.endOffset())*2),
                         number(values, RAMP_TREAD_PIXELS, ramp.treadPixels),
                         trigger == SpaceDoorData.TRIGGER_REDSTONE_ON,
                         number(values, RAMP_SPEED, ramp.speed) == 2,

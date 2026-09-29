@@ -45,11 +45,9 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public double verticalTravel() {
         return com.vandorlabs.persistence.SpaceDoorData.verticalTravel(framed,slideDirection);
     }
-    /** Model-space depth offset: rotating art is edge-native, sliding art is centre-native. */
+    /** Model-space depth offset for centre and flush near/far edge placement. */
     public double positionOffset() {
-        double centre = com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(), true);
-        double near = com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(), false);
-        return placementDepth == 0 ? centre : placementDepth == 2 ? 2 * centre - near : near;
+        return com.vandorlabs.persistence.SpaceDoorData.positionOffset(isSliding(),framed,hinges,placementDepth);
     }
     public int getPlacementDepth() { return placementDepth; }
     public void setPlacementDepth(int depth) {

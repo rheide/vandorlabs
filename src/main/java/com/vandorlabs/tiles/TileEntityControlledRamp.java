@@ -30,6 +30,12 @@ public class TileEntityControlledRamp extends TileEntity {
     public BlockPos controller=BlockPos.ORIGIN;
     public IBlockState source=Blocks.STONE.getDefaultState();
     public int startOffset,treadPixels=8;
+    private int startHalfSteps,endHalfSteps=-6;
+    public void setHalfOffsets(int start,int end) {
+        startHalfSteps=start; endHalfSteps=end;
+    }
+    public double startOffsetValue() { return startHalfSteps/2D; }
+    public double endOffsetValue() { return endHalfSteps/2D; }
     // Keep the legacy magnitude/sign fields for old saves and integrations.
     public int endOffset() { return top?-drop:drop; }
     public int sourceY,row,length=1,drop=3,segments=2,duration=60;
@@ -68,13 +74,13 @@ public class TileEntityControlledRamp extends TileEntity {
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
         if (origins.isEmpty() && travelAxis==RampGeometry.VERTICAL && !extendSegments)
             return RampGeometry.boxesPixels(direction(face),pos.getY(),sourceY,low,high,
-                    row,length,startOffset,endOffset(),treadPixels,pose(partial),elevator);
+                    row,length,startOffsetValue(),endOffsetValue(),treadPixels,pose(partial),elevator);
         for (BlockPos origin:origins) {
             int originRow=origin.getX()*face.getFrontOffsetX()+origin.getZ()*face.getFrontOffsetZ()
                     -(pos.getX()*face.getFrontOffsetX()+pos.getZ()*face.getFrontOffsetZ()-row);
             for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
                 RampGeometry.Box whole=RampGeometry.movingTread(direction(face),origin.getX(),origin.getY(),origin.getZ(),
-                        low,high,originRow,length,startOffset,endOffset(),treadPixels,step,pose(partial),pose(partial),
+                        low,high,originRow,length,startOffsetValue(),endOffsetValue(),treadPixels,step,pose(partial),pose(partial),
                         elevator,travelAxis,extendSegments,speed==0);
                 RampGeometry.Box clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
                 if (clipped!=null) boxes.add(clipped);
@@ -115,7 +121,7 @@ public class TileEntityControlledRamp extends TileEntity {
                     -(pos.getX()*face.getFrontOffsetX()+pos.getZ()*face.getFrontOffsetZ()-row);
             for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
                 RampGeometry.Box whole=RampGeometry.movingTread(direction(face),origin.getX(),origin.getY(),origin.getZ(),
-                        low,high,originRow,length,startOffset,endOffset(),treadPixels,step,pose,pose,
+                        low,high,originRow,length,startOffsetValue(),endOffsetValue(),treadPixels,step,pose,pose,
                         elevator,travelAxis,false,speed==0);
                 RampGeometry.Box clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
                 if (clipped==null || Math.abs(clipped.minX-box.minX)>1e-7
@@ -125,7 +131,7 @@ public class TileEntityControlledRamp extends TileEntity {
                         || Math.abs(clipped.minZ-box.minZ)>1e-7
                         || Math.abs(clipped.maxZ-box.maxZ)>1e-7) continue;
                 double offset=ControllerPlatform.offsetPixels(originRow,step,length,treadPixels,
-                        startOffset,endOffset(),pose,elevator,speed==0);
+                        startOffsetValue(),endOffsetValue(),pose,elevator,speed==0);
                 return new double[]{pos.getX()-origin.getX()-side.getFrontOffsetX()*offset,
                         pos.getZ()-origin.getZ()-side.getFrontOffsetZ()*offset};
             }
@@ -142,7 +148,7 @@ public class TileEntityControlledRamp extends TileEntity {
         RampGeometry.Box portable=new RampGeometry.Box(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);
         int step=RampGeometry.segmentAtPixels(direction(face),portable,treadPixels,elevator);
         double offset=travelAxis==RampGeometry.VERTICAL && !extendSegments
-                ?ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffset,endOffset(),pose(partial),elevator,speed==0):0;
+                ?ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),pose(partial),elevator,speed==0):0;
         return ControllerPlatform.sideTextureV(pos.getY(),localY,sourceY,offset);
     }
     private static RampGeometry.Direction direction(EnumFacing face) {
@@ -220,6 +226,8 @@ public class TileEntityControlledRamp extends TileEntity {
         super.writeToNBT(tag);
         new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
                 elevator,open,moving,startPose,startTick,startOffset,endOffset(),treadPixels).write(new NbtPrimitiveData(tag));
+        tag.setInteger(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,startHalfSteps);
+        tag.setInteger(SaveSchema.Ramp.END_OFFSET_HALF_STEPS,endHalfSteps);
         tag.setInteger(SaveSchema.Ramp.TRAVEL_AXIS,travelAxis);
         tag.setBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS,extendSegments);
         tag.setInteger(SaveSchema.Ramp.SPEED_MODE,speed);
@@ -268,6 +276,17 @@ public class TileEntityControlledRamp extends TileEntity {
         startOffset=savedTravel==RampGeometry.LEFT?-data.startOffset:data.startOffset;
         int signedEnd=savedTravel==RampGeometry.LEFT?-data.endOffset:data.endOffset;
         drop=Math.abs(signedEnd); top=signedEnd<0;
+        startHalfSteps=tag.hasKey(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,3)
+                ?tag.getInteger(SaveSchema.Ramp.START_OFFSET_HALF_STEPS):startOffset*2;
+        endHalfSteps=tag.hasKey(SaveSchema.Ramp.END_OFFSET_HALF_STEPS,3)
+                ?tag.getInteger(SaveSchema.Ramp.END_OFFSET_HALF_STEPS):signedEnd*2;
+        if (savedTravel==RampGeometry.LEFT) {
+            if (tag.hasKey(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,3)) startHalfSteps=-startHalfSteps;
+            if (tag.hasKey(SaveSchema.Ramp.END_OFFSET_HALF_STEPS,3)) endHalfSteps=-endHalfSteps;
+        }
+        startHalfSteps=Math.max(-16,Math.min(16,startHalfSteps));
+        endHalfSteps=Math.max(-16,Math.min(16,endHalfSteps));
+        startOffset=startHalfSteps/2; drop=(Math.abs(endHalfSteps)+1)/2; top=endHalfSteps<0;
         travelAxis=savedTravel==RampGeometry.LEFT?RampGeometry.RIGHT:savedTravel;
         extendSegments=tag.getBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS);
         speed=tag.hasKey(SaveSchema.Ramp.SPEED_MODE)?tag.getInteger(SaveSchema.Ramp.SPEED_MODE):1;

@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["LLL"],
+  "key": {"L": {"item": "vandorlabs:programmable_light"}},
+  "result": {"item": "vandorlabs:programmable_light_slab", "count": 6}
+}

@@ -322,7 +322,8 @@ final class SpaceDoorRuntimeChecks {
                 check(z0+shift>=0 && z1+shift<=16,"control panel leaves its block at depth "+depth);
                 if (!far) check(z0==com.vandorlabs.render.SpaceDoorControlPanel.z0(sliding),
                         "near or middle panel moved");
-                else check(Math.abs(z0+shift-4.76)<1E-6 && Math.abs(z1+shift-7.76)<1E-6,
+                else check(Math.abs(z0+shift-(sliding?4:4.75))<1E-6
+                                && Math.abs(z1+shift-(sliding?7:7.75))<1E-6,
                         "far panel was not moved across the door frame");
                 boolean right=side==com.vandorlabs.render.SpaceDoorControlPanel.Side.RIGHT;
                 double z=(z0+z1)/32+settings.positionOffset();

@@ -184,8 +184,13 @@ public class BlockVandorDoor extends BlockVandorDirectional {
     }
 
     private static boolean hasDoorSupport(World world, BlockPos support) {
+        net.minecraft.block.Block block = world.getBlockState(support).getBlock();
         return world.isSideSolid(support, EnumFacing.UP)
-                || world.getBlockState(support).getBlock() instanceof BlockProgrammableSlab;
+                || block instanceof BlockProgrammableSlab
+                || block instanceof BlockProgrammableWall
+                && ((BlockProgrammableWall) block).isDiagonalShape()
+                && !BlockProgrammableWall.halfHeight(world, support)
+                && BlockProgrammableWall.fill(world, support) != 0;
     }
 
     @Override
@@ -316,7 +321,8 @@ public class BlockVandorDoor extends BlockVandorDirectional {
         TileEntity tile = world.getTileEntity(lowerPos);
         boolean channelPowered = tile instanceof TileEntitySlidingDoor
                 && ((TileEntitySlidingDoor) tile).isChannelSignalPowered();
-        boolean powered = world.isBlockPowered(lowerPos) || world.isBlockPowered(lowerPos.up())
+        boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, lowerPos)
+                || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, lowerPos.up())
                 || channelPowered;
         boolean wasPowered = getActualState(state, world, pos).getValue(POWERED);
         if (powered != wasPowered) setPowered(world, pos, state, powered);

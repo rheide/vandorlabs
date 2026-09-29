@@ -334,7 +334,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
                 ? ScreenHousingTextures.clamp(tag.getInteger("PropulsionSideTexture"))
                 : ScreenHousingTextures.INDUSTRIAL_BLOCK;
         if (world != null && !world.isRemote && oldChannel != channel)
-            RedstoneChannels.channelChanged(this, oldChannel);
+            DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 
     @Override public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }

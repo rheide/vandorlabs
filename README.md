@@ -36,7 +36,9 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   These fixtures are six-direction, light-emitting and redstone-channel aware.
   Right-click cycles On, On + Particle Stream and Off. Particle-stream mode uses a separate,
   substantially brighter family-colored emitter texture in addition to its
-  denser exhaust effect. The channel dialog can also choose whether
+  denser exhaust effect. The selected wall texture covers the housing on every
+  side, while the emitter and trim keep their own art. The channel dialog shows
+  a preview of that texture and can also choose whether
   redstone-powered engines emit particles. Matching square engines in
   an isolated, coplanar square from 2x2 through 8x8 merge visually into one
   large engine and emit one size-scaled, concentrated particle plume from the
@@ -52,6 +54,11 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all
   four corners, iron ingots at top/bottom center, gold ingots at left/right center,
   and redstone dust in the center. Produces one ingot.
+- **Programmable lights**: the full block, thin Light Frame and half-height Light
+  Slab share artwork, brightness, joining and redstone settings. Place the slab
+  against the top or underside of a block to choose its lower or upper half.
+  Craft a Light Frame from a Programmable Light and iron bars, or six Light Slabs
+  from three Programmable Lights in a row. See [version 1.2 examples](docs/gallery/version-1.2.md).
 - **Configurizer**: right-click a configurable block while holding it to open
   that block's settings menu, including in survival mode. Craft it from one
   Programmable Matter Ingot and one redstone; see the
@@ -67,7 +74,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   sixteen buildable materials from their independent 4x4 source sheet.
 - **Connected seats**: Luxury and Military Seats have Join and height controls.
   Their recipes use Industrial Alloy and wool. See [seating](docs/gallery/chairs.md).
-- **Landing Gear**: one block with Small, Medium and Large sizes. Configure
+- **Landing Gear**: one block with Small, Medium, Large and Extra Large sizes. Extra Large doubles Large's model dimensions and occupies a centered three-by-three footprint. Configure
   redstone mode/channel and extension from 0–4 blocks in half-block steps;
   size and length changes preview immediately. See [Landing Gear](docs/gallery/version-1.1.md#landing-gear).
 - **Ramp / Elevator Controller**: turns matching existing slabs or blocks into
@@ -118,7 +125,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.1.jar`.
+`build/libs/vandorlabs-1.2.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 

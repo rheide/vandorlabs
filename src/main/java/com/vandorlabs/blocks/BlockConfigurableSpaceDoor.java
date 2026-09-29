@@ -40,7 +40,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         TileEntity raw=world.getTileEntity(lower);
         if (!(raw instanceof TileEntitySpaceDoor)) { super.updateRedstoneState(world,pos,state); return; }
         TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;
-        boolean powered=world.isBlockPowered(lower) || world.isBlockPowered(lower.up())
+        boolean powered=com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,lower)
+                || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,lower.up())
                 || tile.isChannelSignalPowered();
         boolean open=tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED
                 ?world.getBlockState(lower).getValue(OPEN)
@@ -195,12 +196,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         IBlockState actual=getActualState(state,world,pos);
         net.minecraft.util.math.AxisAlignedBB box=tile==null?super.getBoundingBox(state,world,pos)
                 :tile.model(tile.isSliding()).spaceBounds(actual,world,pos);
-        if (tile!=null) {
-            EnumFacing facing=actual.getValue(FACING);
-            box=box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
-                    facing.getFrontOffsetZ()*tile.positionOffset());
-        }
-        return box;
+        return tile==null?box:positionedBounds(box,actual.getValue(FACING),tile.positionOffset());
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getCollisionBoundingBox(IBlockState state,
             net.minecraft.world.IBlockAccess world,BlockPos pos) {
@@ -210,7 +206,17 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         if (tile.isSliding() && actual.getValue(OPEN)) return NULL_AABB;
         net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).spaceBounds(actual,world,pos);
         EnumFacing facing=actual.getValue(FACING);
-        return box.offset(facing.getFrontOffsetX()*tile.positionOffset(),0,
-                facing.getFrontOffsetZ()*tile.positionOffset());
+        return positionedBounds(box,facing,tile.positionOffset());
+    }
+    private static AxisAlignedBB positionedBounds(AxisAlignedBB box,EnumFacing facing,double offset) {
+        AxisAlignedBB moved=box.offset(facing.getFrontOffsetX()*offset,0,
+                facing.getFrontOffsetZ()*offset);
+        // The older selection boxes are wider than the door art. Keep the
+        // shifted box inside its block when the visible outer face is flush.
+        if (facing.getAxis()==EnumFacing.Axis.X)
+            return new AxisAlignedBB(Math.max(0,moved.minX),moved.minY,moved.minZ,
+                    Math.min(1,moved.maxX),moved.maxY,moved.maxZ);
+        return new AxisAlignedBB(moved.minX,moved.minY,Math.max(0,moved.minZ),
+                moved.maxX,moved.maxY,Math.min(1,moved.maxZ));
     }
 }

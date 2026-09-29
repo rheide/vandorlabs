@@ -292,6 +292,10 @@ public class ReproLab {
                 galleryFeet + 0.5D, -24.0D, 0.0F, 8.0F));
         SHOTS.add(new Shot("gallery_propulsion", GALLERY_X, galleryFeet + 2.0D,
                 -32.0D, 0.0F, 5.0F));
+        SHOTS.add(new Shot("gallery_propulsion_wall_top",GALLERY_X,
+                galleryFeet+7,-27,0,25));
+        SHOTS.add(new Shot("gallery_propulsion_wall_bottom",GALLERY_X,
+                galleryFeet+1,-27,0,-20));
         SHOTS.add(new Shot("gallery_connected_thruster", GALLERY_X,
                 galleryFeet + 1.0D, -26.0D, 0.0F, 0.0F));
         SHOTS.add(new Shot("gallery_connected_hover", GALLERY_X,
@@ -303,9 +307,11 @@ public class ReproLab {
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
-        for (String scene : new String[]{"faces", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
+        for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
                     galleryFeet+3, -26, -20, 15));
+        SHOTS.add(new Shot("gallery_v12_input_ceiling",GALLERY_X+2,
+                galleryFeet+2,-21,0,-35));
         SHOTS.add(new Shot("gallery_v12_shallow_fill_under", GALLERY_X-3,
                 galleryFeet, -26, -20, -12));
         SHOTS.add(new Shot("gallery_v12_light_depth_near", GALLERY_X,
@@ -870,6 +876,8 @@ public class ReproLab {
                 saveNamed(mc,"chair_item_hotbar_and_hand");
                 BlockPos thrusterGui = CONSOLE.add(6, 0, 3);
                 mc.world.setBlockState(thrusterGui, block("ion_drive").getDefaultState(), 3);
+                ((com.vandorlabs.tiles.TileEntityRedstoneLight)mc.world.getTileEntity(thrusterGui))
+                        .setSideTexture(3);
                 mc.displayGuiScreen(new GuiRedstoneChannel(
                         (com.vandorlabs.tiles.TileEntityRedstoneLight) mc.world.getTileEntity(thrusterGui)));
                 state = 22;
@@ -1104,6 +1112,20 @@ public class ReproLab {
             throw new IllegalStateException("render lab requires an integrated server");
         }
         World world = mc.getIntegratedServer().getWorld(0);
+        IBlockState inputWall = ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,EnumFacing.NORTH)
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,false)
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER,true);
+        IBlockState inputKeyboard=inputWall
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,true)
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER,false);
+        IBlockState fullWall=ModBlocks.PROGRAMMABLE_FULL_INPUT.getDefaultState()
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,EnumFacing.NORTH)
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,false)
+                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER,false);
+        IBlockState fullFloor=fullWall.withProperty(
+                com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,true);
+        onServer(mc,()->{
         int y = PLATFORM0.getY();
         BlockPos.getAllInBox(PLATFORM0, PLATFORM1).forEach(pos -> {
             world.setBlockState(pos, Blocks.STONE.getDefaultState(), 2);
@@ -1322,31 +1344,17 @@ public class ReproLab {
             }
         }
         world.setBlockState(DIAGONAL_DOWN.up(),Blocks.STONE.getDefaultState(),2);
-        IBlockState inputWall = ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
-                        EnumFacing.NORTH)
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD, false)
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER, true);
         world.setBlockState(INPUT_WALL, inputWall, 2);
         configureInputs(world, INPUT_WALL, 2, 2);
         setInputWallPosition(world, INPUT_WALL, 1);
         setInputSmall(world, INPUT_WALL, true);
-        IBlockState inputKeyboard = inputWall
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD, true)
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER, false);
         world.setBlockState(INPUT_KEYBOARD, inputKeyboard, 2);
         configureInputs(world, INPUT_KEYBOARD, 3, 3);
         setInputSmall(world, INPUT_KEYBOARD, true);
         place(world, HALF_CONSOLE, ModBlocks.PROGRAMMABLE_HALF_CONSOLE,
                 BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH);
         configureInputs(world, HALF_CONSOLE, 4, 14);
-        IBlockState fullWall = ModBlocks.PROGRAMMABLE_FULL_INPUT.getDefaultState()
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,
-                        EnumFacing.NORTH)
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD, false)
-                .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.UPPER, false);
-        IBlockState fullFloor = fullWall.withProperty(
-                com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD, true);
+        });
         EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()
                 .getPlayerByUsername(mc.player.getName());
         if (serverPlayer == null) {
@@ -1368,6 +1376,7 @@ public class ReproLab {
         ScreenRuntimeChecks.run(serverPlayer);
         MaterialRuntimeChecks.run(serverPlayer);
         ItemRuntimeChecks.run(serverPlayer);
+        onServer(mc,()->{
         // Rebuild programmable fixtures after destructive runtime contracts.
         // Keeping render targets downstream from test mutations also avoids
         // integrated-server/client ordering races in a reused world.
@@ -1474,7 +1483,13 @@ public class ReproLab {
                                 EnumFacing.NORTH), 2);
             }
         }
+        });
         System.out.println("[vandorlabs][reprolab] platform built");
+    }
+
+    private static void onServer(Minecraft mc,Runnable action){
+        try {mc.getIntegratedServer().addScheduledTask(action).get();}
+        catch(Exception e){throw new IllegalStateException("Render lab server world setup failed",e);}
     }
 
     private static void placeChair(World world, BlockPos pos, int style) {
@@ -1644,6 +1659,23 @@ public class ReproLab {
                 world.setBlockState(new BlockPos(GALLERY_X + x, GALLERY_Y, -18), state, 3);
             world.setBlockState(new BlockPos(GALLERY_X + 3, GALLERY_Y + 2, -18),
                     state.withProperty(com.vandorlabs.blocks.BlockIndustrialTable.UPSIDE_DOWN, true), 3);
+        } else if (shot.startsWith("gallery_propulsion_wall_")) {
+            String[] families={"rocket_thruster","ion_drive","plasma_vent","impulse_engine"};
+            for(int i=0;i<families.length;i++){
+                BlockPos at=new BlockPos(GALLERY_X-5+i*3,GALLERY_Y+3,-18);
+                Block block=block(families[i]);
+                world.setBlockState(at,block.getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockPropulsionLight.FACING,EnumFacing.NORTH),3);
+                ((com.vandorlabs.tiles.TileEntityRedstoneLight)world.getTileEntity(at)).setSideTexture(3);
+            }
+            String[] hover={"antigravity_plate","repulsor_array","vertical_hover_thruster"};
+            for(int i=0;i<hover.length;i++){
+                BlockPos at=new BlockPos(GALLERY_X-3+i*3,GALLERY_Y+1,-18);
+                Block block=block(hover[i]);
+                world.setBlockState(at,block.getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockPropulsionLight.FACING,EnumFacing.NORTH),3);
+                ((com.vandorlabs.tiles.TileEntityRedstoneLight)world.getTileEntity(at)).setSideTexture(3);
+            }
         } else if (shot.equals("gallery_propulsion")) {
             String[] hexes = {"rocket_thruster_hexagonal", "ion_drive_hexagonal",
                     "plasma_vent_hexagonal", "impulse_engine_hexagonal"};

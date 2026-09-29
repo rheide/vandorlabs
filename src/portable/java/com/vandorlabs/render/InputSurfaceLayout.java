@@ -70,6 +70,14 @@ public final class InputSurfaceLayout {
         return keyboard?(upper?FULL_FLOOR_UPPER:FULL_FLOOR_LOWER):FULL_WALL;
     }
 
+    public static Mounted ceilingInput(boolean full,boolean small) {
+        double scale=full?1:small?SMALL_SCALE:1;
+        double x0=(16-16*scale)/2,x1=16-x0;
+        double z0=full?0:16-8*scale;
+        return new Mounted(new Box(x0,15,z0,x1,16,16),
+                horizontalDown(x0+.25,x1-.25,z0+.25,15.75,14.98));
+    }
+
     public static Quad halfConsoleFront() { return HALF_CONSOLE_FRONT; }
 
     public static Quad halfConsoleRear() { return HALF_CONSOLE_REAR; }
@@ -77,6 +85,11 @@ public final class InputSurfaceLayout {
     private static Quad horizontal(double x0,double x1,double z0,double z1,double y) {
         return new Quad(new Vertex(x0,y,z1,0,0),new Vertex(x1,y,z1,1,0),
                 new Vertex(x1,y,z0,1,1),new Vertex(x0,y,z0,0,1));
+    }
+
+    private static Quad horizontalDown(double x0,double x1,double z0,double z1,double y) {
+        return new Quad(new Vertex(x0,y,z0,0,0),new Vertex(x1,y,z0,1,0),
+                new Vertex(x1,y,z1,1,1),new Vertex(x0,y,z1,0,1));
     }
 
     private static Quad vertical(double x0,double x1,double y0,double y1,double z) {

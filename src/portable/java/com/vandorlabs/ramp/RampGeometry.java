@@ -21,13 +21,13 @@ public final class RampGeometry {
     }
 
     public static Box movingTread(Direction face,int sourceX,int sourceY,int sourceZ,
-            double low,double high,int row,int length,int start,int end,int pixels,
+            double low,double high,int row,int length,double start,double end,int pixels,
             int step,double from,double to,boolean elevator,int travel,boolean extend) {
         return movingTread(face,sourceX,sourceY,sourceZ,low,high,row,length,start,end,pixels,
                 step,from,to,elevator,travel,extend,false);
     }
     public static Box movingTread(Direction face,int sourceX,int sourceY,int sourceZ,
-            double low,double high,int row,int length,int start,int end,int pixels,
+            double low,double high,int row,int length,double start,double end,int pixels,
             int step,double from,double to,boolean elevator,int travel,boolean extend,boolean fast) {
         Box footprint=footprintPixels(face,step,elevator?16:pixels,low,high);
         double a=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,from,elevator,fast);
@@ -66,7 +66,7 @@ public final class RampGeometry {
         return boxes(face,cellY,sourceY,low,high,row,length,0,top?-drop:drop,segments,pose,elevator);
     }
     public static List<Box> boxes(Direction face,int cellY,int sourceY,double low,double high,
-            int row,int length,int start,int end,int segments,double pose,boolean elevator) {
+            int row,int length,double start,double end,int segments,double pose,boolean elevator) {
         List<Box> result=new ArrayList<>();
         int count=elevator?1:segments;
         for (int i=0;i<count;i++) {
@@ -84,7 +84,7 @@ public final class RampGeometry {
     }
 
     public static List<Box> boxesPixels(Direction face,int cellY,int sourceY,double low,double high,
-            int row,int length,int start,int end,int pixels,double pose,boolean elevator) {
+            int row,int length,double start,double end,int pixels,double pose,boolean elevator) {
         List<Box> result=new ArrayList<>();
         for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(pixels));step++) {
             double offset=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,pose,elevator);

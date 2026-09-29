@@ -40,7 +40,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (world == null) return false;
         net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
         return block instanceof com.vandorlabs.blocks.BlockProgrammableTrigger
-                || block instanceof com.vandorlabs.blocks.BlockProgrammableLight;
+                || block.getClass()==com.vandorlabs.blocks.BlockProgrammableLight.class;
     }
 
     public static final int MODE_OFF = ScreenBehavior.OFF;
@@ -93,6 +93,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private String secondaryInputPanel = INPUT_PANELS[0];
     /** -1 means a legacy block whose lower/top position comes from metadata. */
     private int wallPosition = -1;
+    private boolean ceilingMounted;
+    public boolean isCeilingMounted() { return ceilingMounted; }
+    public void setCeilingMounted(boolean value) {
+        ceilingMounted=value;markDirty();
+        if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
+    }
     private boolean smallInput = false;
     private int redstoneChannel;
     private boolean channelSignal;
@@ -190,7 +196,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return redstoneChannel; }
     @Override public boolean hasLocalRedstoneSignal() {
-        return world != null && pos != null && world.isBlockPowered(pos);
+        return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }
     @Override public void setChannelSignal(boolean powered) {
         if (channelSignal == powered) return;
@@ -210,7 +216,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         RedstoneChannels.channelChanged(this, old);
     }
     public void localInputChanged() { RedstoneChannels.inputChanged(this); }
-    @Override public void onLoad() { super.onLoad(); RedstoneChannels.register(this); }
+    @Override public void onLoad() {
+        super.onLoad();
+        DeferredTileLoad.schedule(this, this::finishLoading);
+    }
+
+    protected void finishLoading() { RedstoneChannels.register(this); }
     @Override public void invalidate() { RedstoneChannels.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() { RedstoneChannels.unregister(this); super.onChunkUnload(); }
 
@@ -318,12 +329,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
      * animated, mirroring the sequenced displays' wake-only behavior.
      */
     public int getEffectiveMode() {
-        boolean powered = (world != null && pos != null && world.isBlockPowered(pos)) || channelSignal;
+        boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
         return ScreenBehavior.effectiveMode(displayMode,redstoneEnabled,powered);
     }
 
     protected boolean isTriggerPowered() {
-        return (world != null && pos != null && world.isBlockPowered(pos)) || channelSignal;
+        return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
     }
 
     public boolean isUsableByPlayer(EntityPlayer player) {
@@ -339,6 +350,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
+        compound.setBoolean("CeilingMounted",ceilingMounted);
         new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
@@ -366,6 +378,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
+        ceilingMounted=compound.getBoolean("CeilingMounted");
         // NBT is world data, never trust it blindly. The portable codec keeps
         // these defaults identical in every version-specific block entity.
         ScreenData data = ScreenData.read(new NbtPrimitiveData(compound),
@@ -396,7 +409,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
         faceTextures = new FaceTextures(compound.getBoolean("FaceTexturesEnabled"),
                 compound.getIntArray("FaceTextures"));
-        slabTileSides = compound.getBoolean("SlabTileSides");
+        if (compound.hasKey("SlabTileSides", 1))
+            slabTileSides = compound.getBoolean("SlabTileSides");
         diagonalFullWidth = compound.getBoolean("DiagonalFullWidth");
         diagonalHalfHeight = compound.getBoolean("DiagonalHalfHeight");
         diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
@@ -407,7 +421,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             world.markBlockRangeForRenderUpdate(pos,pos);
         portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
-            RedstoneChannels.channelChanged(this, oldChannel);
+            DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 
     @Override

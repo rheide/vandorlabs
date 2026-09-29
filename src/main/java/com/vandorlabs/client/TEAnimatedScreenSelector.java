@@ -391,9 +391,19 @@ public class TEAnimatedScreenSelector
             GlStateManager.enableCull();
             GlStateManager.cullFace(GlStateManager.CullFace.FRONT);
             int visible=lightVisibleFaces(light,state.getValue(BlockAnimatedScreenSelector.FACING));
-            renderLightHousing(housing,visible);
+            int minY=0,maxY=16,minZ=0,maxZ=16;
+            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)maxZ=1;
+            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLightSlab){
+                boolean upper=state.getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF)
+                        ==net.minecraft.block.BlockSlab.EnumBlockHalf.TOP;
+                EnumFacing facing=state.getValue(BlockAnimatedScreenSelector.FACING);
+                if(facing==EnumFacing.UP){minZ=upper?0:8;maxZ=upper?8:16;}
+                else if(facing==EnumFacing.DOWN){minZ=upper?8:0;maxZ=upper?16:8;}
+                else {minY=upper?8:0;maxY=upper?16:8;}
+            }
+            renderLightHousing(housing,visible,0,minY,minZ,16,maxY,maxZ);
             if ((visible & (1 << EnumFacing.NORTH.getIndex())) != 0)
-                renderProgrammableLightFace(face, lightGroup(light, state), te.getPos());
+                renderProgrammableLightFace(face, lightGroup(light, state), te.getPos(),minY,maxY,minZ);
             GlStateManager.cullFace(GlStateManager.CullFace.BACK);
             GlStateManager.enableLighting();
             endLocalTransform();
@@ -625,8 +635,9 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
-        InputSurfaceLayout.Mounted layout=InputSurfaceLayout.halfInput(keyboard,upper,
-                wallPosition,small);
+        InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
+                ?InputSurfaceLayout.ceilingInput(false,small)
+                :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
         renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1);
         drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
@@ -640,7 +651,9 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
         double[] uv=bindScreenSurface(te);
-        InputSurfaceLayout.Mounted layout=InputSurfaceLayout.fullInput(keyboard,upper);
+        InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
+                ?InputSurfaceLayout.ceilingInput(true,false)
+                :InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
         renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1);
@@ -853,7 +866,8 @@ public class TEAnimatedScreenSelector
             return;
         }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS, wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL
+                ? DefaultVertexFormats.POSITION_TEX_NORMAL : DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
             boolean halfHeight=te.isDiagonalHalfHeight();
             if (halfHeight) {
@@ -902,6 +916,22 @@ public class TEAnimatedScreenSelector
             double x, double y, double z, double u, double v) {
         buf.pos(x, y, z).tex(sprite.getInterpolatedU(u),
                 sprite.getInterpolatedV(v)).endVertex();
+    }
+
+    /** The diagonal wall uses per-face normals so shader lighting stays stable as the camera moves. */
+    private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign,
+            double[] a, double[] b, double[] c, double[] d) {
+        double ux=b[0]-a[0], uy=b[1]-a[1], uz=b[2]-a[2];
+        double vx=c[0]-a[0], vy=c[1]-a[1], vz=c[2]-a[2];
+        double nx=sign*(uy*vz-uz*vy), ny=sign*(uz*vx-ux*vz),
+                nz=sign*(ux*vy-uy*vx);
+        double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
+        if (length<1.0E-7) return;
+        float fx=(float)(nx/length), fy=(float)(ny/length), fz=(float)(nz/length);
+        for (double[] p:new double[][]{a,b,c,d})
+            buf.pos(p[0],p[1],p[2])
+                    .tex(sprite.getInterpolatedU(p[3]),sprite.getInterpolatedV(p[4]))
+                    .normal(fx,fy,fz).endVertex();
     }
 
     private static void panelRect(BufferBuilder buf, TextureAtlasSprite sprite,
@@ -1041,23 +1071,24 @@ public class TEAnimatedScreenSelector
             double uvOrigin = fill == 0 ? 0 : fillLow;
             boolean acrossX = Math.abs(a[0] - b[0]) + Math.abs(c[0] - d[0])
                     > Math.abs(a[1] - b[1]) + Math.abs(c[1] - d[1]);
-            wallVertex(buf, sprite, a[0], 0, a[1], acrossX ? a[0] : a[1] - uvOrigin, 16);
-            wallVertex(buf, sprite, b[0], 0, b[1], acrossX ? b[0] : b[1] - uvOrigin, 16);
-            wallVertex(buf, sprite, c[0], 16, c[1], acrossX ? c[0] : c[1] - uvOrigin, 0);
-            wallVertex(buf, sprite, d[0], 16, d[1], acrossX ? d[0] : d[1] - uvOrigin, 0);
+            normalQuad(buf, sprite, -1,
+                    new double[]{a[0], 0, a[1], acrossX ? a[0] : a[1] - uvOrigin, 16},
+                    new double[]{b[0], 0, b[1], acrossX ? b[0] : b[1] - uvOrigin, 16},
+                    new double[]{c[0], 16, c[1], acrossX ? c[0] : c[1] - uvOrigin, 0},
+                    new double[]{d[0], 16, d[1], acrossX ? d[0] : d[1] - uvOrigin, 0});
         }
         for (int y : new int[] {0, 16}) {
             double near = y == 0 ? bottom : top;
             roofRect(buf, fill == 0 ? metal : wall, y, corner == null ? 0 : corner.left(near),
-                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4, fill == 0 ? 0 : fillLow);
+                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4, fill == 0 ? 0 : fillLow, true);
             if (corner != null) {
                 if (corner.frontRight != null && (fill&1)==0) {
                     double armX = corner.armLeft(near, corner.frontRight);
-                    roofRect(buf, metal, y, armX, armX + 4, 0, near);
+                    roofRect(buf, metal, y, armX, armX + 4, 0, near, 0, true);
                 }
                 if (corner.backRight != null && (fill&2)==0) {
                     double armX = corner.armLeft(near, corner.backRight);
-                    roofRect(buf, metal, y, armX, armX + 4, near + 4, 16);
+                    roofRect(buf, metal, y, armX, armX + 4, near + 4, 16, 0, true);
                 }
             }
         }
@@ -1175,7 +1206,21 @@ public class TEAnimatedScreenSelector
 
     private static void roofRect(BufferBuilder buf, TextureAtlasSprite sprite,
             double y, double x0, double x1, double z0, double z1, double uvOrigin) {
+        roofRect(buf,sprite,y,x0,x1,z0,z1,uvOrigin,false);
+    }
+
+    private static void roofRect(BufferBuilder buf, TextureAtlasSprite sprite,
+            double y, double x0, double x1, double z0, double z1, double uvOrigin,
+            boolean normal) {
         if (z1 - z0 < 1.0E-7) return;
+        if (normal) {
+            normalQuad(buf,sprite,y == 16 ? -1 : 1,
+                    new double[]{x0,y,z0,x0,z0-uvOrigin},
+                    new double[]{x1,y,z0,x1,z0-uvOrigin},
+                    new double[]{x1,y,z1,x1,z1-uvOrigin},
+                    new double[]{x0,y,z1,x0,z1-uvOrigin});
+            return;
+        }
         wallVertex(buf, sprite, x0, y, z0, x0, z0 - uvOrigin);
         wallVertex(buf, sprite, x1, y, z0, x1, z0 - uvOrigin);
         wallVertex(buf, sprite, x1, y, z1, x1, z1 - uvOrigin);
@@ -1249,7 +1294,10 @@ public class TEAnimatedScreenSelector
             EnumFacing worldSide=lightWorldSide(facing,local);
             BlockPos neighbor=tile.getPos().offset(worldSide);
             if(!tile.getWorld().isBlockLoaded(neighbor)
-                    || !(tile.getWorld().getBlockState(neighbor).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLight))
+                    || tile.getWorld().getBlockState(neighbor).getBlock()!=tile.getWorld().getBlockState(tile.getPos()).getBlock()
+                    || tile.getWorld().getBlockState(neighbor).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLightSlab
+                    && tile.getWorld().getBlockState(neighbor).getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF)
+                    !=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF))
                 visible |= 1 << local.getIndex();
         }
         return visible;
@@ -1262,29 +1310,30 @@ public class TEAnimatedScreenSelector
                 :local==EnumFacing.UP?plane.up:plane.up.getOpposite();
     }
 
-    private static void renderLightHousing(TextureAtlasSprite sprite,int visible) {
+    private static void renderLightHousing(TextureAtlasSprite sprite,int visible,
+            double x0,double y0,double z0,double x1,double y1,double z1) {
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
         if ((visible & (1 << EnumFacing.UP.getIndex())) != 0)
-            spriteQuad(b,sprite,0,16,0, 16,16,0, 16,16,16, 0,16,16,0,0,16,16);
+            spriteQuad(b,sprite,x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1,0,0,16,16);
         if ((visible & (1 << EnumFacing.DOWN.getIndex())) != 0)
-            spriteQuad(b,sprite,0,0,16, 16,0,16, 16,0,0, 0,0,0,0,0,16,16);
+            spriteQuad(b,sprite,x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0,0,0,16,16);
         if ((visible & (1 << EnumFacing.WEST.getIndex())) != 0)
-            spriteQuad(b,sprite,0,16,0, 0,16,16, 0,0,16, 0,0,0,0,0,16,16);
+            spriteQuad(b,sprite,x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0,0,0,16,16);
         if ((visible & (1 << EnumFacing.EAST.getIndex())) != 0)
-            spriteQuad(b,sprite,16,16,16, 16,16,0, 16,0,0, 16,0,16,0,0,16,16);
+            spriteQuad(b,sprite,x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1,0,0,16,16);
         if ((visible & (1 << EnumFacing.SOUTH.getIndex())) != 0)
-            spriteQuad(b,sprite,0,16,16, 16,16,16, 16,0,16, 0,0,16,0,0,16,16);
+            spriteQuad(b,sprite,x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1,0,0,16,16);
         Tessellator.getInstance().draw();
     }
 
     private static void renderProgrammableLightFace(TextureAtlasSprite face,
-            LightGroup group, BlockPos pos) {
+            LightGroup group, BlockPos pos,int minY,int maxY,int minZ) {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(buf, face, 16,16,0, 0,16,0,
-                0,0,0, 16,0,0, group.right(pos), group.top(pos),
+        spriteQuad(buf, face, 16,maxY,minZ, 0,maxY,minZ,
+                0,minY,minZ, 16,minY,minZ, group.right(pos), group.top(pos),
                 group.left(pos), group.bottom(pos));
         tess.draw();
     }

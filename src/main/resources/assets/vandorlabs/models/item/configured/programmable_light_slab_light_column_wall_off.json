@@ -1,0 +1,41 @@
+{
+  "textures": {
+    "particle": "vandorlabs:blocks/dark_wall_panel",
+    "housing": "vandorlabs:blocks/dark_wall_panel",
+    "face": "vandorlabs:blocks/light_column_wall_off"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        8,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#face"
+        },
+        "south": {
+          "texture": "#housing"
+        },
+        "east": {
+          "texture": "#housing"
+        },
+        "west": {
+          "texture": "#housing"
+        },
+        "up": {
+          "texture": "#housing"
+        },
+        "down": {
+          "texture": "#housing"
+        }
+      }
+    }
+  ]
+}

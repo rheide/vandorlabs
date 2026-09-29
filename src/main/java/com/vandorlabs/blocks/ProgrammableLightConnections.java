@@ -80,7 +80,7 @@ public final class ProgrammableLightConnections {
             if (visited.contains(seed) || !world.isBlockLoaded(seed)) continue;
             TileEntity raw = world.getTileEntity(seed);
             if (!(raw instanceof TileEntityProgrammableLight) || !((TileEntityProgrammableLight) raw).isAvailableForJoining()
-                    || world.getBlockState(seed).getBlock() != ModBlocks.PROGRAMMABLE_LIGHT) continue;
+                    || !(world.getBlockState(seed).getBlock() instanceof BlockProgrammableLight)) continue;
             Set<BlockPos> group = members((TileEntityProgrammableLight) raw,
                     world.getBlockState(seed), false);
             visited.addAll(group);
@@ -95,8 +95,11 @@ public final class ProgrammableLightConnections {
     private static boolean eligible(World world, BlockPos pos, EnumFacing facing,
             TileEntityProgrammableLight first, boolean matchOn) {
         IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() != ModBlocks.PROGRAMMABLE_LIGHT
+        IBlockState source=world.getBlockState(first.getPos());
+        if (state.getBlock() != source.getBlock()
                 || state.getValue(BlockAnimatedScreenSelector.FACING) != facing) return false;
+        if(state.getBlock() instanceof BlockProgrammableLightSlab
+                && state.getValue(BlockProgrammableLightSlab.HALF)!=source.getValue(BlockProgrammableLightSlab.HALF))return false;
         TileEntity raw = world.getTileEntity(pos);
         if (!(raw instanceof TileEntityProgrammableLight)) return false;
         TileEntityProgrammableLight other = (TileEntityProgrammableLight) raw;

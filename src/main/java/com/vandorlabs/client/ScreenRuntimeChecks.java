@@ -36,6 +36,7 @@ final class ScreenRuntimeChecks {
         PanelConnectionRuntimeChecks.checkBakedHousing(player);
         checkTilePersistence();
         checkProgrammableLight(player);
+        checkProgrammableLightShapes(player);
         checkProgrammableLightJoin(player);
         checkProgrammableSlab(player);
         require(((TileEntityAnimatedScreenSelector) ModBlocks.PROGRAMMABLE_PORTHOLE_WALL
@@ -55,6 +56,7 @@ final class ScreenRuntimeChecks {
                         for (int pixel:level) require((pixel>>>24)==255,"controller atlas still has alpha holes");
             }
         checkHousingSprites();
+        checkPropulsionHousing(player);
         checkHousingCycling();
         checkSurvivalDropRoundTrip(player);
         checkPacketRoundTrip();
@@ -132,6 +134,50 @@ final class ScreenRuntimeChecks {
                     "programmable light settings did not persist");
         } finally {
             player.world.setBlockToAir(pos);
+        }
+    }
+
+    private static void checkProgrammableLightShapes(EntityPlayer player) {
+        BlockPos pos=new BlockPos(40,250,40);
+        for(net.minecraft.block.Block block:new net.minecraft.block.Block[]{
+                ModBlocks.PROGRAMMABLE_LIGHT_FRAME,ModBlocks.PROGRAMMABLE_LIGHT_SLAB}) {
+            require(block!=null,"programmable light shape is not registered");
+            IBlockState state=block.getDefaultState();
+            player.world.setBlockState(pos,state,3);
+            try {
+                com.vandorlabs.tiles.TileEntityProgrammableLight light=
+                        (com.vandorlabs.tiles.TileEntityProgrammableLight)player.world.getTileEntity(pos);
+                require(light!=null,"programmable light shape has no light tile");
+                light.configure(2,11,true,0);
+                require(block.getLightValue(state,player.world,pos)==11,
+                        "programmable light shape did not emit configured level");
+                light.setOn(false);
+                require(block.getLightValue(state,player.world,pos)==0,
+                        "programmable light shape kept emitting when switched off");
+                require(light.writeToNBT(new NBTTagCompound()).getInteger("LightLevel")==11,
+                        "programmable light shape lost brightness");
+                AxisAlignedBB bounds=block.getBoundingBox(state,player.world,pos);
+                if(block==ModBlocks.PROGRAMMABLE_LIGHT_FRAME)
+                    require(close(bounds.maxZ-bounds.minZ,1/16D),"light frame is not one pixel deep");
+                else {
+                    require(close(bounds.maxY-bounds.minY,.5),"light slab is not half height");
+                    com.vandorlabs.blocks.BlockProgrammableLightSlab slab=
+                            (com.vandorlabs.blocks.BlockProgrammableLightSlab)block;
+                    for(EnumFacing facing:EnumFacing.values())for(net.minecraft.block.BlockSlab.EnumBlockHalf half:
+                            net.minecraft.block.BlockSlab.EnumBlockHalf.values()){
+                        IBlockState variant=state.withProperty(BlockAnimatedScreenSelector.FACING,facing)
+                                .withProperty(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF,half);
+                        require(slab.getStateFromMeta(slab.getMetaFromState(variant)).equals(variant),
+                                "light slab metadata lost facing or half");
+                    }
+                    IBlockState ceiling=block.getStateForPlacement(player.world,pos,EnumFacing.DOWN,
+                            .5F,.5F,.5F,0,player);
+                    require(ceiling.getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF)
+                            ==net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
+                            && ceiling.getValue(BlockAnimatedScreenSelector.FACING)==EnumFacing.DOWN,
+                            "light slab underside placement chose bottom half");
+                }
+            } finally {player.world.setBlockToAir(pos);}
         }
     }
 
@@ -337,26 +383,40 @@ final class ScreenRuntimeChecks {
                         .getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
                         == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP,
                 "programmable slab bounds or metadata failed");
+        player.world.setBlockState(pos, bottom, 3);
+        require(player.world.isSideSolid(pos, EnumFacing.DOWN)
+                        && !player.world.isSideSolid(pos, EnumFacing.UP)
+                        && !player.world.isSideSolid(pos, EnumFacing.NORTH)
+                        && !player.world.getBlockState(pos).isTopSolid(),
+                "bottom programmable slab does not support underside attachments");
         player.world.setBlockState(pos, top, 3);
+        require(player.world.isSideSolid(pos, EnumFacing.UP)
+                        && !player.world.isSideSolid(pos, EnumFacing.DOWN)
+                        && !player.world.isSideSolid(pos, EnumFacing.NORTH)
+                        && player.world.getBlockState(pos).isTopSolid(),
+                "top programmable slab does not support top attachments");
         try {
             TileEntityAnimatedScreenSelector tile =
                     (TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos);
+            require(tile.isSlabTileSides(),
+                    "new programmable slab does not default to Tile side layout");
             tile.setHousingTexture(ScreenHousingTextures.IDS.length - 1);
-            ItemStack picked = slab.getPickBlock(top, null, player.world, pos, player);
+            ItemStack tiled = slab.getPickBlock(top, null, player.world, pos, player);
             String pickedSprite = ScreenHousingTextures.texture(
                     ScreenHousingTextures.IDS.length - 1);
             require(pickedSprite.equals(Minecraft.getMinecraft().getRenderItem()
-                            .getItemModelMesher().getItemModel(picked)
+                            .getItemModelMesher().getItemModel(tiled)
                             .getParticleTexture().getIconName()),
                     "picked programmable slab hotbar artwork does not match configuration");
-            tile.setSlabTileSides(true);
-            ItemStack tiled = slab.getPickBlock(top, null, player.world, pos, player);
+            tile.setSlabTileSides(false);
+            ItemStack fitted = slab.getPickBlock(top, null, player.world, pos, player);
             require(tiled.getSubCompound("BlockEntityTag").getBoolean("SlabTileSides")
+                            && !fitted.getSubCompound("BlockEntityTag").getBoolean("SlabTileSides")
                             && Minecraft.getMinecraft().getRenderItem()
-                            .getItemModelMesher().getItemModel(picked)
+                            .getItemModelMesher().getItemModel(fitted)
                             != Minecraft.getMinecraft().getRenderItem()
                             .getItemModelMesher().getItemModel(tiled),
-                    "picked programmable slab lost Tile side texture mode");
+                    "picked programmable slab lost Tile/Fit side layout");
             BlockPos copyPos = pos.east();
             require(((ItemBlock) tiled.getItem()).placeBlockAt(tiled.copy(), player,
                             player.world, copyPos, EnumFacing.UP, .5F, .5F, .5F, top),
@@ -403,6 +463,41 @@ final class ScreenRuntimeChecks {
             require(name.equals(Minecraft.getMinecraft().getTextureMapBlocks()
                             .getAtlasSprite(name).getIconName()),
                     "missing housing sprite: " + name);
+        }
+    }
+
+    private static void checkPropulsionHousing(EntityPlayer player) {
+        BlockPos pos=new BlockPos(44,250,44);
+        for(String id:new String[]{"rocket_thruster","ion_drive","plasma_vent","impulse_engine",
+                "antigravity_plate","repulsor_array","vertical_hover_thruster"}) {
+            com.vandorlabs.blocks.BlockPropulsionLight block=
+                    (com.vandorlabs.blocks.BlockPropulsionLight)net.minecraft.block.Block.REGISTRY
+                            .getObject(new net.minecraft.util.ResourceLocation("vandorlabs",id));
+            player.world.setBlockState(pos,block.getDefaultState()
+                    .withProperty(com.vandorlabs.blocks.BlockPropulsionLight.FACING,EnumFacing.NORTH),3);
+            try {
+                com.vandorlabs.tiles.TileEntityRedstoneLight tile=
+                        (com.vandorlabs.tiles.TileEntityRedstoneLight)player.world.getTileEntity(pos);
+                tile.setSideTexture(1);
+                IBlockState actual=block.getActualState(player.world.getBlockState(pos),player.world,pos);
+                IBlockState extended=block.getExtendedState(actual,player.world,pos);
+                net.minecraft.client.renderer.block.model.IBakedModel model=Minecraft.getMinecraft()
+                        .getRenderItem().getItemModelMesher().getModelManager().getModel(
+                                new net.minecraft.client.renderer.block.model.ModelResourceLocation(
+                                        "vandorlabs:"+id,"facing=north,part=single,particles=false,powered=true"));
+                require(model instanceof PropulsionSideModel,"propulsion housing model missing: "+id);
+                String replacement=ScreenHousingTextures.texture(1);
+                int changed=0,emitter=0;
+                for(int face=-1;face<6;face++)for(net.minecraft.client.renderer.block.model.BakedQuad quad:
+                        model.getQuads(extended,face<0?null:EnumFacing.getFront(face),0)){
+                    String sprite=quad.getSprite().getIconName();
+                    require(!PropulsionSideModel.isHousing(sprite),"old propulsion housing remains: "+id);
+                    if(replacement.equals(sprite))changed++;
+                    if(sprite.endsWith("_on"))emitter++;
+                }
+                require(changed>=4&&emitter>0,
+                        "propulsion housing or emitter missing: "+id);
+            } finally {player.world.setBlockToAir(pos);}
         }
     }
 
@@ -1269,6 +1364,27 @@ final class ScreenRuntimeChecks {
         require(close(floorBox.maxY - floorBox.minY, 1.0D / 16.0D)
                         && close(floorBox.maxZ - floorBox.minZ, 1.0D),
                 "full input keyboard collision is not one pixel high and full-depth");
+        checkCeilingInput(player,(BlockProgrammableInput)ModBlocks.PROGRAMMABLE_INPUT,false);
+        checkCeilingInput(player,block,true);
+    }
+
+    private static void checkCeilingInput(EntityPlayer player,BlockProgrammableInput block,boolean full) {
+        BlockPos at=new BlockPos(full?43:42,250,40);
+        IBlockState state=block.getStateForPlacement(player.world,at,EnumFacing.DOWN,
+                .5F,.5F,.5F,0,player);
+        try {
+            require(new com.vandorlabs.blocks.ItemProgrammableInput(block).placeBlockAt(
+                    new ItemStack(block),player,player.world,at,EnumFacing.DOWN,.5F,.5F,.5F,state),
+                    "ceiling input could not be placed");
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(at);
+            require(tile.isCeilingMounted()&&tile.writeToNBT(new NBTTagCompound()).getBoolean("CeilingMounted"),
+                    "ceiling input did not keep underside orientation");
+            com.vandorlabs.render.InputSurfaceLayout.Mounted layout=
+                    com.vandorlabs.render.InputSurfaceLayout.ceilingInput(full,false);
+            require(layout.surface.vertices[0].y<layout.housing.y1
+                    && layout.surface.vertices[0].y<layout.housing.y0,
+                    "ceiling input artwork does not face downward");
+        } finally {player.world.setBlockToAir(at);}
     }
 
     private static boolean close(double a, double b) {

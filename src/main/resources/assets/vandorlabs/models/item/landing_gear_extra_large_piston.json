@@ -1,0 +1,85 @@
+{
+  "credit": "MCTrek landing gear \u2014 integer voxel grid",
+  "parent": "block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "metal": "vandorlabs:blocks/landing_gear/metal",
+    "strut": "vandorlabs:blocks/landing_gear/strut",
+    "rubber": "vandorlabs:blocks/landing_gear/rubber",
+    "hub": "vandorlabs:blocks/landing_gear/hub",
+    "panel": "vandorlabs:blocks/landing_gear/panel",
+    "particle": "vandorlabs:blocks/landing_gear/metal",
+    "arm": "vandorlabs:blocks/programmable_glass/metal_side"
+  },
+  "elements": [
+    {
+      "name": "piston",
+      "from": [
+        4,
+        13.0,
+        4
+      ],
+      "to": [
+        12,
+        14,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            12,
+            1.0
+          ],
+          "texture": "#arm"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            12,
+            1.0
+          ],
+          "texture": "#arm"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            12,
+            1.0
+          ],
+          "texture": "#arm"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            12,
+            1.0
+          ],
+          "texture": "#arm"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#arm"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#arm"
+        }
+      }
+    }
+  ]
+}

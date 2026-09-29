@@ -66,7 +66,7 @@ public final class ControllerPlatform {
         return top?-travel:travel;
     }
     /** Signed endpoint heights relative to the original platform, with a fixed ramp hinge. */
-    public static double offset(int row,int segment,int length,int segments,int start,int end,
+    public static double offset(int row,int segment,int length,int segments,double start,double end,
             double pose,boolean elevator) {
         double p=Math.max(0,Math.min(1,pose));
         double height=start+(end-start)*p*p*(3-2*p);
@@ -87,11 +87,11 @@ public final class ControllerPlatform {
     public static int treadCount(int pixels) { return (16+pixels-1)/pixels; }
     public static double treadStart(int step,int pixels) { return step*pixels/16.0; }
     public static double treadEnd(int step,int pixels) { return Math.min(1,(step+1)*pixels/16.0); }
-    public static double offsetPixels(int row,int step,int length,int pixels,int start,int end,
+    public static double offsetPixels(int row,int step,int length,int pixels,double start,double end,
             double pose,boolean elevator) {
         return offsetPixels(row,step,length,pixels,start,end,pose,elevator,false);
     }
-    public static double offsetPixels(int row,int step,int length,int pixels,int start,int end,
+    public static double offsetPixels(int row,int step,int length,int pixels,double start,double end,
             double pose,boolean elevator,boolean fast) {
         double p=Math.max(0,Math.min(1,pose));
         double height=start+(end-start)*(fast?p:p*p*(3-2*p));

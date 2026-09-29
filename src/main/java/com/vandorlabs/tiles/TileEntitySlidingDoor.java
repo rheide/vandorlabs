@@ -51,7 +51,8 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
     }
 
     @Override public boolean hasLocalRedstoneSignal() {
-        return isLowerDoor() && (world.isBlockPowered(pos) || world.isBlockPowered(pos.up()));
+        return isLowerDoor() && (com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos)
+                || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos.up()));
     }
 
     @Override public void setChannelSignal(boolean powered) {
@@ -69,7 +70,12 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
                 && world.isBlockModifiable(player, pos);
     }
 
-    @Override public void onLoad() { super.onLoad(); if (isLowerDoor()) RedstoneChannels.register(this); }
+    @Override public void onLoad() {
+        super.onLoad();
+        DeferredTileLoad.schedule(this, () -> {
+            if (isLowerDoor()) RedstoneChannels.register(this);
+        });
+    }
     @Override public void invalidate() { RedstoneChannels.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() { RedstoneChannels.unregister(this); super.onChunkUnload(); }
 
@@ -95,7 +101,7 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
         channel=data.channel;
         channelSignal=data.signal;
         if (world != null && !world.isRemote && oldChannel != channel)
-            RedstoneChannels.channelChanged(this, oldChannel);
+            DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 
     @Override public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }

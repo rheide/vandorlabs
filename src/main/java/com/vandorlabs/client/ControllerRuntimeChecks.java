@@ -48,7 +48,8 @@ public final class ControllerRuntimeChecks {
         NBTTagList cells=tag.getTagList("Sources",10);
         for (int i=0;i<cells.tagCount();i++) {
             BlockPos source=BlockPos.fromLong(cells.getCompoundTagAt(i).getLong("Pos"));
-            for (int d=Math.min(0,Math.min(controller.startOffset,controller.endOffset()));d<=Math.max(0,Math.max(controller.startOffset,controller.endOffset()));d++) {
+            for (int d=(int)Math.floor(Math.min(0,Math.min(controller.startOffsetValue(),controller.endOffsetValue())));
+                    d<=Math.ceil(Math.max(0,Math.max(controller.startOffsetValue(),controller.endOffsetValue())));d++) {
                 BlockPos p=source.up(d);
                 if (world.getTileEntity(p) instanceof TileEntityControlledRamp)
                     ((TileEntityControlledRamp)world.getTileEntity(p)).move(controller.isOpen(),
@@ -599,6 +600,7 @@ public final class ControllerRuntimeChecks {
         checkProgrammableSources(world,player,pos);
         clear(world,pos);
         checkCreativePick(world, player, pos);
+        checkHalfOffsets(world,player,pos);
         clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);
         System.out.println("[vandorlabs][reprolab] controller-runtime PASS ("+assertions+" assertions)");
@@ -672,6 +674,38 @@ public final class ControllerRuntimeChecks {
                         && copy.extendSegments,
                 "creative ramp pick did not restore settings");
         world.setBlockToAir(copyPos);
+    }
+
+    private static void checkHalfOffsets(World world,EntityPlayerMP player,BlockPos pos) {
+        clear(world,pos);
+        TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+        platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+        require(controller.configureHalfOffsets(player,3,-5,8,true,false,true,
+                EnumFacing.SOUTH,0,false,1,true),"half-block endpoints configure");
+        require(controller.startOffsetValue()==1.5 && controller.endOffsetValue()==-2.5
+                && controller.attached(),"half-block starting geometry is retained");
+        TileEntityRampController restored=new TileEntityRampController();
+        restored.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+        require(restored.startOffsetValue()==1.5 && restored.endOffsetValue()==-2.5,
+                "half-block endpoints survive controller save");
+        NBTTagList occupied=controller.writeToNBT(new NBTTagCompound()).getTagList("Cells",10);
+        require(occupied.tagCount()>0,"half-block platform has no occupied cells");
+        BlockPos cellPos=BlockPos.fromLong(occupied.getCompoundTagAt(0).getLong("Pos"));
+        TileEntityControlledRamp cell=(TileEntityControlledRamp)world.getTileEntity(cellPos);
+        require(cell!=null && cell.startOffsetValue()==1.5 && cell.endOffsetValue()==-2.5,
+                "moving cell did not receive half-block endpoints");
+        TileEntityControlledRamp savedCell=new TileEntityControlledRamp();
+        savedCell.readFromNBT(cell.writeToNBT(new NBTTagCompound()));
+        require(savedCell.startOffsetValue()==1.5 && savedCell.endOffsetValue()==-2.5,
+                "moving cell lost half-block endpoints on save");
+        require(controller.request(true),"half-block travel begins");
+        finish(controller);
+        require(controller.isOpen() && !controller.error,"half-block travel completes");
+        require(controller.request(false),"half-block return begins");
+        finish(controller);
+        require(!controller.error && controller.attached(),"half-block return completes");
+        require(controller.recover(false),"half-block platform restores");
+        clear(world,pos);
     }
 
     private static final class FaultController extends TileEntityRampController {

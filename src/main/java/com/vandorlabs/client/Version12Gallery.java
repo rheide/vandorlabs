@@ -11,7 +11,27 @@ import net.minecraft.world.World;
 final class Version12Gallery {
     static void build(World world,String scene,int x,int y) {
         BlockPos origin=new BlockPos(x-3,y+1,-18);
-        if(scene.startsWith("light_depth")) {
+        if(scene.equals("input_ceiling")) {
+            for(int i=0;i<2;i++) {
+                BlockProgrammableInput input=(BlockProgrammableInput)(i==0
+                        ?ModBlocks.PROGRAMMABLE_INPUT:ModBlocks.PROGRAMMABLE_FULL_INPUT);
+                BlockPos at=origin.add(3+i*4,5,0);
+                world.setBlockState(at,input.getDefaultState()
+                        .withProperty(BlockProgrammableInput.KEYBOARD,true)
+                        .withProperty(BlockProgrammableInput.UPPER,true),3);
+                ((TileEntityAnimatedScreenSelector)world.getTileEntity(at)).setCeilingMounted(true);
+            }
+        } else if(scene.equals("light_shapes")) {
+            for(int i=0;i<4;i++) {
+                Block block=i<2?ModBlocks.PROGRAMMABLE_LIGHT_FRAME:ModBlocks.PROGRAMMABLE_LIGHT_SLAB;
+                BlockPos at=origin.add(2+i*3,3,0);
+                IBlockState state=block.getDefaultState();
+                if(i==3)state=state.withProperty(BlockProgrammableLightSlab.HALF,
+                        net.minecraft.block.BlockSlab.EnumBlockHalf.TOP);
+                world.setBlockState(at,state,3);
+                ((TileEntityProgrammableLight)world.getTileEntity(at)).configure(i,15,true,0);
+            }
+        } else if(scene.startsWith("light_depth")) {
             for(int col=0;col<2;col++)for(int row=0;row<2;row++) {
                 BlockPos p=origin.add(col,row+2,0);
                 world.setBlockState(p,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
@@ -82,6 +102,13 @@ final class Version12Gallery {
                 if(scene.equals("seating_heights")){tile.setHeight(col);tile.setJoin(false);}
                 if(scene.equals("seating_unjoined"))tile.setJoin(false);
             }
+        } else if (scene.equals("gear_extra_large")) {
+            BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear");
+            BlockPos p=origin.add(6,5,0);
+            world.setBlockState(p,gear.getDefaultState(),3);
+            TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
+            tile.configure(0,0,32,3);
+            gear.setExtended(world,p,true);
         } else if (scene.startsWith("gear")) {
             for(int i=0;i<3;i++) {
                 BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear");

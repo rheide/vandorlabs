@@ -409,6 +409,8 @@ tile.vandorlabs.programmable_glass.name=Programmable Glass
 tile.vandorlabs.programmable_door.name=Programmable Door
 
 tile.vandorlabs.programmable_light.name=Programmable Light
+tile.vandorlabs.programmable_light_frame.name=Programmable Light Frame
+tile.vandorlabs.programmable_light_slab.name=Programmable Light Slab
 gui.vandorlabs.light.title=Programmable Light
 tile.vandorlabs.logo.name=Vandor Logo
 gui.vandorlabs.light.preview=Preview

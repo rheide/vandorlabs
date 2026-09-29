@@ -64,8 +64,13 @@ public class BlockRampController extends BlockVandorDirectional {
                     && stack.getTagCompound().hasKey("RampSettings", 10)
                     ? stack.getTagCompound().getCompoundTag("RampSettings") : null;
             if (settings != null && placer instanceof EntityPlayer) {
-                ramp.configureTreads((EntityPlayer) placer,
-                        settings.getInteger("StartOffset"), settings.getInteger("EndOffset"),
+                ramp.configureHalfOffsets((EntityPlayer) placer,
+                        settings.hasKey("StartOffsetHalfSteps",3)
+                                ? settings.getInteger("StartOffsetHalfSteps")
+                                : settings.getInteger("StartOffset")*2,
+                        settings.hasKey("EndOffsetHalfSteps",3)
+                                ? settings.getInteger("EndOffsetHalfSteps")
+                                : settings.getInteger("EndOffset")*2,
                         settings.getInteger("TreadPixels"), settings.getBoolean("PowerOn"),
                         settings.getInteger("Speed") == 2, settings.getBoolean("Elevator"),
                         EnumFacing.getHorizontal(settings.getInteger("Direction") & 3),
@@ -85,6 +90,8 @@ public class BlockRampController extends BlockVandorDirectional {
             NBTTagCompound settings = new NBTTagCompound();
             settings.setInteger("StartOffset", ramp.startOffset);
             settings.setInteger("EndOffset", ramp.endOffset());
+            settings.setInteger("StartOffsetHalfSteps",ramp.startHalfSteps());
+            settings.setInteger("EndOffsetHalfSteps",ramp.endHalfSteps());
             settings.setInteger("TreadPixels", ramp.treadPixels);
             settings.setBoolean("PowerOn", ramp.activateOnPower);
             settings.setBoolean("Elevator", ramp.elevator);

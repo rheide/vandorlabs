@@ -103,7 +103,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
             initialized = true;
             markDirty();
         }
-        RedstoneChannels.register(this);
+        DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
     }
 
     @Override public void invalidate() { RedstoneChannels.unregister(this); super.invalidate(); }
@@ -134,7 +134,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         if (world!=null && world.isRemote && oldRotation!=mountRotation)
             world.markBlockRangeForRenderUpdate(pos,pos);
         if (world != null && !world.isRemote && oldChannel != channel)
-            RedstoneChannels.channelChanged(this, oldChannel);
+            DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 
     @Override public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }

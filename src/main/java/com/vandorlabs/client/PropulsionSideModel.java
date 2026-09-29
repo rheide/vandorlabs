@@ -16,9 +16,9 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Replaces only the side material of a baked propulsion model per placed tile. */
+/** Replaces the propulsion housing material while preserving trim and emitters. */
 public final class PropulsionSideModel implements IBakedModel {
-    private static final String ORIGINAL = "vandorlabs:blocks/thrusters/side";
+    private static final String PREFIX = "vandorlabs:blocks/thrusters/";
     private final IBakedModel delegate;
 
     public PropulsionSideModel(IBakedModel delegate) { this.delegate = delegate; }
@@ -35,7 +35,7 @@ public final class PropulsionSideModel implements IBakedModel {
         List<BakedQuad> result = new ArrayList<>(original.size());
         for (BakedQuad quad : original) {
             TextureAtlasSprite source = quad.getSprite();
-            if (source == null || !ORIGINAL.equals(source.getIconName())
+            if (source == null || !isHousing(source.getIconName())
                     || !quad.getFormat().hasUvOffset(0)) {
                 result.add(quad);
                 continue;
@@ -54,6 +54,11 @@ public final class PropulsionSideModel implements IBakedModel {
                     replacement, quad.shouldApplyDiffuseLighting(), quad.getFormat()));
         }
         return result;
+    }
+
+    static boolean isHousing(String sprite) {
+        return (PREFIX+"side").equals(sprite) || (PREFIX+"top").equals(sprite)
+                || (PREFIX+"rear").equals(sprite) || (PREFIX+"cavity").equals(sprite);
     }
 
     @Override public boolean isAmbientOcclusion() { return delegate.isAmbientOcclusion(); }

@@ -3488,5 +3488,19 @@
     "class": "BlockLandingGear",
     "type": "landing_gear",
     "item": true
+  },
+  {
+    "id": "programmable_light_frame",
+    "class": "BlockProgrammableLightFrame",
+    "type": "programmable_light",
+    "programmable_only": true,
+    "item": true
+  },
+  {
+    "id": "programmable_light_slab",
+    "class": "BlockProgrammableLightSlab",
+    "type": "programmable_light",
+    "programmable_only": true,
+    "item": true
   }
 ]

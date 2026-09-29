@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public class MessageRampController implements IMessage {
     private BlockPos pos;
     private int treadPixels,startOffset,drop,segments,direction,channel,travelAxis,speed;
+    private int startHalfSteps,endHalfSteps;
     private boolean top,powerOn,slow,elevator,extendSegments;
     private boolean matchTextures=true;
     public MessageRampController() { }
@@ -28,11 +29,13 @@ public class MessageRampController implements IMessage {
         this.speed=slow?2:1;
         this.direction=direction.getHorizontalIndex();
         this.channel=channel;
+        this.endHalfSteps=(top?-drop:drop)*2;
     }
     public MessageRampController(BlockPos pos,int start,int end,int pixels,boolean powerOn,
             boolean slow,boolean elevator,net.minecraft.util.EnumFacing direction,int channel) {
         this(pos,Math.abs(end),com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels),end<0,powerOn,slow,elevator,direction,channel);
         startOffset=start; treadPixels=pixels;
+        startHalfSteps=start*2; endHalfSteps=end*2;
     }
     public MessageRampController(BlockPos pos,int start,int end,int pixels,boolean powerOn,
             boolean slow,boolean elevator,net.minecraft.util.EnumFacing direction,int channel,
@@ -52,6 +55,17 @@ public class MessageRampController implements IMessage {
         this(pos,start,end,pixels,powerOn,slow,elevator,direction,channel,travelAxis,extendSegments,speed);
         this.matchTextures=matchTextures;
     }
+    public static MessageRampController halfOffsets(BlockPos pos,int startHalf,int endHalf,
+            int pixels,boolean powerOn,boolean slow,boolean elevator,
+            net.minecraft.util.EnumFacing direction,int channel,int travelAxis,
+            boolean extendSegments,int speed,boolean matchTextures) {
+        MessageRampController packet=new MessageRampController(pos,startHalf/2,endHalf/2,
+                pixels,powerOn,slow,elevator,direction,channel,travelAxis,
+                extendSegments,speed,matchTextures);
+        packet.startHalfSteps=startHalf;
+        packet.endHalfSteps=endHalf;
+        return packet;
+    }
     @Override public void fromBytes(ByteBuf buf) {
         pos=BlockPos.fromLong(buf.readLong()); drop=buf.readInt(); segments=buf.readInt();
         top=buf.readBoolean(); powerOn=buf.readBoolean(); slow=buf.readBoolean(); elevator=buf.readBoolean();
@@ -63,6 +77,8 @@ public class MessageRampController implements IMessage {
         extendSegments=buf.readableBytes()>=1 && buf.readBoolean();
         speed=buf.readableBytes()>=4?buf.readInt():(slow?2:1);
         matchTextures=!buf.isReadable()||buf.readBoolean();
+        startHalfSteps=buf.readableBytes()>=4?buf.readInt():startOffset*2;
+        endHalfSteps=buf.readableBytes()>=4?buf.readInt():(top?-drop:drop)*2;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong()); buf.writeInt(drop); buf.writeInt(segments);
@@ -70,6 +86,7 @@ public class MessageRampController implements IMessage {
         buf.writeInt(direction);
         buf.writeInt(channel); buf.writeInt(startOffset); buf.writeInt(treadPixels);
         buf.writeInt(travelAxis); buf.writeBoolean(extendSegments); buf.writeInt(speed); buf.writeBoolean(matchTextures);
+        buf.writeInt(startHalfSteps); buf.writeInt(endHalfSteps);
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
@@ -82,7 +99,7 @@ public class MessageRampController implements IMessage {
                 TileEntityRampController te=(TileEntityRampController)raw;
                 if (((ContainerRampController)player.openContainer).controller!=te || !te.usable(player)) return;
                 if (message.direction<0 || message.direction>3 || message.channel<0) return;
-                te.configureTreads(player,message.startOffset,message.top?-message.drop:message.drop,message.treadPixels,message.powerOn,message.slow,message.elevator,
+                te.configureHalfOffsets(player,message.startHalfSteps,message.endHalfSteps,message.treadPixels,message.powerOn,message.slow,message.elevator,
                         net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures);
                 te.setRedstoneChannel(message.channel);
                 player.connection.sendPacket(te.getUpdatePacket());

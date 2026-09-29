@@ -42,10 +42,17 @@ public final class SpaceDoorDataTest {
         SpaceDoorData bad=new SpaceDoorData(-1,9,false,90);
         check(bad.design==2 && bad.detail==1 && bad.direction==0,"invalid settings fallback");
         check(new SpaceDoorData(15,1,true,0).design==2,"unknown design fallback");
-        check(SpaceDoorData.positionOffset(false,false)==0,"rotating edge native");
-        check(SpaceDoorData.positionOffset(false,true)<0,"rotating middle inset");
-        check(SpaceDoorData.positionOffset(true,true)==0,"sliding middle native");
-        check(SpaceDoorData.positionOffset(true,false)>0,"sliding edge outset");
+        for (boolean sliding:new boolean[]{false,true}) for (boolean framed:new boolean[]{false,true})
+                for (boolean hinges:new boolean[]{false,true}) {
+            double low=sliding?(framed?6:7):(hinges?10.49:framed?11.24:12.24);
+            double high=sliding?(framed?10:9):(framed?15.24:14.24);
+            check(Math.abs(high+16*SpaceDoorData.positionOffset(sliding,framed,hinges,1)-16)<1E-9,
+                    "near-edge door model is inset");
+            check(Math.abs(low+16*SpaceDoorData.positionOffset(sliding,framed,hinges,2))<1E-9,
+                    "far-edge door model is inset");
+            check(SpaceDoorData.positionOffset(sliding,framed,hinges,0)==(sliding?0:-5.24/16.0),
+                    "middle door model moved");
+        }
         com.vandorlabs.render.SpaceDoorMotion motion=com.vandorlabs.render.SpaceDoorMotion.ROTATING;
         for (int i=0;i<4;i++) {
             check(motion.sliding==(i>0) && motion.direction==Math.max(0,i-1),"four motion choices");

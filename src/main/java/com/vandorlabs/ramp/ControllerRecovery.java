@@ -26,6 +26,7 @@ public final class ControllerRecovery {
         if (world.isRemote) return;
         for (TileEntityControlledRamp part:new ArrayList<>(LOADED)) {
             if (part.getWorld()==world && !part.isInvalid()
+                    && world.isBlockLoaded(part.getPos())
                     && (part.controller.getX()>>4)==event.getChunk().x
                     && (part.controller.getZ()>>4)==event.getChunk().z)
                 world.scheduleUpdate(part.getPos(),world.getBlockState(part.getPos()).getBlock(),1);

@@ -18,12 +18,15 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public int getSize(){return size;}
     public int getConfigurationRevision(){return configurationRevision;}
     private boolean channelSignal, lastSignal;
-    private int ownerDistance;
-    public BlockPos owner(){return ownerDistance>0?pos.up(ownerDistance):null;}
+    private int ownerDistance,ownerX,ownerZ;
+    private boolean hasOwner;
+    public BlockPos owner(){return hasOwner?pos.add(ownerX,ownerDistance,ownerZ):null;}
     public void setOwner(BlockPos root){
-        if(root.getX()!=pos.getX()||root.getZ()!=pos.getZ()||root.getY()<=pos.getY()||root.getY()-pos.getY()>4)
-            throw new IllegalArgumentException("Landing gear owner must be 1-4 cells above");
-        ownerDistance=root.getY()-pos.getY();markDirty();sync();
+        if(Math.abs(root.getX()-pos.getX())>1||Math.abs(root.getZ()-pos.getZ())>1
+                ||root.getY()<pos.getY()||root.getY()-pos.getY()>5||root.equals(pos))
+            throw new IllegalArgumentException("Landing gear owner outside reserved footprint");
+        ownerDistance=root.getY()-pos.getY();ownerX=root.getX()-pos.getX();ownerZ=root.getZ()-pos.getZ();
+        hasOwner=true;markDirty();sync();
     }
     public int getExtensionPixels(){return extensionPixels;}
     public int getMode(){return mode;}
@@ -34,12 +37,15 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     }
     public boolean configure(int nextMode,int nextChannel,int pixels){return configure(nextMode,nextChannel,pixels,size);}
     public boolean configure(int nextMode,int nextChannel,int pixels,int nextSize){
-        if(nextSize<0||nextSize>2||!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
+        if(nextSize<0||nextSize>=BlockTelescopicLandingGear.SIZES.length||!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
-        if(world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED)
-                && !block.reserve(world,pos,Math.max(progress,pixels/16F)))return false;
+        boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
+        if((extended||nextSize==3) && !block.reserve(world,pos,
+                extended?Math.max(progress,pixels/16F):progress,nextSize))return false;
         boolean automationChanged=mode!=nextMode||channel!=nextChannel;
         mode=nextMode;extensionPixels=pixels;size=nextSize;setRedstoneChannel(nextChannel);
+        if(!world.isRemote)block.releaseBelow(world,pos,
+                nextSize==3||extended?(int)Math.ceil(Math.max(progress,extended?pixels/16F:0)):0);
         evaluateSignal(automationChanged);markDirty();sync();return true;
     }
     public void update(){
@@ -68,27 +74,33 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         int old=channel;channel=Math.max(0,value);
         if(old!=channel){channelSignal=false;RedstoneChannels.channelChanged(this,old);markDirty();sync();}
     }
-    public boolean hasLocalRedstoneSignal(){return isRoot()&&world.isBlockPowered(pos);}
+    public boolean hasLocalRedstoneSignal(){return isRoot()&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);}
     public void setChannelSignal(boolean value){if(channelSignal!=value){channelSignal=value;evaluateSignal(false);}}
-    public void onLoad(){super.onLoad();placed();}
+    public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::placed);}
     public void invalidate(){RedstoneChannels.unregister(this);super.invalidate();}
     public void onChunkUnload(){RedstoneChannels.unregister(this);super.onChunkUnload();}
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
         tag.setInteger("GearSize",size);tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
-        if(ownerDistance>0)tag.setInteger("GearOwnerDistance",ownerDistance);return tag;
+        if(hasOwner){tag.setBoolean("GearHasOwner",true);tag.setInteger("GearOwnerDistance",ownerDistance);
+            tag.setInteger("GearOwnerX",ownerX);tag.setInteger("GearOwnerZ",ownerZ);}return tag;
     }
     public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
         extensionPixels=tag.hasKey("ExtensionPixels")?Math.round(Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels")))/8F)*8:16;
-        size=Math.max(0,Math.min(2,tag.getInteger("GearSize")));
+        size=Math.max(0,Math.min(BlockTelescopicLandingGear.SIZES.length-1,tag.getInteger("GearSize")));
         mode=tag.hasKey("RedstoneMode")?Math.max(0,Math.min(2,tag.getInteger("RedstoneMode"))):1;
         channel=Math.max(0,tag.getInteger("RedstoneChannel"));lastSignal=tag.getBoolean("LastSignal");
-        ownerDistance=Math.max(0,Math.min(4,tag.getInteger("GearOwnerDistance")));
+        ownerDistance=Math.max(0,Math.min(5,tag.getInteger("GearOwnerDistance")));
+        ownerX=Math.max(-1,Math.min(1,tag.getInteger("GearOwnerX")));
+        ownerZ=Math.max(-1,Math.min(1,tag.getInteger("GearOwnerZ")));
+        hasOwner=tag.getBoolean("GearHasOwner")||ownerDistance>0;
     }
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     public void onDataPacket(NetworkManager net,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());configurationRevision++;}
-    public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.down(4),pos.add(1,1,1));}
+    public AxisAlignedBB getRenderBoundingBox(){return size==3
+            ?new AxisAlignedBB(pos.add(-1,-5,-1),pos.add(2,1,2))
+            :new AxisAlignedBB(pos.down(4),pos.add(1,1,1));}
 }

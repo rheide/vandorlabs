@@ -81,8 +81,8 @@ public final class MessageProgrammableLight implements IMessage {
                         || tile != container.getTileEntity()
                         || !container.canInteractWith(player)
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
-                        || player.world.getBlockState(msg.pos).getBlock()
-                        != ModBlocks.PROGRAMMABLE_LIGHT) return;
+                        || !(player.world.getBlockState(msg.pos).getBlock()
+                        instanceof com.vandorlabs.blocks.BlockProgrammableLight)) return;
                 ((TileEntityProgrammableLight) tile).configure(
                         msg.texture, msg.level, msg.join, msg.channel, msg.housing, msg.trigger);
             });

@@ -3,6 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.BlockDetailedDoor;
 import com.vandorlabs.blocks.BlockConnectingDetailedDoor;
+import com.vandorlabs.blocks.BlockProgrammableWall;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
@@ -51,6 +52,7 @@ final class DoorRuntimeChecks {
                 "misaligned facing");
         checkIncompletePair(world, player, origin, hingedA, hingedB);
         checkPlacement(world, player, origin, hingedA, hingedB, sliding);
+        checkDiagonalWallSupport(world, origin.add(4, 0, 0), hingedA);
         checkMotionPairMatrix(world, player, origin);
         checkConnectedSpaceModels(world, origin);
         checkSpaceDoors(world, player, origin);
@@ -199,6 +201,35 @@ final class DoorRuntimeChecks {
                     "different-motion neighbor influenced placement for " + facing);
             clear(world, pos.offset(facing.rotateY()));
         }
+    }
+
+    private static void checkDiagonalWallSupport(World world, BlockPos pos,
+            BlockVandorDoor door) {
+        Block supportBlock = Block.REGISTRY.getObject(new ResourceLocation(
+                "vandorlabs", "programmable_diagonal_wall"));
+        require(supportBlock instanceof BlockProgrammableWall,
+                "missing diagonal wall for door support check");
+        BlockPos support = pos.down();
+        clear(world, pos);
+        world.setBlockToAir(support);
+        world.setBlockState(support, supportBlock.getDefaultState(), 3);
+        com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
+                (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)
+                        world.getTileEntity(support);
+        require(tile != null, "diagonal wall tile missing");
+        tile.setDiagonalGeometry(0, 0);
+        require(!door.canPlaceBlockAt(world, pos),
+                "thin diagonal wall supports a door");
+        for (int fill = 1; fill <= 3; fill++) {
+            tile.setDiagonalGeometry(0, fill);
+            require(door.canPlaceBlockAt(world, pos),
+                    "extruded diagonal wall rejects a door: fill=" + fill);
+        }
+        tile.setDiagonalGeometry(2, 3);
+        require(!door.canPlaceBlockAt(world, pos),
+                "half-height diagonal wall supports a full-height door");
+        world.setBlockToAir(support);
+        clear(world, pos);
     }
 
     private static void checkStateParity(World world, BlockPos pos, BlockVandorDoor door) {

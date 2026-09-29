@@ -39,6 +39,8 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_BLOCK;
     public static Block PROGRAMMABLE_TRIGGER_BLOCK;
     public static Block PROGRAMMABLE_LIGHT;
+    public static Block PROGRAMMABLE_LIGHT_FRAME;
+    public static Block PROGRAMMABLE_LIGHT_SLAB;
     public static Block PROGRAMMABLE_SLAB;
     public static Block PROGRAMMABLE_STAIRS;
     public static Block PROGRAMMABLE_CHAIR;
@@ -178,6 +180,8 @@ public class ModBlocks {
         PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
         PROGRAMMABLE_TRIGGER_BLOCK = add(new BlockProgrammableTrigger());
         PROGRAMMABLE_LIGHT = add(new BlockProgrammableLight());
+        PROGRAMMABLE_LIGHT_FRAME = add(new BlockProgrammableLightFrame());
+        PROGRAMMABLE_LIGHT_SLAB = add(new BlockProgrammableLightSlab());
         PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
         PROGRAMMABLE_SLAB = add(new BlockProgrammableSlab());
         PROGRAMMABLE_STAIRS = add(new BlockProgrammableStairs());
@@ -392,7 +396,7 @@ public class ModBlocks {
     public static void onItemRegister(RegistryEvent.Register<Item> event) {
         for (Block block : BLOCKS) {
             if (!NO_ITEM.contains(block)) {
-                ItemBlock item = block == PROGRAMMABLE_INPUT
+                ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
@@ -438,7 +442,7 @@ public class ModBlocks {
                     }
                     ModelLoader.setCustomMeshDefinition(item, stack -> {
                         net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
-                        int size=tag==null?0:Math.max(0,Math.min(2,tag.getInteger("GearSize")));
+                        int size=tag==null?0:Math.max(0,Math.min(BlockTelescopicLandingGear.SIZES.length-1,tag.getInteger("GearSize")));
                         return new ModelResourceLocation("vandorlabs:landing_gear_"+BlockTelescopicLandingGear.SIZES[size],"inventory");
                     });
                     continue;
@@ -457,8 +461,8 @@ public class ModBlocks {
                     else registerHousingItemModels(block, item);
                     continue;
                 }
-                if (block == PROGRAMMABLE_LIGHT) {
-                    registerLightItemModels(item);
+                if (block instanceof BlockProgrammableLight) {
+                    registerLightItemModels(block,item);
                     continue;
                 }
                 if (block == PROGRAMMABLE_CHAIR) {
@@ -558,22 +562,24 @@ public class ModBlocks {
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int choice = tag == null ? 0 : com.vandorlabs.tiles.ScreenHousingTextures.clamp(
                     tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
-            boolean tileSides = tag != null && tag.getBoolean("SlabTileSides");
+            boolean tileSides = tag == null || !tag.hasKey("SlabTileSides", 1)
+                    || tag.getBoolean("SlabTileSides");
             return new ModelResourceLocation(variants[choice * 2 + (tileSides ? 1 : 0)],
                     "inventory");
         });
     }
 
     @SideOnly(Side.CLIENT)
-    private static void registerLightItemModels(Item item) {
+    private static void registerLightItemModels(Block block,Item item) {
+        String blockId=block.getRegistryName().getResourcePath();
         ResourceLocation[] variants = new ResourceLocation[
                 com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length * 2];
         for (int i = 0; i < com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length; i++) {
             String id = com.vandorlabs.tiles.ProgrammableLightTextures.IDS[i];
             variants[i * 2] = new ResourceLocation(VandorLabs.MODID,
-                    "configured/programmable_light_" + id + "_off");
+                    "configured/"+blockId+"_" + id + "_off");
             variants[i * 2 + 1] = new ResourceLocation(VandorLabs.MODID,
-                    "configured/programmable_light_" + id + "_on");
+                    "configured/"+blockId+"_" + id + "_on");
         }
         ModelLoader.registerItemVariants(item, variants);
         ModelLoader.setCustomMeshDefinition(item, stack -> {
@@ -640,7 +646,9 @@ public class ModBlocks {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())) continue;
             String path = location.getResourcePath();
             if (!(path.startsWith("rocket_thruster") || path.startsWith("ion_drive")
-                    || path.startsWith("plasma_vent") || path.startsWith("impulse_engine")))
+                    || path.startsWith("plasma_vent") || path.startsWith("impulse_engine")
+                    || path.startsWith("antigravity_plate") || path.startsWith("repulsor_array")
+                    || path.startsWith("vertical_hover_thruster")))
                 continue;
             net.minecraft.client.renderer.block.model.IBakedModel model =
                     event.getModelRegistry().getObject(location);
