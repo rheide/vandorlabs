@@ -1,8 +1,0 @@
-{
-  "parent": "block/half_slab",
-  "textures": {
-    "bottom": "vandorlabs:blocks/non_glowing_power_conduit_2",
-    "top": "vandorlabs:blocks/non_glowing_power_conduit_2",
-    "side": "vandorlabs:blocks/non_glowing_power_conduit_2"
-  }
-}

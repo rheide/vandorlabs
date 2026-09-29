@@ -1,8 +1,0 @@
-{
-  "parent": "block/half_slab",
-  "textures": {
-    "bottom": "vandorlabs:blocks/perforated_decking_2",
-    "top": "vandorlabs:blocks/perforated_decking_2",
-    "side": "vandorlabs:blocks/perforated_decking_2"
-  }
-}

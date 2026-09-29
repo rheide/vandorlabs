@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "vandorlabs:blocks/precision_cut_metal_grating_2"
-  }
-}

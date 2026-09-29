@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "vandorlabs:blocks/integrated_circuit_board_panel_2"
-  }
-}

@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "vandorlabs:blocks/brushed_titanium_plating_1"
-  }
-}

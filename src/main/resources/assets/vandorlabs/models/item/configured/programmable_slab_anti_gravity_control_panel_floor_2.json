@@ -1,8 +1,0 @@
-{
-  "parent": "block/half_slab",
-  "textures": {
-    "bottom": "vandorlabs:blocks/anti_gravity_control_panel_floor_2",
-    "top": "vandorlabs:blocks/anti_gravity_control_panel_floor_2",
-    "side": "vandorlabs:blocks/anti_gravity_control_panel_floor_2"
-  }
-}

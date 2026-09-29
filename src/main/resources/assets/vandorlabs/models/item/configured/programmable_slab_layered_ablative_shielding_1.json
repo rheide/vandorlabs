@@ -1,8 +1,0 @@
-{
-  "parent": "block/half_slab",
-  "textures": {
-    "bottom": "vandorlabs:blocks/layered_ablative_shielding_1",
-    "top": "vandorlabs:blocks/layered_ablative_shielding_1",
-    "side": "vandorlabs:blocks/layered_ablative_shielding_1"
-  }
-}

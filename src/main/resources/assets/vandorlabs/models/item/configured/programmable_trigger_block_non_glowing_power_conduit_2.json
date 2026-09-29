@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "vandorlabs:blocks/non_glowing_power_conduit_2"
-  }
-}
