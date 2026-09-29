@@ -1,4 +1,12 @@
-# Version 1.2 additions
+# Version 1.2
+
+## Housing finishes
+
+The shared finish menu now has 78 choices for Programmable Blocks and compatible shapes: 28 original finishes, 16 selected finishes from the first texture pack with shorter `T1` names, 23 selected finishes from the second pack with descriptive `T2` names and 64×64 artwork, and 11 new finishes named Hull Plating 1–11.
+
+The [Programmable Block finish overview](building.md#programmable-block-finishes) shows every choice on a full block, with up to ten blocks per screenshot and names in the same left-to-right order. Removed pack finishes have no save remaps, so an older saved finish number may now show different artwork.
+
+![Hull Plating finishes on Programmable Blocks](../images/gallery/building/finishes-08.png)
 
 ## Ramp Controller offsets
 
@@ -33,3 +41,15 @@ Rocket Thrusters, Ion Drives, Plasma Vents, Impulse Engines and the hover fixtur
 ![Propulsion housings viewed from below](../images/gallery/v1.2/propulsion-wall-bottom.png)
 
 ![Propulsion configuration preview](../images/gallery/v1.2/propulsion-config.png)
+
+## Building and placement fixes
+
+New Programmable Slabs default to the Tile side layout. Their outer faces also support attachments such as Mekanism Glow Panels. Filled, full-height Diagonal Walls support Programmable Doors above them, and their face normals keep shader lighting stable as the camera moves.
+
+Framed Programmable Doors align with a block's edge. Frameless doors retain one pixel of inset so a sliding leaf clears the adjacent block. Ceiling-mounted inputs and half consoles use near, middle and far positions across the underside, as shown above.
+
+## Dynmap and chunk loading
+
+Dynmap now shows Programmable Slab halves, door orientation and open state, propulsion emitter faces, and the clipped shapes and saved main finish of blocks moved by a Programmable Ramp. Programmable blocks and walls have fallback map geometry.
+
+Interactive blocks defer load-sensitive updates until their chunk tiles are ready. Redstone checks use loaded neighboring chunks without loading another chunk. See the [1.2 changelog](../../CHANGELOG.md#12) for the full list of fixes.
