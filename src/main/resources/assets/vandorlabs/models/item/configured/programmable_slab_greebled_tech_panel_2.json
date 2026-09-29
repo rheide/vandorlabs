@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/greebled_tech_panel_2",
+    "top": "vandorlabs:blocks/greebled_tech_panel_2",
+    "side": "vandorlabs:blocks/greebled_tech_panel_2"
+  }
+}

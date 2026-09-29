@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/thermal_shielding_panel_1",
+    "top": "vandorlabs:blocks/thermal_shielding_panel_1",
+    "side": "vandorlabs:blocks/thermal_shielding_panel_1"
+  }
+}

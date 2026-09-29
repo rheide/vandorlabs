@@ -56,14 +56,14 @@ blocks.extend([
 finishes=[value for value in __import__('re').findall(
     r'new Finish\("[^"]+", "([^"]+)"\)',
     (root/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text())]
-assert len(finishes)==28
+assert len(finishes)>=28
 for finish in finishes:
     textures['v12_blocks_'+finish.replace('/','_')]='blocks/'+finish+'.png'
 textures['v12_source_stone']='assets/minecraft/textures/blocks/stone.png'
 blocks.append('block:id=%controlled_ramp,state=*,'+
               ','.join('patch%d=0:v12_blocks_%s' % (i,finish.replace('/','_'))
                        for i,finish in enumerate(finishes))+
-              ',patch28=0:v12_source_stone,transparency=SEMITRANSPARENT')
+              ',patch%d=0:v12_source_stone,transparency=SEMITRANSPARENT' % len(finishes))
 
 wall_states=json.loads((assets/'blockstates/programmable_wall.json').read_text())['variants']
 for name in ('programmable_wall','programmable_porthole_wall',

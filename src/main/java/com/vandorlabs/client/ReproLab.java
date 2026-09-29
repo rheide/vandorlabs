@@ -1796,7 +1796,9 @@ public class ReproLab {
                                         : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM), 2);
                 ((TileEntityAnimatedScreenSelector) world.getTileEntity(at))
                         .setHousingTexture(i == 2 || i == 5
-                                ? com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 2
+                                ? java.util.Arrays.asList(
+                                        com.vandorlabs.tiles.ScreenHousingTextures.IDS)
+                                        .indexOf("glass_frame_inner")
                                 : i % 3);
             }
         } else if (shot.equals("gallery_structure")) {

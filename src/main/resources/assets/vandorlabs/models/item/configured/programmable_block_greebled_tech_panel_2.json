@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "vandorlabs:blocks/greebled_tech_panel_2"
+  }
+}

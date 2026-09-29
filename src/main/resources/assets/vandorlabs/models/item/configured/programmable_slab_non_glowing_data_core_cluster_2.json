@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/non_glowing_data_core_cluster_2",
+    "top": "vandorlabs:blocks/non_glowing_data_core_cluster_2",
+    "side": "vandorlabs:blocks/non_glowing_data_core_cluster_2"
+  }
+}

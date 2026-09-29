@@ -2,6 +2,7 @@ package com.vandorlabs.dynmap;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import org.dynmap.renderer.CustomRenderer;
 import org.dynmap.renderer.MapDataContext;
 import org.dynmap.renderer.RenderPatch;
@@ -11,13 +12,14 @@ public final class ControlledRampRenderer extends CustomRenderer {
     @Override public String[] getTileEntityFieldsNeeded() {
         return new String[]{"DynmapBoxes","DynmapTexture"};
     }
-    @Override protected int getMaximumTextureCount() { return 29; }
+    @Override protected int getMaximumTextureCount() { return ScreenHousingTextures.IDS.length + 1; }
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
         Object saved=context.getBlockTileEntityField("DynmapBoxes");
         if (!(saved instanceof String)) return new RenderPatch[0];
         Object savedTexture=context.getBlockTileEntityField("DynmapTexture");
-        int texture=savedTexture instanceof Number?((Number)savedTexture).intValue():28;
-        if (texture<0 || texture>28) texture=28;
+        int fallback=ScreenHousingTextures.IDS.length;
+        int texture=savedTexture instanceof Number?((Number)savedTexture).intValue():fallback;
+        if (texture<0 || texture>fallback) texture=fallback;
         int[] faces={texture,texture,texture,texture,texture,texture};
         List<RenderPatch> patches=new ArrayList<>();
         for (String box:((String)saved).split(";")) {

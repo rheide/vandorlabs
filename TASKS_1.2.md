@@ -5,6 +5,7 @@ This file tracks the requested work and findings for this update.
 - [x] Investigate the latest server `ConcurrentModificationException` and whether Vandor Labs caused it. The latest crash iterated chunk tile entities and did not identify a mod; an earlier crash included the Ramp Controller. Deferred load callbacks and loaded-neighbor power reads address the mod's likely contribution.
 - [x] Check whether lights were already fixed. Version 1.1 deferred the older redstone light; other interactive tiles still used load-time callbacks, so these were deferred as well.
 - [x] Bump the mod version to 1.2.
+- [x] Add all 32 images from `LLMShareDrive/textures` as selectable shared housing finishes, preserving the existing saved finish indices and adding item models, menu labels and Dynmap texture entries.
 - [x] Audit other interactive blocks for loaded-chunk and tile-load behavior. Covered programmable lights, redstone channels, screens, doors, ramps, sequenced displays and landing gear.
 - [x] Let attachments such as Mekanism Glow Panels stick to the bottom of a Programmable Slab. The slab now reports the matching outer face as solid.
 - [x] Make Tile the default side layout for new Programmable Slabs and their unconfigured item icon, while preserving explicitly saved Fit layouts.

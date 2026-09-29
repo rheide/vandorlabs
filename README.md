@@ -145,6 +145,11 @@ The default pack mixes resolutions according to the job each texture performs.
 128x128 is not a blanket requirement for every block; imported model artwork
 keeps its authored dimensions.
 
+The shared housing finish menu has 60 choices. The 32 imported 140x140
+textures are appended to the existing list so saved finish numbers still select
+the same artwork. Programmable Blocks, Slabs, Stairs, Walls and other housing
+menus use this list.
+
 Use these dimensions for new or replacement art:
 
 | Asset role | Dimensions | Convention |

@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "vandorlabs:blocks/anti_gravity_control_panel_floor_2"
+  }
+}

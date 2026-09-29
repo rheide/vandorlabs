@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/advanced_biomechanical_tech_block_2",
+    "top": "vandorlabs:blocks/advanced_biomechanical_tech_block_2",
+    "side": "vandorlabs:blocks/advanced_biomechanical_tech_block_2"
+  }
+}

@@ -266,7 +266,7 @@ public class TileEntityControlledRamp extends TileEntity {
             }
         }
         tag.setString("DynmapBoxes",mapBoxes.toString());
-        int mapTexture=28;
+        int mapTexture=ScreenHousingTextures.IDS.length;
         if ((source.getBlock()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK
                 || source.getBlock()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_SLAB)
                 && !sourceTileTags.isEmpty()) {

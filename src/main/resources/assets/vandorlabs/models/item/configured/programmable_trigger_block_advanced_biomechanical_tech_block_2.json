@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "vandorlabs:blocks/advanced_biomechanical_tech_block_2"
+  }
+}

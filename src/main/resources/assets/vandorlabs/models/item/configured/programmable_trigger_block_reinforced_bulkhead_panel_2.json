@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "vandorlabs:blocks/reinforced_bulkhead_panel_2"
+  }
+}

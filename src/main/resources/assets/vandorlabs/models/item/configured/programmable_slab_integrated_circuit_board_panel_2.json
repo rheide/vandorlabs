@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/integrated_circuit_board_panel_2",
+    "top": "vandorlabs:blocks/integrated_circuit_board_panel_2",
+    "side": "vandorlabs:blocks/integrated_circuit_board_panel_2"
+  }
+}

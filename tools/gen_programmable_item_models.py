@@ -38,4 +38,4 @@ for style in ('fit', 'tile'):
                 model['textures'][key] = 'vandorlabs:blocks/' + texture
         (out / ('programmable_slab_' + choice + '_' + style + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')
-print('Generated', len(ids) * 8, 'configured item models')
+print('Generated', len(ids) * 9, 'configured item models')
