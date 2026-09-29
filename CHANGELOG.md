@@ -4,8 +4,10 @@
 
 ### Added
 
-- 46 more selectable housing finishes from `textures2`, labeled with their T/R/C source codes.
-- 16 selected housing finishes from the shared `textures` artwork folder, available across Programmable Blocks and the other blocks that share the housing finish menu.
+- 23 selected housing finishes from `textures2`, using the supplied 64x64 artwork and short descriptive menu names.
+- 16 selected housing finishes from the shared `textures` artwork folder, with shorter names prefixed `T1`, available across Programmable Blocks and the other blocks that share the housing finish menu.
+- 11 Hull Plating finishes from `hulls`, numbered 1–11 and available in the shared housing finish menu.
+- The building guide now shows all 78 selectable finishes on Programmable Blocks, in groups of up to ten with names in display order.
 - Extra Large Landing Gear doubles Large's model dimensions. Its centered mount and moving parts reserve a three-by-three footprint; extension remains configurable from 0–4 blocks.
 - Programmable Light Frame, a one-pixel-deep light panel, and Programmable Light Slab, a half-height light with top and bottom placement. Both use Programmable Light artwork, brightness, joining, redstone channels and configuration.
 - Ramp Controller start and end offset sliders with half-block steps from -16 to 16 blocks. The controller, moving cells, saved settings and copied items retain these intermediate positions.
@@ -13,6 +15,7 @@
 ### Fixed
 
 - Removed the other 16 first-pack housing finishes and their packaged textures. Existing saved finish numbers are not migrated and may resolve to different artwork.
+- Removed the other 23 second-pack housing finishes and their packaged textures. Existing saved finish numbers are not remapped.
 - Extra Large Landing Gear now uses a smaller, centered hotbar icon that fits its slot.
 - Dynmap now reads Programmable Slab halves, Programmable Door facing and open state, and the clipped shapes and saved main finish of deployed Ramp cells. Propulsion emitter faces have enough depth to remain visible on the map.
 - Newly placed Programmable Slabs now use Tile for their side layout by default; saved Fit selections still render as Fit, and the inventory model matches the default.

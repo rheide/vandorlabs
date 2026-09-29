@@ -7,7 +7,10 @@ This file tracks the requested work and findings for this update.
 - [x] Bump the mod version to 1.2.
 - [x] Import the first `LLMShareDrive/textures` pack into the shared housing finish catalog, with item models, menu labels and Dynmap texture entries; later retain only the 16 choices selected by the owner.
 - [x] Remove the other 16 first-pack finishes and packaged assets without save migration, as requested. Older saved finish numbers may now resolve to different artwork.
-- [x] Add all 46 images from `LLMShareDrive/textures2` to the same housing catalog. Preserve their T/R/C source codes as menu labels and retain their source dimensions.
+- [x] Import `LLMShareDrive/textures2` into the shared housing catalog; later retain only the 23 owner-selected choices, replace their standard-pack artwork with the 64x64 images, and give them short descriptive menu names. The T/R/C source codes remain in their internal IDs.
+- [x] Remove the other 23 second-pack finishes and packaged assets without save remaps, as requested. Prefix the 16 retained first-pack menu names with `T1` and shorten longer names.
+- [x] Add all 11 `LLMShareDrive/hulls` textures to the shared housing finish menu as Hull Plating 1–11.
+- [x] Document every selectable housing finish using Programmable Blocks in eight wider gallery screenshots, with up to ten finishes and matching names in each.
 - [x] Audit other interactive blocks for loaded-chunk and tile-load behavior. Covered programmable lights, redstone channels, screens, doors, ramps, sequenced displays and landing gear.
 - [x] Let attachments such as Mekanism Glow Panels stick to the bottom of a Programmable Slab. The slab now reports the matching outer face as solid.
 - [x] Make Tile the default side layout for new Programmable Slabs and their unconfigured item icon, while preserving explicitly saved Fit layouts.

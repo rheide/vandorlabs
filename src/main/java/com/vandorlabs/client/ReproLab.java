@@ -330,6 +330,9 @@ public class ReproLab {
                 galleryFeet+2, -11, 180, 5));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
+        for (int page = 0; page < (com.vandorlabs.tiles.ScreenHousingTextures.IDS.length + 9) / 10; page++)
+            SHOTS.add(new Shot("gallery_finish_overview_" + page, GALLERY_X + .5D,
+                    galleryFeet + 3.0D, -26.0D, 0.0F, 5.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {
             for (String trim : new String[]{"bare", "framed"}) {
                 for (String pose : new String[]{"closed", "open"}) {
@@ -1630,6 +1633,18 @@ public class ReproLab {
                 world.setBlockState(at,finish<0?block(ids[i]).getDefaultState()
                         :ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
                 if (finish>=0) ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
+                        .setHousingTexture(finish);
+            }
+        } else if (shot.startsWith("gallery_finish_overview_")) {
+            int page = Integer.parseInt(shot.substring("gallery_finish_overview_".length()));
+            for (int cell = 0; cell < 10; cell++) {
+                int finish = page * 10 + cell;
+                if (finish >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length) break;
+                BlockPos at = new BlockPos(GALLERY_X + 4 - (cell % 5) * 2,
+                        GALLERY_Y + (cell < 5 ? 3 : 1), -18);
+                world.setBlockState(at, ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState()
+                        .withProperty(BlockAnimatedScreenSelector.FACING, EnumFacing.NORTH), 3);
+                ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
                         .setHousingTexture(finish);
             }
         } else if (shot.startsWith("gallery_door_")) {

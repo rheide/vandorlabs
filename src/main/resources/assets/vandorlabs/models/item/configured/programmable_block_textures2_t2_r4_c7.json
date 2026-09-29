@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "vandorlabs:blocks/textures2_t2_r4_c7"
-  }
-}

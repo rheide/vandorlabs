@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Copy documentation-worthy ReproLab shots to stable GitHub paths."""
 
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -46,6 +47,11 @@ for index, name in enumerate(("command", "companion", "operator",
 
 for name in ("hull", "padding", "pipes", "glass"):
     SHOTS[f"gallery_close_material_{name}"] = f"building/{name}.png"
+
+finish_catalog = (ROOT / "src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java").read_text()
+finish_count = len(re.findall(r'new Finish\("', finish_catalog))
+for page in range((finish_count + 9) // 10):
+    SHOTS[f"gallery_finish_overview_{page}"] = f"building/finishes-{page + 1:02d}.png"
 
 for index, name in enumerate(("observation", "airlock", "standard", "security",
                               "reactor-service", "viewport", "laboratory", "cargo",

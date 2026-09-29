@@ -1,0 +1,8 @@
+{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "vandorlabs:blocks/hull_plating_4",
+    "top": "vandorlabs:blocks/hull_plating_4",
+    "side": "vandorlabs:blocks/hull_plating_4"
+  }
+}

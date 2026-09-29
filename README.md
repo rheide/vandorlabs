@@ -145,12 +145,12 @@ The default pack mixes resolutions according to the job each texture performs.
 128x128 is not a blanket requirement for every block; imported model artwork
 keeps its authored dimensions.
 
-The shared housing finish menu has 90 choices: the original 28, 16 selected
-textures from `textures`, and 46 from `textures2`. Removed first-pack choices
-were deleted without a save migration, so older saved finish numbers may select
-different artwork. The imported images retain their authored 140x140 and
-124x124 dimensions. Programmable Blocks, Slabs, Stairs, Walls and other housing
-menus use this list.
+The shared housing finish menu has 78 choices: the original 28, 16 selected
+textures from `textures`, 23 from `textures2`, and 11 Hull Plating finishes from
+`hulls`. The second-pack choices use the supplied 64x64 versions; their earlier
+artwork remains in the original archive. Removed choices were deleted without a
+save migration, so older saved finish numbers may select different artwork.
+Programmable Blocks, Slabs, Stairs, Walls and other housing menus use this list.
 
 Use these dimensions for new or replacement art:
 
