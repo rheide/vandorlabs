@@ -44,15 +44,26 @@ for name in ('programmable_block','programmable_light',
              'programmable_trigger_block'):
     for facing in ('north','east','south','west','up','down'):
         fallback(name,'facing:'+facing,[((0,0,0),(16,16,16))])
-for facing in ('north','east','south','west','up','down'):
-    for half in ('bottom','top'):
-        y=8 if half=='top' else 0
-        fallback('programmable_slab',f'facing:{facing}/half:{half}',
-                 [((0,y,0),(16,y+8,16))])
-
-for facing,rotation in (('north',0),('east',90),('south',180),('west',270)):
-    fallback('controlled_ramp','facing:'+facing,
-             [((0,0,z),(16,z+2,z+2)) for z in range(0,16,2)],rotation)
+models.extend([
+    'customblock:id=%programmable_slab,state=*,class=com.vandorlabs.dynmap.ProgrammableSlabRenderer',
+    'customblock:id=%programmable_door,state=*,class=com.vandorlabs.dynmap.ProgrammableDoorRenderer',
+    'customblock:id=%controlled_ramp,state=*,class=com.vandorlabs.dynmap.ControlledRampRenderer',
+])
+blocks.extend([
+    'block:id=%programmable_slab,state=*,patch0=0:v12_blocks_dark_wall_panel,transparency=SEMITRANSPARENT',
+    'block:id=%programmable_door,state=*,patch0=0:space_standard,transparency=TRANSPARENT',
+])
+finishes=[value for value in __import__('re').findall(
+    r'new Finish\("[^"]+", "([^"]+)"\)',
+    (root/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text())]
+assert len(finishes)==28
+for finish in finishes:
+    textures['v12_blocks_'+finish.replace('/','_')]='blocks/'+finish+'.png'
+textures['v12_source_stone']='assets/minecraft/textures/blocks/stone.png'
+blocks.append('block:id=%controlled_ramp,state=*,'+
+              ','.join('patch%d=0:v12_blocks_%s' % (i,finish.replace('/','_'))
+                       for i,finish in enumerate(finishes))+
+              ',patch28=0:v12_source_stone,transparency=SEMITRANSPARENT')
 
 wall_states=json.loads((assets/'blockstates/programmable_wall.json').read_text())['variants']
 for name in ('programmable_wall','programmable_porthole_wall',
@@ -124,7 +135,9 @@ for state,variant in json.loads((assets/'blockstates/programmable_stairs.json').
             e['from'][1],e['to'][1]=16-e['to'][1],16-e['from'][1]
             e['from'][2],e['to'][2]=16-e['to'][2],16-e['from'][2]
     emit('programmable_stairs',state.replace('=',':').replace(',','/'),data,variant.get('y',0))
-for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[f'texture:id={k},filename=assets/vandorlabs/textures/{v},xcount=1,ycount=1' for k,v in textures.items()]+blocks)]:
+for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[
+        f'texture:id={k},filename={v if v.startswith("assets/") else "assets/vandorlabs/textures/"+v},xcount=1,ycount=1'
+        for k,v in textures.items()]+blocks)]:
     p=assets/filename
     old=p.read_text().split(marker)[0].splitlines()
     # These are texture choices, not registered blocks. The old block scan
@@ -133,4 +146,12 @@ for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[f'tex
     old=[line for line in old if not line.startswith(tuple(
         prefix+name+',' for prefix in ('modellist:id=%','block:id=%')
         for name in texture_only))]
+    old=[line for line in old if not line.startswith(
+        ('modellist:id=%programmable_door,','block:id=%programmable_door,'))]
+    if filename=='dynmap-models.txt':
+        # The scanner's quarter-pixel emissive pane can disappear under its
+        # surrounding trim in Dynmap's ray tracer. Give it one pixel of depth.
+        propulsion=('rocket_thruster','ion_drive','plasma_vent','impulse_engine')
+        old=[line.replace('/5.750000:','/5.000000:') if line.startswith(tuple(
+                'modellist:id=%'+name+',' for name in propulsion)) else line for line in old]
     p.write_text('\n'.join(old).rstrip()+'\n\n'+marker+'\n'.join(lines)+'\n')

@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Extra Large Landing Gear now uses a smaller, centered hotbar icon that fits its slot.
+- Dynmap now reads Programmable Slab halves, Programmable Door facing and open state, and the clipped shapes and saved main finish of deployed Ramp cells. Propulsion emitter faces have enough depth to remain visible on the map.
 - Newly placed Programmable Slabs now use Tile for their side layout by default; saved Fit selections still render as Fit, and the inventory model matches the default.
 - Filled, full-height Programmable Diagonal Walls now support Programmable Doors above them.
 - Framed Programmable Doors align with the block boundary at either depth edge. Frameless doors keep one pixel of clearance so sliding leaves retract behind the neighboring block.
@@ -21,7 +23,7 @@
 - Ceiling-mounted Programmable Inputs, Programmable Half-Inputs and Programmable Half-Consoles now use near, middle or far positions across the ceiling face based on where it was clicked.
 - Propulsion wall textures now cover the housing's sides, top, bottom, rear and front recess across the Rocket Thruster, Ion Drive, Plasma Vent, Impulse Engine and three hover fixtures. Their configuration dialog shows the selected texture.
 - The live-client test lab now performs bulk integrated-server scene setup on the server thread, reducing its chunk-packet tile-map race during setup.
-- Dynmap now has fallback geometry for programmable blocks, slabs and walls, plus the Controlled Ramp. Removed model entries for three texture-only names that Dynmap rejected as air.
+- Dynmap now has fallback geometry for programmable blocks and walls. Removed model entries for three texture-only names that Dynmap rejected as air.
 
 ## 1.1
 

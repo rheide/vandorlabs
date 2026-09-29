@@ -254,6 +254,26 @@ public class TileEntityControlledRamp extends TileEntity {
         tag.setInteger(SaveSchema.Ramp.CONTROLLER_Z,controller.getZ());
         tag.setTag(SaveSchema.Ramp.SOURCE,NBTUtil.writeBlockState(new NBTTagCompound(),source));
         tag.setString(SaveSchema.Ramp.SOURCE_STATE,LegacyBlockStates.encode(source));
+        // Dynmap reads tile NBT but cannot run this cell's animated Minecraft renderer.
+        // Give it the clipped cell geometry and the saved programmable finish.
+        StringBuilder mapBoxes=new StringBuilder();
+        if (world!=null) for (RampGeometry.Box box:geometry(0)) {
+            if (mapBoxes.length()>0) mapBoxes.append(';');
+            double[] coords={box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ};
+            for (int i=0;i<coords.length;i++) {
+                if (i>0) mapBoxes.append(',');
+                mapBoxes.append(Math.max(0,Math.min(1,coords[i])));
+            }
+        }
+        tag.setString("DynmapBoxes",mapBoxes.toString());
+        int mapTexture=28;
+        if ((source.getBlock()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK
+                || source.getBlock()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_SLAB)
+                && !sourceTileTags.isEmpty()) {
+            NBTTagCompound saved=sourceTileTags.values().iterator().next();
+            mapTexture=ScreenHousingTextures.clamp(saved.getInteger(SaveSchema.Screen.HOUSING_TEXTURE));
+        }
+        tag.setInteger("DynmapTexture",mapTexture);
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {

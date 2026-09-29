@@ -202,20 +202,20 @@ and publishes the stable images used by the Markdown pages under
 
 The normal Vandor Labs jar includes `assets/vandorlabs/dynmap-models.txt` and
 `assets/vandorlabs/dynmap-texture.txt`. Dynmap 3.7 discovers these resources
-directly from the mod jar, so Vandor Labs does not compile against or require
-Dynmap and continues to load normally when Dynmap is absent.
+directly from the mod jar. Dynmap's API is a compile-only dependency; the mod
+continues to load when Dynmap is absent.
 
-The definitions cover all 104 world-rendered block types and 21,670 block
-states. Ordinary JSON models retain their scanned shape, orientation, texture,
+The definitions cover 93 block types and more than 20,000 block states.
+Ordinary JSON models retain their scanned shape, orientation, texture,
 power state, and connected square-thruster variant. Dynmap 1.12 cannot parse
 Forge OBJ models or execute tile-entity renderers, so the bundled data supplies
 static Dynmap-native approximations for hexagonal and triangular thrusters,
-chairs, doors, connected glass, and programmable input housings. Their correct
-textures and orientation are retained, but animated door travel, selected
-programmable-screen content, particles, and moving ramp interpolation do not
-appear on the map. Deployed `controlled_ramp` cells are transient renderer-only
-placeholders and therefore have no independent map model; the source platform
-is rendered normally when restored at a zero start offset.
+chairs, connected glass, and programmable input housings. Programmable Slabs
+read their top or bottom block state. Programmable Doors read facing, open state,
+and the lower tile's motion and depth settings. Deployed `controlled_ramp` cells
+read their saved clipped boxes and programmable main finish; sources from other
+mods use a stone texture fallback. Selected programmable-screen content,
+particles, and moving interpolation still do not appear on the map.
 
 To refresh the definitions after adding block models, run the matching
 DynmapBlockScan 3.7 tool once against a built jar in an isolated Forge 1.12.2

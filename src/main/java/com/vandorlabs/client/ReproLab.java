@@ -976,6 +976,15 @@ public class ReproLab {
             case 38:
                 if(--holdTicks>0)break;
                 saveNamed(mc,"connected_seat_hotbar");
+                ItemStack extraLargeIcon=new ItemStack(block("landing_gear"));
+                net.minecraft.nbt.NBTTagCompound extraLargeData=new net.minecraft.nbt.NBTTagCompound();
+                extraLargeData.setInteger("GearSize",3);
+                extraLargeIcon.setTagInfo("BlockEntityTag",extraLargeData);
+                mc.player.inventory.setInventorySlotContents(8,extraLargeIcon);
+                state=44;holdTicks=GUI_SETTLE_TICKS;break;
+            case 44:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"extra_large_gear_hotbar");
                 BlockPos directionPos = CONSOLE.add(10,0,3);
                 mc.world.setBlockState(directionPos,block("programmable_diagonal_porthole").getDefaultState()
                         .withProperty(com.vandorlabs.blocks.BlockProgrammableWall.INVERTED,true),3);

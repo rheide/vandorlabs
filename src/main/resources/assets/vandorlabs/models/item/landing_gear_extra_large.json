@@ -1,3 +1,10 @@
 {
-  "parent": "vandorlabs:block/landing_gear_extra_large_retracted"
+  "parent": "vandorlabs:block/landing_gear_extra_large_retracted",
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.3125, 0.3125, 0.3125]
+    }
+  }
 }

@@ -31,8 +31,21 @@ def main():
     texture_path = ASSETS / "dynmap-texture.txt"
     models = records(model_path, "modellist")
     mappings = records(texture_path, "block")
+    custom = records(model_path, "customblock")
+    models.update(custom)
     if not models.issubset(mappings):
         raise AssertionError("Dynmap models lack matching texture states")
+    for name, renderer in (
+            ("programmable_slab", "ProgrammableSlabRenderer"),
+            ("programmable_door", "ProgrammableDoorRenderer"),
+            ("controlled_ramp", "ControlledRampRenderer")):
+        if (name, "*") not in custom or not re.search(
+                r"^customblock:id=%%%s,state=\*,class=com\.vandorlabs\.dynmap\.%s$" %
+                (name, renderer), model_path.read_text(), re.MULTILINE):
+            raise AssertionError("missing tile-aware Dynmap renderer for " + name)
+        if not (ROOT / "src/main/java/com/vandorlabs/dynmap" /
+                (renderer + ".java")).is_file():
+            raise AssertionError("missing Dynmap renderer class " + renderer)
     # These Minecraft models have no JSON elements: Dynmap can only see them
     # when every listed blockstate has an explicit model and texture mapping.
     dynamic = (
@@ -45,7 +58,7 @@ def main():
         variants = json.loads((ASSETS / "blockstates" / (name + ".json")).read_text())["variants"]
         wanted = {(name, state.replace("=", ":").replace(",", "/"))
                   for state in variants}
-        missing = wanted - models
+        missing = wanted - models if (name, "*") not in custom else set()
         if missing:
             raise AssertionError("missing Dynmap model states for %s: %s" %
                                  (name, sorted(missing)[:5]))
@@ -56,13 +69,20 @@ def main():
     if re.search(r"[eunsdw]/\d+(?:/-?\d+(?:\.\d+)?){4}",
                  model_path.read_text()):
         raise AssertionError("scanner UV bounds were not normalized")
+    if re.search(r"^modellist:id=%(?:rocket_thruster|ion_drive|plasma_vent|impulse_engine),.*?/5\.750000:",
+                 model_path.read_text(), re.MULTILINE):
+        raise AssertionError("propulsion emitter faces are too thin for Dynmap")
+    if "block:id=%controlled_ramp,state=*,patch0=" not in texture_path.read_text() \
+            or "patch28=0:v12_source_stone" not in texture_path.read_text():
+        raise AssertionError("ramp source texture mapping is incomplete")
 
     texture_text = texture_path.read_text()
     declarations = dict(re.findall(
-        r"^texture:id=([^,]+),filename=assets/vandorlabs/textures/([^,]+)",
+        r"^texture:id=([^,]+),filename=([^,]+)",
         texture_text, re.MULTILINE))
     missing_files = sorted(name for name, relative in declarations.items()
-                           if not (TEXTURES / relative).is_file())
+                           if relative.startswith("assets/vandorlabs/textures/")
+                           and not (TEXTURES / relative.split("assets/vandorlabs/textures/",1)[1]).is_file())
     if missing_files:
         raise AssertionError("missing declared textures: " + repr(missing_files))
     referenced = set(re.findall(r"patch\d+=\d+:([^,\n]+)", texture_text))

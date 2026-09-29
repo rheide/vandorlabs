@@ -48,5 +48,11 @@ for size in ['small','medium','large','extra_large']:
   def category(e): return 'piston' if e['name']=='piston' else 'fixed' if e['name'] in ['mount_plate','fixed_sleeve'] else 'wheel'
   data['elements']=[e for e in data['elements'] if category(e)==group]
   write(assets/f'item/landing_gear_{size}_{group}.json',data)
- write(assets/f'item/landing_gear_{size}.json',{'parent':f'vandorlabs:block/landing_gear_{size}_retracted'})
+ item={'parent':f'vandorlabs:block/landing_gear_{size}_retracted'}
+ if size=='extra_large':
+  # The placed model spans 32 pixels; shrink and recenter only its inventory view.
+  item['display']={'gui':{'rotation':[30,225,0],
+                          'translation':[0,2.5,0],
+                          'scale':[0.3125,0.3125,0.3125]}}
+ write(assets/f'item/landing_gear_{size}.json',item)
 write(assets/'item/landing_gear.json',{'parent':'vandorlabs:item/landing_gear_small'})
