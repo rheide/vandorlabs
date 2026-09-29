@@ -2,7 +2,7 @@
 
 ## Ramp Controller offsets
 
-The start and end offset sliders move in half-block steps from -8 to 8 blocks. The displayed values describe the retracted and deployed positions. Shift-right-click the controller in creative mode to open its menu.
+The start and end offset sliders move in half-block steps from -16 to 16 blocks. The displayed values describe the retracted and deployed positions. Shift-right-click the controller in creative mode to open its menu.
 
 ![Ramp Controller start and end offset sliders](../images/gallery/v1.2/ramp-controller.png)
 
@@ -14,7 +14,7 @@ The Programmable Light Frame is a one-pixel-deep panel that faces the side it is
 
 ## Ceiling-mounted Inputs
 
-Place Programmable Input or Programmable Half Input against the underside of a block to put its artwork on the downward-facing side.
+Place Programmable Input or Programmable Half-Input against the underside of a block to put its artwork on the downward-facing side. Click near, at the middle, or far across the underside to choose its position. Programmable Half-Consoles use the same three ceiling positions.
 
 ![Inputs mounted beneath a ceiling](../images/gallery/v1.2/input-ceiling.png)
 

@@ -17,8 +17,13 @@ public class BlockProgrammableFullInput extends BlockProgrammableInput {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        InputSurfaceLayout.Box box=InputSurfaceLayout.fullInput(
-                state.getValue(KEYBOARD),state.getValue(UPPER)).housing;
+        net.minecraft.tileentity.TileEntity raw=source.getTileEntity(pos);
+        com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=
+                raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                        ?(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw:null;
+        InputSurfaceLayout.Box box=tile!=null && tile.isCeilingMounted()
+                ?InputSurfaceLayout.ceilingInput(true,false,tile.getCeilingPosition(1)).housing
+                :InputSurfaceLayout.fullInput(state.getValue(KEYBOARD),state.getValue(UPPER)).housing;
         AxisAlignedBB local=new AxisAlignedBB(box.x0/16,box.y0/16,box.z0/16,
                 box.x1/16,box.y1/16,box.z1/16);
         return rotateFromNorth(local, state.getValue(FACING));

@@ -71,11 +71,22 @@ public final class InputSurfaceLayout {
     }
 
     public static Mounted ceilingInput(boolean full,boolean small) {
+        return ceilingInput(full,small,full?1:2);
+    }
+
+    /** Slot 0 is the local near edge, 1 the middle, and 2 the far edge. */
+    public static Mounted ceilingInput(boolean full,boolean small,int position) {
         double scale=full?1:small?SMALL_SCALE:1;
         double x0=(16-16*scale)/2,x1=16-x0;
-        double z0=full?0:16-8*scale;
-        return new Mounted(new Box(x0,15,z0,x1,16,16),
-                horizontalDown(x0+.25,x1-.25,z0+.25,15.75,14.98));
+        double depth=full?16:8*scale;
+        double z0=ceilingStart(depth,position);
+        return new Mounted(new Box(x0,15,z0,x1,16,z0+depth),
+                horizontalDown(x0+.25,x1-.25,z0+.25,z0+depth-.25,14.98));
+    }
+
+    public static double ceilingStart(double depth,int position) {
+        int slot=Math.max(0,Math.min(2,position));
+        return (16-depth)*(slot/2.0)+(depth==16?(slot-1)*4:0);
     }
 
     public static Quad halfConsoleFront() { return HALF_CONSOLE_FRONT; }

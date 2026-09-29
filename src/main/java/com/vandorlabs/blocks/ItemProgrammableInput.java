@@ -28,8 +28,12 @@ public class ItemProgrammableInput extends ItemBlock {
         // Normal side placement is the wall-mounted mode. Sneaking and
         // top/bottom clicks retain the existing horizontal shelf behavior.
         TileEntity tile=world.getTileEntity(pos);
-        if(tile instanceof TileEntityAnimatedScreenSelector)
-            ((TileEntityAnimatedScreenSelector)tile).setCeilingMounted(side==EnumFacing.DOWN);
+        if(tile instanceof TileEntityAnimatedScreenSelector) {
+            TileEntityAnimatedScreenSelector selector=(TileEntityAnimatedScreenSelector)tile;
+            selector.setCeilingMounted(side==EnumFacing.DOWN);
+            if (side==EnumFacing.DOWN) selector.setCeilingPosition(CeilingPlacement.position(
+                    newState.getValue(BlockProgrammableInput.FACING),hitX,hitZ));
+        }
         if (side.getAxis().isHorizontal() && !player.isSneaking()
                 && !newState.getValue(BlockProgrammableInput.KEYBOARD)) {
             if (tile instanceof TileEntityAnimatedScreenSelector) {

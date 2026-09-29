@@ -284,8 +284,10 @@ public class TileEntityControlledRamp extends TileEntity {
             if (tag.hasKey(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,3)) startHalfSteps=-startHalfSteps;
             if (tag.hasKey(SaveSchema.Ramp.END_OFFSET_HALF_STEPS,3)) endHalfSteps=-endHalfSteps;
         }
-        startHalfSteps=Math.max(-16,Math.min(16,startHalfSteps));
-        endHalfSteps=Math.max(-16,Math.min(16,endHalfSteps));
+        startHalfSteps=Math.max(-ControllerPlatform.MAX_OFFSET_HALF_STEPS,
+                Math.min(ControllerPlatform.MAX_OFFSET_HALF_STEPS,startHalfSteps));
+        endHalfSteps=Math.max(-ControllerPlatform.MAX_OFFSET_HALF_STEPS,
+                Math.min(ControllerPlatform.MAX_OFFSET_HALF_STEPS,endHalfSteps));
         startOffset=startHalfSteps/2; drop=(Math.abs(endHalfSteps)+1)/2; top=endHalfSteps<0;
         travelAxis=savedTravel==RampGeometry.LEFT?RampGeometry.RIGHT:savedTravel;
         extendSegments=tag.getBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS);

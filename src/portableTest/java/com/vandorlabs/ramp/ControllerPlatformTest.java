@@ -82,6 +82,13 @@ public final class ControllerPlatformTest {
                 "medium motion retains its eased profile");
         check(ControllerPlatform.duration(3,2,0)==12 && ControllerPlatform.duration(3,2,1)==24
                 && ControllerPlatform.duration(3,2,2)==48,"three speed durations");
+        check(ControllerPlatform.MAX_DROP==16 && ControllerPlatform.MAX_OFFSET_HALF_STEPS==32,
+                "sixteen-block endpoint range");
+        check(ControllerPlatform.duration(3,32,2)==512,"long-range slow duration");
+        close(ControllerPlatform.offsetPixels(0,0,1,16,-16,16,0,true),-16,
+                "long-range start endpoint");
+        close(ControllerPlatform.offsetPixels(0,0,1,16,-16,16,1,true),16,
+                "long-range end endpoint");
         for (int start=-8;start<=8;start++) for (int end=-8;end<=8;end++) {
             for (boolean lift:new boolean[]{false,true}) {
                 close(ControllerPlatform.offset(2,7,3,8,start,end,0,lift),start,"signed start endpoint");

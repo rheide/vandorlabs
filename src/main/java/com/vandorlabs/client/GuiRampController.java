@@ -35,12 +35,14 @@ public class GuiRampController extends GuiContainer {
     }
     @Override public void initGui() {
         super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
-        startSlider=new GuiSlider(20,guiLeft+14,guiTop+30,292,20,"","",-16,16,
+        startSlider=new GuiSlider(20,guiLeft+14,guiTop+30,292,20,"","",
+                -ControllerPlatform.MAX_OFFSET_HALF_STEPS,ControllerPlatform.MAX_OFFSET_HALF_STEPS,
                 controller.startHalfSteps(),false,true,slider->{
             int half=slider.getValueInt();slider.setValue(half);
             slider.displayString=offsetLabel("Start / off",half);
         });
-        endSlider=new GuiSlider(21,guiLeft+14,guiTop+54,292,20,"","",-16,16,
+        endSlider=new GuiSlider(21,guiLeft+14,guiTop+54,292,20,"","",
+                -ControllerPlatform.MAX_OFFSET_HALF_STEPS,ControllerPlatform.MAX_OFFSET_HALF_STEPS,
                 controller.endHalfSteps(),false,true,slider->{
             int half=slider.getValueInt();slider.setValue(half);
             slider.displayString=offsetLabel("End / on",half);
@@ -111,7 +113,9 @@ public class GuiRampController extends GuiContainer {
     }
     private void submit() {
         int start=startSlider.getValueInt(),end=endSlider.getValueInt(),pixels=parseOffset(treadField);
-        if (start>=-16 && start<=16 && end>=-16 && end<=16 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
+        if (Math.abs(start)<=ControllerPlatform.MAX_OFFSET_HALF_STEPS
+                && Math.abs(end)<=ControllerPlatform.MAX_OFFSET_HALF_STEPS
+                && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
             lastStartHalf=start;lastEndHalf=end;
             PacketHandler.INSTANCE.sendToServer(MessageRampController.halfOffsets(controller.getPos(),start,end,
                     pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures));

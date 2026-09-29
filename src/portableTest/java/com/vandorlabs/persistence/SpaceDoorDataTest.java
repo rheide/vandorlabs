@@ -46,10 +46,10 @@ public final class SpaceDoorDataTest {
                 for (boolean hinges:new boolean[]{false,true}) {
             double low=sliding?(framed?6:7):(hinges?10.49:framed?11.24:12.24);
             double high=sliding?(framed?10:9):(framed?15.24:14.24);
-            check(Math.abs(high+16*SpaceDoorData.positionOffset(sliding,framed,hinges,1)-16)<1E-9,
-                    "near-edge door model is inset");
-            check(Math.abs(low+16*SpaceDoorData.positionOffset(sliding,framed,hinges,2))<1E-9,
-                    "far-edge door model is inset");
+            check(Math.abs(high+16*SpaceDoorData.positionOffset(sliding,framed,hinges,1)-(framed?16:15))<1E-9,
+                    "near-edge door clearance is wrong");
+            check(Math.abs(low+16*SpaceDoorData.positionOffset(sliding,framed,hinges,2)-(framed?0:1))<1E-9,
+                    "far-edge door clearance is wrong");
             check(SpaceDoorData.positionOffset(sliding,framed,hinges,0)==(sliding?0:-5.24/16.0),
                     "middle door model moved");
         }

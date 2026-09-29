@@ -30,7 +30,7 @@ Creative shift-right-click the controller to open its settings, or use the Confi
 
 1. Choose **Ramp**, **Filled Ramp**, **Lift**, or **Extend**.
 2. Choose **Up/Down** or **Left/Right** travel. Left and right are relative to the selected ramp direction.
-3. Set **Start / off offset** and **End / on offset** from `-8` to `+8` blocks. Positive vertical offsets rise; negative ones descend. Positive horizontal offsets move right. Opposite endpoints can create a 16-block stroke.
+3. Set **Start / off offset** and **End / on offset** from `-16` to `+16` blocks in half-block steps. Positive vertical offsets rise; negative ones descend. Positive horizontal offsets move right. Opposite endpoints can create a 32-block stroke.
 4. Choose whether redstone **On** or **Off** deploys the platform. Physical power and virtual redstone channels are supported.
 5. Set **Match textures** (On by default). Turn it Off to include differently textured Programmable Blocks or Slabs; block type and slab half still must match. Individual finishes are preserved.
 6. Choose **Fast**, **Medium**, or **Slow**. Ramp and Filled Ramp offer **1, 2, 4, 8, or 16 pixel** treads. Lift and Extend have no treads.

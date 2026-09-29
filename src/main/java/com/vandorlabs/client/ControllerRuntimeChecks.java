@@ -178,7 +178,7 @@ public final class ControllerRuntimeChecks {
         controller=place(world,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),Blocks.FURNACE.getDefaultState(),3);
         require(!controller.request(true),"tile entities excluded");
-        require(!controller.configure(player,9,2,true,true,false,false),"travel above eight rejected");
+        require(!controller.configure(player,17,2,true,true,false,false),"travel above sixteen rejected");
 
         // Real passenger motion in both directions, including collision at every intermediate tick.
         clear(world,pos);
@@ -601,6 +601,7 @@ public final class ControllerRuntimeChecks {
         clear(world,pos);
         checkCreativePick(world, player, pos);
         checkHalfOffsets(world,player,pos);
+        checkMaxOffsets(world,player,pos.up(64));
         clear(world,pos);
         player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);
         System.out.println("[vandorlabs][reprolab] controller-runtime PASS ("+assertions+" assertions)");
@@ -706,6 +707,42 @@ public final class ControllerRuntimeChecks {
         require(!controller.error && controller.attached(),"half-block return completes");
         require(controller.recover(false),"half-block platform restores");
         clear(world,pos);
+    }
+
+    private static void checkMaxOffsets(World world,EntityPlayerMP player,BlockPos pos) {
+        double px=player.posX,py=player.posY,pz=player.posZ;
+        player.connection.setPlayerLocation(pos.getX()-2.5,pos.getY()+1,pos.getZ()+.5,
+                player.rotationYaw,player.rotationPitch);
+        try {
+            TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+            List<BlockPos> sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
+            require(controller.configureHalfOffsets(player,-32,32,8,true,false,true,
+                    EnumFacing.SOUTH,0,false,2,true),"sixteen-block endpoints configure");
+            require(controller.startOffsetValue()==-16 && controller.endOffsetValue()==16
+                    && controller.attached(),"sixteen-block endpoints were clamped");
+            TileEntityRampController saved=new TileEntityRampController();
+            saved.readFromNBT(controller.writeToNBT(new NBTTagCompound()));
+            require(saved.startOffsetValue()==-16 && saved.endOffsetValue()==16,
+                    "sixteen-block endpoints were lost on save");
+            require(controller.request(true),"long-range travel begins");
+            require(controller.durationTicks()==512,"long-range slow duration is wrong");
+            finish(controller);
+            require(controller.isOpen() && !controller.error,"long-range travel completes");
+            require(controller.request(false),"long-range return begins");
+            finish(controller);
+            require(!controller.error && controller.attached(),"long-range return completes");
+            require(controller.recover(false),"long-range platform restores");
+            for (BlockPos source:sources) {
+                require(world.getBlockState(source).equals(Blocks.STONE_SLAB.getDefaultState()),
+                        "long-range source did not restore");
+                for (int y=-16;y<=16;y++) if (y!=0)
+                    require(world.getBlockState(source.up(y)).getBlock()!=ModBlocks.CONTROLLED_RAMP,
+                            "long-range reservation remained");
+            }
+            clear(world,pos);
+        } finally {
+            player.connection.setPlayerLocation(px,py,pz,player.rotationYaw,player.rotationPitch);
+        }
     }
 
     private static final class FaultController extends TileEntityRampController {

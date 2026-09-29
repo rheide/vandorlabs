@@ -82,7 +82,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   Fast/Medium/Slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and
   a zero start offset restores the original blocks on retraction. Travel-space locks follow the moving
   platform, and setting edits reset it automatically. Uses the supplied HD-2 art.
-  Footprints are capped at 8 wide × 16 long; each offset ranges from -8 to +8 blocks.
+  Footprints are capped at 8 wide × 16 long; each offset ranges from -16 to +16 blocks.
   Ramp direction is independent of the controller's platform-selection arrow.
   **Match textures** is optional and defaults On; Immersive Engineering slabs are supported.
   See [placement, geometry and tests](docs/landing-ramps.md).

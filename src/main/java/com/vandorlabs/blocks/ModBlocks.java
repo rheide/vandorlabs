@@ -398,6 +398,8 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
+                        : block == PROGRAMMABLE_HALF_CONSOLE
+                        ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
                         ? new ItemDiagonalWall((BlockProgrammableWall) block) : new ItemBlock(block);

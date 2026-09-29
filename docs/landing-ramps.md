@@ -16,10 +16,9 @@ evaluates the redstone signal using the new settings:
   tread slope with material filling from each tread's starting position),
   lift (whole platform translates), or extend (whole platform expands to its
   destination).
-- **Start / off offset** and **End / on offset:** signed integers from -8 to +8,
+- **Start / off offset** and **End / on offset:** values from -16 to +16 in half-block steps,
   measured from the original platform along the chosen travel axis. Up/down
-  uses positive for up and negative for down. Type a value or use the adjacent
-  minus/plus buttons; valid edits apply
+  uses positive for up and negative for down. Use the sliders; valid edits apply
   immediately. For example, start `2`, end `-3` travels from two blocks up to
   three blocks down. Equal endpoints are allowed. Trigger polarity still decides
   which redstone signal selects the end position.
@@ -46,11 +45,14 @@ evaluates the redstone signal using the new settings:
   ramps retain their actual 2px treads. A one-block ramp with a single 16px tread
   moves that entire tread because it has no separate hinge tread.
 
-Travel is the absolute difference between the two offsets (up to 16 blocks).
-Full-stroke time is `max(platform length, travel) × 5 ticks` on fast,
-`× 10 ticks` on medium, or `× 20 ticks` on slow. For example, a four-long platform
-with three-block travel takes one second on fast, two on medium, and four on slow. Reversing redstone mid-animation
+Travel is the absolute difference between the two offsets (up to 32 blocks).
+Full-stroke time is `max(platform length, ceil(travel)) × 4 ticks` on fast,
+`× 8 ticks` on medium, or `× 16 ticks` on slow. A full 32-block stroke takes
+6.4 seconds on fast, 12.8 on medium, and 25.6 on slow. Reversing redstone mid-animation
 keeps the current pose and takes only the remaining portion of the stroke.
+Longer strokes check more space when deployment begins and stay active for more ticks.
+The platform footprint remains capped at 128 source blocks; an idle controller does
+not scan its travel path each tick.
 Moving lifts and ramps carry standing entities; obstructed riders stop movement
 and leave an error for the next signal edge or setting edit. Riders do not collide
 with their own platform during transport, but foreign ceilings still stop them.
@@ -64,7 +66,7 @@ There is no connect/disconnect operation. Each deployment scans face-connected
 blocks matching the type **and complete blockstate** of the block directly in
 front, on that same horizontal layer. Different slab halves/material variants
 remain separate. Maximum footprint: **8 blocks wide × 16 blocks long** (128 source
-blocks), with **each endpoint within 8 blocks of the original position**. Matching blocks beyond those
+blocks), with **each endpoint within 16 blocks of the original position**. Matching blocks beyond those
 bounds are ignored, not treated as an error. Selection grows from the arrow's
 front block using a repeatable connected flood fill; sideways/backward growth
 also counts toward these spans. Length follows the configured ramp direction;

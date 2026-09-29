@@ -522,6 +522,8 @@ final class ScreenRuntimeChecks {
             source.setSecondaryInputPanel(TileEntityAnimatedScreenSelector.INPUT_PANELS[
                     TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1]);
             source.setWallPosition(1);
+            source.setCeilingMounted(true);
+            source.setCeilingPosition(2);
             source.setSmallInput(true);
             source.setRedstoneChannel(4271);
             source.setHousingTexture(8);
@@ -543,6 +545,8 @@ final class ScreenRuntimeChecks {
                                     TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1]
                                     .equals(restored.getSecondaryInputPanel())
                             && restored.getWallPosition(0) == 1
+                            && restored.isCeilingMounted()
+                            && restored.getCeilingPosition(1) == 2
                             && restored.isSmallInput()
                             && restored.getRedstoneChannel() == 4271
                             && restored.getHousingTexture() == 8
@@ -1366,24 +1370,50 @@ final class ScreenRuntimeChecks {
                 "full input keyboard collision is not one pixel high and full-depth");
         checkCeilingInput(player,(BlockProgrammableInput)ModBlocks.PROGRAMMABLE_INPUT,false);
         checkCeilingInput(player,block,true);
+        checkCeilingHalfConsole(player);
     }
 
     private static void checkCeilingInput(EntityPlayer player,BlockProgrammableInput block,boolean full) {
         BlockPos at=new BlockPos(full?43:42,250,40);
-        IBlockState state=block.getStateForPlacement(player.world,at,EnumFacing.DOWN,
-                .5F,.5F,.5F,0,player);
-        try {
+        IBlockState state=block.getDefaultState().withProperty(BlockProgrammableInput.FACING,EnumFacing.NORTH)
+                .withProperty(BlockProgrammableInput.KEYBOARD,true)
+                .withProperty(BlockProgrammableInput.UPPER,true);
+        for (int slot=0;slot<3;slot++) try {
+            float hitZ=(slot+.5F)/3;
             require(new com.vandorlabs.blocks.ItemProgrammableInput(block).placeBlockAt(
-                    new ItemStack(block),player,player.world,at,EnumFacing.DOWN,.5F,.5F,.5F,state),
+                    new ItemStack(block),player,player.world,at,EnumFacing.DOWN,.5F,.5F,hitZ,state),
                     "ceiling input could not be placed");
             TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(at);
-            require(tile.isCeilingMounted()&&tile.writeToNBT(new NBTTagCompound()).getBoolean("CeilingMounted"),
-                    "ceiling input did not keep underside orientation");
+            require(tile.isCeilingMounted() && tile.getCeilingPosition(-1)==slot
+                    && tile.writeToNBT(new NBTTagCompound()).getInteger("CeilingPosition")==slot,
+                    "ceiling input did not keep its underside slot");
             com.vandorlabs.render.InputSurfaceLayout.Mounted layout=
-                    com.vandorlabs.render.InputSurfaceLayout.ceilingInput(full,false);
-            require(layout.surface.vertices[0].y<layout.housing.y1
-                    && layout.surface.vertices[0].y<layout.housing.y0,
+                    com.vandorlabs.render.InputSurfaceLayout.ceilingInput(full,false,slot);
+            AxisAlignedBB bounds=block.getBoundingBox(state,player.world,at);
+            require(close(bounds.minZ,layout.housing.z0/16)
+                    && close(bounds.maxZ,layout.housing.z1/16),
+                    "ceiling input hitbox misses its rendered slot");
+            require(layout.surface.vertices[0].y<layout.housing.y0,
                     "ceiling input artwork does not face downward");
+        } finally {player.world.setBlockToAir(at);}
+    }
+
+    private static void checkCeilingHalfConsole(EntityPlayer player) {
+        com.vandorlabs.blocks.BlockProgrammableHalfConsole block=
+                (com.vandorlabs.blocks.BlockProgrammableHalfConsole)ModBlocks.PROGRAMMABLE_HALF_CONSOLE;
+        BlockPos at=new BlockPos(44,250,40);
+        IBlockState state=block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH);
+        for (int slot=0;slot<3;slot++) try {
+            float hitZ=(slot+.5F)/3;
+            require(new com.vandorlabs.blocks.ItemProgrammableHalfConsole(block).placeBlockAt(
+                    new ItemStack(block),player,player.world,at,EnumFacing.DOWN,.5F,.5F,hitZ,state),
+                    "ceiling half console could not be placed");
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(at);
+            double start=com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,slot)/16;
+            AxisAlignedBB bounds=block.getBoundingBox(state,player.world,at);
+            require(tile.isCeilingMounted() && tile.getCeilingPosition(-1)==slot
+                    && close(bounds.minZ,start) && close(bounds.maxZ,start+1),
+                    "ceiling half console hitbox misses its rendered slot");
         } finally {player.world.setBlockToAir(at);}
     }
 

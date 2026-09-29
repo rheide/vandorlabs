@@ -33,7 +33,13 @@ public class BlockProgrammableHalfConsole extends BlockAnimatedScreenSelector {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        return new AxisAlignedBB(0, 0, 0, 1, 0.5, 1);
+        net.minecraft.tileentity.TileEntity raw=source.getTileEntity(pos);
+        double offset=raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                && ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw).isCeilingMounted()
+                ?com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,
+                        ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw).getCeilingPosition(1))/16:0;
+        return PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,0,offset,1,.5,1+offset),
+                state.getValue(FACING));
     }
 
     @Override

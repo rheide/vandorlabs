@@ -6,18 +6,19 @@
 
 - Extra Large Landing Gear doubles Large's model dimensions. Its centered mount and moving parts reserve a three-by-three footprint; extension remains configurable from 0–4 blocks.
 - Programmable Light Frame, a one-pixel-deep light panel, and Programmable Light Slab, a half-height light with top and bottom placement. Both use Programmable Light artwork, brightness, joining, redstone channels and configuration.
-- Ramp Controller start and end offset sliders with half-block steps from -8 to 8 blocks. The controller, moving cells, saved settings and copied items retain these intermediate positions.
+- Ramp Controller start and end offset sliders with half-block steps from -16 to 16 blocks. The controller, moving cells, saved settings and copied items retain these intermediate positions.
 
 ### Fixed
 
 - Newly placed Programmable Slabs now use Tile for their side layout by default; saved Fit selections still render as Fit, and the inventory model matches the default.
 - Filled, full-height Programmable Diagonal Walls now support Programmable Doors above them.
-- Programmable Doors placed at either depth edge now align their outside surface with the block boundary across framed, bare, rotating and sliding models.
+- Framed Programmable Doors align with the block boundary at either depth edge. Frameless doors keep one pixel of clearance so sliding leaves retract behind the neighboring block.
 - Programmable Diagonal Walls now provide per-face normals for shader lighting.
 - Defer programmable-light joining, saved-state channel changes and redstone-channel registration until after chunk tile loading finishes. Landing Gear and door load callbacks now use the same safe point.
 - Ramp controllers, doors, displays and Landing Gear read power only from loaded neighboring chunks, preventing redstone checks from loading another chunk during a tile callback.
 - Programmable Slabs report their full outer face as solid, so ceiling and floor attachments such as Mekanism Glow Panels can be placed on the matching half.
 - Programmable Input and Programmable Half Input now show their screen on the underside when mounted beneath a ceiling.
+- Ceiling-mounted Programmable Inputs, Programmable Half-Inputs and Programmable Half-Consoles now use near, middle or far positions across the ceiling face based on where it was clicked.
 - Propulsion wall textures now cover the housing's sides, top, bottom, rear and front recess across the Rocket Thruster, Ion Drive, Plasma Vent, Impulse Engine and three hover fixtures. Their configuration dialog shows the selected texture.
 - The live-client test lab now performs bulk integrated-server scene setup on the server thread, reducing its chunk-packet tile-map race during setup.
 - Dynmap now has fallback geometry for programmable blocks, slabs and walls, plus the Controlled Ramp. Removed model entries for three texture-only names that Dynmap rejected as air.

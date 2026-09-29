@@ -10,7 +10,8 @@ public final class ControllerPlatform {
     public static final int MAX_WIDTH = 8;
     public static final int MAX_LENGTH = 16;
     public static final int MAX_AREA = MAX_WIDTH * MAX_LENGTH;
-    public static final int MAX_DROP = 8;
+    public static final int MAX_DROP = 16;
+    public static final int MAX_OFFSET_HALF_STEPS = MAX_DROP * 2;
     private ControllerPlatform() { }
 
     public static final class Cell {

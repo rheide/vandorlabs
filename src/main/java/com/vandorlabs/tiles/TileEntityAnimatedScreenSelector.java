@@ -94,7 +94,21 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     /** -1 means a legacy block whose lower/top position comes from metadata. */
     private int wallPosition = -1;
     private boolean ceilingMounted;
+    /** -1 keeps the geometry of ceiling-mounted inputs saved before slots existed. */
+    private int ceilingPosition = -1;
     public boolean isCeilingMounted() { return ceilingMounted; }
+    public int getCeilingPosition(int legacyPosition) {
+        return ceilingPosition<0?legacyPosition:ceilingPosition;
+    }
+    public void setCeilingPosition(int position) {
+        ceilingPosition=Math.max(0,Math.min(2,position));markDirty();
+        if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
+    }
+    @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+        if (ceilingMounted) return new net.minecraft.util.math.AxisAlignedBB(
+                pos.add(-1,0,-1),pos.add(2,1,2));
+        return super.getRenderBoundingBox();
+    }
     public void setCeilingMounted(boolean value) {
         ceilingMounted=value;markDirty();
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
@@ -351,6 +365,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
         compound.setBoolean("CeilingMounted",ceilingMounted);
+        if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
         new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
@@ -379,6 +394,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
         ceilingMounted=compound.getBoolean("CeilingMounted");
+        ceilingPosition=compound.hasKey("CeilingPosition",3)
+                ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;
         // NBT is world data, never trust it blindly. The portable codec keeps
         // these defaults identical in every version-specific block entity.
         ScreenData data = ScreenData.read(new NbtPrimitiveData(compound),

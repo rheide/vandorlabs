@@ -172,7 +172,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if (direction==null || !direction.getAxis().isHorizontal()) return fail("Choose a horizontal ramp direction");
         if (travel<RampGeometry.VERTICAL || travel>RampGeometry.RIGHT) return fail("Choose a travel direction");
         if (selectedSpeed<0 || selectedSpeed>2) return fail("Choose a valid speed");
-        if (Math.abs((long)startHalf)>16 || Math.abs((long)endHalf)>16) return fail("Offsets must be -8 to 8 blocks");
+        if (Math.abs((long)startHalf)>ControllerPlatform.MAX_OFFSET_HALF_STEPS
+                || Math.abs((long)endHalf)>ControllerPlatform.MAX_OFFSET_HALF_STEPS)
+            return fail("Offsets must be -16 to 16 blocks");
         if (!ControllerPlatform.validTreadPixels(pixels)) return fail("Tread size must be 1, 2, 4, 8 or 16 pixels");
         // Reset using the old geometry and journal before installing new settings.
         if (attached()) {
@@ -708,8 +710,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if (tag.hasKey(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,3)) startHalfSteps=-startHalfSteps;
             if (tag.hasKey(SaveSchema.Ramp.END_OFFSET_HALF_STEPS,3)) endHalfSteps=-endHalfSteps;
         }
-        startHalfSteps=Math.max(-16,Math.min(16,startHalfSteps));
-        endHalfSteps=Math.max(-16,Math.min(16,endHalfSteps));
+        startHalfSteps=Math.max(-ControllerPlatform.MAX_OFFSET_HALF_STEPS,
+                Math.min(ControllerPlatform.MAX_OFFSET_HALF_STEPS,startHalfSteps));
+        endHalfSteps=Math.max(-ControllerPlatform.MAX_OFFSET_HALF_STEPS,
+                Math.min(ControllerPlatform.MAX_OFFSET_HALF_STEPS,endHalfSteps));
         startOffset=startHalfSteps/2; drop=(Math.abs(endHalfSteps)+1)/2; top=endHalfSteps<0;
         travelAxis=data.travelAxis==RampGeometry.LEFT?RampGeometry.RIGHT:data.travelAxis;
         extendSegments=data.extendSegments; matchTextures=data.matchTextures; speed=data.speed; slow=speed==2;

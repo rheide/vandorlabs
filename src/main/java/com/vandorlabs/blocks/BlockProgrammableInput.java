@@ -103,8 +103,10 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
         boolean small = selector != null && selector.isSmallInput();
         int wallPosition=state.getValue(UPPER)?2:0;
         if (selector!=null) wallPosition=selector.getWallPosition(wallPosition);
-        InputSurfaceLayout.Box box=InputSurfaceLayout.halfInput(state.getValue(KEYBOARD),
-                state.getValue(UPPER),wallPosition,small).housing;
+        InputSurfaceLayout.Box box=selector!=null && selector.isCeilingMounted()
+                ?InputSurfaceLayout.ceilingInput(false,small,selector.getCeilingPosition(2)).housing
+                :InputSurfaceLayout.halfInput(state.getValue(KEYBOARD),
+                        state.getValue(UPPER),wallPosition,small).housing;
         AxisAlignedBB local=new AxisAlignedBB(box.x0/16,box.y0/16,box.z0/16,
                 box.x1/16,box.y1/16,box.z1/16);
         return rotateFromNorth(local, state.getValue(FACING));

@@ -475,6 +475,8 @@ public class TEAnimatedScreenSelector
         if (state.getBlock() instanceof BlockProgrammableHalfConsole) {
             EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
             beginLocalTransform(x, y, z, facing);
+            if (te.isCeilingMounted()) GlStateManager.translate(0,0,
+                    InputSurfaceLayout.ceilingStart(16,te.getCeilingPosition(1)));
             GlStateManager.disableLighting();
             renderHalfConsole(te);
             GlStateManager.enableLighting();
@@ -636,7 +638,7 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
         InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
-                ?InputSurfaceLayout.ceilingInput(false,small)
+                ?InputSurfaceLayout.ceilingInput(false,small,te.getCeilingPosition(2))
                 :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
         renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1);
@@ -652,7 +654,7 @@ public class TEAnimatedScreenSelector
         TextureAtlasSprite wall = wallSprite(te);
         double[] uv=bindScreenSurface(te);
         InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
-                ?InputSurfaceLayout.ceilingInput(true,false)
+                ?InputSurfaceLayout.ceilingInput(true,false,te.getCeilingPosition(1))
                 :InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
         renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
