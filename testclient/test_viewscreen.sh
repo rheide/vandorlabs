@@ -28,6 +28,9 @@ fi
 grep -q '\[vandorlabs\]\[reprolab\] followup-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] version-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] face-textures-runtime PASS' "$RUN_OUT/client.log"
+grep -q '\[vandorlabs\]\[reprolab\] duplifier-connected-runtime PASS' "$RUN_OUT/client.log"
+grep -q '\[vandorlabs\]\[reprolab\] duplifier-options-gui PASS' "$RUN_OUT/client.log"
+grep -q '\[vandorlabs\]\[reprolab\] duplifier-mode-icon PASS' "$RUN_OUT/client.log"
 python3 testclient/analyze_viewscreen.py "$RUN_OUT" --texture-variant
 python3 testclient/analyze_space_doors.py "$RUN_OUT"
 python3 testclient/analyze_landing_gear.py "$RUN_OUT"

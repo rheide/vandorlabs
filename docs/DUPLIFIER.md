@@ -17,6 +17,26 @@ start On, and the choices stay on the item when you copy a different block.
 Shift-right-click in the air to clear the copy and return its name and display
 to the empty state; the Apply Settings choices remain in place.
 
+**Connected Matching Blocks** starts Off. A tool holding copied settings uses
+the multi-block icon when this mode is On; an empty tool keeps the off icon.
+Turn it On in Apply Settings to apply the selected copied properties to the
+clicked block and its entire matching group, following neighbors that share a face. A neighbor must have the same
+block type and original configuration as the clicked block. Facing and
+rotation are ignored when matching; other placement properties still match.
+Slabs and full blocks never join the same group, even with identical settings.
+Matching checks all other properties even when their copy switches are Off;
+it also checks saved face choices when overrides are disabled.
+The whole group is found before settings change, so a new texture does not stop
+the search halfway through a wall. Diagonal contact does not connect groups.
+
+The search uses loaded chunks and blocks you can edit. Door and seat halves and
+Landing Gear parts are addressed through their settings root and applied once.
+Groups larger than 4,096 occupied block cells are rejected without applying
+settings. The mode stays on the tool when you copy or clear settings; crafting
+still applies settings to the crafted item.
+
+![Duplifier apply options](images/gallery/tools/duplifier-config.png)
+
 | Shared setting | Sources and targets |
 | --- | --- |
 | Wall Texture | Programmable block, slab, stairs, wall, porthole, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |

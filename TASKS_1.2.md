@@ -2,6 +2,8 @@
 
 This file tracks the requested work and findings for this update.
 
+- [x] Add a Duplifier dialog option to apply selected settings across face-connected blocks of the clicked block's exact type and configuration. Ignore facing and rotation while requiring exact block type. Use the supplied multi icon only when holding a copy and the mode is enabled. Match the entire original region before applying, preserve edit permissions, handle multi-block roots once, and stay within loaded chunks. Matching boundaries, permissions, multi-block roots, unloaded chunks, group limits and distant controllers passed live gameplay checks. The complete live suite passed; a focused follow-up verified the compact dialog, option sync and all icon states.
+
 - [x] Investigate the latest server `ConcurrentModificationException` and whether Vandor Labs caused it. The latest crash iterated chunk tile entities and did not identify a mod; an earlier crash included the Ramp Controller. Deferred load callbacks and loaded-neighbor power reads address the mod's likely contribution.
 - [x] Check whether lights were already fixed. Version 1.1 deferred the older redstone light; other interactive tiles still used load-time callbacks, so these were deferred as well.
 - [x] Bump the mod version to 1.2.

@@ -125,7 +125,17 @@ public final class ItemDuplifier extends Item {
             player.sendStatusMessage(new TextComponentString("Duplifier has no copied settings"), true);
             return;
         }
-        if (applyTo(world, pos, tool, player))
+        if (DuplifierApplyOptions.connected(tool)) {
+            int count = DuplifierConnectedApply.apply(world, event.getPos(), tool,
+                    player, event.getFace());
+            if (count < 0)
+                player.sendStatusMessage(new TextComponentString(
+                        "Matching group exceeds 4096 block cells; no settings applied"), true);
+            else
+                player.sendStatusMessage(new TextComponentString(count > 0
+                        ? "Duplifier applied settings to " + count + " blocks"
+                        : "No copied settings apply here"), true);
+        } else if (applyTo(world, pos, tool, player))
             player.sendStatusMessage(new TextComponentString("Duplifier applied settings"), true);
         else
             player.sendStatusMessage(new TextComponentString("No copied settings apply here"), true);

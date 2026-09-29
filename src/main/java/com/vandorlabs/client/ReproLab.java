@@ -516,6 +516,12 @@ public class ReproLab {
                     mc.shutdown();
                     return;
                 }
+                if (Boolean.getBoolean("vandorlabs.duplifierChecksOnly")) {
+                    mc.gameSettings.hideGUI = false;
+                    state = 28;
+                    holdTicks = GUI_SETTLE_TICKS;
+                    break;
+                }
                 beginShot(mc, SHOTS.get(shotIndex), true);
                 state = 3;
                 holdTicks = CAPTURE_SETTLE_TICKS;
@@ -725,14 +731,88 @@ public class ReproLab {
             case 28:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "duplifier_off_item_hotbar");
-                mc.displayGuiScreen(new GuiDuplifier(mc.player.inventory));
+                mc.player.inventory.currentItem = 4;
+                onServer(mc, () -> {
+                    EntityPlayerMP owner = mc.getIntegratedServer().getPlayerList()
+                            .getPlayerByUsername(mc.player.getName());
+                    owner.inventory.currentItem = 4;
+                    ItemStack guiTool = new ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
+                    net.minecraft.nbt.NBTTagCompound guiCopy = new net.minecraft.nbt.NBTTagCompound();
+                    guiCopy.setInteger(com.vandorlabs.items.ProgrammableSettings.WALL_TEXTURE, 1);
+                    guiTool.setTagInfo(com.vandorlabs.items.ItemDuplifier.SETTINGS_TAG, guiCopy);
+                    owner.setHeldItem(EnumHand.MAIN_HAND, guiTool);
+                    owner.sendContainerToPlayer(owner.inventoryContainer);
+                    owner.openGui(com.vandorlabs.VandorLabs.instance,
+                            com.vandorlabs.GuiHandler.GUI_DUPLIFIER, owner.world, 0, 0, 0);
+                });
                 state = 29;
                 holdTicks = GUI_SETTLE_TICKS;
                 break;
             case 29:
                 if (--holdTicks > 0) break;
+                if (!(mc.currentScreen instanceof GuiDuplifier))
+                    throw new IllegalStateException("Duplifier options GUI did not open");
+                ((GuiDuplifier)mc.currentScreen).actionPerformed(
+                        new net.minecraft.client.gui.GuiButton(98,0,0,"Connected"));
+                ((GuiDuplifier)mc.currentScreen).actionPerformed(
+                        new net.minecraft.client.gui.GuiButton(100,0,0,"Primary"));
+                state = 45;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 45:
+                if (--holdTicks > 0) break;
+                ItemStack serverTool = mc.getIntegratedServer().getPlayerList()
+                        .getPlayerByUsername(mc.player.getName()).getHeldItemMainhand();
+                if (!com.vandorlabs.items.DuplifierApplyOptions.connected(serverTool)
+                        || com.vandorlabs.items.DuplifierApplyOptions.enabled(
+                                com.vandorlabs.items.DuplifierApplyOptions.mask(serverTool), 0))
+                    throw new IllegalStateException("Duplifier scope/property packets did not persist together");
+                System.out.println("[vandorlabs][reprolab] duplifier-options-gui PASS");
+                ((GuiDuplifier)mc.currentScreen).initGui();
+                state = 47;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 47:
+                if (--holdTicks > 0) break;
+                if (!com.vandorlabs.items.DuplifierApplyOptions.connected(mc.player.getHeldItemMainhand()))
+                    throw new IllegalStateException("Duplifier mode did not sync to the client");
                 saveNamed(mc, "duplifier_apply_settings_gui");
+                mc.player.closeScreen();
                 mc.displayGuiScreen(null);
+                state = 46;
+                holdTicks = GUI_SETTLE_TICKS;
+                break;
+            case 46:
+                if (--holdTicks > 0) break;
+                ItemStack ordinaryTool = new ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
+                ItemStack multiTool = ordinaryTool.copy();
+                com.vandorlabs.items.DuplifierApplyOptions.setConnected(multiTool, true);
+                net.minecraft.client.renderer.block.model.IBakedModel ordinaryModel =
+                        mc.getRenderItem().getItemModelWithOverrides(ordinaryTool, mc.world, mc.player);
+                if (mc.getRenderItem().getItemModelWithOverrides(multiTool, mc.world, mc.player) != ordinaryModel)
+                    throw new IllegalStateException("Empty connected Duplifier did not keep the off icon");
+                net.minecraft.nbt.NBTTagCompound iconCopy = new net.minecraft.nbt.NBTTagCompound();
+                iconCopy.setInteger(com.vandorlabs.items.ProgrammableSettings.WALL_TEXTURE, 1);
+                multiTool.setTagInfo(com.vandorlabs.items.ItemDuplifier.SETTINGS_TAG, iconCopy);
+                net.minecraft.client.renderer.block.model.IBakedModel multiModel =
+                        mc.getRenderItem().getItemModelWithOverrides(multiTool, mc.world, mc.player);
+                ordinaryTool.setTagInfo(com.vandorlabs.items.ItemDuplifier.SETTINGS_TAG, iconCopy.copy());
+                if (ordinaryModel == multiModel || multiModel == mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel()
+                        || mc.getRenderItem().getItemModelWithOverrides(ordinaryTool, mc.world, mc.player) == multiModel)
+                    throw new IllegalStateException("Duplifier connected mode item model did not select correctly");
+                com.vandorlabs.items.ItemDuplifier.clearCopyState(multiTool);
+                if (mc.getRenderItem().getItemModelWithOverrides(multiTool, mc.world, mc.player) != ordinaryModel)
+                    throw new IllegalStateException("Cleared connected Duplifier did not return to the off icon");
+                if (mc.getRenderItem().getItemModelWithOverrides(mc.player.getHeldItemMainhand(),
+                        mc.world, mc.player) != multiModel)
+                    throw new IllegalStateException("Held Duplifier did not render the connected icon");
+                saveNamed(mc, "duplifier_multi_item_hotbar");
+                System.out.println("[vandorlabs][reprolab] duplifier-mode-icon PASS");
+                if (Boolean.getBoolean("vandorlabs.duplifierChecksOnly")) {
+                    state = 9;
+                    holdTicks = GUI_SETTLE_TICKS;
+                    break;
+                }
                 TileEntity controllerRaw=mc.world.getTileEntity(ControllerRuntimeChecks.FIXTURE);
                 if (!(controllerRaw instanceof com.vandorlabs.tiles.TileEntityRampController))
                     throw new IllegalStateException("controller GUI fixture missing");
@@ -1385,8 +1465,10 @@ public class ReproLab {
         } catch (Exception exception) {
             throw new IllegalStateException("Controller server-thread contracts failed",exception);
         }
-        ScreenRuntimeChecks.run(serverPlayer);
-        MaterialRuntimeChecks.run(serverPlayer);
+        onServer(mc, () -> {
+            ScreenRuntimeChecks.run(serverPlayer);
+            MaterialRuntimeChecks.run(serverPlayer);
+        });
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{
         // Rebuild programmable fixtures after destructive runtime contracts.

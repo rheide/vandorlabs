@@ -168,7 +168,19 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public boolean configureHalfOffsets(EntityPlayer player,int startHalf,int endHalf,int pixels,
             boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
             boolean extend,int selectedSpeed,boolean matchTextures) {
-        if (world.isRemote || !usable(player)) return false;
+        return configureHalfOffsets(player,startHalf,endHalf,pixels,powerOn,slower,lift,
+                direction,travel,extend,selectedSpeed,matchTextures,false);
+    }
+    public boolean configureHalfOffsets(EntityPlayer player,int startHalf,int endHalf,int pixels,
+            boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
+            boolean extend,int selectedSpeed,boolean matchTextures,boolean connectedCopy) {
+        boolean copyAllowed = connectedCopy && player != null && world.isBlockLoaded(pos)
+                && world.getTileEntity(pos)==this
+                && player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.DUPLIFIER
+                && com.vandorlabs.items.DuplifierApplyOptions.connected(player.getHeldItemMainhand())
+                && player.canPlayerEdit(pos,EnumFacing.UP,player.getHeldItemMainhand())
+                && world.isBlockModifiable(player,pos);
+        if (world.isRemote || !(copyAllowed || usable(player))) return false;
         if (direction==null || !direction.getAxis().isHorizontal()) return fail("Choose a horizontal ramp direction");
         if (travel<RampGeometry.VERTICAL || travel>RampGeometry.RIGHT) return fail("Choose a travel direction");
         if (selectedSpeed<0 || selectedSpeed>2) return fail("Choose a valid speed");

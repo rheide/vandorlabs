@@ -498,7 +498,9 @@ public final class ProgrammableSettings {
                         number(values, RAMP_TRAVEL, ramp.travelAxis),
                         flag(values, RAMP_EXTEND, ramp.extendSegments),
                         number(values, RAMP_SPEED, ramp.speed),
-                        flag(values, RAMP_MATCH_TEXTURES, ramp.matchTextures));
+                        flag(values, RAMP_MATCH_TEXTURES, ramp.matchTextures),
+                        player.getHeldItemMainhand().getItem() == ModItems.DUPLIFIER
+                                && DuplifierApplyOptions.connected(player.getHeldItemMainhand()));
             }
         }
         if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL, 3)) {

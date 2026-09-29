@@ -46,9 +46,11 @@ public final class ModItems {
                 new ModelResourceLocation(CONFIGURIZER.getRegistryName(), "inventory"));
         ResourceLocation off = new ResourceLocation(VandorLabs.MODID, "duplifier_off");
         ResourceLocation on = new ResourceLocation(VandorLabs.MODID, "duplifier_on");
-        ModelLoader.registerItemVariants(DUPLIFIER, off, on);
+        ResourceLocation multi = new ResourceLocation(VandorLabs.MODID, "duplifier_multi");
+        ModelLoader.registerItemVariants(DUPLIFIER, off, on, multi);
         ModelLoader.setCustomMeshDefinition(DUPLIFIER, stack ->
-                new ModelResourceLocation(ItemDuplifier.hasCopy(stack) ? on : off,
+                new ModelResourceLocation(!ItemDuplifier.hasCopy(stack) ? off
+                        : DuplifierApplyOptions.connected(stack) ? multi : on,
                         "inventory"));
     }
 }

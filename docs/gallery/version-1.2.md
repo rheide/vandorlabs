@@ -1,5 +1,12 @@
 # Version 1.2
 
+## Connected Duplifier applications
+
+The Duplifier dialog now offers **Connected Matching Blocks**, Off by default.
+Enable it to apply the selected copied properties across a face-connected group
+matching the clicked block's exact type and original configuration, ignoring facing and rotation.
+See [Duplifier settings](../DUPLIFIER.md) for matching rules and limits.
+
 ## Housing finishes
 
 The shared finish menu now has 78 choices for Programmable Blocks and compatible shapes: 28 original finishes, 16 selected finishes from the first texture pack with shorter `T1` names, 23 selected finishes from the second pack with descriptive `T2` names and 64×64 artwork, and 11 new finishes named Hull Plating 1–11.

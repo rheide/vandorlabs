@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    "duplifier_apply_settings_gui": "tools/duplifier-config.png",
     "console_gui": "programmable/console-config.png",
     "input_gui": "programmable/input-config.png",
     "half_console_gui": "programmable/half-console-config.png",

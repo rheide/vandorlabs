@@ -11,12 +11,16 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public final class MessageDuplifierOptions implements IMessage {
     private long mask;
+    private boolean connected;
 
     public MessageDuplifierOptions() { }
-    public MessageDuplifierOptions(long mask) { this.mask = mask; }
+    public MessageDuplifierOptions(long mask, boolean connected) {
+        this.mask = mask;
+        this.connected = connected;
+    }
 
-    @Override public void fromBytes(ByteBuf buf) { mask = buf.readLong(); }
-    @Override public void toBytes(ByteBuf buf) { buf.writeLong(mask); }
+    @Override public void fromBytes(ByteBuf buf) { mask = buf.readLong(); connected = buf.readBoolean(); }
+    @Override public void toBytes(ByteBuf buf) { buf.writeLong(mask); buf.writeBoolean(connected); }
 
     public static final class Handler implements IMessageHandler<MessageDuplifierOptions, IMessage> {
         @Override public IMessage onMessage(MessageDuplifierOptions message, MessageContext context) {
@@ -27,6 +31,7 @@ public final class MessageDuplifierOptions implements IMessage {
                         || !player.openContainer.canInteractWith(player)) return;
                 ItemStack tool = player.getHeldItemMainhand();
                 DuplifierApplyOptions.setMask(tool, message.mask);
+                DuplifierApplyOptions.setConnected(tool, message.connected);
                 player.inventory.markDirty();
             });
             return null;

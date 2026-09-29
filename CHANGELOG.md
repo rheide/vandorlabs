@@ -4,6 +4,7 @@
 
 ### Added
 
+- Duplifier's optional Connected Matching Blocks mode applies selected copied settings to a face-connected group with the exact same block type and original configuration, ignoring facing and rotation. It uses the supplied multi-block item icon, stays within loaded chunks and rejects groups larger than 4,096 occupied block cells before applying settings.
 - 23 selected housing finishes from `textures2`, using the supplied 64x64 artwork and short descriptive menu names.
 - 16 selected housing finishes from the shared `textures` artwork folder, with shorter names prefixed `T1`, available across Programmable Blocks and the other blocks that share the housing finish menu.
 - 11 Hull Plating finishes from `hulls`, numbered 1–11 and available in the shared housing finish menu.

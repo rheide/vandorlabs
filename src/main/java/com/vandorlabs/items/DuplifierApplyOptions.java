@@ -6,6 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 /** Per-item choices for which copied settings may be applied. */
 public final class DuplifierApplyOptions {
     public static final String TAG = "DuplifierApplyMask";
+    public static final String CONNECTED_TAG = "DuplifierConnected";
     public static final String[] PAGES = {"Common", "Displays", "Blocks", "Doors", "Ramps"};
 
     public static final class Option {
@@ -80,6 +81,15 @@ public final class DuplifierApplyOptions {
     public static final long ALL = (1L << OPTIONS.length) - 1L;
 
     private DuplifierApplyOptions() { }
+
+    public static boolean connected(ItemStack tool) {
+        NBTTagCompound root = tool.getTagCompound();
+        return root != null && root.getBoolean(CONNECTED_TAG);
+    }
+
+    public static void setConnected(ItemStack tool, boolean connected) {
+        tool.setTagInfo(CONNECTED_TAG, new net.minecraft.nbt.NBTTagByte((byte)(connected ? 1 : 0)));
+    }
 
     public static long mask(ItemStack tool) {
         NBTTagCompound root = tool.getTagCompound();

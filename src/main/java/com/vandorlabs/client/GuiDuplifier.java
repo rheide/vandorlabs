@@ -4,7 +4,6 @@ import com.vandorlabs.container.ContainerDuplifier;
 import com.vandorlabs.items.DuplifierApplyOptions;
 import com.vandorlabs.network.MessageDuplifierOptions;
 import com.vandorlabs.network.PacketHandler;
-import java.io.IOException;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -34,11 +33,17 @@ public final class GuiDuplifier extends GuiContainer {
                 ? "On" : "Off");
     }
 
+    private String connectedLabel() {
+        return "Connected Matching Blocks: " + (DuplifierApplyOptions.connected(tool()) ? "On" : "Off");
+    }
+
     private void showPage() {
         buttonList.clear();
+        buttonList.add(new GuiButton(98, guiLeft + 14, guiTop + 26,
+                392, 18, connectedLabel()));
         for (int i = 0; i < DuplifierApplyOptions.PAGES.length; i++) {
-            GuiButton tab = new GuiButton(i, guiLeft + 10 + i * 80, guiTop + 30,
-                    76, 20, DuplifierApplyOptions.PAGES[i]);
+            GuiButton tab = new GuiButton(i, guiLeft + 10 + i * 80, guiTop + 48,
+                    76, 18, DuplifierApplyOptions.PAGES[i]);
             tab.enabled = i != page;
             buttonList.add(tab);
         }
@@ -48,17 +53,22 @@ public final class GuiDuplifier extends GuiContainer {
             int column = indexOnPage % 2;
             int row = indexOnPage / 2;
             buttonList.add(new GuiButton(OPTION_START + i,
-                    guiLeft + 14 + column * 200, guiTop + 63 + row * 27,
-                    190, 22, optionLabel(i)));
+                    guiLeft + 14 + column * 200, guiTop + 82 + row * 21,
+                    190, 18, optionLabel(i)));
             indexOnPage++;
         }
-        buttonList.add(new GuiButton(99, guiLeft + 162, guiTop + 205,
-                96, 20, "Done"));
+        buttonList.add(new GuiButton(99, guiLeft + 162, guiTop + 211,
+                96, 18, "Done"));
     }
 
-    @Override protected void actionPerformed(GuiButton button) throws IOException {
+    @Override protected void actionPerformed(GuiButton button) {
         if (button.id == 99) {
             mc.player.closeScreen();
+        } else if (button.id == 98) {
+            DuplifierApplyOptions.setConnected(tool(), !DuplifierApplyOptions.connected(tool()));
+            PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(
+                    DuplifierApplyOptions.mask(tool()), DuplifierApplyOptions.connected(tool())));
+            button.displayString = connectedLabel();
         } else if (button.id >= 0 && button.id < DuplifierApplyOptions.PAGES.length) {
             page = button.id;
             showPage();
@@ -67,7 +77,8 @@ public final class GuiDuplifier extends GuiContainer {
             int index = button.id - OPTION_START;
             long mask = DuplifierApplyOptions.mask(tool()) ^ (1L << index);
             DuplifierApplyOptions.setMask(tool(), mask);
-            PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(mask));
+            PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(mask,
+                    DuplifierApplyOptions.connected(tool())));
             button.displayString = optionLabel(index);
         }
     }
@@ -79,6 +90,6 @@ public final class GuiDuplifier extends GuiContainer {
         fontRenderer.drawString("Duplifier: Apply Settings", guiLeft + 10,
                 guiTop + 7, 0xFFFFFFFF);
         fontRenderer.drawString("Choose which copied properties to apply", guiLeft + 14,
-                guiTop + 54, 0xFFB8C7D2);
+                guiTop + 70, 0xFFB8C7D2);
     }
 }
