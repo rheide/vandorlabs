@@ -1469,6 +1469,7 @@ public class ReproLab {
             ScreenRuntimeChecks.run(serverPlayer);
             MaterialRuntimeChecks.run(serverPlayer);
         });
+        ScreenRuntimeChecks.checkClientPlacement(mc);
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{
         // Rebuild programmable fixtures after destructive runtime contracts.

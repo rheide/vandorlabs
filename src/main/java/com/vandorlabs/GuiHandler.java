@@ -32,6 +32,7 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_PROGRAMMABLE_CHAIR = 6;
     public static final int GUI_DUPLIFIER = 7;
     public static final int GUI_LANDING_GEAR = 8;
+    public static final int GUI_PROGRAMMABLE_TRAPDOOR = 9;
 
     private static TileEntity doorTile(World world, BlockPos pos) {
         net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
@@ -74,6 +75,12 @@ public class GuiHandler implements IGuiHandler {
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass)
                 return new com.vandorlabs.container.ContainerProgrammableGlass((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile);
+        }
+        if (ID==GUI_PROGRAMMABLE_TRAPDOOR && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor
+                    && ((com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile).usable(player))
+                return new com.vandorlabs.container.ContainerProgrammableTrapdoor((com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile);
         }
         if (ID==GUI_SPACE_DOOR) {
             TileEntity tile=doorTile(world,new BlockPos(x,y,z));
@@ -127,6 +134,12 @@ public class GuiHandler implements IGuiHandler {
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass)
                 return new com.vandorlabs.client.GuiProgrammableGlass((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile);
+        }
+        if (ID==GUI_PROGRAMMABLE_TRAPDOOR && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) {
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor
+                    && ((com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile).usable(player))
+                return new com.vandorlabs.client.GuiProgrammableTrapdoor((com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile);
         }
         if (ID==GUI_SPACE_DOOR) {
             TileEntity tile=doorTile(world,new BlockPos(x,y,z));

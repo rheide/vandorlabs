@@ -20,14 +20,15 @@ to the empty state; the Apply Settings choices remain in place.
 **Connected Matching Blocks** starts Off. A tool holding copied settings uses
 the multi-block icon when this mode is On; an empty tool keeps the off icon.
 Turn it On in Apply Settings to apply the selected copied properties to the
-clicked block and its entire matching group, following neighbors that share a face. A neighbor must have the same
+clicked block and its entire matching group, following neighbors that share a face, edge, or corner. A neighbor must have the same
 block type and original configuration as the clicked block. Facing and
-rotation are ignored when matching; other placement properties still match.
+rotation are ignored when matching. Top and bottom Programmable Slabs can join
+the same group; applying settings preserves each slab's half. Other placement properties still match.
 Slabs and full blocks never join the same group, even with identical settings.
 Matching checks all other properties even when their copy switches are Off;
 it also checks saved face choices when overrides are disabled.
 The whole group is found before settings change, so a new texture does not stop
-the search halfway through a wall. Diagonal contact does not connect groups.
+the search halfway through a wall. Diagonal contact connects groups, including vertical diagonals.
 
 The search uses loaded chunks and blocks you can edit. Door and seat halves and
 Landing Gear parts are addressed through their settings root and applied once.
@@ -39,10 +40,10 @@ still applies settings to the crafted item.
 
 | Shared setting | Sources and targets |
 | --- | --- |
-| Wall Texture | Programmable block, slab, stairs, wall, porthole, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
+| Wall Texture | Programmable block, slab, stairs, wall, porthole, trapdoor, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
 | Redstone Channel | Every configured block that implements `RedstoneChannelMember`. |
 | Join | Portholes, Programmable Glass, Programmable Light, connected propulsion blocks, and Luxury/Military Seats. |
-| Trigger | Programmable Light and Door support Disabled, Redstone ON, and Redstone OFF. Displays support Disabled and Redstone ON. |
+| Trigger | Programmable Light, Door and Trapdoor support Disabled, Redstone ON, and Redstone OFF. Displays support Disabled and Redstone ON. |
 | Active | Manual light state, propulsion state, and switch or lever latch. |
 
 Primary screen artwork transfers between displays. Light artwork transfers
@@ -54,6 +55,10 @@ slab side layout, propulsion shape and particles, glass size, trigger on finish,
 chair style and height, door design and motion settings, and switch mount
 rotation transfer only to targets that expose those settings. Framing and glass
 shade also transfer across block types that share those controls.
+Programmable Trapdoors share the door motion switch for Rotating / Sliding;
+**Trapdoor Position** copies Bottom, Middle, or Top. Applying settings to one
+paired trapdoor or one member of a complete 2×2 group updates its group together,
+provided you can edit every member. Placement facing and group links are preserved.
 Ramp controllers carry their offsets, tread size, speed, lift and extend modes,
 direction, travel axis, texture matching, trigger polarity, and redstone channel. Applying ramp
 geometry uses the controller's normal validation and reset path; an obstructed

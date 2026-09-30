@@ -51,6 +51,11 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   frame, hinge, and control-panel options. Adjacent doors pair automatically.
   Select manual operation or redstone on/off triggering, including virtual channels.
   Craft one from six Programmable Matter Ingots in two columns of three.
+- **Programmable Trapdoor**: selectable block finishes, rotating or sideways sliding,
+  and Bottom, Middle, or Top placement. Adjacent pairs and complete 2×2 squares
+  open together toward opposite sides, manually or through local/virtual redstone.
+  Craft two from five Industrial Alloy Ingots and one Programmable Matter Ingot;
+  see the [trapdoor guide](docs/gallery/programmable-trapdoor.md).
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all
   four corners, iron ingots at top/bottom center, gold ingots at left/right center,
   and redstone dust in the center. Produces one ingot.
@@ -125,9 +130,15 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.2.jar`.
+`build/libs/vandorlabs-1.3.jar`.
 
 Keep finished builds there unless a specific destination is requested.
+
+To check placement settings, diagonal lighting data, render-distance policy,
+and connected Duplifier selection without opening a renderer, run
+`./gradlew testNonRendering --no-daemon` with Java 8. These checks do not replace
+visual testing with the player's shader pack.
+
 
 New blocks should have crafting recipes. Keep each recipe distinct so it does
 not clash with another recipe. A new block recipe should include a Programmable

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IMI"
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    },
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:programmable_trapdoor",
+    "count": 2
+  }
+}

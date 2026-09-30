@@ -40,7 +40,8 @@ public final class ItemConfigurizer extends Item {
         IBlockState state = world.getBlockState(pos);
         TileEntity tile = world.getTileEntity(pos);
         int gui;
-        if (tile instanceof TileEntitySpaceDoor) gui = GuiHandler.GUI_SPACE_DOOR;
+        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) gui = GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR;
+        else if (tile instanceof TileEntitySpaceDoor) gui = GuiHandler.GUI_SPACE_DOOR;
         else if (tile instanceof TileEntityProgrammableGlass) gui = GuiHandler.GUI_PROGRAMMABLE_GLASS;
         else if (tile instanceof TileEntityProgrammableLight) gui = GuiHandler.GUI_PROGRAMMABLE_LIGHT;
         else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) gui = GuiHandler.GUI_LANDING_GEAR;

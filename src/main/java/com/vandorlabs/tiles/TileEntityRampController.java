@@ -309,15 +309,20 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                     || !world.isBlockModifiable(actor,p))) { sources.clear(); return fail("No permission to move this platform"); }
             if (!selected.contains(p) && !world.isAirBlock(p)) { sources.clear(); return fail("Movement path is obstructed"); }
         }
-        // Preserve the established full-column clearance rule for vertical controllers.
+        // Preserve full-column clearance, using the source's actual thickness.
+        // A top slab moved down 2.5 blocks touches the ground in the third
+        // cell below without entering it; rounding the offset alone rejects it.
         if (travelAxis==RampGeometry.VERTICAL) for (BlockPos source:selected)
-            for (int distance=(int)Math.floor(Math.min(0,Math.min(startOffsetValue(),endOffsetValue())));
-                 distance<=Math.ceil(Math.max(0,Math.max(startOffsetValue(),endOffsetValue())));distance++) {
-                BlockPos p=source.up(distance);
+            for (int y=RampGeometry.firstOccupiedY(source.getY(),low,
+                        Math.min(0,startOffsetValue()),Math.min(0,endOffsetValue()));
+                 y<=RampGeometry.lastOccupiedY(source.getY(),high,
+                        Math.max(0,startOffsetValue()),Math.max(0,endOffsetValue()));y++) {
+                BlockPos p=new BlockPos(source.getX(),y,source.getZ());
+                if (!VerticalBounds.legacy(world.getHeight()).contains(y)) { sources.clear(); return fail("Travel exceeds world height"); }
                 if (!world.isBlockLoaded(p)) { sources.clear(); return fail("Load all platform chunks first"); }
                 if (actor!=null && (!actor.canPlayerEdit(p,EnumFacing.UP,actor.getHeldItemMainhand())
                         || !world.isBlockModifiable(actor,p))) { sources.clear(); return fail("No permission to move this platform"); }
-                if (distance!=0 && !world.isAirBlock(p)) { sources.clear(); return fail("Movement path is obstructed"); }
+                if (!selected.contains(p) && !world.isAirBlock(p)) { sources.clear(); return fail("Movement path is obstructed"); }
             }
         sourceTiles.clear(); sourceTiles.putAll(capturedTiles);
         startPose=0; moving=false; open=false; startTick=world.getTotalWorldTime();

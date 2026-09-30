@@ -75,7 +75,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.RAMP_MATCH_TEXTURES, "Match Textures", 4),
             option(ProgrammableSettings.GEAR_SIZE, "Gear Size", 2),
             option(ProgrammableSettings.GEAR_LENGTH, "Gear Extension", 2),
-            option(ProgrammableSettings.GEAR_MODE, "Gear Redstone Mode", 2)
+            option(ProgrammableSettings.GEAR_MODE, "Gear Redstone Mode", 2),
+            option(ProgrammableSettings.TRAPDOOR_POSITION, "Trapdoor Position", 3)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;

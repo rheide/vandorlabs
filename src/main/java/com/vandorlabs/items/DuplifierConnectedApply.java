@@ -54,7 +54,9 @@ public final class DuplifierConnectedApply {
         for (net.minecraft.block.properties.IProperty<?> property : original.getPropertyKeys()) {
             String name = property.getName();
             if (name.equals("facing") || name.equals("rotation") || name.equals("rotated")
-                    || name.equals("hinge") || name.equals("inverted")) continue;
+                    || name.equals("hinge") || name.equals("inverted")
+                    || name.equals("half") && original.getBlock()
+                            instanceof com.vandorlabs.blocks.BlockProgrammableSlab) continue;
             if (!original.getValue(property).equals(candidate.getValue(property))) return false;
         }
         return true;
@@ -86,7 +88,12 @@ public final class DuplifierConnectedApply {
             targets.add(root.toImmutable());
             // Walk physical cells so the upper half of a door or seat can
             // connect to another matching object. Apply to each root once.
-            for (EnumFacing direction : EnumFacing.values()) pending.add(cell.offset(direction));
+            // Face, edge and corner contact all connect the selected region.
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dz = -1; dz <= 1; dz++)
+                        if (dx != 0 || dy != 0 || dz != 0)
+                            pending.add(cell.add(dx, dy, dz));
         }
         int applied = 0;
         for (BlockPos target : targets) {

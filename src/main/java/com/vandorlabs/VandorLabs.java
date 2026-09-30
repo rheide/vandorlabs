@@ -22,7 +22,7 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
     /** Bump on every test build so logs identify the exact binary. */
     public static final String BUILD_ID = "t60";
 
@@ -42,6 +42,7 @@ public class VandorLabs {
         logger = event.getModLog();
         com.vandorlabs.tiles.DeferredTileLoad.install();
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, "vandorlabs:programmable_trapdoor");
         GameRegistry.registerTileEntity(TileEntitySlidingDoor.class, "vandorlabs:sliding_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableGlass.class, "vandorlabs:programmable_glass");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:programmable_door");

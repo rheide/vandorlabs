@@ -20,7 +20,7 @@ out.mkdir(exist_ok=True)
 for block in ('programmable_block', 'programmable_trigger_block',
               'programmable_slab', 'programmable_wall',
               'programmable_diagonal_wall', 'programmable_porthole_wall',
-              'programmable_porthole_block'):
+              'programmable_porthole_block', 'programmable_trapdoor'):
     base = json.loads((models / (block + '.json')).read_text())
     for choice, texture in zip(ids, textures):
         model = json.loads(json.dumps(base))
@@ -38,4 +38,4 @@ for style in ('fit', 'tile'):
                 model['textures'][key] = 'vandorlabs:blocks/' + texture
         (out / ('programmable_slab_' + choice + '_' + style + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')
-print('Generated', len(ids) * 9, 'configured item models')
+print('Generated', len(ids) * 10, 'configured item models')

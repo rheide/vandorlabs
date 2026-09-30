@@ -48,6 +48,6 @@ Ramp direction can be north, east, south, or west. Small treads make a smoother 
 
 ## Troubleshooting
 
-The source and travel space must be clear, loaded, and within world height. Chests, machines, unbreakable blocks, and non-cuboid shapes cannot be selected. An obstruction stops motion without replacing the obstructing block. Remove it, then change a setting or toggle the signal to retry. The dialog retains validation errors. Breaking the controller restores its saved source blocks.
+The source and travel space must be clear, loaded, and within world height. Clearance accounts for slab thickness: top slabs can move down `2.5` blocks to meet the ground without overlapping it; bottom slabs can likewise meet a ceiling after moving up `2.5` blocks. Chests, machines, unbreakable blocks, and non-cuboid shapes cannot be selected. An obstruction stops motion without replacing the obstructing block. Remove it, then change a setting or toggle the signal to retry. The dialog retains validation errors. Breaking the controller restores its saved source blocks.
 
 For exact selection, timing, rider, and persistence rules, see the [Programmable Ramp reference](../landing-ramps.md).

@@ -169,6 +169,26 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
                 == TileEntityAnimatedScreenSelector.MODE_OFF ? 0 : 11;
     }
 
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
+            EntityLivingBase placer, ItemStack stack) {
+        super.onBlockPlacedBy(world, pos, state, placer, stack);
+        // Vanilla ItemBlock skips item NBT in WorldClient because it has no
+        // MinecraftServer. Predict the configured appearance before the first
+        // chunk mesh is built; the server's tile packet remains authoritative.
+        if (!world.isRemote) return;
+        NBTTagCompound settings = stack.getSubCompound("BlockEntityTag");
+        TileEntity tile = world.getTileEntity(pos);
+        if (settings == null || !(tile instanceof TileEntityAnimatedScreenSelector)) return;
+        NBTTagCompound data = tile.writeToNBT(new NBTTagCompound());
+        data.merge(settings);
+        data.setInteger("x", pos.getX());
+        data.setInteger("y", pos.getY());
+        data.setInteger("z", pos.getZ());
+        tile.readFromNBT(data);
+        world.markBlockRangeForRenderUpdate(pos, pos);
+    }
+
     /** Build the inventory form used by mining, explosions and pick-block. */
     public ItemStack createConfiguredDrop(@Nullable TileEntity tile) {
         ItemStack stack = new ItemStack(Item.getItemFromBlock(this));

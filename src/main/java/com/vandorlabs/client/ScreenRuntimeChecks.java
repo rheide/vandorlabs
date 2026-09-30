@@ -30,6 +30,40 @@ final class ScreenRuntimeChecks {
 
     private ScreenRuntimeChecks() {}
 
+    /** Run on the actual WorldClient, before any server response can arrive. */
+    static void checkClientPlacement(Minecraft mc) {
+        BlockPos pos = new BlockPos(52, 250, 32);
+        require(mc.world.isRemote, "placement test needs client world");
+        TileEntityAnimatedScreenSelector configured = new TileEntityAnimatedScreenSelector();
+        configured.setHousingTexture(4);
+        configured.setFaceTextures(new com.vandorlabs.tiles.FaceTextures(true, new int[]{1,2,3,4,5,6}));
+        NBTTagCompound data = configured.writeToNBT(new NBTTagCompound());
+        data.setInteger("x", -200); data.setInteger("y", -200); data.setInteger("z", -200);
+        for (Block block : new Block[]{ModBlocks.PROGRAMMABLE_BLOCK, ModBlocks.PROGRAMMABLE_SLAB,
+                ModBlocks.PROGRAMMABLE_STAIRS, ModBlocks.PROGRAMMABLE_DIAGONAL_WALL}) {
+            ItemStack stack = new ItemStack(block);
+            stack.setTagInfo("BlockEntityTag", data.copy());
+            try {
+                mc.world.setBlockToAir(pos);
+                require(((ItemBlock)stack.getItem()).placeBlockAt(stack, mc.player, mc.world, pos,
+                        EnumFacing.UP, .5F, .5F, .5F, block.getDefaultState()), "client placement failed");
+                TileEntityAnimatedScreenSelector tile = (TileEntityAnimatedScreenSelector)mc.world.getTileEntity(pos);
+                require(tile.getHousingTexture()==4 && tile.getFaceTextures().equals(configured.getFaceTextures()),
+                        "first client frame uses default finish");
+                require(tile.getPos().equals(pos), "item coordinates changed destination");
+                if(block==ModBlocks.PROGRAMMABLE_DIAGONAL_WALL)
+                    require(tile.getMaxRenderDistanceSquared()>256D*256D, "diagonal wall keeps tile distance cutoff");
+                // A server correction must still replace the predicted settings.
+                NBTTagCompound correction=tile.getUpdateTag();
+                correction.setInteger("housingTexture",2);
+                tile.onDataPacket(null,new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,correction));
+                require(tile.getHousingTexture()==2,"server correction did not replace prediction");
+            } finally { mc.world.setBlockToAir(pos); }
+        }
+        System.out.println("[vandorlabs][reprolab] placement-texture-and-distance PASS");
+    }
+
+
     static void run(EntityPlayer player) {
         PanelConnectionRuntimeChecks.run();
         PanelConnectionRuntimeChecks.checkPackedLighting(player);

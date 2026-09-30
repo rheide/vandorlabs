@@ -21,9 +21,28 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '1.2'
+version = '1.3'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
+
+task compileNonRenderingChecks(type: JavaCompile) {
+    dependsOn classes
+    source = fileTree('testclient/java') { include '**/*.java' }
+    classpath = sourceSets.main.runtimeClasspath
+    destinationDir = file("$buildDir/non-rendering-checks/classes")
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+task testNonRendering(type: JavaExec) {
+    group = 'verification'
+    description = 'Check placement, surfaces, copying, ramps and trapdoor groups without a renderer'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
 
 task compilePortableTests(type: JavaCompile) {
     group = 'verification'

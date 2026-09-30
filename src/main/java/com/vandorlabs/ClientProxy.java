@@ -59,6 +59,7 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class,
                 RenderChairSeat::new);
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityLandingGear.class, new com.vandorlabs.client.TELandingGear());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, new com.vandorlabs.client.TEProgrammableTrapdoor());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntitySlidingDoor.class, new TESlidingDoor());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntitySpaceDoor.class, new TESlidingDoor());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableGlass.class,

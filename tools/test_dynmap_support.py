@@ -37,6 +37,7 @@ def main():
         raise AssertionError("Dynmap models lack matching texture states")
     for name, renderer in (
             ("programmable_slab", "ProgrammableSlabRenderer"),
+            ("programmable_trapdoor", "ProgrammableTrapdoorRenderer"),
             ("programmable_door", "ProgrammableDoorRenderer"),
             ("controlled_ramp", "ControlledRampRenderer")):
         if (name, "*") not in custom or not re.search(

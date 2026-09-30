@@ -37,6 +37,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_CONSOLE;
     public static Block PROGRAMMABLE_WALL;
     public static Block PROGRAMMABLE_BLOCK;
+    public static Block PROGRAMMABLE_TRAPDOOR;
     public static Block PROGRAMMABLE_TRIGGER_BLOCK;
     public static Block PROGRAMMABLE_LIGHT;
     public static Block PROGRAMMABLE_LIGHT_FRAME;
@@ -178,6 +179,7 @@ public class ModBlocks {
         PROGRAMMABLE_WALL = add(new BlockProgrammableWall("programmable_wall",
                 BlockProgrammableWall.Shape.PLAIN));
         PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
+        PROGRAMMABLE_TRAPDOOR = add(new BlockProgrammableTrapdoor());
         PROGRAMMABLE_TRIGGER_BLOCK = add(new BlockProgrammableTrigger());
         PROGRAMMABLE_LIGHT = add(new BlockProgrammableLight());
         PROGRAMMABLE_LIGHT_FRAME = add(new BlockProgrammableLightFrame());
@@ -454,7 +456,7 @@ public class ModBlocks {
                     ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
                     continue;
                 }
-                if (block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_TRIGGER_BLOCK
+                if (block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_TRAPDOOR || block == PROGRAMMABLE_TRIGGER_BLOCK
                         || block == PROGRAMMABLE_SLAB
                         || block == PROGRAMMABLE_WALL || block == PROGRAMMABLE_DIAGONAL_WALL
                         || block == PROGRAMMABLE_PORTHOLE_WALL

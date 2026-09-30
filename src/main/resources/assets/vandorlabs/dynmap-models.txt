@@ -20498,3 +20498,5 @@ modellist:id=%programmable_stairs,state=facing:east/half:top/shape:inner_left,bo
 modellist:id=%programmable_stairs,state=facing:west/half:top/shape:inner_left,box=0/8/0:16/16/16:e/0:u/0:n/0:s/0:d/0:w/0:R/0/180/0,box=8/0/0:16/8/16:e/0:u/0:n/0:s/0:d/0:w/0:R/0/180/0,box=0/0/0:8/8/8:e/0:u/0:n/0:s/0:d/0:w/0:R/0/180/0
 modellist:id=%programmable_stairs,state=facing:south/half:top/shape:inner_left,box=0/8/0:16/16/16:e/0:u/0:n/0:s/0:d/0:w/0:R/0/90/0,box=8/0/0:16/8/16:e/0:u/0:n/0:s/0:d/0:w/0:R/0/90/0,box=0/0/0:8/8/8:e/0:u/0:n/0:s/0:d/0:w/0:R/0/90/0
 modellist:id=%programmable_stairs,state=facing:north/half:top/shape:inner_left,box=0/8/0:16/16/16:e/0:u/0:n/0:s/0:d/0:w/0:R/0/270/0,box=8/0/0:16/8/16:e/0:u/0:n/0:s/0:d/0:w/0:R/0/270/0,box=0/0/0:8/8/8:e/0:u/0:n/0:s/0:d/0:w/0:R/0/270/0
+
+customblock:id=%programmable_trapdoor,state=*,class=com.vandorlabs.dynmap.ProgrammableTrapdoorRenderer

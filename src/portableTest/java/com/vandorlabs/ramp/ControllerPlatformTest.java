@@ -197,6 +197,10 @@ public final class ControllerPlatformTest {
         close(surface.topLeft.x,.5,"screen surface inset"); close(surface.topLeft.y,14.85,"screen surface top");
         check(RampGeometry.firstOccupiedY(10,.5,-1.0,-.25)==9,"occupied range floor");
         check(RampGeometry.lastOccupiedY(10,1,-1.0,-.25)==10,"occupied range ceiling");
+        check(RampGeometry.firstOccupiedY(10,.5,0,-2.5)==8,"top slab touching ground excludes ground cell");
+        check(RampGeometry.firstOccupiedY(10,0,0,-2.5)==7,"bottom slab overlaps ground cell");
+        check(RampGeometry.lastOccupiedY(10,.5,0,2.5)==12,"bottom slab touching ceiling excludes ceiling cell");
+        check(RampGeometry.lastOccupiedY(10,1,0,2.5)==13,"top slab overlaps ceiling cell");
         close(RampGeometry.riderTarget(10,10.25,10,.5),10.25,"rider follows surface");
         check(Double.isNaN(RampGeometry.riderTarget(10,10.25,11,.15)),"distant entity is not a rider");
         DoorPanelLayout.Panel[] split=DoorPanelLayout.calculate(

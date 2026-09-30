@@ -869,21 +869,16 @@ public class TEAnimatedScreenSelector
         }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
         buf.begin(GL11.GL_QUADS, wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL
-                ? DefaultVertexFormats.POSITION_TEX_NORMAL : DefaultVertexFormats.POSITION_TEX);
+                ? BlockSurfaceFormat.get() : DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
             boolean halfHeight=te.isDiagonalHalfHeight();
-            if (halfHeight) {
-                java.nio.FloatBuffer transform=org.lwjgl.BufferUtils.createFloatBuffer(16);
-                transform.put(new float[]{1,0,0,0, 0,0,1,0, 0,1,0,0,
-                        0,state.getValue(BlockProgrammableWall.INVERTED)?6:0,0,1}).flip();
-                GlStateManager.multMatrix(transform);
-            }
             renderDiagonalWall(buf, wall, metal,
                     state.getValue(BlockProgrammableWall.INVERTED),
                     wallBlock.corner(state, te.getWorld(), te.getPos()),
                     BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()),
                     te.getDiagonalFill(), halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?-6:0) : 0,
-                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?10:16) : 16);
+                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?10:16) : 16,
+                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED) ? 6 : 0) : Double.NaN);
         } else if (flat != null) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -921,8 +916,16 @@ public class TEAnimatedScreenSelector
     }
 
     /** The diagonal wall uses per-face normals so shader lighting stays stable as the camera moves. */
-    private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign,
+    private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign, double halfOffset,
             double[] a, double[] b, double[] c, double[] d) {
+        if (!Double.isNaN(halfOffset)) {
+            // Bake the half-height reflection into positions before shader
+            // tangent/normal generation, preserving outward face winding.
+            for (double[] p : new double[][]{a,b,c,d}) {
+                double y = p[1]; p[1] = p[2] + halfOffset; p[2] = y;
+            }
+            sign = -sign;
+        }
         double ux=b[0]-a[0], uy=b[1]-a[1], uz=b[2]-a[2];
         double vx=c[0]-a[0], vy=c[1]-a[1], vz=c[2]-a[2];
         double nx=sign*(uy*vz-uz*vy), ny=sign*(uz*vx-ux*vz),
@@ -930,9 +933,12 @@ public class TEAnimatedScreenSelector
         double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
         if (length<1.0E-7) return;
         float fx=(float)(nx/length), fy=(float)(ny/length), fz=(float)(nz/length);
-        for (double[] p:new double[][]{a,b,c,d})
-            buf.pos(p[0],p[1],p[2])
+        // Shader integrations may derive normals from winding. Submit the
+        // same orientation as the explicit normal, including the roof faces.
+        for (double[] p : sign < 0 ? new double[][]{a,d,c,b} : new double[][]{a,b,c,d})
+            buf.pos(p[0],p[1],p[2]).color(255,255,255,255)
                     .tex(sprite.getInterpolatedU(p[3]),sprite.getInterpolatedV(p[4]))
+                    .lightmap((int)OpenGlHelper.lastBrightnessY, (int)OpenGlHelper.lastBrightnessX)
                     .normal(fx,fy,fz).endVertex();
     }
 
@@ -1051,7 +1057,8 @@ public class TEAnimatedScreenSelector
 
     private static void renderDiagonalWall(BufferBuilder buf,
             TextureAtlasSprite wall, TextureAtlasSprite metal, boolean inverted,
-            BlockProgrammableWall.Corner corner, double span, int fill, double fillLow, double fillHigh) {
+            BlockProgrammableWall.Corner corner, double span, int fill, double fillLow, double fillHigh,
+            double halfOffset) {
         double bottom = inverted ? span : 0, top = inverted ? 0 : span;
         double[][] lower = filledDiagonalOutline(bottom, corner, fill, fillLow, fillHigh);
         double[][] upper = filledDiagonalOutline(top, corner, fill, fillLow, fillHigh);
@@ -1073,7 +1080,7 @@ public class TEAnimatedScreenSelector
             double uvOrigin = fill == 0 ? 0 : fillLow;
             boolean acrossX = Math.abs(a[0] - b[0]) + Math.abs(c[0] - d[0])
                     > Math.abs(a[1] - b[1]) + Math.abs(c[1] - d[1]);
-            normalQuad(buf, sprite, -1,
+            normalQuad(buf, sprite, -1, halfOffset,
                     new double[]{a[0], 0, a[1], acrossX ? a[0] : a[1] - uvOrigin, 16},
                     new double[]{b[0], 0, b[1], acrossX ? b[0] : b[1] - uvOrigin, 16},
                     new double[]{c[0], 16, c[1], acrossX ? c[0] : c[1] - uvOrigin, 0},
@@ -1082,15 +1089,15 @@ public class TEAnimatedScreenSelector
         for (int y : new int[] {0, 16}) {
             double near = y == 0 ? bottom : top;
             roofRect(buf, fill == 0 ? metal : wall, y, corner == null ? 0 : corner.left(near),
-                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4, fill == 0 ? 0 : fillLow, true);
+                    corner == null ? 16 : corner.right(near), (fill&1)!=0?fillLow:near, (fill&2)!=0?fillHigh:near + 4, fill == 0 ? 0 : fillLow, true, halfOffset);
             if (corner != null) {
                 if (corner.frontRight != null && (fill&1)==0) {
                     double armX = corner.armLeft(near, corner.frontRight);
-                    roofRect(buf, metal, y, armX, armX + 4, 0, near, 0, true);
+                    roofRect(buf, metal, y, armX, armX + 4, 0, near, 0, true, halfOffset);
                 }
                 if (corner.backRight != null && (fill&2)==0) {
                     double armX = corner.armLeft(near, corner.backRight);
-                    roofRect(buf, metal, y, armX, armX + 4, near + 4, 16, 0, true);
+                    roofRect(buf, metal, y, armX, armX + 4, near + 4, 16, 0, true, halfOffset);
                 }
             }
         }
@@ -1208,15 +1215,15 @@ public class TEAnimatedScreenSelector
 
     private static void roofRect(BufferBuilder buf, TextureAtlasSprite sprite,
             double y, double x0, double x1, double z0, double z1, double uvOrigin) {
-        roofRect(buf,sprite,y,x0,x1,z0,z1,uvOrigin,false);
+        roofRect(buf,sprite,y,x0,x1,z0,z1,uvOrigin,false,Double.NaN);
     }
 
     private static void roofRect(BufferBuilder buf, TextureAtlasSprite sprite,
             double y, double x0, double x1, double z0, double z1, double uvOrigin,
-            boolean normal) {
+            boolean normal, double halfOffset) {
         if (z1 - z0 < 1.0E-7) return;
         if (normal) {
-            normalQuad(buf,sprite,y == 16 ? -1 : 1,
+            normalQuad(buf,sprite,y == 16 ? -1 : 1, halfOffset,
                     new double[]{x0,y,z0,x0,z0-uvOrigin},
                     new double[]{x1,y,z0,x1,z0-uvOrigin},
                     new double[]{x1,y,z1,x1,z1-uvOrigin},

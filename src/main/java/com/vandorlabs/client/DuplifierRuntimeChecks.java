@@ -150,19 +150,21 @@ final class DuplifierRuntimeChecks {
                         net.minecraft.util.EnumFacing.UP) == 0, "connected apply bypassed edit permissions");
             } finally { player.capabilities.allowEdit = couldEdit; }
             require(com.vandorlabs.items.DuplifierConnectedApply.apply(world, origin, tool, player,
-                    net.minecraft.util.EnumFacing.UP) == 5, "connected region did not follow the full bent chain");
+                    net.minecraft.util.EnumFacing.UP) == 6, "connected region did not follow the full bent chain");
             for (BlockPos pos : matching) {
                 TileEntityAnimatedScreenSelector tile = (TileEntityAnimatedScreenSelector)world.getTileEntity(pos);
                 require(tile.getHousingTexture() == 20 && tile.getRedstoneChannel() == 0,
                         "connected apply changed excluded properties or missed a match");
             }
-            for (BlockPos pos : new BlockPos[]{barrier, behind, diagonal, hiddenFaces, slab})
+            for (BlockPos pos : new BlockPos[]{barrier, behind, hiddenFaces, slab})
                 require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getHousingTexture() == 0,
                         "connected apply crossed a type, configuration or adjacency boundary");
             require(((TileEntityAnimatedScreenSelector)world.getTileEntity(facing)).getHousingTexture() == 20
                     && world.getBlockState(facing).getValue(
                             com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING) == net.minecraft.util.EnumFacing.EAST,
                     "connected apply excluded a different facing or changed its block orientation");
+            require(((TileEntityAnimatedScreenSelector)world.getTileEntity(diagonal)).getHousingTexture()==20,
+                    "diagonally touching block was missed");
             require(ItemDuplifier.copyFrom(world, origin, tool) != null
                     && DuplifierApplyOptions.connected(tool) && DuplifierApplyOptions.mask(tool) == mask,
                     "copying lost connected apply choices");
@@ -171,6 +173,31 @@ final class DuplifierRuntimeChecks {
                     "clearing lost connected apply choices");
         } finally {
             for (BlockPos pos : all) world.setBlockToAir(pos);
+        }
+        BlockPos[] slabChain = {origin,origin.up(),origin.up().east().south(),origin.up(2).east(2).south(2)};
+        BlockPos separate = origin.east(5);
+        try {
+            for(int i=0;i<slabChain.length;i++)
+                world.setBlockState(slabChain[i],ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(
+                        com.vandorlabs.blocks.BlockProgrammableSlab.HALF,
+                        i%2==0 ? net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
+                                : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),2);
+            world.setBlockState(separate,ModBlocks.PROGRAMMABLE_SLAB.getDefaultState(),2);
+            tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,copy.copy());
+            require(com.vandorlabs.items.DuplifierConnectedApply.apply(world,origin,tool,player,
+                    net.minecraft.util.EnumFacing.UP)==slabChain.length,"vertical and corner-touching slabs missed");
+            for(int i=0;i<slabChain.length;i++) {
+                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(slabChain[i])).getHousingTexture()==20,
+                        "slab group did not receive settings");
+                require(world.getBlockState(slabChain[i]).getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
+                        ==(i%2==0 ? net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
+                                : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),"copy changed slab half");
+            }
+            require(((TileEntityAnimatedScreenSelector)world.getTileEntity(separate)).getHousingTexture()==0,
+                    "copy crossed an air gap");
+        } finally {
+            for(BlockPos pos:slabChain)world.setBlockToAir(pos);
+            world.setBlockToAir(separate);
         }
         BlockPos edge = new BlockPos(63, 245, 54);
         world.setBlockState(edge, ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(), 2);

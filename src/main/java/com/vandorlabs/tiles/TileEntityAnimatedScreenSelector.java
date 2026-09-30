@@ -104,6 +104,16 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         ceilingPosition=Math.max(0,Math.min(2,position));markDirty();
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
+    @Override public double getMaxRenderDistanceSquared() {
+        // These walls are world geometry. Loaded chunks and the normal render
+        // frustum bound their visibility, rather than the 64-block tile cutoff.
+        if (world != null && world.getBlockState(pos).getBlock()
+                instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                && ((com.vandorlabs.blocks.BlockProgrammableWall) world.getBlockState(pos).getBlock())
+                        .isDiagonalShape()) return Double.MAX_VALUE;
+        return super.getMaxRenderDistanceSquared();
+    }
+
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         if (ceilingMounted) return new net.minecraft.util.math.AxisAlignedBB(
                 pos.add(-1,0,-1),pos.add(2,1,2));

@@ -3502,5 +3502,12 @@
     "type": "programmable_light",
     "programmable_only": true,
     "item": true
+  },
+  {
+    "id": "programmable_trapdoor",
+    "type": "trapdoor",
+    "class": "BlockProgrammableTrapdoor",
+    "item": true,
+    "programmable_only": true
   }
 ]

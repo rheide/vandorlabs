@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String TRAPDOOR_POSITION = "trapdoor_position";
     public static final String DIAGONAL_GEOMETRY = "diagonal_geometry";
     public static final String FACE_TEXTURES = "face_textures";
     public static final String WALL_TEXTURE = "wall_texture";
@@ -113,7 +114,12 @@ public final class ProgrammableSettings {
         NBTTagCompound out = new NBTTagCompound();
         if (tile instanceof RedstoneChannelMember)
             out.setInteger(CHANNEL, ((RedstoneChannelMember) tile).getRedstoneChannel());
-        if (tile instanceof TileEntityProgrammableLight) {
+        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
+            out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
+            out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
+            out.setBoolean(DOOR_SLIDING,hatch.isSliding());out.setInteger(TRIGGER,hatch.getTrigger());
+        } else if (tile instanceof TileEntityProgrammableLight) {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
             out.setInteger(WALL_TEXTURE, light.getHousingTexture());
             out.setString(PRIMARY_KIND, "light");
@@ -274,7 +280,22 @@ public final class ProgrammableSettings {
             EntityPlayer player, TileEntity tile, Block block) {
         if (tile == null || values == null || values.hasNoTags()) return false;
         boolean applicable = false;
-        if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
+        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
+            applicable=values.hasKey(WALL_TEXTURE,3) || values.hasKey(TRAPDOOR_POSITION,3)
+                    || values.hasKey(DOOR_SLIDING,1) || values.hasKey(TRIGGER,3) || values.hasKey(CHANNEL,3);
+            if(applicable) {
+                java.util.List<com.vandorlabs.tiles.TileEntityProgrammableTrapdoor> leaves=world==null
+                        ?java.util.Collections.singletonList(hatch):hatch.group();
+                if(player!=null)for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:leaves)
+                    if(!player.canPlayerEdit(leaf.getPos(),EnumFacing.UP,player.getHeldItemMainhand())
+                            || !world.isBlockModifiable(player,leaf.getPos()))return false;
+                for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:leaves)leaf.configure(
+                        number(values,WALL_TEXTURE,leaf.getHousingTexture()),number(values,TRAPDOOR_POSITION,leaf.getPosition()),
+                        flag(values,DOOR_SLIDING,leaf.isSliding()),number(values,TRIGGER,leaf.getTrigger()),
+                        number(values,CHANNEL,leaf.getRedstoneChannel()));
+            }
+        } else if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
             BlockPropulsionLight fixture = (BlockPropulsionLight) block;
             if (world != null && values.hasKey(PROPULSION_SHAPE, 3) && !fixture.familyId().isEmpty()) {
                 BlockPropulsionLight.configureShape(world, pos,
