@@ -17,10 +17,11 @@ import net.minecraft.world.*;
 import javax.annotation.Nullable;
 
 /** Vanilla trapdoor interaction with configurable rigid motion and finishes. */
-public final class BlockProgrammableTrapdoor extends BlockTrapDoor {
-    public BlockProgrammableTrapdoor() {
-        super(Material.IRON);setRegistryName(VandorLabs.MODID,"programmable_trapdoor");
-        setUnlocalizedName("vandorlabs.programmable_trapdoor");setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+public class BlockProgrammableTrapdoor extends BlockTrapDoor {
+    public BlockProgrammableTrapdoor() { this("programmable_trapdoor"); }
+    protected BlockProgrammableTrapdoor(String name) {
+        super(Material.IRON);setRegistryName(VandorLabs.MODID,name);
+        setUnlocalizedName("vandorlabs."+name);setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
         setHardness(3);setResistance(10);setSoundType(SoundType.METAL);useNeighborBrightness=true;
     }
     @Override public boolean hasTileEntity(IBlockState state){return true;}
@@ -79,15 +80,15 @@ public final class BlockProgrammableTrapdoor extends BlockTrapDoor {
                 com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON,0);
         if(saved!=null)tile.configure(tile.getHousingTexture(),tile.getPosition(),tile.isSliding(),tile.getTrigger(),tile.getRedstoneChannel());
         if(world.isRemote)return;
-        for(EnumFacing side:EnumFacing.HORIZONTALS) {
+        for(EnumFacing side:tile instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor?EnumFacing.values():EnumFacing.HORIZONTALS) {
             BlockPos next=pos.offset(side);if(!world.isBlockLoaded(next))continue;
             TileEntity neighbor=world.getTileEntity(next);
             if(!(neighbor instanceof TileEntityProgrammableTrapdoor))continue;
             TileEntityProgrammableTrapdoor other=(TileEntityProgrammableTrapdoor)neighbor;
-            if(other.hasPairLink() || other.getPosition()!=tile.getPosition())continue;
+            if(other.hasPairLink() || !tile.compatible(other))continue;
             if(placer instanceof EntityPlayer && (!((EntityPlayer)placer).canPlayerEdit(next,side,stack)
                     || !world.isBlockModifiable((EntityPlayer)placer,next)))continue;
-            tile.pairWith(other);break;
+            tile.pairWith(other);if(tile.hasPairLink())break;
         }
         tile.completeSquare(placer instanceof EntityPlayer?(EntityPlayer)placer:null,stack);
         tile.evaluatePower(true);

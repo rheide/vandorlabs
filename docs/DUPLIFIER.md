@@ -83,6 +83,11 @@ continues to use that main texture. Front/back/left/right follow block facing.
 
 Diagonal width, half height and inside/outside fill transfer through the
 **Diagonal Geometry** switch where the target supports them.
+Programmable Diagonal Trapdoors share the geometry mode with diagonal walls;
+they have no inside/outside fill. Their texture, motion, trigger and channel
+use the existing shared switches. A linked pair or square receives settings
+together; changing between tall and shallow layouts dissolves the old links
+because the square's second direction changes from vertical to horizontal.
 
 ## Apply settings while crafting
 

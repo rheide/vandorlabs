@@ -14,10 +14,10 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
 /** Settings and pair links; event-driven power, no idle tile ticks. */
-public final class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
-    private int texture,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
-    private boolean sliding,channelSignal,powerKnown,lastPower;
-    private BlockPos partner,squareOrigin;
+public class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
+    protected int texture,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
+    protected boolean sliding,channelSignal,powerKnown,lastPower;
+    protected BlockPos partner,squareOrigin;
     public int getHousingTexture(){return texture;}
     public int getPosition(){return position;}
     public boolean isSliding(){return sliding;}
@@ -42,9 +42,11 @@ public final class TileEntityProgrammableTrapdoor extends TileEntity implements 
         return pos.equals(other.partner) && pos.distanceSq(partner)==1 ? other : null;
     }
     public boolean hasPairLink(){return partner!=null;}
+    public boolean compatible(TileEntityProgrammableTrapdoor other){return other.getClass()==getClass() && position==other.position;}
+    protected boolean groupCompatible(TileEntityProgrammableTrapdoor other){return compatible(other);}
     public void pairWith(TileEntityProgrammableTrapdoor other) {
         if(world==null || world.isRemote || other.world!=world || partner!=null || other.partner!=null
-                || pos.getY()!=other.pos.getY() || pos.distanceSq(other.pos)!=1 || position!=other.position)return;
+                || pos.getY()!=other.pos.getY() || pos.distanceSq(other.pos)!=1 || !compatible(other))return;
         partner=other.pos.toImmutable();other.partner=pos.toImmutable();
         // The placed neighbour joins the existing trapdoor's motion/channel.
         sliding=other.sliding; trigger=other.trigger;
@@ -55,7 +57,7 @@ public final class TileEntityProgrammableTrapdoor extends TileEntity implements 
         requestOpen(world.getBlockState(other.pos).getValue(BlockProgrammableTrapdoor.OPEN));
         sync();other.sync(); evaluatePower(true);
     }
-    private static java.util.List<BlockPos> squareCells(BlockPos base) {
+    protected java.util.List<BlockPos> squareCells(BlockPos base) {
         return java.util.Arrays.asList(base,base.east(),base.south(),base.east().south());
     }
     /** A stable four-leaf group, otherwise the surviving pair or single leaf. */
@@ -67,7 +69,7 @@ public final class TileEntityProgrammableTrapdoor extends TileEntity implements 
                 TileEntity raw=world.getTileEntity(cell);
                 if(!(raw instanceof TileEntityProgrammableTrapdoor)){result.clear();break;}
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
-                if(!squareOrigin.equals(leaf.squareOrigin) || leaf.position!=position || leaf.sliding!=sliding) {
+                if(!squareOrigin.equals(leaf.squareOrigin) || !groupCompatible(leaf) || leaf.sliding!=sliding) {
                     result.clear();break;
                 }
                 result.add(leaf);
@@ -90,7 +92,7 @@ public final class TileEntityProgrammableTrapdoor extends TileEntity implements 
                 if(!(raw instanceof TileEntityProgrammableTrapdoor))break;
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
                 leaf.repairLinks();
-                if(leaf.squareOrigin!=null || leaf.position!=position || leaf.partner!=null && !cells.contains(leaf.partner))break;
+                if(leaf.squareOrigin!=null || !compatible(leaf) || leaf.partner!=null && !cells.contains(leaf.partner))break;
                 if(player!=null && (!player.canPlayerEdit(cell,EnumFacing.UP,stack) || !world.isBlockModifiable(player,cell)))break;
                 leaves.add(leaf);
             }
@@ -181,7 +183,7 @@ public final class TileEntityProgrammableTrapdoor extends TileEntity implements 
         world.setBlockState(pos,state.withProperty(BlockProgrammableTrapdoor.OPEN,open),2);
         world.playEvent(null,open?1037:1036,pos,0);markDirty();
     }
-    private void sync() {
+    protected void sync() {
         markDirty();if(world==null)return;
         IBlockState state=world.getBlockState(pos);
         // HALF keeps vanilla metadata and ladder behavior consistent with the chosen position.

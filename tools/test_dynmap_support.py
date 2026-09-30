@@ -38,6 +38,7 @@ def main():
     for name, renderer in (
             ("programmable_slab", "ProgrammableSlabRenderer"),
             ("programmable_trapdoor", "ProgrammableTrapdoorRenderer"),
+            ("programmable_diagonal_trapdoor", "ProgrammableDiagonalTrapdoorRenderer"),
             ("programmable_door", "ProgrammableDoorRenderer"),
             ("controlled_ramp", "ControlledRampRenderer")):
         if (name, "*") not in custom or not re.search(

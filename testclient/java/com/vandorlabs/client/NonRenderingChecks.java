@@ -36,6 +36,7 @@ public final class NonRenderingChecks {
         contiguous();
         rampClearance();
         TrapdoorChecks.run();
+        DiagonalTrapdoorChecks.run();
     }
 
     private static void placement() {

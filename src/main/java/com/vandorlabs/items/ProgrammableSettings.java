@@ -117,7 +117,9 @@ public final class ProgrammableSettings {
         if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
-            out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
+            if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor){
+                NBTTagCompound geometry=new NBTTagCompound();geometry.setInteger("mode",hatch.getPosition());out.setTag(DIAGONAL_GEOMETRY,geometry);
+            } else out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
             out.setBoolean(DOOR_SLIDING,hatch.isSliding());out.setInteger(TRIGGER,hatch.getTrigger());
         } else if (tile instanceof TileEntityProgrammableLight) {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
@@ -282,7 +284,8 @@ public final class ProgrammableSettings {
         boolean applicable = false;
         if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
-            applicable=values.hasKey(WALL_TEXTURE,3) || values.hasKey(TRAPDOOR_POSITION,3)
+            boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
+            applicable=values.hasKey(WALL_TEXTURE,3) || (diagonal?values.hasKey(DIAGONAL_GEOMETRY,10):values.hasKey(TRAPDOOR_POSITION,3))
                     || values.hasKey(DOOR_SLIDING,1) || values.hasKey(TRIGGER,3) || values.hasKey(CHANNEL,3);
             if(applicable) {
                 java.util.List<com.vandorlabs.tiles.TileEntityProgrammableTrapdoor> leaves=world==null
@@ -291,7 +294,7 @@ public final class ProgrammableSettings {
                     if(!player.canPlayerEdit(leaf.getPos(),EnumFacing.UP,player.getHeldItemMainhand())
                             || !world.isBlockModifiable(player,leaf.getPos()))return false;
                 for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:leaves)leaf.configure(
-                        number(values,WALL_TEXTURE,leaf.getHousingTexture()),number(values,TRAPDOOR_POSITION,leaf.getPosition()),
+                        number(values,WALL_TEXTURE,leaf.getHousingTexture()),diagonal?(values.hasKey(DIAGONAL_GEOMETRY,10)?Math.max(0,Math.min(2,values.getCompoundTag(DIAGONAL_GEOMETRY).getInteger("mode"))):leaf.getPosition()):number(values,TRAPDOOR_POSITION,leaf.getPosition()),
                         flag(values,DOOR_SLIDING,leaf.isSliding()),number(values,TRIGGER,leaf.getTrigger()),
                         number(values,CHANNEL,leaf.getRedstoneChannel()));
             }

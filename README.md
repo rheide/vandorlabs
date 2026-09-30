@@ -56,6 +56,11 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   open together toward opposite sides, manually or through local/virtual redstone.
   Craft two from five Industrial Alloy Ingots and one Programmable Matter Ingot;
   see the [trapdoor guide](docs/gallery/programmable-trapdoor.md).
+- **Programmable Diagonal Trapdoor**: wall-aligned 2px leaves with half-width/full-height,
+  full-width/full-height or full-width/half-height geometry. Pairs and 2×2 surface
+  groups open together, rotating or sliding horizontally toward opposite sides.
+  Craft one from a Programmable Trapdoor and an Industrial Alloy Ingot;
+  see the [diagonal trapdoor guide](docs/gallery/programmable-diagonal-trapdoor.md).
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all
   four corners, iron ingots at top/bottom center, gold ingots at left/right center,
   and redstone dust in the center. Produces one ingot.

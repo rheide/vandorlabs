@@ -43,6 +43,7 @@ public class VandorLabs {
         com.vandorlabs.tiles.DeferredTileLoad.install();
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, "vandorlabs:programmable_trapdoor");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor.class,"vandorlabs:programmable_diagonal_trapdoor");
         GameRegistry.registerTileEntity(TileEntitySlidingDoor.class, "vandorlabs:sliding_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableGlass.class, "vandorlabs:programmable_glass");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:programmable_door");
