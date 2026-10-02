@@ -8,10 +8,8 @@ import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.input.Keyboard;
 
@@ -242,22 +240,6 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
                 right, y + 22, 0xFFA0A0A8);
         bottomList.draw(fontRenderer,mouseX,mouseY);
         topList.draw(fontRenderer,mouseX,mouseY);
-        int previewX = right + 72;
-        String suffix = displayMode == TileEntityAnimatedScreenSelector.MODE_OFF
-                ? "_off.png" : "_static.png";
-        drawRect(previewX - 1, y + 18, previewX + 45, y + 34, 0xFF000000);
-        mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",
-                "textures/blocks/console_inputs/" + topPanel + suffix));
-        GlStateManager.color(1, 1, 1, 1);
-        drawScaledCustomSizeModalRect(previewX, y + 19, 0, 0, 512, 256,
-                44, 14, 512, 256);
-        previewX = left + 72;
-        drawRect(previewX - 1, y + 18, previewX + 45, y + 34, 0xFF000000);
-        mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",
-                "textures/blocks/console_inputs/" + bottomPanel + suffix));
-        GlStateManager.color(1, 1, 1, 1);
-        drawScaledCustomSizeModalRect(previewX, y + 19, 0, 0, 512, 256,
-                44, 14, 512, 256);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),
                 left, y + 136, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),

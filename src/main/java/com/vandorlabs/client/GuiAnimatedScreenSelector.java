@@ -12,10 +12,8 @@ import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -30,7 +28,7 @@ import java.util.List;
 
 /**
  * Selector GUI: a scrollable list of every screen family (bare/framed
- * variants collapsed to one entry), a static image preview, a redstone
+ * variants collapsed to one entry) with texture thumbnails, a redstone
  * enable checkbox, an Off/Static/Animated mode control, a Bare/Framed
  * variant checkbox, and the slow/normal/fast speed control. Every change is
  * pushed to the server immediately so the block previews live behind the GUI.
@@ -65,7 +63,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private boolean redstoneEnabled;
     private int displayMode;
     private int speedIndex;
-    private ResourceLocation previewTexture;
     private String inputPanel;
     private int housingTexture;
     private HousingTextureList housingList;
@@ -90,9 +87,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private int listTop;
     private int listRight;
     private int listBottom;
-    private int previewX;
-    private int previewY;
-    private int previewSize;
     private int inputListLeft;
     private int inputListTop;
     private int inputListRight;
@@ -164,7 +158,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 framed = te.isFramed();
             }
         }
-        refreshPreview();
     }
 
     /** Block id currently addressed: the selected family's active variant. */
@@ -173,11 +166,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
             return "engineering_screen";
         }
         return framed ? selectedOption.framedId : selectedOption.bareId;
-    }
-
-    private void refreshPreview() {
-        previewTexture = new ResourceLocation("vandorlabs",
-                "textures/blocks/" + activeId() + "_static.png");
     }
 
     @Override
@@ -193,9 +181,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         listTop = y + 22;
         listRight = x + (console ? 126 : 184);
         listBottom = listTop + LIST_H;
-        previewX = x + (console ? 340 : 194);
-        previewY = y + (console ? 130 : 32);
-        previewSize = console ? 52 : 64;
         inputListLeft = x + 136;
         inputListTop = y + 22;
         inputListRight = x + 236;
@@ -294,7 +279,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                     return;
                 }
                 framed = !framed;
-                refreshPreview();
                 break;
             case 10:
                 speedIndex = 0;
@@ -362,7 +346,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(screenList.click(mouseX,mouseY,mouseButton)) {
             for(Entry entry:entries)if(screenList.picked() && entry.option.bareId.equals(screenList.selected()) && (!entry.option.key.equals(selectedOption.key) || te.getSurfaceTexture(0)>=0)) {
                 selectedOption=entry.option;framed=selectedOption.hasPair() || ModBlocks.DISPLAY_FRAMED_IDS.contains(selectedOption.framedId);
-                te.setSurfaceTexture(0,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,0,-1));refreshPreview();refreshButtons();sendUpdate();break;
+                te.setSurfaceTexture(0,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,0,-1));refreshButtons();sendUpdate();break;
             }return;
         }
         super.mouseClicked(mouseX, mouseY, mouseButton);
@@ -439,28 +423,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 x + 8, y + 5, 0xFFFFFFFF);
         screenList.draw(fontRenderer,mouseX,mouseY);
         if(inputList!=null)inputList.draw(fontRenderer,mouseX,mouseY);
-        // Right column: preview + section labels.
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.preview"),
-                previewX, console ? y + 118 : listTop, 0xFFA0A0A8);
-        int previewHeight = previewSize + (console ? previewSize / 2 : 0);
-        drawRect(previewX - 1, previewY - 1, previewX + previewSize + 1,
-                previewY + previewHeight + 1, 0xFF000000);
-        if (previewTexture != null) {
-            mc.getTextureManager().bindTexture(previewTexture);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            drawScaledCustomSizeModalRect(previewX, previewY, 0.0F, 0.0F,
-                    256, 256, previewSize, previewSize, 256.0F, 256.0F);
-        }
-        if (console) {
-            mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",
-                    "textures/blocks/console_inputs/" + inputPanel
-                            + (displayMode == TileEntityAnimatedScreenSelector.MODE_OFF
-                                    ? "_off.png" : "_static.png")));
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            drawScaledCustomSizeModalRect(previewX, previewY + previewSize,
-                    0.0F, 0.0F, 512, 256, previewSize, previewSize / 2,
-                    512.0F, 256.0F);
-        }
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),
                 x + (console ? 164 : 196), y + 116, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),

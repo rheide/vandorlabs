@@ -24,6 +24,8 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 
 ### Fixed
 
+- Programmable screen, input and console dialogs use categorized list thumbnails for previews, removing the separate preview areas while preserving animation and display controls.
+
 - Joined diagonal trapdoors rotate both slope rows toward the outside of the surface while retaining their inset animation and hinge pivots. Reversed coplanar rows retain a common outside direction.
 
 - Diagonal trapdoor hotbar icons use a smaller scale for default, configured and Custom finishes. The Duplifier dialog grows to fit all options, keeping its last-row trapdoor hinge/layout switches clear of Done and fitting smaller GUI resolutions. Its movement switch explicitly includes trapdoors.

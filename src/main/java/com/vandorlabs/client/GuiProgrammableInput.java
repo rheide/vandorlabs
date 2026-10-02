@@ -8,16 +8,14 @@ import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 
-/** Compact selector containing only the input-surface list and preview. */
+/** Compact selector containing the categorized input-surface and material lists. */
 public class GuiProgrammableInput extends GuiContainer {
 
     private static final int ROW_H = 12;
@@ -229,18 +227,6 @@ public class GuiProgrammableInput extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.title"), x + 8, y + 5,
                 0xFFFFFFFF);
         screenList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.preview"),
-                x + 164, y + 22, 0xFFA0A0A8);
-        mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",
-                "textures/blocks/console_inputs/" + selected
-                        + (displayMode == TileEntityAnimatedScreenSelector.MODE_OFF
-                                ? "_off.png" : "_static.png")));
-        GlStateManager.color(1, 1, 1, 1);
-        int previewW = smallInput ? 55 : 78;
-        int previewH = smallInput ? 27 : 39;
-        drawScaledCustomSizeModalRect(x + 164 + (78 - previewW) / 2,
-                y + 38 + (39 - previewH) / 2, 0, 0, 512, 256,
-                previewW, previewH, 512, 256);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),
                 x + 8, y + 114, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),
