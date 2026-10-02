@@ -306,9 +306,9 @@ public class ReproLab {
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
-        for(String group:new String[]{"flat","v","rectangle","stagger"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
+        for(String group:new String[]{"flat","v","rectangle","stagger","stagger_halfwidth","stagger_shallow"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
-        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open"}) {
+        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open","diagonal_opposite_slopes_sliding_open","diagonal_reversed_plane_sliding_open"}) {
             boolean neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
             SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-(wall?3:.7),galleryFeet+(neighbors?1.5:3.2),neighbors || wall?-14.5:-21.5,neighbors?180:wall?-155:-8,neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
@@ -560,7 +560,12 @@ public class ReproLab {
                     if(door.getFaceTexture()!=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(Blocks.BRICK_BLOCK)) || door.isTileTexture()!=s.name.endsWith("_tile"))throw new IllegalStateException("Door material gallery settings did not synchronize");
                 }
                 if(s.name.startsWith("gallery_trapdoor_followup_"))TrapdoorMaterialRuntimeChecks.checkScene(mc,s.name.substring("gallery_trapdoor_followup_".length()),GALLERY_X,GALLERY_Y);
-                if(s.name.startsWith("gallery_trapdoor_v_rotating") || s.name.contains("diagonal_opposite_slopes_open") || s.name.contains("diagonal_reversed_plane_open"))TrapdoorGallery.checkOutside(mc.world,(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)mc.world.getTileEntity(new BlockPos(GALLERY_X-1,GALLERY_Y+2,-18)));
+                if(s.name.startsWith("gallery_trapdoor_v_") || s.name.contains("diagonal_opposite_slopes") || s.name.contains("diagonal_reversed_plane"))TrapdoorGallery.checkOutside(mc.world,(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)mc.world.getTileEntity(new BlockPos(GALLERY_X-1,GALLERY_Y+2,-18)),s.name.startsWith("gallery_trapdoor_v_") || s.name.contains("opposite_slopes"));
+                if(s.name.startsWith("gallery_trapdoor_stagger_halfwidth_") || s.name.startsWith("gallery_trapdoor_stagger_shallow_")) {
+                    com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)mc.world.getTileEntity(new BlockPos(GALLERY_X-1,GALLERY_Y+2,-18));
+                    if(root==null || root.group().size()!=4 || root.getPosition()!=(s.name.contains("_shallow_")?2:0))throw new IllegalStateException("staggered mode did not synchronize a four-leaf group");
+                    System.out.println("[vandorlabs][reprolab] diagonal-staggered-mode-runtime PASS "+s.name);
+                }
                 save(mc, s);
                 shotIndex++;
                 if (shotIndex < SHOTS.size()) {

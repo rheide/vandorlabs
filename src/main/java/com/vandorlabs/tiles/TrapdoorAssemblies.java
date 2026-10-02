@@ -18,9 +18,10 @@ final class TrapdoorAssemblies {
         BlockPos u=new BlockPos(across.getDirectionVec());
         BlockPos v=diagonal?root.position==2?new BlockPos(facing.getOpposite().getDirectionVec()):new BlockPos(0,1,0)
                 :new BlockPos(across.rotateY().getDirectionVec());
-        if(diagonal && root.position==1) {
+        if(diagonal) {
             TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)root;
-            BlockPos stagger=v.add((leaf.isInverted()?facing:facing.getOpposite()).getDirectionVec());
+            BlockPos stagger=root.position==2?v.add(0,leaf.isInverted()?-1:1,0)
+                    :v.add((leaf.isInverted()?facing:facing.getOpposite()).getDirectionVec());
             if(discover(root,player,stack,u,stagger,true))return true;
         }
         return discover(root,player,stack,u,v,false);

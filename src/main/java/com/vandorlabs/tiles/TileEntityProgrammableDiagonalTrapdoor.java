@@ -15,14 +15,35 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     private boolean reverse,cachedInverted;
     private EnumFacing cachedFacing=EnumFacing.NORTH,groupFacing=EnumFacing.NORTH;
     public boolean isReverse(){return reverse;}
+    private TileEntityProgrammableDiagonalTrapdoor outsideReference(List<TileEntityProgrammableTrapdoor> leaves) {
+        TileEntityProgrammableDiagonalTrapdoor reference=this;
+        for(TileEntityProgrammableTrapdoor leaf:leaves)if(leaf.getPos().compareTo(reference.getPos())<0)reference=(TileEntityProgrammableDiagonalTrapdoor)leaf;
+        return reference;
+    }
+    private EnumFacing outsideFacing(List<TileEntityProgrammableTrapdoor> leaves) {
+        TileEntityProgrammableDiagonalTrapdoor reference=outsideReference(leaves);
+        boolean bent=false;
+        for(TileEntityProgrammableTrapdoor raw:leaves) {
+            TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
+            if(leaf.getPos().getY()>reference.getPos().getY() && (leaf.isInverted() ^ (leaf.facing()==reference.facing().getOpposite()))!=reference.isInverted())bent=true;
+        }
+        // A V assembly's outside is the convex side of its bend. A continued
+        // plane retains the existing upward-opening side of its bottom row.
+        return reference.isInverted() ^ bent?reference.facing().getOpposite():reference.facing();
+    }
+    /** Joined tall sliders clear the same outside face before separating sideways. */
+    public int slideLiftDirection() {
+        if(!sliding || position==2)return 1;
+        List<TileEntityProgrammableTrapdoor> leaves=group();
+        if(leaves.size()<2)return 1;
+        return facing()==outsideFacing(leaves)?-1:1;
+    }
     /** Keep every rotating row outside the surface, including reversed coplanar rows. */
     public boolean rotationReverse() {
         if(sliding || position==2)return reverse;
         List<TileEntityProgrammableTrapdoor> leaves=group();
         if(leaves.size()<2)return reverse;
-        TileEntityProgrammableDiagonalTrapdoor reference=this;
-        for(TileEntityProgrammableTrapdoor leaf:leaves)if(leaf.getPos().compareTo(reference.getPos())<0)reference=(TileEntityProgrammableDiagonalTrapdoor)leaf;
-        boolean opposite=facing()==reference.facing().getOpposite();
+        boolean opposite=facing()==outsideFacing(leaves).getOpposite();
         return reverse ^ (isInverted()!=opposite);
     }
 

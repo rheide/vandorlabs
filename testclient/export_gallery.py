@@ -10,6 +10,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    **{f"gallery_trapdoor_{group}_{motion}_{pose}":f"tasks/trapdoor-{group.replace('_','-')}-{motion}-{pose}.png" for group in ("stagger_halfwidth","stagger_shallow") for motion in ("rotating","sliding") for pose in ("closed","open")},
+    "gallery_trapdoor_followup_diagonal_opposite_slopes_sliding_open": "tasks/trapdoor-diagonal-opposite-slopes-sliding-open.png",
+    "gallery_trapdoor_followup_diagonal_reversed_plane_sliding_open": "tasks/trapdoor-diagonal-reversed-plane-sliding-open.png",
     "gallery_trapdoor_followup_diagonal_opposite_slopes_open": "tasks/trapdoor-diagonal-opposite-slopes-open.png",
     "gallery_trapdoor_followup_diagonal_reversed_plane_open": "tasks/trapdoor-diagonal-reversed-plane-open.png",
     "diagonal_trapdoor_hotbar": "tasks/diagonal-trapdoor-hotbar.png",

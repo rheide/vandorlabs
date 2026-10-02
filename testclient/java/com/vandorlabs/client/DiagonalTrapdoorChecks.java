@@ -25,7 +25,7 @@ final class DiagonalTrapdoorChecks {
         GameRegistry.registerTileEntity(TileEntityProgrammableDiagonalTrapdoor.class,new ResourceLocation("minecraft:vandorlabs_data_check_diagonal_trapdoor"));
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();boundaries();recipe();
+        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }
     private static void mesh() {
@@ -158,7 +158,7 @@ final class DiagonalTrapdoorChecks {
                 require(tile.group().size()==4,"coplanar reversed row not grouped "+mode+Arrays.toString(order));
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());tile.readFromNBT(saved);require(tile.group().size()==4,"coplanar group's saved basis lost");
                 tile.requestOpen(true);for(BlockPos other:cells)require(open(world,other),"coplanar square opening failed");
-                if(mode!=2 && !slide) {
+                if(mode!=2) {
                     double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(p),tile,0),opened=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(p),tile,1);
                     double outward=0;for(int i=0;i<8;i++)outward+=(opened[i][0]-closed[i][0])*facing.getFrontOffsetX()+(opened[i][2]-closed[i][2])*facing.getFrontOffsetZ();
                     require(outward>0,"reversed coplanar row opens inside the continued surface");
@@ -184,30 +184,53 @@ final class DiagonalTrapdoorChecks {
             require(first.group().size()<=2,"coplanar square remained after break");place(world,cells[3],mode,facing.getOpposite(),true,slide,0);require(first.group().size()==4,"coplanar square repair failed");
         }
     }
+    private static void staggeredModes() {
+        List<int[]> orders=new ArrayList<>();permutations(new int[]{0,1,2,3},0,orders);
+        for(int mode=0;mode<3;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean sliding:new boolean[]{false,true}) {
+            BlockPos base=new BlockPos(20,100,20);EnumFacing across=facing.rotateY();
+            BlockPos step=mode==2?new BlockPos(facing.getOpposite().getDirectionVec()).add(0,inverted?-1:1,0)
+                    :new BlockPos((inverted?facing:facing.getOpposite()).getDirectionVec()).up();
+            BlockPos[] cells={base,base.offset(across),base.add(step),base.add(step).offset(across)};
+            for(int[] order:orders) {
+                NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+                for(int i:order)place(world,cells[i],mode,facing,inverted,sliding,0);
+                TileEntityProgrammableDiagonalTrapdoor root=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base);
+                require(root.group().size()==4,"staggered mode "+mode+" did not join in order "+Arrays.toString(order));
+                root.requestOpen(true);
+                for(BlockPos cell:cells) {
+                    TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(cell);
+                    require(open(world,cell) && leaf.group().size()==4,"staggered mode missed group opening");
+                    leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));require(leaf.group().size()==4,"staggered mode lost saved links");
+                }
+                root.configureGroup(7,mode,sliding,0,19,inverted,false,false,facing);
+                for(TileEntityProgrammableTrapdoor leaf:root.group())require(leaf.getHousingTexture()==7 && leaf.getRedstoneChannel()==19 && !leaf.isTileTexture(),"staggered mode configuration missed member");
+            }
+        }
+    }
     private static void expandedGroups() {
         for(boolean slide:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS) {
             BlockPos base=new BlockPos(20,100,20);EnumFacing width=facing.rotateYCCW();
             NonRenderingChecks.MemoryWorld vworld=new NonRenderingChecks.MemoryWorld(false);
             List<int[]> orders=new ArrayList<>();permutations(new int[]{0,1,2,3},0,orders);
-            for(int[] order:orders) {
+            for(boolean invertedBase:new boolean[]{false,true})for(int[] order:orders) {
                 vworld.clear();BlockPos[] cells={base,base.offset(width),base.up(),base.up().offset(width)};
-                for(int i:order)place(vworld,cells[i],0,facing,i>=2,slide,0);
+                for(int i:order)place(vworld,cells[i],0,facing,(i>=2)^invertedBase,slide,0);
                 TileEntityProgrammableDiagonalTrapdoor first=(TileEntityProgrammableDiagonalTrapdoor)vworld.getTileEntity(base);
                 require(first.group().size()==4,"opposite slope V group missed placement order");
                 for(TileEntityProgrammableTrapdoor raw:first.group()) {
                     TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
                     double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,0);
                     double[][] opened=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,1);
-                    if(!slide)for(double pose:new double[]{.25,.5,.75,1}) {
+                    for(double pose:new double[]{.2,.25,.5,.75,1}) {
                         double[][] moving=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,pose);
                         double outward=0;for(int i=0;i<8;i++)outward+=(moving[i][0]-closed[i][0])*facing.getFrontOffsetX()+(moving[i][2]-closed[i][2])*facing.getFrontOffsetZ();
-                        require(outward>0,"opposite-slope row rotates inside the diagonal surface");
+                        require(invertedBase?outward>0:outward<0,"opposite-slope row moves inside the convex bend");
                     }
                 }
             }
-            if(!slide)for(int mode:new int[]{0,1}) {
+            for(int mode:new int[]{0,1}) {
                 NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
-                for(int row=0;row<2;row++)for(int col=0;col<5;col++)place(world,base.offset(width,col).up(row),mode,facing,row==1,false,0);
+                for(int row=0;row<2;row++)for(int col=0;col<5;col++)place(world,base.offset(width,col).up(row),mode,facing,row==1,slide,0);
                 TileEntityProgrammableDiagonalTrapdoor root=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base);
                 require(root.group().size()==10,"opposite-slope rectangle did not join");
                 for(TileEntityProgrammableTrapdoor raw:root.group()) {
@@ -215,9 +238,9 @@ final class DiagonalTrapdoorChecks {
                     IBlockState state=world.getBlockState(leaf.getPos());
                     double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(state,leaf,0),opened=BlockProgrammableDiagonalTrapdoor.corners(state,leaf,1);
                     double outward=0;for(int i=0;i<8;i++)outward+=(opened[i][0]-closed[i][0])*facing.getFrontOffsetX()+(opened[i][2]-closed[i][2])*facing.getFrontOffsetZ();
-                    require(outward>0,"joined rectangle row rotates inside surface");
+                    require(outward<0,"joined rectangle row moves inside convex bend");
                     leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));
-                    require(leaf.rotationReverse()==(leaf.isReverse() ^ leaf.isInverted()),"rectangle outside direction lost after reload");
+                    require(leaf.rotationReverse()==(slide?leaf.isReverse():leaf.isReverse() ^ !leaf.isInverted()),"rectangle outside direction lost after reload");
                 }
             }
             for(boolean stagger:new boolean[]{false,true}) {

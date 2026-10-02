@@ -18,12 +18,13 @@ final class TrapdoorGallery {
         boolean sliding=scene.contains("sliding"),open=scene.endsWith("open");
         BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)(flat?ModBlocks.PROGRAMMABLE_TRAPDOOR:ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR);
         int width=flat?2:stagger||v?2:5,height=flat?4:2;
+        int mode=flat?1:scene.startsWith("stagger_halfwidth")?0:scene.startsWith("stagger_shallow")?2:stagger?1:0;
         BlockPos origin=new BlockPos(x-width/2,y+2,-18);
         TileEntityProgrammableTrapdoor first=null;
         for(int row=0;row<height;row++)for(int col=0;col<width;col++) {
             BlockPos at=flat?origin.add(col,0,row):origin.add(col,row,stagger?row:0);
             TileEntityProgrammableTrapdoor prototype=flat?new TileEntityProgrammableTrapdoor():new TileEntityProgrammableDiagonalTrapdoor();
-            prototype.configure(4,flat?1:stagger?1:0,sliding,0,0);
+            prototype.configure(4,mode,sliding,0,0);
             ItemStack stack=new ItemStack(block);stack.setTagInfo("BlockEntityTag",prototype.itemSettings());
             IBlockState state=block.getDefaultState().withProperty(BlockTrapDoor.FACING,EnumFacing.NORTH)
                     .withProperty(BlockTrapDoor.HALF,v && row>0?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM);
@@ -33,13 +34,16 @@ final class TrapdoorGallery {
         }
         if(world.isRemote)return;
         if(first.group().size()!=width*height)throw new IllegalStateException("trapdoor gallery group failed: "+scene+" size="+first.group().size());
-        if(v && !sliding)checkOutside(world,first);
+        if(v)checkOutside(world,first,true);
         first.requestOpen(open);
         for(TileEntityProgrammableTrapdoor leaf:first.group())if(world.getBlockState(leaf.getPos()).getValue(BlockTrapDoor.OPEN)!=open)throw new IllegalStateException("trapdoor gallery opening failed");
         System.out.println("[vandorlabs][reprolab] trapdoor-assembly PASS "+scene);
     }
-    static void checkOutside(World world,TileEntityProgrammableTrapdoor root) {
-        EnumFacing outward=world.getBlockState(root.getPos()).getValue(BlockTrapDoor.FACING);
+    static void checkOutside(World world,TileEntityProgrammableTrapdoor root,boolean convex) {
+        IBlockState rootState=world.getBlockState(root.getPos());
+        double[][] surface=BlockProgrammableDiagonalTrapdoor.corners(rootState,(TileEntityProgrammableDiagonalTrapdoor)root,0);
+        EnumFacing rise=EnumFacing.getFacingFromVector((float)(surface[2][0]-surface[0][0]),0,(float)(surface[2][2]-surface[0][2]));
+        EnumFacing outward=convex?rise:rise.getOpposite();
         for(TileEntityProgrammableTrapdoor raw:root.group()) {
             TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
             IBlockState state=world.getBlockState(leaf.getPos());
@@ -92,8 +96,8 @@ final class TrapdoorGallery {
             }
             if(world.isRemote)return;
             if(first.group().size()!=4)throw new IllegalStateException("followup trapdoor square not joined");
-            first.configureGroup(texture,0,false,0,0,false,false,!fit,EnumFacing.NORTH);
-            if(scene.endsWith("_open")){checkOutside(world,first);first.requestOpen(true);}
+            first.configureGroup(texture,0,scene.contains("_sliding_"),0,0,false,false,!fit,EnumFacing.NORTH);
+            if(scene.endsWith("_open")){checkOutside(world,first,scene.contains("opposite_slopes"));first.requestOpen(true);}
         }
         System.out.println("[vandorlabs][reprolab] trapdoor-followup PASS "+scene);
     }

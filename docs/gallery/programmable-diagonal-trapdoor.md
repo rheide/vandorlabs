@@ -28,7 +28,7 @@ Geometry copies between diagonal walls and trapdoors through the Duplifier's
 
 ## Motion and groups
 
-Sliding first lifts the leaf clear of a solid continuation wall, then slides along the surface's width, leaving roughly one pixel visible in its original block. Tall leaves lift in their depth coordinate; shallow leaves lift vertically. Rendered vertices, selection and collision use the same motion. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
+Sliding first lifts the leaf clear of a solid continuation wall, then slides along the surface's width, leaving roughly one pixel visible in its original block. Tall leaves lift in their depth coordinate; shallow leaves lift vertically. Joined tall rows clear the group’s common outside face (the convex side for an opposite-slope bend) before separating sideways, including opposite slopes and reversed-facing continuations. Rendered vertices, selection and collision use the same motion. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
 compatible leaves pair and open toward opposite sides without reversing their
 closed surface. Compatible leaves have the same shape and matching orientation, opposite slopes in neighboring rows (V-shaped assemblies), or the reversed
 facing/inversion that continues the same wall plane.
@@ -37,7 +37,7 @@ A complete 2×2 surface group opens together in every placement order. Tall
 groups span two blocks across and two vertically; shallow groups span two
 across and two along their footprint. The two columns open outward. Groups
 retain their links on save/reload, and rebuilding a broken square restores the
-four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. Full-width tall panels also connect across a one-block vertical plus one-block depth offset. Larger rotating halves share their outer hinge. Individual tall panels prefer upward opening for either slope. Joined tall panels open toward the outside of the surface in both rows, including opposite-slope V assemblies and reversed coplanar continuations. Their inset and hinge animation is retained; an inverted row may rotate downward to stay outside.
+four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. All three modes also connect across a one-block vertical plus one-block depth offset along their slope. Tall rows step up and toward the facing’s opposite direction for a normal slope, or toward its facing for an inverted slope. Shallow rows step along the facing’s opposite direction and up for a normal slope, or down for an inverted slope. Complete staggered rectangles through 8×8 share movement and settings and retain their links on save/reload. Larger rotating halves share their outer hinge. Individual tall panels prefer upward opening for either slope. Joined tall panels open toward the convex outside of a bend in both rows, including opposite-slope V assemblies and reversed coplanar continuations. Their inset and hinge animation is retained; rows may rotate upward or downward as needed to stay outside the bend.
 
 Right-click any member to toggle the loaded group. Physical or virtual redstone
 at any member controls the whole group. Configuration and copying update the

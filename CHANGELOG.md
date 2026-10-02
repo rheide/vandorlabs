@@ -24,9 +24,13 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 
 ### Fixed
 
+- Staggered diagonal trapdoor groups connect in all three shape modes, including Half width / Full height and Full width / Half height, with saved links and shared movement/settings.
+
+- Opposite-slope diagonal groups derive their outside direction from the convex bend. Both rotating rows and the staged sliding clearance move outward, preserving hinge pivots and the inset/lift animation. Reversed coplanar rows share an outside face and retain their established rotation direction.
+
+
 - Programmable screen, input and console dialogs use categorized list thumbnails for previews, removing the separate preview areas while preserving animation and display controls.
 
-- Joined diagonal trapdoors rotate both slope rows toward the outside of the surface while retaining their inset animation and hinge pivots. Reversed coplanar rows retain a common outside direction.
 
 - Diagonal trapdoor hotbar icons use a smaller scale for default, configured and Custom finishes. The Duplifier dialog grows to fit all options, keeping its last-row trapdoor hinge/layout switches clear of Done and fitting smaller GUI resolutions. Its movement switch explicitly includes trapdoors.
 

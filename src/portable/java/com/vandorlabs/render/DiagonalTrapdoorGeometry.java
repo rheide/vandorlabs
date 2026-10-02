@@ -7,6 +7,9 @@ public final class DiagonalTrapdoorGeometry {
         return corners(mode,inverted,turns,sliding,reverse,pose,reverse?15/16D:1/16D,15/16D);
     }
     public static double[][] corners(int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,double hinge,double travel) {
+        return corners(mode,inverted,turns,sliding,reverse,pose,hinge,travel,1);
+    }
+    public static double[][] corners(int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,double hinge,double travel,int slideLiftDirection) {
         double span=mode==1?.75:.375,p=Math.max(0,Math.min(1,pose));
         double slope=inverted?-span:span;
         double base=(inverted?span:0)+(mode==2 && inverted?.375:0)+1/16D;
@@ -24,7 +27,7 @@ public final class DiagonalTrapdoorGeometry {
                 x+=(reverse?1:-1)*Math.max(0,(p-.25)/.75)*travel;
                 // Lift clear of a solid continuation wall before sliding across it.
                 double lift=.25*Math.min(1,p*4);
-                if(mode==2)y+=lift;else z+=lift;
+                if(mode==2)y+=lift;else z+=slideLiftDirection*lift;
             }
             else {
                 double dx=x-px,dy=y-pivotY,dz=z-pivotZ,dot=ay*dy+az*dz;

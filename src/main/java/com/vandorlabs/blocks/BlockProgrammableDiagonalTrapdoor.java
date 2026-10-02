@@ -57,7 +57,7 @@ public final class BlockProgrammableDiagonalTrapdoor extends BlockProgrammableTr
     }
     public static double[][] corners(IBlockState state,TileEntityProgrammableDiagonalTrapdoor tile,double pose) {
         return DiagonalTrapdoorGeometry.corners(tile==null?0:tile.getPosition(),state.getValue(HALF)==DoorHalf.TOP,
-                quarterTurns(state.getValue(FACING)),tile!=null && tile.isSliding(),tile!=null && tile.rotationReverse(),pose,tile==null?1/16D:tile.motionHinge(),tile==null?15/16D:tile.motionTravel());
+                quarterTurns(state.getValue(FACING)),tile!=null && tile.isSliding(),tile!=null && tile.rotationReverse(),pose,tile==null?1/16D:tile.motionHinge(),tile==null?15/16D:tile.motionTravel(),tile==null?1:tile.slideLiftDirection());
     }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);double[] b=DiagonalTrapdoorGeometry.bounds(corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0));
