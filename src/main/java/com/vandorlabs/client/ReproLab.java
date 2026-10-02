@@ -1199,7 +1199,9 @@ public class ReproLab {
                 if(!offset.isCover() || offset.isSliding() || offset.isTileTexture() || offset.coverFacing()!=EnumFacing.EAST)throw new IllegalStateException("next-block/motion/layout/hinge GUI packets failed");
                 saveNamed(mc,"trapdoor_gui");mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] trapdoor-controls-runtime PASS");
-                state=9;holdTicks=10;break;
+                offsetTrapdoorChecks=new OffsetTrapdoorRuntimeChecks(CONSOLE.add(15,0,3));state=58;break;
+            case 58:
+                if(offsetTrapdoorChecks.tick(mc)){state=9;holdTicks=10;}break;
             case 9:
                 if (--holdTicks > 0) break;
                 mc.shutdown();
@@ -1214,6 +1216,7 @@ public class ReproLab {
         for(net.minecraft.client.gui.GuiButton button:buttons)if(button.id==id && button.enabled){gui.actionPerformed(button);return;}
         throw new IllegalStateException("trapdoor control missing or disabled: "+id);
     }
+    private OffsetTrapdoorRuntimeChecks offsetTrapdoorChecks;
     private void openTrapdoorFollowup(Minecraft mc,boolean diagonal) {
         mc.getIntegratedServer().addScheduledTask(()->{
             World world=mc.getIntegratedServer().getWorld(0);BlockPos base=CONSOLE.add(15,0,3);
