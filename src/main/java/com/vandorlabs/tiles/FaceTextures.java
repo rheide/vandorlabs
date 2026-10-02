@@ -14,7 +14,7 @@ public final class FaceTextures {
         Arrays.fill(choices, -1);
         if (values != null && values.length == 6)
             for (int i = 0; i < 6; i++)
-                choices[i] = values[i] >= 0 && values[i] < ScreenHousingTextures.IDS.length
+                choices[i] = values[i] >= 0 && ScreenHousingTextures.validChoice(values[i])
                         ? values[i] : -1;
     }
     public int choice(int face) { return choices[face]; }

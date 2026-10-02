@@ -22,6 +22,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     private static final int ROW_H = 12;
     private static final int ROWS = 8;
+    private SurfaceTexturePicker surfacePicker;
     private final TileEntityAnimatedScreenSelector te;
     private String topPanel;
     private String bottomPanel;
@@ -56,6 +57,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
+        surfacePicker=new SurfaceTexturePicker(te,true);
+        surfacePicker.init(guiLeft,guiTop,xSize,ySize);
         Keyboard.enableRepeatEvents(true);
         int x = (width - xSize) / 2;
         int y = (height - ySize) / 2;
@@ -128,6 +131,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
+        if(surfacePicker.click(mouseX,mouseY,button))return;
         if (housingList.click(mouseX, mouseY, button)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();
@@ -173,6 +177,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     }
 
     @Override protected void mouseClickMove(int mouseX,int mouseY,int button,long elapsed) {
+        if(surfacePicker.drag(mouseY))return;
         if (housingList != null && housingList.drag(mouseY)) return;
         if (draggingList != 0) dragScrollbarTo(mouseY);
         else super.mouseClickMove(mouseX,mouseY,button,elapsed);
@@ -199,6 +204,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
+        if(surfacePicker.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel()))return;
         int wheel = Mouse.getEventDWheel();
         if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
@@ -283,6 +289,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         housingList.draw(fontRenderer, mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
+        surfacePicker.draw(fontRenderer,mouseX,mouseY);
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {

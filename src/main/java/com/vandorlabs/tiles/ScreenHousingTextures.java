@@ -89,29 +89,54 @@ public final class ScreenHousingTextures {
             new Finish("hull_plating_10", "hull_plating_10"),
             new Finish("hull_plating_11", "hull_plating_11")
     };
-    public static final String[] IDS = new String[FINISHES.length];
-    private static final String[] TEXTURES = new String[FINISHES.length];
-
+    public static final String[] IDS;
+    private static final String[] TEXTURES;
+    private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
+    public static final int LEGACY_COUNT=FINISHES.length;
+    public static final int BUILTIN_COUNT;
+    private static final java.util.Map<Integer,Integer> FILE_CHOICES=new java.util.HashMap<>();
     static {
-        for (int i = 0; i < FINISHES.length; i++) {
-            IDS[i] = FINISHES[i].id;
-            TEXTURES[i] = "vandorlabs:blocks/" + FINISHES[i].texture;
+        try(java.io.InputStream stream=ScreenHousingTextures.class.getResourceAsStream("/assets/vandorlabs/data/unified_textures.json")) {
+            if(stream==null)throw new IllegalStateException("Shared texture catalog missing");
+            for(com.google.gson.JsonElement e:new com.google.gson.JsonParser().parse(new java.io.InputStreamReader(stream,"UTF-8")).getAsJsonArray())EXTRAS.add(e.getAsJsonObject());
+        } catch(java.io.IOException e){throw new ExceptionInInitializerError(e);}
+        BUILTIN_COUNT=FINISHES.length+EXTRAS.size();
+        EXTRAS.addAll(FilesystemTextures.entries());
+        IDS=new String[FINISHES.length+EXTRAS.size()];TEXTURES=new String[IDS.length];
+        for(int i=0;i<FINISHES.length;i++){IDS[i]=FINISHES[i].id;TEXTURES[i]="vandorlabs:blocks/"+FINISHES[i].texture;}
+        for(int i=0;i<EXTRAS.size();i++) {
+            com.google.gson.JsonObject entry=EXTRAS.get(i);int index=i+FINISHES.length;
+            IDS[index]=entry.get("id").getAsString();
+            if(entry.has("key"))FILE_CHOICES.put(entry.get("key").getAsInt(),index);
+            TEXTURES[index]="vandorlabs:blocks/"+(entry.has("rectangular")?"unified/"+IDS[index]:entry.get("source").getAsString());
         }
     }
+    public static com.google.gson.JsonObject entry(int choice){int index=localIndex(choice)-LEGACY_COUNT;return index>=0 && index<EXTRAS.size()?EXTRAS.get(index):null;}
+    public static String category(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null?e.get("category").getAsString():choice<28?"Materials":choice<44?"Texture Pack 1":choice<67?"Texture Pack 2":"Hull Plating";}
+    public static String label(int choice){com.google.gson.JsonObject e=entry(choice);return e==null?null:e.get("label").getAsString();}
+    public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
+    public static boolean isDoor(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
+    public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
+    public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
+    public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=entry(choice);return !lit && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
 
     public static final int INDUSTRIAL_BLOCK = 9;
 
     private ScreenHousingTextures() { }
 
+    public static boolean validChoice(int choice){return choice>=0 && (choice<BUILTIN_COUNT || choice>=FilesystemTextures.ID_BASE);}
+    public static int choiceAt(int index){com.google.gson.JsonObject e=entry(index);return e!=null && e.has("key")?e.get("key").getAsInt():index;}
+    public static int localIndex(int choice){return choice>=FilesystemTextures.ID_BASE?FILE_CHOICES.getOrDefault(choice,0):choice>=0 && choice<IDS.length?choice:0;}
+
     public static int clamp(int choice) {
-        return choice >= 0 && choice < IDS.length ? choice : 0;
+        return validChoice(choice) ? choice : 0;
     }
 
     public static int cycle(int choice, int direction) {
-        return Math.floorMod(clamp(choice) + direction, IDS.length);
+        return choiceAt(Math.floorMod(localIndex(clamp(choice)) + direction, IDS.length));
     }
 
     public static String texture(int choice) {
-        return TEXTURES[clamp(choice)];
+        return TEXTURES[localIndex(choice)];
     }
 }

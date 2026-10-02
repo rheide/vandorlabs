@@ -24,9 +24,10 @@ import java.io.IOException;
 
 /** Scrollable finish picker shared by programmable walls and the full block. */
 public class GuiProgrammableWall extends GuiContainer {
-    private static final int ROW_H = 16;
+    private static final int ROW_H = 12;
     private int rows = 8;
-    private static final int LIST_W = 190;
+    private static final int LIST_W = 310;
+    private HousingTextureList textureList;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
     private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
     private final TileEntityAnimatedScreenSelector tile;
@@ -97,7 +98,7 @@ public class GuiProgrammableWall extends GuiContainer {
         buttonList.clear();
         listX = guiLeft + 11;
         listY = guiTop + (porthole ? 106 : supportsFaces() && tile.getFaceTextures().enabled ? 79 : 27);
-        scroll = Math.min(Math.max(0, selected - rows / 2), maxScroll());
+        textureList=new HousingTextureList(listX,listY,LIST_W,selected,rows);
         if (supportsFaces()) {
             buttonList.add(new GuiButton(106, guiLeft + 14, guiTop + ySize - 51, 312, 20,
                     "Face overrides: " + (tile.getFaceTextures().enabled ? "On" : "Off")));
@@ -200,41 +201,25 @@ public class GuiProgrammableWall extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if (button == 0 && mouseY >= listY && mouseY < listY + ROW_H * rows) {
-            if (mouseX >= listX + LIST_W && mouseX < listX + LIST_W + 7
-                    && maxScroll() > 0) {
-                int top = thumbY();
-                scrollbarDragOffset = mouseY >= top && mouseY < top + thumbHeight()
-                        ? mouseY - top : thumbHeight() / 2;
-                draggingScrollbar = true;
-                dragTo(mouseY);
-                return;
-            }
-            if (mouseX >= listX && mouseX < listX + LIST_W) {
-                int index = scroll + (mouseY - listY) / ROW_H;
-                if (index < ScreenHousingTextures.IDS.length) choose(index);
-                return;
-            }
-        }
+        int before=textureList.selected();
+        if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override protected void mouseReleased(int mouseX, int mouseY, int button) {
-        draggingScrollbar = false;
+        textureList.release();
         super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override protected void mouseClickMove(int mouseX, int mouseY,
             int clickedButton, long timeSinceLastClick) {
-        if (draggingScrollbar) dragTo(mouseY);
+        if (textureList.drag(mouseY)) return;
         else super.mouseClickMove(mouseX, mouseY, clickedButton, timeSinceLastClick);
     }
 
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();
-        if (wheel != 0)
-            scroll = Math.max(0, Math.min(maxScroll(), scroll + (wheel > 0 ? -1 : 1)));
+        textureList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
     }
 
     @Override protected void actionPerformed(GuiButton button) {
@@ -318,41 +303,7 @@ public class GuiProgrammableWall extends GuiContainer {
                         : fullBlock ? "gui.vandorlabs.block.title"
                         : "gui.vandorlabs.wall.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
-        drawRect(listX - 1, listY - 1, listX + LIST_W + 8,
-                listY + ROW_H * rows + 1, 0xFF000000);
-        drawRect(listX, listY, listX + LIST_W, listY + ROW_H * rows, 0xFF0A0A0C);
-        for (int row = 0; row < rows; row++) {
-            int index = scroll + row;
-            if (index >= ScreenHousingTextures.IDS.length) break;
-            int yy = listY + row * ROW_H;
-            boolean hovered = mouseX >= listX && mouseX < listX + LIST_W
-                    && mouseY >= yy && mouseY < yy + ROW_H;
-            if (index == selected || hovered)
-                drawRect(listX, yy, listX + LIST_W, yy + ROW_H,
-                        index == selected ? 0xFF2A4A6A : 0xFF1A1A20);
-            String label = I18n.format("tile.vandorlabs."
-                    + ScreenHousingTextures.IDS[index] + ".name");
-            fontRenderer.drawStringWithShadow(
-                    fontRenderer.trimStringToWidth(label, LIST_W - 8),
-                    listX + 4, yy + 4, index == selected ? 0xFFFFE08A : 0xFFD8D8D8);
-        }
-        if (maxScroll() > 0) {
-            drawRect(listX + LIST_W, listY, listX + LIST_W + 7,
-                    listY + ROW_H * rows, 0xFF303038);
-            drawRect(listX + LIST_W, thumbY(), listX + LIST_W + 7,
-                    thumbY() + thumbHeight(), 0xFF808090);
-        }
-        int previewX = listX + LIST_W + 18;
-        int previewY = listY + 16;
-        fontRenderer.drawString("Preview", previewX, listY + 2, 0xFFD8D8D8);
-        int previewSize=Math.min(96,rows*ROW_H-20);
-        drawRect(previewX - 2, previewY - 2, previewX + previewSize+2,
-                previewY + previewSize+2, 0xFF505058);
-        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(
-                ScreenHousingTextures.texture(selected));
-        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        GlStateManager.color(1F, 1F, 1F, 1F);
-        drawTexturedModalRect(previewX, previewY, sprite, previewSize, previewSize);
+        textureList.draw(fontRenderer,mouseX,mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 

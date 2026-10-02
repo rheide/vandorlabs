@@ -30,7 +30,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     @Override public TileEntity channelTile(){return this;}
     @Override public boolean hasLocalRedstoneSignal(){return LoadedRedstonePower.isPowered(world,pos);}
     public static boolean valid(int texture,int position,int trigger,int channel) {
-        return texture>=0 && texture<ScreenHousingTextures.IDS.length && position>=0 && position<=2
+        return texture>=0 && ScreenHousingTextures.validChoice(texture) && position>=0 && position<=2
                 && SpaceDoorData.validTrigger(trigger) && channel>=0;
     }
     public boolean usable(EntityPlayer player) {

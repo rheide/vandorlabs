@@ -448,14 +448,14 @@ final class ScreenRuntimeChecks {
                     (TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos);
             require(tile.isSlabTileSides(),
                     "new programmable slab does not default to Tile side layout");
-            tile.setHousingTexture(ScreenHousingTextures.IDS.length - 1);
+            tile.setHousingTexture(ScreenHousingTextures.choiceAt(ScreenHousingTextures.IDS.length - 1));
             ItemStack tiled = slab.getPickBlock(top, null, player.world, pos, player);
             String pickedSprite = ScreenHousingTextures.texture(
-                    ScreenHousingTextures.IDS.length - 1);
+                    ScreenHousingTextures.choiceAt(ScreenHousingTextures.IDS.length - 1));
             require(pickedSprite.equals(Minecraft.getMinecraft().getRenderItem()
                             .getItemModelMesher().getItemModel(tiled)
                             .getParticleTexture().getIconName()),
-                    "picked programmable slab hotbar artwork does not match configuration");
+                    "picked programmable slab hotbar artwork does not match configuration: expected="+pickedSprite+", actual="+Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(tiled).getParticleTexture().getIconName()+", model="+Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(tiled).getClass().getName());
             tile.setSlabTileSides(false);
             ItemStack fitted = slab.getPickBlock(top, null, player.world, pos, player);
             require(tiled.getSubCompound("BlockEntityTag").getBoolean("SlabTileSides")
@@ -472,7 +472,7 @@ final class ScreenRuntimeChecks {
             TileEntityAnimatedScreenSelector copy =
                     (TileEntityAnimatedScreenSelector) player.world.getTileEntity(copyPos);
             require(copy != null && copy.getHousingTexture()
-                            == ScreenHousingTextures.IDS.length - 1
+                            == ScreenHousingTextures.choiceAt(ScreenHousingTextures.IDS.length - 1)
                             && copy.isSlabTileSides()
                             && player.world.getBlockState(copyPos).getValue(
                             com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
@@ -491,7 +491,7 @@ final class ScreenRuntimeChecks {
                 "half-input scrollbar drag does not cover its full range");
         HousingTextureList finishes = new HousingTextureList(0, 0, 120, 0);
         finishes.wheel(10, 10, -1);
-        finishes.click(10, 2, 0);
+        finishes.click(10, 14, 0);
         require(finishes.selected() == 1, "housing finish list did not scroll and select");
         require(GuiProgrammableWall.scrollForDrag(105, 100, 100, 20, 4, 5) == 0
                         && GuiProgrammableWall.scrollForDrag(145, 100, 100, 20, 4, 5) == 2
@@ -550,7 +550,7 @@ final class ScreenRuntimeChecks {
     }
 
     private static void checkHousingCycling() {
-        int last = ScreenHousingTextures.IDS.length - 1;
+        int last = ScreenHousingTextures.choiceAt(ScreenHousingTextures.IDS.length - 1);
         require(ScreenHousingTextures.cycle(0, -1) == last
                         && ScreenHousingTextures.cycle(last, 1) == 0
                         && ScreenHousingTextures.cycle(4, -1) == 3

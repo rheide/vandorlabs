@@ -44,6 +44,7 @@ public final class ProgrammableSettings {
     public static final String SLAB_TILE_SIDES = "slab_tile_sides";
     public static final String DIAGONAL_FULL_WIDTH = "diagonal_full_width";
     public static final String TRIGGER_ON_TEXTURE = "trigger_on_texture";
+    public static final String PRIMARY_SURFACE="primary_surface", SECONDARY_SURFACE="secondary_surface";
     public static final String DISPLAY_MODE = "display_mode";
     public static final String ANIMATION_SPEED = "animation_speed";
     public static final String FRAMED = "framed";
@@ -51,9 +52,11 @@ public final class ProgrammableSettings {
     public static final String SECONDARY_INPUT_PANEL = "secondary_input_panel";
     public static final String SMALL_INPUT = "small_input";
     public static final String WALL_POSITION = "wall_position";
+    public static final String LIGHT_FACE_TEXTURE="light_face_texture";
     public static final String LIGHT_LEVEL = "light_level";
     public static final String CHAIR_STYLE = "chair_style";
     public static final String CHAIR_HEIGHT = "chair_height";
+    public static final String DOOR_FACE_TEXTURE="door_face_texture";
     public static final String DOOR_DESIGN = "door_design";
     public static final String DOOR_DETAIL = "door_detail";
     public static final String DOOR_SLIDE_DIRECTION = "door_slide_direction";
@@ -126,6 +129,7 @@ public final class ProgrammableSettings {
             out.setInteger(WALL_TEXTURE, light.getHousingTexture());
             out.setString(PRIMARY_KIND, "light");
             out.setInteger(PRIMARY_TEXTURE, light.getTexture());
+            out.setInteger(LIGHT_FACE_TEXTURE,light.getFaceTexture());
             out.setInteger(LIGHT_LEVEL, light.getLightLevel());
             out.setBoolean(SMALL_INPUT,light.isSmallInput());out.setBoolean(SLAB_TILE_SIDES,light.isSlabTileSides());
             out.setInteger(TRIGGER, light.getTrigger());
@@ -146,6 +150,7 @@ public final class ProgrammableSettings {
                 out.setTag(FACE_TEXTURES, faces);
             }
             if (isDisplay(block)) {
+                out.setInteger(PRIMARY_SURFACE,screen.getSurfaceTexture(0));out.setInteger(SECONDARY_SURFACE,screen.getSurfaceTexture(1));
                 out.setString(PRIMARY_KIND, "screen");
                 out.setString(PRIMARY_TEXTURE, screen.getSelectedScreen());
                 out.setInteger(TRIGGER, screen.isRedstoneEnabled()
@@ -159,7 +164,7 @@ public final class ProgrammableSettings {
                 out.setBoolean(SMALL_INPUT, screen.isSmallInput());
                 out.setInteger(WALL_POSITION, screen.getWallPosition(1));
             }
-            if ((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs))
+            if (block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block))
                 out.setBoolean(SLAB_TILE_SIDES, screen.isSlabTileSides());
             if (block instanceof BlockProgrammableWall
                     && ((BlockProgrammableWall) block).isDiagonalShape())
@@ -191,7 +196,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
             out.setInteger(TRIGGER, door.getTrigger());
-            out.setInteger(DOOR_DESIGN, door.getDesign());
+            out.setInteger(DOOR_DESIGN, door.getDesign());out.setInteger(DOOR_FACE_TEXTURE,door.getFaceTexture());
             out.setInteger(DOOR_DETAIL, door.getDetail());
             out.setBoolean(FRAMED, door.isFramed());
             out.setInteger(DOOR_SLIDE_DIRECTION, door.getSlideDirection());
@@ -331,6 +336,7 @@ public final class ProgrammableSettings {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
             int trigger = number(values, TRIGGER, light.getTrigger());
             if (!SpaceDoorData.validTrigger(trigger)) trigger = light.getTrigger();
+            if(values.hasKey(LIGHT_FACE_TEXTURE,3))light.setFaceTexture(values.getInteger(LIGHT_FACE_TEXTURE));
             int primary = light.getTexture();
             if ("light".equals(values.getString(PRIMARY_KIND))
                     && values.hasKey(PRIMARY_TEXTURE, 3))
@@ -370,6 +376,8 @@ public final class ProgrammableSettings {
                 applicable = true;
             }
             if (isDisplay(block)) {
+                if(values.hasKey(PRIMARY_SURFACE,3)){screen.setSurfaceTexture(0,values.getInteger(PRIMARY_SURFACE));applicable=true;}
+                if(values.hasKey(SECONDARY_SURFACE,3)){screen.setSurfaceTexture(1,values.getInteger(SECONDARY_SURFACE));applicable=true;}
                 if ("screen".equals(values.getString(PRIMARY_KIND))
                         && values.hasKey(PRIMARY_TEXTURE, 8)
                         && validScreen(values.getString(PRIMARY_TEXTURE))) {
@@ -404,7 +412,7 @@ public final class ProgrammableSettings {
                     screen.setWallPosition(values.getInteger(WALL_POSITION)); applicable = true;
                 }
             }
-            if ((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs) && values.hasKey(SLAB_TILE_SIDES, 1)) {
+            if ((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block)) && values.hasKey(SLAB_TILE_SIDES, 1)) {
                 screen.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES)); applicable = true;
             }
             if (block instanceof BlockProgrammableWall
@@ -450,6 +458,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
+            if(values.hasKey(DOOR_FACE_TEXTURE,3)){door.setFaceTexture(values.getInteger(DOOR_FACE_TEXTURE));applicable=true;}
             int trigger = number(values, TRIGGER, door.getTrigger());
             if (!SpaceDoorData.validTrigger(trigger)) trigger = door.getTrigger();
             if (values.hasKey(TRIGGER) || values.hasKey(DOOR_DESIGN)

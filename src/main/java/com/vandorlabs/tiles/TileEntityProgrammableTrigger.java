@@ -13,8 +13,8 @@ public final class TileEntityProgrammableTrigger extends TileEntityAnimatedScree
     }
 
     public void configure(int off, int on, int channel) {
-        if (off < 0 || off >= ScreenHousingTextures.IDS.length
-                || on < 0 || on >= ScreenHousingTextures.IDS.length
+        if (off < 0 || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(off)
+                || on < 0 || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(on)
                 || channel < 0) return;
         setHousingTexture(off);
         onTexture = on;

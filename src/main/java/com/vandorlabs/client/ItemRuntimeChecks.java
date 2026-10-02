@@ -277,7 +277,7 @@ final class ItemRuntimeChecks {
             ItemStack last = new ItemStack(block);
             net.minecraft.nbt.NBTTagCompound tag = new net.minecraft.nbt.NBTTagCompound();
             tag.setInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,
-                    com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1);
+                    com.vandorlabs.tiles.ScreenHousingTextures.choiceAt(com.vandorlabs.tiles.ScreenHousingTextures.IDS.length - 1));
             last.setTagInfo("BlockEntityTag", tag);
             net.minecraft.client.renderer.block.model.IBakedModel a =
                     mc.getRenderItem().getItemModelMesher().getItemModel(first);

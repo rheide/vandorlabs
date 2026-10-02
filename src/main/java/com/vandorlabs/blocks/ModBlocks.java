@@ -550,7 +550,7 @@ public class ModBlocks {
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int choice = tag == null ? 0 : com.vandorlabs.tiles.ScreenHousingTextures.clamp(
                     tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
-            return new ModelResourceLocation(variants[choice], "inventory");
+            return new ModelResourceLocation(variants[com.vandorlabs.tiles.ScreenHousingTextures.localIndex(choice)], "inventory");
         });
     }
 
@@ -572,7 +572,7 @@ public class ModBlocks {
                     tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
             boolean tileSides = tag == null || !tag.hasKey("SlabTileSides", 1)
                     || tag.getBoolean("SlabTileSides");
-            return new ModelResourceLocation(variants[choice * 2 + (tileSides ? 1 : 0)],
+            return new ModelResourceLocation(variants[com.vandorlabs.tiles.ScreenHousingTextures.localIndex(choice) * 2 + (tileSides ? 1 : 0)],
                     "inventory");
         });
     }
@@ -598,7 +598,7 @@ public class ModBlocks {
             boolean lit = tag == null || ((!tag.hasKey("LightOn")
                     || tag.getBoolean("LightOn"))
                     && (!tag.hasKey("LightLevel", 3) || tag.getInteger("LightLevel") > 0));
-            return new ModelResourceLocation(variants[choice * 2 + (lit ? 1 : 0)],
+            return new ModelResourceLocation(variants[com.vandorlabs.tiles.ScreenHousingTextures.localIndex(choice) * 2 + (lit ? 1 : 0)],
                     "inventory");
         });
     }
@@ -622,6 +622,20 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
         com.vandorlabs.client.DoorRenderModels.clear();
+        String[] shapes={"programmable_block","programmable_trapdoor","programmable_diagonal_trapdoor",
+                "programmable_trigger_block","programmable_wall","programmable_diagonal_wall",
+                "programmable_porthole_wall","programmable_porthole_block","programmable_slab"};
+        for(String shape:shapes)for(String suffix:shape.equals("programmable_slab")?new String[]{"_fit","_tile"}:new String[]{""}) {
+            ModelResourceLocation source=new ModelResourceLocation("vandorlabs:configured/"+shape+"_dark_wall_panel"+suffix,"inventory");
+            net.minecraft.client.renderer.block.model.IBakedModel base=event.getModelRegistry().getObject(source);
+            if(base==null)continue;
+            for(int i=com.vandorlabs.tiles.ScreenHousingTextures.LEGACY_COUNT;i<com.vandorlabs.tiles.ScreenHousingTextures.IDS.length;i++) {
+                ModelResourceLocation target=new ModelResourceLocation("vandorlabs:configured/"+shape+"_"+com.vandorlabs.tiles.ScreenHousingTextures.IDS[i]+suffix,"inventory");
+                event.getModelRegistry().putObject(target,new com.vandorlabs.client.RetexturedItemModel(base,
+                    net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(i))));
+            }
+        }
+
         for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())) {
             if(VandorLabs.MODID.equals(location.getResourceDomain()) && (location.getResourcePath().equals("luxury_seat")||location.getResourcePath().equals("military_seat")))
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConnectedSeatModel(event.getModelRegistry().getObject(location)));

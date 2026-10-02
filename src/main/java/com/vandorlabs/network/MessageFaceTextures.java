@@ -37,7 +37,7 @@ public final class MessageFaceTextures implements IMessage {
                 net.minecraft.block.Block block = player.world.getBlockState(msg.pos).getBlock();
                 if (block != ModBlocks.PROGRAMMABLE_BLOCK && block != ModBlocks.PROGRAMMABLE_SLAB && block != ModBlocks.PROGRAMMABLE_STAIRS) return;
                 for (int choice : msg.choices)
-                    if (choice < -1 || choice >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length) return;
+                    if (choice < -1 || (choice!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(choice))) return;
                 ContainerAnimatedScreenSelector container = (ContainerAnimatedScreenSelector) player.openContainer;
                 TileEntity tile = player.world.getTileEntity(msg.pos);
                 if (tile != container.getTileEntity() || !container.canInteractWith(player)) return;

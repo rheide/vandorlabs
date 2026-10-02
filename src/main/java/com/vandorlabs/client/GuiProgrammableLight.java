@@ -29,7 +29,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     private int housing;
     private int trigger;
     private boolean small,tileSides;
-    private HousingTextureList housingList;
+    private HousingTextureList housingList,faceList;
     private GuiTextField channelField;
     private boolean draggingLevel;
     private static final int SLIDER_W = 286;
@@ -38,7 +38,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
         this.tile = tile;
         small=tile.isSmallInput();tileSides=tile.isSlabTileSides();
-        selected = tile.getTexture();
+        selected = tile.getFaceTexture();
         level = tile.getLightLevel();
         join = tile.isJoin();
         housing = tile.getHousingTexture();
@@ -56,9 +56,10 @@ public final class GuiProgrammableLight extends GuiContainer {
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
-        housingList = new HousingTextureList(guiLeft + 252, guiTop + 40, 148, housing);
-        buttonList.add(new GuiButton(103,guiLeft+162,guiTop+122,84,20,sizeLabel()));
-        buttonList.add(new GuiButton(104,guiLeft+252,guiTop+140,156,20,sidesLabel()));
+        faceList=new HousingTextureList(guiLeft+12,guiTop+40,190,selected);
+        housingList = new HousingTextureList(guiLeft + 218, guiTop + 40, 182, housing);
+        buttonList.add(new GuiButton(103,guiLeft+12,guiTop+140,190,20,sizeLabel()));
+        buttonList.add(new GuiButton(104,guiLeft+218,guiTop+140,190,20,sidesLabel()));
         buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 214,
                 96, 20, joinLabel()));
         buttonList.add(new GuiButton(102, guiLeft + 112, guiTop + 214,
@@ -93,7 +94,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         int channel = channel();
         if (channel < 0) return;
         tile.setSmallInput(small);tile.setSlabTileSides(tileSides);
-        tile.configure(selected, level, join, channel, housing, trigger);
+        tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, channel, housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
                 tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides));
     }
@@ -109,6 +110,8 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
+        int before=faceList.selected();
+        if(faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){selected=faceList.selected();send();}return;}
         if (housingList.click(mouseX, mouseY, button)) {
             if (housing != housingList.selected()) {
                 housing = housingList.selected();
@@ -117,17 +120,6 @@ public final class GuiProgrammableLight extends GuiContainer {
             return;
         }
         if (button == 0) {
-            int x = guiLeft + 12;
-            int y = guiTop + 27;
-            if (mouseX >= x && mouseX < x + 140
-                    && mouseY >= y && mouseY < y + ProgrammableLightTextures.IDS.length * 20) {
-                int choice = (mouseY - y) / 20;
-                if (choice != selected) {
-                    selected = choice;
-                    send();
-                }
-                return;
-            }
             if (mouseX >= guiLeft + 12 && mouseX <= guiLeft + 318
                     && mouseY >= guiTop + 168 && mouseY <= guiTop + 182) {
                 draggingLevel = true;
@@ -141,19 +133,20 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override protected void mouseClickMove(int mouseX, int mouseY,
             int button, long elapsed) {
-        if (housingList.drag(mouseY)) return;
+        if (faceList.drag(mouseY) || housingList.drag(mouseY)) return;
         if (draggingLevel && button == 0) setLevelFromMouse(mouseX);
         else super.mouseClickMove(mouseX, mouseY, button, elapsed);
     }
 
     @Override protected void mouseReleased(int mouseX, int mouseY, int button) {
         draggingLevel = false;
-        housingList.release();
+        faceList.release();housingList.release();
         super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
+        faceList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
         housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1,
                 Mouse.getEventDWheel());
@@ -208,27 +201,10 @@ public final class GuiProgrammableLight extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.housing"),
-                guiLeft + 252, guiTop + 27, 0xFFD8D8D8);
+                guiLeft + 218, guiTop + 27, 0xFFD8D8D8);
         housingList.draw(fontRenderer, mouseX, mouseY);
-        for (int i = 0; i < ProgrammableLightTextures.IDS.length; i++) {
-            int y = guiTop + 27 + i * 20;
-            boolean hovered = mouseX >= guiLeft + 12 && mouseX < guiLeft + 152
-                    && mouseY >= y && mouseY < y + 20;
-            drawRect(guiLeft + 12, y, guiLeft + 152, y + 19,
-                    selected == i ? 0xFF2A4A6A : hovered ? 0xFF1A1A20 : 0xFF0A0A0C);
-            fontRenderer.drawStringWithShadow(I18n.format("tile.vandorlabs."
-                    + ProgrammableLightTextures.IDS[i] + ".name"),
-                    guiLeft + 17, y + 7, selected == i ? 0xFFFFE08A : 0xFFD8D8D8);
-        }
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.preview"),
-                guiLeft + 168, guiTop + 28, 0xFFD8D8D8);
-        drawRect(guiLeft + 166, guiTop + 41, guiLeft + 238,
-                guiTop + 113, 0xFF505058);
-        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(
-                ProgrammableLightTextures.texture(selected, tile.isOn() && level > 0));
-        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        GlStateManager.color(1F, 1F, 1F, 1F);
-        drawTexturedModalRect(guiLeft + 169, guiTop + 44, sprite, 66, 66);
+        fontRenderer.drawString("Light texture",guiLeft+12,guiTop+27,0xFFD8D8D8);
+        faceList.draw(fontRenderer,mouseX,mouseY);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level") + ": " + level,
                 guiLeft + 13, guiTop + 156, 0xFFD8D8D8);
         drawRect(guiLeft + 16, guiTop + 173, guiLeft + 16 + SLIDER_W,

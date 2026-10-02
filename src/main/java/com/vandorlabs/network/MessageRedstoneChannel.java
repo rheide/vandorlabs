@@ -86,7 +86,7 @@ public class MessageRedstoneChannel implements IMessage {
             player.getServerWorld().addScheduledTask(() -> {
                 if (message.pos == null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)
                         || (message.updateSide && (message.sideTexture < 0
-                        || message.sideTexture >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length))
+                        || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.sideTexture)))
                         || (message.updateShape && (message.shape < 0 || message.shape > 2
                         || !player.capabilities.isCreativeMode))) return;
                 TileEntity tile = player.world.getTileEntity(message.pos);

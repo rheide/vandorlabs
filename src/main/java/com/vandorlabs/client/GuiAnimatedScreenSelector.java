@@ -52,6 +52,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private static final int LIST_ROWS = 8;
     private static final int LIST_H = ROW_H * LIST_ROWS;
 
+    private SurfaceTexturePicker surfacePicker;
     private final TileEntityAnimatedScreenSelector te;
     private final BlockPos pos;
     private final List<Entry> entries = new ArrayList<>();
@@ -181,6 +182,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
+        surfacePicker=new SurfaceTexturePicker(te,te.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableConsole);
+        surfacePicker.init(guiLeft,guiTop,xSize,ySize);
         Keyboard.enableRepeatEvents(true);
         int x = (width - xSize) / 2;
         int y = (height - ySize) / 2;
@@ -339,6 +342,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if(surfacePicker.click(mouseX,mouseY,mouseButton))return;
         if (housingList.click(mouseX, mouseY, mouseButton)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();
@@ -398,6 +402,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
+        surfacePicker.release();
         draggingScrollbar = false;
         if (housingList != null) housingList.release();
         draggingInputScrollbar = false;
@@ -407,6 +412,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
             long timeSinceLastClick) {
+        if(surfacePicker.drag(mouseY))return;
         if (housingList != null && housingList.drag(mouseY)) return;
         if (draggingScrollbar) {
             dragScrollbarTo(mouseY);
@@ -434,6 +440,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
+        if(surfacePicker.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel()))return;
         int wheel = Mouse.getEventDWheel();
         if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
@@ -576,6 +583,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         housingList.draw(fontRenderer, mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
         channelField.drawTextBox();
+        surfacePicker.draw(fontRenderer,mouseX,mouseY);
         // Hovered-row tooltip: family name plus which variant it addresses.
         // The selected row shows its live variant; other pairs show both.
         if (mouseX >= listLeft && mouseX < listRight

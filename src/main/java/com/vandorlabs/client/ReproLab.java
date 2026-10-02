@@ -332,7 +332,7 @@ public class ReproLab {
                 galleryFeet+2, -11, 180, 5));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
-        for (int page = 0; page < (com.vandorlabs.tiles.ScreenHousingTextures.IDS.length + 9) / 10; page++)
+        for (int page = 0; page < (com.vandorlabs.tiles.ScreenHousingTextures.LEGACY_COUNT + 9) / 10; page++)
             SHOTS.add(new Shot("gallery_finish_overview_" + page, GALLERY_X + .5D,
                     galleryFeet + 3.0D, -26.0D, 0.0F, 5.0F));
         for (String motion : new String[]{"sliding", "rotating"}) {

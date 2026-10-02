@@ -9,6 +9,9 @@ import net.minecraft.world.EnumSkyBlock;
 /** Per-block artwork, switch state and emitted light level. */
 public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelector {
     private int texture;
+    private int faceTexture=-1;
+    public int getFaceTexture(){return faceTexture<0?ScreenHousingTextures.lightIndex(texture):faceTexture;}
+    public void setFaceTexture(int choice){int next=ScreenHousingTextures.clamp(choice);if(faceTexture==next)return;faceTexture=next;changed();}
     private int lightLevel = 15;
     private boolean on = true;
     private boolean join;
@@ -141,6 +144,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setInteger("LightTexture", texture);
+        tag.setInteger("LightFaceTexture",faceTexture);
         tag.setInteger("LightLevel", lightLevel);
         tag.setBoolean("LightOn", on);
         tag.setBoolean("LightJoin", join);
@@ -151,6 +155,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
+        faceTexture=tag.hasKey("LightFaceTexture",3) && tag.getInteger("LightFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("LightFaceTexture")):-1;
         texture = ProgrammableLightTextures.clamp(tag.getInteger("LightTexture"));
         lightLevel = tag.hasKey("LightLevel", 3)
                 ? Math.max(0, Math.min(15, tag.getInteger("LightLevel"))) : 15;

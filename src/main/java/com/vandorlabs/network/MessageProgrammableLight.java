@@ -75,9 +75,9 @@ public final class MessageProgrammableLight implements IMessage {
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(msg.trigger)
                         || msg.texture < 0
-                        || msg.texture >= com.vandorlabs.tiles.ProgrammableLightTextures.IDS.length
+                        || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.texture)
                         || msg.housing < 0
-                        || msg.housing >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length
+                        || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.housing)
                         || msg.level < 0 || msg.level > 15 || msg.channel < 0
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector)) return;
@@ -92,8 +92,9 @@ public final class MessageProgrammableLight implements IMessage {
                         instanceof com.vandorlabs.blocks.BlockProgrammableLight)) return;
                 ((TileEntityProgrammableLight)tile).setSmallInput(msg.small);
                 ((TileEntityProgrammableLight)tile).setSlabTileSides(msg.tileSides);
+                ((TileEntityProgrammableLight)tile).setFaceTexture(msg.texture);
                 ((TileEntityProgrammableLight) tile).configure(
-                        msg.texture, msg.level, msg.join, msg.channel, msg.housing, msg.trigger);
+                        ((TileEntityProgrammableLight)tile).getTexture(), msg.level, msg.join, msg.channel, msg.housing, msg.trigger);
             });
             return null;
         }

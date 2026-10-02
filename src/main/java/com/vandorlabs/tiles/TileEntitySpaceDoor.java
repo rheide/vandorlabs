@@ -23,7 +23,10 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
             MOTION_MODELS[i] = new ResourceLocation("vandorlabs",
                     modelId(2, (i & 2) != 0, (i & 1) != 0));
     }
-    private int design=2, detail=1;
+    private int design=2, detail=1,faceTexture=-1;
+    public int getFaceTexture(){return faceTexture;}
+    public void setFaceTexture(int choice){faceTexture=choice<0?-1:ScreenHousingTextures.clamp(choice);markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
+
     private int slideDirection;
     private boolean framed=true, sliding;
     private boolean middle, hinges=true, panel=true;
@@ -135,6 +138,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         super.writeToNBT(tag);
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
+        tag.setInteger("DoorFaceTexture",faceTexture);
         tag.setInteger("SpaceDoorPlacementDepth", placementDepth);
         return tag;
     }
@@ -144,10 +148,12 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         NBTTagCompound tag=new NBTTagCompound();
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
+        tag.setInteger("DoorFaceTexture",faceTexture);
         tag.setInteger("SpaceDoorChannel",getRedstoneChannel());
         return tag;
     }
     public void applyItemSettings(NBTTagCompound tag) {
+        setFaceTexture(tag.hasKey("DoorFaceTexture",3)?tag.getInteger("DoorFaceTexture"):-1);
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         configure(data.design,data.detail,data.framed,data.direction,data.middle,data.sliding,data.hinges,data.trigger,data.panel);
@@ -155,6 +161,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
+        faceTexture=tag.hasKey("DoorFaceTexture",3) && tag.getInteger("DoorFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("DoorFaceTexture")):-1;
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         design=data.design; detail=data.detail; framed=data.framed; slideDirection=data.direction;
@@ -180,7 +187,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     @Override public void onLoad() { super.onLoad(); migrateLegacyMotion(); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11; }
-    public boolean hasGlass() { return hasGlassDesign(design); }
+    public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
     @Override public boolean shouldRenderInPass(int pass) {
         return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }

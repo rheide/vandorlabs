@@ -1,0 +1,1383 @@
+[
+  {
+    "id": "light_porthole",
+    "label": "Porthole",
+    "category": "Lights",
+    "source": "porthole_on",
+    "unlit": "porthole_off"
+  },
+  {
+    "id": "light_light_column_wall",
+    "label": "Light Column",
+    "category": "Lights",
+    "source": "light_column_wall_on",
+    "unlit": "light_column_wall_off"
+  },
+  {
+    "id": "light_slatted_lamp",
+    "label": "Slatted Lamp",
+    "category": "Lights",
+    "source": "slatted_lamp_on",
+    "unlit": "slatted_lamp_off"
+  },
+  {
+    "id": "light_window_lamp",
+    "label": "Window Lamp",
+    "category": "Lights",
+    "source": "window_lamp_on",
+    "unlit": "window_lamp_off"
+  },
+  {
+    "id": "light_lightbar_wall",
+    "label": "Lightbar",
+    "category": "Lights",
+    "source": "lightbar_wall_on",
+    "unlit": "lightbar_wall_off"
+  },
+  {
+    "id": "light_logo",
+    "label": "Logo",
+    "category": "Lights",
+    "source": "logo_on",
+    "unlit": "logo_off"
+  },
+  {
+    "id": "door_observation_low",
+    "label": "Observation Small",
+    "category": "Doors",
+    "source": "space_doors/low/observation",
+    "rectangular": true,
+    "crop": true,
+    "design": 0,
+    "detail": 0
+  },
+  {
+    "id": "door_observation_medium",
+    "label": "Observation Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/observation",
+    "rectangular": true,
+    "crop": true,
+    "design": 0,
+    "detail": 1
+  },
+  {
+    "id": "door_observation_high",
+    "label": "Observation Large",
+    "category": "Doors",
+    "source": "space_doors/high/observation",
+    "rectangular": true,
+    "crop": true,
+    "design": 0,
+    "detail": 2
+  },
+  {
+    "id": "door_airlock_low",
+    "label": "Airlock Small",
+    "category": "Doors",
+    "source": "space_doors/low/airlock",
+    "rectangular": true,
+    "crop": true,
+    "design": 1,
+    "detail": 0
+  },
+  {
+    "id": "door_airlock_medium",
+    "label": "Airlock Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/airlock",
+    "rectangular": true,
+    "crop": true,
+    "design": 1,
+    "detail": 1
+  },
+  {
+    "id": "door_airlock_high",
+    "label": "Airlock Large",
+    "category": "Doors",
+    "source": "space_doors/high/airlock",
+    "rectangular": true,
+    "crop": true,
+    "design": 1,
+    "detail": 2
+  },
+  {
+    "id": "door_standard_low",
+    "label": "Standard Small",
+    "category": "Doors",
+    "source": "space_doors/low/standard",
+    "rectangular": true,
+    "crop": true,
+    "design": 2,
+    "detail": 0
+  },
+  {
+    "id": "door_standard_medium",
+    "label": "Standard Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/standard",
+    "rectangular": true,
+    "crop": true,
+    "design": 2,
+    "detail": 1
+  },
+  {
+    "id": "door_standard_high",
+    "label": "Standard Large",
+    "category": "Doors",
+    "source": "space_doors/high/standard",
+    "rectangular": true,
+    "crop": true,
+    "design": 2,
+    "detail": 2
+  },
+  {
+    "id": "door_security_low",
+    "label": "Security Small",
+    "category": "Doors",
+    "source": "space_doors/low/security",
+    "rectangular": true,
+    "crop": true,
+    "design": 3,
+    "detail": 0
+  },
+  {
+    "id": "door_security_medium",
+    "label": "Security Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/security",
+    "rectangular": true,
+    "crop": true,
+    "design": 3,
+    "detail": 1
+  },
+  {
+    "id": "door_security_high",
+    "label": "Security Large",
+    "category": "Doors",
+    "source": "space_doors/high/security",
+    "rectangular": true,
+    "crop": true,
+    "design": 3,
+    "detail": 2
+  },
+  {
+    "id": "door_reactor_low",
+    "label": "Reactor Small",
+    "category": "Doors",
+    "source": "space_doors/low/reactor",
+    "rectangular": true,
+    "crop": true,
+    "design": 4,
+    "detail": 0
+  },
+  {
+    "id": "door_reactor_medium",
+    "label": "Reactor Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/reactor",
+    "rectangular": true,
+    "crop": true,
+    "design": 4,
+    "detail": 1
+  },
+  {
+    "id": "door_reactor_high",
+    "label": "Reactor Large",
+    "category": "Doors",
+    "source": "space_doors/high/reactor",
+    "rectangular": true,
+    "crop": true,
+    "design": 4,
+    "detail": 2
+  },
+  {
+    "id": "door_door_viewport_low",
+    "label": "Viewport Small",
+    "category": "Doors",
+    "source": "space_doors/low/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 5,
+    "detail": 0
+  },
+  {
+    "id": "door_door_viewport_medium",
+    "label": "Viewport Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 5,
+    "detail": 1
+  },
+  {
+    "id": "door_door_viewport_high",
+    "label": "Viewport Large",
+    "category": "Doors",
+    "source": "space_doors/high/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 5,
+    "detail": 2
+  },
+  {
+    "id": "door_door_laboratory_low",
+    "label": "Laboratory Small",
+    "category": "Doors",
+    "source": "space_doors/low/door_laboratory",
+    "rectangular": true,
+    "crop": true,
+    "design": 6,
+    "detail": 0
+  },
+  {
+    "id": "door_door_laboratory_medium",
+    "label": "Laboratory Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/door_laboratory",
+    "rectangular": true,
+    "crop": true,
+    "design": 6,
+    "detail": 1
+  },
+  {
+    "id": "door_door_laboratory_high",
+    "label": "Laboratory Large",
+    "category": "Doors",
+    "source": "space_doors/high/door_laboratory",
+    "rectangular": true,
+    "crop": true,
+    "design": 6,
+    "detail": 2
+  },
+  {
+    "id": "door_door_cargo_low",
+    "label": "Cargo Small",
+    "category": "Doors",
+    "source": "space_doors/low/door_cargo",
+    "rectangular": true,
+    "crop": true,
+    "design": 7,
+    "detail": 0
+  },
+  {
+    "id": "door_door_cargo_medium",
+    "label": "Cargo Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/door_cargo",
+    "rectangular": true,
+    "crop": true,
+    "design": 7,
+    "detail": 1
+  },
+  {
+    "id": "door_door_cargo_high",
+    "label": "Cargo Large",
+    "category": "Doors",
+    "source": "space_doors/high/door_cargo",
+    "rectangular": true,
+    "crop": true,
+    "design": 7,
+    "detail": 2
+  },
+  {
+    "id": "door_door_ventilation_low",
+    "label": "Ventilation Small",
+    "category": "Doors",
+    "source": "space_doors/low/door_ventilation",
+    "rectangular": true,
+    "crop": true,
+    "design": 8,
+    "detail": 0
+  },
+  {
+    "id": "door_door_ventilation_medium",
+    "label": "Ventilation Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/door_ventilation",
+    "rectangular": true,
+    "crop": true,
+    "design": 8,
+    "detail": 1
+  },
+  {
+    "id": "door_door_ventilation_high",
+    "label": "Ventilation Large",
+    "category": "Doors",
+    "source": "space_doors/high/door_ventilation",
+    "rectangular": true,
+    "crop": true,
+    "design": 8,
+    "detail": 2
+  },
+  {
+    "id": "door_lift_cargo_lift_low",
+    "label": "Cargo Lift Small",
+    "category": "Doors",
+    "source": "space_doors/low/lift_cargo_lift",
+    "rectangular": true,
+    "crop": true,
+    "design": 9,
+    "detail": 0
+  },
+  {
+    "id": "door_lift_cargo_lift_medium",
+    "label": "Cargo Lift Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/lift_cargo_lift",
+    "rectangular": true,
+    "crop": true,
+    "design": 9,
+    "detail": 1
+  },
+  {
+    "id": "door_lift_cargo_lift_high",
+    "label": "Cargo Lift Large",
+    "category": "Doors",
+    "source": "space_doors/high/lift_cargo_lift",
+    "rectangular": true,
+    "crop": true,
+    "design": 9,
+    "detail": 2
+  },
+  {
+    "id": "door_lift_blast_shield_low",
+    "label": "Blast Shield Small",
+    "category": "Doors",
+    "source": "space_doors/low/lift_blast_shield",
+    "rectangular": true,
+    "crop": true,
+    "design": 10,
+    "detail": 0
+  },
+  {
+    "id": "door_lift_blast_shield_medium",
+    "label": "Blast Shield Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/lift_blast_shield",
+    "rectangular": true,
+    "crop": true,
+    "design": 10,
+    "detail": 1
+  },
+  {
+    "id": "door_lift_blast_shield_high",
+    "label": "Blast Shield Large",
+    "category": "Doors",
+    "source": "space_doors/high/lift_blast_shield",
+    "rectangular": true,
+    "crop": true,
+    "design": 10,
+    "detail": 2
+  },
+  {
+    "id": "door_lift_glazed_hangar_low",
+    "label": "Glazed Hangar Small",
+    "category": "Doors",
+    "source": "space_doors/low/lift_glazed_hangar",
+    "rectangular": true,
+    "crop": true,
+    "design": 11,
+    "detail": 0
+  },
+  {
+    "id": "door_lift_glazed_hangar_medium",
+    "label": "Glazed Hangar Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/lift_glazed_hangar",
+    "rectangular": true,
+    "crop": true,
+    "design": 11,
+    "detail": 1
+  },
+  {
+    "id": "door_lift_glazed_hangar_high",
+    "label": "Glazed Hangar Large",
+    "category": "Doors",
+    "source": "space_doors/high/lift_glazed_hangar",
+    "rectangular": true,
+    "crop": true,
+    "design": 11,
+    "detail": 2
+  },
+  {
+    "id": "door_lift_quarantine_seal_low",
+    "label": "Quarantine Seal Small",
+    "category": "Doors",
+    "source": "space_doors/low/lift_quarantine_seal",
+    "rectangular": true,
+    "crop": true,
+    "design": 12,
+    "detail": 0
+  },
+  {
+    "id": "door_lift_quarantine_seal_medium",
+    "label": "Quarantine Seal Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/lift_quarantine_seal",
+    "rectangular": true,
+    "crop": true,
+    "design": 12,
+    "detail": 1
+  },
+  {
+    "id": "door_lift_quarantine_seal_high",
+    "label": "Quarantine Seal Large",
+    "category": "Doors",
+    "source": "space_doors/high/lift_quarantine_seal",
+    "rectangular": true,
+    "crop": true,
+    "design": 12,
+    "detail": 2
+  },
+  {
+    "id": "door_lift_reactor_barrier_low",
+    "label": "Reactor Barrier Small",
+    "category": "Doors",
+    "source": "space_doors/low/lift_reactor_barrier",
+    "rectangular": true,
+    "crop": true,
+    "design": 13,
+    "detail": 0
+  },
+  {
+    "id": "door_lift_reactor_barrier_medium",
+    "label": "Reactor Barrier Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/lift_reactor_barrier",
+    "rectangular": true,
+    "crop": true,
+    "design": 13,
+    "detail": 1
+  },
+  {
+    "id": "door_lift_reactor_barrier_high",
+    "label": "Reactor Barrier Large",
+    "category": "Doors",
+    "source": "space_doors/high/lift_reactor_barrier",
+    "rectangular": true,
+    "crop": true,
+    "design": 13,
+    "detail": 2
+  },
+  {
+    "id": "door_lift_modular_shutter_low",
+    "label": "Modular Shutter Small",
+    "category": "Doors",
+    "source": "space_doors/low/lift_modular_shutter",
+    "rectangular": true,
+    "crop": true,
+    "design": 14,
+    "detail": 0
+  },
+  {
+    "id": "door_lift_modular_shutter_medium",
+    "label": "Modular Shutter Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/lift_modular_shutter",
+    "rectangular": true,
+    "crop": true,
+    "design": 14,
+    "detail": 1
+  },
+  {
+    "id": "door_lift_modular_shutter_high",
+    "label": "Modular Shutter Large",
+    "category": "Doors",
+    "source": "space_doors/high/lift_modular_shutter",
+    "rectangular": true,
+    "crop": true,
+    "design": 14,
+    "detail": 2
+  },
+  {
+    "id": "screen_analysis_bare_gas_giant_static",
+    "label": "Analysis Bare Gas Giant",
+    "category": "Screens",
+    "source": "analysis_bare_gas_giant_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_bare_ice_planet_static",
+    "label": "Analysis Bare Ice Planet",
+    "category": "Screens",
+    "source": "analysis_bare_ice_planet_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_bare_station_static",
+    "label": "Analysis Bare Station",
+    "category": "Screens",
+    "source": "analysis_bare_station_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_bare_surface_map_static",
+    "label": "Analysis Bare Surface Map",
+    "category": "Screens",
+    "source": "analysis_bare_surface_map_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_bare_targeting_static",
+    "label": "Analysis Bare Targeting",
+    "category": "Screens",
+    "source": "analysis_bare_targeting_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_bare_terrestrial_static",
+    "label": "Analysis Bare Terrestrial",
+    "category": "Screens",
+    "source": "analysis_bare_terrestrial_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_framed_gas_giant_static",
+    "label": "Analysis Framed Gas Giant",
+    "category": "Screens",
+    "source": "analysis_framed_gas_giant_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_framed_ice_planet_static",
+    "label": "Analysis Framed Ice Planet",
+    "category": "Screens",
+    "source": "analysis_framed_ice_planet_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_framed_station_static",
+    "label": "Analysis Framed Station",
+    "category": "Screens",
+    "source": "analysis_framed_station_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_framed_surface_map_static",
+    "label": "Analysis Framed Surface Map",
+    "category": "Screens",
+    "source": "analysis_framed_surface_map_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_framed_targeting_static",
+    "label": "Analysis Framed Targeting",
+    "category": "Screens",
+    "source": "analysis_framed_targeting_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_analysis_framed_terrestrial_static",
+    "label": "Analysis Framed Terrestrial",
+    "category": "Screens",
+    "source": "analysis_framed_terrestrial_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_bare_engineering_static",
+    "label": "Bridge Bare Engineering",
+    "category": "Screens",
+    "source": "bridge_bare_engineering_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_bare_pilot_static",
+    "label": "Bridge Bare Pilot",
+    "category": "Screens",
+    "source": "bridge_bare_pilot_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_bare_sensors_static",
+    "label": "Bridge Bare Sensors",
+    "category": "Screens",
+    "source": "bridge_bare_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_bare_ship_status_static",
+    "label": "Bridge Bare Ship Status",
+    "category": "Screens",
+    "source": "bridge_bare_ship_status_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_framed_pilot_static",
+    "label": "Bridge Framed Pilot",
+    "category": "Screens",
+    "source": "bridge_framed_pilot_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_framed_sensors_static",
+    "label": "Bridge Framed Sensors",
+    "category": "Screens",
+    "source": "bridge_framed_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_bridge_framed_ship_status_static",
+    "label": "Bridge Framed Ship Status",
+    "category": "Screens",
+    "source": "bridge_framed_ship_status_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_biology_static",
+    "label": "Console Biology",
+    "category": "Screens",
+    "source": "console_biology_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_engineering_static",
+    "label": "Console Engineering",
+    "category": "Screens",
+    "source": "console_engineering_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_analysis_framed_gas_giant_static",
+    "label": "Analysis Framed Gas Giant",
+    "category": "Screens",
+    "source": "console_inputs/analysis_framed_gas_giant_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_analysis_framed_ice_planet_static",
+    "label": "Analysis Framed Ice Planet",
+    "category": "Screens",
+    "source": "console_inputs/analysis_framed_ice_planet_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_analysis_framed_surface_map_static",
+    "label": "Analysis Framed Surface Map",
+    "category": "Screens",
+    "source": "console_inputs/analysis_framed_surface_map_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_analysis_framed_terrestrial_static",
+    "label": "Analysis Framed Terrestrial",
+    "category": "Screens",
+    "source": "console_inputs/analysis_framed_terrestrial_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_bare_engineering_static",
+    "label": "Bridge Bare Engineering",
+    "category": "Screens",
+    "source": "console_inputs/bridge_bare_engineering_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_bare_pilot_static",
+    "label": "Bridge Bare Pilot",
+    "category": "Screens",
+    "source": "console_inputs/bridge_bare_pilot_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_bare_sensors_static",
+    "label": "Bridge Bare Sensors",
+    "category": "Screens",
+    "source": "console_inputs/bridge_bare_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_bare_ship_status_static",
+    "label": "Bridge Bare Ship Status",
+    "category": "Screens",
+    "source": "console_inputs/bridge_bare_ship_status_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_framed_engineering_static",
+    "label": "Bridge Framed Engineering",
+    "category": "Screens",
+    "source": "console_inputs/bridge_framed_engineering_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_framed_pilot_static",
+    "label": "Bridge Framed Pilot",
+    "category": "Screens",
+    "source": "console_inputs/bridge_framed_pilot_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_framed_sensors_static",
+    "label": "Bridge Framed Sensors",
+    "category": "Screens",
+    "source": "console_inputs/bridge_framed_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_bridge_framed_ship_status_static",
+    "label": "Bridge Framed Ship Status",
+    "category": "Screens",
+    "source": "console_inputs/bridge_framed_ship_status_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_console_controls_biology_controls_static",
+    "label": "Console Controls Biology Controls",
+    "category": "Screens",
+    "source": "console_inputs/console_controls_biology_controls_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_console_controls_communications_keyboard_static",
+    "label": "Console Controls Communications Keyboard",
+    "category": "Screens",
+    "source": "console_inputs/console_controls_communications_keyboard_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_console_controls_engineering_keyboard_static",
+    "label": "Console Controls Engineering Keyboard",
+    "category": "Screens",
+    "source": "console_inputs/console_controls_engineering_keyboard_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_console_controls_medical_keyboard_static",
+    "label": "Console Controls Medical Keyboard",
+    "category": "Screens",
+    "source": "console_inputs/console_controls_medical_keyboard_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_console_controls_navigation_controls_static",
+    "label": "Console Controls Navigation Controls",
+    "category": "Screens",
+    "source": "console_inputs/console_controls_navigation_controls_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_console_controls_sensor_controls_static",
+    "label": "Console Controls Sensor Controls",
+    "category": "Screens",
+    "source": "console_inputs/console_controls_sensor_controls_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_bare_door_controller_static",
+    "label": "Extra Bare Door Controller",
+    "category": "Screens",
+    "source": "console_inputs/extra_bare_door_controller_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_bare_engineering_charts_static",
+    "label": "Extra Bare Engineering Charts",
+    "category": "Screens",
+    "source": "console_inputs/extra_bare_engineering_charts_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_bare_personal_terminal_static",
+    "label": "Extra Bare Personal Terminal",
+    "category": "Screens",
+    "source": "console_inputs/extra_bare_personal_terminal_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_bare_viewscreen_static",
+    "label": "Extra Bare Viewscreen",
+    "category": "Screens",
+    "source": "console_inputs/extra_bare_viewscreen_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_framed_door_controller_static",
+    "label": "Extra Framed Door Controller",
+    "category": "Screens",
+    "source": "console_inputs/extra_framed_door_controller_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_framed_engineering_charts_static",
+    "label": "Extra Framed Engineering Charts",
+    "category": "Screens",
+    "source": "console_inputs/extra_framed_engineering_charts_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_framed_personal_terminal_static",
+    "label": "Extra Framed Personal Terminal",
+    "category": "Screens",
+    "source": "console_inputs/extra_framed_personal_terminal_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_extra_framed_viewscreen_static",
+    "label": "Extra Framed Viewscreen",
+    "category": "Screens",
+    "source": "console_inputs/extra_framed_viewscreen_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_input_surfaces_command_keypad_static",
+    "label": "Input Surfaces Command Keypad",
+    "category": "Screens",
+    "source": "console_inputs/input_surfaces_command_keypad_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_input_surfaces_engineering_faders_static",
+    "label": "Input Surfaces Engineering Faders",
+    "category": "Screens",
+    "source": "console_inputs/input_surfaces_engineering_faders_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_input_surfaces_keyboard_static",
+    "label": "Input Surfaces Keyboard",
+    "category": "Screens",
+    "source": "console_inputs/input_surfaces_keyboard_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_input_surfaces_keyboard_touchpad_static",
+    "label": "Input Surfaces Keyboard Touchpad",
+    "category": "Screens",
+    "source": "console_inputs/input_surfaces_keyboard_touchpad_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_input_surfaces_pilot_controls_static",
+    "label": "Input Surfaces Pilot Controls",
+    "category": "Screens",
+    "source": "console_inputs/input_surfaces_pilot_controls_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_input_surfaces_science_touchpad_static",
+    "label": "Input Surfaces Science Touchpad",
+    "category": "Screens",
+    "source": "console_inputs/input_surfaces_science_touchpad_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_sliders_buttons_button_clusters_sliders_static",
+    "label": "Sliders Buttons Button Clusters Sliders",
+    "category": "Screens",
+    "source": "console_inputs/sliders_buttons_button_clusters_sliders_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_sliders_buttons_button_matrix_sliders_static",
+    "label": "Sliders Buttons Button Matrix Sliders",
+    "category": "Screens",
+    "source": "console_inputs/sliders_buttons_button_matrix_sliders_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_sliders_buttons_environment_controls_static",
+    "label": "Sliders Buttons Environment Controls",
+    "category": "Screens",
+    "source": "console_inputs/sliders_buttons_environment_controls_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_sliders_buttons_pilot_faders_static",
+    "label": "Sliders Buttons Pilot Faders",
+    "category": "Screens",
+    "source": "console_inputs/sliders_buttons_pilot_faders_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_sliders_buttons_six_faders_static",
+    "label": "Sliders Buttons Six Faders",
+    "category": "Screens",
+    "source": "console_inputs/sliders_buttons_six_faders_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_sliders_buttons_twin_faders_transport_static",
+    "label": "Sliders Buttons Twin Faders Transport",
+    "category": "Screens",
+    "source": "console_inputs/sliders_buttons_twin_faders_transport_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_bare_biology_static",
+    "label": "Specialist Bare Biology",
+    "category": "Screens",
+    "source": "console_inputs/specialist_bare_biology_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_bare_medical_static",
+    "label": "Specialist Bare Medical",
+    "category": "Screens",
+    "source": "console_inputs/specialist_bare_medical_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_bare_science_static",
+    "label": "Specialist Bare Science",
+    "category": "Screens",
+    "source": "console_inputs/specialist_bare_science_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_bare_sensors_static",
+    "label": "Specialist Bare Sensors",
+    "category": "Screens",
+    "source": "console_inputs/specialist_bare_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_bare_starmap_static",
+    "label": "Specialist Bare Starmap",
+    "category": "Screens",
+    "source": "console_inputs/specialist_bare_starmap_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_bare_weapons_static",
+    "label": "Specialist Bare Weapons",
+    "category": "Screens",
+    "source": "console_inputs/specialist_bare_weapons_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_framed_biology_static",
+    "label": "Specialist Framed Biology",
+    "category": "Screens",
+    "source": "console_inputs/specialist_framed_biology_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_framed_medical_static",
+    "label": "Specialist Framed Medical",
+    "category": "Screens",
+    "source": "console_inputs/specialist_framed_medical_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_framed_science_static",
+    "label": "Specialist Framed Science",
+    "category": "Screens",
+    "source": "console_inputs/specialist_framed_science_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_framed_sensors_static",
+    "label": "Specialist Framed Sensors",
+    "category": "Screens",
+    "source": "console_inputs/specialist_framed_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_framed_starmap_static",
+    "label": "Specialist Framed Starmap",
+    "category": "Screens",
+    "source": "console_inputs/specialist_framed_starmap_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_specialist_framed_weapons_static",
+    "label": "Specialist Framed Weapons",
+    "category": "Screens",
+    "source": "console_inputs/specialist_framed_weapons_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_medical_static",
+    "label": "Console Medical",
+    "category": "Screens",
+    "source": "console_medical_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_navigation_static",
+    "label": "Console Navigation",
+    "category": "Screens",
+    "source": "console_navigation_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_sensors_static",
+    "label": "Console Sensors",
+    "category": "Screens",
+    "source": "console_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_signals_static",
+    "label": "Console Signals",
+    "category": "Screens",
+    "source": "console_signals_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_command_left_static",
+    "label": "Cruiser Command Left",
+    "category": "Screens",
+    "source": "cruiser_command_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_command_right_static",
+    "label": "Cruiser Command Right",
+    "category": "Screens",
+    "source": "cruiser_command_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_patrol_left_static",
+    "label": "Cruiser Patrol Left",
+    "category": "Screens",
+    "source": "cruiser_patrol_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_patrol_right_static",
+    "label": "Cruiser Patrol Right",
+    "category": "Screens",
+    "source": "cruiser_patrol_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_science_left_static",
+    "label": "Cruiser Science Left",
+    "category": "Screens",
+    "source": "cruiser_science_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_science_right_static",
+    "label": "Cruiser Science Right",
+    "category": "Screens",
+    "source": "cruiser_science_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_three_views_bottom_center_static",
+    "label": "Cruiser Three Views Bottom Center",
+    "category": "Screens",
+    "source": "cruiser_three_views_bottom_center_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_three_views_bottom_left_static",
+    "label": "Cruiser Three Views Bottom Left",
+    "category": "Screens",
+    "source": "cruiser_three_views_bottom_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_three_views_bottom_right_static",
+    "label": "Cruiser Three Views Bottom Right",
+    "category": "Screens",
+    "source": "cruiser_three_views_bottom_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_three_views_top_center_static",
+    "label": "Cruiser Three Views Top Center",
+    "category": "Screens",
+    "source": "cruiser_three_views_top_center_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_three_views_top_left_static",
+    "label": "Cruiser Three Views Top Left",
+    "category": "Screens",
+    "source": "cruiser_three_views_top_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_cruiser_three_views_top_right_static",
+    "label": "Cruiser Three Views Top Right",
+    "category": "Screens",
+    "source": "cruiser_three_views_top_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_engineering_screen_static",
+    "label": "Engineering Screen",
+    "category": "Screens",
+    "source": "engineering_screen_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_bare_door_controller_static",
+    "label": "Extra Bare Door Controller",
+    "category": "Screens",
+    "source": "extra_bare_door_controller_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_bare_engineering_charts_static",
+    "label": "Extra Bare Engineering Charts",
+    "category": "Screens",
+    "source": "extra_bare_engineering_charts_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_bare_personal_terminal_static",
+    "label": "Extra Bare Personal Terminal",
+    "category": "Screens",
+    "source": "extra_bare_personal_terminal_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_bare_viewscreen_static",
+    "label": "Extra Bare Viewscreen",
+    "category": "Screens",
+    "source": "extra_bare_viewscreen_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_framed_door_controller_static",
+    "label": "Extra Framed Door Controller",
+    "category": "Screens",
+    "source": "extra_framed_door_controller_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_framed_engineering_charts_static",
+    "label": "Extra Framed Engineering Charts",
+    "category": "Screens",
+    "source": "extra_framed_engineering_charts_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_framed_personal_terminal_static",
+    "label": "Extra Framed Personal Terminal",
+    "category": "Screens",
+    "source": "extra_framed_personal_terminal_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_extra_framed_viewscreen_static",
+    "label": "Extra Framed Viewscreen",
+    "category": "Screens",
+    "source": "extra_framed_viewscreen_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_science_biology_wide_left_static",
+    "label": "Science Biology Wide Left",
+    "category": "Screens",
+    "source": "science_biology_wide_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_science_biology_wide_right_static",
+    "label": "Science Biology Wide Right",
+    "category": "Screens",
+    "source": "science_biology_wide_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_chamfered_square_1_static",
+    "label": "Ship Chamfered Square 1",
+    "category": "Screens",
+    "source": "ship_chamfered_square_1_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_chamfered_square_2_static",
+    "label": "Ship Chamfered Square 2",
+    "category": "Screens",
+    "source": "ship_chamfered_square_2_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_chamfered_wide_1_left_static",
+    "label": "Ship Chamfered Wide 1 Left",
+    "category": "Screens",
+    "source": "ship_chamfered_wide_1_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_chamfered_wide_1_right_static",
+    "label": "Ship Chamfered Wide 1 Right",
+    "category": "Screens",
+    "source": "ship_chamfered_wide_1_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_chamfered_wide_2_left_static",
+    "label": "Ship Chamfered Wide 2 Left",
+    "category": "Screens",
+    "source": "ship_chamfered_wide_2_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_chamfered_wide_2_right_static",
+    "label": "Ship Chamfered Wide 2 Right",
+    "category": "Screens",
+    "source": "ship_chamfered_wide_2_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_crescent_explorer_static",
+    "label": "Ship Crescent Explorer",
+    "category": "Screens",
+    "source": "ship_crescent_explorer_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_freighter_static",
+    "label": "Ship Freighter",
+    "category": "Screens",
+    "source": "ship_freighter_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_research_cruiser_left_static",
+    "label": "Ship Research Cruiser Left",
+    "category": "Screens",
+    "source": "ship_research_cruiser_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_research_cruiser_right_static",
+    "label": "Ship Research Cruiser Right",
+    "category": "Screens",
+    "source": "ship_research_cruiser_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_rounded_square_1_static",
+    "label": "Ship Rounded Square 1",
+    "category": "Screens",
+    "source": "ship_rounded_square_1_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_rounded_square_2_static",
+    "label": "Ship Rounded Square 2",
+    "category": "Screens",
+    "source": "ship_rounded_square_2_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_rounded_wide_1_left_static",
+    "label": "Ship Rounded Wide 1 Left",
+    "category": "Screens",
+    "source": "ship_rounded_wide_1_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_rounded_wide_1_right_static",
+    "label": "Ship Rounded Wide 1 Right",
+    "category": "Screens",
+    "source": "ship_rounded_wide_1_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_rounded_wide_2_left_static",
+    "label": "Ship Rounded Wide 2 Left",
+    "category": "Screens",
+    "source": "ship_rounded_wide_2_left_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_ship_rounded_wide_2_right_static",
+    "label": "Ship Rounded Wide 2 Right",
+    "category": "Screens",
+    "source": "ship_rounded_wide_2_right_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_bare_biology_static",
+    "label": "Specialist Bare Biology",
+    "category": "Screens",
+    "source": "specialist_bare_biology_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_bare_medical_static",
+    "label": "Specialist Bare Medical",
+    "category": "Screens",
+    "source": "specialist_bare_medical_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_bare_science_static",
+    "label": "Specialist Bare Science",
+    "category": "Screens",
+    "source": "specialist_bare_science_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_bare_sensors_static",
+    "label": "Specialist Bare Sensors",
+    "category": "Screens",
+    "source": "specialist_bare_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_bare_starmap_static",
+    "label": "Specialist Bare Starmap",
+    "category": "Screens",
+    "source": "specialist_bare_starmap_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_bare_weapons_static",
+    "label": "Specialist Bare Weapons",
+    "category": "Screens",
+    "source": "specialist_bare_weapons_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_framed_biology_static",
+    "label": "Specialist Framed Biology",
+    "category": "Screens",
+    "source": "specialist_framed_biology_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_framed_medical_static",
+    "label": "Specialist Framed Medical",
+    "category": "Screens",
+    "source": "specialist_framed_medical_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_framed_science_static",
+    "label": "Specialist Framed Science",
+    "category": "Screens",
+    "source": "specialist_framed_science_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_framed_sensors_static",
+    "label": "Specialist Framed Sensors",
+    "category": "Screens",
+    "source": "specialist_framed_sensors_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_framed_starmap_static",
+    "label": "Specialist Framed Starmap",
+    "category": "Screens",
+    "source": "specialist_framed_starmap_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_specialist_framed_weapons_static",
+    "label": "Specialist Framed Weapons",
+    "category": "Screens",
+    "source": "specialist_framed_weapons_static",
+    "rectangular": true
+  },
+  {
+    "id": "screen_tactical_starmap_static",
+    "label": "Tactical Starmap",
+    "category": "Screens",
+    "source": "tactical_starmap_static",
+    "rectangular": true
+  }
+]

@@ -384,8 +384,8 @@ public class TEAnimatedScreenSelector
             setNeighborWorldLight(te);
             TextureAtlasSprite housing = wallSprite(te);
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks()
-                    .getAtlasSprite(com.vandorlabs.tiles.ProgrammableLightTextures.texture(
-                            light.getTexture(), light.isOn() && light.getLightLevel() > 0));
+                    .getAtlasSprite(ScreenHousingTextures.texture(
+                            light.getFaceTexture(), light.isOn() && light.getLightLevel() > 0));
             // The shared box/art quads have inward winding. Cull their front
             // sides so hidden rear housing cannot compete with the artwork
             // when distance reduces depth-buffer precision.
@@ -563,7 +563,9 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
         }
+        float uMin=0,uMax=1;
         bindTexture(texture);
+        if(te.getSurfaceTexture(0)>=0){double[] uv=bindSurface(te,0);vTop=(float)uv[0];vBottom=(float)uv[1];uMin=(float)uv[2];uMax=(float)uv[3];}
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
@@ -575,10 +577,10 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
-        buf.pos(quad.topLeft.x,quad.topLeft.y,quad.topLeft.z).tex(1,vTop).endVertex();
-        buf.pos(quad.topRight.x,quad.topRight.y,quad.topRight.z).tex(0,vTop).endVertex();
-        buf.pos(quad.bottomRight.x,quad.bottomRight.y,quad.bottomRight.z).tex(0,vBottom).endVertex();
-        buf.pos(quad.bottomLeft.x,quad.bottomLeft.y,quad.bottomLeft.z).tex(1,vBottom).endVertex();
+        buf.pos(quad.topLeft.x,quad.topLeft.y,quad.topLeft.z).tex(uMax,vTop).endVertex();
+        buf.pos(quad.topRight.x,quad.topRight.y,quad.topRight.z).tex(uMin,vTop).endVertex();
+        buf.pos(quad.bottomRight.x,quad.bottomRight.y,quad.bottomRight.z).tex(uMin,vBottom).endVertex();
+        buf.pos(quad.bottomLeft.x,quad.bottomLeft.y,quad.bottomLeft.z).tex(uMax,vBottom).endVertex();
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(-4.0F,-4.0F);
@@ -658,6 +660,7 @@ public class TEAnimatedScreenSelector
 
     /** Bind a regular full-height programmable animation and return its V range. */
     private static double[] bindScreenSurface(TileEntityAnimatedScreenSelector te) {
+        if(te.getSurfaceTexture(0)>=0)return bindSurface(te,0);
         String id = te.getSelectedScreen();
         if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(id)) id = "engineering_screen";
         int mode = te.getEffectiveMode();
@@ -698,7 +701,7 @@ public class TEAnimatedScreenSelector
         double[] frontUv = bindInput(te, te.getInputPanel());
         drawInputSurface(InputSurfaceLayout.halfConsoleFront(),frontUv);
 
-        double[] rearUv = bindInput(te, te.getSecondaryInputPanel());
+        double[] rearUv = bindInput(te, te.getSecondaryInputPanel(),1);
         drawInputSurface(InputSurfaceLayout.halfConsoleRear(),rearUv);
     }
 
@@ -708,12 +711,19 @@ public class TEAnimatedScreenSelector
         buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
         for (InputSurfaceLayout.Vertex vertex:quad.vertices) {
             double v=uv[0]+vertex.v*(uv[1]-uv[0]);
-            buf.pos(vertex.x,vertex.y,vertex.z).tex(vertex.u,v).endVertex();
+            double u=uv.length==4?uv[2]+vertex.u*(uv[3]-uv[2]):vertex.u;
+            buf.pos(vertex.x,vertex.y,vertex.z).tex(u,v).endVertex();
         }
         tess.draw();
     }
 
-    private static double[] bindInput(TileEntityAnimatedScreenSelector te, String id) {
+    private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
+        bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(te.getSurfaceTexture(slot)));
+        setWorldLight(te);return new double[]{sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};
+    }
+    private static double[] bindInput(TileEntityAnimatedScreenSelector te,String id){return bindInput(te,id,0);}
+    private static double[] bindInput(TileEntityAnimatedScreenSelector te, String id,int slot) {
+        if(te.getSurfaceTexture(slot)>=0)return bindSurface(te,slot);
         int mode = te.getEffectiveMode();
         int frames = TileEntityAnimatedScreenSelector.getInputFrameCount(id);
         String suffix;
@@ -811,7 +821,7 @@ public class TEAnimatedScreenSelector
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
         // fills the deck without cropping or atlas-induced aspect changes.
-        double[] inputUv = bindInput(te, te.getInputPanel());
+        double[] inputUv = bindInput(te, te.getInputPanel(),1);
         drawInputSurface(InputSurfaceLayout.halfConsoleFront(),inputUv);
     }
 

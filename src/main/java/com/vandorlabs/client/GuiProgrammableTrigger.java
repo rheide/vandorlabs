@@ -39,8 +39,8 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         super.initGui();
         buttonList.clear();
         Keyboard.enableRepeatEvents(true);
-        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 124, off);
-        onList = new HousingTextureList(guiLeft + 216, guiTop + 41, 124, on);
+        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 180, off);
+        onList = new HousingTextureList(guiLeft + 216, guiTop + 41, 180, on);
         channelField = new GuiTextField(0, fontRenderer, guiLeft + 132,
                 guiTop + 144, 110, 18);
         channelField.setMaxStringLength(10);
@@ -133,8 +133,6 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         fontRenderer.drawString("Redstone On", guiLeft + 216, guiTop + 27, 0xFFD8D8D8);
         offList.draw(fontRenderer, mouseX, mouseY);
         onList.draw(fontRenderer, mouseX, mouseY);
-        drawPreview(guiLeft + 146, off);
-        drawPreview(guiLeft + 350, on);
         fontRenderer.drawString("Redstone Channel", guiLeft + 12,
                 guiTop + 149, 0xFFD8D8D8);
         super.drawScreen(mouseX, mouseY, partial);

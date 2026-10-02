@@ -103,7 +103,7 @@ public final class ProgrammableLightConnections {
         TileEntity raw = world.getTileEntity(pos);
         if (!(raw instanceof TileEntityProgrammableLight)) return false;
         TileEntityProgrammableLight other = (TileEntityProgrammableLight) raw;
-        return other.isAvailableForJoining() && other.isJoin() && !other.isSmallInput() && other.getTexture() == first.getTexture()
+        return other.isAvailableForJoining() && other.isJoin() && !other.isSmallInput() && other.getFaceTexture() == first.getFaceTexture()
                 && (!matchOn || other.isOn() == first.isOn());
     }
 }

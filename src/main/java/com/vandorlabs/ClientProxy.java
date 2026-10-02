@@ -22,7 +22,9 @@ import net.minecraft.world.World;
 public class ClientProxy extends CommonProxy {
     @Override public void preInit(FMLPreInitializationEvent event) {
         OBJLoader.INSTANCE.addDomain(VandorLabs.MODID);
+        net.minecraftforge.client.model.ModelLoaderRegistry.registerLoader(new com.vandorlabs.client.UnifiedItemModels());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.SpaceDoorTextures());
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.UnifiedTextureSprites());
     }
 
     @Override public void spawnThrusterParticle(World world, BlockPos pos,

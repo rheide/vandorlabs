@@ -4,6 +4,9 @@
 
 ### Added
 
+- Shared categorized texture picker with thumbnails across programmable materials, lights, doors and static screen/control surfaces. Adds full door artwork and static first-frame screen textures while preserving existing finish indices.
+- Filesystem PNG categories under `config/vandorlabs/textures`, with first-run Example folder/sample panel, path-based saved identifiers and missing-client fallback. Different client/server catalogs are supported.
+
 - Programmable lights offer centered Small/Full sizing and side-texture Fit/Tile. Small lights remain individual artwork panels.
 
 - Loaded-only rectangular programmable trapdoor groups through 8×8, with shared outer hinges and scaled sliding travel. Diagonal trapdoors connect across opposite-slope rows and full-width vertical/depth offsets.

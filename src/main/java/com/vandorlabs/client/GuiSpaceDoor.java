@@ -19,6 +19,8 @@ import java.io.IOException;
 public class GuiSpaceDoor extends GuiContainer {
     private static final int ROW_H=14, LIST_ROWS=10, LIST_H=ROW_H*LIST_ROWS;
     private final TileEntitySpaceDoor tile;
+    private HousingTextureList textureList;
+    private int faceTexture;
     private int design,detail,depth,scrollIndex,lastValidChannel;
     private int trigger;
     private SpaceDoorMotion motion;
@@ -38,6 +40,7 @@ public class GuiSpaceDoor extends GuiContainer {
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
         this.tile=tile;
+        faceTexture=tile.getFaceTexture();
         design=tile.getDesign(); detail=tile.getDetail(); framed=tile.isFramed();
         motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
         depth=tile.getPlacementDepth();
@@ -52,23 +55,24 @@ public class GuiSpaceDoor extends GuiContainer {
         String channelText=channelField==null?Integer.toString(lastValidChannel):channelField.getText();
         super.initGui();
         Keyboard.enableRepeatEvents(true);
-        listLeft=guiLeft+12; listRight=listLeft+140; listTop=guiTop+40; listBottom=listTop+LIST_H;
+        listLeft=guiLeft+12; listRight=listLeft+200; listTop=guiTop+40; listBottom=listTop+LIST_H;
+        textureList=new HousingTextureList(listLeft,listTop,200,faceTexture<0?com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail):faceTexture,11);
         previewX=guiLeft+338; previewY=guiTop+42;
-        motionButton=new GuiButton(10,guiLeft+168,guiTop+40,154,20,motion.label);
+        motionButton=new GuiButton(10,guiLeft+228,guiTop+40,180,20,motion.label);
         buttonList.add(motionButton);
-        buttonList.add(new GuiButton(11,guiLeft+168,guiTop+66,154,20,SIZES[detail]));
-        buttonList.add(new GuiButton(12,guiLeft+168,guiTop+92,154,20,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(new GuiButton(16,guiLeft+168,guiTop+118,154,20,triggerLabel()));
-        buttonList.add(new GuiButton(13,guiLeft+168,guiTop+144,154,20,depthLabel()));
-        hingeButton=new GuiButton(15,guiLeft+338,guiTop+190,80,20,"");
+        buttonList.add(new GuiButton(11,guiLeft+228,guiTop+66,180,20,SIZES[detail]));
+        buttonList.add(new GuiButton(12,guiLeft+228,guiTop+92,180,20,framed?"Frame: Framed":"Frame: Bare"));
+        buttonList.add(new GuiButton(16,guiLeft+228,guiTop+118,180,20,triggerLabel()));
+        buttonList.add(new GuiButton(13,guiLeft+228,guiTop+144,180,20,depthLabel()));
+        hingeButton=new GuiButton(15,guiLeft+12,guiTop+190,96,20,"");
         buttonList.add(hingeButton);
         updateHingeButton();
-        buttonList.add(new GuiButton(17,guiLeft+338,guiTop+216,80,20,panel?"Panel: On":"Panel: Off"));
-        channelField=new GuiTextField(0,fontRenderer,guiLeft+168,guiTop+190,154,18);
+        buttonList.add(new GuiButton(17,guiLeft+116,guiTop+190,96,20,panel?"Panel: On":"Panel: Off"));
+        channelField=new GuiTextField(0,fontRenderer,guiLeft+228,guiTop+190,180,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(channelText);
-        done=new GuiButton(1,guiLeft+109,guiTop+216,212,20,"Done");
+        done=new GuiButton(1,guiLeft+228,guiTop+216,180,20,"Done");
         buttonList.add(done);
         updateChannelValidity();
     }
@@ -98,7 +102,7 @@ public class GuiSpaceDoor extends GuiContainer {
         if (channel()>=0) lastValidChannel=channel();
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel));
+                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
@@ -107,7 +111,7 @@ public class GuiSpaceDoor extends GuiContainer {
             motionButton.displayString=motion.label;
             updateHingeButton();
         }
-        else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail]; }
+        else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail];if(faceTexture<0)textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail)); }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
         else if (button.id==13) { depth=(depth+1)%3; button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
@@ -126,26 +130,29 @@ public class GuiSpaceDoor extends GuiContainer {
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         channelField.mouseClicked(x,y,button);
-        if (button==0 && y>=listTop && y<listBottom) {
-            if (x>=listRight && x<listRight+8) { draggingScrollbar=true; dragScrollbarTo(y); return; }
-            if (x>=listLeft && x<listRight) { select(scrollIndex+(y-listTop)/ROW_H); return; }
+        int before=textureList.selected();
+        if(textureList.click(x,y,button)) {
+            if(before!=textureList.selected()) {
+                int selected=textureList.selected();com.google.gson.JsonObject entry=com.vandorlabs.tiles.ScreenHousingTextures.entry(selected);
+                if(com.vandorlabs.tiles.ScreenHousingTextures.isDoor(selected)){design=entry.get("design").getAsInt();detail=entry.get("detail").getAsInt();faceTexture=-1;}
+                else faceTexture=selected;
+                sendUpdate();
+            }return;
         }
         super.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int state) {
-        draggingScrollbar=false; super.mouseReleased(x,y,state);
+        textureList.release();draggingScrollbar=false; super.mouseReleased(x,y,state);
     }
     @Override protected void mouseClickMove(int x,int y,int button,long elapsed) {
-        if (draggingScrollbar) dragScrollbarTo(y); else super.mouseClickMove(x,y,button,elapsed);
+        if (textureList.drag(y)) return; else super.mouseClickMove(x,y,button,elapsed);
     }
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
         int wheel=Mouse.getEventDWheel();
         int x=Mouse.getEventX()*width/mc.displayWidth;
         int y=height-Mouse.getEventY()*height/mc.displayHeight-1;
-        if (wheel!=0 && x>=listLeft && x<listRight+8 && y>=listTop && y<listBottom) {
-            scrollIndex+=wheel>0?-1:1; clampScroll();
-        }
+        textureList.wheel(x,y,wheel);
     }
     @Override protected void keyTyped(char c,int key) throws IOException {
         if (key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER) {
@@ -171,38 +178,15 @@ public class GuiSpaceDoor extends GuiContainer {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
-        drawRect(listLeft-1,listTop-1,listRight+9,listBottom+1,0xFF070E14);
-        for (int row=0;row<LIST_ROWS;row++) {
-            int index=scrollIndex+row;
-            if (index>=LABELS.length) break;
-            int y=listTop+row*ROW_H;
-            boolean hover=mouseX>=listLeft && mouseX<listRight && mouseY>=y && mouseY<y+ROW_H;
-            drawRect(listLeft,y,listRight,y+ROW_H,index==design?0xFF385F78:hover?0xFF293F4F:0xFF14212B);
-            fontRenderer.drawString(LABELS[index],listLeft+4,y+3,index==design?0xFFFFFF:0xDAE8F0);
-        }
-        int thumb=Math.max(12,LIST_H*LIST_ROWS/LABELS.length);
-        int top=listTop+(maxScroll()==0?0:(LIST_H-thumb)*scrollIndex/maxScroll());
-        drawRect(listRight+1,top,listRight+7,top+thumb,0xFF7895A8);
-        drawRect(previewX-2,previewY-2,previewX+72,previewY+142,0xFF070E14);
-        drawRect(previewX,previewY,previewX+70,previewY+140,0xFF26343D);
-        int nativeWidth=128<<detail;
-        ResourceLocation preview=new ResourceLocation("vandorlabs","textures/blocks/space_doors/"
-                +TileEntitySpaceDoor.DETAILS[detail]+"/"+TEXTURES[design]+".png");
-        mc.getTextureManager().bindTexture(preview);
-        GlStateManager.color(1,1,1,1);
-        GlStateManager.enableBlend();
-        drawScaledCustomSizeModalRect(previewX,previewY,0,0,nativeWidth,nativeWidth*2,
-                70,140,nativeWidth,nativeWidth*2);
-        GlStateManager.disableBlend();
+        textureList.draw(fontRenderer,mouseX,mouseY);
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString("Programmable Door",12,8,0xFFFFFF);
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
-        fontRenderer.drawString("Options",168,28,0xDAE8F0);
-        fontRenderer.drawString("Preview",338,28,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",168,178,0xDAE8F0);
-        if (channel()<0) fontRenderer.drawString("Invalid channel",168,212,0xFF7777);
-        fontRenderer.drawString("Changes apply live",12,196,0xDAE8F0);
+        fontRenderer.drawString("Options",228,28,0xDAE8F0);
+        fontRenderer.drawString("Channel (0 = none)",228,178,0xDAE8F0);
+        if (channel()<0) fontRenderer.drawString("Invalid channel",228,212,0xFF7777);
+
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground(); super.drawScreen(x,y,partial); channelField.drawTextBox();

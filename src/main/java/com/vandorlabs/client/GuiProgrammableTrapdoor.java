@@ -78,16 +78,13 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);textures.draw(fontRenderer,x,y);
-        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);
-        net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(textures.selected()));
-        // Atlas sprites use normalized coordinates rather than a standalone texture.
-        drawTexturedModalRect(guiLeft+12,guiTop+142,sprite,32,32);
+
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString(diagonal()?"Programmable Diagonal Trapdoor":"Programmable Trapdoor",12,8,0xFFFFFF);
         fontRenderer.drawString("Block texture",12,27,0xDAE8F0);
         fontRenderer.drawString("Channel (0 = none)",214,127,0xDAE8F0);
-        fontRenderer.drawString("Changes apply to the group",52,145,0xDAE8F0);
+        fontRenderer.drawString("Changes apply to the group",12,145,0xDAE8F0);
         fontRenderer.drawString("Facing sets opening direction",12,196,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);channelField.drawTextBox();}

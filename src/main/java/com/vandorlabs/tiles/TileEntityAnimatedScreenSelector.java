@@ -124,6 +124,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     private boolean smallInput = false;
+    private int primarySurface=-1,secondarySurface=-1;
+    public int getSurfaceTexture(int slot){return slot==1?secondarySurface:primarySurface;}
+    public void setSurfaceTexture(int slot,int choice) {
+        int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
+        if(slot==1)secondarySurface=next;else primarySurface=next;
+        markDirty();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
+    }
     private int redstoneChannel;
     private boolean channelSignal;
     private int housingTexture;
@@ -374,6 +381,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
+        compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
         new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
@@ -403,6 +411,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
+        primarySurface=compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
+        secondarySurface=compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
         ceilingMounted=compound.getBoolean("CeilingMounted");
         ceilingPosition=compound.hasKey("CeilingPosition",3)
                 ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;

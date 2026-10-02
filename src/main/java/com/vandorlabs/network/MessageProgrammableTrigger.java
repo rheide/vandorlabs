@@ -37,8 +37,8 @@ public final class MessageProgrammableTrigger implements IMessage {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || msg.channel < 0 || msg.off < 0 || msg.on < 0
-                        || msg.off >= ScreenHousingTextures.IDS.length
-                        || msg.on >= ScreenHousingTextures.IDS.length
+                        || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.off)
+                        || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.on)
                         || !player.world.isBlockLoaded(msg.pos)
                         || !ConfigurationAccess.canConfigure(player)
                         || player.world.getBlockState(msg.pos).getBlock()

@@ -49,7 +49,7 @@ final class ProgrammableSolidRenderer {
         if (light && (visible & (1 << EnumFacing.NORTH.getIndex()))!=0) {
             TileEntityProgrammableLight lamp = (TileEntityProgrammableLight) tile;
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
-                    ProgrammableLightTextures.texture(lamp.getTexture(), lamp.isOn() && lamp.getLightLevel()>0));
+                    com.vandorlabs.tiles.ScreenHousingTextures.texture(lamp.getFaceTexture(), lamp.isOn() && lamp.getLightLevel()>0));
             TEAnimatedScreenSelector.LightGroup group = TEAnimatedScreenSelector.lightGroup(lamp,state);
             double left=group.left(tile.getPos()), right=group.right(tile.getPos());
             double top=group.top(tile.getPos()), bottom=group.bottom(tile.getPos());

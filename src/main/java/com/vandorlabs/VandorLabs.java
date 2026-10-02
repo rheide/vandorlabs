@@ -38,8 +38,9 @@ public class VandorLabs {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        proxy.preInit(event);
         logger = event.getModLog();
+        com.vandorlabs.tiles.FilesystemTextures.initialize(event.getModConfigurationDirectory().toPath().resolve("vandorlabs/textures"));
+        proxy.preInit(event);
         com.vandorlabs.tiles.DeferredTileLoad.install();
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, "vandorlabs:programmable_trapdoor");
