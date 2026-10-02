@@ -25,14 +25,15 @@ final class HousingTextureList {
     private int selected,scroll,dragOffset,custom=-1,missing=-1;
     private java.util.function.IntConsumer customConsumer;
     HousingTextureList custom(java.util.function.IntConsumer consumer){customConsumer=consumer;rebuild();return this;}
-    private boolean dragging;
+    private boolean dragging,picked;
+    boolean picked(){return picked;}
     HousingTextureList(int x,int y,int width,int selected){this(x,y,width,selected,8);}
     HousingTextureList(int x,int y,int width,int selected,int count) {this(x,y,width,selected,count,null);}
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries) {
         this.x=x;this.y=y;this.width=width;this.count=Math.max(2,count*12/ROW_HEIGHT);
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
-        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.texture(i)));
+        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())if(!categories.contains(option.category))categories.add(option.category);
         categories.sort(String.CASE_INSENSITIVE_ORDER);
         setSelected(selected);
@@ -69,6 +70,7 @@ final class HousingTextureList {
     private int thumbHeight(){return Math.max(8,height()*count/Math.max(count,rows.size()));}
     private int thumbY(){return y+(height()-thumbHeight())*scroll/Math.max(1,maxScroll());}
     boolean click(int mouseX,int mouseY,int button) {
+        picked=false;
         if(button!=0 || mouseY<y || mouseY>=y+height())return false;
         if(mouseX>=x+width && mouseX<x+width+7 && maxScroll()>0) {
             dragOffset=mouseY>=thumbY() && mouseY<thumbY()+thumbHeight()?mouseY-thumbY():thumbHeight()/2;
@@ -78,7 +80,7 @@ final class HousingTextureList {
         int index=scroll+(mouseY-y)/ROW_HEIGHT;if(index>=rows.size())return true;
         int choice=visibleChoice((mouseY-y)/ROW_HEIGHT);
         if(choice==-100000){Minecraft mc=Minecraft.getMinecraft();net.minecraft.item.ItemStack carried=mc.player.inventory.getItemStack();mc.player.inventory.setItemStack(net.minecraft.item.ItemStack.EMPTY);mc.displayGuiScreen(new GuiCustomTexture(mc.currentScreen,value->{setSelected(value);customConsumer.accept(value);}));mc.player.inventory.setItemStack(carried);return true;}
-        if(choice>=0){selected=choice;custom=-1;missing=-1;}
+        if(choice>=0){selected=choice;custom=-1;missing=-1;picked=true;}
         else {String category=categories.get(-choice-1);if(!expanded.remove(category))expanded.add(category);rebuild();}
         return true;
     }
@@ -108,7 +110,7 @@ final class HousingTextureList {
             if(choice==-100000){font.drawStringWithShadow(custom>=0?"Custom: "+name(custom):"Custom...",x+3,yy+7,0xFFABCFE8);}
             else if(choice<0) {
                 String category=categories.get(-choice-1);
-                font.drawStringWithShadow((expanded.contains(category)?"- ":"+ ")+category,x+3,yy+7,0xFFABCFE8);
+                font.drawStringWithShadow(font.trimStringToWidth((expanded.contains(category)?"- ":"+ ")+category,width-6),x+3,yy+7,0xFFABCFE8);
             } else {
                 mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();
                 net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(options.get(choice).texture);

@@ -23,7 +23,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         DoorAnimation animation=ANIMATIONS.computeIfAbsent(tile,t->new DoorAnimation(9));
         double pose=animation.sample(state.getValue(BlockProgrammableTrapdoor.OPEN),now);
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(tile.getHousingTexture()));
+        TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(tile.getHousingTexture()));
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.disableLighting();
         GlStateManager.color(1,1,1,1);
@@ -90,8 +90,11 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     }
     /** Split custom door artwork at the upper/lower boundary even across a connected surface. */
     static void drawMaterialMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] uv,int light,int choice) {
-        if(!com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice) || !CustomBlockTextures.isDoor(choice)){drawMesh(buffer,sprite,vertices,uv,light);return;}
-        for(int face=0;face<TrapdoorGeometry.FACES.length;face++) {
+        drawMaterialMesh(buffer,sprite,vertices,uv,light,choice,0,6);
+    }
+    static void drawMaterialMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] uv,int light,int choice,int first,int end) {
+        if(!com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice) || !CustomBlockTextures.isDoor(choice)){drawMesh(buffer,sprite,vertices,uv,light,first,end);return;}
+        for(int face=first;face<end;face++) {
             int[] indices=TrapdoorGeometry.FACES[face];
             double[] a=vertices[indices[0]],b=vertices[indices[1]],c=vertices[indices[2]];
             double nx=(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]);
@@ -116,7 +119,10 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     }
 
     static void drawMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] original,int light) {
-        for(int face=0;face<TrapdoorGeometry.FACES.length;face++) {
+        drawMesh(buffer,sprite,vertices,original,light,0,6);
+    }
+    private static void drawMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] original,int light,int first,int end) {
+        for(int face=first;face<end;face++) {
             int[] indices=TrapdoorGeometry.FACES[face];
             double[] a=vertices[indices[0]],b=vertices[indices[1]],c=vertices[indices[2]];
             double ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];

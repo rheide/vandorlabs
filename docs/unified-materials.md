@@ -1,22 +1,22 @@
 # Unified materials and Custom textures
 
-Programmable blocks, slabs, stairs, walls, trapdoors, doors, lights and static screen/control surfaces share a texture picker. Categories expand and collapse, and each texture has a small thumbnail. The category containing the selected material opens automatically.
+Programmable blocks, slabs, stairs, walls, trapdoors, doors, lights and static screen/control surfaces share a texture picker. Categories expand and collapse, and each texture has a larger thumbnail with its original aspect ratio. Categories and texture names are sorted alphabetically, and the current category heading stays visible while scrolling within it. The category containing the selected material opens automatically.
 
-Built-in categories include Materials, Texture Pack 1, Texture Pack 2, Hull Plating, Lights, Doors and Screens. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries include their On/Off artwork. Door entries provide Small, Medium and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
+Built-in categories include Materials, Texture Pack 1, Texture Pack 2, Hull Plating, Lights, Doors and Screens. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Door entries provide Small, Medium and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
 
 ## Choose a surface
 
 Shift-right-click in Creative mode, or open the block's menu with the Configurizer. Choose a category and material. Lights have separate face and housing lists; triggers have Off and On lists. Blocks and slabs retain their optional per-face overrides.
 
-For screens, inputs and consoles, open **Surface textures** to choose a static front surface. Consoles also have a second surface choice. **Use screen / animation** restores the original configured screen or control panel. The original animation controls remain available. Housing lists use the same catalog.
+For screens, inputs and consoles, open **Surface textures** to choose a static front surface. Consoles also have a second surface choice. **Use screen / animation** restores the original configured screen or control panel. The native screen/control lists now use the same categorized thumbnail presentation, containing their original options. They still select the original animated screen or control family: Off/Static/Animated, speed and frame controls retain their behavior. Selecting a native option restores that surface from a static override. Housing lists use the shared material catalog.
 
-Door presets retain the existing frame, motion and hardware options. Selecting a different material replaces the door's leaf artwork. Connected trapdoors map built-in full door artwork over the connected surface; a single trapdoor uses its lower half. Custom doors likewise use upper and lower atlas artwork across the connected surface.
+Door presets retain the existing frame, motion and hardware options. Selecting a different material replaces the door's front/back leaf artwork while keeping the native edge textures and hinge hardware. **Face texture: Fit/Tile** fits a block image once over the complete leaf or repeats it at one-block scale; door artwork retains its upper/lower mapping. The layout survives saving, configured items and Duplifier copying. Ordinary programmable blocks use the lower square half of built-in door artwork, avoiding a stretched two-high image. Connected trapdoors map built-in full door artwork over the connected surface; a single trapdoor uses its lower half. Custom doors likewise use upper and lower atlas artwork across the connected surface.
 
 ## Custom block and door artwork
 
 Scroll to **Custom...** in any shared material list. The picker shows your inventory and a sample slot. Drag a block or door into that slot, or click an inventory item and then **Use texture**. Nothing is consumed or moved in your real inventory.
 
-The selected block's model supplies its atlas texture. This supports vanilla and other mods' registered block items and door items. Block metadata is included in the saved choice. Vanilla doors and mod doors inheriting Minecraft's door block use upper and lower artwork for programmable door leaves and connected trapdoors. Ordinary blocks use the model's representative particle texture; the source block's mesh, tile settings and animation are not imported. Models without usable atlas artwork fall back to the default wall panel.
+For configured programmable items, the picker reads the material saved in the item, including Custom and filesystem choices. Other selected blocks' models supply their atlas texture. This supports vanilla and other mods' registered block items and door items. Block metadata is included in the saved choice. Vanilla doors and mod doors inheriting Minecraft's door block use upper and lower artwork for programmable door leaves and connected trapdoors. Ordinary blocks use the model's representative particle texture; the source block's mesh, tile settings and animation are not imported. Models without usable atlas artwork fall back to the default wall panel.
 
 Custom choices survive saves, configured items and Duplifier copies. A client missing the referenced block uses the default panel while keeping the choice. Each client's resource pack determines the source artwork it sees.
 
@@ -24,7 +24,7 @@ To import PNG files instead, see [filesystem texture categories](filesystem-text
 
 ## Housing Fit/Tile
 
-Slabs, stairs and lights keep their side-layout controls. Screens, half/full inputs and consoles now offer **Sides: Fit/Tile** inside **Surface textures**. Fit scales the complete housing image onto each shortened housing face; Tile retains the original pixel-space UV layout. Existing screen/input/console saves retain Tile until changed. The choice is saved and copied by the Duplifier.
+Slabs, stairs and lights keep their side-layout controls. Screens, half/full inputs and consoles offer **Sides: Fit/Tile** directly in their main dialogs and inside **Surface textures**. Programmable Half-Input labels its main control **Wall texture: Tile/Fit**. Fit scales the complete housing image onto each shortened housing face; Tile retains the original pixel-space UV layout. Existing screen/input/console saves retain Tile until changed. The choice is saved and copied by the Duplifier.
 
 ## Transparency assessment
 

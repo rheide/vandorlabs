@@ -26,8 +26,9 @@ final class CustomMaterialRuntimeChecks {
             require(Math.abs(selected.bounds[0]-inset)<1e-6 && Math.abs(selected.bounds[3]-(1-inset))<1e-6,"selected door frame width");
             require(Math.abs(selected.bounds[1]-inset)<1e-6 && Math.abs(selected.bounds[4]-(2-inset))<1e-6,"selected door frame height");
             require(Math.abs(selected.bounds[2]-12.24/16D)<1e-6 && Math.abs(selected.bounds[5]-14.24/16D)<1e-6,"selected door native depth");
-            require(!selected.getQuads(null,null,0).isEmpty(),"replacement leaf lost its hinges");
-            require(DoorRenderModels.get(programmableDoor,metadata+2160).selected().getQuads(null,null,0).isEmpty(),"hinges-off replacement retained hardware");
+            require(selected.getQuads(null,null,0).stream().anyMatch(q->q.getSprite().getIconName().endsWith("/hinge")),"replacement leaf lost its hinges");
+            require(selected.getQuads(null,null,0).stream().anyMatch(q->!q.getSprite().getIconName().endsWith("/hinge") && q.getFace().getAxis()!=net.minecraft.util.EnumFacing.Axis.Z),"replacement leaf lost native edges");
+            require(DoorRenderModels.get(programmableDoor,metadata+2160).selected().getQuads(null,null,0).stream().noneMatch(q->q.getSprite().getIconName().endsWith("/hinge")),"hinges-off replacement retained hardware");
         }
         net.minecraft.block.Block other=net.minecraft.block.Block.getBlockFromName("immersiveengineering:stone_decoration");
         if(other!=null) {
@@ -37,6 +38,16 @@ final class CustomMaterialRuntimeChecks {
         ItemStack configured=new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK);NBTTagCompound tag=new NBTTagCompound();tag.setInteger("housingTexture",stoneId);configured.setTagInfo("BlockEntityTag",tag);
         net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(configured,player.world,player);
         require(model.getParticleTexture().getIconName().equals("minecraft:blocks/stone"),"custom configured inventory artwork");
+        require(CustomBlockMaterials.choice(configured)==stoneId,"sampling configured programmable material");
+        tag.setInteger("housingTexture",ScreenHousingTextures.doorIndex(0,1));
+        require(CustomBlockMaterials.choice(configured)==ScreenHousingTextures.doorIndex(0,1),"sampling configured built-in material");
+        int doorChoice=ScreenHousingTextures.doorIndex(0,1);
+        net.minecraft.client.renderer.texture.TextureAtlasSprite full=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(doorChoice));
+        net.minecraft.client.renderer.texture.TextureAtlasSprite half=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(doorChoice));
+        require(Math.abs(UnifiedTextureSprites.aspect(full)-.5)<1e-5 && Math.abs(UnifiedTextureSprites.aspect(half)-1)<1e-5,"full door preview / square block half aspect");
+        String[] nativeIds=new String[ModBlocks.SCREEN_OPTIONS.size()];int ni=0;for(ModBlocks.ScreenOption option:ModBlocks.SCREEN_OPTIONS)nativeIds[ni++]=option.bareId;
+        for(String id:nativeIds)require(ScreenHousingTextures.screenIndex(id+"_static")>=ScreenHousingTextures.LEGACY_COUNT,"native screen thumbnail "+id);
+        for(String id:TileEntityAnimatedScreenSelector.INPUT_PANELS)require(ScreenHousingTextures.screenIndex("console_inputs/"+id+"_static")>=ScreenHousingTextures.LEGACY_COUNT,"native input thumbnail "+id);
         BlockPos pos=new BlockPos(player.posX,248,player.posZ);
         player.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState());
         try {

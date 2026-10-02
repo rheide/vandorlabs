@@ -39,6 +39,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private int housingTexture;
     private GuiTextField channelField;
     private HousingTextureList housingList;
+    private ScreenTextureList topList,bottomList;
 
     public GuiProgrammableHalfConsole(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector te) {
@@ -57,6 +58,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
+        buttonList.clear();
         surfacePicker=new SurfaceTexturePicker(te,true);
         surfacePicker.init(guiLeft,guiTop,xSize,ySize);
         Keyboard.enableRepeatEvents(true);
@@ -86,11 +88,13 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
                 housingTexture).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         buttonList.add(new GuiButton(20, x + 214, y + 208, 198, 20,
                 I18n.format("gui.done")));
-        topScroll = reveal(topPanel);
-        bottomScroll = reveal(bottomPanel);
+        topList=new ScreenTextureList(right,top,112,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
+        bottomList=new ScreenTextureList(left,top,112,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
+        buttonList.add(new GuiButton(32,x+284,y+126,120,18,sidesLabel()));
         refreshButtons();
     }
 
+    private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
         for (GuiButton button : buttonList) {
             if (button.id == 0) {
@@ -139,38 +143,18 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             }
             return;
         }
-        if (button == 0 && mouseY >= top && mouseY < top + ROW_H * ROWS) {
-            int list = mouseX >= left + 114 && mouseX < left + 120 ? 1
-                    : mouseX >= right + 114 && mouseX < right + 120 ? 2 : 0;
-            if (list != 0 && maxScroll() > 0) {
-                int scroll = list == 1 ? bottomScroll : topScroll;
-                int thumbY = scrollbarThumbY(scroll);
-                int thumbH = scrollbarThumbHeight();
-                scrollbarDragOffset = mouseY >= thumbY && mouseY < thumbY + thumbH
-                        ? mouseY - thumbY : thumbH / 2;
-                draggingList = list;
-                dragScrollbarTo(mouseY);
-                return;
-            }
-        }
-        if (button == 0 && mouseY >= top && mouseY < top + ROW_H * ROWS) {
-            boolean first = mouseX >= left && mouseX < left + 112;
-            boolean second = mouseX >= right && mouseX < right + 112;
-            if (first || second) {
-                int index = (first ? bottomScroll : topScroll) + (mouseY - top) / ROW_H;
-                if (index < TileEntityAnimatedScreenSelector.INPUT_PANELS.length) {
-                    if (first) bottomPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
-                    else topPanel = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
-                    sendUpdate();
-                }
-                return;
-            }
+        boolean first=bottomList.click(mouseX,mouseY,button),second=topList.click(mouseX,mouseY,button);
+        if(first || second) {
+            if(bottomList.picked() || topList.picked()) {
+                int slot=first?0:1;bottomPanel=bottomList.selected();topPanel=topList.selected();te.setSurfaceTexture(slot,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,-1));sendUpdate();
+            }return;
         }
         super.mouseClicked(mouseX, mouseY, button);
         channelField.mouseClicked(mouseX,mouseY,button);
     }
 
     @Override protected void mouseReleased(int mouseX,int mouseY,int state) {
+        topList.release();bottomList.release();surfacePicker.release();
         draggingList = 0;
         if (housingList != null) housingList.release();
         super.mouseReleased(mouseX,mouseY,state);
@@ -179,8 +163,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override protected void mouseClickMove(int mouseX,int mouseY,int button,long elapsed) {
         if(surfacePicker.drag(mouseY))return;
         if (housingList != null && housingList.drag(mouseY)) return;
-        if (draggingList != 0) dragScrollbarTo(mouseY);
-        else super.mouseClickMove(mouseX,mouseY,button,elapsed);
+        if(topList.drag(mouseY) || bottomList.drag(mouseY))return;
+        super.mouseClickMove(mouseX,mouseY,button,elapsed);
     }
 
     private void dragScrollbarTo(int mouseY) {
@@ -193,6 +177,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button.id == 20) { if (channel()>=0) sendUpdate(); mc.player.closeScreen(); return; }
+        if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
@@ -208,14 +193,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         int wheel = Mouse.getEventDWheel();
         if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
-        if (wheel != 0) {
-            int mouseX = Mouse.getEventX() * width / mc.displayWidth;
-            int delta = wheel > 0 ? -1 : 1;
-            if (mouseX >= left && mouseX < left + 120)
-                bottomScroll = clamp(bottomScroll + delta);
-            else if (mouseX >= right && mouseX < right + 120)
-                topScroll = clamp(topScroll + delta);
-        }
+        int mx=Mouse.getEventX()*width/mc.displayWidth,my=height-Mouse.getEventY()*height/mc.displayHeight-1;
+        topList.wheel(mx,my,wheel);bottomList.wheel(mx,my,wheel);
     }
 
     private int clamp(int value) { return Math.max(0, Math.min(maxScroll(), value)); }
@@ -261,8 +240,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
                 left, y + 22, 0xFFA0A0A8);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.top"),
                 right, y + 22, 0xFFA0A0A8);
-        drawList(left, bottomScroll, bottomPanel);
-        drawList(right, topScroll, topPanel);
+        bottomList.draw(fontRenderer,mouseX,mouseY);
+        topList.draw(fontRenderer,mouseX,mouseY);
         int previewX = right + 72;
         String suffix = displayMode == TileEntityAnimatedScreenSelector.MODE_OFF
                 ? "_off.png" : "_static.png";

@@ -136,8 +136,14 @@ public final class ScreenHousingTextures {
         return choiceAt(Math.floorMod(localIndex(clamp(choice)) + direction, IDS.length));
     }
 
-    public static String texture(int choice) {
+    /** Full artwork for door leaves and thumbnails; ordinary blocks use one square half. */
+    public static String fullTexture(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
         return TEXTURES[localIndex(choice)];
+    }
+    public static String texture(int choice) {
+        if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
+        com.google.gson.JsonObject e=entry(choice);
+        return TEXTURES[localIndex(choice)]+(e!=null && e.has("design")?"_half":"");
     }
 }

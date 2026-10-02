@@ -24,7 +24,7 @@ public class GuiSpaceDoor extends GuiContainer {
     private int design,detail,depth,scrollIndex,lastValidChannel;
     private int trigger;
     private SpaceDoorMotion motion;
-    private boolean framed,hinges,panel,draggingScrollbar;
+    private boolean framed,hinges,panel,draggingScrollbar,tileTexture;
     private int listLeft,listTop,listRight,listBottom;
     private GuiTextField channelField;
     private GuiButton done,motionButton,hingeButton;
@@ -40,7 +40,7 @@ public class GuiSpaceDoor extends GuiContainer {
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
         this.tile=tile;
-        faceTexture=tile.getFaceTexture();
+        faceTexture=tile.getFaceTexture();tileTexture=tile.isTileTexture();
         design=tile.getDesign(); detail=tile.getDetail(); framed=tile.isFramed();
         motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
         depth=tile.getPlacementDepth();
@@ -54,6 +54,7 @@ public class GuiSpaceDoor extends GuiContainer {
     @Override public void initGui() {
         String channelText=channelField==null?Integer.toString(lastValidChannel):channelField.getText();
         super.initGui();
+        buttonList.clear();
         Keyboard.enableRepeatEvents(true);
         listLeft=guiLeft+12; listRight=listLeft+200; listTop=guiTop+40; listBottom=listTop+LIST_H;
         textureList=new HousingTextureList(listLeft,listTop,200,faceTexture<0?com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail):faceTexture,11).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
@@ -74,6 +75,7 @@ public class GuiSpaceDoor extends GuiContainer {
         channelField.setText(channelText);
         done=new GuiButton(1,guiLeft+228,guiTop+216,180,20,"Done");
         buttonList.add(done);
+        buttonList.add(new GuiButton(18,guiLeft+12,guiTop+216,200,20,layoutLabel()));
         updateChannelValidity();
     }
     private int channel() {
@@ -91,6 +93,7 @@ public class GuiSpaceDoor extends GuiContainer {
                 :trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Trigger: Redstone OFF"
                 :"Trigger: Disabled";
     }
+    private String layoutLabel(){return "Face texture: "+(tileTexture?"Tile":"Fit");}
     private String depthLabel() {
         return "Position: " + new String[]{"Middle", "Near", "Far"}[depth];
     }
@@ -102,7 +105,7 @@ public class GuiSpaceDoor extends GuiContainer {
         if (channel()>=0) lastValidChannel=channel();
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture));
+                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
@@ -116,6 +119,7 @@ public class GuiSpaceDoor extends GuiContainer {
         else if (button.id==13) { depth=(depth+1)%3; button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
         else if (button.id==16) { trigger=(trigger+1)%3; button.displayString=triggerLabel(); }
+        else if(button.id==18){tileTexture=!tileTexture;tile.setTileTexture(tileTexture);button.displayString=layoutLabel();}
         else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }
         else return;
         sendUpdate();

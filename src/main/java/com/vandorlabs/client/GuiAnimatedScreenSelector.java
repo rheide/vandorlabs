@@ -69,6 +69,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private String inputPanel;
     private int housingTexture;
     private HousingTextureList housingList;
+    private ScreenTextureList screenList,inputList;
 
     private int scrollIndex;
     private boolean draggingScrollbar;
@@ -182,6 +183,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
+        buttonList.clear();
         surfacePicker=new SurfaceTexturePicker(te,te.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableConsole);
         surfacePicker.init(guiLeft,guiTop,xSize,ySize);
         Keyboard.enableRepeatEvents(true);
@@ -238,10 +240,13 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 console ? 148 : 138, 20,
                 I18n.format("gui.done")));
         refreshButtons();
-        clampScroll();
-        clampInputScroll();
+        String[] ids=new String[entries.size()],labels=new String[entries.size()];for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}
+        screenList=new ScreenTextureList(listLeft,listTop,listRight-listLeft,8,selectedOption.bareId,ids,labels,false);
+        if(console)inputList=new ScreenTextureList(inputListLeft,inputListTop,inputListRight-inputListLeft,8,inputPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
+        buttonList.add(new GuiButton(32,x+8,y+212,138,20,sidesLabel()));
     }
 
+    private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
         redstoneButton.displayString = I18n.format("gui.vandorlabs.selector.redstone") + ": "
                 + I18n.format(redstoneEnabled
@@ -270,6 +275,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.isSurfaceTileSides()));return;}
         switch (button.id) {
             case 0:
                 redstoneEnabled = !redstoneEnabled;
@@ -350,51 +356,14 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
             }
             return;
         }
-        if (console && mouseButton == 0 && mouseX >= inputListRight
-                && mouseX < inputListRight + 8 && mouseY >= inputListTop
-                && mouseY < inputListBottom && maxInputScroll() > 0) {
-            draggingInputScrollbar = true;
-            dragInputScrollbarTo(mouseY);
-            return;
+        if(console && inputList.click(mouseX,mouseY,mouseButton)) {
+            if(inputList.picked() && (!inputPanel.equals(inputList.selected()) || te.getSurfaceTexture(1)>=0)){inputPanel=inputList.selected();te.setSurfaceTexture(1,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,1,-1));sendUpdate();}return;
         }
-        if (console && mouseButton == 0 && mouseX >= inputListLeft
-                && mouseX < inputListRight && mouseY >= inputListTop
-                && mouseY < inputListBottom) {
-            int row = inputRowAt(mouseY);
-            if (row < 0) {
-                return;
-            }
-            String picked = TileEntityAnimatedScreenSelector.INPUT_PANELS[row];
-            if (!picked.equals(inputPanel)) {
-                inputPanel = picked;
-                sendUpdate();
-            }
-            return;
-        }
-        // Scrollbar hit?
-        if (mouseButton == 0 && mouseX >= listRight && mouseX < listRight + 8
-                && mouseY >= listTop && mouseY < listBottom && maxScroll() > 0) {
-            draggingScrollbar = true;
-            dragScrollbarTo(mouseY);
-            return;
-        }
-        if (mouseButton == 0 && mouseX >= listLeft && mouseX < listRight
-                && mouseY >= listTop && mouseY < listBottom) {
-            int row = rowAt(mouseY);
-            if (row >= 0) {
-                ModBlocks.ScreenOption option = entries.get(row).option;
-                if (selectedOption == null || !option.key.equals(selectedOption.key)) {
-                    selectedOption = option;
-                    // A fresh pick prefers the framed variant when the family
-                    // has one; lone ids keep their only variant.
-                    framed = option.hasPair()
-                            || ModBlocks.DISPLAY_FRAMED_IDS.contains(option.framedId);
-                    refreshPreview();
-                    refreshButtons();
-                    sendUpdate();
-                }
-            }
-            return;
+        if(screenList.click(mouseX,mouseY,mouseButton)) {
+            for(Entry entry:entries)if(screenList.picked() && entry.option.bareId.equals(screenList.selected()) && (!entry.option.key.equals(selectedOption.key) || te.getSurfaceTexture(0)>=0)) {
+                selectedOption=entry.option;framed=selectedOption.hasPair() || ModBlocks.DISPLAY_FRAMED_IDS.contains(selectedOption.framedId);
+                te.setSurfaceTexture(0,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,0,-1));refreshPreview();refreshButtons();sendUpdate();break;
+            }return;
         }
         super.mouseClicked(mouseX, mouseY, mouseButton);
         channelField.mouseClicked(mouseX,mouseY,mouseButton);
@@ -402,6 +371,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
+        screenList.release();if(inputList!=null)inputList.release();
         surfacePicker.release();
         draggingScrollbar = false;
         if (housingList != null) housingList.release();
@@ -414,13 +384,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
             long timeSinceLastClick) {
         if(surfacePicker.drag(mouseY))return;
         if (housingList != null && housingList.drag(mouseY)) return;
-        if (draggingScrollbar) {
-            dragScrollbarTo(mouseY);
-        } else if (draggingInputScrollbar) {
-            dragInputScrollbarTo(mouseY);
-        } else {
-            super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
-        }
+        if(screenList.drag(mouseY) || inputList!=null && inputList.drag(mouseY))return;
+        super.mouseClickMove(mouseX,mouseY,clickedMouseButton,timeSinceLastClick);
     }
 
     private void dragScrollbarTo(int mouseY) {
@@ -444,18 +409,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         int wheel = Mouse.getEventDWheel();
         if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
-        if (wheel != 0) {
-            int mouseX = Mouse.getEventX() * width / mc.displayWidth;
-            int mouseY = height - Mouse.getEventY() * height / mc.displayHeight - 1;
-            if (console && mouseX >= inputListLeft && mouseX < inputListRight + 8
-                    && mouseY >= inputListTop && mouseY < inputListBottom) {
-                inputScrollIndex += wheel > 0 ? -1 : 1;
-                clampInputScroll();
-            } else {
-                scrollIndex += wheel > 0 ? -1 : 1;
-                clampScroll();
-            }
-        }
+        int mx=Mouse.getEventX()*width/mc.displayWidth,my=height-Mouse.getEventY()*height/mc.displayHeight-1;
+        screenList.wheel(mx,my,wheel);if(inputList!=null)inputList.wheel(mx,my,wheel);
     }
 
     @Override
@@ -482,75 +437,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                         : (diagonalScreen ? "gui.vandorlabs.diagonal_screen.title"
                                 : "gui.vandorlabs.selector.title"))),
                 x + 8, y + 5, 0xFFFFFFFF);
-        // List background + rows.
-        drawRect(listLeft - 1, listTop - 1, listRight + 9, listBottom + 1, 0xFF000000);
-        drawRect(listLeft, listTop, listRight, listBottom, 0xFF0A0A0C);
-        for (int i = 0; i < LIST_ROWS; i++) {
-            int idx = scrollIndex + i;
-            if (idx >= entries.size()) {
-                break;
-            }
-            Entry e = entries.get(idx);
-            int rowY = listTop + i * ROW_H;
-            boolean selected = selectedOption != null
-                    && e.option.key.equals(selectedOption.key);
-            if (selected) {
-                drawRect(listLeft, rowY, listRight, rowY + ROW_H, 0xFF2A4A6A);
-            } else if (mouseX >= listLeft && mouseX < listRight
-                    && mouseY >= rowY && mouseY < rowY + ROW_H) {
-                drawRect(listLeft, rowY, listRight, rowY + ROW_H, 0xFF1A1A20);
-            }
-            fontRenderer.drawStringWithShadow(
-                    fontRenderer.trimStringToWidth(e.name, listRight - listLeft - 6),
-                    listLeft + 3, rowY + 2,
-                    selected ? 0xFFFFE08A : 0xFFD8D8D8);
-        }
-        // Scrollbar.
-        if (maxScroll() > 0) {
-            int trackX = listRight + 1;
-            drawRect(trackX, listTop, trackX + 6, listBottom, 0xFF303038);
-            int thumbH = Math.max(8, LIST_H * LIST_ROWS / entries.size());
-            int thumbY = listTop + (LIST_H - thumbH) * scrollIndex / maxScroll();
-            drawRect(trackX, thumbY, trackX + 6, thumbY + thumbH, 0xFF808090);
-        }
-        // Consoles show controls as a peer list, with independent selection
-        // and scrolling, rather than hiding them behind a drop-down.
-        if (console) {
-            drawRect(inputListLeft - 1, inputListTop - 1, inputListRight + 9,
-                    inputListBottom + 1, 0xFF000000);
-            drawRect(inputListLeft, inputListTop, inputListRight, inputListBottom,
-                    0xFF0A0A0C);
-            for (int i = 0; i < LIST_ROWS; i++) {
-                int idx = inputScrollIndex + i;
-                if (idx >= TileEntityAnimatedScreenSelector.INPUT_PANELS.length) {
-                    break;
-                }
-                String id = TileEntityAnimatedScreenSelector.INPUT_PANELS[idx];
-                String name = I18n.format("gui.vandorlabs.console.input." + id);
-                int rowY = inputListTop + i * ROW_H;
-                boolean selected = id.equals(inputPanel);
-                boolean hovered = mouseX >= inputListLeft && mouseX < inputListRight
-                        && mouseY >= rowY && mouseY < rowY + ROW_H;
-                if (selected || hovered) {
-                    drawRect(inputListLeft, rowY, inputListRight, rowY + ROW_H,
-                            selected ? 0xFF2A4A6A : 0xFF1A1A20);
-                }
-                fontRenderer.drawStringWithShadow(
-                        fontRenderer.trimStringToWidth(name,
-                                inputListRight - inputListLeft - 6),
-                        inputListLeft + 3, rowY + 2,
-                        selected ? 0xFFFFE08A : 0xFFD8D8D8);
-            }
-            if (maxInputScroll() > 0) {
-                int trackX = inputListRight + 1;
-                drawRect(trackX, inputListTop, trackX + 6, inputListBottom, 0xFF303038);
-                int thumbH = Math.max(8, LIST_H * LIST_ROWS
-                        / TileEntityAnimatedScreenSelector.INPUT_PANELS.length);
-                int thumbY = inputListTop + (LIST_H - thumbH) * inputScrollIndex
-                        / maxInputScroll();
-                drawRect(trackX, thumbY, trackX + 6, thumbY + thumbH, 0xFF808090);
-            }
-        }
+        screenList.draw(fontRenderer,mouseX,mouseY);
+        if(inputList!=null)inputList.draw(fontRenderer,mouseX,mouseY);
         // Right column: preview + section labels.
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.preview"),
                 previewX, console ? y + 118 : listTop, 0xFFA0A0A8);

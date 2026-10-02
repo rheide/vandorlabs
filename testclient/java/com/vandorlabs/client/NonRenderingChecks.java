@@ -39,6 +39,7 @@ public final class NonRenderingChecks {
         DiagonalTrapdoorChecks.run();
         LandingGearFootprintChecks.run();
         SurfaceLayoutChecks.run();
+        DoorMaterialChecks.run();
     }
 
     private static void placement() {

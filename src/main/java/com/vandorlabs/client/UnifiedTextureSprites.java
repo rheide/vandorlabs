@@ -16,8 +16,9 @@ public final class UnifiedTextureSprites {
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             com.google.gson.JsonObject e=ScreenHousingTextures.entry(i);
-            if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
+            if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
             else event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i)));
+            if(e!=null && e.has("design"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),true,false,true));
             if(e!=null && e.has("unlit"))event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i,false)));
         }
     }
@@ -25,9 +26,10 @@ public final class UnifiedTextureSprites {
     private static final class Sprite extends TextureAtlasSprite {
         private final ResourceLocation source;
         private final String diskSource;
-        private final boolean crop,file;
+        private final boolean crop,file,half;
         private float usedU=1,usedV=1;
-        Sprite(String name,String source,boolean crop,boolean file){super(name);this.diskSource=source;this.source=file?new ResourceLocation(name):new ResourceLocation("vandorlabs","textures/blocks/"+source+".png");this.crop=crop;this.file=file;}
+        Sprite(String name,String source,boolean crop,boolean file){this(name,source,crop,file,false);}
+        Sprite(String name,String source,boolean crop,boolean file,boolean half){super(name);this.half=half;this.diskSource=source;this.source=file?new ResourceLocation(name):new ResourceLocation("vandorlabs","textures/blocks/"+source+".png");this.crop=crop;this.file=file;}
         @Override public boolean hasCustomLoader(IResourceManager manager,ResourceLocation location){return true;}
         @Override public boolean load(IResourceManager manager,ResourceLocation location,Function<ResourceLocation,TextureAtlasSprite> getter) {
             try(java.io.InputStream stream=file?java.nio.file.Files.newInputStream(com.vandorlabs.tiles.FilesystemTextures.file(diskSource)):manager.getResource(source).getInputStream()) {
@@ -35,6 +37,7 @@ public final class UnifiedTextureSprites {
                 if(image==null)throw new java.io.IOException("Invalid PNG");
                 int x0=crop?image.getWidth()/16:0,y0=crop?image.getHeight()/32:0;
                 int w=image.getWidth()-x0,h=image.getHeight()-2*y0;
+                if(half){h/=2;y0+=h;}
                 int canvas=1;while(canvas<Math.max(w,h))canvas<<=1;
                 setIconWidth(canvas);setIconHeight(canvas);usedU=(float)w/canvas;usedV=(float)h/canvas;
                 int[] pixels=new int[canvas*canvas];

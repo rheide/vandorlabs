@@ -57,6 +57,7 @@ public final class ProgrammableSettings {
     public static final String LIGHT_LEVEL = "light_level";
     public static final String CHAIR_STYLE = "chair_style";
     public static final String CHAIR_HEIGHT = "chair_height";
+    public static final String DOOR_TILE_TEXTURE="door_tile_texture";
     public static final String DOOR_FACE_TEXTURE="door_face_texture";
     public static final String DOOR_DESIGN = "door_design";
     public static final String DOOR_DETAIL = "door_detail";
@@ -197,7 +198,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
             out.setInteger(TRIGGER, door.getTrigger());
-            out.setInteger(DOOR_DESIGN, door.getDesign());out.setInteger(DOOR_FACE_TEXTURE,door.getFaceTexture());
+            out.setBoolean(DOOR_TILE_TEXTURE,door.isTileTexture());out.setInteger(DOOR_DESIGN, door.getDesign());out.setInteger(DOOR_FACE_TEXTURE,door.getFaceTexture());
             out.setInteger(DOOR_DETAIL, door.getDetail());
             out.setBoolean(FRAMED, door.isFramed());
             out.setInteger(DOOR_SLIDE_DIRECTION, door.getSlideDirection());
@@ -462,6 +463,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
+            if(values.hasKey(DOOR_TILE_TEXTURE,1)){door.setTileTexture(values.getBoolean(DOOR_TILE_TEXTURE));applicable=true;}
             if(values.hasKey(DOOR_FACE_TEXTURE,3)){door.setFaceTexture(values.getInteger(DOOR_FACE_TEXTURE));applicable=true;}
             int trigger = number(values, TRIGGER, door.getTrigger());
             if (!SpaceDoorData.validTrigger(trigger)) trigger = door.getTrigger();

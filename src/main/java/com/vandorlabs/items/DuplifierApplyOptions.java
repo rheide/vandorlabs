@@ -81,7 +81,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.PRIMARY_SURFACE, "Static Surface Texture", 1),
             option(ProgrammableSettings.SECONDARY_SURFACE, "Second Static Texture", 1),
             option(ProgrammableSettings.LIGHT_FACE_TEXTURE, "Light Face Texture", 0),
-            option(ProgrammableSettings.DOOR_FACE_TEXTURE, "Door Face Texture", 3)
+            option(ProgrammableSettings.DOOR_FACE_TEXTURE, "Door Face Texture", 3),
+            option(ProgrammableSettings.DOOR_TILE_TEXTURE, "Door Face Layout", 3)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;

@@ -37,6 +37,7 @@ public class GuiProgrammableInput extends GuiContainer {
     private int scrollbarDragOffset;
     private GuiTextField channelField;
     private HousingTextureList housingList;
+    private ScreenTextureList screenList;
 
     public GuiProgrammableInput(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector te) {
@@ -55,6 +56,7 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     public void initGui() {
         super.initGui();
+        buttonList.clear();
         surfacePicker=new SurfaceTexturePicker(te,te.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableConsole);
         surfacePicker.init(guiLeft,guiTop,xSize,ySize);
         Keyboard.enableRepeatEvents(true);
@@ -87,10 +89,12 @@ public class GuiProgrammableInput extends GuiContainer {
                 housingTexture).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         buttonList.add(new GuiButton(20, x + 128, y + 228, 114, 20,
                 I18n.format("gui.done")));
-        revealSelection();
+        screenList=new ScreenTextureList(listX,listY,142,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
+        buttonList.add(new GuiButton(32,x+258,y+138,150,20,sidesLabel()));
         refreshButtons();
     }
 
+    private String sidesLabel(){return "Wall texture: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
         for (GuiButton button : buttonList) {
             if (button.id == 0) {
@@ -150,25 +154,8 @@ public class GuiProgrammableInput extends GuiContainer {
             }
             return;
         }
-        if (button == 0 && maxScroll() > 0 && mouseX >= listX + 144
-                && mouseX < listX + 150 && mouseY >= listY
-                && mouseY < listY + ROW_H * ROWS) {
-            int thumbY = scrollbarThumbY();
-            int thumbH = scrollbarThumbHeight();
-            scrollbarDragOffset = mouseY >= thumbY && mouseY < thumbY + thumbH
-                    ? mouseY - thumbY : thumbH / 2;
-            draggingScrollbar = true;
-            dragScrollbarTo(mouseY);
-            return;
-        }
-        if (button == 0 && mouseX >= listX && mouseX < listX + 142
-                && mouseY >= listY && mouseY < listY + ROW_H * ROWS) {
-            int index = scroll + (mouseY - listY) / ROW_H;
-            if (index < TileEntityAnimatedScreenSelector.INPUT_PANELS.length) {
-                selected = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
-                sendUpdate();
-            }
-            return;
+        if(screenList.click(mouseX,mouseY,button)) {
+            if(screenList.picked() && (!selected.equals(screenList.selected()) || te.getSurfaceTexture(0)>=0)){selected=screenList.selected();te.setSurfaceTexture(0,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),0,-1));sendUpdate();}return;
         }
         super.mouseClicked(mouseX, mouseY, button);
         channelField.mouseClicked(mouseX, mouseY, button);
@@ -177,6 +164,7 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
         surfacePicker.release();
+        screenList.release();
         draggingScrollbar = false;
         if (housingList != null) housingList.release();
         super.mouseReleased(mouseX, mouseY, state);
@@ -187,11 +175,8 @@ public class GuiProgrammableInput extends GuiContainer {
             long timeSinceLastClick) {
         if(surfacePicker.drag(mouseY))return;
         if (housingList != null && housingList.drag(mouseY)) return;
-        if (draggingScrollbar) {
-            dragScrollbarTo(mouseY);
-        } else {
-            super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
-        }
+        if(screenList.drag(mouseY))return;
+        super.mouseClickMove(mouseX,mouseY,clickedMouseButton,timeSinceLastClick);
     }
 
     private void dragScrollbarTo(int mouseY) {
@@ -213,6 +198,7 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button.id == 20) { if (channel()>=0) sendUpdate(); mc.player.closeScreen(); return; }
+        if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
@@ -230,9 +216,7 @@ public class GuiProgrammableInput extends GuiContainer {
         int wheel = Mouse.getEventDWheel();
         if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
-        if (wheel != 0) {
-            scroll = Math.max(0, Math.min(maxScroll(), scroll + (wheel > 0 ? -1 : 1)));
-        }
+        screenList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);
     }
 
     @Override
@@ -244,25 +228,7 @@ public class GuiProgrammableInput extends GuiContainer {
         drawRect(x, y, x + xSize, y + 16, 0xFF202028);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.title"), x + 8, y + 5,
                 0xFFFFFFFF);
-        drawRect(listX - 1, listY - 1, listX + 151, listY + ROW_H * ROWS + 1,
-                0xFF000000);
-        for (int row = 0; row < ROWS; row++) {
-            int index = scroll + row;
-            if (index >= TileEntityAnimatedScreenSelector.INPUT_PANELS.length) break;
-            String id = TileEntityAnimatedScreenSelector.INPUT_PANELS[index];
-            int yy = listY + row * ROW_H;
-            if (id.equals(selected)) drawRect(listX, yy, listX + 142, yy + ROW_H,
-                    0xFF2A4A6A);
-            fontRenderer.drawStringWithShadow(fontRenderer.trimStringToWidth(
-                    I18n.format("gui.vandorlabs.console.input." + id), 136),
-                    listX + 3, yy + 2, id.equals(selected) ? 0xFFFFE08A : 0xFFD8D8D8);
-        }
-        if (maxScroll() > 0) {
-            int thumbH = scrollbarThumbHeight();
-            int thumbY = scrollbarThumbY();
-            drawRect(listX + 144, listY, listX + 150, listY + ROW_H * ROWS, 0xFF303038);
-            drawRect(listX + 144, thumbY, listX + 150, thumbY + thumbH, 0xFF808090);
-        }
+        screenList.draw(fontRenderer,mouseX,mouseY);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.preview"),
                 x + 164, y + 22, 0xFFA0A0A8);
         mc.getTextureManager().bindTexture(new ResourceLocation("vandorlabs",

@@ -23,10 +23,13 @@ public final class CustomBlockMaterials {
         Block block=block(stack);if(block==null)return -1;
         if(block.getRegistryName()!=null && "vandorlabs".equals(block.getRegistryName().getResourceDomain())) {
             net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
-            if(tag!=null)for(String key:new String[]{"LightFaceTexture","DoorFaceTexture","PropulsionSideTexture","housingTexture"})
+            if(block instanceof com.vandorlabs.blocks.BlockProgrammableLight) {
+                if(tag!=null && tag.hasKey("LightFaceTexture",3) && tag.getInteger("LightFaceTexture")>=0)return ScreenHousingTextures.clamp(tag.getInteger("LightFaceTexture"));
+                return ScreenHousingTextures.lightIndex(tag==null?0:tag.getInteger("LightTexture"));
+            }
+            if(tag!=null)for(String key:new String[]{"DoorFaceTexture","PropulsionSideTexture","housingTexture"})
                 if(tag.hasKey(key,3) && tag.getInteger(key)>=0)return ScreenHousingTextures.clamp(tag.getInteger(key));
-            if(block instanceof com.vandorlabs.blocks.BlockProgrammableLight)return ScreenHousingTextures.lightIndex(tag==null?0:tag.getInteger("LightTexture"));
-            if(block instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)return ScreenHousingTextures.doorIndex(tag==null?2:tag.hasKey("SpaceDoorDesign",3)?tag.getInteger("SpaceDoorDesign"):2,tag==null?1:tag.hasKey("SpaceDoorDetail",3)?tag.getInteger("SpaceDoorDetail"):1);
+            if(block instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor){com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag==null?new net.minecraft.nbt.NBTTagCompound():tag));return ScreenHousingTextures.doorIndex(data.design,data.detail);}
             if(block instanceof com.vandorlabs.blocks.BlockAnimatedScreenSelector || block instanceof com.vandorlabs.blocks.BlockProgrammableTrapdoor)return 0;
         }
         return identifier(block,stack.getItem() instanceof ItemDoor?0:stack.getMetadata() & 15);

@@ -13,7 +13,19 @@ import net.minecraft.world.World;
 final class Version12Gallery {
     static void build(World world,String scene,int x,int y) {
         BlockPos origin=new BlockPos(x-3,y+1,-18);
-        if(scene.equals("materials")) {
+        if(scene.equals("door_fit") || scene.equals("door_tile") || scene.equals("door_block_half")) {
+            BlockPos at=new BlockPos(x,y+1,-18);
+            if(scene.equals("door_block_half")) {
+                world.setBlockState(at,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
+                ((TileEntityAnimatedScreenSelector)world.getTileEntity(at)).setHousingTexture(ScreenHousingTextures.doorIndex(0,2));
+            } else {
+                Block block=block("programmable_door");world.setBlockState(at,block.getDefaultState(),3);
+                world.setBlockState(at.up(),block.getDefaultState().withProperty(BlockVandorDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),3);
+                TileEntitySpaceDoor tile=(TileEntitySpaceDoor)world.getTileEntity(at);
+                tile.setFaceTexture(CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.BRICK_BLOCK)));
+                tile.setTileTexture(scene.equals("door_tile"));
+            }
+        } else if(scene.equals("materials")) {
             int stone=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.STONE));
             int door=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Items.OAK_DOOR));
             for(int i=0;i<3;i++) {

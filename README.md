@@ -40,7 +40,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   substantially brighter family-colored emitter texture in addition to its
   denser exhaust effect. The selected wall texture covers the housing on every
   side, while the emitter and trim keep their own art. The channel dialog shows
-  a preview of that texture and can also choose whether
+  categorized texture thumbnails and can also choose whether
   redstone-powered engines emit particles. Matching square engines in
   an isolated, coplanar square from 2x2 through 8x8 merge visually into one
   large engine and emit one size-scaled, concentrated particle plume from the

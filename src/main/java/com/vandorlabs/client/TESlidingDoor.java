@@ -244,11 +244,13 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,double[] bounds) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tile.getFaceTexture()));
+        net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(tile.getFaceTexture()));
         double[][] points=new double[8][3],uv=new double[8][3];
         for(int i=0;i<8;i++){points[i]=new double[]{bounds[(i&1)==0?0:3],bounds[(i&2)==0?1:4],bounds[(i&4)==0?2:5]};uv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?1:0,(i&4)==0?0:1};}
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        TEProgrammableTrapdoor.drawMaterialMesh(buffer,sprite,points,uv,light,tile.getFaceTexture());Tessellator.getInstance().draw();
+        if(tile.isTileTexture() && !com.vandorlabs.tiles.ScreenHousingTextures.isDoor(tile.getFaceTexture()))DoorFaceTextureMesh.draw(buffer,sprite,bounds,light);
+        else TEProgrammableTrapdoor.drawMaterialMesh(buffer,sprite,points,uv,light,tile.getFaceTexture(),2,4);
+        Tessellator.getInstance().draw();
     }
 
     private static void renderSpaceDoorControlPanel(com.vandorlabs.tiles.TileEntitySpaceDoor tile,

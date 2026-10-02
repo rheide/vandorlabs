@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 public class MessageSpaceDoor implements IMessage {
     private BlockPos pos;
     private int design,detail,channel,slideDirection,trigger,depth,faceTexture=-1;
-    private boolean framed;
+    private boolean framed,tileTexture;
     private boolean sliding,hinges,panel;
     public MessageSpaceDoor() {}
     public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,int depth,boolean sliding,boolean hinges,int trigger,boolean panel) {
@@ -25,6 +25,7 @@ public class MessageSpaceDoor implements IMessage {
         this.panel=panel;
     }
     public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,int depth,boolean sliding,boolean hinges,int trigger,boolean panel,int faceTexture){this(pos,design,detail,framed,channel,slideDirection,depth,sliding,hinges,trigger,panel);this.faceTexture=faceTexture;}
+    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,int depth,boolean sliding,boolean hinges,int trigger,boolean panel,int faceTexture,boolean tileTexture){this(pos,design,detail,framed,channel,slideDirection,depth,sliding,hinges,trigger,panel,faceTexture);this.tileTexture=tileTexture;}
     @Override public void fromBytes(ByteBuf b) {
         pos=BlockPos.fromLong(b.readLong()); design=b.readInt(); detail=b.readInt(); framed=b.readBoolean(); channel=b.readInt();
         slideDirection=b.readInt();
@@ -32,7 +33,7 @@ public class MessageSpaceDoor implements IMessage {
         sliding=b.readBoolean();
         hinges=b.readBoolean();
         trigger=b.readInt();
-        panel=b.readBoolean();faceTexture=b.readInt();
+        panel=b.readBoolean();faceTexture=b.readInt();tileTexture=b.readBoolean();
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
@@ -41,7 +42,7 @@ public class MessageSpaceDoor implements IMessage {
         b.writeBoolean(sliding);
         b.writeBoolean(hinges);
         b.writeInt(trigger);
-        b.writeBoolean(panel);b.writeInt(faceTexture);
+        b.writeBoolean(panel);b.writeInt(faceTexture);b.writeBoolean(tileTexture);
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
@@ -63,12 +64,12 @@ public class MessageSpaceDoor implements IMessage {
                     other=(TileEntitySpaceDoor)player.world.getTileEntity(mate);
                     if (!other.usable(player)) return;
                 }
-                tile.setFaceTexture(m.faceTexture);
+                tile.setFaceTexture(m.faceTexture);tile.setTileTexture(m.tileTexture);
                 tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                 tile.setPlacementDepth(m.depth);
                 tile.setRedstoneChannel(m.channel);
                 if (other!=null) {
-                    other.setFaceTexture(m.faceTexture);
+                    other.setFaceTexture(m.faceTexture);other.setTileTexture(m.tileTexture);
                     other.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                     other.setPlacementDepth(m.depth);
                     other.setRedstoneChannel(m.channel);

@@ -20,7 +20,7 @@ final class SelectedDoorGeometry implements IBakedModel {
         if(!Double.isFinite(bounds[0]))throw new IllegalStateException("Door model has no material surface");
     }
     private static boolean hinge(BakedQuad quad){return quad.getSprite().getIconName().endsWith("/hinge");}
-    public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed){List<BakedQuad> result=new ArrayList<>();for(BakedQuad quad:original.getQuads(state,side,seed))if(hinge(quad))result.add(quad);return result;}
+    public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed){List<BakedQuad> result=new ArrayList<>();for(BakedQuad quad:original.getQuads(state,side,seed))if(hinge(quad) || quad.getFace().getAxis()!=EnumFacing.Axis.Z)result.add(quad);return result;}
     public boolean isAmbientOcclusion(){return original.isAmbientOcclusion();}
     public boolean isGui3d(){return original.isGui3d();}
     public boolean isBuiltInRenderer(){return false;}

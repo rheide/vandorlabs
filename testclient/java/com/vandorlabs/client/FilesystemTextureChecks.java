@@ -10,6 +10,8 @@ import net.minecraft.nbt.NBTTagCompound;
 public final class FilesystemTextureChecks {
     public static void main(String[] args) throws Exception {
         net.minecraft.init.Bootstrap.register();
+        // The picker sorts translated labels before rendering; provide a locale without launching Minecraft.
+        for(java.lang.reflect.Field field:net.minecraft.client.resources.I18n.class.getDeclaredFields())if(field.getType()==net.minecraft.client.resources.Locale.class){field.setAccessible(true);field.set(null,new net.minecraft.client.resources.Locale());}
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_filesystem_check"));
         Path root=Files.createTempDirectory("vandorlabs-textures-");
         try {

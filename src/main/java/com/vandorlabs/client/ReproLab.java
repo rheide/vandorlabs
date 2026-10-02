@@ -308,6 +308,7 @@ public class ReproLab {
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         for(String group:new String[]{"flat","v","rectangle","stagger"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
+        for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "gear_corner", "gear_cover_closed", "gear_cover_open", "materials", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
