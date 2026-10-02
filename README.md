@@ -240,7 +240,7 @@ read their top or bottom block state. Programmable Doors read facing, open state
 and the lower tile's motion and depth settings. Deployed `controlled_ramp` cells
 read their saved clipped boxes and programmable main finish; sources from other
 mods use a stone texture fallback. Selected programmable-screen content,
-particles, and moving interpolation still do not appear on the map.
+particles, and moving interpolation still do not appear on the map. After upgrading the mod on a server, rerender affected Dynmap tiles to apply the updated definitions.
 
 To refresh the definitions after adding block models, run the matching
 DynmapBlockScan 3.7 tool once against a built jar in an isolated Forge 1.12.2
