@@ -28,11 +28,14 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.disableLighting();
         GlStateManager.color(1,1,1,1);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        if(ScreenHousingTextures.isDoor(tile.getHousingTexture())) {
+        if(tile.isCover()) {
+            double[][] uv=TrapdoorGeometry.corners(tile.getPosition(),true,0,0);for(double[] p:uv)p[1]-=TrapdoorGeometry.low(tile.getPosition());
+            drawMesh(buffer,sprite,tile.corners(state,pose),uv,light);
+        } else if(ScreenHousingTextures.isDoor(tile.getHousingTexture())) {
             double[][] vertices=tile instanceof TileEntityProgrammableDiagonalTrapdoor
                     ?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose)
-                    :TrapdoorGeometry.corners(tile.getPosition(),tile.isSliding(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),pose,tile.motionHinge(),tile.motionTravel());
-            drawMesh(buffer,sprite,vertices,materialCoordinates(tile,state),light);
+                    :tile.corners(state,pose);
+            drawMaterialMesh(buffer,sprite,vertices,materialCoordinates(tile,state),light,tile.getHousingTexture());
         } else {
         if(tile instanceof TileEntityProgrammableDiagonalTrapdoor) {
             TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)tile;
@@ -85,6 +88,33 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         for(int i=0;i<8;i++)uv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:mode==2?2/16D:1,(i&4)==0?0:mode==2?1:2/16D};
         drawMesh(buffer,sprite,vertices,uv,light);
     }
+    /** Split custom door artwork at the upper/lower boundary even across a connected surface. */
+    static void drawMaterialMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] uv,int light,int choice) {
+        if(!com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice) || !CustomBlockTextures.isDoor(choice)){drawMesh(buffer,sprite,vertices,uv,light);return;}
+        for(int face=0;face<TrapdoorGeometry.FACES.length;face++) {
+            int[] indices=TrapdoorGeometry.FACES[face];
+            double[] a=vertices[indices[0]],b=vertices[indices[1]],c=vertices[indices[2]];
+            double nx=(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]);
+            double ny=(b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]);
+            double nz=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
+            for(boolean upper:new boolean[]{true,false}) {
+                java.util.List<double[]> polygon=new java.util.ArrayList<>();
+                for(int index:indices)polygon.add(new double[]{vertices[index][0],vertices[index][1],vertices[index][2],face<4?uv[index][0]:uv[index][2],face<2?uv[index][2]:uv[index][1]});
+                java.util.List<double[]> clipped=new java.util.ArrayList<>();
+                for(int j=0;j<polygon.size();j++) {
+                    double[] previous=polygon.get((j+polygon.size()-1)%polygon.size()),current=polygon.get(j);
+                    boolean before=upper?previous[4]<=.5:previous[4]>=.5,after=upper?current[4]<=.5:current[4]>=.5;
+                    if(before!=after){double t=(.5-previous[4])/(current[4]-previous[4]);double[] point=new double[5];for(int k=0;k<5;k++)point[k]=previous[k]+t*(current[k]-previous[k]);clipped.add(point);}
+                    if(after)clipped.add(current);
+                }
+                TextureAtlasSprite part=CustomBlockTextures.sprite(choice,upper);
+                for(int j=1;j+1<clipped.size();j++)for(double[] p:new double[][]{clipped.get(0),clipped.get(j),clipped.get(j+1),clipped.get(j+1)})
+                    buffer.pos(p[0],p[1],p[2]).color(255,255,255,255).tex(part.getInterpolatedU(p[3]*16),part.getInterpolatedV((upper?p[4]*2:(p[4]-.5)*2)*16))
+                        .lightmap(light>>>16,light&65535).normal((float)(nx/length),(float)(ny/length),(float)(nz/length)).endVertex();
+            }
+        }
+    }
+
     static void drawMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] original,int light) {
         for(int face=0;face<TrapdoorGeometry.FACES.length;face++) {
             int[] indices=TrapdoorGeometry.FACES[face];

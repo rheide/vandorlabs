@@ -37,6 +37,7 @@ public final class FilesystemTextureChecks {
             TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setHousingTexture(absent);tile.setSurfaceTexture(0,blue);
             NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);
             require(restored.getHousingTexture()==absent && restored.getSurfaceTexture(0)==blue,"NBT retained absent peer choices");
+            HousingTextureList list=new HousingTextureList(0,0,120,absent);require(list.selected()==absent,"opening a missing selection replaced its identity");list.click(10,1,0);require(list.selected()==absent,"expanding a category replaced a missing selection");
             require(new FaceTextures(true,new int[]{blue,red,absent,-1,-1,-1}).choice(2)==absent,"per-face identity");
             System.out.println("PASS: filesystem categories, stable identities, missing-peer fallback and saved choices");
         }finally{try(java.util.stream.Stream<Path> paths=Files.walk(root)){paths.sorted(java.util.Comparator.reverseOrder()).forEach(p->{try{Files.delete(p);}catch(java.io.IOException e){throw new RuntimeException(e);}});}}

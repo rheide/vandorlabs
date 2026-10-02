@@ -83,7 +83,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
         housingList = new HousingTextureList(x + 284, y + 34, 120,
-                housingTexture);
+                housingTexture).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         buttonList.add(new GuiButton(20, x + 214, y + 208, 198, 20,
                 I18n.format("gui.done")));
         topScroll = reveal(topPanel);

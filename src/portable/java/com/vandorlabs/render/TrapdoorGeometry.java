@@ -32,6 +32,12 @@ public final class TrapdoorGeometry {
         }
         return out;
     }
+    /** An adjacent mount owns the cover while its closed leaf spans the neighboring cell. */
+    public static double[][] coverCorners(int position,int quarterTurns,double pose) {
+        double[][] vertices=corners(position,true,0,0);double shift=-1+Math.max(0,Math.min(1,pose));
+        for(double[] p:vertices){p[2]+=shift;for(int turn=0;turn<(quarterTurns&3);turn++){double x=p[0];p[0]=1-p[2];p[2]=x;}}
+        return vertices;
+    }
     public static double[] bounds(int position,boolean sliding,int quarterTurns,double pose) {
         double[] b={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,
                 Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};

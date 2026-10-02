@@ -31,7 +31,7 @@ public final class GuiLandingGear extends GuiContainer {
         length.displayString=lengthLabel(tile.getExtensionPixels());
         buttonList.add(length);buttonList.add(new GuiButton(3,guiLeft+14,guiTop+180,252,20,"Done"));
     }
-    private String sizeLabel(){String name=com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES[size].replace('_',' ');return "Size: "+Character.toUpperCase(name.charAt(0))+name.substring(1);}
+    private String sizeLabel(){String name=(size==4?"extra large (2×2)":com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES[size]).replace('_',' ');return "Size: "+Character.toUpperCase(name.charAt(0))+name.substring(1);}
     private static String lengthLabel(int pixels){return "Extended length: "+(pixels/16D)+" blocks";}
     private void submit(){
         try{int value=Integer.parseInt(channel.getText());if(value<0)return;

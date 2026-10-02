@@ -30,7 +30,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             EnumFacing.WEST, EnumFacing.EAST, EnumFacing.NORTH, EnumFacing.SOUTH};
     private final IBakedModel delegate;
     private final boolean slab;
-    private final Map<Integer, BakedQuad> variants = new ConcurrentHashMap<>();
+    private final Map<Long, BakedQuad> variants = new ConcurrentHashMap<>();
 
     public ProgrammableHousingModel(IBakedModel delegate, boolean slab) {
         this.delegate = delegate;
@@ -62,7 +62,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             EnumFacing worldFace = worldFace(FACE[local], facing);
             if ((visible & (1 << worldFace.getIndex())) == 0) continue;
             int texture = faces.texture(FACE[local].getIndex(), finish);
-            int key = ((((texture * 6 + facing.getIndex()) * 2 + (upper ? 1 : 0)) * 2
+            long key = (((((long)texture * 6 + facing.getIndex()) * 2 + (upper ? 1 : 0)) * 2
                     + (tileSides != 0 ? 1 : 0)) * 6 + local);
             final int faceIndex = local;
             final boolean tiled = tileSides != 0;

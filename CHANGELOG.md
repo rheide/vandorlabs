@@ -4,6 +4,11 @@
 
 ### Added
 
+- Extra Large (2×2) landing-gear alignment with matching reservations and saved/copied size settings.
+- Adjacent trapdoor Cover mode, preserving the cover tile outside the gear shaft and holding it open until retraction completes.
+- Custom block/door texture sample slot across shared material menus, with vanilla/mod atlas artwork, upper/lower door mapping and non-consuming inventory selection.
+- Fit/Tile housing controls for screens, half/full inputs and consoles. Static surface and material choices participate in Duplifier copying.
+
 - Shared categorized texture picker with thumbnails across programmable materials, lights, doors and static screen/control surfaces. Adds full door artwork and static first-frame screen textures while preserving existing finish indices.
 - Filesystem PNG categories under `config/vandorlabs/textures`, with first-run Example folder/sample panel, path-based saved identifiers and missing-client fallback. Different client/server catalogs are supported.
 
@@ -16,6 +21,8 @@
 - Non-rendering Minecraft/Forge regression checks for placement, diagonal vertex data, connected copying, ramp clearance and trapdoor geometry, grouping, persistence and redstone.
 
 ### Fixed
+
+- Register custom atlas sprites before ordinary sprite registration, and reuse existing configured item geometry for the expanded material catalog.
 
 - Light Frames sit against the supporting wall, floor or ceiling face. Their collision and rendering share the same bounds. Light Frame and Light Slab inventory models are centered, scaled to fit and show the lamp artwork.
 

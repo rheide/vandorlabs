@@ -56,7 +56,7 @@ public class GuiSpaceDoor extends GuiContainer {
         super.initGui();
         Keyboard.enableRepeatEvents(true);
         listLeft=guiLeft+12; listRight=listLeft+200; listTop=guiTop+40; listBottom=listTop+LIST_H;
-        textureList=new HousingTextureList(listLeft,listTop,200,faceTexture<0?com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail):faceTexture,11);
+        textureList=new HousingTextureList(listLeft,listTop,200,faceTexture<0?com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail):faceTexture,11).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         previewX=guiLeft+338; previewY=guiTop+42;
         motionButton=new GuiButton(10,guiLeft+228,guiTop+40,180,20,motion.label);
         buttonList.add(motionButton);
@@ -123,7 +123,7 @@ public class GuiSpaceDoor extends GuiContainer {
     private int maxScroll() { return Math.max(0,LABELS.length-LIST_ROWS); }
     private void clampScroll() { scrollIndex=Math.max(0,Math.min(maxScroll(),scrollIndex)); }
     private void select(int index) {
-        if (index>=0 && index<LABELS.length && index!=design) { design=index; sendUpdate(); }
+        if (index>=0 && index<LABELS.length && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
     }
     private void dragScrollbarTo(int y) {
         scrollIndex=Math.round((float)(y-listTop)/LIST_H*maxScroll()); clampScroll();
@@ -134,7 +134,7 @@ public class GuiSpaceDoor extends GuiContainer {
         if(textureList.click(x,y,button)) {
             if(before!=textureList.selected()) {
                 int selected=textureList.selected();com.google.gson.JsonObject entry=com.vandorlabs.tiles.ScreenHousingTextures.entry(selected);
-                if(com.vandorlabs.tiles.ScreenHousingTextures.isDoor(selected)){design=entry.get("design").getAsInt();detail=entry.get("detail").getAsInt();faceTexture=-1;}
+                if(entry!=null && entry.has("design")){design=entry.get("design").getAsInt();detail=entry.get("detail").getAsInt();faceTexture=-1;}
                 else faceTexture=selected;
                 sendUpdate();
             }return;

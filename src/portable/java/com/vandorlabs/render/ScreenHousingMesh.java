@@ -18,6 +18,21 @@ public final class ScreenHousingMesh {
         this.quads=quads; this.triangles=triangles;
     }
 
+    /** Fit complete artwork to each housing face; Tile retains the pixel-space UVs. */
+    private volatile ScreenHousingMesh fitted;
+    public ScreenHousingMesh sideLayout(boolean tile){if(tile)return this;ScreenHousingMesh result=fitted;if(result==null)synchronized(this){if(fitted==null)fitted=new ScreenHousingMesh(fit(quads),fit(triangles));result=fitted;}return result;}
+    private static Face[] fit(Face[] faces) {
+        Face[] result=new Face[faces.length];
+        for(int i=0;i<faces.length;i++) {
+            double minU=Double.POSITIVE_INFINITY,maxU=Double.NEGATIVE_INFINITY,minV=minU,maxV=maxU;
+            for(Vertex v:faces[i].vertices){minU=Math.min(minU,v.u);maxU=Math.max(maxU,v.u);minV=Math.min(minV,v.v);maxV=Math.max(maxV,v.v);}
+            Vertex[] vertices=new Vertex[faces[i].vertices.length];
+            for(int j=0;j<vertices.length;j++){Vertex v=faces[i].vertices[j];vertices[j]=new Vertex(v.x,v.y,v.z,maxU>minU?(v.u-minU)*16/(maxU-minU):v.u,maxV>minV?(v.v-minV)*16/(maxV-minV):v.v);}
+            result[i]=new Face(vertices);
+        }
+        return result;
+    }
+
     private static final ScreenHousingMesh CUBE=buildBox(0,16,0,16);
     private static final ScreenHousingMesh[] SLABS = {
             buildBox(0,8,0,16), buildBox(0,8,8,16),

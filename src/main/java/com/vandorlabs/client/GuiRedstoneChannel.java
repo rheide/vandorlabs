@@ -60,7 +60,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         channelField.setText(Integer.toString(member.getRedstoneChannel()));
         channelField.setFocused(true);
         if (thruster) housingList = new HousingTextureList(guiLeft + 230,
-                guiTop + 48, 106, sideTexture);
+                guiTop + 48, 106, sideTexture).custom(value->{sideTexture=value;submit();});
         if (thruster) {
             particleButton = new GuiButton(2, guiLeft + 116, guiTop + 68, 106, 20,
                     particleLabel());

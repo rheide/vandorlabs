@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 /** Resource-pack-aware first frames and door faces, padded once during atlas loading. */
 public final class UnifiedTextureSprites {
-    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST) public void stitch(TextureStitchEvent.Pre event) {
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             com.google.gson.JsonObject e=ScreenHousingTextures.entry(i);
             if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));

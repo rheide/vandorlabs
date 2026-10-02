@@ -98,7 +98,7 @@ public class GuiProgrammableWall extends GuiContainer {
         buttonList.clear();
         listX = guiLeft + 11;
         listY = guiTop + (porthole ? 106 : supportsFaces() && tile.getFaceTextures().enabled ? 79 : 27);
-        textureList=new HousingTextureList(listX,listY,LIST_W,selected,rows);
+        textureList=new HousingTextureList(listX,listY,LIST_W,selected,rows).custom(this::choose);
         if (supportsFaces()) {
             buttonList.add(new GuiButton(106, guiLeft + 14, guiTop + ySize - 51, 312, 20,
                     "Face overrides: " + (tile.getFaceTextures().enabled ? "On" : "Off")));

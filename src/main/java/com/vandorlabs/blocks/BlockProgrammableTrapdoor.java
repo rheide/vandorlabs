@@ -40,7 +40,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);TileEntityProgrammableTrapdoor tile=raw instanceof TileEntityProgrammableTrapdoor?(TileEntityProgrammableTrapdoor)raw:null;
         int position=tile==null?(state.getValue(HALF)==DoorHalf.TOP?2:0):tile.getPosition();
-        double[] b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(TrapdoorGeometry.corners(position,tile!=null && tile.isSliding(),quarterTurns(state.getValue(FACING)),state.getValue(OPEN)?1:0,tile==null?1/16D:tile.motionHinge(),tile==null?15/16D:tile.motionTravel()));
+        double[] b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(tile==null?TrapdoorGeometry.corners(position,false,quarterTurns(state.getValue(FACING)),state.getValue(OPEN)?1:0):tile.corners(state,state.getValue(OPEN)?1:0));
         return new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]);
     }
     @Override public net.minecraft.block.state.BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing face){return BlockFaceShape.UNDEFINED;}

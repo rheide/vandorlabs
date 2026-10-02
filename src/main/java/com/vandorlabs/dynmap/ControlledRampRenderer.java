@@ -12,12 +12,12 @@ public final class ControlledRampRenderer extends CustomRenderer {
     @Override public String[] getTileEntityFieldsNeeded() {
         return new String[]{"DynmapBoxes","DynmapTexture"};
     }
-    @Override protected int getMaximumTextureCount() { return ScreenHousingTextures.IDS.length + 1; }
+    @Override protected int getMaximumTextureCount() { return ScreenHousingTextures.LEGACY_COUNT + 1; }
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
         Object saved=context.getBlockTileEntityField("DynmapBoxes");
         if (!(saved instanceof String)) return new RenderPatch[0];
         Object savedTexture=context.getBlockTileEntityField("DynmapTexture");
-        int fallback=ScreenHousingTextures.IDS.length;
+        int fallback=ScreenHousingTextures.LEGACY_COUNT;
         int texture=savedTexture instanceof Number?((Number)savedTexture).intValue():fallback;
         if (texture<0 || texture>fallback) texture=fallback;
         int[] faces={texture,texture,texture,texture,texture,texture};

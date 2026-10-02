@@ -115,7 +115,7 @@ public final class ScreenHousingTextures {
     public static String category(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null?e.get("category").getAsString():choice<28?"Materials":choice<44?"Texture Pack 1":choice<67?"Texture Pack 2":"Hull Plating";}
     public static String label(int choice){com.google.gson.JsonObject e=entry(choice);return e==null?null:e.get("label").getAsString();}
     public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
-    public static boolean isDoor(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
+    public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
     public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
     public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=entry(choice);return !lit && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
@@ -124,9 +124,9 @@ public final class ScreenHousingTextures {
 
     private ScreenHousingTextures() { }
 
-    public static boolean validChoice(int choice){return choice>=0 && (choice<BUILTIN_COUNT || choice>=FilesystemTextures.ID_BASE);}
+    public static boolean validChoice(int choice){return choice>=0 && (choice<BUILTIN_COUNT || choice>=CustomBlockMaterials.ID_BASE);}
     public static int choiceAt(int index){com.google.gson.JsonObject e=entry(index);return e!=null && e.has("key")?e.get("key").getAsInt():index;}
-    public static int localIndex(int choice){return choice>=FilesystemTextures.ID_BASE?FILE_CHOICES.getOrDefault(choice,0):choice>=0 && choice<IDS.length?choice:0;}
+    public static int localIndex(int choice){return CustomBlockMaterials.isCustom(choice)?0:choice>=FilesystemTextures.ID_BASE?FILE_CHOICES.getOrDefault(choice,0):choice>=0 && choice<IDS.length?choice:0;}
 
     public static int clamp(int choice) {
         return validChoice(choice) ? choice : 0;
@@ -137,6 +137,7 @@ public final class ScreenHousingTextures {
     }
 
     public static String texture(int choice) {
+        if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
         return TEXTURES[localIndex(choice)];
     }
 }

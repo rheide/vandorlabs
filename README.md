@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
-Texture choices share a categorized picker with thumbnails, including door, light and static screen artwork. Add your own categories and PNGs with [filesystem textures](docs/filesystem-textures.md); first startup creates an Example folder and sample panel. Client and server texture folders may differ.
+Texture choices share a [categorized picker with thumbnails and Custom block/door artwork](docs/unified-materials.md), including door, light and static screen artwork. Add your own categories and PNGs with [filesystem textures](docs/filesystem-textures.md); first startup creates an Example folder and sample panel. Client and server texture folders may differ.
 
 See the [screenshot and functionality gallery](docs/gallery/README.md) for a
 visual tour of the programmable blocks, doors, propulsion systems, controls,
@@ -88,7 +88,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   Their recipes use Industrial Alloy and wool. See [seating](docs/gallery/chairs.md).
 - **Landing Gear**: one block with Small, Medium, Large and Extra Large sizes. Extra Large doubles Large's model dimensions and occupies a centered three-by-three footprint. Configure
   redstone mode/channel and extension from 0–4 blocks in half-block steps;
-  size and length changes preview immediately. See [Landing Gear](docs/gallery/version-1.1.md#landing-gear).
+  size and length changes preview immediately. See [2×2 alignment and adjacent covers](docs/landing-gear-covers.md). See [Landing Gear](docs/gallery/version-1.1.md#landing-gear).
 - **Ramp / Elevator Controller**: turns matching existing slabs or blocks into
   a ramp or moving lift. Configure signed start/end offsets, redstone polarity and
   Fast/Medium/Slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and

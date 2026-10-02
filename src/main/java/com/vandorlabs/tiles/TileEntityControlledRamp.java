@@ -266,12 +266,13 @@ public class TileEntityControlledRamp extends TileEntity {
             }
         }
         tag.setString("DynmapBoxes",mapBoxes.toString());
-        int mapTexture=ScreenHousingTextures.IDS.length;
+        int mapTexture=ScreenHousingTextures.LEGACY_COUNT;
         if ((source.getBlock()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK
                 || source.getBlock()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_SLAB)
                 && !sourceTileTags.isEmpty()) {
             NBTTagCompound saved=sourceTileTags.values().iterator().next();
             mapTexture=ScreenHousingTextures.clamp(saved.getInteger(SaveSchema.Screen.HOUSING_TEXTURE));
+            if(mapTexture>=ScreenHousingTextures.LEGACY_COUNT)mapTexture=0;
         }
         tag.setInteger("DynmapTexture",mapTexture);
         return tag;

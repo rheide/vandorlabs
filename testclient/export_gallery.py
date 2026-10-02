@@ -10,6 +10,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    "gallery_v12_materials": "tasks/material-choices.png",
+    "gallery_v12_gear_corner": "tasks/gear-2x2.png",
+    "gallery_v12_gear_cover_closed": "tasks/gear-cover-closed.png",
+    "gallery_v12_gear_cover_open": "tasks/gear-cover-open.png",
     "duplifier_apply_settings_gui": "tools/duplifier-config.png",
     "console_gui": "programmable/console-config.png",
     "input_gui": "programmable/input-config.png",
@@ -23,6 +27,11 @@ SHOTS = {
     "gallery_ramp_down_smooth": "ramp-controller/down-smooth.png",
     "gallery_ramp_down_stairs": "ramp-controller/down-stairs.png",
 }
+
+for group in ("flat", "v", "rectangle", "stagger"):
+    for motion in ("rotating", "sliding"):
+        for pose in ("closed", "open"):
+            SHOTS[f"gallery_trapdoor_{group}_{motion}_{pose}"] = f"tasks/trapdoor-{group}-{motion}-{pose}.png"
 
 for name in ("viewscreen", "console", "diagonal_up", "diagonal_down",
              "input_wall", "input_keyboard", "half_console", "full_input_wall",

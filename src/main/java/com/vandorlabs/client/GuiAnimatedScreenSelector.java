@@ -229,7 +229,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         buttonList.add(frameButton);
         housingList = new HousingTextureList(x + (console ? 244 : 266), y + 22,
                 console ? 160 : 140,
-                housingTexture);
+                housingTexture).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         channelField = new GuiTextField(40,fontRenderer,x+64,y+186,84,18);
         channelField.setMaxStringLength(10);
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));

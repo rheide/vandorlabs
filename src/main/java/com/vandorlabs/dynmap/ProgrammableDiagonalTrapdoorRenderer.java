@@ -12,7 +12,7 @@ public final class ProgrammableDiagonalTrapdoorRenderer extends CustomRenderer {
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
         int turns=context.getBlockType().isStateMatch("facing","east")?1:context.getBlockType().isStateMatch("facing","south")?2:context.getBlockType().isStateMatch("facing","west")?3:0;
         double[][] v=DiagonalTrapdoorGeometry.corners(Math.max(0,Math.min(2,number(context.getBlockTileEntityField("TrapdoorPosition")))),context.getBlockType().isStateMatch("half","top"),turns,flag(context.getBlockTileEntityField("TrapdoorSliding")),flag(context.getBlockTileEntityField("DiagonalReverse")),context.getBlockType().isStateMatch("open","true")?1:0);
-        int texture=ScreenHousingTextures.clamp(number(context.getBlockTileEntityField("housingTexture")));
+        int texture=ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(number(context.getBlockTileEntityField("housingTexture"))));
         RenderPatch[] result=new RenderPatch[6];
         for(int f=0;f<6;f++) {
             int[] face=TrapdoorGeometry.FACES[f];double[] a=v[face[0]],b=v[face[1]],c=v[face[3]];

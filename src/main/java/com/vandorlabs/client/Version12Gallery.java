@@ -1,4 +1,6 @@
 package com.vandorlabs.client;
+import com.vandorlabs.blocks.BlockProgrammableTrapdoor;
+import com.vandorlabs.tiles.TileEntityProgrammableTrapdoor;
 
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.tiles.*;
@@ -11,7 +13,22 @@ import net.minecraft.world.World;
 final class Version12Gallery {
     static void build(World world,String scene,int x,int y) {
         BlockPos origin=new BlockPos(x-3,y+1,-18);
-        if(scene.equals("input_ceiling")) {
+        if(scene.equals("materials")) {
+            int stone=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.STONE));
+            int door=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Items.OAK_DOOR));
+            for(int i=0;i<3;i++) {
+                BlockPos p=origin.add(i*3,1,0);world.setBlockState(p,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
+                ((TileEntityAnimatedScreenSelector)world.getTileEntity(p)).setHousingTexture(i==0?stone:i==1?ScreenHousingTextures.doorIndex(0,2):FilesystemTextures.identifier("Example/sample_panel.png"));
+            }
+            BlockPos doorPos=origin.add(9,1,0);Block block=block("programmable_door");world.setBlockState(doorPos,block.getDefaultState(),3);
+            world.setBlockState(doorPos.up(),block.getDefaultState().withProperty(BlockVandorDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),3);
+            ((TileEntitySpaceDoor)world.getTileEntity(doorPos)).setFaceTexture(door);
+            BlockProgrammableTrapdoor hatch=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
+            for(int x0=0;x0<2;x0++)for(int z0=0;z0<2;z0++) {
+                BlockPos p=origin.add(3+x0,0,3+z0);world.setBlockState(p,hatch.getDefaultState(),3);
+                TileEntityProgrammableTrapdoor tile=(TileEntityProgrammableTrapdoor)world.getTileEntity(p);tile.configure(door,2,false,0,0);tile.completeSquare(null,net.minecraft.item.ItemStack.EMPTY);
+            }
+        }else if(scene.equals("input_ceiling")) {
             for(int i=0;i<2;i++) {
                 BlockProgrammableInput input=(BlockProgrammableInput)(i==0
                         ?ModBlocks.PROGRAMMABLE_INPUT:ModBlocks.PROGRAMMABLE_FULL_INPUT);
@@ -102,13 +119,18 @@ final class Version12Gallery {
                 if(scene.equals("seating_heights")){tile.setHeight(col);tile.setJoin(false);}
                 if(scene.equals("seating_unjoined"))tile.setJoin(false);
             }
-        } else if (scene.equals("gear_extra_large")) {
+        } else if (scene.equals("gear_extra_large") || scene.equals("gear_corner") || scene.startsWith("gear_cover")) {
             BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear");
             BlockPos p=origin.add(6,5,0);
             world.setBlockState(p,gear.getDefaultState(),3);
             TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
-            tile.configure(0,0,32,3);
-            gear.setExtended(world,p,true);
+            tile.configure(0,0,32,scene.equals("gear_extra_large")?3:4);
+            if(scene.startsWith("gear_cover")) {
+                BlockPos mount=p.down().west();BlockProgrammableTrapdoor hatch=(BlockProgrammableTrapdoor)block("programmable_trapdoor");
+                world.setBlockState(mount,hatch.getDefaultState().withProperty(BlockProgrammableTrapdoor.FACING,EnumFacing.EAST),3);
+                TileEntityProgrammableTrapdoor cover=(TileEntityProgrammableTrapdoor)world.getTileEntity(mount);cover.setCover(true);cover.configure(2,0,false,1,0);
+                if(!scene.endsWith("closed"))gear.setExtended(world,p,true);
+            }else gear.setExtended(world,p,true);
         } else if (scene.startsWith("gear")) {
             for(int i=0;i<3;i++) {
                 BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)block("landing_gear");

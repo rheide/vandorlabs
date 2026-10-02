@@ -37,8 +37,6 @@ public final class MessageProgrammableSlabSides implements IMessage {
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || !player.world.isBlockLoaded(msg.pos)
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
-                        || (player.world.getBlockState(msg.pos).getBlock() != ModBlocks.PROGRAMMABLE_SLAB
-                        && player.world.getBlockState(msg.pos).getBlock() != ModBlocks.PROGRAMMABLE_STAIRS)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector))
                     return;
                 ContainerAnimatedScreenSelector container =
@@ -46,7 +44,10 @@ public final class MessageProgrammableSlabSides implements IMessage {
                 TileEntity tile = player.world.getTileEntity(msg.pos);
                 if (tile != container.getTileEntity() || !container.canInteractWith(player))
                     return;
-                ((TileEntityAnimatedScreenSelector) tile).setSlabTileSides(msg.tileSides);
+                if(!(tile instanceof TileEntityAnimatedScreenSelector))return;
+                if(tile.getBlockType()==ModBlocks.PROGRAMMABLE_SLAB || tile.getBlockType()==ModBlocks.PROGRAMMABLE_STAIRS)
+                    ((TileEntityAnimatedScreenSelector) tile).setSlabTileSides(msg.tileSides);
+                else ((TileEntityAnimatedScreenSelector) tile).setSurfaceTileSides(msg.tileSides);
             });
             return null;
         }

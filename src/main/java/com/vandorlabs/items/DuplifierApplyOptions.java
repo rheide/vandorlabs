@@ -76,7 +76,12 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.GEAR_SIZE, "Gear Size", 2),
             option(ProgrammableSettings.GEAR_LENGTH, "Gear Extension", 2),
             option(ProgrammableSettings.GEAR_MODE, "Gear Redstone Mode", 2),
-            option(ProgrammableSettings.TRAPDOOR_POSITION, "Trapdoor Position", 3)
+            option(ProgrammableSettings.TRAPDOOR_POSITION, "Trapdoor Position", 3),
+            option(ProgrammableSettings.TRAPDOOR_COVER, "Gear Cover", 3),
+            option(ProgrammableSettings.PRIMARY_SURFACE, "Static Surface Texture", 1),
+            option(ProgrammableSettings.SECONDARY_SURFACE, "Second Static Texture", 1),
+            option(ProgrammableSettings.LIGHT_FACE_TEXTURE, "Light Face Texture", 0),
+            option(ProgrammableSettings.DOOR_FACE_TEXTURE, "Door Face Texture", 3)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;

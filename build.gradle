@@ -49,6 +49,8 @@ task testFilesystemTextureBootstrap(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.FilesystemTextureChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
     args 'bootstrap'
 }
 
@@ -58,6 +60,8 @@ task testFilesystemTextures(type: JavaExec) {
     dependsOn compileNonRenderingChecks, testFilesystemTextureBootstrap
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.FilesystemTextureChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
 }
 
 task compilePortableTests(type: JavaCompile) {

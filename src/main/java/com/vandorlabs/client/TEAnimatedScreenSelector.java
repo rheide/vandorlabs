@@ -635,8 +635,8 @@ public class TEAnimatedScreenSelector
         InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
                 ?InputSurfaceLayout.ceilingInput(false,small,te.getCeilingPosition(2))
                 :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
-        renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
-                layout.housing.x1,layout.housing.y1,layout.housing.z1);
+        renderWallBox(wall,wall,true,layout.housing.x0,layout.housing.y0,layout.housing.z0,
+                layout.housing.x1,layout.housing.y1,layout.housing.z1,te.isSurfaceTileSides());
         drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
     }
 
@@ -652,8 +652,8 @@ public class TEAnimatedScreenSelector
                 ?InputSurfaceLayout.ceilingInput(true,false,te.getCeilingPosition(1))
                 :InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
-        renderWallBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
-                layout.housing.x1,layout.housing.y1,layout.housing.z1);
+        renderWallBox(wall,wall,true,layout.housing.x0,layout.housing.y0,layout.housing.z0,
+                layout.housing.x1,layout.housing.y1,layout.housing.z1,te.isSurfaceTileSides());
         bindScreenSurface(te);
         drawInputSurface(layout.surface,uv);
     }
@@ -696,7 +696,7 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
         renderWallBox(wall, 0, 0, 0, 16, 1, 16);
-        drawWallMesh(wall,ScreenHousingMesh.halfConsole());
+        drawWallMesh(wall,ScreenHousingMesh.halfConsole().sideLayout(te.isSurfaceTileSides()));
 
         double[] frontUv = bindInput(te, te.getInputPanel());
         drawInputSurface(InputSurfaceLayout.halfConsoleFront(),frontUv);
@@ -816,7 +816,7 @@ public class TEAnimatedScreenSelector
 
         TextureAtlasSprite wall = wallSprite(te);
         renderWallBox(wall, 0, 0, 0, 16, 1, 16);
-        drawWallMesh(wall,ScreenHousingMesh.console());
+        drawWallMesh(wall,ScreenHousingMesh.console().sideLayout(te.isSurfaceTileSides()));
 
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork

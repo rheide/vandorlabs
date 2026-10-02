@@ -443,7 +443,7 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);
                 if (block instanceof BlockTelescopicLandingGear) {
-                    for (String size : BlockTelescopicLandingGear.SIZES) {
+                    for (String size : new String[]{"small","medium","large","extra_large"}) {
                         ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,"landing_gear_"+size));
                         for (String group : new String[]{"fixed", "wheel", "piston"})
                             ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,"landing_gear_"+size+"_"+group));
@@ -451,7 +451,7 @@ public class ModBlocks {
                     ModelLoader.setCustomMeshDefinition(item, stack -> {
                         net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
                         int size=tag==null?0:Math.max(0,Math.min(BlockTelescopicLandingGear.SIZES.length-1,tag.getInteger("GearSize")));
-                        return new ModelResourceLocation("vandorlabs:landing_gear_"+BlockTelescopicLandingGear.SIZES[size],"inventory");
+                        return new ModelResourceLocation("vandorlabs:landing_gear_"+BlockTelescopicLandingGear.SIZES[Math.min(size,3)],"inventory");
                     });
                     continue;
                 }
@@ -676,6 +676,13 @@ public class ModBlocks {
                     event.getModelRegistry().getObject(location);
             if (model != null) event.getModelRegistry().putObject(location,
                     new com.vandorlabs.client.PropulsionSideModel(model));
+        }
+        for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())) {
+            String path=location.getResourcePath();
+            if("vandorlabs".equals(location.getResourceDomain()) && "inventory".equals(location.getVariant()) && path.startsWith("configured/programmable_") && !path.startsWith("configured/programmable_chair")) {
+                net.minecraft.client.renderer.block.model.IBakedModel base=event.getModelRegistry().getObject(location);
+                if(base!=null)event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConfiguredMaterialItemModel(base,path.startsWith("configured/programmable_light")));
+            }
         }
         ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");
         if (event.getModelRegistry().getObject(stairItem)!=null)

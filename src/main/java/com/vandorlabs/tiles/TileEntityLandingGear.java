@@ -40,13 +40,13 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         if(nextSize<0||nextSize>=BlockTelescopicLandingGear.SIZES.length||!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
         boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
-        if((extended||nextSize==3) && !block.reserve(world,pos,
+        if((extended||nextSize>=3) && !block.reserve(world,pos,
                 extended?Math.max(progress,pixels/16F):progress,nextSize))return false;
         boolean automationChanged=mode!=nextMode||channel!=nextChannel;
         mode=nextMode;extensionPixels=pixels;size=nextSize;setRedstoneChannel(nextChannel);
         if(!world.isRemote)block.releaseBelow(world,pos,
-                nextSize==3||extended?(int)Math.ceil(Math.max(progress,extended?pixels/16F:0)):0);
-        evaluateSignal(automationChanged);markDirty();sync();return true;
+                nextSize>=3||extended?(int)Math.ceil(Math.max(progress,extended?pixels/16F:0)):0);
+        evaluateSignal(automationChanged);LandingGearCovers.refresh(world,pos);markDirty();sync();return true;
     }
     public void update(){
         if(!isRoot())return;
@@ -56,7 +56,8 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         progress=progress<target?Math.min(target,progress+.05F):Math.max(target,progress-.05F);
         if(!world.isRemote){
             if(progress!=previous){markDirty();
-                ((BlockTelescopicLandingGear)getBlockType()).releaseBelow(world,pos,(int)Math.ceil(Math.max(progress,target)));}
+                ((BlockTelescopicLandingGear)getBlockType()).releaseBelow(world,pos,(int)Math.ceil(Math.max(progress,target)));
+                if(progress==target)LandingGearCovers.refresh(world,pos);}
         }
     }
     public void placed(){if(isRoot()){RedstoneChannels.register(this);evaluateSignal(true);}}
@@ -100,7 +101,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     public void onDataPacket(NetworkManager net,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());configurationRevision++;}
-    public AxisAlignedBB getRenderBoundingBox(){return size==3
+    public AxisAlignedBB getRenderBoundingBox(){return size==4?new AxisAlignedBB(pos.down(5),pos.add(2,1,2)):size==3
             ?new AxisAlignedBB(pos.add(-1,-5,-1),pos.add(2,1,2))
             :new AxisAlignedBB(pos.down(4),pos.add(1,1,1));}
 }

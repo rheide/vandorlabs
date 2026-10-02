@@ -37,6 +37,8 @@ public final class NonRenderingChecks {
         rampClearance();
         TrapdoorChecks.run();
         DiagonalTrapdoorChecks.run();
+        LandingGearFootprintChecks.run();
+        SurfaceLayoutChecks.run();
     }
 
     private static void placement() {

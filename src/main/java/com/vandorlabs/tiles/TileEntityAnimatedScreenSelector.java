@@ -136,6 +136,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int housingTexture;
     private FaceTextures faceTextures = FaceTextures.DEFAULT;
     private boolean slabTileSides;
+    private boolean surfaceTileSides=true;
+    public boolean isSurfaceTileSides(){return surfaceTileSides;}
+    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value)return;surfaceTileSides=value;markDirty();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
     private boolean diagonalFullWidth;
     private boolean diagonalHalfHeight;
     private int diagonalFill;
@@ -394,6 +397,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
         compound.setIntArray("FaceTextures", faceTextures.choices());
         compound.setBoolean("SlabTileSides", slabTileSides);
+        compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
         compound.setInteger("DiagonalFill", diagonalFill);
@@ -406,6 +410,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
         boolean previousSlabSides = slabTileSides;
+        boolean previousSurfaceSides=surfaceTileSides;
+        surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");
         boolean previousHalfHeight = diagonalHalfHeight;
         int previousFill = diagonalFill;
         boolean previousDiagonalWidth = diagonalFullWidth;
@@ -452,7 +458,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         diagonalHalfHeight = compound.getBoolean("DiagonalHalfHeight");
         diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
         if (world != null && world.isRemote
-                && (!previousFaces.equals(faceTextures) || previousHousing != housingTexture || previousSlabSides != slabTileSides
+                && (!previousFaces.equals(faceTextures) || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
                 || previousFill != diagonalFill))
             world.markBlockRangeForRenderUpdate(pos,pos);

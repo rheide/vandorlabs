@@ -39,8 +39,8 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         super.initGui();
         buttonList.clear();
         Keyboard.enableRepeatEvents(true);
-        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 180, off);
-        onList = new HousingTextureList(guiLeft + 216, guiTop + 41, 180, on);
+        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 180, off).custom(value->{off=value;send();});
+        onList = new HousingTextureList(guiLeft + 216, guiTop + 41, 180, on).custom(value->{on=value;send();});
         channelField = new GuiTextField(0, fontRenderer, guiLeft + 132,
                 guiTop + 144, 110, 18);
         channelField.setMaxStringLength(10);
