@@ -33,6 +33,11 @@ public class BlockProgrammableLight extends BlockAnimatedScreenSelector {
         return support.getBlock() == this ? support.getValue(FACING) : clickedFace;
     }
 
+    @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
+        return ProgrammableLightShape.world(state,world,pos);
+    }
+    @Override public boolean isOpaqueCube(IBlockState state){return false;}
+    @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
         TileEntity tile = world == null || pos == null ? null : world.getTileEntity(pos);
         return tile instanceof TileEntityProgrammableLight

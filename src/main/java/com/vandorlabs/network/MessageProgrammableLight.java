@@ -20,6 +20,7 @@ public final class MessageProgrammableLight implements IMessage {
     private int channel;
     private int housing;
     private int trigger;
+    private boolean small,tileSides;
 
     public MessageProgrammableLight() { }
     public MessageProgrammableLight(BlockPos pos, int texture, int level,
@@ -35,6 +36,10 @@ public final class MessageProgrammableLight implements IMessage {
 
     public MessageProgrammableLight(BlockPos pos, int texture, int level,
             boolean join, int channel, int housing, int trigger) {
+        this(pos,texture,level,join,channel,housing,trigger,false,true);
+    }
+    public MessageProgrammableLight(BlockPos pos,int texture,int level,boolean join,int channel,int housing,int trigger,boolean small,boolean tileSides) {
+        this.small=small;this.tileSides=tileSides;
         this.pos = pos;
         this.texture = texture;
         this.level = level;
@@ -51,6 +56,7 @@ public final class MessageProgrammableLight implements IMessage {
         channel = buf.readInt();
         housing = buf.readInt();
         trigger = buf.readInt();
+        small=buf.readBoolean();tileSides=buf.readBoolean();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -60,6 +66,7 @@ public final class MessageProgrammableLight implements IMessage {
         buf.writeInt(channel);
         buf.writeInt(housing);
         buf.writeInt(trigger);
+        buf.writeBoolean(small);buf.writeBoolean(tileSides);
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableLight, IMessage> {
@@ -83,6 +90,8 @@ public final class MessageProgrammableLight implements IMessage {
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock()
                         instanceof com.vandorlabs.blocks.BlockProgrammableLight)) return;
+                ((TileEntityProgrammableLight)tile).setSmallInput(msg.small);
+                ((TileEntityProgrammableLight)tile).setSlabTileSides(msg.tileSides);
                 ((TileEntityProgrammableLight) tile).configure(
                         msg.texture, msg.level, msg.join, msg.channel, msg.housing, msg.trigger);
             });

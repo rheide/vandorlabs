@@ -1,4 +1,24 @@
 {
+  "parent": "block/block",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    }
+  },
   "textures": {
     "particle": "vandorlabs:blocks/dark_wall_panel",
     "housing": "vandorlabs:blocks/dark_wall_panel",
@@ -9,19 +29,19 @@
       "from": [
         0,
         0,
-        0
+        7.5
       ],
       "to": [
         16,
         16,
-        1
+        8.5
       ],
       "faces": {
         "north": {
           "texture": "#face"
         },
         "south": {
-          "texture": "#housing"
+          "texture": "#face"
         },
         "east": {
           "texture": "#housing"

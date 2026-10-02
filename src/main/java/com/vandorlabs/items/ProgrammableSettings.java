@@ -127,6 +127,7 @@ public final class ProgrammableSettings {
             out.setString(PRIMARY_KIND, "light");
             out.setInteger(PRIMARY_TEXTURE, light.getTexture());
             out.setInteger(LIGHT_LEVEL, light.getLightLevel());
+            out.setBoolean(SMALL_INPUT,light.isSmallInput());out.setBoolean(SLAB_TILE_SIDES,light.isSlabTileSides());
             out.setInteger(TRIGGER, light.getTrigger());
             out.setBoolean(JOIN, light.isJoin());
             out.setBoolean(ACTIVE, light.isManualOn());
@@ -334,6 +335,8 @@ public final class ProgrammableSettings {
             if ("light".equals(values.getString(PRIMARY_KIND))
                     && values.hasKey(PRIMARY_TEXTURE, 3))
                 primary = values.getInteger(PRIMARY_TEXTURE);
+            if(values.hasKey(SMALL_INPUT,1))light.setSmallInput(values.getBoolean(SMALL_INPUT));
+            if(values.hasKey(SLAB_TILE_SIDES,1))light.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES));
             light.configure(primary, number(values, LIGHT_LEVEL, light.getLightLevel()),
                     flag(values, JOIN, light.isJoin()),
                     number(values, CHANNEL, light.getRedstoneChannel()),

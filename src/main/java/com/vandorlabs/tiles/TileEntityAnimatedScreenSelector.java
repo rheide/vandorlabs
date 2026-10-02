@@ -40,7 +40,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (world == null) return false;
         net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
         return block instanceof com.vandorlabs.blocks.BlockProgrammableTrigger
-                || block.getClass()==com.vandorlabs.blocks.BlockProgrammableLight.class;
+                || block.getClass()==com.vandorlabs.blocks.BlockProgrammableLight.class && !isSmallInput();
     }
 
     public static final int MODE_OFF = ScreenBehavior.OFF;

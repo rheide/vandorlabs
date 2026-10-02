@@ -28,6 +28,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     private boolean join;
     private int housing;
     private int trigger;
+    private boolean small,tileSides;
     private HousingTextureList housingList;
     private GuiTextField channelField;
     private boolean draggingLevel;
@@ -36,6 +37,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     public GuiProgrammableLight(InventoryPlayer inventory, TileEntityProgrammableLight tile) {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
         this.tile = tile;
+        small=tile.isSmallInput();tileSides=tile.isSlabTileSides();
         selected = tile.getTexture();
         level = tile.getLightLevel();
         join = tile.isJoin();
@@ -55,6 +57,8 @@ public final class GuiProgrammableLight extends GuiContainer {
         channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
         housingList = new HousingTextureList(guiLeft + 252, guiTop + 40, 148, housing);
+        buttonList.add(new GuiButton(103,guiLeft+162,guiTop+122,84,20,sizeLabel()));
+        buttonList.add(new GuiButton(104,guiLeft+252,guiTop+140,156,20,sidesLabel()));
         buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 214,
                 96, 20, joinLabel()));
         buttonList.add(new GuiButton(102, guiLeft + 112, guiTop + 214,
@@ -62,6 +66,9 @@ public final class GuiProgrammableLight extends GuiContainer {
         buttonList.add(new GuiButton(100, guiLeft + 300, guiTop + 214,
                 108, 20, I18n.format("gui.done")));
     }
+
+    private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
+    private String sidesLabel(){return "Side layout: "+(tileSides?"Tile":"Fit");}
 
     private String joinLabel() {
         return "Join: "
@@ -85,9 +92,10 @@ public final class GuiProgrammableLight extends GuiContainer {
     private void send() {
         int channel = channel();
         if (channel < 0) return;
+        tile.setSmallInput(small);tile.setSlabTileSides(tileSides);
         tile.configure(selected, level, join, channel, housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
-                tile.getPos(), selected, level, join, channel, housing, trigger));
+                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides));
     }
 
     private void setLevelFromMouse(int mouseX) {
@@ -157,6 +165,8 @@ public final class GuiProgrammableLight extends GuiContainer {
             button.displayString = joinLabel();
             send();
         }
+        if(button.id==103){small=!small;button.displayString=sizeLabel();send();}
+        if(button.id==104){tileSides=!tileSides;button.displayString=sidesLabel();send();}
         if (button.id == 102) {
             trigger = (trigger + 1) % 3;
             button.displayString = triggerLabel();
@@ -219,17 +229,6 @@ public final class GuiProgrammableLight extends GuiContainer {
         mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1F, 1F, 1F, 1F);
         drawTexturedModalRect(guiLeft + 169, guiTop + 44, sprite, 66, 66);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.preview"),
-                guiLeft + 344, guiTop + 140, 0xFFD8D8D8);
-        drawRect(guiLeft + 342, guiTop + 150, guiLeft + 402,
-                guiTop + 210, 0xFF505058);
-        mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        GlStateManager.color(1F, 1F, 1F, 1F);
-        GlStateManager.enableBlend();
-        drawTexturedModalRect(guiLeft + 344, guiTop + 152,
-                mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(housing)),
-                56, 56);
-        GlStateManager.disableBlend();
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level") + ": " + level,
                 guiLeft + 13, guiTop + 156, 0xFFD8D8D8);
         drawRect(guiLeft + 16, guiTop + 173, guiLeft + 16 + SLIDER_W,

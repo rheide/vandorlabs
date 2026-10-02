@@ -14,3 +14,7 @@ Programmable Light provides six selectable appearances. Each has an unlit and li
 | Logo | ![Logo light states](../images/gallery/lights/logo.png) |
 
 Use redstone **On** to light while powered or **Off** to light while unpowered. A virtual channel carries the same activation across loaded blocks in the dimension. Configure the block from its own menu, or copy compatible settings with the [Duplifier](../DUPLIFIER.md).
+
+## Shape, size and side layout
+
+Light Frames attach flush to the supporting wall, floor or ceiling. **Size: Small** centers a half-width light; **Full** restores the normal size. Small lights display individual artwork even when Join is enabled. Light Slabs keep their upper/lower half while centering the smaller footprint. **Side layout: Tile/Fit** controls whether housing artwork keeps its block scale or stretches to the exposed side. The chosen size and layout survive saving, configured items and Duplifier copying. Light Frame and Light Slab icons show their light artwork and fit within the hotbar slot.

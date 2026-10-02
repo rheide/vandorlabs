@@ -11,10 +11,7 @@ public final class BlockProgrammableLightFrame extends BlockProgrammableLight {
     public BlockProgrammableLightFrame() { super("programmable_light_frame"); }
 
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
-        EnumFacing facing=state.getValue(FACING);
-        if(facing==EnumFacing.UP)return new AxisAlignedBB(0,15/16D,0,1,1,1);
-        if(facing==EnumFacing.DOWN)return new AxisAlignedBB(0,0,0,1,1/16D,1);
-        return PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,0,0,1,1,1/16D),facing);
+        return ProgrammableLightShape.world(state,world,pos);
     }
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}

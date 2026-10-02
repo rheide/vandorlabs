@@ -74,6 +74,10 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         else changed();
     }
 
+    @Override public void setSmallInput(boolean small) {
+        if(isSmallInput()==small)return;
+        super.setSmallInput(small);changed();
+    }
     public void setOn(boolean value) {
         if (!isManual() || on == value) return;
         on = value;

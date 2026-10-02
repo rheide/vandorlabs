@@ -19,6 +19,7 @@ import com.vandorlabs.blocks.BlockProgrammableFullInput;
 import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammablePortholeBlock;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.TileEntityProgrammableLight;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -391,19 +392,11 @@ public class TEAnimatedScreenSelector
             GlStateManager.enableCull();
             GlStateManager.cullFace(GlStateManager.CullFace.FRONT);
             int visible=lightVisibleFaces(light,state.getValue(BlockAnimatedScreenSelector.FACING));
-            int minY=0,maxY=16,minZ=0,maxZ=16;
-            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)maxZ=1;
-            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLightSlab){
-                boolean upper=state.getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF)
-                        ==net.minecraft.block.BlockSlab.EnumBlockHalf.TOP;
-                EnumFacing facing=state.getValue(BlockAnimatedScreenSelector.FACING);
-                if(facing==EnumFacing.UP){minZ=upper?0:8;maxZ=upper?8:16;}
-                else if(facing==EnumFacing.DOWN){minZ=upper?8:0;maxZ=upper?16:8;}
-                else {minY=upper?8:0;maxY=upper?16:8;}
-            }
-            renderLightHousing(housing,visible,0,minY,minZ,16,maxY,maxZ);
+            net.minecraft.util.math.AxisAlignedBB box=com.vandorlabs.blocks.ProgrammableLightShape.local(state,light.isSmallInput());
+            double minX=box.minX*16,maxX=box.maxX*16,minY=box.minY*16,maxY=box.maxY*16,minZ=box.minZ*16,maxZ=box.maxZ*16;
+            renderLightHousing(housing,visible,minX,minY,minZ,maxX,maxY,maxZ,light.isSlabTileSides());
             if ((visible & (1 << EnumFacing.NORTH.getIndex())) != 0)
-                renderProgrammableLightFace(face, lightGroup(light, state), te.getPos(),minY,maxY,minZ);
+                renderProgrammableLightFace(face, lightGroup(light, state), te.getPos(),minX,maxX,minY,maxY,minZ);
             GlStateManager.cullFace(GlStateManager.CullFace.BACK);
             GlStateManager.enableLighting();
             endLocalTransform();
@@ -1298,11 +1291,13 @@ public class TEAnimatedScreenSelector
 
     /** Adjacent light cubes fully cover these surfaces, regardless of Join. */
     static int lightVisibleFaces(TileEntityAnimatedScreenSelector tile,EnumFacing facing) {
+        if(tile.isSmallInput())return 63;
         int visible=0;
         for(EnumFacing local:EnumFacing.values()) {
             EnumFacing worldSide=lightWorldSide(facing,local);
             BlockPos neighbor=tile.getPos().offset(worldSide);
             if(!tile.getWorld().isBlockLoaded(neighbor)
+                    || tile.getWorld().getTileEntity(neighbor) instanceof TileEntityProgrammableLight && ((TileEntityProgrammableLight)tile.getWorld().getTileEntity(neighbor)).isSmallInput()
                     || tile.getWorld().getBlockState(neighbor).getBlock()!=tile.getWorld().getBlockState(tile.getPos()).getBlock()
                     || tile.getWorld().getBlockState(neighbor).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLightSlab
                     && tile.getWorld().getBlockState(neighbor).getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF)
@@ -1320,29 +1315,30 @@ public class TEAnimatedScreenSelector
     }
 
     private static void renderLightHousing(TextureAtlasSprite sprite,int visible,
-            double x0,double y0,double z0,double x1,double y1,double z1) {
+            double x0,double y0,double z0,double x1,double y1,double z1,boolean tileSides) {
+        double u=tileSides?x1-x0:16,v=tileSides?y1-y0:16,w=tileSides?z1-z0:16;
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
         if ((visible & (1 << EnumFacing.UP.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1,0,0,16,16);
+            spriteQuad(b,sprite,x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1,0,0,u,w);
         if ((visible & (1 << EnumFacing.DOWN.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0,0,0,16,16);
+            spriteQuad(b,sprite,x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0,0,0,w,v);
         if ((visible & (1 << EnumFacing.WEST.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0,0,0,16,16);
+            spriteQuad(b,sprite,x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0,0,0,w,v);
         if ((visible & (1 << EnumFacing.EAST.getIndex())) != 0)
-            spriteQuad(b,sprite,x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1,0,0,16,16);
+            spriteQuad(b,sprite,x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1,0,0,w,v);
         if ((visible & (1 << EnumFacing.SOUTH.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1,0,0,16,16);
+            spriteQuad(b,sprite,x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1,0,0,u,v);
         Tessellator.getInstance().draw();
     }
 
     private static void renderProgrammableLightFace(TextureAtlasSprite face,
-            LightGroup group, BlockPos pos,int minY,int maxY,int minZ) {
+            LightGroup group, BlockPos pos,double minX,double maxX,double minY,double maxY,double minZ) {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        spriteQuad(buf, face, 16,maxY,minZ, 0,maxY,minZ,
-                0,minY,minZ, 16,minY,minZ, group.right(pos), group.top(pos),
+        spriteQuad(buf, face, maxX,maxY,minZ, minX,maxY,minZ,
+                minX,minY,minZ, maxX,minY,minZ, group.right(pos), group.top(pos),
                 group.left(pos), group.bottom(pos));
         tess.draw();
     }

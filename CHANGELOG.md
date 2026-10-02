@@ -4,6 +4,8 @@
 
 ### Added
 
+- Programmable lights offer centered Small/Full sizing and side-texture Fit/Tile. Small lights remain individual artwork panels.
+
 - Loaded-only rectangular programmable trapdoor groups through 8×8, with shared outer hinges and scaled sliding travel. Diagonal trapdoors connect across opposite-slope rows and full-width vertical/depth offsets.
 
 - Programmable Diagonal Trapdoor with wall-compatible half-width/full-height, full-width/full-height and full-width/half-height placement. Its 2px leaf leaves 1px clearance on each wall surface; pairs and 2×2 surface groups rotate or slide toward opposite sides. Shares textures, redstone channels, configuration and copying with programmable trapdoors.
@@ -11,6 +13,8 @@
 - Non-rendering Minecraft/Forge regression checks for placement, diagonal vertex data, connected copying, ramp clearance and trapdoor geometry, grouping, persistence and redstone.
 
 ### Fixed
+
+- Light Frames sit against the supporting wall, floor or ceiling face. Their collision and rendering share the same bounds. Light Frame and Light Slab inventory models are centered, scaled to fit and show the lamp artwork.
 
 - Rotating tall diagonal trapdoors open upward consistently across either slope.
 

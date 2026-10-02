@@ -194,7 +194,20 @@ final class ScreenRuntimeChecks {
                 AxisAlignedBB bounds=block.getBoundingBox(state,player.world,pos);
                 if(block==ModBlocks.PROGRAMMABLE_LIGHT_FRAME)
                     require(close(bounds.maxZ-bounds.minZ,1/16D),"light frame is not one pixel deep");
-                else {
+                if(block==ModBlocks.PROGRAMMABLE_LIGHT_FRAME) {
+                    for(EnumFacing facing:EnumFacing.values()) {
+                        IBlockState variant=state.withProperty(BlockAnimatedScreenSelector.FACING,facing);
+                        player.world.setBlockState(pos,variant,2);
+                        AxisAlignedBB mounted=block.getBoundingBox(variant,player.world,pos);
+                        double edge=facing==EnumFacing.UP?mounted.minY:facing==EnumFacing.DOWN?mounted.maxY
+                                :facing==EnumFacing.NORTH?mounted.maxZ:facing==EnumFacing.SOUTH?mounted.minZ
+                                :facing==EnumFacing.EAST?mounted.minX:mounted.maxX;
+                        require(close(edge,facing==EnumFacing.DOWN || facing==EnumFacing.NORTH || facing==EnumFacing.WEST?1:0),"frame attaches to wrong face "+facing);
+                        light.setSmallInput(true);AxisAlignedBB small=block.getBoundingBox(variant,player.world,pos);
+                        require(close(facing.getAxis()==EnumFacing.Axis.X?small.maxZ-small.minZ:small.maxX-small.minX,.5),"small frame is not centered half width");
+                        light.setSmallInput(false);
+                    }
+                } else {
                     require(close(bounds.maxY-bounds.minY,.5),"light slab is not half height");
                     com.vandorlabs.blocks.BlockProgrammableLightSlab slab=
                             (com.vandorlabs.blocks.BlockProgrammableLightSlab)block;

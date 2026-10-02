@@ -37,7 +37,7 @@ public final class ProgrammableLightConnections {
     private static Set<BlockPos> members(TileEntityProgrammableLight first,
             IBlockState state, boolean matchOn) {
         World world = first.getWorld();
-        if (!first.isJoin()) {
+        if (!first.isJoin() || first.isSmallInput()) {
             Set<BlockPos> single = new LinkedHashSet<>();
             single.add(first.getPos());
             return single;
@@ -103,7 +103,7 @@ public final class ProgrammableLightConnections {
         TileEntity raw = world.getTileEntity(pos);
         if (!(raw instanceof TileEntityProgrammableLight)) return false;
         TileEntityProgrammableLight other = (TileEntityProgrammableLight) raw;
-        return other.isAvailableForJoining() && other.isJoin() && other.getTexture() == first.getTexture()
+        return other.isAvailableForJoining() && other.isJoin() && !other.isSmallInput() && other.getTexture() == first.getTexture()
                 && (!matchOn || other.isOn() == first.isOn());
     }
 }
