@@ -8,6 +8,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.*;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 /** Vanilla's voxel ray traversal cannot visit an offset leaf whose destination cell is air. */
 public final class OffsetTrapdoorSelection {
@@ -16,14 +19,27 @@ public final class OffsetTrapdoorSelection {
         if(hit!=null && hit.typeOfHit==RayTraceResult.Type.BLOCK && isOffset(event.getPlayer().world.getTileEntity(hit.getBlockPos())))event.setCanceled(true);
     }
     private static boolean isOffset(TileEntity tile) {return tile instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)tile).isCover();}
-    @SubscribeEvent public void render(RenderWorldLastEvent event) {
+    @SubscribeEvent(priority=EventPriority.HIGHEST) public void tick(TickEvent.ClientTickEvent event) {
+        Minecraft mc=Minecraft.getMinecraft();
+        if(event.phase==TickEvent.Phase.START && mc.world!=null && mc.playerController!=null && mc.playerController.getClass()==net.minecraft.client.multiplayer.PlayerControllerMP.class)
+            mc.playerController=new OffsetTrapdoorController(mc,mc.playerController);
+        if(event.phase==TickEvent.Phase.END)updateTarget(1);
+    }
+    @SubscribeEvent(priority=EventPriority.LOWEST) public void mouse(MouseEvent event){updateTarget(1);}
+    @SubscribeEvent public void key(InputEvent.KeyInputEvent event){updateTarget(1);}
+    static void updateTarget(float partial) {
         Minecraft mc=Minecraft.getMinecraft();Entity view=mc.getRenderViewEntity();
-        if(mc.world==null || view==null || mc.player==null)return;
-        float partial=event.getPartialTicks();Vec3d start=view.getPositionEyes(partial),end=start.add(view.getLook(partial).scale(mc.playerController.getBlockReachDistance()));
+        if(mc.world==null || view==null || mc.player==null || mc.playerController==null)return;
+        Vec3d start=view.getPositionEyes(partial),end=start.add(view.getLook(partial).scale(mc.playerController.getBlockReachDistance()));
         RayTraceResult leaf=OffsetTrapdoorInteractions.trace(mc.world,start,end),vanilla=mc.objectMouseOver;
         if(leaf!=null && (vanilla==null || vanilla.typeOfHit==RayTraceResult.Type.MISS || start.squareDistanceTo(leaf.hitVec)<=start.squareDistanceTo(vanilla.hitVec))) {
             mc.objectMouseOver=leaf;mc.pointedEntity=null;
         }
+    }
+    @SubscribeEvent public void render(RenderWorldLastEvent event) {
+        Minecraft mc=Minecraft.getMinecraft();Entity view=mc.getRenderViewEntity();
+        if(mc.world==null || view==null || mc.player==null)return;
+        float partial=event.getPartialTicks();updateTarget(partial);
         RayTraceResult selected=mc.objectMouseOver;
         if(mc.gameSettings.hideGUI || selected==null || selected.typeOfHit!=RayTraceResult.Type.BLOCK)return;
         TileEntity tile=mc.world.getTileEntity(selected.getBlockPos());if(!isOffset(tile))return;

@@ -43,14 +43,15 @@ final class OffsetTrapdoorRuntimeChecks {
                 AxisAlignedBB query=new AxisAlignedBB(center.x-.04,center.y-.04,center.z-.04,center.x+.04,center.y+.04,center.z+.04);
                 if(!world.getCollisionBoxes(null,query).contains(box))throw new IllegalStateException("actual offset collision event missed scenario "+scenario);
             }
-            mc.playerController.processRightClickBlock(mc.player,mc.world,pos,hit.sideHit,hit.hitVec,EnumHand.MAIN_HAND);
+            if(!(mc.playerController instanceof OffsetTrapdoorController))throw new IllegalStateException("offset picking is not installed in the input phase");
+            net.minecraft.client.settings.KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
             stage=2;wait=15;return false;
         }
         if(stage==2) {
             World world=mc.getIntegratedServer().getWorld(0);
             if(world.getBlockState(pos).getValue(BlockProgrammableTrapdoor.OPEN)==(scenario%8>=4))throw new IllegalStateException("offset click did not reach owner on server: "+scenario);
             if(++scenario<16){stage=0;return false;}
-            System.out.println("[vandorlabs][reprolab] offset-trapdoor-hitbox-runtime PASS (all hinges, both states, both movements, real aim/click and client/server collision)");
+            System.out.println("[vandorlabs][reprolab] offset-trapdoor-hitbox-runtime PASS (all hinges, both states, both movements, real aim/use input and client/server collision)");
             mc.getIntegratedServer().addScheduledTask(()->{
                 TileEntityProgrammableTrapdoor root=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos);root.setCover(false);root.requestOpen(false);
                 for(int z=0;z<2;z++)for(int x=0;x<2;x++)if(x!=0 || z!=0)TrapdoorGallery.place(world,pos.add(x,0,z),false,root.getHousingTexture(),0,false,EnumFacing.NORTH);
