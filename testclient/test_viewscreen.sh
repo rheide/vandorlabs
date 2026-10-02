@@ -12,6 +12,8 @@ mkdir -p testclient/runtime/game/mods
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
 rm -f testclient/runtime/game/mods/vandorlabs-*.jar
+sha256sum "$TEST_JAR" > "$RUN_OUT/artifact.sha256"
+git rev-parse HEAD > "$RUN_OUT/source-commit.txt"
 cp "$TEST_JAR" "testclient/runtime/game/mods/vandorlabs-$VERSION.jar"
 cp "$HOME/MC-Forge12-2/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
     testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar

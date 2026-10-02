@@ -2,6 +2,8 @@
 
 ## 1.3
 
+See the [illustrated programmable block improvements](docs/gallery/task-improvements.md) and [filesystem texture setup](docs/filesystem-textures.md).
+
 ### Added
 
 - Extra Large (2×2) landing-gear alignment with matching reservations and saved/copied size settings.

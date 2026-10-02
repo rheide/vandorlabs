@@ -5,6 +5,7 @@ world. The close-ups show individual shapes, controls, and states. Open an image
 at full size to inspect its texture and model.
 
 - [New in 1.2](version-1.2.md)
+- [Programmable block improvements](task-improvements.md)
 - [New in 1.1](version-1.1.md)
 
 ## Blocks and systems

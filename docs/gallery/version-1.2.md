@@ -19,7 +19,7 @@ The [Programmable Block finish overview](building.md#programmable-block-finishes
 
 The start and end offset sliders move in half-block steps from -16 to 16 blocks. The displayed values describe the retracted and deployed positions. Shift-right-click the controller in creative mode to open its menu.
 
-![Ramp Controller start and end offset sliders](../images/gallery/v1.2/ramp-controller.png)
+![Ramp Controller start and end offset sliders](../images/gallery/systems/ramp-controller-config.png)
 
 ## Programmable Light shapes
 
@@ -47,7 +47,7 @@ Rocket Thrusters, Ion Drives, Plasma Vents, Impulse Engines and the hover fixtur
 
 ![Propulsion housings viewed from below](../images/gallery/v1.2/propulsion-wall-bottom.png)
 
-![Propulsion configuration preview](../images/gallery/v1.2/propulsion-config.png)
+![Propulsion configuration preview](../images/gallery/propulsion/thruster-config.png)
 
 ## Building and placement fixes
 

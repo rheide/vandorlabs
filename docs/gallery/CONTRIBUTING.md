@@ -14,6 +14,19 @@ world under software rendering, disables tutorial prompts and mob spawning,
 runs the live runtime contracts, captures the curated scenes, replaces
 `docs/images/gallery`, and fails if any expected image is missing.
 
+A successful `testclient/test_viewscreen.sh` run captures the same curated scenes
+and also runs the image analyzers. You can publish that validated capture without
+starting a second client:
+
+```bash
+python3 testclient/export_gallery.py testclient/render-run.<id>
+```
+
+The live-suite run includes `artifact.sha256` and `source-commit.txt` to identify
+the tested binary and source. Check that the artifact hash still matches before
+reusing a capture. This uses the same exporter as `generate_gallery.sh`; do not
+stage or crop screenshots by hand.
+
 When adding or changing a showcased block:
 
 1. Add or update its grounded `gallery_*` shot and scene in

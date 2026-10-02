@@ -10,6 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    "gallery_v12_gear_extra_large": "v1.2/gear-extra-large.png",
+    "gallery_v12_input_ceiling": "v1.2/input-ceiling.png",
+    "gallery_v12_light_shapes": "v1.2/light-shapes.png",
+    "gallery_propulsion_wall_bottom": "v1.2/propulsion-wall-bottom.png",
+    "gallery_propulsion_wall_top": "v1.2/propulsion-wall-top.png",
     "gallery_v12_materials": "tasks/material-choices.png",
     "gallery_v12_gear_corner": "tasks/gear-2x2.png",
     "gallery_v12_gear_cover_closed": "tasks/gear-cover-closed.png",
