@@ -28,7 +28,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityProgrammableTrapdoor();}
     @Override public EnumBlockRenderType getRenderType(IBlockState state){return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;}
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer) {
-        EnumFacing facing=side.getAxis().isHorizontal()?side:placer.getHorizontalFacing().getOpposite();
+        EnumFacing facing=side.getAxis().isHorizontal()?side.getOpposite():placer.getHorizontalFacing().getOpposite();
         DoorHalf half=side.getAxis().isHorizontal()?(y>.5F?DoorHalf.TOP:DoorHalf.BOTTOM)
                 :side==EnumFacing.UP?DoorHalf.BOTTOM:DoorHalf.TOP;
         return getDefaultState().withProperty(FACING,facing).withProperty(HALF,half)

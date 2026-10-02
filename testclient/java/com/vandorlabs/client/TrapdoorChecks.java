@@ -136,7 +136,13 @@ final class TrapdoorChecks {
         for(EnumFacing side:EnumFacing.values())for(float hit:new float[]{.1F,.5F,.9F}) {
             NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
             BlockPos p=new BlockPos(10,100,10);ItemStack stack=new ItemStack(item);
-            require(item.placeBlockAt(stack,null,world,p,side,.5F,hit,.5F,block.getDefaultState()),"plain placement failed");
+            EntityPlayer placer=new EntityPlayer(world,new com.mojang.authlib.GameProfile(UUID.randomUUID(),"TrapdoorPlacement")) {
+                @Override public boolean isSpectator(){return false;}
+                @Override public boolean isCreative(){return true;}
+            };
+            IBlockState placedState=block.getStateForPlacement(world,p,side,.5F,hit,.5F,0,placer);
+            require(placedState.getValue(BlockTrapDoor.FACING)==(side.getAxis().isHorizontal()?side.getOpposite():placer.getHorizontalFacing().getOpposite()),"plain trapdoor hinge faces away from clicked support");
+            require(item.placeBlockAt(stack,placer,world,p,side,.5F,hit,.5F,placedState),"plain placement failed");
             int expected=side==EnumFacing.UP?0:side==EnumFacing.DOWN?2:hit<1/3F?0:hit>2/3F?2:1;
             require(((TileEntityProgrammableTrapdoor)world.getTileEntity(p)).getPosition()==expected,"click band lost");
             require(stack.getSubCompound("BlockEntityTag")==null,"placement changed held stack");

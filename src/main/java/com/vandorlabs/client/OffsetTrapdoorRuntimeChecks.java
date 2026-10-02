@@ -55,6 +55,15 @@ final class OffsetTrapdoorRuntimeChecks {
             if(++scenario<16){stage=0;return false;}
             System.out.println("[vandorlabs][reprolab] offset-trapdoor-hitbox-runtime PASS (all hinges, both states, both movements, real aim/use input and client/server collision)");
             mc.getIntegratedServer().addScheduledTask(()->{
+                EntityPlayerMP placer=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                for(int i=0;i<4;i++)for(int height=0;height<2;height++) {
+                    EnumFacing side=EnumFacing.HORIZONTALS[i];BlockPos mount=pos.add(20+height*3,0,i*4);
+                    world.setBlockState(mount.offset(side.getOpposite()),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                    BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRAPDOOR;
+                    net.minecraft.block.state.IBlockState state=block.getStateForPlacement(world,mount,side,.5F,height==0?.1F:.9F,.5F,0,placer);
+                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(block);
+                    if(!((net.minecraft.item.ItemBlock)stack.getItem()).placeBlockAt(stack,placer,world,mount,side,.5F,height==0?.1F:.9F,.5F,state))throw new IllegalStateException("live plain side placement failed");
+                }
                 for(int i=0;i<4;i++) {
                     BlockPos source=pos.add(8,0,i*4);EnumFacing facing=EnumFacing.HORIZONTALS[i];
                     TileEntityProgrammableTrapdoor first=TrapdoorGallery.place(world,source,false,0,0,i%2==0,facing);
@@ -80,6 +89,12 @@ final class OffsetTrapdoorRuntimeChecks {
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos.add(8+member,0,i*4));
                 if(leaf==null || !leaf.isCover() || !leaf.canOffsetClosedLeaf() || leaf.isSliding()!=(i%2==0) || leaf.coverFacing()!=EnumFacing.HORIZONTALS[i].rotateY())throw new IllegalStateException("synchronized offset copy/neighbor hinge failed");
             }
+            for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)})for(int i=0;i<4;i++)for(int height=0;height<2;height++) {
+                BlockPos mount=pos.add(20+height*3,0,i*4);
+                TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(mount);
+                if(leaf==null || leaf.getPosition()!=(height==0?0:2) || world.getBlockState(mount).getValue(BlockProgrammableTrapdoor.FACING)!=EnumFacing.HORIZONTALS[i].getOpposite())throw new IllegalStateException("plain side placement hinge does not face support");
+            }
+            System.out.println("[vandorlabs][reprolab] trapdoor-side-placement-runtime PASS (all four support faces, both heights, client/server)");
             System.out.println("[vandorlabs][reprolab] trapdoor-offset-copy-neighbor-runtime PASS (movement, closed leaf and hinge retained on client/server)");
             stage=3;return false;
         }

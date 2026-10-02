@@ -73,7 +73,7 @@ The diagonal dialog separates width and height, so Full/Half width updates a tal
 
 ## Motion clearance and next-block placement
 
-Rotating normal leaves keep their thickness inside the mounting cell when open. Sliding diagonal leaves lift clear of the continuation wall before moving sideways. Next block places the untriggered leaf across the neighboring cell; rotating then folds it upright into its own mount.
+Rotating normal leaves keep their thickness inside the mounting cell when open. Sliding diagonal leaves lift clear of the continuation wall before moving sideways. Next block places the untriggered leaf across the neighboring cell with a one-pixel overhang beyond its far edge; rotating then folds it upright into its own mount. Normal and diagonal leaf edges use the standard programmable door’s metal side artwork.
 
 | Rotating beside blocks | Sliding over a diagonal wall |
 | --- | --- |
@@ -82,6 +82,14 @@ Rotating normal leaves keep their thickness inside the mounting cell when open. 
 | Next-block leaf, closed | Next-block leaf, rotating open |
 | --- | --- |
 | ![Closed leaf covers the neighboring cell](../images/gallery/tasks/trapdoor-next-rotating-closed.png) | ![Rotated leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-next-rotating-open.png) |
+
+## Flush floor and ceiling mounts
+
+Closed Bottom and Top leaves sit flush visually against their support, with only a 1/64-pixel inset to prevent coplanar faces. Rotating leaves retain clearance from their supporting floor or ceiling throughout opening.
+
+| Floor mount | Ceiling mount |
+| --- | --- |
+| ![Closed trapdoor sits flush on a floor](../images/gallery/tasks/trapdoor-flush-floor.png) | ![Closed trapdoor sits flush beneath a ceiling](../images/gallery/tasks/trapdoor-flush-ceiling.png) |
 
 ## Next-block selection and joined-group protection
 

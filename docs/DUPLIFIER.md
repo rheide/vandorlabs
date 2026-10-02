@@ -67,8 +67,8 @@ platform can reject the change.
 Landing Gear supports independent **Gear Size**, **Gear Extension**, and
 **Gear Redstone Mode** switches, plus the shared redstone channel.
 
-Placement facing, physical position, live redstone signal, current door motion,
-and ownership are not stored. The item uses semantic setting keys rather than
+Ordinary placement facing, physical position, live redstone signal, current door motion,
+and ownership are not stored. The explicit Next block hinge direction is a configurable setting and can be copied. The item uses semantic setting keys rather than
 copying tile NBT, so existing saved-world field names and placement behavior
 remain intact.
 
