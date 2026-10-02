@@ -115,6 +115,23 @@ final class DuplifierRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] duplifier-runtime PASS");
     }
 
+    static void checkDialog(GuiDuplifier gui) {
+        for(int page=0;page<DuplifierApplyOptions.PAGES.length;page++) {
+            gui.actionPerformed(new net.minecraft.client.gui.GuiButton(page,0,0,"Page"));
+            java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+            for(int i=0;i<buttons.size();i++) {
+                net.minecraft.client.gui.GuiButton a=buttons.get(i);
+                require(a.x>=0 && a.y>=0 && a.x+a.width<=gui.width && a.y+a.height<=gui.height,"Duplifier option outside dialog viewport");
+                for(int j=0;j<i;j++) {
+                    net.minecraft.client.gui.GuiButton b=buttons.get(j);
+                    require(a.x>=b.x+b.width || b.x>=a.x+a.width || a.y>=b.y+b.height || b.y>=a.y+a.height,"Duplifier options overlap Done or another control");
+                }
+            }
+        }
+        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Common"));
+        System.out.println("[vandorlabs][reprolab] duplifier-dialog-layout PASS (all pages and last-row hinge/layout options)");
+    }
+
     private static void runConnected(EntityPlayer player) {
         World world = player.world;
         BlockPos origin = new BlockPos(54, 245, 54);

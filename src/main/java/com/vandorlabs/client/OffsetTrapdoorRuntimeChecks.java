@@ -96,6 +96,28 @@ final class OffsetTrapdoorRuntimeChecks {
             }
             System.out.println("[vandorlabs][reprolab] trapdoor-side-placement-runtime PASS (all four support faces, both heights, client/server)");
             System.out.println("[vandorlabs][reprolab] trapdoor-offset-copy-neighbor-runtime PASS (movement, closed leaf and hinge retained on client/server)");
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                owner.inventory.setInventorySlotContents(0,new net.minecraft.item.ItemStack(com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRAPDOOR));
+                for(int slot=1;slot<=3;slot++) {
+                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR);
+                    if(slot>1){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("housingTexture",slot==2?4:CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.STONE)));stack.setTagInfo("BlockEntityTag",tag);}
+                    owner.inventory.setInventorySlotContents(slot,stack);
+                }
+                owner.inventoryContainer.detectAndSendChanges();
+            });
+            stage=7;wait=20;return false;
+        }
+        if(stage==7) {
+            for(int slot=1;slot<=3;slot++) {
+                net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(mc.player.inventory.getStackInSlot(slot),mc.world,mc.player);
+                if(Math.abs(model.getItemCameraTransforms().gui.scale.x-.65F)>.00001 || Math.abs(model.getItemCameraTransforms().gui.scale.y-.65F)>.00001)throw new IllegalStateException("diagonal trapdoor hotbar model scale lost in configured/custom override");
+            }
+            mc.gameSettings.hideGUI=false;stage=8;wait=3;return false;
+        }
+        if(stage==8) {
+            capture(mc,"diagonal_trapdoor_hotbar");
+            System.out.println("[vandorlabs][reprolab] diagonal-trapdoor-hotbar-runtime PASS (default, configured and Custom icons)");
             stage=3;return false;
         }
         if(stage==3) {

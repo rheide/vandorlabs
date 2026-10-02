@@ -781,6 +781,7 @@ public class ReproLab {
                 if (--holdTicks > 0) break;
                 if (!(mc.currentScreen instanceof GuiDuplifier))
                     throw new IllegalStateException("Duplifier options GUI did not open");
+                DuplifierRuntimeChecks.checkDialog((GuiDuplifier)mc.currentScreen);
                 ((GuiDuplifier)mc.currentScreen).actionPerformed(
                         new net.minecraft.client.gui.GuiButton(98,0,0,"Connected"));
                 ((GuiDuplifier)mc.currentScreen).actionPerformed(
@@ -806,6 +807,11 @@ public class ReproLab {
                 if (!com.vandorlabs.items.DuplifierApplyOptions.connected(mc.player.getHeldItemMainhand()))
                     throw new IllegalStateException("Duplifier mode did not sync to the client");
                 saveNamed(mc, "duplifier_apply_settings_gui");
+                ((GuiDuplifier)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Doors"));
+                state=59;holdTicks=3;break;
+            case 59:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"duplifier_door_settings_gui");
                 mc.player.closeScreen();
                 mc.displayGuiScreen(null);
                 state = 46;

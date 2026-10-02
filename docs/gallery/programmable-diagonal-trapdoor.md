@@ -1,5 +1,7 @@
 # Programmable Diagonal Trapdoor
 
+Default, configured and Custom-finish inventory icons use a reduced scale to fit the hotbar slot.
+
 A movable panel aligned with Programmable Diagonal Walls. Choose the shared categorized
 material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
 with Rotating or Sliding movement and no frame or hinge hardware.

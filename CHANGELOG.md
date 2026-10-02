@@ -24,6 +24,8 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 
 ### Fixed
 
+- Diagonal trapdoor hotbar icons use a smaller scale for default, configured and Custom finishes. The Duplifier dialog grows to fit all options, keeping its last-row trapdoor hinge/layout switches clear of Done and fitting smaller GUI resolutions. Its movement switch explicitly includes trapdoors.
+
 - Plain side-mounted trapdoors hinge against the clicked supporting block instead of its opposite edge. Configured Next block items retain their explicit saved hinge.
 
 - Floor- and ceiling-mounted trapdoors sit flush visually, using a tiny coplanar-face inset instead of a one-pixel gap. Rotating leaves retain clearance from their support when open.
