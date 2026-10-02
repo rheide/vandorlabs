@@ -312,6 +312,7 @@ public class ReproLab {
             boolean neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
             SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-(wall?3:.7),galleryFeet+(neighbors?1.5:3.2),neighbors || wall?-14.5:-21.5,neighbors?180:wall?-155:-8,neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
+        for(String surface:new String[]{"floor","ceiling"})SHOTS.add(new Shot("gallery_trapdoor_followup_flush_"+surface,GALLERY_X-.7,galleryFeet+(surface.equals("floor")?1.12:1.85),-21.5,-8,0));
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "gear_corner", "gear_cover_closed", "gear_cover_open", "materials", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})

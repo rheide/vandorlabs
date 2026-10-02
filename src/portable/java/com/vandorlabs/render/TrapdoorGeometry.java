@@ -9,7 +9,7 @@ public final class TrapdoorGeometry {
     public static final double COVER_OVERHANG=1/16D;
     private TrapdoorGeometry() { }
     public static double low(int position) {
-        return position==TOP?12/16D:position==MIDDLE?6.5/16D:1/16D;
+        return position==TOP?1-THICKNESS-EDGE_CLEARANCE:position==MIDDLE?6.5/16D:EDGE_CLEARANCE;
     }
     /** Canonical leaf hinges/slides north. Quarter turns map it to world facing. */
     public static double[][] corners(int position,boolean sliding,int quarterTurns,double pose) {
@@ -28,6 +28,9 @@ public final class TrapdoorGeometry {
             else {
                 double dy=y-pivot;
                 y=pivot+dy*cos+(z-hinge)*sin;
+                // Closed floor/ceiling leaves sit flush. Move the rotating panel
+                // slightly inward to retain clearance from its support when open.
+                if(position!=MIDDLE)y+=Math.abs(sin)*(position==TOP?-1:1)*(OPEN_HINGE-EDGE_CLEARANCE);
                 // Translate the thickness inward as it turns; keep the original
                 // hinge height and legacy saved assembly pivots.
                 z=hinge+(z-hinge)*cos-dy*sin+p*THICKNESS;

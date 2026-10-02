@@ -52,7 +52,11 @@ final class TrapdoorGallery {
         BlockPos base=new BlockPos(x-1,y+2,-18);
         boolean diagonal=scene.contains("diagonal"),custom=scene.contains("custom"),fit=scene.endsWith("fit");
         int texture=custom?CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR)):ScreenHousingTextures.doorIndex(1,1);
-        if(scene.contains("slide_wall")) {
+        if(scene.contains("flush_")) {
+            boolean ceiling=scene.endsWith("ceiling");
+            place(world,base,false,texture,ceiling?2:0,false,EnumFacing.NORTH);
+            world.setBlockState(ceiling?base.up():base.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+        } else if(scene.contains("slide_wall")) {
             TileEntityProgrammableTrapdoor leaf=place(world,base,true,texture,0,true,EnumFacing.NORTH);
             BlockPos support=base.west();world.setBlockState(support,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.NORTH),3);
             ((TileEntityAnimatedScreenSelector)world.getTileEntity(support)).setDiagonalGeometry(0,0);

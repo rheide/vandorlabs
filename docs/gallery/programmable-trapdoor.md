@@ -9,9 +9,8 @@ height, redstone trigger, and channel.
 moves it 15 pixels sideways, leaving one pixel visible in its own block. Placement determines the facing; sliding always
 stays horizontal. Rotating leaves keep their full thickness at least one pixel inside the mounting cell at the hinge, with a tiny perimeter inset to avoid coplanar neighboring faces. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
 
-The leaf is 3px thick. **Bottom** spans 1–4px above the block's base,
-**Middle** spans 6.5–9.5px, and **Top** spans 12–15px. The 1px inset at the top
-and bottom keeps a sliding leaf inside its chosen height.
+The leaf is 3px thick. **Bottom** spans approximately 0–3px above the block’s base,
+**Middle** spans 6.5–9.5px, and **Top** spans approximately 13–16px. Floor and ceiling mounts use only a 1/1024-block inset (1/64 of a texture pixel) to prevent coplanar faces, so closed leaves sit flush visually. Rotating panels move inward during opening to retain clearance from their support; sliding leaves keep their selected height.
 
 ## Closed leaf placement and texture layout
 

@@ -13,7 +13,7 @@ final class TrapdoorMaterialRuntimeChecks {
     static void checkScene(Minecraft mc,String scene,int x,int y) {
         TileEntityProgrammableTrapdoor root=(TileEntityProgrammableTrapdoor)mc.world.getTileEntity(new BlockPos(x-1,y+2,-18));
         if(root==null)throw new IllegalStateException("trapdoor followup fixture missing");
-        boolean single=scene.contains("slide_wall") || scene.contains("rotate_neighbors") || scene.contains("next_");
+        boolean single=scene.contains("slide_wall") || scene.contains("rotate_neighbors") || scene.contains("next_") || scene.contains("flush_");
         if(root.group().size()!=(single?1:4))throw new IllegalStateException("trapdoor followup client grouping failed");
         boolean custom=CustomBlockMaterials.isCustom(root.getHousingTexture());
         int upper=0,lower=0;

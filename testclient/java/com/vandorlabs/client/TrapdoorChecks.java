@@ -41,8 +41,10 @@ final class TrapdoorChecks {
             require(Math.abs(distance(vertices[0],vertices[2])-3/16D)<1e-8,"leaf thickness changes");
             double[] bounds=TrapdoorGeometry.bounds(pos,slide,facing,pose);
             if(slide || step==0){require(Math.abs(bounds[1]-TrapdoorGeometry.low(pos))<1e-8,"slide changes height");require(Math.abs(bounds[4]-bounds[1]-3/16D)<1e-8,"slide changes thickness");}
-            if(step==0 && pos==0)require(bounds[1]==1/16D,"bottom inset");
-            if(step==0 && pos==2)require(bounds[4]==15/16D,"top inset");
+            if(pos==0)require(bounds[1]>=TrapdoorGeometry.EDGE_CLEARANCE-1e-8,"moving bottom leaf clips its supporting floor");
+            if(pos==2)require(bounds[4]<=1-TrapdoorGeometry.EDGE_CLEARANCE+1e-8,"moving top leaf clips its supporting ceiling");
+            if(step==0 && pos==0)require(bounds[1]==TrapdoorGeometry.EDGE_CLEARANCE,"bottom leaf floats above support");
+            if(step==0 && pos==2)require(bounds[4]==1-TrapdoorGeometry.EDGE_CLEARANCE,"top leaf floats below support");
             net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(1024);
             net.minecraft.client.renderer.vertex.VertexFormat format=BlockSurfaceFormat.get();buffer.begin(7,format);
             TEProgrammableTrapdoor.drawLeaf(buffer,sprite,pos,slide,facing,pose,(192<<16)|80);buffer.finishDrawing();
