@@ -37,7 +37,7 @@ A complete 2×2 surface group opens together in every placement order. Tall
 groups span two blocks across and two vertically; shallow groups span two
 across and two along their footprint. The two columns open outward. Groups
 retain their links on save/reload, and rebuilding a broken square restores the
-four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. Full-width tall panels also connect across a one-block vertical plus one-block depth offset. Larger rotating halves share their outer hinge. Tall panels prefer upward opening for either slope.
+four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. Full-width tall panels also connect across a one-block vertical plus one-block depth offset. Larger rotating halves share their outer hinge. Individual tall panels prefer upward opening for either slope. Joined tall panels open toward the outside of the surface in both rows, including opposite-slope V assemblies and reversed coplanar continuations. Their inset and hinge animation is retained; an inverted row may rotate downward to stay outside.
 
 Right-click any member to toggle the loaded group. Physical or virtual redstone
 at any member controls the whole group. Configuration and copying update the

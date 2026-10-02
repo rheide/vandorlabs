@@ -158,6 +158,11 @@ final class DiagonalTrapdoorChecks {
                 require(tile.group().size()==4,"coplanar reversed row not grouped "+mode+Arrays.toString(order));
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());tile.readFromNBT(saved);require(tile.group().size()==4,"coplanar group's saved basis lost");
                 tile.requestOpen(true);for(BlockPos other:cells)require(open(world,other),"coplanar square opening failed");
+                if(mode!=2 && !slide) {
+                    double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(p),tile,0),opened=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(p),tile,1);
+                    double outward=0;for(int i=0;i<8;i++)outward+=(opened[i][0]-closed[i][0])*facing.getFrontOffsetX()+(opened[i][2]-closed[i][2])*facing.getFrontOffsetZ();
+                    require(outward>0,"reversed coplanar row opens inside the continued surface");
+                }
             }
             TileEntityProgrammableDiagonalTrapdoor first=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(cells[0]);
             NBTTagCompound settings=ProgrammableSettings.capture(world,cells[0]);settings.setInteger(ProgrammableSettings.WALL_TEXTURE,16);
@@ -193,7 +198,26 @@ final class DiagonalTrapdoorChecks {
                     TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
                     double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,0);
                     double[][] opened=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,1);
-                    if(!slide){double change=0;for(int i=0;i<8;i++)change+=opened[i][1]-closed[i][1];require(change>0,"diagonal leaf opens downward");}
+                    if(!slide)for(double pose:new double[]{.25,.5,.75,1}) {
+                        double[][] moving=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,pose);
+                        double outward=0;for(int i=0;i<8;i++)outward+=(moving[i][0]-closed[i][0])*facing.getFrontOffsetX()+(moving[i][2]-closed[i][2])*facing.getFrontOffsetZ();
+                        require(outward>0,"opposite-slope row rotates inside the diagonal surface");
+                    }
+                }
+            }
+            if(!slide)for(int mode:new int[]{0,1}) {
+                NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+                for(int row=0;row<2;row++)for(int col=0;col<5;col++)place(world,base.offset(width,col).up(row),mode,facing,row==1,false,0);
+                TileEntityProgrammableDiagonalTrapdoor root=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base);
+                require(root.group().size()==10,"opposite-slope rectangle did not join");
+                for(TileEntityProgrammableTrapdoor raw:root.group()) {
+                    TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
+                    IBlockState state=world.getBlockState(leaf.getPos());
+                    double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(state,leaf,0),opened=BlockProgrammableDiagonalTrapdoor.corners(state,leaf,1);
+                    double outward=0;for(int i=0;i<8;i++)outward+=(opened[i][0]-closed[i][0])*facing.getFrontOffsetX()+(opened[i][2]-closed[i][2])*facing.getFrontOffsetZ();
+                    require(outward>0,"joined rectangle row rotates inside surface");
+                    leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));
+                    require(leaf.rotationReverse()==(leaf.isReverse() ^ leaf.isInverted()),"rectangle outside direction lost after reload");
                 }
             }
             for(boolean stagger:new boolean[]{false,true}) {

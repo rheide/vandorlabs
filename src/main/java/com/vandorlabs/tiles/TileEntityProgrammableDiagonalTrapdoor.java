@@ -15,6 +15,17 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     private boolean reverse,cachedInverted;
     private EnumFacing cachedFacing=EnumFacing.NORTH,groupFacing=EnumFacing.NORTH;
     public boolean isReverse(){return reverse;}
+    /** Keep every rotating row outside the surface, including reversed coplanar rows. */
+    public boolean rotationReverse() {
+        if(sliding || position==2)return reverse;
+        List<TileEntityProgrammableTrapdoor> leaves=group();
+        if(leaves.size()<2)return reverse;
+        TileEntityProgrammableDiagonalTrapdoor reference=this;
+        for(TileEntityProgrammableTrapdoor leaf:leaves)if(leaf.getPos().compareTo(reference.getPos())<0)reference=(TileEntityProgrammableDiagonalTrapdoor)leaf;
+        boolean opposite=facing()==reference.facing().getOpposite();
+        return reverse ^ (isInverted()!=opposite);
+    }
+
     public boolean isInverted(){
         if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor)
             cachedInverted=world.getBlockState(pos).getValue(BlockTrapDoor.HALF)==BlockTrapDoor.DoorHalf.TOP;

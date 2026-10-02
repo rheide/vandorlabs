@@ -33,9 +33,24 @@ final class TrapdoorGallery {
         }
         if(world.isRemote)return;
         if(first.group().size()!=width*height)throw new IllegalStateException("trapdoor gallery group failed: "+scene+" size="+first.group().size());
+        if(v && !sliding)checkOutside(world,first);
         first.requestOpen(open);
         for(TileEntityProgrammableTrapdoor leaf:first.group())if(world.getBlockState(leaf.getPos()).getValue(BlockTrapDoor.OPEN)!=open)throw new IllegalStateException("trapdoor gallery opening failed");
         System.out.println("[vandorlabs][reprolab] trapdoor-assembly PASS "+scene);
+    }
+    static void checkOutside(World world,TileEntityProgrammableTrapdoor root) {
+        EnumFacing outward=world.getBlockState(root.getPos()).getValue(BlockTrapDoor.FACING);
+        for(TileEntityProgrammableTrapdoor raw:root.group()) {
+            TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
+            IBlockState state=world.getBlockState(leaf.getPos());
+            double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(state,leaf,0);
+            for(double pose:new double[]{.25,.5,.75,1}) {
+                double[][] moving=BlockProgrammableDiagonalTrapdoor.corners(state,leaf,pose);double distance=0;
+                for(int i=0;i<8;i++)distance+=(moving[i][0]-closed[i][0])*outward.getFrontOffsetX()+(moving[i][2]-closed[i][2])*outward.getFrontOffsetZ();
+                if(distance<=0)throw new IllegalStateException("diagonal group row opens inside at pose "+pose);
+            }
+        }
+        System.out.println("[vandorlabs][reprolab] diagonal-outward-runtime PASS "+(world.isRemote?"client":"server"));
     }
     static TileEntityProgrammableTrapdoor place(World world,BlockPos pos,boolean diagonal,int texture,int mode,boolean sliding,EnumFacing facing) {
         return place(world,pos,diagonal,texture,mode,sliding,facing,false);
@@ -73,11 +88,12 @@ final class TrapdoorGallery {
             TileEntityProgrammableTrapdoor first=null;
             for(int row=0;row<2;row++)for(int col=0;col<2;col++) {
                 BlockPos pos=base.add(col,diagonal?row:0,diagonal?0:row);
-                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,EnumFacing.NORTH,diagonal && row==1);if(first==null)first=leaf;
+                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,scene.contains("reversed_plane") && row==1?EnumFacing.SOUTH:EnumFacing.NORTH,diagonal && row==1);if(first==null)first=leaf;
             }
             if(world.isRemote)return;
             if(first.group().size()!=4)throw new IllegalStateException("followup trapdoor square not joined");
             first.configureGroup(texture,0,false,0,0,false,false,!fit,EnumFacing.NORTH);
+            if(scene.endsWith("_open")){checkOutside(world,first);first.requestOpen(true);}
         }
         System.out.println("[vandorlabs][reprolab] trapdoor-followup PASS "+scene);
     }

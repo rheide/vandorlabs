@@ -10,6 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    "gallery_trapdoor_followup_diagonal_opposite_slopes_open": "tasks/trapdoor-diagonal-opposite-slopes-open.png",
+    "gallery_trapdoor_followup_diagonal_reversed_plane_open": "tasks/trapdoor-diagonal-reversed-plane-open.png",
     "diagonal_trapdoor_hotbar": "tasks/diagonal-trapdoor-hotbar.png",
     "duplifier_door_settings_gui": "tools/duplifier-door-config.png",
     "gallery_trapdoor_followup_flush_floor": "tasks/trapdoor-flush-floor.png",
