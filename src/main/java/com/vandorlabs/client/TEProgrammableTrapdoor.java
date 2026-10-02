@@ -30,20 +30,26 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         if(tile instanceof TileEntityProgrammableDiagonalTrapdoor) {
             TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)tile;
-            drawDiagonalLeaf(buffer,sprite,diagonal.getPosition(),diagonal.isInverted(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),diagonal.isSliding(),diagonal.isReverse(),pose,light);
-        } else drawLeaf(buffer,sprite,tile.getPosition(),tile.isSliding(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),pose,light);
+            drawDiagonalLeaf(buffer,sprite,diagonal.getPosition(),diagonal.isInverted(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),diagonal.isSliding(),diagonal.isReverse(),pose,light,diagonal.motionHinge(),diagonal.motionTravel());
+        } else drawLeaf(buffer,sprite,tile.getPosition(),tile.isSliding(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),pose,light,tile.motionHinge(),tile.motionTravel());
         Tessellator.getInstance().draw();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }
     /** Buffer-only entry point also verifies actual submitted geometry without GL. */
     static void drawLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int position,boolean sliding,int turns,double pose,int light) {
-        double[][] vertices=TrapdoorGeometry.corners(position,sliding,turns,pose);
+        drawLeaf(buffer,sprite,position,sliding,turns,pose,light,1/16D,15/16D);
+    }
+    static void drawLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int position,boolean sliding,int turns,double pose,int light,double hinge,double travel) {
+        double[][] vertices=TrapdoorGeometry.corners(position,sliding,turns,pose,hinge,travel);
         double[][] original=TrapdoorGeometry.corners(position,true,0,0);
         double[][] uv=new double[8][3];
         for(int i=0;i<8;i++)uv[i]=new double[]{original[i][0],original[i][1]-TrapdoorGeometry.low(position),original[i][2]};
         drawMesh(buffer,sprite,vertices,uv,light);
     }
     static void drawDiagonalLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,int light) {
-        double[][] vertices=com.vandorlabs.render.DiagonalTrapdoorGeometry.corners(mode,inverted,turns,sliding,reverse,pose);
+        drawDiagonalLeaf(buffer,sprite,mode,inverted,turns,sliding,reverse,pose,light,reverse?15/16D:1/16D,15/16D);
+    }
+    static void drawDiagonalLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,int light,double hinge,double travel) {
+        double[][] vertices=com.vandorlabs.render.DiagonalTrapdoorGeometry.corners(mode,inverted,turns,sliding,reverse,pose,hinge,travel);
         double[][] uv=new double[8][3];
         for(int i=0;i<8;i++)uv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:mode==2?2/16D:1,(i&4)==0?0:mode==2?1:2/16D};
         drawMesh(buffer,sprite,vertices,uv,light);

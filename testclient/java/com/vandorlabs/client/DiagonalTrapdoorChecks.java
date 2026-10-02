@@ -25,7 +25,7 @@ final class DiagonalTrapdoorChecks {
         GameRegistry.registerTileEntity(TileEntityProgrammableDiagonalTrapdoor.class,new ResourceLocation("minecraft:vandorlabs_data_check_diagonal_trapdoor"));
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();boundaries();recipe();
+        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }
     private static void mesh() {
@@ -165,6 +165,37 @@ final class DiagonalTrapdoorChecks {
             }
             IBlockState removed=world.getBlockState(cells[3]);world.states.put(cells[3],Blocks.AIR.getDefaultState());block.breakBlock(world,cells[3],removed);world.setBlockState(cells[3],Blocks.AIR.getDefaultState(),2);
             require(first.group().size()<=2,"coplanar square remained after break");place(world,cells[3],mode,facing.getOpposite(),true,slide,0);require(first.group().size()==4,"coplanar square repair failed");
+        }
+    }
+    private static void expandedGroups() {
+        for(boolean slide:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS) {
+            BlockPos base=new BlockPos(20,100,20);EnumFacing width=facing.rotateYCCW();
+            NonRenderingChecks.MemoryWorld vworld=new NonRenderingChecks.MemoryWorld(false);
+            List<int[]> orders=new ArrayList<>();permutations(new int[]{0,1,2,3},0,orders);
+            for(int[] order:orders) {
+                vworld.clear();BlockPos[] cells={base,base.offset(width),base.up(),base.up().offset(width)};
+                for(int i:order)place(vworld,cells[i],0,facing,i>=2,slide,0);
+                TileEntityProgrammableDiagonalTrapdoor first=(TileEntityProgrammableDiagonalTrapdoor)vworld.getTileEntity(base);
+                require(first.group().size()==4,"opposite slope V group missed placement order");
+                for(TileEntityProgrammableTrapdoor raw:first.group()) {
+                    TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)raw;
+                    double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,0);
+                    double[][] opened=BlockProgrammableDiagonalTrapdoor.corners(vworld.getBlockState(leaf.getPos()),leaf,1);
+                    if(!slide){double change=0;for(int i=0;i<8;i++)change+=opened[i][1]-closed[i][1];require(change>0,"diagonal leaf opens downward");}
+                }
+            }
+            for(boolean stagger:new boolean[]{false,true}) {
+                NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+                BlockPos step=stagger?new BlockPos(facing.getOpposite().getDirectionVec()).up():new BlockPos(0,1,0);
+                for(int row=0;row<2;row++)for(int col=0;col<5;col++)place(world,base.offset(width,col).add(step.getX()*row,row,step.getZ()*row),1,facing,false,slide,0);
+                TileEntityProgrammableDiagonalTrapdoor first=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base);
+                require(first.group().size()==10,"5x2 diagonal rectangle did not join "+facing+" stagger="+stagger+" size="+first.group().size());first.requestOpen(true);
+                for(TileEntityProgrammableTrapdoor leaf:first.group()){require(open(world,leaf.getPos()),"rectangle missed leaf");leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));require(leaf.group().size()==10,"diagonal rectangle save lost");}
+            }
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            TileEntityProgrammableDiagonalTrapdoor first=place(world,base,1,facing,false,slide,0);
+            place(world,base.up().offset(facing.getOpposite()),1,facing,false,slide,0);
+            require(first.group().size()==2,"staggered full-width panels did not connect");
         }
     }
     private static void boundaries() {

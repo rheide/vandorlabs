@@ -10,6 +10,9 @@ public final class TrapdoorGeometry {
     }
     /** Canonical leaf hinges/slides north. Quarter turns map it to world facing. */
     public static double[][] corners(int position,boolean sliding,int quarterTurns,double pose) {
+        return corners(position,sliding,quarterTurns,pose,1/16D,15/16D);
+    }
+    public static double[][] corners(int position,boolean sliding,int quarterTurns,double pose,double hinge,double travel) {
         double low=low(position), high=low+THICKNESS;
         double p=Math.max(0,Math.min(1,pose));
         double angle=(position==TOP?-1:1)*p*Math.PI/2;
@@ -18,11 +21,11 @@ public final class TrapdoorGeometry {
         double[][] out=new double[8][3];
         for(int i=0;i<8;i++) {
             double x=(i&1)==0?0:1,y=(i&2)==0?low:high,z=(i&4)==0?0:1;
-            if(sliding) z-=p*15/16D;
+            if(sliding) z-=p*travel;
             else {
                 double dy=y-pivot;
-                y=pivot+dy*cos+(z-1/16D)*sin;
-                z=1/16D+(z-1/16D)*cos-dy*sin;
+                y=pivot+dy*cos+(z-hinge)*sin;
+                z=hinge+(z-hinge)*cos-dy*sin;
             }
             for(int turn=0;turn<(quarterTurns&3);turn++) {double old=x;x=1-z;z=old;}
             out[i]=new double[]{x,y,z};

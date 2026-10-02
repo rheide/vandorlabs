@@ -13,7 +13,7 @@ The leaf is 3px thick. **Bottom** spans 1–4px above the block's base,
 **Middle** spans 6.5–9.5px, and **Top** spans 12–15px. The 1px inset at the top
 and bottom keeps a sliding leaf inside its chosen height.
 
-## Pairs and 2×2 groups
+## Connected groups
 
 Place two trapdoors side by side at the same height to pair them automatically.
 They face opposite directions and open together in either movement mode.
@@ -23,8 +23,8 @@ Each leaf retains its selected finish until you change the group's settings.
 A complete horizontal 2×2 square at the same height becomes one four-leaf
 group, regardless of placement order. The two rows or columns open toward
 opposite sides. Right-clicking any leaf toggles all four, and redstone at any
-member controls the whole group. Larger areas remain separate pairs or squares.
-Breaking a leaf removes the square link; surviving pairs remain usable.
+member controls the whole group. Complete rectangular areas through 8×8 also form a group, including 2×4 and 5×2. The two halves slide clear or rotate around their outer edges as joined panels. Incomplete areas keep their existing smaller groups; completing the rectangle joins them.
+Breaking a leaf removes the square link; surviving smaller groups remain usable.
 
 Configuration and Duplifier applications update the loaded group together.
 Group membership and individual finishes persist when the world is saved.

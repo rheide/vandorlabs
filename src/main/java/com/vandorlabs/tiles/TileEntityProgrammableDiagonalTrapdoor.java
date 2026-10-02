@@ -25,12 +25,17 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
             cachedFacing=world.getBlockState(pos).getValue(BlockTrapDoor.FACING);
         return cachedFacing;
     }
+    void setOpeningSide(boolean value){reverse=value;}
+    @Override public double motionHinge(){return assembly.isEmpty()?(reverse?15/16D:1/16D):assemblyHinge;}
     private EnumFacing width(){return facing().rotateYCCW();}
     private EnumFacing along(){return position==2?facing().getOpposite():EnumFacing.UP;}
     @Override public boolean compatible(TileEntityProgrammableTrapdoor raw) {
         if(!(raw instanceof TileEntityProgrammableDiagonalTrapdoor) || position!=raw.getPosition())return false;
         TileEntityProgrammableDiagonalTrapdoor other=(TileEntityProgrammableDiagonalTrapdoor)raw;
         if(world==null || other.world==null)return true;
+        if(facing().getAxis()==other.facing().getAxis() && (position==2
+                ? pos.getY()==other.pos.getY() && com.vandorlabs.blocks.PanelPlane.axis(other.pos.subtract(pos),facing())!=0
+                : pos.getY()!=other.pos.getY()))return true;
         if(facing()==other.facing() && isInverted()==other.isInverted())return true;
         if(!(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor)
                 || !(world.getBlockState(other.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor))return false;
@@ -65,7 +70,8 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     }
     @Override public void completeSquare(EntityPlayer player,ItemStack stack) {
         if(world==null || world.isRemote)return;
-        repairLinks();if(squareOrigin!=null)return;
+        repairLinks();if(TrapdoorAssemblies.complete(this,player,stack))return;
+        if(squareOrigin!=null)return;
         for(int across=-1;across<=0;across++)for(int down=-1;down<=0;down++) {
             BlockPos base=pos.offset(width(),across).offset(along(),down);
             List<BlockPos> cells=squareCells(base);List<TileEntityProgrammableDiagonalTrapdoor> leaves=new ArrayList<>();

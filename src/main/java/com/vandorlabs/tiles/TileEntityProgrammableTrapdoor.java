@@ -18,6 +18,10 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     protected int texture,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
     protected boolean sliding,channelSignal,powerKnown,lastPower;
     protected BlockPos partner,squareOrigin;
+    protected java.util.List<BlockPos> assembly=new java.util.ArrayList<>();
+    protected double assemblyHinge=1/16D,assemblyTravel=15/16D;
+    public double motionHinge(){return assembly.isEmpty()?1/16D:assemblyHinge;}
+    public double motionTravel(){return assembly.isEmpty()?15/16D:assemblyTravel;}
     public int getHousingTexture(){return texture;}
     public int getPosition(){return position;}
     public boolean isSliding(){return sliding;}
@@ -63,6 +67,17 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     /** A stable four-leaf group, otherwise the surviving pair or single leaf. */
     public java.util.List<TileEntityProgrammableTrapdoor> group() {
         java.util.List<TileEntityProgrammableTrapdoor> result=new java.util.ArrayList<>();
+        if(!assembly.isEmpty() && assembly.contains(pos) && world!=null) {
+            for(BlockPos cell:assembly) {
+                if(!world.isBlockLoaded(cell)){result.clear();break;}
+                TileEntity raw=world.getTileEntity(cell);
+                if(!(raw instanceof TileEntityProgrammableTrapdoor)){result.clear();break;}
+                TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
+                if(!assembly.equals(leaf.assembly) || !groupCompatible(leaf)){result.clear();break;}
+                result.add(leaf);
+            }
+            if(result.size()==assembly.size())return result;
+        }
         if(squareOrigin!=null && world!=null && squareCells(squareOrigin).contains(pos)) {
             for(BlockPos cell:squareCells(squareOrigin)) {
                 if(!world.isBlockLoaded(cell)){result.clear();break;}
@@ -82,7 +97,8 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     /** Complete a square in any placement order; mirror the two rows/columns. */
     public void completeSquare(EntityPlayer player,net.minecraft.item.ItemStack stack) {
         if(world==null || world.isRemote)return;
-        repairLinks();if(squareOrigin!=null)return;
+        repairLinks();if(TrapdoorAssemblies.complete(this,player,stack))return;
+        if(squareOrigin!=null)return;
         for(int dx=-1;dx<=0;dx++)for(int dz=-1;dz<=0;dz++) {
             BlockPos base=pos.add(dx,0,dz);java.util.List<BlockPos> cells=squareCells(base);
             java.util.List<TileEntityProgrammableTrapdoor> leaves=new java.util.ArrayList<>();
@@ -122,10 +138,25 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         }
         squareOrigin=null;
     }
+    protected void clearAssembly() {
+        java.util.List<BlockPos> old=new java.util.ArrayList<>(assembly);assembly.clear();
+        if(world==null)return;
+        for(BlockPos cell:old)if(world.isBlockLoaded(cell)) {
+            TileEntity raw=world.getTileEntity(cell);
+            if(raw instanceof TileEntityProgrammableTrapdoor) {
+                TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
+                if(leaf.assembly.equals(old)){leaf.assembly.clear();leaf.sync();}
+            }
+        }
+    }
     /** Repair loaded stale links; defer decisions about unloaded chunks. */
     public void repairLinks() {
         if(world==null || world.isRemote)return;
         if(partner!=null && world.isBlockLoaded(partner) && mate()==null){partner=null;sync();}
+        for(BlockPos cell:new java.util.ArrayList<>(assembly))if(world.isBlockLoaded(cell)) {
+            TileEntity raw=world.getTileEntity(cell);
+            if(!(raw instanceof TileEntityProgrammableTrapdoor) || !assembly.equals(((TileEntityProgrammableTrapdoor)raw).assembly)) {clearAssembly();break;}
+        }
         if(squareOrigin==null)return;
         if(!squareCells(squareOrigin).contains(pos)){squareOrigin=null;sync();return;}
         for(BlockPos cell:squareCells(squareOrigin)) {
@@ -138,6 +169,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         }
     }
     public void unpair() {
+        clearAssembly();
         clearSquare();
         TileEntityProgrammableTrapdoor other=mate();partner=null;sync();
         if(other!=null){other.partner=null;other.sync();other.evaluatePower(true);}
@@ -206,7 +238,10 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         tag.setInteger("TrapdoorSchema",1);tag.setBoolean("ChannelSignal",channelSignal);
         tag.setBoolean("TrapdoorPowerKnown",powerKnown);tag.setBoolean("TrapdoorLastPower",lastPower);
         if(partner!=null)tag.setLong("TrapdoorPartner",partner.toLong());
-        if(squareOrigin!=null)tag.setLong("TrapdoorSquare",squareOrigin.toLong());return tag;
+        if(squareOrigin!=null)tag.setLong("TrapdoorSquare",squareOrigin.toLong());
+        net.minecraft.nbt.NBTTagList members=new net.minecraft.nbt.NBTTagList();
+        for(BlockPos cell:assembly)members.appendTag(new net.minecraft.nbt.NBTTagLong(cell.toLong()));
+        tag.setTag("TrapdoorAssembly",members);tag.setDouble("TrapdoorHinge",assemblyHinge);tag.setDouble("TrapdoorTravel",assemblyTravel);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         int old=channel;super.readFromNBT(tag);
@@ -219,6 +254,10 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         powerKnown=tag.getBoolean("TrapdoorPowerKnown");lastPower=tag.getBoolean("TrapdoorLastPower");
         partner=tag.hasKey("TrapdoorPartner",4)?BlockPos.fromLong(tag.getLong("TrapdoorPartner")):null;
         squareOrigin=tag.hasKey("TrapdoorSquare",4)?BlockPos.fromLong(tag.getLong("TrapdoorSquare")):null;
+        assembly=new java.util.ArrayList<>();net.minecraft.nbt.NBTTagList members=tag.getTagList("TrapdoorAssembly",4);
+        if(members.tagCount()<=64)for(int i=0;i<members.tagCount();i++)assembly.add(BlockPos.fromLong(((net.minecraft.nbt.NBTTagLong)members.get(i)).getLong()));
+        assemblyHinge=Math.max(-8,Math.min(8,tag.getDouble("TrapdoorHinge")));
+        assemblyTravel=Math.max(15/16D,Math.min(8,tag.getDouble("TrapdoorTravel")));
         if(world!=null && !world.isRemote && old!=channel)
             DeferredTileLoad.schedule(this,()->RedstoneChannels.channelChanged(this,old));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
@@ -235,6 +274,6 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager net,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}
-    @Override public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.add(-1,-1,-1),pos.add(2,2,2));}
+    @Override public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.add(-8,-8,-8),pos.add(9,9,9));}
     @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
 }

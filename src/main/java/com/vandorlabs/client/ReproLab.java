@@ -306,6 +306,8 @@ public class ReproLab {
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
+        for(String group:new String[]{"flat","v","rectangle","stagger"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
+            SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-3,galleryFeet+5,-28,-15,24));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
             SHOTS.add(new Shot("gallery_v12_"+scene, GALLERY_X-3,
@@ -1623,7 +1625,9 @@ public class ReproLab {
                 new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
-        if (shot.startsWith("gallery_close_display_")) {
+        if (shot.startsWith("gallery_trapdoor_")) {
+            TrapdoorGallery.build(world,shot.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);
+        } else if (shot.startsWith("gallery_close_display_")) {
             String kind = shot.substring("gallery_close_display_".length());
             BlockPos at = new BlockPos(GALLERY_X, GALLERY_Y, -18);
             if (kind.equals("viewscreen") || kind.equals("console"))

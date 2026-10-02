@@ -26,7 +26,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkPower();checkCopy();checkPermissions();checkRecipe();
+        checkMesh();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -146,6 +146,25 @@ final class TrapdoorChecks {
             world.states.put(cells[3],Blocks.AIR.getDefaultState());world.tiles.remove(cells[3]);
             remaining.repairLinks();place(world,cells[3],position,slide);
             require(remaining.group().size()==4,"stale saved links prevent rebuilding square");
+        }
+    }
+    private static void checkRectangles() {
+        for(boolean slide:new boolean[]{false,true})for(int[] size:new int[][]{{2,4},{5,2},{8,8}}) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos base=new BlockPos(20,100,20);
+            for(int x=0;x<size[0];x++)for(int z=0;z<size[1];z++)place(world,base.add(x,0,z),1,slide);
+            TileEntityProgrammableTrapdoor first=(TileEntityProgrammableTrapdoor)world.getTileEntity(base);
+            require(first.group().size()==size[0]*size[1],"rectangle did not connect "+Arrays.toString(size));
+            first.requestOpen(true);
+            for(TileEntityProgrammableTrapdoor leaf:first.group()) {
+                require(open(world,leaf.getPos()),"rectangle missed leaf");
+                leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));
+                require(leaf.group().size()==size[0]*size[1],"rectangle save lost");
+                require(!leaf.itemSettings().hasKey("TrapdoorAssembly"),"item retained assembly links");
+            }
+            BlockPos removed=base.add(size[0]-1,0,size[1]-1);
+            block.breakBlock(world,removed,world.getBlockState(removed));world.setBlockState(removed,Blocks.AIR.getDefaultState(),2);
+            require(first.group().size()<=4,"broken rectangle remained linked");
+            place(world,removed,1,slide);require(first.group().size()==size[0]*size[1],"rectangle repair failed");
         }
     }
     private static void checkPower() {

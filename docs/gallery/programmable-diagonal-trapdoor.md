@@ -29,14 +29,14 @@ Geometry copies between diagonal walls and trapdoors through the Duplifier's
 Sliding moves 15 pixels along the surface's horizontal width; it never moves
 up or down, leaving one pixel visible in its original block. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
 compatible leaves pair and open toward opposite sides without reversing their
-closed surface. Compatible leaves have the same shape and matching orientation, or the reversed
+closed surface. Compatible leaves have the same shape and matching orientation, opposite slopes in neighboring rows (V-shaped assemblies), or the reversed
 facing/inversion that continues the same wall plane.
 
 A complete 2×2 surface group opens together in every placement order. Tall
 groups span two blocks across and two vertically; shallow groups span two
 across and two along their footprint. The two columns open outward. Groups
 retain their links on save/reload, and rebuilding a broken square restores the
-four-leaf group. Larger areas remain separate pairs or squares.
+four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. Full-width tall panels also connect across a one-block vertical plus one-block depth offset. Larger rotating halves share their outer hinge. Tall panels prefer upward opening for either slope.
 
 Right-click any member to toggle the loaded group. Physical or virtual redstone
 at any member controls the whole group. Configuration and copying update the
