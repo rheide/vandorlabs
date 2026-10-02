@@ -71,6 +71,7 @@ final class TrapdoorChecks {
             if(!sliding)require(Math.abs(open[0][1]-closed[0][1])>.5,"next-block rotating leaf slides instead");
             double[] normal=TrapdoorGeometry.bounds(position,false,turn,1);
             require(normal[0]>0 && normal[3]<1 && normal[2]>0 && normal[5]<1,"rotated normal leaf shares a neighboring block plane");
+            if(position!=1)require(normal[1]>0 && normal[4]<1,"open bottom/top leaf clips into supporting floor or ceiling");
         }
         TileEntityProgrammableTrapdoor tile=new TileEntityProgrammableTrapdoor();require(tile.isTileTexture(),"trapdoors default to Tile");tile.setTileTexture(false);tile.setCover(true);
         NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityProgrammableTrapdoor restored=new TileEntityProgrammableTrapdoor();restored.readFromNBT(saved);

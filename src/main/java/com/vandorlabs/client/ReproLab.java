@@ -309,7 +309,7 @@ public class ReproLab {
         for(String group:new String[]{"flat","v","rectangle","stagger"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
         for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open"})
-            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-.7,galleryFeet+3.2,-21.5,-8,scene.startsWith("flat") || scene.startsWith("next")?30:12));
+            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-.7,galleryFeet+(scene.equals("flat_rotate_neighbors")?1.5:3.2),scene.equals("flat_rotate_neighbors")?-14.5:-21.5,scene.equals("flat_rotate_neighbors")?180:-8,scene.equals("flat_rotate_neighbors")?0:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "gear_corner", "gear_cover_closed", "gear_cover_open", "materials", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
@@ -543,7 +543,7 @@ public class ReproLab {
                 }
                 beginShot(mc, SHOTS.get(shotIndex), true);
                 state = 3;
-                holdTicks = CAPTURE_SETTLE_TICKS;
+                holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")?100:CAPTURE_SETTLE_TICKS;
                 break;
             case 3:
                 if (--holdTicks > 0) {
@@ -1148,8 +1148,10 @@ public class ReproLab {
                 saveNamed(mc,"ramp_matching_gui");
                 System.out.println("[vandorlabs][reprolab] ramp-matching-gui PASS");
                 mc.player.closeScreen();
-                openTrapdoorFollowup(mc,true);state=50;holdTicks=40;
+                state=48;holdTicks=10;
                 break;
+            case 48:
+                if(--holdTicks>0)break;openTrapdoorFollowup(mc,true);state=50;holdTicks=40;break;
             case 49:
                 if(--holdTicks>0)break;mc.gameSettings.hideGUI=false;openTrapdoorFollowup(mc,true);state=50;holdTicks=40;break;
             case 50:
@@ -1166,7 +1168,9 @@ public class ReproLab {
             case 52:
                 if(--holdTicks>0)break;
                 checkTrapdoorGroup(mc,0,false);saveNamed(mc,"diagonal_trapdoor_gui");
-                mc.player.closeScreen();openTrapdoorFollowup(mc,false);state=53;holdTicks=40;break;
+                mc.player.closeScreen();state=55;holdTicks=10;break;
+            case 55:
+                if(--holdTicks>0)break;openTrapdoorFollowup(mc,false);state=53;holdTicks=40;break;
             case 53:
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("normal trapdoor GUI did not open");

@@ -5,7 +5,7 @@ public final class TrapdoorGeometry {
     public static final int BOTTOM=0, MIDDLE=1, TOP=2;
     public static final double THICKNESS=3/16D;
     public static final double EDGE_CLEARANCE=1/1024D;
-    public static final double OPEN_HINGE=THICKNESS+1/16D;
+    public static final double OPEN_HINGE=1/16D;
     private TrapdoorGeometry() { }
     public static double low(int position) {
         return position==TOP?12/16D:position==MIDDLE?6.5/16D:1/16D;
@@ -27,7 +27,9 @@ public final class TrapdoorGeometry {
             else {
                 double dy=y-pivot;
                 y=pivot+dy*cos+(z-hinge)*sin;
-                z=hinge+(z-hinge)*cos-dy*sin;
+                // Translate the thickness inward as it turns; keep the original
+                // hinge height and legacy saved assembly pivots.
+                z=hinge+(z-hinge)*cos-dy*sin+p*THICKNESS;
             }
             for(int turn=0;turn<(quarterTurns&3);turn++) {double old=x;x=1-z;z=old;}
             out[i]=new double[]{x,y,z};

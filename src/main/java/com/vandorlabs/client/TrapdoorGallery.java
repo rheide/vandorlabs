@@ -56,7 +56,7 @@ final class TrapdoorGallery {
             leaf.requestOpen(true);
         } else if(scene.contains("rotate_neighbors")) {
             TileEntityProgrammableTrapdoor leaf=place(world,base,false,texture,0,false,EnumFacing.NORTH);
-            for(BlockPos support:new BlockPos[]{base.north(),base.west(),base.east()})world.setBlockState(support,net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+            for(BlockPos support:new BlockPos[]{base.north(),base.west(),base.east(),base.down()})world.setBlockState(support,net.minecraft.init.Blocks.STONE.getDefaultState(),3);
             leaf.requestOpen(true);
         } else if(scene.contains("next_")) {
             TileEntityProgrammableTrapdoor leaf=place(world,base,false,texture,0,false,EnumFacing.NORTH);
