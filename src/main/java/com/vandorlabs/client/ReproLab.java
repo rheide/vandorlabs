@@ -534,6 +534,12 @@ public class ReproLab {
                     break;
                 }
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.equals("gallery_v12_door_fit") || s.name.equals("gallery_v12_door_tile")) {
+                    TileEntity rawDoor=mc.world.getTileEntity(new BlockPos(GALLERY_X,GALLERY_Y+1,-18));
+                    if(!(rawDoor instanceof com.vandorlabs.tiles.TileEntitySpaceDoor))throw new IllegalStateException("Door material gallery fixture disappeared");
+                    com.vandorlabs.tiles.TileEntitySpaceDoor door=(com.vandorlabs.tiles.TileEntitySpaceDoor)rawDoor;
+                    if(door.getFaceTexture()!=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(Blocks.BRICK_BLOCK)) || door.isTileTexture()!=s.name.endsWith("_tile"))throw new IllegalStateException("Door material gallery settings did not synchronize");
+                }
                 save(mc, s);
                 shotIndex++;
                 if (shotIndex < SHOTS.size()) {

@@ -19,7 +19,7 @@ final class Version12Gallery {
                 world.setBlockState(at,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
                 ((TileEntityAnimatedScreenSelector)world.getTileEntity(at)).setHousingTexture(ScreenHousingTextures.doorIndex(0,2));
             } else {
-                Block block=block("programmable_door");world.setBlockState(at,block.getDefaultState(),3);
+                Block block=block("programmable_door");world.setBlockState(at.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);world.setBlockState(at,block.getDefaultState(),3);
                 world.setBlockState(at.up(),block.getDefaultState().withProperty(BlockVandorDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),3);
                 TileEntitySpaceDoor tile=(TileEntitySpaceDoor)world.getTileEntity(at);
                 tile.setFaceTexture(CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.BRICK_BLOCK)));
@@ -32,7 +32,7 @@ final class Version12Gallery {
                 BlockPos p=origin.add(i*3,1,0);world.setBlockState(p,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
                 ((TileEntityAnimatedScreenSelector)world.getTileEntity(p)).setHousingTexture(i==0?stone:i==1?ScreenHousingTextures.doorIndex(0,2):FilesystemTextures.identifier("Example/sample_panel.png"));
             }
-            BlockPos doorPos=origin.add(9,1,0);Block block=block("programmable_door");world.setBlockState(doorPos,block.getDefaultState(),3);
+            BlockPos doorPos=origin.add(9,1,0);Block block=block("programmable_door");world.setBlockState(doorPos.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);world.setBlockState(doorPos,block.getDefaultState(),3);
             world.setBlockState(doorPos.up(),block.getDefaultState().withProperty(BlockVandorDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),3);
             ((TileEntitySpaceDoor)world.getTileEntity(doorPos)).setFaceTexture(door);
             BlockProgrammableTrapdoor hatch=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;

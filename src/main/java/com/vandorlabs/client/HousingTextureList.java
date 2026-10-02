@@ -13,6 +13,7 @@ import java.util.*;
 final class HousingTextureList {
     static final int ROW_HEIGHT=22;
     private final Map<Integer,Option> options=new LinkedHashMap<>();
+    private final Map<String,List<Option>> groups=new HashMap<>();
     private final boolean nativeOptions;
     static final class Option {
         final int choice; final String label,category,texture;
@@ -34,8 +35,9 @@ final class HousingTextureList {
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
         else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
-        for(Option option:options.values())if(!categories.contains(option.category))categories.add(option.category);
-        categories.sort(String.CASE_INSENSITIVE_ORDER);
+        for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
+        categories.addAll(groups.keySet());categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
+        for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
         setSelected(selected);
     }
     void setSelected(int choice) {
@@ -50,9 +52,7 @@ final class HousingTextureList {
         for(int c=0;c<categories.size();c++) {
             String category=categories.get(c);rows.add(-c-1);
             if(expanded.contains(category)) {
-                List<Option> entries=new ArrayList<>();for(Option option:options.values())if(category.equals(option.category))entries.add(option);
-                entries.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
-                for(Option option:entries)rows.add(option.choice);
+                for(Option option:groups.get(category))rows.add(option.choice);
             }
         }
         if(customConsumer!=null)rows.add(-100000);
