@@ -66,6 +66,8 @@ final class DiagonalTrapdoorChecks {
             double[] b=DiagonalTrapdoorGeometry.bounds(DiagonalTrapdoorGeometry.corners(mode,inverted,0,slide,reverse,1));
             require(reverse?b[0]<=15/16D+TrapdoorGeometry.EDGE_CLEARANCE+1e-8:b[3]>=1/16D-TrapdoorGeometry.EDGE_CLEARANCE-1e-8,"open diagonal leaf disappeared into neighbor");
             if(slide) {
+                double[][] closed=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,0),lifting=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,.2);
+                for(int i=0;i<8;i++)require(Math.abs(closed[i][0]-lifting[i][0])<1e-8,"diagonal slide enters wall before lifting clear");
                 double[][] vertices=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,1);
                 double span=mode==1?.75:.375;
                 for(double[] point:vertices){double along=mode==2?point[2]:point[1],near=(inverted?span*(1-along):span*along)+(mode==2 && inverted?.375:0),depth=mode==2?point[1]:point[2];require(depth-near>=5/16D-1e-8,"sliding leaf intersects continuation wall");}

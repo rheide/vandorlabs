@@ -66,8 +66,9 @@ final class TrapdoorGallery {
             TileEntityProgrammableTrapdoor first=null;
             for(int row=0;row<2;row++)for(int col=0;col<2;col++) {
                 BlockPos pos=base.add(col,diagonal?row:0,diagonal?0:row);
-                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,EnumFacing.NORTH);if(first==null)first=leaf;
+                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,EnumFacing.NORTH);if(diagonal && row==1)((TileEntityProgrammableDiagonalTrapdoor)leaf).setInverted(true);if(first==null)first=leaf;
             }
+            if(world.isRemote)return;
             if(first.group().size()!=4)throw new IllegalStateException("followup trapdoor square not joined");
             first.configureGroup(texture,0,false,0,0,false,false,!fit,EnumFacing.NORTH);
         }

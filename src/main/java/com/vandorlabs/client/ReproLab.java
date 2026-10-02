@@ -451,6 +451,7 @@ public class ReproLab {
         if (enabled) {
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
+            if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_"));
         }
     }
 
@@ -570,7 +571,7 @@ public class ReproLab {
                     beginShot(mc, new Shot("gui_return", CONSOLE.getX() + 0.5D,
                             Y + 1.0D - 1.62D, CONSOLE.getZ() - 2.5D,
                             0.0F, -90.0F), false);
-                    state = 11;
+                    state = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")?49:11;
                     holdTicks = 40;
                 }
                 break;
@@ -1149,6 +1150,8 @@ public class ReproLab {
                 mc.player.closeScreen();
                 openTrapdoorFollowup(mc,true);state=50;holdTicks=40;
                 break;
+            case 49:
+                if(--holdTicks>0)break;mc.gameSettings.hideGUI=false;openTrapdoorFollowup(mc,true);state=50;holdTicks=40;break;
             case 50:
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("diagonal trapdoor GUI did not open");
@@ -1195,7 +1198,10 @@ public class ReproLab {
             World world=mc.getIntegratedServer().getWorld(0);BlockPos base=CONSOLE.add(15,0,3);
             for(int row=0;row<2;row++)for(int col=0;col<2;col++)world.setBlockToAir(base.add(col,row,0));
             int choice=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR));
-            for(int row=0;row<(diagonal?2:1);row++)for(int col=0;col<(diagonal?2:1);col++)TrapdoorGallery.place(world,base.add(col,row,0),diagonal,choice,0,false,EnumFacing.NORTH);
+            for(int row=0;row<(diagonal?2:1);row++)for(int col=0;col<(diagonal?2:1);col++) {
+                com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf=TrapdoorGallery.place(world,base.add(col,row,0),diagonal,choice,0,false,EnumFacing.NORTH);
+                if(diagonal && row==1)((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)leaf).setInverted(true);
+            }
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             player.capabilities.isCreativeMode=true;player.sendPlayerAbilities();player.setPositionAndUpdate(base.getX()+.5,base.getY(),base.getZ()-2);
             player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR,world,base.getX(),base.getY(),base.getZ());

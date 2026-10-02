@@ -21,7 +21,7 @@ public final class DiagonalTrapdoorGeometry {
             double y=mode==2?base+slope*((i&4)==0?0:1)+((i&2)==0?0:2/16D):((i&2)==0?0:1);
             double z=mode==2?((i&4)==0?0:1):base+slope*y+((i&4)==0?0:2/16D);
             if(sliding){
-                x+=(reverse?1:-1)*p*travel;
+                x+=(reverse?1:-1)*Math.max(0,(p-.25)/.75)*travel;
                 // Lift clear of a solid continuation wall before sliding across it.
                 double lift=.25*Math.min(1,p*4);
                 if(mode==2)y+=lift;else z+=lift;
