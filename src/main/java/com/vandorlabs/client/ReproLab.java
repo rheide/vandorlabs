@@ -945,7 +945,7 @@ public class ReproLab {
                 saveNamed(mc,"programmable_light_gui");
                 mc.displayGuiScreen(null);
                 if(mc.gameSettings.guiScale!=lightPickerPreviousScale)throw new IllegalStateException("light dialog did not restore GUI scale");
-                if(Boolean.getBoolean("vandorlabs.lightPickerChecksOnly")){mc.shutdown();return;}
+                if(Boolean.getBoolean("vandorlabs.lightPickerChecksOnly")){state=9;mc.shutdown();return;}
                 BlockPos triggerGui=CONSOLE.add(5,0,3);
                 mc.world.setBlockState(triggerGui,ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),3);
                 com.vandorlabs.tiles.TileEntityProgrammableTrigger triggerTile=
