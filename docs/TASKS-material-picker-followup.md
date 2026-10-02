@@ -2,6 +2,8 @@
 
 Requested 2026-10-02. Preserve existing saved material identifiers and animated screen behavior.
 
+Status: complete. All fourteen changes are implemented, documented and live-validated.
+
 ## Requested tasks (verbatim)
 
 - [x] Texture thumbnails are too small, should definitely be at least twice as large. Fine for the text size to increase as well
@@ -34,3 +36,7 @@ Visual capture caught unsupported test doors falling out of the new Fit/Tile gal
 Catalog performance: group and sort once per dialog instead of rescanning/sorting the catalog on each category toggle. Rendering visits only visible rows; thumbnails reuse atlas textures loaded at startup, rather than reading files on scroll. Very large catalogs can still affect startup/atlas memory and dialog creation; no texture-count limit or FPS claim is made.
 
 The full live suite at `testclient/render-run.sUQUgP` passed every runtime marker and all six image analyzers. Reviewed light/propulsion/door/native screen dialogs: light level is clear, block lights have no Size control, propulsion has no separate preview, and native screen/controls/materials show categorized thumbnails. Half-Input now shows Wall texture Tile/Fit; also reduced its oversized dialog to 240px and moved Done into the right column so the title stays on-screen at the test GUI scale. Final source recapture will include corrected supported-door examples and cached grouping.
+
+Final validation: standard Java 8 build, non-rendering and filesystem contracts pass. Full Forge live suite `testclient/render-run.qg1MEr` exited successfully with every runtime marker and all six image analyzers. Reviewed supported Fit/Tile doors, square door halves, categorized screen/control/material lists, light and propulsion dialogs, and Half-Input title/layout. Exported all 164 curated screenshots through the gallery exporter; checked documentation links, whitespace and packaged classes/catalog/license. These are software-rendered client checks, not hardware shader acceptance.
+
+Tested source: `087d6ddac62c31ea7060e38afba47c695fd6a6f4`. Standard artifact: `build/libs/vandorlabs-1.3.jar`, SHA-256 `c55f0fbf947ac354814d049e2d970f08d4861b2a54681a9b32cab52c51e3f383`. Setup and limitations are in [unified materials](unified-materials.md); new door examples are in the [illustrated improvements](gallery/task-improvements.md).

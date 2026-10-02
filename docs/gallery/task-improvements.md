@@ -44,3 +44,16 @@ See [material selection](../unified-materials.md) and
 [filesystem texture setup](../filesystem-textures.md). Texture transparency
 does not generate geometry or collision holes; that follow-up is documented
 in the material guide.
+
+## Door material proportions
+
+Ordinary programmable blocks use the lower square half of a door image.
+Door leaves keep the complete image and their native edge textures. A sampled
+block image can fit once across the leaf or tile at one-block scale.
+
+| Door image on a block | Block image fitted to a door | Block image tiled on a door |
+| --- | --- | --- |
+| ![Square lower door half](../images/gallery/tasks/door-block-half.png) | ![Fitted brick door face](../images/gallery/tasks/door-face-fit.png) | ![Tiled brick door face](../images/gallery/tasks/door-face-tile.png) |
+
+The [material picker follow-up checklist](../TASKS-material-picker-followup.md)
+tracks the thumbnail, category, dialog and material fixes.
