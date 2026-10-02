@@ -28,49 +28,52 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.disableLighting();
         GlStateManager.color(1,1,1,1);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        if(tile.isCover()) {
-            double[][] uv=TrapdoorGeometry.corners(tile.getPosition(),true,0,0);for(double[] p:uv)p[1]-=TrapdoorGeometry.low(tile.getPosition());
-            drawMesh(buffer,sprite,tile.corners(state,pose),uv,light);
-        } else if(ScreenHousingTextures.isDoor(tile.getHousingTexture())) {
-            double[][] vertices=tile instanceof TileEntityProgrammableDiagonalTrapdoor
-                    ?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose)
-                    :tile.corners(state,pose);
-            drawMaterialMesh(buffer,sprite,vertices,materialCoordinates(tile,state),light,tile.getHousingTexture());
-        } else {
-        if(tile instanceof TileEntityProgrammableDiagonalTrapdoor) {
-            TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)tile;
-            drawDiagonalLeaf(buffer,sprite,diagonal.getPosition(),diagonal.isInverted(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),diagonal.isSliding(),diagonal.isReverse(),pose,light,diagonal.motionHinge(),diagonal.motionTravel());
-        } else drawLeaf(buffer,sprite,tile.getPosition(),tile.isSliding(),BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING)),pose,light,tile.motionHinge(),tile.motionTravel());
-        }
+        drawConfiguredLeaf(buffer,sprite,tile,state,pose,light);
         Tessellator.getInstance().draw();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }
-    private static double[][] materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state) {
+    /** Broad artwork and native dark-wall leaf edges share the exact collision mesh. */
+    static void drawConfiguredLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
+        boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
+        double[][] vertices=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose):tile.corners(state,pose);
+        int first=tall?2:0,end=first+2;
+        boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
+        TrapdoorSurfaceMesh.draw(buffer,sprite,vertices,materialCoordinates(tile,state),light,tile.getHousingTexture(),first,end,tile.isTileTexture(),tile.isTileTexture() && door);
+        TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        double[][] edgeUv=new double[8][3];
+        for(int i=0;i<8;i++)edgeUv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:tall?1:diagonal?2/16D:TrapdoorGeometry.THICKNESS,(i&4)==0?0:tall?2/16D:1};
+        for(int face=0;face<6;face++)if(face<first || face>=end)drawMesh(buffer,edge,vertices,edgeUv,light,face,face+1);
+    }
+    static double[][] materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state) {
         java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();
         boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor;
         boolean tall=diagonal && tile.getPosition()!=2;
         net.minecraft.util.EnumFacing facing=state.getValue(BlockProgrammableTrapdoor.FACING);
-        boolean widthX=!diagonal || facing.getAxis()==net.minecraft.util.EnumFacing.Axis.Z;
+        boolean widthX=facing.getAxis()==(diagonal?net.minecraft.util.EnumFacing.Axis.Z:net.minecraft.util.EnumFacing.Axis.X);
+        boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
         double minU=Double.POSITIVE_INFINITY,minV=Double.POSITIVE_INFINITY,maxU=Double.NEGATIVE_INFINITY,maxV=Double.NEGATIVE_INFINITY;
         for(TileEntityProgrammableTrapdoor leaf:group) {
             double u=widthX?leaf.getPos().getX():leaf.getPos().getZ();
-            double v=tall?leaf.getPos().getY():diagonal && !widthX?leaf.getPos().getX():leaf.getPos().getZ();
+            double v=tall?leaf.getPos().getY():widthX?leaf.getPos().getZ():leaf.getPos().getX();
             minU=Math.min(minU,u);maxU=Math.max(maxU,u+1);minV=Math.min(minV,v);maxV=Math.max(maxV,v+1);
         }
         double[][] closed=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,0)
-                :TrapdoorGeometry.corners(tile.getPosition(),tile.isSliding(),BlockProgrammableTrapdoor.quarterTurns(facing),0);
+                :tile.corners(state,0);
         double[][] uv=new double[8][3];
         for(int i=0;i<8;i++) {
             double u=(widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2]);
-            double v=tall?tile.getPos().getY()+closed[i][1]:diagonal && !widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2];
-            double mappedV=tall?1-(v-minV)/(maxV-minV):(v-minV)/(maxV-minV);
-            if(group.size()==1)mappedV=.5+.5*mappedV;
-            uv[i]=new double[]{(u-minU)/(maxU-minU),tall?mappedV:(i&2)==0?0:1,tall?(i&4)==0?0:1:mappedV};
+            double v=tall?tile.getPos().getY()+closed[i][1]:widthX?tile.getPos().getZ()+closed[i][2]:tile.getPos().getX()+closed[i][0];
+            // Offset covers live in the neighboring cell, independent of their owning tile.
+            if(tile.isCover()){net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);minU=widthX?target.getX():target.getZ();maxU=minU+1;minV=widthX?target.getZ():target.getX();maxV=minV+1;}
+            double mappedU=u-minU,mappedV=tall?maxV-v:v-minV;
+            if(tile.isTileTexture()){if(door){mappedV/=2;if(maxV-minV<1.5)mappedV+=.5;}}
+            else{mappedU/=maxU-minU;mappedV/=maxV-minV;if(door && maxV-minV<1.5)mappedV=.5+.5*mappedV;}
+            uv[i]=new double[]{mappedU,tall?mappedV:(i&2)==0?0:1,tall?(i&4)==0?0:1:mappedV};
         }
         return uv;
     }
     /** Buffer-only entry point also verifies actual submitted geometry without GL. */
     static void drawLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int position,boolean sliding,int turns,double pose,int light) {
-        drawLeaf(buffer,sprite,position,sliding,turns,pose,light,1/16D,15/16D);
+        drawLeaf(buffer,sprite,position,sliding,turns,pose,light,TrapdoorGeometry.OPEN_HINGE,15/16D);
     }
     static void drawLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int position,boolean sliding,int turns,double pose,int light,double hinge,double travel) {
         double[][] vertices=TrapdoorGeometry.corners(position,sliding,turns,pose,hinge,travel);

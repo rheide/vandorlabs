@@ -21,8 +21,8 @@ See the [normal](programmable-trapdoor.md) and
 
 ## Landing gear covers
 
-Four independent Cover mounts close the 2×2 opening from its west and east
-edges. Extending the gear slides the leaves into their mounting cells. They
+Four independent Next-block mounts close the 2×2 opening from its west and east
+edges. Extending the gear rotates the leaves upright into their mounting cells. Sliding remains a separate movement choice. They
 stay open until retraction finishes.
 
 | Retracted and covered | Extended and clear |

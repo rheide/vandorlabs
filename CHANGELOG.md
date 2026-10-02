@@ -24,6 +24,9 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 
 ### Fixed
 
+- Diagonal trapdoors have separate width/height controls and apply combined width edits together. Trapdoor Fit/Tile is saved/copied; Tile repeats and mirrors built-in and Custom door artwork instead of stretching it over 2×2 groups, while thin edges keep native door artwork.
+- Rotating trapdoors retain clearance from neighboring block faces; sliding diagonal trapdoors lift clear of continuation walls. Next-block closed-leaf placement is independent of Rotating/Sliding and offers an explicit hinge direction, replacing the forced-sliding Cover option.
+
 - Programmable light dialogs hide separate Off materials while keeping automatic on/off artwork, and grow to show up to seven textures plus the category heading. Temporarily reduce GUI scale when needed to fit the taller dialog, restoring it on close.
 
 - Native screen/control options use categorized thumbnail lists while retaining animation, framing and speed controls. Housing Fit/Tile is directly available in screen/console/input dialogs.

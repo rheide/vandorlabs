@@ -15,14 +15,16 @@ import java.io.IOException;
 public final class GuiProgrammableTrapdoor extends GuiContainer {
     private final TileEntityProgrammableTrapdoor tile;
     private HousingTextureList textures;
-    private int position,trigger,channel;
-    private boolean sliding,inverted,cover;
+    private int position,trigger,channel,tallWidth;
+    private net.minecraft.util.EnumFacing facing;
+    private boolean sliding,inverted,cover,tileTexture;
     private boolean diagonal(){return tile instanceof TileEntityProgrammableDiagonalTrapdoor;}
     private GuiTextField channelField;
     private GuiButton done;
     public GuiProgrammableTrapdoor(TileEntityProgrammableTrapdoor tile) {
         super(new ContainerProgrammableTrapdoor(tile));this.tile=tile;
         cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();trigger=tile.getTrigger();channel=tile.getRedstoneChannel();
+        tileTexture=tile.isTileTexture();tallWidth=position==0?0:1;facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING);
         inverted=diagonal() && ((TileEntityProgrammableDiagonalTrapdoor)tile).isInverted();
         xSize=360;ySize=240;
     }
@@ -32,30 +34,47 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         buttonList.add(new GuiButton(1,guiLeft+214,guiTop+38,134,20,motionLabel()));
         buttonList.add(new GuiButton(2,guiLeft+214,guiTop+64,134,20,positionLabel()));
         buttonList.add(new GuiButton(3,guiLeft+214,guiTop+90,134,20,triggerLabel()));
+        buttonList.add(new GuiButton(6,guiLeft+12,guiTop+166,185,20,layoutLabel()));
+        if(diagonal()) {
+            buttonList.add(new GuiButton(7,guiLeft+12,guiTop+138,185,20,heightLabel()));
+            for(GuiButton button:buttonList)if(button.id==2)button.enabled=position!=2;
+        } else {
+            buttonList.add(new GuiButton(7,guiLeft+12,guiTop+138,185,20,coverLabel()));
+            buttonList.add(new GuiButton(8,guiLeft+214,guiTop+166,134,20,facingLabel()));
+            for(GuiButton button:buttonList)if(button.id==8)button.enabled=cover;
+        }
         if(diagonal())buttonList.add(new GuiButton(5,guiLeft+214,guiTop+166,134,20,"Reverse slope"));
         channelField=new GuiTextField(0,fontRenderer,guiLeft+214,guiTop+140,134,18);
         channelField.setMaxStringLength(10);channelField.setValidator(s->s.isEmpty() || s.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(channel));
         done=new GuiButton(4,guiLeft+12,guiTop+210,336,20,"Done");buttonList.add(done);
     }
-    private String motionLabel(){return "Movement: "+(cover?"Cover":sliding?"Sliding":"Rotating");}
-    private String positionLabel(){return diagonal()?new String[]{"Half width / tall","Full width / tall","Full width / shallow"}[position]:"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
+    private String motionLabel(){return "Movement: "+(sliding?"Sliding":"Rotating");}
+    private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
+    private String layoutLabel(){return "Texture: "+(tileTexture?"Tile / mirror":"Fit");}
+    private String heightLabel(){return "Height: "+(position==2?"Half":"Full");}
+    private String coverLabel(){return "Closed leaf: "+(cover?"Next block":"This block");}
+    private String facingLabel(){return "Hinge: "+facing.getName();}
     private String triggerLabel(){return trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?"Redstone: On":trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Redstone: Off":"Redstone: Disabled";}
     private int parsedChannel(){try{return Integer.parseInt(channelField.getText());}catch(NumberFormatException e){return -1;}}
     private void send() {
         if(parsedChannel()>=0)channel=parsedChannel();
         int selected=textures.selected();
-        tile.setCover(cover);
-        tile.configure(selected,position,sliding,trigger,channel);
-        if(diagonal())((TileEntityProgrammableDiagonalTrapdoor)tile).setInverted(inverted);
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover));
+        tile.configureGroup(selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing);
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
-        if(button.id==1){if(diagonal())sliding=!sliding;else if(cover){cover=false;sliding=false;}else if(sliding){sliding=false;cover=true;}else sliding=true;button.displayString=motionLabel();}
-        else if(button.id==2){position=(position+1)%3;button.displayString=positionLabel();}
+        if(button.id==1){sliding=!sliding;button.displayString=motionLabel();}
+        else if(button.id==2){position=diagonal()?(position==0?1:0):(position+1)%3;if(diagonal())tallWidth=position;button.displayString=positionLabel();}
         else if(button.id==3){trigger=(trigger+1)%3;button.displayString=triggerLabel();}
         else if(button.id==5){inverted=!inverted;}
+        else if(button.id==6){tileTexture=!tileTexture;button.displayString=layoutLabel();}
+        else if(button.id==7){
+            if(diagonal()){if(position==2)position=tallWidth;else{tallWidth=position;position=2;}button.displayString=heightLabel();for(GuiButton other:buttonList)if(other.id==2){other.enabled=position!=2;other.displayString=positionLabel();}}
+            else{cover=!cover;button.displayString=coverLabel();for(GuiButton other:buttonList)if(other.id==8)other.enabled=cover;}
+        }
+        else if(button.id==8){facing=facing.rotateY();button.displayString=facingLabel();}
         send();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
@@ -85,8 +104,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         fontRenderer.drawString(diagonal()?"Programmable Diagonal Trapdoor":"Programmable Trapdoor",12,8,0xFFFFFF);
         fontRenderer.drawString("Block texture",12,27,0xDAE8F0);
         fontRenderer.drawString("Channel (0 = none)",214,127,0xDAE8F0);
-        fontRenderer.drawString("Changes apply to the group",12,145,0xDAE8F0);
-        fontRenderer.drawString("Facing sets opening direction",12,196,0xDAE8F0);
+        fontRenderer.drawString("Changes apply to the group",12,192,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);channelField.drawTextBox();}
 }

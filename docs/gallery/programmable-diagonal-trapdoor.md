@@ -1,7 +1,7 @@
 # Programmable Diagonal Trapdoor
 
-A movable panel aligned with Programmable Diagonal Walls. Choose the same 78
-block finishes and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
+A movable panel aligned with Programmable Diagonal Walls. Choose the shared categorized
+material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
 with Rotating or Sliding movement and no frame or hinge hardware.
 
 ## Geometry and placement
@@ -20,14 +20,13 @@ Configured items retain their geometry. Facing, clicked edge and ceiling
 placement follow the existing wall rules, including upper shallow panels.
 
 Shift-right-click in creative mode, or right-click with the Configurizer, to
-select texture, shape, movement, slope/band inversion, trigger and channel.
+select texture, width, height, movement, slope/band inversion, trigger and channel. Width and height have separate controls: switching Half/Full width on a tall combined group updates every member together. Half-height geometry is always full width.
 Geometry copies between diagonal walls and trapdoors through the Duplifier's
 **Diagonal Geometry** switch. Fill settings do not apply to trapdoors.
 
 ## Motion and groups
 
-Sliding moves 15 pixels along the surface's horizontal width; it never moves
-up or down, leaving one pixel visible in its original block. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
+Sliding first lifts the leaf clear of a solid continuation wall, then slides along the surface's width, leaving roughly one pixel visible in its original block. Tall leaves lift in their depth coordinate; shallow leaves lift vertically. Rendered vertices, selection and collision use the same motion. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
 compatible leaves pair and open toward opposite sides without reversing their
 closed surface. Compatible leaves have the same shape and matching orientation, opposite slopes in neighboring rows (V-shaped assemblies), or the reversed
 facing/inversion that continues the same wall plane.
@@ -44,6 +43,10 @@ group together, subject to edit permission on every member. Switching between
 tall and shallow geometry removes the previous links; place members in the new
 layout to form the new group. No unloaded chunk is forced to load.
 
+## Texture layout
+
+**Texture: Tile / mirror** uses one-block-wide, two-block-high door art on tall surfaces and two-block-long door art on shallow surfaces. Alternating columns mirror left/right, so a 2×2 surface shows two doors rather than one image stretched across both columns. This works with built-in door artwork and Custom vanilla/mod `BlockDoor` items, retaining separate upper/lower sprites. **Texture: Fit** stretches one complete image over the connected group. Ordinary block art tiles once per cell. The four thin edges always use standard native door-edge artwork. Layout is saved in worlds, configured items and Duplifier settings.
+
 ## Crafting and validation
 
 Combine a Programmable Trapdoor with an Industrial Alloy Ingot, in any crafting
@@ -53,4 +56,4 @@ settings; opening-side and group links stay in the world.
 Non-rendering checks cover wall placement alignment, one-pixel insets, rigid
 motion, mesh normals/UVs/lightmaps, all square placement orders, persistence,
 redstone, copying and recipe matching. Hardware client and Complementary
-Unbound 5.6.1 visual checks remain pending; the software renderer was not run.
+Unbound 5.6.1 visual checks remain pending. Live software-rendered regression captures validate the documented scenes.

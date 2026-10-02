@@ -1,17 +1,23 @@
 # Programmable Trapdoor
 
-Programmable Trapdoors use the same 78 block finishes as Programmable Block.
+Programmable Trapdoors use the shared categorized material catalog, including door artwork and Custom block/door textures.
 Right-click to open or close. Shift-right-click in creative mode, or right-click
 with the Configurizer in either game mode, to choose the finish, movement,
 height, redstone trigger, and channel.
 
 **Rotating** swings the leaf 90 degrees around its facing edge. **Sliding**
 moves it 15 pixels sideways, leaving one pixel visible in its own block. Placement determines the facing; sliding always
-stays horizontal. Rotating leaves also retain one pixel at the hinge edge when open. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
+stays horizontal. Rotating leaves keep their full thickness at least one pixel inside the mounting cell at the hinge, with a tiny perimeter inset to avoid coplanar neighboring faces. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
 
 The leaf is 3px thick. **Bottom** spans 1–4px above the block's base,
 **Middle** spans 6.5–9.5px, and **Top** spans 12–15px. The 1px inset at the top
 and bottom keeps a sliding leaf inside its chosen height.
+
+## Closed leaf placement and texture layout
+
+**Closed leaf: This block / Next block** is independent of **Movement: Rotating / Sliding**. Next block places the closed leaf across the neighboring cell in its facing direction, with the trapdoor tile remaining in its own mounting cell. In this mode **Hinge: north/east/south/west** selects that neighboring cell explicitly. Rotating folds the leaf upright into the mounting cell; Sliding brings it back horizontally. These offset mounts remain individual rather than joining a rectangle. This replaces the old Movement: Cover mode. See [landing gear covers](../landing-gear-covers.md) for a gear shaft example.
+
+**Texture: Tile / mirror** repeats block artwork at one-block scale. Door artwork is recognized automatically, including Custom vanilla/mod `BlockDoor` items: one block wide and two blocks long, with alternating columns mirrored left/right. A 2×2 hatch therefore shows two opposite-handed doors. A single-row door hatch uses its lower half. **Texture: Fit** stretches one image across the complete group. Native dark-wall door-edge artwork covers the four thin edges in either layout. Texture layout and next-block hinge direction survive saves, configured items and Duplifier copying.
 
 ## Connected groups
 

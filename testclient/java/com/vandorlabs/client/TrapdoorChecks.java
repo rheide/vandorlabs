@@ -4,6 +4,7 @@ import com.vandorlabs.blocks.*;
 import com.vandorlabs.items.*;
 import com.vandorlabs.tiles.*;
 import com.vandorlabs.render.TrapdoorGeometry;
+import com.vandorlabs.render.DiagonalTrapdoorGeometry;
 import com.vandorlabs.persistence.SpaceDoorData;
 import net.minecraft.block.BlockTrapDoor;
 import net.minecraft.block.state.IBlockState;
@@ -26,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkPermissions();checkRecipe();
+        checkMesh();checkNextBlockAndLayout();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -35,8 +36,8 @@ final class TrapdoorChecks {
         for(int pos=0;pos<3;pos++)for(boolean slide:new boolean[]{false,true})for(int facing=0;facing<4;facing++)for(int step=0;step<=18;step++) {
             double pose=step/18D;
             double[][] vertices=TrapdoorGeometry.corners(pos,slide,facing,pose);
-            require(Math.abs(distance(vertices[0],vertices[1])-1)<1e-8,"leaf width changes");
-            require(Math.abs(distance(vertices[0],vertices[4])-1)<1e-8,"leaf length changes");
+            require(Math.abs(distance(vertices[0],vertices[1])-(1-2*TrapdoorGeometry.EDGE_CLEARANCE))<1e-8,"leaf width changes");
+            require(Math.abs(distance(vertices[0],vertices[4])-(1-2*TrapdoorGeometry.EDGE_CLEARANCE))<1e-8,"leaf length changes");
             require(Math.abs(distance(vertices[0],vertices[2])-3/16D)<1e-8,"leaf thickness changes");
             double[] bounds=TrapdoorGeometry.bounds(pos,slide,facing,pose);
             if(slide || step==0){require(Math.abs(bounds[1]-TrapdoorGeometry.low(pos))<1e-8,"slide changes height");require(Math.abs(bounds[4]-bounds[1]-3/16D)<1e-8,"slide changes thickness");}
@@ -61,6 +62,21 @@ final class TrapdoorChecks {
             }
         }
     }
+    private static void checkNextBlockAndLayout() {
+        for(int position=0;position<3;position++)for(int turn=0;turn<4;turn++)for(boolean sliding:new boolean[]{false,true}) {
+            double[][] closed=TrapdoorGeometry.coverCorners(position,sliding,turn,0),open=TrapdoorGeometry.coverCorners(position,sliding,turn,1);
+            double[] b=DiagonalTrapdoorGeometry.bounds(open);
+            require(b[0]>0 && b[3]<1 && b[2]>0 && b[5]<1,"next-block open leaf intrudes into adjacent solid block");
+            for(int i=0;i<8;i++)for(int j=i+1;j<8;j++)require(Math.abs(distance(closed[i],closed[j])-distance(open[i],open[j]))<1e-8,"next-block leaf deforms");
+            if(!sliding)require(Math.abs(open[0][1]-closed[0][1])>.5,"next-block rotating leaf slides instead");
+            double[] normal=TrapdoorGeometry.bounds(position,false,turn,1);
+            require(normal[0]>0 && normal[3]<1 && normal[2]>0 && normal[5]<1,"rotated normal leaf shares a neighboring block plane");
+        }
+        TileEntityProgrammableTrapdoor tile=new TileEntityProgrammableTrapdoor();require(tile.isTileTexture(),"trapdoors default to Tile");tile.setTileTexture(false);tile.setCover(true);
+        NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityProgrammableTrapdoor restored=new TileEntityProgrammableTrapdoor();restored.readFromNBT(saved);
+        require(!restored.isTileTexture() && restored.isCover() && !restored.isSliding(),"Fit and next-block rotation did not save");
+        saved.removeTag("TrapdoorTileTexture");restored.readFromNBT(saved);require(restored.isTileTexture(),"old trapdoors do not default to Tile");
+    }
     private static void checkClickPlacement() {
         for(EnumFacing side:EnumFacing.values())for(float hit:new float[]{.1F,.5F,.9F}) {
             NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
@@ -72,8 +88,8 @@ final class TrapdoorChecks {
         }
         for(int pos=0;pos<3;pos++)for(boolean sliding:new boolean[]{false,true}) {
             double[] b=TrapdoorGeometry.bounds(pos,sliding,0,1);
-            require(b[5]>=1/16D-1e-8,"open leaf disappeared into neighbor");
-            if(sliding)require(Math.abs(b[5]-1/16D)<1e-8,"sliding clearance is not one pixel");
+            require(b[5]>=1/16D-TrapdoorGeometry.EDGE_CLEARANCE-1e-8,"open leaf disappeared into neighbor");
+            if(sliding)require(Math.abs(b[5]-(1/16D-TrapdoorGeometry.EDGE_CLEARANCE))<1e-8,"sliding clearance is not one pixel");
         }
     }
     private static void checkSettings() {

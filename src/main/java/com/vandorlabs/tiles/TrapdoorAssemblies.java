@@ -68,7 +68,7 @@ final class TrapdoorAssemblies {
             } else {
                 EnumFacing direction=EnumFacing.getFacingFromVector(u.getX(),u.getY(),u.getZ());
                 root.getWorld().setBlockState(leaf.getPos(),root.getWorld().getBlockState(leaf.getPos()).withProperty(BlockProgrammableTrapdoor.FACING,high?direction:direction.getOpposite()),2);
-                leaf.assemblyHinge=-distance+1/16D;
+                leaf.assemblyHinge=-distance+com.vandorlabs.render.TrapdoorGeometry.OPEN_HINGE;
             }
         }
         for(TileEntityProgrammableTrapdoor leaf:cells.values()){leaf.setRedstoneChannel(reference.channel);leaf.sync();}

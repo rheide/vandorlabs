@@ -51,7 +51,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     }
     @Override protected void sync() {
         // HALF is slope/band inversion here, independent of the three geometry modes.
-        markDirty();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
+        markDirty();if(!configuring && world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
     }
     public void setInverted(boolean inverted) {
         if(world==null)return;

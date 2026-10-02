@@ -34,7 +34,7 @@ final class DiagonalTrapdoorChecks {
         for(int mode=0;mode<3;mode++)for(boolean inverted:new boolean[]{false,true})for(int facing=0;facing<4;facing++)for(boolean sliding:new boolean[]{false,true})for(boolean reverse:new boolean[]{false,true})for(int step=0;step<=18;step++) {
             double pose=step/18D;double[][] closed=DiagonalTrapdoorGeometry.corners(mode,inverted,facing,sliding,reverse,0),v=DiagonalTrapdoorGeometry.corners(mode,inverted,facing,sliding,reverse,pose);
             for(int i=0;i<8;i++)for(int j=i+1;j<8;j++)require(Math.abs(distance(v[i],v[j])-distance(closed[i],closed[j]))<1e-8,"leaf deforms while moving");
-            if(sliding)for(int i=0;i<8;i++)require(Math.abs(v[i][1]-closed[i][1])<1e-8,"slide moved vertically");
+            if(sliding)for(int i=1;i<8;i++)for(int axis=0;axis<3;axis++)require(Math.abs((v[i][axis]-closed[i][axis])-(v[0][axis]-closed[0][axis]))<1e-8,"slide/lift deforms leaf");
             net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(4096);buffer.begin(7,BlockSurfaceFormat.get());
             TEProgrammableTrapdoor.drawDiagonalLeaf(buffer,sprite,mode,inverted,facing,sliding,reverse,pose,0xF000A0);buffer.finishDrawing();require(buffer.getVertexCount()==24,"mesh face count");
             java.nio.ByteBuffer bytes=buffer.getByteBuffer();net.minecraft.client.renderer.vertex.VertexFormat format=buffer.getVertexFormat();
@@ -64,8 +64,13 @@ final class DiagonalTrapdoorChecks {
     private static void clearance() {
         for(int mode=0;mode<3;mode++)for(boolean inverted:new boolean[]{false,true})for(boolean reverse:new boolean[]{false,true})for(boolean slide:new boolean[]{false,true}) {
             double[] b=DiagonalTrapdoorGeometry.bounds(DiagonalTrapdoorGeometry.corners(mode,inverted,0,slide,reverse,1));
-            require(reverse?b[0]<=15/16D+1e-8:b[3]>=1/16D-1e-8,"open diagonal leaf disappeared into neighbor");
-            if(slide)require(Math.abs((reverse?b[0]:b[3])-(reverse?15/16D:1/16D))<1e-8,"diagonal slide clearance");
+            require(reverse?b[0]<=15/16D+TrapdoorGeometry.EDGE_CLEARANCE+1e-8:b[3]>=1/16D-TrapdoorGeometry.EDGE_CLEARANCE-1e-8,"open diagonal leaf disappeared into neighbor");
+            if(slide) {
+                double[][] vertices=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,1);
+                double span=mode==1?.75:.375;
+                for(double[] point:vertices){double along=mode==2?point[2]:point[1],near=(inverted?span*(1-along):span*along)+(mode==2 && inverted?.375:0),depth=mode==2?point[1]:point[2];require(depth-near>=5/16D-1e-8,"sliding leaf intersects continuation wall");}
+            }
+            if(slide)require(Math.abs((reverse?b[0]:b[3])-(reverse?15/16D+TrapdoorGeometry.EDGE_CLEARANCE:1/16D-TrapdoorGeometry.EDGE_CLEARANCE))<1e-8,"diagonal slide clearance");
         }
     }
     private static void placement() {
@@ -160,6 +165,11 @@ final class DiagonalTrapdoorChecks {
                 TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)leaf;diagonal.setInverted(!diagonal.isInverted());
             }
             require(first.group().size()==4,"group slope toggle dissolved group");
+            if(mode!=2)for(int nextWidth:new int[]{1,0,1,0}) {
+                first.configureGroup(16,nextWidth,slide,0,0,first.isInverted(),false,false,first.facing());
+                require(first.group().size()==4,"combined width toggle split square");
+                for(TileEntityProgrammableTrapdoor member:first.group())require(member.getPosition()==nextWidth && !member.isTileTexture(),"combined width edit missed member");
+            }
             for(TileEntityProgrammableTrapdoor leaf:new ArrayList<>(first.group())) {
                 TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)leaf;diagonal.setInverted(!diagonal.isInverted());
             }

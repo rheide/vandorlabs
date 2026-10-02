@@ -16,18 +16,24 @@ import net.minecraft.world.World;
 /** Settings and pair links; event-driven power, no idle tile ticks. */
 public class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
     protected int texture,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
-    protected boolean sliding,channelSignal,powerKnown,lastPower;
+    protected boolean sliding,channelSignal,powerKnown,lastPower,configuring;
+    private boolean tileTexture=true;
+    public boolean isTileTexture(){return tileTexture;}
+    public void setTileTexture(boolean value){tileTexture=value;sync();}
     protected BlockPos partner,squareOrigin;
     protected java.util.List<BlockPos> assembly=new java.util.ArrayList<>();
     protected double assemblyHinge=1/16D,assemblyTravel=15/16D;
-    public double motionHinge(){return assembly.isEmpty()?1/16D:assemblyHinge;}
+    public double motionHinge(){return assembly.isEmpty()?com.vandorlabs.render.TrapdoorGeometry.OPEN_HINGE:assemblyHinge;}
     public double motionTravel(){return assembly.isEmpty()?15/16D:assemblyTravel;}
     public int getHousingTexture(){return texture;}
     public int getPosition(){return position;}
     private boolean cover;
+    private EnumFacing coverFacing=EnumFacing.NORTH;
+    public EnumFacing coverFacing(){if(world!=null && world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor)coverFacing=world.getBlockState(pos).getValue(BlockProgrammableTrapdoor.FACING);return coverFacing;}
+    public void setCoverFacing(EnumFacing value){coverFacing=value;if(cover && world!=null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockProgrammableTrapdoor.FACING,value),2);sync();}
     public boolean isCover(){return cover;}
     public void setCover(boolean value){value=value && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);if(cover==value)return;if(value)unpair();cover=value;sync();if(world!=null&&!world.isRemote)evaluatePower(true);}
-    public double[][] corners(net.minecraft.block.state.IBlockState state,double pose){int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));return cover?com.vandorlabs.render.TrapdoorGeometry.coverCorners(position,turns,pose):com.vandorlabs.render.TrapdoorGeometry.corners(position,sliding,turns,pose,motionHinge(),motionTravel());}
+    public double[][] corners(net.minecraft.block.state.IBlockState state,double pose){int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));return cover?com.vandorlabs.render.TrapdoorGeometry.coverCorners(position,sliding,turns,pose):com.vandorlabs.render.TrapdoorGeometry.corners(position,sliding,turns,pose,motionHinge(),motionTravel());}
     public boolean isSliding(){return sliding;}
     public int getTrigger(){return trigger;}
     @Override public int getRedstoneChannel(){return channel;}
@@ -179,6 +185,27 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         TileEntityProgrammableTrapdoor other=mate();partner=null;sync();
         if(other!=null){other.partner=null;other.sync();other.evaluatePower(true);}
     }
+    /** Apply every member before publishing updates or evaluating group power. */
+    public static void configureGroup(java.util.List<TileEntityProgrammableTrapdoor> leaves,Runnable changes) {
+        for(TileEntityProgrammableTrapdoor leaf:leaves)leaf.configuring=true;
+        try{changes.run();}finally{
+            for(TileEntityProgrammableTrapdoor leaf:leaves)leaf.configuring=false;
+            for(TileEntityProgrammableTrapdoor leaf:leaves)leaf.sync();
+            for(TileEntityProgrammableTrapdoor leaf:leaves)leaf.evaluatePower(true);
+        }
+    }
+    public void configureGroup(int texture,int position,boolean sliding,int trigger,int channel,boolean inverted,boolean cover,boolean tileTexture,EnumFacing facing) {
+        if(!valid(texture,position,trigger,channel))return;
+        java.util.List<TileEntityProgrammableTrapdoor> leaves=new java.util.ArrayList<>(group());
+        boolean flip=this instanceof TileEntityProgrammableDiagonalTrapdoor && ((TileEntityProgrammableDiagonalTrapdoor)this).isInverted()!=inverted;
+        configureGroup(leaves,()->{
+            for(TileEntityProgrammableTrapdoor leaf:leaves){
+                leaf.setCover(cover);leaf.setTileTexture(tileTexture);leaf.configure(texture,position,sliding,trigger,channel);
+                if(flip && leaf instanceof TileEntityProgrammableDiagonalTrapdoor){TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)leaf;diagonal.setInverted(!diagonal.isInverted());}
+                if(leaf.cover && facing!=null)leaf.setCoverFacing(facing);
+            }
+        });
+    }
     public void configure(int texture,int position,boolean sliding,int trigger,int channel) {
         if(!valid(texture,position,trigger,channel))return;
         this.texture=texture;this.position=position;this.sliding=sliding;this.trigger=trigger;
@@ -199,7 +226,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         repairLinks();RedstoneChannels.inputChanged(this);evaluatePower(false);
     }
     public void evaluatePower(boolean force) {
-        if(world==null || world.isRemote)return;
+        if(configuring || world==null || world.isRemote)return;
         if(cover && LandingGearCovers.needsOpen(this)){requestOpen(true);return;}
         java.util.List<TileEntityProgrammableTrapdoor> members=group();
         boolean powered=false;
@@ -212,7 +239,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
             requestOpen(trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?powered:!powered);
     }
     public void requestOpen(boolean open) {
-        if(world==null || world.isRemote)return;
+        if(configuring || world==null || world.isRemote)return;
         if(cover && LandingGearCovers.needsOpen(this))open=true;
         for(TileEntityProgrammableTrapdoor leaf:group())leaf.setOpen(open);
     }
@@ -223,7 +250,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         world.playEvent(null,open?1037:1036,pos,0);markDirty();
     }
     protected void sync() {
-        markDirty();if(world==null)return;
+        markDirty();if(configuring || world==null)return;
         IBlockState state=world.getBlockState(pos);
         // HALF keeps vanilla metadata and ladder behavior consistent with the chosen position.
         if(state.getBlock() instanceof BlockProgrammableTrapdoor) {
@@ -237,7 +264,8 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     public NBTTagCompound itemSettings() {
         NBTTagCompound tag=new NBTTagCompound();
         tag.setInteger("housingTexture",texture);tag.setInteger("TrapdoorPosition",position);
-        tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setInteger("TrapdoorTrigger",trigger);
+        if(cover)tag.setInteger("TrapdoorCoverFacing",coverFacing().getHorizontalIndex());
+        tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setInteger("TrapdoorTrigger",trigger);
         tag.setInteger("RedstoneChannel",channel);return tag;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
@@ -254,7 +282,9 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         int old=channel;super.readFromNBT(tag);
         texture=ScreenHousingTextures.clamp(tag.getInteger("housingTexture"));
         position=Math.max(0,Math.min(2,tag.getInteger("TrapdoorPosition")));
+        tileTexture=!tag.hasKey("TrapdoorTileTexture",1) || tag.getBoolean("TrapdoorTileTexture");
         cover=tag.getBoolean("TrapdoorCover") && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);
+        coverFacing=EnumFacing.getHorizontal(tag.getInteger("TrapdoorCoverFacing"));
         sliding=tag.getBoolean("TrapdoorSliding");
         int saved=tag.hasKey("TrapdoorTrigger",3)?tag.getInteger("TrapdoorTrigger"):SpaceDoorData.TRIGGER_REDSTONE_ON;
         trigger=SpaceDoorData.validTrigger(saved)?saved:SpaceDoorData.TRIGGER_REDSTONE_ON;

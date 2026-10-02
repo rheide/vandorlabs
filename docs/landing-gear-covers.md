@@ -8,17 +8,19 @@ The mod reserves the matching two-by-two cells for the mount and moving wheel. T
 
 ## Adjacent trapdoor covers
 
-The Programmable Trapdoor movement selector now cycles through Rotating, Sliding and **Cover**. Cover mode keeps the tile in its mounting cell while the closed leaf spans the adjacent cell in its facing direction. Opening slides it back into its own mounting cell. Thus a cover can cross the gear shaft without occupying a cell the gear reserves.
+The Programmable Trapdoor has a **Closed leaf: This block / Next block** control, separate from its Rotating/Sliding movement. Choose **Next block** to keep the owning tile outside the shaft while its closed leaf covers the adjacent shaft cell. Choose **Rotating** to fold it upright into its mounting cell, or **Sliding** to bring it back horizontally. The old Movement: Cover option is replaced by these independent controls.
 
-For a simple cover:
+For a rotating gear cover:
 
-1. Place a normal Programmable Trapdoor beside the shaft, one block below the gear root.
-2. Configure **Movement: Cover** and point its facing into the shaft. The normal facing rule still applies; verify the closed leaf lies over the intended cell.
-3. Choose Bottom, Middle or Top to set the cover's height within that cell. Leave clear space in its mounting cell for the open leaf.
+1. Place a normal Programmable Trapdoor beside the shaft, one block below the gear root. The trapdoor tile must be outside the reserved shaft; placing it in the gear block itself is unnecessary.
+2. Set **Closed leaf: Next block**, **Movement: Rotating**, and use **Hinge** to point north/east/south/west into the shaft. That direction identifies the covered neighboring cell directly.
+3. Choose Bottom, Middle or Top for the cover's height. The open leaf folds vertically into the mounting cell, so leave enough vertical space there. The selection outline follows the offset closed leaf.
 4. Set **Redstone: On** for automatic closure when the gear is retracted. A shared channel can also open it independently.
+
+For a 2×2 shaft whose root is at `(x,y,z)` and occupies X `x..x+1`, Z `z..z+1`, put the mounts at `(x-1,y-1,z)`, `(x-1,y-1,z+1)`, `(x+2,y-1,z)`, `(x+2,y-1,z+1)`. The west mounts choose **Hinge: east**, and the east mounts choose **Hinge: west**. All four choose Next block. Each closed leaf then covers one reserved shaft cell; rotating opens it into its own outside mount.
 
 The gear automatically opens nearby loaded covers whose closed cell belongs to its reserved footprint. Covers stay open while the wheel is extended or still retracting, then reevaluate their redstone setting when it has fully retracted. Turning off power therefore does not close the cover through a moving wheel. Disabled redstone mode leaves manual closure available after retraction.
 
-Cover mode applies to normal horizontal trapdoors and uses individual cover mounts rather than joined rotating/sliding groups. For a 2×2 opening, put two mounts along each of the west and east edges, facing inward: four independent covers fill the four shaft cells. Keep each mount outside the gear's reservation. The mod preserves them during reservation cleanup. Updates read only loaded cells and run when the gear changes target or completes motion; they do not load chunks or poll idle gears.
+Next-block placement applies to normal horizontal trapdoors and uses individual mounts rather than joined rotating/sliding groups. For a 2×2 opening, put two mounts along each of the west and east edges, facing inward: four independent covers fill the four shaft cells. Keep each mount outside the gear's reservation. The mod preserves them during reservation cleanup. Updates read only loaded cells and run when the gear changes target or completes motion; they do not load chunks or poll idle gears.
 
-Cover settings survive configured items and Duplifier copying. The Configurizer uses the same Creative-only configuration gate as the other programmable menus.
+Movement, next-block placement, texture layout and hinge direction survive configured items and Duplifier copying. The Configurizer uses the same Creative-only configuration gate as the other programmable menus.

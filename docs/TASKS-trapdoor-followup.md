@@ -23,3 +23,9 @@ Initial checkout clean at `d4b9b2ff`. Read README, trapdoor and landing-gear gui
 The diagonal size control currently cycles width and height together; separate those controls. Capture the original group before predicting or applying settings, so combined tall width edits remain combined. Next-block coverage should be a placement option independent of Rotating/Sliding, with an explicit facing control for individual offset mounts. Retain loaded-only gear clearance notifications.
 
 Door artwork gets a saved Fit/Tile control; Tile repeats one-block-wide, two-block-long artwork, mirroring alternating columns. Use standard native door leaf-edge artwork on trapdoor edges. Rendering and collision share motion/clearance geometry. Validate combined edits, saved/copied settings, upper/lower UVs, mirroring, edge sprites, open-state clearance, and real scenes/dialogs.
+
+## Implementation slice
+
+Implemented separate diagonal width/height controls, atomic group configuration/prediction, saved/copied Fit/Tile and hinge direction, next-block placement independent of motion, rotating clearance and lifted diagonal sliding. Door faces tile at native proportions with alternating mirrored columns; four thin edges use the native dark-wall leaf-edge texture.
+
+Java 8 standard build, non-rendering contracts and filesystem checks pass (`/tmp/vl-trapdoor-contracts2.log`). Tests cover repeated combined width changes, rigid geometry, neighboring-plane clearance, continuation-wall separation, atlas bounds, complete tiled-face coverage, left/right mirroring and configured-item/copy settings. Live renderer/dialog scenes remain pending.
