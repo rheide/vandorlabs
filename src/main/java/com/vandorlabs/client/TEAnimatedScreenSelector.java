@@ -453,7 +453,7 @@ public class TEAnimatedScreenSelector
                 GlStateManager.translate(0,16,0); GlStateManager.scale(1,-1,1);
             }
             GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
-            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false));
+            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).sideLayout(te.isSurfaceTileSides()));
             double[] uv=bindInput(te,te.getInputPanel());
             com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
             BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
@@ -695,7 +695,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
-        renderWallBox(wall, 0, 0, 0, 16, 1, 16);
+        renderWallBox(wall,wall,true,0,0,0,16,1,16,te.isSurfaceTileSides());
         drawWallMesh(wall,ScreenHousingMesh.halfConsole().sideLayout(te.isSurfaceTileSides()));
 
         double[] frontUv = bindInput(te, te.getInputPanel());
@@ -815,7 +815,7 @@ public class TEAnimatedScreenSelector
                 (float) (combined % 65536), (float) (combined / 65536));
 
         TextureAtlasSprite wall = wallSprite(te);
-        renderWallBox(wall, 0, 0, 0, 16, 1, 16);
+        renderWallBox(wall,wall,true,0,0,0,16,1,16,te.isSurfaceTileSides());
         drawWallMesh(wall,ScreenHousingMesh.console().sideLayout(te.isSurfaceTileSides()));
 
         // The supplied half-height controls are native 2:1 textures rather

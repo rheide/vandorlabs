@@ -19,6 +19,6 @@ For a simple cover:
 
 The gear automatically opens nearby loaded covers whose closed cell belongs to its reserved footprint. Covers stay open while the wheel is extended or still retracting, then reevaluate their redstone setting when it has fully retracted. Turning off power therefore does not close the cover through a moving wheel. Disabled redstone mode leaves manual closure available after retraction.
 
-Cover mode applies to normal horizontal trapdoors and uses individual cover mounts rather than joined rotating/sliding groups. Add separate mounts for larger openings, keeping each mount outside the gear's reservation. The mod preserves them during reservation cleanup. Updates read only loaded cells and run when the gear changes target or completes motion; they do not load chunks or poll idle gears.
+Cover mode applies to normal horizontal trapdoors and uses individual cover mounts rather than joined rotating/sliding groups. For a 2×2 opening, put two mounts along each of the west and east edges, facing inward: four independent covers fill the four shaft cells. Keep each mount outside the gear's reservation. The mod preserves them during reservation cleanup. Updates read only loaded cells and run when the gear changes target or completes motion; they do not load chunks or poll idle gears.
 
 Cover settings survive configured items and Duplifier copying. The Configurizer uses the same Creative-only configuration gate as the other programmable menus.

@@ -24,16 +24,22 @@ final class LandingGearFootprintChecks {
         BlockPos coverPos=pos.down().west();
         world.setBlockState(coverPos,com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRAPDOOR.getDefaultState().withProperty(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING,net.minecraft.util.EnumFacing.EAST));
         com.vandorlabs.tiles.TileEntityProgrammableTrapdoor cover=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(coverPos);cover.setCover(true);
+        java.util.List<BlockPos> covers=new java.util.ArrayList<>();covers.add(coverPos);
+        for(int side=0;side<2;side++)for(int row=0;row<2;row++) {
+            BlockPos mount=pos.add(side==0?-1:2,-1,row);if(mount.equals(coverPos))continue;
+            world.setBlockState(mount,com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRAPDOOR.getDefaultState().withProperty(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING,side==0?net.minecraft.util.EnumFacing.EAST:net.minecraft.util.EnumFacing.WEST));
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor panel=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(mount);panel.setCover(true);panel.configure(0,0,false,1,0);covers.add(mount);
+        }
         cover.configure(0,0,false,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON,0);
         require(cover.corners(world.getBlockState(coverPos),0)[0][0]>=1,"closed cover does not span the adjacent cell");
         require(block.setExtended(world,pos,true),"corner wheel could not extend");
-        require(world.getBlockState(coverPos).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN),"cover did not automatically open for gear");
+        for(BlockPos mount:covers)require(world.getBlockState(mount).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN),"cover did not automatically open for gear");
         for(int i=0;i<45;i++)tile.update();
         require(tile.progress==2,"extension progress");
         require(block.setExtended(world,pos,false),"corner wheel could not retract");
         require(world.getBlockState(coverPos).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN),"cover closed before wheel retracted");
         for(int i=0;i<45;i++)tile.update();
-        require(!world.getBlockState(coverPos).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN),"cover failed to close after retraction");
+        for(BlockPos mount:covers)require(!world.getBlockState(mount).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN) && world.getTileEntity(mount) instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor,"cover failed to survive and close after retraction");
         require(world.getTileEntity(coverPos)==cover,"reservation cleanup removed the cover owner");
         require(tile.progress==0 && world.isAirBlock(pos.down(2)),"retraction reservation cleanup");
         require(cover.itemSettings().getBoolean("TrapdoorCover"),"cover item settings");

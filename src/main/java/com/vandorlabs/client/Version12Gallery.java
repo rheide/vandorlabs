@@ -126,9 +126,12 @@ final class Version12Gallery {
             TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);
             tile.configure(0,0,32,scene.equals("gear_extra_large")?3:4);
             if(scene.startsWith("gear_cover")) {
-                BlockPos mount=p.down().west();BlockProgrammableTrapdoor hatch=(BlockProgrammableTrapdoor)block("programmable_trapdoor");
-                world.setBlockState(mount,hatch.getDefaultState().withProperty(BlockProgrammableTrapdoor.FACING,EnumFacing.EAST),3);
-                TileEntityProgrammableTrapdoor cover=(TileEntityProgrammableTrapdoor)world.getTileEntity(mount);cover.setCover(true);cover.configure(2,0,false,1,0);
+                BlockProgrammableTrapdoor hatch=(BlockProgrammableTrapdoor)block("programmable_trapdoor");
+                for(int side=0;side<2;side++)for(int row=0;row<2;row++) {
+                    BlockPos mount=p.add(side==0?-1:2,-1,row);
+                    world.setBlockState(mount,hatch.getDefaultState().withProperty(BlockProgrammableTrapdoor.FACING,side==0?EnumFacing.EAST:EnumFacing.WEST),3);
+                    TileEntityProgrammableTrapdoor cover=(TileEntityProgrammableTrapdoor)world.getTileEntity(mount);cover.setCover(true);cover.configure(2,0,false,1,0);
+                }
                 if(!scene.endsWith("closed"))gear.setExtended(world,p,true);
             }else gear.setExtended(world,p,true);
         } else if (scene.startsWith("gear")) {

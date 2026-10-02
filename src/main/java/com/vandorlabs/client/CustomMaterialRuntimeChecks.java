@@ -29,6 +29,11 @@ final class CustomMaterialRuntimeChecks {
             require(!selected.getQuads(null,null,0).isEmpty(),"replacement leaf lost its hinges");
             require(DoorRenderModels.get(programmableDoor,metadata+2160).selected().getQuads(null,null,0).isEmpty(),"hinges-off replacement retained hardware");
         }
+        net.minecraft.block.Block other=net.minecraft.block.Block.getBlockFromName("immersiveengineering:stone_decoration");
+        if(other!=null) {
+            int choice=CustomBlockMaterials.choice(new ItemStack(other));require(choice>=0,"mod block item selection");
+            require(CustomBlockTextures.texture(choice).startsWith("immersiveengineering:"),"mod block artwork");
+        }
         ItemStack configured=new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK);NBTTagCompound tag=new NBTTagCompound();tag.setInteger("housingTexture",stoneId);configured.setTagInfo("BlockEntityTag",tag);
         net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(configured,player.world,player);
         require(model.getParticleTexture().getIconName().equals("minecraft:blocks/stone"),"custom configured inventory artwork");
