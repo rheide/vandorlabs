@@ -1169,13 +1169,13 @@ public class ReproLab {
             case 50:
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("diagonal trapdoor GUI did not open");
-                ((GuiProgrammableTrapdoor)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(2,0,0,"Width"));
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,2);
                 state=51;holdTicks=20;break;
             case 51:
                 if(--holdTicks>0)break;
                 checkTrapdoorGroup(mc,1,true);
-                ((GuiProgrammableTrapdoor)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Fit"));
-                ((GuiProgrammableTrapdoor)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(2,0,0,"Width"));
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,6);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,2);
                 state=52;holdTicks=20;break;
             case 52:
                 if(--holdTicks>0)break;
@@ -1187,11 +1187,11 @@ public class ReproLab {
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("normal trapdoor GUI did not open");
                 GuiProgrammableTrapdoor hatch=(GuiProgrammableTrapdoor)mc.currentScreen;
-                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Next block"));
-                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(8,0,0,"Hinge"));
-                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Sliding"));
-                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Rotating"));
-                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Fit"));
+                pressTrapdoorControl(hatch,7);
+                pressTrapdoorControl(hatch,8);
+                pressTrapdoorControl(hatch,1);
+                pressTrapdoorControl(hatch,1);
+                pressTrapdoorControl(hatch,6);
                 state=54;holdTicks=20;break;
             case 54:
                 if(--holdTicks>0)break;
@@ -1209,6 +1209,11 @@ public class ReproLab {
         }
     }
 
+    private static void pressTrapdoorControl(GuiProgrammableTrapdoor gui,int id) {
+        java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+        for(net.minecraft.client.gui.GuiButton button:buttons)if(button.id==id && button.enabled){gui.actionPerformed(button);return;}
+        throw new IllegalStateException("trapdoor control missing or disabled: "+id);
+    }
     private void openTrapdoorFollowup(Minecraft mc,boolean diagonal) {
         mc.getIntegratedServer().addScheduledTask(()->{
             World world=mc.getIntegratedServer().getWorld(0);BlockPos base=CONSOLE.add(15,0,3);
@@ -1217,6 +1222,8 @@ public class ReproLab {
             for(int row=0;row<(diagonal?2:1);row++)for(int col=0;col<(diagonal?2:1);col++) {
                 com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf=TrapdoorGallery.place(world,base.add(col,row,0),diagonal,choice,0,false,EnumFacing.NORTH,diagonal && row==1);
             }
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(base);
+            root.configureGroup(choice,0,false,0,0,false,false,true,EnumFacing.NORTH);
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             player.capabilities.isCreativeMode=true;player.sendPlayerAbilities();player.setPositionAndUpdate(base.getX()+.5,base.getY(),base.getZ()-2);
         });
@@ -1225,7 +1232,7 @@ public class ReproLab {
         for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(CONSOLE.add(15,0,3));
             if(root.group().size()!=4)throw new IllegalStateException("GUI width toggle broke combined diagonal trapdoor");
-            for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:root.group())if(leaf.getPosition()!=mode || leaf.isTileTexture()!=tile)throw new IllegalStateException("GUI group settings missed diagonal member");
+            for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:root.group())if(leaf.getPosition()!=mode || leaf.isTileTexture()!=tile || leaf.getHousingTexture()!=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR)))throw new IllegalStateException("GUI group settings missed diagonal member");
         }
     }
 
