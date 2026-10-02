@@ -36,6 +36,11 @@ SHOTS = {
     "gallery_ramp_down_stairs": "ramp-controller/down-stairs.png",
 }
 
+SHOTS["trapdoor_gui"]="tasks/trapdoor-config.png"
+SHOTS["diagonal_trapdoor_gui"]="tasks/diagonal-trapdoor-config.png"
+for scene in ("flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open"):
+    SHOTS[f"gallery_trapdoor_followup_{scene}"]=f"tasks/trapdoor-{scene.replace('_','-')}.png"
+
 for group in ("flat", "v", "rectangle", "stagger"):
     for motion in ("rotating", "sliding"):
         for pose in ("closed", "open"):

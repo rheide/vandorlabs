@@ -308,6 +308,8 @@ public class ReproLab {
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         for(String group:new String[]{"flat","v","rectangle","stagger"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
+        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open"})
+            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-.7,galleryFeet+3.2,-21.5,-8,scene.startsWith("flat") || scene.startsWith("next")?30:12));
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "gear_corner", "gear_cover_closed", "gear_cover_open", "materials", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
@@ -553,6 +555,7 @@ public class ReproLab {
                     com.vandorlabs.tiles.TileEntitySpaceDoor door=(com.vandorlabs.tiles.TileEntitySpaceDoor)rawDoor;
                     if(door.getFaceTexture()!=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(Blocks.BRICK_BLOCK)) || door.isTileTexture()!=s.name.endsWith("_tile"))throw new IllegalStateException("Door material gallery settings did not synchronize");
                 }
+                if(s.name.startsWith("gallery_trapdoor_followup_"))TrapdoorMaterialRuntimeChecks.checkScene(mc,s.name.substring("gallery_trapdoor_followup_".length()),GALLERY_X,GALLERY_Y);
                 save(mc, s);
                 shotIndex++;
                 if (shotIndex < SHOTS.size()) {
@@ -1144,16 +1147,65 @@ public class ReproLab {
                 saveNamed(mc,"ramp_matching_gui");
                 System.out.println("[vandorlabs][reprolab] ramp-matching-gui PASS");
                 mc.player.closeScreen();
-                System.out.println("[vandorlabs][reprolab] all shots taken, shutting down");
-                state = 9;
-                holdTicks = 10;
+                openTrapdoorFollowup(mc,true);state=50;holdTicks=40;
                 break;
+            case 50:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("diagonal trapdoor GUI did not open");
+                ((GuiProgrammableTrapdoor)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(2,0,0,"Width"));
+                state=51;holdTicks=20;break;
+            case 51:
+                if(--holdTicks>0)break;
+                checkTrapdoorGroup(mc,1,true);
+                ((GuiProgrammableTrapdoor)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Fit"));
+                ((GuiProgrammableTrapdoor)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(2,0,0,"Width"));
+                state=52;holdTicks=20;break;
+            case 52:
+                if(--holdTicks>0)break;
+                checkTrapdoorGroup(mc,0,false);saveNamed(mc,"diagonal_trapdoor_gui");
+                mc.player.closeScreen();openTrapdoorFollowup(mc,false);state=53;holdTicks=40;break;
+            case 53:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("normal trapdoor GUI did not open");
+                GuiProgrammableTrapdoor hatch=(GuiProgrammableTrapdoor)mc.currentScreen;
+                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Next block"));
+                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(8,0,0,"Hinge"));
+                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Sliding"));
+                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Rotating"));
+                hatch.actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Fit"));
+                state=54;holdTicks=20;break;
+            case 54:
+                if(--holdTicks>0)break;
+                com.vandorlabs.tiles.TileEntityProgrammableTrapdoor offset=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(15,0,3));
+                if(!offset.isCover() || offset.isSliding() || offset.isTileTexture() || offset.coverFacing()!=EnumFacing.EAST)throw new IllegalStateException("next-block/motion/layout/hinge GUI packets failed");
+                saveNamed(mc,"trapdoor_gui");mc.player.closeScreen();
+                System.out.println("[vandorlabs][reprolab] trapdoor-controls-runtime PASS");
+                state=9;holdTicks=10;break;
             case 9:
                 if (--holdTicks > 0) break;
                 mc.shutdown();
                 break;
             default:
                 break;
+        }
+    }
+
+    private void openTrapdoorFollowup(Minecraft mc,boolean diagonal) {
+        mc.getIntegratedServer().addScheduledTask(()->{
+            World world=mc.getIntegratedServer().getWorld(0);BlockPos base=CONSOLE.add(15,0,3);
+            for(int row=0;row<2;row++)for(int col=0;col<2;col++)world.setBlockToAir(base.add(col,row,0));
+            int choice=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR));
+            for(int row=0;row<(diagonal?2:1);row++)for(int col=0;col<(diagonal?2:1);col++)TrapdoorGallery.place(world,base.add(col,row,0),diagonal,choice,0,false,EnumFacing.NORTH);
+            EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+            player.capabilities.isCreativeMode=true;player.sendPlayerAbilities();player.setPositionAndUpdate(base.getX()+.5,base.getY(),base.getZ()-2);
+            player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR,world,base.getX(),base.getY(),base.getZ());
+        });
+    }
+    private void checkTrapdoorGroup(Minecraft mc,int mode,boolean tile) {
+        for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(CONSOLE.add(15,0,3));
+            if(root.group().size()!=4)throw new IllegalStateException("GUI width toggle broke combined diagonal trapdoor");
+            for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:root.group())if(leaf.getPosition()!=mode || leaf.isTileTexture()!=tile)throw new IllegalStateException("GUI group settings missed diagonal member");
         }
     }
 

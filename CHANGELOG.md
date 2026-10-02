@@ -7,7 +7,7 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 ### Added
 
 - Extra Large (2×2) landing-gear alignment with matching reservations and saved/copied size settings.
-- Adjacent trapdoor Cover mode, preserving the cover tile outside the gear shaft and holding it open until retraction completes.
+- Adjacent next-block trapdoor placement, preserving the owning tile outside the gear shaft and holding the leaf open until retraction completes. Supports either rotating or sliding movement.
 - Custom block/door texture sample slot across shared material menus, with vanilla/mod atlas artwork, upper/lower door mapping and non-consuming inventory selection.
 - Fit/Tile housing controls for screens, half/full inputs and consoles. Static surface and material choices participate in Duplifier copying.
 

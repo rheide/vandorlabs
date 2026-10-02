@@ -13,6 +13,7 @@ import net.minecraft.world.World;
 /** Real item placement, grouping and open-state contracts in the screenshot world. */
 final class TrapdoorGallery {
     static void build(World world,String scene,int x,int y) {
+        if(scene.startsWith("followup_")){buildFollowup(world,scene,x,y);return;}
         boolean flat=scene.startsWith("flat"),stagger=scene.startsWith("stagger"),v=scene.startsWith("v_");
         boolean sliding=scene.contains("sliding"),open=scene.endsWith("open");
         BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)(flat?ModBlocks.PROGRAMMABLE_TRAPDOOR:ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR);
@@ -35,5 +36,41 @@ final class TrapdoorGallery {
         first.requestOpen(open);
         for(TileEntityProgrammableTrapdoor leaf:first.group())if(world.getBlockState(leaf.getPos()).getValue(BlockTrapDoor.OPEN)!=open)throw new IllegalStateException("trapdoor gallery opening failed");
         System.out.println("[vandorlabs][reprolab] trapdoor-assembly PASS "+scene);
+    }
+    static TileEntityProgrammableTrapdoor place(World world,BlockPos pos,boolean diagonal,int texture,int mode,boolean sliding,EnumFacing facing) {
+        BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)(diagonal?ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR:ModBlocks.PROGRAMMABLE_TRAPDOOR);
+        TileEntityProgrammableTrapdoor prototype=diagonal?new TileEntityProgrammableDiagonalTrapdoor():new TileEntityProgrammableTrapdoor();
+        prototype.configure(texture,mode,sliding,0,0);
+        ItemStack stack=new ItemStack(block);stack.setTagInfo("BlockEntityTag",prototype.itemSettings());
+        if(!((ItemBlock)stack.getItem()).placeBlockAt(stack,null,world,pos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing)))throw new IllegalStateException("followup trapdoor placement failed");
+        return (TileEntityProgrammableTrapdoor)world.getTileEntity(pos);
+    }
+    static void buildFollowup(World world,String scene,int x,int y) {
+        BlockPos base=new BlockPos(x-1,y+2,-18);
+        boolean diagonal=scene.contains("diagonal"),custom=scene.contains("custom"),fit=scene.endsWith("fit");
+        int texture=custom?CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR)):ScreenHousingTextures.doorIndex(1,1);
+        if(scene.contains("slide_wall")) {
+            TileEntityProgrammableTrapdoor leaf=place(world,base,true,texture,0,true,EnumFacing.NORTH);
+            BlockPos support=base.west();world.setBlockState(support,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.NORTH),3);
+            ((TileEntityAnimatedScreenSelector)world.getTileEntity(support)).setDiagonalGeometry(0,0);
+            leaf.requestOpen(true);
+        } else if(scene.contains("rotate_neighbors")) {
+            TileEntityProgrammableTrapdoor leaf=place(world,base,false,texture,0,false,EnumFacing.NORTH);
+            for(BlockPos support:new BlockPos[]{base.north(),base.west(),base.east()})world.setBlockState(support,net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+            leaf.requestOpen(true);
+        } else if(scene.contains("next_")) {
+            TileEntityProgrammableTrapdoor leaf=place(world,base,false,texture,0,false,EnumFacing.NORTH);
+            world.setBlockState(base.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+            leaf.configureGroup(texture,0,false,0,0,false,true,true,EnumFacing.NORTH);leaf.requestOpen(scene.endsWith("open"));
+        } else {
+            TileEntityProgrammableTrapdoor first=null;
+            for(int row=0;row<2;row++)for(int col=0;col<2;col++) {
+                BlockPos pos=base.add(col,diagonal?row:0,diagonal?0:row);
+                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,EnumFacing.NORTH);if(first==null)first=leaf;
+            }
+            if(first.group().size()!=4)throw new IllegalStateException("followup trapdoor square not joined");
+            first.configureGroup(texture,0,false,0,0,false,false,!fit,EnumFacing.NORTH);
+        }
+        System.out.println("[vandorlabs][reprolab] trapdoor-followup PASS "+scene);
     }
 }
