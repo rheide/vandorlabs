@@ -152,16 +152,16 @@ def main():
         screen_detail = sum(screen_list) / 3.0
         input_detail = sum(input_list) / 3.0
         housing_detail = sum(housing_list) / 3.0
-        preview_screen = mean_chroma(gui_path, (1035, 395, 1180, 535))
-        preview_input = mean_chroma(gui_path, (1035, 550, 1180, 620))
+        thumbnail_screen = mean_chroma(gui_path, (40, 205, 90, 255))
+        thumbnail_input = mean_chroma(gui_path, (425, 205, 475, 245))
         print("console GUI list detail: screens %.2f, controls %.2f, housing %.2f"
               % (screen_detail, input_detail, housing_detail))
-        print("console GUI preview chroma: screen %.2f, controls %.2f"
-              % (preview_screen, preview_input))
+        print("console GUI thumbnail chroma: screen %.2f, controls %.2f"
+              % (thumbnail_screen, thumbnail_input))
         if min(screen_detail, input_detail, housing_detail) < 8.0:
             failures.append("console GUI does not show three populated peer lists")
-        if preview_screen < 10.0 or preview_input < 10.0:
-            failures.append("console GUI preview is missing screen or control artwork")
+        if thumbnail_screen < 10.0 or thumbnail_input < 10.0:
+            failures.append("console GUI list thumbnails are missing screen or control artwork")
 
     diagonal_views = {
         "front": ((575, 305, 705, 430), 20.0),

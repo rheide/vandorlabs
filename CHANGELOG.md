@@ -28,9 +28,7 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 
 - Opposite-slope diagonal groups derive their outside direction from the convex bend. Both rotating rows and the staged sliding clearance move outward, preserving hinge pivots and the inset/lift animation. Reversed coplanar rows share an outside face and retain their established rotation direction.
 
-
 - Programmable screen, input and console dialogs use categorized list thumbnails for previews, removing the separate preview areas while preserving animation and display controls.
-
 
 - Diagonal trapdoor hotbar icons use a smaller scale for default, configured and Custom finishes. The Duplifier dialog grows to fit all options, keeping its last-row trapdoor hinge/layout switches clear of Done and fitting smaller GUI resolutions. Its movement switch explicitly includes trapdoors.
 
@@ -50,7 +48,7 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 - Native screen/control options use categorized thumbnail lists while retaining animation, framing and speed controls. Housing Fit/Tile is directly available in screen/console/input dialogs.
 - Door artwork on ordinary blocks uses its square lower half. Replacement door faces offer saved/copied Fit/Tile and keep the native edge textures and hinges.
 
-- Material lists use larger aspect-preserving thumbnails, alphabetic categories/entries and pinned category headings. Added explicit Off light choices without changing existing saved material numbers.
+- Material lists use larger aspect-preserving thumbnails, alphabetic categories/entries and pinned category headings, preserving existing saved material numbers.
 - Custom texture sampling reads configured programmable item materials; its Back/Use texture controls follow their revised order. Light sizing applies only to Frames, and propulsion dialogs use the list thumbnails instead of a separate housing preview.
 
 - Replacement programmable-door artwork follows the native leaf bounds and retains selected hinge hardware, including bare/framed variants.

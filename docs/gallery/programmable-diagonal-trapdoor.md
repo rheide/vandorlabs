@@ -1,6 +1,6 @@
 # Programmable Diagonal Trapdoor
 
-Default, configured and Custom-finish inventory icons use a reduced scale to fit the hotbar slot.
+Default, configured and Custom-finish inventory icons use a reduced scale to fit the hotbar slot; see the [hotbar comparison](../images/gallery/tasks/diagonal-trapdoor-hotbar.png).
 
 A movable panel aligned with Programmable Diagonal Walls. Choose the shared categorized
 material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
@@ -37,7 +37,7 @@ A complete 2×2 surface group opens together in every placement order. Tall
 groups span two blocks across and two vertically; shallow groups span two
 across and two along their footprint. The two columns open outward. Groups
 retain their links on save/reload, and rebuilding a broken square restores the
-four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. All three modes also connect across a one-block vertical plus one-block depth offset along their slope. Tall rows step up and toward the facing’s opposite direction for a normal slope, or toward its facing for an inverted slope. Shallow rows step along the facing’s opposite direction and up for a normal slope, or down for an inverted slope. Complete staggered rectangles through 8×8 share movement and settings and retain their links on save/reload. Larger rotating halves share their outer hinge. Individual tall panels prefer upward opening for either slope. Joined tall panels open toward the convex outside of a bend in both rows, including opposite-slope V assemblies and reversed coplanar continuations. Their inset and hinge animation is retained; rows may rotate upward or downward as needed to stay outside the bend.
+four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. All three modes also connect across a one-block vertical plus one-block depth offset along their slope. Tall rows step up and toward the facing’s opposite direction for a normal slope, or toward its facing for an inverted slope. Shallow rows step along the facing’s opposite direction and up for a normal slope, or down for an inverted slope. Complete staggered rectangles through 8×8 share movement and settings and retain their links on save/reload. Larger rotating halves share their outer hinge. Individual tall panels prefer upward opening for either slope. Both rows of an opposite-slope V assembly open toward the convex outside of the bend. Reversed coplanar rows share the same outside face. Their inset and hinge animation is retained; rows may rotate upward or downward as needed to stay outside the bend.
 
 Right-click any member to toggle the loaded group. Physical or virtual redstone
 at any member controls the whole group. Configuration and copying update the

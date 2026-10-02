@@ -5,7 +5,7 @@ These captures show the programmable blocks, material pickers and connected trap
 ## Connected trapdoors
 
 Rotating and sliding groups support rectangles up to eight cells on each axis,
-opposite-slope diagonal rows, and staggered full-width diagonal panels. Their
+opposite-slope diagonal rows, and staggered diagonal panels in all three shape modes. Their
 membership and configuration survive saving and copying.
 
 | Assembly | Closed | Open |
@@ -13,7 +13,16 @@ membership and configuration survive saving and copying.
 | Flat 2×4, rotating | ![Closed flat rectangle](../images/gallery/tasks/trapdoor-flat-rotating-closed.png) | ![Open flat rectangle](../images/gallery/tasks/trapdoor-flat-rotating-open.png) |
 | Diagonal 5×2, sliding | ![Closed diagonal rectangle](../images/gallery/tasks/trapdoor-rectangle-sliding-closed.png) | ![Open diagonal rectangle](../images/gallery/tasks/trapdoor-rectangle-sliding-open.png) |
 | Opposite slopes, rotating | ![Closed V assembly](../images/gallery/tasks/trapdoor-v-rotating-closed.png) | ![Open V assembly](../images/gallery/tasks/trapdoor-v-rotating-open.png) |
-| Staggered panels, sliding | ![Closed staggered assembly](../images/gallery/tasks/trapdoor-stagger-sliding-closed.png) | ![Open staggered assembly](../images/gallery/tasks/trapdoor-stagger-sliding-open.png) |
+| Full-width / full-height staggered panels, sliding | ![Closed staggered assembly](../images/gallery/tasks/trapdoor-stagger-sliding-closed.png) | ![Open staggered assembly](../images/gallery/tasks/trapdoor-stagger-sliding-open.png) |
+| Half-width / full-height staggered panels, sliding | ![Closed half-width staggered group](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding-closed.png) | ![Open half-width staggered group](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding-open.png) |
+| Full-width / half-height staggered panels, rotating | ![Closed shallow staggered group](../images/gallery/tasks/trapdoor-stagger-shallow-rotating-closed.png) | ![Open shallow staggered group](../images/gallery/tasks/trapdoor-stagger-shallow-rotating-open.png) |
+
+Opposite-slope rows move toward the convex outside of their bend for both movements. Rotating retains the inset and hinge animation; Sliding clears that outside face before separating sideways. Reversed rows that continue the same plane share an outside face.
+
+| Assembly | Rotating open | Sliding open |
+| --- | --- | --- |
+| Opposite-slope bend | ![Both rows rotate outside the bend](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-open.png) | ![Both rows slide clear of the bend](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-sliding-open.png) |
+| Reversed coplanar rows | ![Reversed rows rotate outside the continued plane](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-open.png) | ![Reversed rows slide clear of the continued plane](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-sliding-open.png) |
 
 See the [normal](programmable-trapdoor.md) and
 [diagonal](programmable-diagonal-trapdoor.md) trapdoor guides for placement.
