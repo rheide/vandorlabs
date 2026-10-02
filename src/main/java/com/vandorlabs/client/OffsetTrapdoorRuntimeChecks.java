@@ -44,6 +44,7 @@ final class OffsetTrapdoorRuntimeChecks {
                 AxisAlignedBB query=new AxisAlignedBB(center.x-.04,center.y-.04,center.z-.04,center.x+.04,center.y+.04,center.z+.04);
                 if(!world.getCollisionBoxes(null,query).contains(box))throw new IllegalStateException("actual offset collision event missed scenario "+scenario);
             }
+            if(scenario==0 || scenario==4)capture(mc,scenario==0?"offset_trapdoor_closed_selection":"offset_trapdoor_open_selection");
             if(!(mc.playerController instanceof OffsetTrapdoorController))throw new IllegalStateException("offset picking is not installed in the input phase");
             net.minecraft.client.settings.KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
             stage=2;wait=15;return false;
@@ -82,6 +83,13 @@ final class OffsetTrapdoorRuntimeChecks {
             if(root.group().size()!=4)throw new IllegalStateException("server offset request dissolved joined trapdoor");
             for(TileEntityProgrammableTrapdoor leaf:root.group())if(leaf.isCover())throw new IllegalStateException("server offset request moved joined leaf");
         }
-        mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] trapdoor-group-offset-guard PASS");return true;
+        capture(mc,"trapdoor_joined_gui");mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] trapdoor-group-offset-guard PASS");return true;
     }
+    private static void capture(Minecraft mc,String name) {
+        try {
+            java.awt.image.BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
+            javax.imageio.ImageIO.write(image,"png",new java.io.File(System.getProperty("vandorlabs.reprolab"),"shot_"+name+".png"));
+        } catch(java.io.IOException e){throw new IllegalStateException("offset trapdoor capture failed",e);}
+    }
+
 }
