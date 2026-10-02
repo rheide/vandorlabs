@@ -32,7 +32,13 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     public EnumFacing coverFacing(){if(world!=null && world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor)coverFacing=world.getBlockState(pos).getValue(BlockProgrammableTrapdoor.FACING);return coverFacing;}
     public void setCoverFacing(EnumFacing value){coverFacing=value;if(cover && world!=null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockProgrammableTrapdoor.FACING,value),2);sync();}
     public boolean isCover(){return cover;}
-    public void setCover(boolean value){value=value && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);if(cover==value)return;if(value)unpair();cover=value;sync();if(world!=null&&!world.isRemote)evaluatePower(true);}
+    /** Offset mounts require an individual leaf, including when linked chunks are unloaded. */
+    public boolean canOffsetClosedLeaf(){return !(this instanceof TileEntityProgrammableDiagonalTrapdoor) && partner==null && squareOrigin==null && assembly.isEmpty();}
+    public void setCover(boolean value){
+        if(value && !canOffsetClosedLeaf())return;
+        if(cover==value)return;
+        cover=value;sync();if(world!=null&&!world.isRemote)evaluatePower(true);
+    }
     public double[][] corners(net.minecraft.block.state.IBlockState state,double pose){int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));return cover?com.vandorlabs.render.TrapdoorGeometry.coverCorners(position,sliding,turns,pose):com.vandorlabs.render.TrapdoorGeometry.corners(position,sliding,turns,pose,motionHinge(),motionTravel());}
     public boolean isSliding(){return sliding;}
     public int getTrigger(){return trigger;}

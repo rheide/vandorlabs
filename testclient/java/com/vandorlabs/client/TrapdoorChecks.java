@@ -27,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkNextBlockAndLayout();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkPermissions();checkRecipe();
+        checkMesh();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -77,6 +77,41 @@ final class TrapdoorChecks {
         NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityProgrammableTrapdoor restored=new TileEntityProgrammableTrapdoor();restored.readFromNBT(saved);
         require(!restored.isTileTexture() && restored.isCover() && !restored.isSliding(),"Fit and next-block rotation did not save");
         saved.removeTag("TrapdoorTileTexture");restored.readFromNBT(saved);require(restored.isTileTexture(),"old trapdoors do not default to Tile");
+    }
+    private static void checkCoverGroupSafety() {
+        for(int[] size:new int[][]{{2,1},{2,2},{2,4}}) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos base=new BlockPos(10,100,10);
+            for(int z=0;z<size[1];z++)for(int x=0;x<size[0];x++)place(world,base.add(x,0,z),0,false);
+            TileEntityProgrammableTrapdoor root=(TileEntityProgrammableTrapdoor)world.getTileEntity(base);
+            java.util.List<TileEntityProgrammableTrapdoor> group=root.group();require(group.size()==size[0]*size[1],"cover safety fixture not joined");
+            java.util.List<IBlockState> states=new ArrayList<>();for(TileEntityProgrammableTrapdoor leaf:group)states.add(world.getBlockState(leaf.getPos()));
+            root.setCover(true);require(!root.isCover(),"direct Next block dissolved joined trapdoor");
+            root.configureGroup(root.getHousingTexture(),0,false,0,0,false,true,true,EnumFacing.NORTH);
+            NBTTagCompound copied=new NBTTagCompound();copied.setBoolean(ProgrammableSettings.TRAPDOOR_COVER,true);copied.setInteger(ProgrammableSettings.TRAPDOOR_COVER_FACING,EnumFacing.SOUTH.getHorizontalIndex());
+            ProgrammableSettings.apply(world,base,copied);
+            for(int i=0;i<group.size();i++) {
+                TileEntityProgrammableTrapdoor leaf=group.get(i);
+                require(!leaf.isCover() && leaf.group().size()==group.size(),"Next block/copy changed joined membership");
+                require(world.getBlockState(leaf.getPos()).getValue(BlockTrapDoor.FACING)==states.get(i).getValue(BlockTrapDoor.FACING),"Next block/copy moved joined hinge");
+            }
+        }
+        for(int position=0;position<3;position++)for(boolean sliding:new boolean[]{false,true}) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(10,100,10);
+            TileEntityProgrammableTrapdoor leaf=place(world,pos,position,sliding);leaf.setCover(true);
+            for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean open:new boolean[]{false,true}) {
+                leaf.setCoverFacing(facing);leaf.requestOpen(open);
+                AxisAlignedBB box=OffsetTrapdoorInteractions.bounds(leaf);Vec3d center=box.getCenter();
+                Vec3d start=center.addVector(0,2,0),end=center.addVector(0,-2,0);
+                if(open){start=center.addVector(facing.getFrontOffsetX()*2,0,facing.getFrontOffsetZ()*2);end=center.addVector(-facing.getFrontOffsetX()*2,0,-facing.getFrontOffsetZ()*2);}
+                RayTraceResult hit=OffsetTrapdoorInteractions.trace(world,start,end);
+                require(hit!=null && pos.equals(hit.getBlockPos()),"Next block leaf cannot be selected after hinge change: "+facing+" open="+open);
+                java.util.List<AxisAlignedBB> boxes=new ArrayList<>();AxisAlignedBB query=new AxisAlignedBB(center.x-.05,center.y-.05,center.z-.05,center.x+.05,center.y+.05,center.z+.05);
+                OffsetTrapdoorInteractions.addCollisions(world,query,boxes);OffsetTrapdoorInteractions.addCollisions(world,query,boxes);
+                require(boxes.size()==1 && boxes.get(0).equals(box),"offset leaf collision missing, misplaced or duplicated");
+                require(leaf.isCover() && world.getTileEntity(pos)==leaf,"hinge change replaced offset tile");
+            }
+            leaf.setCover(false);require(!leaf.isCover(),"offset leaf cannot be restored to This block");
+        }
     }
     private static void checkClickPlacement() {
         for(EnumFacing side:EnumFacing.values())for(float hit:new float[]{.1F,.5F,.9F}) {

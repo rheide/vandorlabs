@@ -27,6 +27,7 @@ public class ClientProxy extends CommonProxy {
         net.minecraftforge.client.model.ModelLoaderRegistry.registerLoader(new com.vandorlabs.client.UnifiedItemModels());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.SpaceDoorTextures());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.UnifiedTextureSprites());
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.OffsetTrapdoorSelection());
     }
 
     @Override public void spawnThrusterParticle(World world, BlockPos pos,

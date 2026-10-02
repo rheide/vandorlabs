@@ -12,7 +12,7 @@ The Programmable Trapdoor has a **Closed leaf: This block / Next block** control
 
 For a rotating gear cover:
 
-1. Place a normal Programmable Trapdoor beside the shaft, one block below the gear root. The trapdoor tile must be outside the reserved shaft; placing it in the gear block itself is unnecessary.
+1. Place an individual normal Programmable Trapdoor beside the shaft, one block below the gear root. If it joins another trapdoor, Next block is disabled; configure each independent mount before placing the next one. The trapdoor tile must be outside the reserved shaft; placing it in the gear block itself is unnecessary.
 2. Set **Closed leaf: Next block**, **Movement: Rotating**, and use **Hinge** to point north/east/south/west into the shaft. That direction identifies the covered neighboring cell directly.
 3. Choose Bottom, Middle or Top for the cover's height. The open leaf folds vertically into the mounting cell, so leave enough vertical space there. The selection outline follows the offset closed leaf.
 4. Set **Redstone: On** for automatic closure when the gear is retracted. A shared channel can also open it independently.

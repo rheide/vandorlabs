@@ -40,6 +40,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
             for(GuiButton button:buttonList)if(button.id==2)button.enabled=position!=2;
         } else {
             buttonList.add(new GuiButton(7,guiLeft+12,guiTop+138,185,20,coverLabel()));
+            for(GuiButton button:buttonList)if(button.id==7)button.enabled=tile.canOffsetClosedLeaf();
             buttonList.add(new GuiButton(8,guiLeft+214,guiTop+166,134,20,facingLabel()));
             for(GuiButton button:buttonList)if(button.id==8)button.enabled=cover;
         }
@@ -53,7 +54,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
     private String layoutLabel(){return "Texture: "+(tileTexture?"Tile / mirror":"Fit");}
     private String heightLabel(){return "Height: "+(position==2?"Half":"Full");}
-    private String coverLabel(){return "Closed leaf: "+(cover?"Next block":"This block");}
+    private String coverLabel(){return tile.canOffsetClosedLeaf()?"Closed leaf: "+(cover?"Next block":"This block"):"Closed leaf: This block (joined)";}
     private String facingLabel(){return "Hinge: "+facing.getName();}
     private String triggerLabel(){return trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?"Redstone: On":trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Redstone: Off":"Redstone: Disabled";}
     private int parsedChannel(){try{return Integer.parseInt(channelField.getText());}catch(NumberFormatException e){return -1;}}
@@ -72,7 +73,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         else if(button.id==6){tileTexture=!tileTexture;button.displayString=layoutLabel();}
         else if(button.id==7){
             if(diagonal()){if(position==2)position=tallWidth;else{tallWidth=position;position=2;}button.displayString=heightLabel();for(GuiButton other:buttonList)if(other.id==2){other.enabled=position!=2;other.displayString=positionLabel();}}
-            else{cover=!cover;button.displayString=coverLabel();for(GuiButton other:buttonList)if(other.id==8)other.enabled=cover;}
+            else{if(!tile.canOffsetClosedLeaf())return;cover=!cover;button.displayString=coverLabel();for(GuiButton other:buttonList)if(other.id==8)other.enabled=cover;}
         }
         else if(button.id==8){facing=facing.rotateY();button.displayString=facingLabel();}
         send();
