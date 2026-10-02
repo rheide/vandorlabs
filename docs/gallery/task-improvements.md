@@ -83,4 +83,18 @@ Rotating normal leaves keep their thickness inside the mounting cell when open. 
 | --- | --- |
 | ![Closed leaf covers the neighboring cell](../images/gallery/tasks/trapdoor-next-rotating-closed.png) | ![Rotated leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-next-rotating-open.png) |
 
+## Next-block selection and joined-group protection
+
+Individual Next block mounts can be selected at the leaf's actual position after changing the hinge. Collision follows the shifted leaf in both open and closed states. Clicking the visible leaf operates its owning trapdoor.
+
+| Closed offset leaf and selection outline | Rotating open leaf and selection outline |
+| --- | --- |
+| ![Selection follows the closed leaf into the neighboring cell](../images/gallery/tasks/trapdoor-offset-closed-selection.png) | ![Selection follows the open leaf after changing the hinge](../images/gallery/tasks/trapdoor-offset-open-selection.png) |
+
+Joined trapdoors retain This block placement. The dialog disables the placement switch, and server configuration and Duplifier copies preserve the group if they request Next block.
+
+![Joined trapdoor placement control is disabled](../images/gallery/tasks/trapdoor-joined-config.png)
+
+For an assembly split by an older version, follow the recovery instructions in the [trapdoor guide](programmable-trapdoor.md).
+
 These are software-rendered Forge regression captures. Hardware shader appearance still needs verification in the target client.
