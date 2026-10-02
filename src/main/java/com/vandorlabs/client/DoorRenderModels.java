@@ -35,6 +35,8 @@ public final class DoorRenderModels {
     static final class Entry {
         final ItemStack stack;
         final IBakedModel model;
+        private SelectedDoorGeometry selected;
+        SelectedDoorGeometry selected(){if(selected==null)selected=new SelectedDoorGeometry(model);return selected;}
         Entry(ItemStack stack, IBakedModel model) { this.stack = stack; this.model = model; }
     }
 

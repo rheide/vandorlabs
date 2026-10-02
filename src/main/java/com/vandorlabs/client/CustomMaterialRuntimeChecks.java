@@ -18,6 +18,17 @@ final class CustomMaterialRuntimeChecks {
         require(CustomBlockTextures.isDoor(doorId),"door classification");
         require(!CustomBlockTextures.sprite(doorId,false).getIconName().equals(CustomBlockTextures.sprite(doorId,true).getIconName()),"upper/lower door artwork");
         require(CustomBlockTextures.texture(stoneId).equals("minecraft:blocks/stone"),"vanilla block artwork");
+        net.minecraft.block.Block programmableDoor=net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_door");
+        for(boolean framed:new boolean[]{false,true})for(int detail=0;detail<3;detail++) {
+            int metadata=TileEntitySpaceDoor.metadata(0,detail,framed,false,false,1,false);
+            SelectedDoorGeometry selected=DoorRenderModels.get(programmableDoor,metadata).selected();
+            double inset=framed?1/16D:0;
+            require(Math.abs(selected.bounds[0]-inset)<1e-6 && Math.abs(selected.bounds[3]-(1-inset))<1e-6,"selected door frame width");
+            require(Math.abs(selected.bounds[1]-inset)<1e-6 && Math.abs(selected.bounds[4]-(2-inset))<1e-6,"selected door frame height");
+            require(Math.abs(selected.bounds[2]-12.24/16D)<1e-6 && Math.abs(selected.bounds[5]-14.24/16D)<1e-6,"selected door native depth");
+            require(!selected.getQuads(null,null,0).isEmpty(),"replacement leaf lost its hinges");
+            require(DoorRenderModels.get(programmableDoor,metadata+2160).selected().getQuads(null,null,0).isEmpty(),"hinges-off replacement retained hardware");
+        }
         ItemStack configured=new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK);NBTTagCompound tag=new NBTTagCompound();tag.setInteger("housingTexture",stoneId);configured.setTagInfo("BlockEntityTag",tag);
         net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(configured,player.world,player);
         require(model.getParticleTexture().getIconName().equals("minecraft:blocks/stone"),"custom configured inventory artwork");

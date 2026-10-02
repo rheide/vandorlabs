@@ -22,6 +22,8 @@
 
 ### Fixed
 
+- Replacement programmable-door artwork follows the native leaf bounds and retains selected hinge hardware, including bare/framed variants.
+
 - Register custom atlas sprites before ordinary sprite registration, and reuse existing configured item geometry for the expanded material catalog.
 
 - Light Frames sit against the supporting wall, floor or ceiling face. Their collision and rendering share the same bounds. Light Frame and Light Slab inventory models are centered, scaled to fit and show the lamp artwork.
