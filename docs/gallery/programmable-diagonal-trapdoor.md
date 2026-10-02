@@ -26,8 +26,8 @@ Geometry copies between diagonal walls and trapdoors through the Duplifier's
 
 ## Motion and groups
 
-Sliding moves one block along the surface's horizontal width; it never moves
-up or down. Rotating swings 90 degrees around a sloping side edge. Adjacent
+Sliding moves 15 pixels along the surface's horizontal width; it never moves
+up or down, leaving one pixel visible in its original block. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
 compatible leaves pair and open toward opposite sides without reversing their
 closed surface. Compatible leaves have the same shape and matching orientation, or the reversed
 facing/inversion that continues the same wall plane.

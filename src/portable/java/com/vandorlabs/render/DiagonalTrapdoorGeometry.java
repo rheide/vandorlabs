@@ -10,14 +10,14 @@ public final class DiagonalTrapdoorGeometry {
         double ay=mode==2?slope:1,az=mode==2?1:slope;
         double length=Math.sqrt(ay*ay+az*az);ay/=length;az/=length;
         double pivotY=mode==2?base+1/16D:0,pivotZ=mode==2?0:base+1/16D;
-        double px=reverse?1:0,angle=(reverse?-1:1)*p*Math.PI/2;
+        double px=reverse?15/16D:1/16D,angle=(reverse?-1:1)*p*Math.PI/2;
         double cos=Math.cos(angle),sin=Math.sin(angle);
         double[][] out=new double[8][3];
         for(int i=0;i<8;i++) {
             double x=(i&1)==0?0:1;
             double y=mode==2?base+slope*((i&4)==0?0:1)+((i&2)==0?0:2/16D):((i&2)==0?0:1);
             double z=mode==2?((i&4)==0?0:1):base+slope*y+((i&4)==0?0:2/16D);
-            if(sliding)x+=(reverse?1:-1)*p;
+            if(sliding)x+=(reverse?1:-1)*p*15/16D;
             else {
                 double dx=x-px,dy=y-pivotY,dz=z-pivotZ,dot=ay*dy+az*dz;
                 x=px+dx*cos+(ay*dz-az*dy)*sin;

@@ -25,7 +25,7 @@ final class DiagonalTrapdoorChecks {
         GameRegistry.registerTileEntity(TileEntityProgrammableDiagonalTrapdoor.class,new ResourceLocation("minecraft:vandorlabs_data_check_diagonal_trapdoor"));
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        mesh();placement();groups();copyAndPower();continuedSurfaces();boundaries();recipe();
+        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }
     private static void mesh() {
@@ -59,6 +59,13 @@ final class DiagonalTrapdoorChecks {
                 double depth=mode==2?v[i][1]:v[i][2];int bit=mode==2?2:4;
                 require(Math.abs(depth-near-((i&bit)==0?1/16D:3/16D))<1e-9,"one-pixel wall inset differs");
             }
+        }
+    }
+    private static void clearance() {
+        for(int mode=0;mode<3;mode++)for(boolean inverted:new boolean[]{false,true})for(boolean reverse:new boolean[]{false,true})for(boolean slide:new boolean[]{false,true}) {
+            double[] b=DiagonalTrapdoorGeometry.bounds(DiagonalTrapdoorGeometry.corners(mode,inverted,0,slide,reverse,1));
+            require(reverse?b[0]<=15/16D+1e-8:b[3]>=1/16D-1e-8,"open diagonal leaf disappeared into neighbor");
+            if(slide)require(Math.abs((reverse?b[0]:b[3])-(reverse?15/16D:1/16D))<1e-8,"diagonal slide clearance");
         }
     }
     private static void placement() {

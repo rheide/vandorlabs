@@ -32,7 +32,8 @@ final class ScreenRuntimeChecks {
 
     /** Run on the actual WorldClient, before any server response can arrive. */
     static void checkClientPlacement(Minecraft mc) {
-        BlockPos pos = new BlockPos(52, 250, 32);
+        BlockPos pos = new BlockPos(mc.player.posX, 250, mc.player.posZ);
+        require(mc.world.isBlockLoaded(pos), "placement test needs a loaded client chunk");
         require(mc.world.isRemote, "placement test needs client world");
         TileEntityAnimatedScreenSelector configured = new TileEntityAnimatedScreenSelector();
         configured.setHousingTexture(4);

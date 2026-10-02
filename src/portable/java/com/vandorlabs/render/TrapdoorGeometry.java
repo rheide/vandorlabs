@@ -18,11 +18,11 @@ public final class TrapdoorGeometry {
         double[][] out=new double[8][3];
         for(int i=0;i<8;i++) {
             double x=(i&1)==0?0:1,y=(i&2)==0?low:high,z=(i&4)==0?0:1;
-            if(sliding) z-=p;
+            if(sliding) z-=p*15/16D;
             else {
                 double dy=y-pivot;
-                y=pivot+dy*cos+z*sin;
-                z=z*cos-dy*sin;
+                y=pivot+dy*cos+(z-1/16D)*sin;
+                z=1/16D+(z-1/16D)*cos-dy*sin;
             }
             for(int turn=0;turn<(quarterTurns&3);turn++) {double old=x;x=1-z;z=old;}
             out[i]=new double[]{x,y,z};

@@ -404,6 +404,7 @@ public class ModBlocks {
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
                         : block == PROGRAMMABLE_HALF_CONSOLE
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
+                        : block == PROGRAMMABLE_TRAPDOOR ? new com.vandorlabs.items.ItemProgrammableTrapdoor((BlockProgrammableTrapdoor)block)
                         : block == PROGRAMMABLE_DIAGONAL_TRAPDOOR ? new com.vandorlabs.items.ItemDiagonalTrapdoor((BlockProgrammableDiagonalTrapdoor)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()

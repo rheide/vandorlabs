@@ -6,8 +6,8 @@ with the Configurizer in either game mode, to choose the finish, movement,
 height, redstone trigger, and channel.
 
 **Rotating** swings the leaf 90 degrees around its facing edge. **Sliding**
-moves it one block sideways. Placement determines the facing; sliding always
-stays horizontal. The model has no frame or hinge hardware.
+moves it 15 pixels sideways, leaving one pixel visible in its own block. Placement determines the facing; sliding always
+stays horizontal. Rotating leaves also retain one pixel at the hinge edge when open. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
 
 The leaf is 3px thick. **Bottom** spans 1–4px above the block's base,
 **Middle** spans 6.5–9.5px, and **Top** spans 12–15px. The 1px inset at the top

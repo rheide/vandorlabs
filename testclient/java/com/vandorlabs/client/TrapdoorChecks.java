@@ -25,8 +25,8 @@ final class TrapdoorChecks {
         GameRegistry.registerTileEntity(TileEntityProgrammableTrapdoor.class,new ResourceLocation("minecraft:vandorlabs_data_check_trapdoor"));
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
-        item=new ItemBlock(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkSettings();checkPairs();checkSquares();checkPower();checkCopy();checkPermissions();checkRecipe();
+        item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
+        checkMesh();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkPower();checkCopy();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -59,6 +59,21 @@ final class TrapdoorChecks {
                     require((uy*vz-uz*vy)*nx+(uz*vx-ux*vz)*ny+(ux*vy-uy*vx)*nz>0,"normal opposes winding");
                 }
             }
+        }
+    }
+    private static void checkClickPlacement() {
+        for(EnumFacing side:EnumFacing.values())for(float hit:new float[]{.1F,.5F,.9F}) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            BlockPos p=new BlockPos(10,100,10);ItemStack stack=new ItemStack(item);
+            require(item.placeBlockAt(stack,null,world,p,side,.5F,hit,.5F,block.getDefaultState()),"plain placement failed");
+            int expected=side==EnumFacing.UP?0:side==EnumFacing.DOWN?2:hit<1/3F?0:hit>2/3F?2:1;
+            require(((TileEntityProgrammableTrapdoor)world.getTileEntity(p)).getPosition()==expected,"click band lost");
+            require(stack.getSubCompound("BlockEntityTag")==null,"placement changed held stack");
+        }
+        for(int pos=0;pos<3;pos++)for(boolean sliding:new boolean[]{false,true}) {
+            double[] b=TrapdoorGeometry.bounds(pos,sliding,0,1);
+            require(b[5]>=1/16D-1e-8,"open leaf disappeared into neighbor");
+            if(sliding)require(Math.abs(b[5]-1/16D)<1e-8,"sliding clearance is not one pixel");
         }
     }
     private static void checkSettings() {
