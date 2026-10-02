@@ -47,4 +47,4 @@ Tested source: `087d6ddac62c31ea7060e38afba47c695fd6a6f4`. Standard artifact: `b
 - [x] Make the light dialog taller, with up to eight list rows (seven textures and a pinned category); adapt to the available GUI height and move all lower controls together.
 - [x] Document Custom door alpha handling and other-mod door recognition.
 
-Validation: pending build and live client suite.
+Initial build, non-rendering checks and full live suite `render-run.txZxJ2` passed. Screenshot review caught Auto GUI scale retaining only four rows at 720p. Added temporary scale reduction for this dialog, restoration on close, and a focused real-client capture/check route. Final validation pending.

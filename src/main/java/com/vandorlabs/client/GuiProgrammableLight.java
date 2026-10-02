@@ -32,6 +32,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     private HousingTextureList housingList,faceList;
     private GuiTextField channelField;
     private boolean draggingLevel;
+    private int previousGuiScale=-1;
     private static final int SLIDER_W = 286;
 
     public GuiProgrammableLight(InventoryPlayer inventory, TileEntityProgrammableLight tile) {
@@ -48,6 +49,18 @@ public final class GuiProgrammableLight extends GuiContainer {
     }
 
     @Override public void initGui() {
+        // Auto scale can leave only 240 GUI pixels at 720p. Give this tall
+        // dialog room, then restore the user's setting when it closes.
+        if(height<344) {
+            if(previousGuiScale<0)previousGuiScale=mc.gameSettings.guiScale;
+            int scale=new net.minecraft.client.gui.ScaledResolution(mc).getScaleFactor();
+            net.minecraft.client.gui.ScaledResolution resolution;
+            do {
+                mc.gameSettings.guiScale=Math.max(1,--scale);
+                resolution=new net.minecraft.client.gui.ScaledResolution(mc);
+            } while(resolution.getScaledHeight()<344 && scale>1);
+            width=resolution.getScaledWidth();height=resolution.getScaledHeight();
+        }
         int rows=Math.max(4,Math.min(8,(height-168)/HousingTextureList.ROW_HEIGHT));
         ySize=152+rows*HousingTextureList.ROW_HEIGHT;
         int extra=ySize-240;
@@ -193,6 +206,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     @Override public void onGuiClosed() {
         super.onGuiClosed();
         Keyboard.enableRepeatEvents(false);
+        if(previousGuiScale>=0){mc.gameSettings.guiScale=previousGuiScale;previousGuiScale=-1;}
     }
 
     @Override protected void drawGuiContainerBackgroundLayer(float partialTicks,

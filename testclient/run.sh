@@ -15,6 +15,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   env LIBGL_ALWAYS_SOFTWARE=1 \
   "$JAVA" -Xmx2G \
   -Dvandorlabs.duplifierChecksOnly="${VANDOR_LABS_DUPLIFIER_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.lightPickerChecksOnly="${VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.lightChecksOnly="${VANDOR_LABS_LIGHT_CHECKS_ONLY:-false}" \
   -Dvandorlabs.benchmarkOnly="${VANDOR_LABS_BENCHMARK_ONLY:-false}" \
   -Dvandorlabs.renderBenchmark="${VANDOR_LABS_RENDER_BENCHMARK:-false}" \

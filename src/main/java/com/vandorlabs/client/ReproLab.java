@@ -427,6 +427,15 @@ public class ReproLab {
     private final File outDir;
     private final boolean enabled;
 
+    private void openLightPicker(Minecraft mc) {
+        BlockPos pos=CONSOLE.add(4,0,3);
+        mc.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
+        TileEntity raw=mc.world.getTileEntity(pos);
+        if(!(raw instanceof com.vandorlabs.tiles.TileEntityProgrammableLight))throw new IllegalStateException("light GUI fixture missing");
+        lightPickerPreviousScale=mc.gameSettings.guiScale;
+        mc.displayGuiScreen(new GuiProgrammableLight(mc.player.inventory,(com.vandorlabs.tiles.TileEntityProgrammableLight)raw));
+    }
+    private int lightPickerPreviousScale;
     private int state = 0; // 0 menu, 1 wait, 2 build, 3 shots, 4-7 GUIs, 8 hotbar, 9 done
     private int tick = 0;
     private int holdTicks = 0;
@@ -511,6 +520,10 @@ public class ReproLab {
             case 2:
                 if (--holdTicks > 0) {
                     break;
+                }
+                if(Boolean.getBoolean("vandorlabs.lightPickerChecksOnly")) {
+                    mc.gameSettings.hideGUI=false;
+                    openLightPicker(mc);state=19;holdTicks=GUI_SETTLE_TICKS;break;
                 }
                 LightOcclusionChecks.run(outDir);
                 if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){mc.shutdown();return;}
@@ -922,13 +935,7 @@ public class ReproLab {
                     throw new IllegalStateException("glass GUI selections were not applied");
                 saveNamed(mc,"programmable_glass_gui");
                 mc.displayGuiScreen(null);
-                BlockPos lightGui=CONSOLE.add(4,0,3);
-                mc.world.setBlockState(lightGui,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
-                TileEntity lightRaw=mc.world.getTileEntity(lightGui);
-                if (!(lightRaw instanceof com.vandorlabs.tiles.TileEntityProgrammableLight))
-                    throw new IllegalStateException("light GUI fixture missing");
-                mc.displayGuiScreen(new GuiProgrammableLight(mc.player.inventory,
-                        (com.vandorlabs.tiles.TileEntityProgrammableLight)lightRaw));
+                openLightPicker(mc);
                 state=19;
                 holdTicks=GUI_SETTLE_TICKS;
                 break;
@@ -937,6 +944,8 @@ public class ReproLab {
                 CustomMaterialRuntimeChecks.checkLightPicker((GuiProgrammableLight)mc.currentScreen);
                 saveNamed(mc,"programmable_light_gui");
                 mc.displayGuiScreen(null);
+                if(mc.gameSettings.guiScale!=lightPickerPreviousScale)throw new IllegalStateException("light dialog did not restore GUI scale");
+                if(Boolean.getBoolean("vandorlabs.lightPickerChecksOnly")){mc.shutdown();return;}
                 BlockPos triggerGui=CONSOLE.add(5,0,3);
                 mc.world.setBlockState(triggerGui,ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),3);
                 com.vandorlabs.tiles.TileEntityProgrammableTrigger triggerTile=

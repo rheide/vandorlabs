@@ -2,6 +2,8 @@
 
 Programmable Light provides six selectable appearances. Each has an unlit and lit texture; the close-ups place those states side by side. In Creative mode, shift-right-click to choose the appearance, wall finish, redstone behavior, channel, and Join setting. Normal right-click changes its manual state. A joined group can respond together to a signal received by one member.
 
+The taller texture lists show up to seven textures and a pinned category heading. Separate Off artwork is hidden in this dialog: choose the On appearance and the light uses its matching unlit texture automatically.
+
 ![Programmable Light settings](../images/gallery/lights/light-config.png)
 
 | Appearance | Off and on close-up |
