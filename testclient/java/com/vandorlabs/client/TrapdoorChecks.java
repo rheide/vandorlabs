@@ -94,6 +94,11 @@ final class TrapdoorChecks {
                 require(!leaf.isCover() && leaf.group().size()==group.size(),"Next block/copy changed joined membership");
                 require(world.getBlockState(leaf.getPos()).getValue(BlockTrapDoor.FACING)==states.get(i).getValue(BlockTrapDoor.FACING),"Next block/copy moved joined hinge");
             }
+            // Model the old conversion, then exercise the documented recovery.
+            for(TileEntityProgrammableTrapdoor leaf:group){leaf.unpair();leaf.setCover(true);leaf.setCoverFacing(EnumFacing.NORTH);}
+            for(TileEntityProgrammableTrapdoor leaf:group)leaf.setCover(false);
+            BlockPos replaced=group.get(group.size()-1).getPos();block.breakBlock(world,replaced,world.getBlockState(replaced));world.setBlockToAir(replaced);place(world,replaced,0,false);
+            require(((TileEntityProgrammableTrapdoor)world.getTileEntity(base)).group().size()==size[0]*size[1],"restored offset assembly did not rejoin after replacing a member");
         }
         for(int position=0;position<3;position++)for(boolean sliding:new boolean[]{false,true}) {
             NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(10,100,10);

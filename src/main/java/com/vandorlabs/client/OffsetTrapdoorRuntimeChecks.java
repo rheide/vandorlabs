@@ -15,7 +15,7 @@ import net.minecraft.world.World;
 final class OffsetTrapdoorRuntimeChecks {
     private final BlockPos pos;
     private int scenario,stage,wait;
-    OffsetTrapdoorRuntimeChecks(BlockPos pos){this.pos=pos;}
+    OffsetTrapdoorRuntimeChecks(BlockPos pos){this.pos=pos.up(4);}
     boolean tick(Minecraft mc) {
         if(wait>0){wait--;return false;}
         if(stage==0) {
@@ -24,6 +24,7 @@ final class OffsetTrapdoorRuntimeChecks {
             mc.getIntegratedServer().addScheduledTask(()->{
                 World world=mc.getIntegratedServer().getWorld(0);
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos);
+                if(leaf==null)leaf=TrapdoorGallery.place(world,pos,false,0,0,false,EnumFacing.NORTH);
                 leaf.configureGroup(leaf.getHousingTexture(),0,index>=8,0,0,false,true,true,EnumFacing.HORIZONTALS[index%4]);leaf.requestOpen(index%8>=4);
                 AxisAlignedBB box=OffsetTrapdoorInteractions.bounds(leaf);Vec3d center=box.getCenter();EnumFacing facing=leaf.coverFacing();
                 Vec3d eye=index%8>=4?center.addVector(2*facing.getFrontOffsetX(),0,2*facing.getFrontOffsetZ()):center.addVector(0,2,0);
@@ -36,7 +37,7 @@ final class OffsetTrapdoorRuntimeChecks {
         }
         if(stage==1) {
             RayTraceResult hit=mc.objectMouseOver;
-            if(hit==null || hit.typeOfHit!=RayTraceResult.Type.BLOCK || !pos.equals(hit.getBlockPos()))throw new IllegalStateException("real offset mouse selection missed scenario "+scenario+": "+hit);
+            if(hit==null || hit.typeOfHit!=RayTraceResult.Type.BLOCK || !pos.equals(hit.getBlockPos()))throw new IllegalStateException("real offset mouse selection missed scenario "+scenario+": "+hit+" eye="+mc.player.getPositionEyes(1)+" look="+mc.player.getLook(1));
             for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos);
                 AxisAlignedBB box=OffsetTrapdoorInteractions.bounds(leaf);Vec3d center=box.getCenter();

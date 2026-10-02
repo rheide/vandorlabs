@@ -54,7 +54,7 @@ programmable stairs, diagonal options, connected seats, landing gear, and placem
   Select manual operation or redstone on/off triggering, including virtual channels.
   Craft one from six Programmable Matter Ingots in two columns of three.
 - **Programmable Trapdoor**: categorized block/door artwork with Fit/Tile and mirrored door panels, rotating or sideways sliding,
-  and Bottom, Middle, or Top placement. Choose This block or Next block for the closed leaf independently of movement; Next block folds into its outside mount when rotating. Adjacent pairs and complete 2×2 squares
+  and Bottom, Middle, or Top placement. Choose This block or Next block for the closed leaf independently of movement; Next block is available for individual mounts and folds into the outside mount when rotating; joined groups retain This block. Adjacent pairs and complete 2×2 squares
   open together toward opposite sides, manually or through local/virtual redstone.
   Craft two from five Industrial Alloy Ingots and one Programmable Matter Ingot;
   see the [trapdoor guide](docs/gallery/programmable-trapdoor.md).
