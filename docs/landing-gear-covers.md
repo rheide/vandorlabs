@@ -23,4 +23,4 @@ The gear automatically opens nearby loaded covers whose closed cell belongs to i
 
 Next-block placement applies to normal horizontal trapdoors and uses individual mounts rather than joined rotating/sliding groups. For a 2×2 opening, put two mounts along each of the west and east edges, facing inward: four independent covers fill the four shaft cells. Keep each mount outside the gear's reservation. The mod preserves them during reservation cleanup. Updates read only loaded cells and run when the gear changes target or completes motion; they do not load chunks or poll idle gears.
 
-Movement, next-block placement, texture layout and hinge direction survive configured items and Duplifier copying. The Configurizer uses the same Creative-only configuration gate as the other programmable menus.
+Movement, next-block placement, texture layout and hinge direction survive configured items and Duplifier copying. Shift-right-click configuration requires Creative mode; the Configurizer also opens these settings in Survival.

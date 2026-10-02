@@ -42,10 +42,13 @@ final class LandingGearFootprintChecks {
         for(BlockPos mount:covers)require(!world.getBlockState(mount).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN) && world.getTileEntity(mount) instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor,"cover failed to survive and close after retraction");
         require(world.getTileEntity(coverPos)==cover,"reservation cleanup removed the cover owner");
         require(tile.progress==0 && world.isAirBlock(pos.down(2)),"retraction reservation cleanup");
+        cover.setTileTexture(false);
         require(cover.itemSettings().getBoolean("TrapdoorCover"),"cover item settings");
         BlockPos copied=coverPos.north(3);world.setBlockState(copied,com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRAPDOOR.getDefaultState());
         com.vandorlabs.items.ProgrammableSettings.apply(world,copied,com.vandorlabs.items.DuplifierApplyOptions.selected(com.vandorlabs.items.ProgrammableSettings.capture(world,coverPos),com.vandorlabs.items.DuplifierApplyOptions.ALL));
-        require(((com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(copied)).isCover(),"Duplifier cover movement");
+        com.vandorlabs.tiles.TileEntityProgrammableTrapdoor copy=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(copied);
+        require(copy.isCover() && !copy.isSliding(),"Duplifier next-block rotating movement");
+        require(!copy.isTileTexture() && copy.coverFacing()==net.minecraft.util.EnumFacing.EAST,"Duplifier next-block texture layout and hinge");
         net.minecraft.nbt.NBTTagCompound saved=tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
         TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(saved);
         require(restored.getSize()==4,"saved corner alignment");

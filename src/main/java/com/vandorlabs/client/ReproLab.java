@@ -308,8 +308,10 @@ public class ReproLab {
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         for(String group:new String[]{"flat","v","rectangle","stagger"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
-        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open"})
-            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-.7,galleryFeet+(scene.equals("flat_rotate_neighbors")?1.5:3.2),scene.equals("flat_rotate_neighbors")?-14.5:-21.5,scene.equals("flat_rotate_neighbors")?180:-8,scene.equals("flat_rotate_neighbors")?0:scene.startsWith("flat") || scene.startsWith("next")?30:12));
+        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open"}) {
+            boolean neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
+            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-(wall?3:.7),galleryFeet+(neighbors?1.5:3.2),neighbors || wall?-14.5:-21.5,neighbors?180:wall?-155:-8,neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
+        }
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
         for (String scene : new String[]{"faces", "light_shapes", "seating", "seating_heights", "seating_unjoined", "gear", "gear_extended", "gear_four", "gear_half", "gear_retracted", "gear_extra_large", "gear_corner", "gear_cover_closed", "gear_cover_open", "materials", "portholes", "half_height", "fill", "half_console", "stairs", "portholes_stacked", "portholes_half_height", "portholes_half_height_unjoined", "shallow_fill", "filled_corners_inside", "filled_corners_outside"})
@@ -1151,9 +1153,19 @@ public class ReproLab {
                 state=48;holdTicks=10;
                 break;
             case 48:
-                if(--holdTicks>0)break;openTrapdoorFollowup(mc,true);state=50;holdTicks=40;break;
+                if(--holdTicks>0)break;openTrapdoorFollowup(mc,true);state=56;holdTicks=40;break;
             case 49:
-                if(--holdTicks>0)break;mc.gameSettings.hideGUI=false;openTrapdoorFollowup(mc,true);state=50;holdTicks=40;break;
+                if(--holdTicks>0)break;mc.gameSettings.hideGUI=false;openTrapdoorFollowup(mc,true);state=56;holdTicks=40;break;
+            case 56:
+            case 57:
+                if(--holdTicks>0)break;
+                final BlockPos trapdoorMenu=CONSOLE.add(15,0,3);
+                if(!(mc.world.getTileEntity(trapdoorMenu) instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor))throw new IllegalStateException("trapdoor GUI fixture did not reach client");
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR,owner.world,trapdoorMenu.getX(),trapdoorMenu.getY(),trapdoorMenu.getZ());
+                });
+                state=state==56?50:53;holdTicks=20;break;
             case 50:
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("diagonal trapdoor GUI did not open");
@@ -1170,7 +1182,7 @@ public class ReproLab {
                 checkTrapdoorGroup(mc,0,false);saveNamed(mc,"diagonal_trapdoor_gui");
                 mc.player.closeScreen();state=55;holdTicks=10;break;
             case 55:
-                if(--holdTicks>0)break;openTrapdoorFollowup(mc,false);state=53;holdTicks=40;break;
+                if(--holdTicks>0)break;openTrapdoorFollowup(mc,false);state=57;holdTicks=40;break;
             case 53:
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("normal trapdoor GUI did not open");
@@ -1207,7 +1219,6 @@ public class ReproLab {
             }
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             player.capabilities.isCreativeMode=true;player.sendPlayerAbilities();player.setPositionAndUpdate(base.getX()+.5,base.getY(),base.getZ()-2);
-            player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR,world,base.getX(),base.getY(),base.getZ());
         });
     }
     private void checkTrapdoorGroup(Minecraft mc,int mode,boolean tile) {
