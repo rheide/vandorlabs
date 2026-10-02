@@ -50,7 +50,7 @@ public class GuiProgrammableInput extends GuiContainer {
         this.smallInput = te.isSmallInput();
         this.housingTexture = te.getHousingTexture();
         this.xSize = 420;
-        this.ySize = 260;
+        this.ySize = 240;
     }
 
     @Override
@@ -87,7 +87,7 @@ public class GuiProgrammableInput extends GuiContainer {
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
         housingList = new HousingTextureList(x + 258, y + 34, 150,
                 housingTexture).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
-        buttonList.add(new GuiButton(20, x + 128, y + 228, 114, 20,
+        buttonList.add(new GuiButton(20, x + 258, y + 216, 150, 20,
                 I18n.format("gui.done")));
         screenList=new ScreenTextureList(listX,listY,142,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
         buttonList.add(new GuiButton(32,x+258,y+138,150,20,sidesLabel()));
