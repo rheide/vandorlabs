@@ -24,7 +24,7 @@ public final class ProgrammableLightShape {
             else if(facing==EnumFacing.DOWN){z0=upper?.5:0;z1=upper?1:.5;}
             else {y0=upper?.5:0;y1=upper?1:.5;}
         }
-        if(small) {
+        if(small && frame) {
             x0=.25;x1=.75;
             if(!slab || !facing.getAxis().isHorizontal()){y0=.25;y1=.75;}
             if(!frame && (!slab || facing.getAxis().isHorizontal())){z0=.25;z1=.75;}

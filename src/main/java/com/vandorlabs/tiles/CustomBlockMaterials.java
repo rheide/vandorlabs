@@ -19,5 +19,16 @@ public final class CustomBlockMaterials {
         if(stack.getItem() instanceof ItemDoor)try{return (Block)net.minecraftforge.fml.relauncher.ReflectionHelper.findField(ItemDoor.class,"block","field_179236_a").get(stack.getItem());}catch(ReflectiveOperationException e){return null;}
         return null;
     }
-    public static int choice(ItemStack stack){Block block=block(stack);return block==null?-1:identifier(block,stack.getItem() instanceof ItemDoor?0:stack.getMetadata() & 15);}
+    public static int choice(ItemStack stack){
+        Block block=block(stack);if(block==null)return -1;
+        if(block.getRegistryName()!=null && "vandorlabs".equals(block.getRegistryName().getResourceDomain())) {
+            net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
+            if(tag!=null)for(String key:new String[]{"LightFaceTexture","DoorFaceTexture","PropulsionSideTexture","housingTexture"})
+                if(tag.hasKey(key,3) && tag.getInteger(key)>=0)return ScreenHousingTextures.clamp(tag.getInteger(key));
+            if(block instanceof com.vandorlabs.blocks.BlockProgrammableLight)return ScreenHousingTextures.lightIndex(tag==null?0:tag.getInteger("LightTexture"));
+            if(block instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)return ScreenHousingTextures.doorIndex(tag==null?2:tag.hasKey("SpaceDoorDesign",3)?tag.getInteger("SpaceDoorDesign"):2,tag==null?1:tag.hasKey("SpaceDoorDetail",3)?tag.getInteger("SpaceDoorDetail"):1);
+            if(block instanceof com.vandorlabs.blocks.BlockAnimatedScreenSelector || block instanceof com.vandorlabs.blocks.BlockProgrammableTrapdoor)return 0;
+        }
+        return identifier(block,stack.getItem() instanceof ItemDoor?0:stack.getMetadata() & 15);
+    }
 }

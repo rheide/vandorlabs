@@ -24,6 +24,9 @@ See the [illustrated programmable block improvements](docs/gallery/task-improvem
 
 ### Fixed
 
+- Material lists use larger aspect-preserving thumbnails, alphabetic categories/entries and pinned category headings. Added explicit Off light choices without changing existing saved material numbers.
+- Custom texture sampling reads configured programmable item materials; its Back/Use texture controls follow their revised order. Light sizing applies only to Frames, and propulsion dialogs use the list thumbnails instead of a separate housing preview.
+
 - Replacement programmable-door artwork follows the native leaf bounds and retains selected hinge hardware, including bare/framed variants.
 
 - Register custom atlas sprites before ordinary sprite registration, and reuse existing configured item geometry for the expanded material catalog.

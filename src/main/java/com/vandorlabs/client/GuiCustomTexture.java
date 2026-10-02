@@ -14,7 +14,7 @@ final class GuiCustomTexture extends GuiScreen {
     private int left,top;
     private boolean dragging;
     GuiCustomTexture(GuiScreen parent,IntConsumer selected){this.parent=parent;this.selected=selected;}
-    @Override public void initGui(){left=(width-252)/2;top=(height-198)/2;buttonList.clear();buttonList.add(new GuiButton(0,left+12,top+169,110,20,"Use texture"));buttonList.add(new GuiButton(1,left+130,top+169,110,20,"Back"));}
+    @Override public void initGui(){left=(width-252)/2;top=(height-198)/2;buttonList.clear();buttonList.add(new GuiButton(0,left+130,top+169,110,20,"Use texture"));buttonList.add(new GuiButton(1,left+12,top+169,110,20,"Back"));}
     @Override public boolean doesGuiPauseGame(){return false;}
     private int slot(int x,int y){int col=(x-left-45)/18;if(x<left+45||col<0||col>=9)return -1;if(y>=top+79&&y<top+133)return 9+((y-top-79)/18)*9+col;if(y>=top+141&&y<top+159)return col;return -1;}
     private boolean ghost(int x,int y){return x>=left+116&&x<left+136&&y>=top+35&&y<top+55;}

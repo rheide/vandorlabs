@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parents[1]
 assets=root/'texture-packs/default/assets/vandorlabs/textures/blocks'
 entries=[]
 for name in ['porthole','light_column_wall','slatted_lamp','window_lamp','lightbar_wall','logo']:
-    entries.append(dict(id='light_'+name,label=name.replace('_wall','').replace('_',' ').title(),category='Lights',source=name+'_on',unlit=name+'_off'))
+    entries.append(dict(id='light_'+name,label=name.replace('_wall','').replace('_',' ').title()+' On',category='Lights',source=name+'_on',unlit=name+'_off'))
 designs=['observation','airlock','standard','security','reactor','door_viewport','door_laboratory','door_cargo','door_ventilation','lift_cargo_lift','lift_blast_shield','lift_glazed_hangar','lift_quarantine_seal','lift_reactor_barrier','lift_modular_shutter']
 for design,name in enumerate(designs):
     for detail,tier in enumerate(['low','medium','high']):
@@ -18,6 +18,9 @@ for source in sources:
     if not (assets/(source+'.png')).exists():raise SystemExit('Missing source: '+source)
     name=source.rsplit('/',1)[-1].removesuffix('_static')
     entries.append(dict(id='screen_'+source.replace('/','_'),label=name.replace('_',' ').title(),category='Screens',source=source,rectangular=True))
+# Append Off choices to keep all existing catalog identifiers stable.
+for name in ['porthole','light_column_wall','slatted_lamp','window_lamp','lightbar_wall','logo']:
+    entries.append(dict(id='light_'+name+'_off',label=name.replace('_wall','').replace('_',' ').title()+' Off',category='Lights',source=name+'_off'))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

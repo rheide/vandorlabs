@@ -1,42 +1,42 @@
 [
   {
     "id": "light_porthole",
-    "label": "Porthole",
+    "label": "Porthole On",
     "category": "Lights",
     "source": "porthole_on",
     "unlit": "porthole_off"
   },
   {
     "id": "light_light_column_wall",
-    "label": "Light Column",
+    "label": "Light Column On",
     "category": "Lights",
     "source": "light_column_wall_on",
     "unlit": "light_column_wall_off"
   },
   {
     "id": "light_slatted_lamp",
-    "label": "Slatted Lamp",
+    "label": "Slatted Lamp On",
     "category": "Lights",
     "source": "slatted_lamp_on",
     "unlit": "slatted_lamp_off"
   },
   {
     "id": "light_window_lamp",
-    "label": "Window Lamp",
+    "label": "Window Lamp On",
     "category": "Lights",
     "source": "window_lamp_on",
     "unlit": "window_lamp_off"
   },
   {
     "id": "light_lightbar_wall",
-    "label": "Lightbar",
+    "label": "Lightbar On",
     "category": "Lights",
     "source": "lightbar_wall_on",
     "unlit": "lightbar_wall_off"
   },
   {
     "id": "light_logo",
-    "label": "Logo",
+    "label": "Logo On",
     "category": "Lights",
     "source": "logo_on",
     "unlit": "logo_off"
@@ -1379,5 +1379,41 @@
     "category": "Screens",
     "source": "tactical_starmap_static",
     "rectangular": true
+  },
+  {
+    "id": "light_porthole_off",
+    "label": "Porthole Off",
+    "category": "Lights",
+    "source": "porthole_off"
+  },
+  {
+    "id": "light_light_column_wall_off",
+    "label": "Light Column Off",
+    "category": "Lights",
+    "source": "light_column_wall_off"
+  },
+  {
+    "id": "light_slatted_lamp_off",
+    "label": "Slatted Lamp Off",
+    "category": "Lights",
+    "source": "slatted_lamp_off"
+  },
+  {
+    "id": "light_window_lamp_off",
+    "label": "Window Lamp Off",
+    "category": "Lights",
+    "source": "window_lamp_off"
+  },
+  {
+    "id": "light_lightbar_wall_off",
+    "label": "Lightbar Off",
+    "category": "Lights",
+    "source": "lightbar_wall_off"
+  },
+  {
+    "id": "light_logo_off",
+    "label": "Logo Off",
+    "category": "Lights",
+    "source": "logo_off"
   }
 ]

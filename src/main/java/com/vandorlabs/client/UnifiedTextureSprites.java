@@ -21,6 +21,7 @@ public final class UnifiedTextureSprites {
             if(e!=null && e.has("unlit"))event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i,false)));
         }
     }
+    static float aspect(TextureAtlasSprite sprite){return sprite instanceof Sprite?((Sprite)sprite).usedU/((Sprite)sprite).usedV:(float)sprite.getIconWidth()/sprite.getIconHeight();}
     private static final class Sprite extends TextureAtlasSprite {
         private final ResourceLocation source;
         private final String diskSource;

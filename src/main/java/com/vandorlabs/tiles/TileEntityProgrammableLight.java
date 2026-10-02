@@ -77,7 +77,9 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         else changed();
     }
 
+    @Override public boolean isSmallInput(){return getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame && super.isSmallInput();}
     @Override public void setSmallInput(boolean small) {
+        small=small && getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame;
         if(isSmallInput()==small)return;
         super.setSmallInput(small);changed();
     }

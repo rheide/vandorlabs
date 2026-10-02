@@ -11,7 +11,13 @@ import java.util.*;
 
 /** One categorized, scrollable artwork picker with atlas thumbnails. */
 final class HousingTextureList {
-    private static final int ROW_HEIGHT=12;
+    static final int ROW_HEIGHT=22;
+    private final Map<Integer,Option> options=new LinkedHashMap<>();
+    private final boolean nativeOptions;
+    static final class Option {
+        final int choice; final String label,category,texture;
+        Option(int choice,String label,String category,String texture){this.choice=choice;this.label=label;this.category=category;this.texture=texture;}
+    }
     private final int x,y,width,count;
     private final List<String> categories=new ArrayList<>();
     private final Set<String> expanded=new HashSet<>();
@@ -21,27 +27,43 @@ final class HousingTextureList {
     HousingTextureList custom(java.util.function.IntConsumer consumer){customConsumer=consumer;rebuild();return this;}
     private boolean dragging;
     HousingTextureList(int x,int y,int width,int selected){this(x,y,width,selected,8);}
-    HousingTextureList(int x,int y,int width,int selected,int count) {
-        this.x=x;this.y=y;this.width=width;this.count=count;
-        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(!categories.contains(ScreenHousingTextures.category(i)))categories.add(ScreenHousingTextures.category(i));
+    HousingTextureList(int x,int y,int width,int selected,int count) {this(x,y,width,selected,count,null);}
+    HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries) {
+        this.x=x;this.y=y;this.width=width;this.count=Math.max(2,count*12/ROW_HEIGHT);
+        nativeOptions=nativeEntries!=null;
+        if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
+        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.texture(i)));
+        for(Option option:options.values())if(!categories.contains(option.category))categories.add(option.category);
+        categories.sort(String.CASE_INSENSITIVE_ORDER);
         setSelected(selected);
     }
     void setSelected(int choice) {
-        custom=com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)?choice:-1;
-        missing=choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
-        selected=ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));expanded.add(ScreenHousingTextures.category(selected));rebuild();
+        custom=!nativeOptions && com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)?choice:-1;
+        missing=!nativeOptions && choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
+        selected=nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
+        Option option=options.get(selected);if(option!=null)expanded.add(option.category);rebuild();
         int index=rows.indexOf(selected);scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
     }
     private void rebuild() {
         rows.clear();
         for(int c=0;c<categories.size();c++) {
             String category=categories.get(c);rows.add(-c-1);
-            if(expanded.contains(category))for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(category.equals(ScreenHousingTextures.category(i)))rows.add(i);
+            if(expanded.contains(category)) {
+                List<Option> entries=new ArrayList<>();for(Option option:options.values())if(category.equals(option.category))entries.add(option);
+                entries.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
+                for(Option option:entries)rows.add(option.choice);
+            }
         }
         if(customConsumer!=null)rows.add(-100000);
         scroll=Math.min(scroll,maxScroll());
     }
-    int selected(){return custom>=0?custom:missing>=0?missing:ScreenHousingTextures.choiceAt(selected);}
+    /** Pin the category of the first visible texture into the top row. */
+    private int visibleChoice(int row) {
+        int choice=rows.get(scroll+row);
+        if(row==0 && choice>=0)return -categories.indexOf(options.get(choice).category)-1;
+        return choice;
+    }
+    int selected(){return custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
     private int height(){return ROW_HEIGHT*count;}
     private int maxScroll(){return Math.max(0,rows.size()-count);}
     private int thumbHeight(){return Math.max(8,height()*count/Math.max(count,rows.size()));}
@@ -54,7 +76,7 @@ final class HousingTextureList {
         }
         if(mouseX<x || mouseX>=x+width)return false;
         int index=scroll+(mouseY-y)/ROW_HEIGHT;if(index>=rows.size())return true;
-        int choice=rows.get(index);
+        int choice=visibleChoice((mouseY-y)/ROW_HEIGHT);
         if(choice==-100000){Minecraft mc=Minecraft.getMinecraft();net.minecraft.item.ItemStack carried=mc.player.inventory.getItemStack();mc.player.inventory.setItemStack(net.minecraft.item.ItemStack.EMPTY);mc.displayGuiScreen(new GuiCustomTexture(mc.currentScreen,value->{setSelected(value);customConsumer.accept(value);}));mc.player.inventory.setItemStack(carried);return true;}
         if(choice>=0){selected=choice;custom=-1;missing=-1;}
         else {String category=categories.get(-choice-1);if(!expanded.remove(category))expanded.add(category);rebuild();}
@@ -80,18 +102,21 @@ final class HousingTextureList {
         Gui.drawRect(x,y,x+width,y+height(),0xFF0A0A0C);
         Minecraft mc=Minecraft.getMinecraft();
         for(int row=0;row<count && scroll+row<rows.size();row++) {
-            int choice=rows.get(scroll+row),yy=y+row*ROW_HEIGHT;
+            int choice=visibleChoice(row),yy=y+row*ROW_HEIGHT;
             boolean hover=mouseX>=x && mouseX<x+width && mouseY>=yy && mouseY<yy+ROW_HEIGHT;
             if(choice==selected && custom<0 || hover)Gui.drawRect(x,yy,x+width,yy+ROW_HEIGHT,choice==selected && custom<0?0xFF2A4A6A:0xFF1A1A20);
-            if(choice==-100000){font.drawStringWithShadow(custom>=0?"Custom: "+name(custom):"Custom...",x+3,yy+2,0xFFABCFE8);}
+            if(choice==-100000){font.drawStringWithShadow(custom>=0?"Custom: "+name(custom):"Custom...",x+3,yy+7,0xFFABCFE8);}
             else if(choice<0) {
                 String category=categories.get(-choice-1);
-                font.drawStringWithShadow((expanded.contains(category)?"- ":"+ ")+category,x+3,yy+2,0xFFABCFE8);
+                font.drawStringWithShadow((expanded.contains(category)?"- ":"+ ")+category,x+3,yy+7,0xFFABCFE8);
             } else {
                 mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();
-                new Gui().drawTexturedModalRect(x+3,yy+2,mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice)),8,8);
+                net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(options.get(choice).texture);
+                float aspect=UnifiedTextureSprites.aspect(sprite);int tw=16,th=16;
+                if(aspect<1)tw=Math.max(1,Math.round(16*aspect));else th=Math.max(1,Math.round(16/aspect));
+                new Gui().drawTexturedModalRect(x+3+(16-tw)/2,yy+3+(16-th)/2,sprite,tw,th);
                 GlStateManager.disableBlend();
-                font.drawStringWithShadow(font.trimStringToWidth(name(choice),width-20),x+15,yy+2,choice==selected?0xFFFFE08A:0xFFD8D8D8);
+                font.drawStringWithShadow(font.trimStringToWidth(options.get(choice).label,width-26),x+23,yy+7,choice==selected?0xFFFFE08A:0xFFD8D8D8);
             }
         }
         if(maxScroll()>0){Gui.drawRect(x+width,y,x+width+7,y+height(),0xFF303038);Gui.drawRect(x+width,thumbY(),x+width+7,thumbY()+thumbHeight(),0xFF808090);}
