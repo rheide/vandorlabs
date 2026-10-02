@@ -38,11 +38,14 @@ final class TrapdoorGallery {
         System.out.println("[vandorlabs][reprolab] trapdoor-assembly PASS "+scene);
     }
     static TileEntityProgrammableTrapdoor place(World world,BlockPos pos,boolean diagonal,int texture,int mode,boolean sliding,EnumFacing facing) {
+        return place(world,pos,diagonal,texture,mode,sliding,facing,false);
+    }
+    static TileEntityProgrammableTrapdoor place(World world,BlockPos pos,boolean diagonal,int texture,int mode,boolean sliding,EnumFacing facing,boolean inverted) {
         BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)(diagonal?ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR:ModBlocks.PROGRAMMABLE_TRAPDOOR);
         TileEntityProgrammableTrapdoor prototype=diagonal?new TileEntityProgrammableDiagonalTrapdoor():new TileEntityProgrammableTrapdoor();
         prototype.configure(texture,mode,sliding,0,0);
         ItemStack stack=new ItemStack(block);stack.setTagInfo("BlockEntityTag",prototype.itemSettings());
-        if(!((ItemBlock)stack.getItem()).placeBlockAt(stack,null,world,pos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing)))throw new IllegalStateException("followup trapdoor placement failed");
+        if(!((ItemBlock)stack.getItem()).placeBlockAt(stack,null,world,pos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing).withProperty(BlockTrapDoor.HALF,inverted?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM)))throw new IllegalStateException("followup trapdoor placement failed");
         return (TileEntityProgrammableTrapdoor)world.getTileEntity(pos);
     }
     static void buildFollowup(World world,String scene,int x,int y) {
@@ -66,7 +69,7 @@ final class TrapdoorGallery {
             TileEntityProgrammableTrapdoor first=null;
             for(int row=0;row<2;row++)for(int col=0;col<2;col++) {
                 BlockPos pos=base.add(col,diagonal?row:0,diagonal?0:row);
-                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,EnumFacing.NORTH);if(diagonal && row==1)((TileEntityProgrammableDiagonalTrapdoor)leaf).setInverted(true);if(first==null)first=leaf;
+                TileEntityProgrammableTrapdoor leaf=place(world,pos,diagonal,texture,0,false,EnumFacing.NORTH,diagonal && row==1);if(first==null)first=leaf;
             }
             if(world.isRemote)return;
             if(first.group().size()!=4)throw new IllegalStateException("followup trapdoor square not joined");

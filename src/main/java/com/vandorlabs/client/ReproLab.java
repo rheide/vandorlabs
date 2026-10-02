@@ -1203,8 +1203,7 @@ public class ReproLab {
             for(int row=0;row<2;row++)for(int col=0;col<2;col++)world.setBlockToAir(base.add(col,row,0));
             int choice=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR));
             for(int row=0;row<(diagonal?2:1);row++)for(int col=0;col<(diagonal?2:1);col++) {
-                com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf=TrapdoorGallery.place(world,base.add(col,row,0),diagonal,choice,0,false,EnumFacing.NORTH);
-                if(diagonal && row==1)((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)leaf).setInverted(true);
+                com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf=TrapdoorGallery.place(world,base.add(col,row,0),diagonal,choice,0,false,EnumFacing.NORTH,diagonal && row==1);
             }
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             player.capabilities.isCreativeMode=true;player.sendPlayerAbilities();player.setPositionAndUpdate(base.getX()+.5,base.getY(),base.getZ()-2);
