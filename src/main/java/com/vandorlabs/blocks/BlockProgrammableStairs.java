@@ -55,6 +55,11 @@ public final class BlockProgrammableStairs extends BlockStairs {
                 && player.capabilities.isCreativeMode;
     }
 
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,net.minecraft.entity.EntityLivingBase placer,ItemStack stack) {
+        super.onBlockPlacedBy(world,pos,state,placer,stack);
+        BlockAnimatedScreenSelector.predictItemSettings(world,pos,stack);
+    }
+
     /** Build the inventory form used by mining, explosions and pick-block. */
     public ItemStack createConfiguredDrop(@Nullable TileEntity tile) {
         ItemStack stack = new ItemStack(Item.getItemFromBlock(this));

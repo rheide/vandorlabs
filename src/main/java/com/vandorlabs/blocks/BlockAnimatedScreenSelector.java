@@ -173,6 +173,10 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
             EntityLivingBase placer, ItemStack stack) {
         super.onBlockPlacedBy(world, pos, state, placer, stack);
+        predictItemSettings(world,pos,stack);
+    }
+
+    public static void predictItemSettings(World world,BlockPos pos,ItemStack stack) {
         // Vanilla ItemBlock skips item NBT in WorldClient because it has no
         // MinecraftServer. Predict the configured appearance before the first
         // chunk mesh is built; the server's tile packet remains authoritative.

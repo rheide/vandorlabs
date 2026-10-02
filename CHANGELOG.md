@@ -10,6 +10,8 @@
 
 ### Fixed
 
+- Configured Programmable Stairs now predict their saved appearance during client placement, matching programmable blocks and slabs.
+
 - Plain Programmable Trapdoors select Bottom, Middle or Top from the clicked wall face thirds. Configured items retain their saved placement.
 - Open programmable trapdoor leaves retain one pixel inside their own block, reducing overlap flicker against neighboring blocks for sliding and rotating motion, including diagonal leaves.
 

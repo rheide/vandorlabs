@@ -50,7 +50,7 @@ final class ScreenRuntimeChecks {
                         EnumFacing.UP, .5F, .5F, .5F, block.getDefaultState()), "client placement failed");
                 TileEntityAnimatedScreenSelector tile = (TileEntityAnimatedScreenSelector)mc.world.getTileEntity(pos);
                 require(tile.getHousingTexture()==4 && tile.getFaceTextures().equals(configured.getFaceTextures()),
-                        "first client frame uses default finish");
+                        "first client frame uses default finish for "+block.getRegistryName());
                 require(tile.getPos().equals(pos), "item coordinates changed destination");
                 if(block==ModBlocks.PROGRAMMABLE_DIAGONAL_WALL)
                     require(tile.getMaxRenderDistanceSquared()>256D*256D, "diagonal wall keeps tile distance cutoff");
