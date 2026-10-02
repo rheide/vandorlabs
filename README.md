@@ -20,6 +20,7 @@ lighting, furniture, ramps, glass, and building materials.
 See the [changelog](CHANGELOG.md) for release notes and the
 [1.1 guide](docs/gallery/version-1.1.md) for face texture overrides,
 programmable stairs, diagonal options, connected seats, landing gear, and placement fixes.
+The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped seams and the proposed continuous geometry; that proposal is not implemented in `1.3-alpha`.
 
 ## What's in the mod
 
