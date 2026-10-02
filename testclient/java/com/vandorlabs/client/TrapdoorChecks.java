@@ -27,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkPermissions();checkRecipe();
+        checkMesh();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -65,6 +65,10 @@ final class TrapdoorChecks {
     private static void checkNextBlockAndLayout() {
         for(int position=0;position<3;position++)for(int turn=0;turn<4;turn++)for(boolean sliding:new boolean[]{false,true}) {
             double[][] closed=TrapdoorGeometry.coverCorners(position,sliding,turn,0),open=TrapdoorGeometry.coverCorners(position,sliding,turn,1);
+            double[] closedBounds=DiagonalTrapdoorGeometry.bounds(closed);
+            double far=turn==0?closedBounds[2]:turn==1?closedBounds[3]:turn==2?closedBounds[5]:closedBounds[0];
+            double expected=turn==0?-1-TrapdoorGeometry.COVER_OVERHANG+TrapdoorGeometry.EDGE_CLEARANCE:turn==3?-1-TrapdoorGeometry.COVER_OVERHANG+TrapdoorGeometry.EDGE_CLEARANCE:2+TrapdoorGeometry.COVER_OVERHANG-TrapdoorGeometry.EDGE_CLEARANCE;
+            require(Math.abs(far-expected)<1e-8,"next-block closed leaf must project one pixel past far edge");
             double[] b=DiagonalTrapdoorGeometry.bounds(open);
             require(b[0]>0 && b[3]<1 && b[2]>0 && b[5]<1,"next-block open leaf intrudes into adjacent solid block");
             for(int i=0;i<8;i++)for(int j=i+1;j<8;j++)require(Math.abs(distance(closed[i],closed[j])-distance(open[i],open[j]))<1e-8,"next-block leaf deforms");
@@ -113,6 +117,14 @@ final class TrapdoorChecks {
                 java.util.List<AxisAlignedBB> boxes=new ArrayList<>();AxisAlignedBB query=new AxisAlignedBB(center.x-.05,center.y-.05,center.z-.05,center.x+.05,center.y+.05,center.z+.05);
                 OffsetTrapdoorInteractions.addCollisions(world,query,boxes);OffsetTrapdoorInteractions.addCollisions(world,query,boxes);
                 require(boxes.size()==1 && boxes.get(0).equals(box),"offset leaf collision missing, misplaced or duplicated");
+                if(!open) {
+                    Vec3d tip=center.addVector(facing.getFrontOffsetX()*.48,0,facing.getFrontOffsetZ()*.48);
+                    RayTraceResult tipHit=OffsetTrapdoorInteractions.trace(world,tip.addVector(0,2,0),tip.addVector(0,-2,0));
+                    require(tipHit!=null && pos.equals(tipHit.getBlockPos()),"one-pixel overhang cannot be selected");
+                    java.util.List<AxisAlignedBB> tipBoxes=new ArrayList<>();
+                    OffsetTrapdoorInteractions.addCollisions(world,new AxisAlignedBB(tip.x-.005,tip.y-.005,tip.z-.005,tip.x+.005,tip.y+.005,tip.z+.005),tipBoxes);
+                    require(tipBoxes.size()==1 && tipBoxes.get(0).equals(box),"one-pixel overhang has no collision");
+                }
                 require(leaf.isCover() && world.getTileEntity(pos)==leaf,"hinge change replaced offset tile");
             }
             leaf.setCover(false);require(!leaf.isCover(),"offset leaf cannot be restored to This block");
@@ -259,6 +271,30 @@ final class TrapdoorChecks {
         for(TileEntityProgrammableTrapdoor leaf:first.group())require(leaf.getPosition()==1 && leaf.isSliding() && leaf.getHousingTexture()==4 && leaf.getRedstoneChannel()==17,"group copy lost settings");
         ItemStack crafted=ProgrammableSettings.applyToItem(new ItemStack(item),ProgrammableSettings.capture(world,a));
         require(!crafted.isEmpty() && !crafted.getSubCompound("BlockEntityTag").hasKey("TrapdoorPartner") && !crafted.getSubCompound("BlockEntityTag").hasKey("TrapdoorSquare"),"crafting copied links");
+    }
+    private static void checkOffsetNeighborsAndCopy() {
+        for(boolean sliding:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(EnumFacing adjacent:EnumFacing.HORIZONTALS) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            BlockPos source=new BlockPos(10,100,10),target=source.add(5,0,0);
+            TileEntityProgrammableTrapdoor first=place(world,source,2,sliding);first.setCover(true);first.setCoverFacing(facing);
+            ItemStack tool=new ItemStack(ModItems.DUPLIFIER);
+            require(ItemDuplifier.copyFrom(world,source,tool)!=null,"offset Duplifier capture failed");
+            TileEntityProgrammableTrapdoor second=place(world,source.offset(adjacent),2,!sliding);
+            require(first.canOffsetClosedLeaf() && first.isCover() && !first.hasPairLink() && !second.hasPairLink(),"neighbor placement joined offset mount");
+            first.setCoverFacing(facing.rotateY());
+            require(first.coverFacing()==facing.rotateY(),"neighbor placement locked hinge");
+            TileEntityProgrammableTrapdoor copied=place(world,target,0,!sliding);
+            require(ItemDuplifier.applyTo(world,target,tool,null),"offset Duplifier application failed");
+            require(copied.isCover() && copied.isSliding()==sliding && copied.coverFacing()==facing,"offset Duplifier lost movement, hinge or closed leaf");
+            place(world,target.offset(adjacent),2,!sliding);
+            copied.configureGroup(copied.getHousingTexture(),2,sliding,0,0,false,true,true,facing.rotateY());
+            require(copied.canOffsetClosedLeaf() && copied.isCover() && copied.coverFacing()==facing.rotateY(),"copied offset mount hinge locked after neighbor placement");
+            ItemStack configured=ProgrammableSettings.applyToItem(new ItemStack(item),tool.getSubCompound(ItemDuplifier.SETTINGS_TAG));
+            BlockPos itemPos=source.add(10,0,0);
+            require(item.placeBlockAt(configured,null,world,itemPos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState()),"copied item placement failed");
+            TileEntityProgrammableTrapdoor placed=(TileEntityProgrammableTrapdoor)world.getTileEntity(itemPos);
+            require(placed.isCover() && placed.isSliding()==sliding && placed.coverFacing()==facing,"copied item lost movement, hinge or closed leaf");
+        }
     }
     private static void checkPermissions() {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos a=new BlockPos(10,100,10),b=a.east();

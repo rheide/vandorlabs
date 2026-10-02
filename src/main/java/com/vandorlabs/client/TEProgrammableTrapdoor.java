@@ -31,14 +31,14 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         drawConfiguredLeaf(buffer,sprite,tile,state,pose,light);
         Tessellator.getInstance().draw();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }
-    /** Broad artwork and native dark-wall leaf edges share the exact collision mesh. */
+    /** Broad artwork and native metal door leaf edges share the exact collision mesh. */
     static void drawConfiguredLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
         boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
         double[][] vertices=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose):tile.corners(state,pose);
         int first=tall?2:0,end=first+2;
         boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
         TrapdoorSurfaceMesh.draw(buffer,sprite,vertices,materialCoordinates(tile,state),light,tile.getHousingTexture(),first,end,tile.isTileTexture(),tile.isTileTexture() && door);
-        TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+        TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         double[][] edgeUv=new double[8][3];
         for(int i=0;i<8;i++)edgeUv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:tall?1:diagonal?2/16D:TrapdoorGeometry.THICKNESS,(i&4)==0?0:tall?2/16D:1};
         for(int face=0;face<6;face++)if(face<first || face>=end)drawMesh(buffer,edge,vertices,edgeUv,light,face,face+1);
@@ -63,7 +63,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             double u=(widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2]);
             double v=tall?tile.getPos().getY()+closed[i][1]:widthX?tile.getPos().getZ()+closed[i][2]:tile.getPos().getX()+closed[i][0];
             // Offset covers live in the neighboring cell, independent of their owning tile.
-            if(tile.isCover()){net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);minU=widthX?target.getX():target.getZ();maxU=minU+1;minV=widthX?target.getZ():target.getX();maxV=minV+1;}
+            if(tile.isCover()){net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);minU=(widthX?target.getX():target.getZ())+TrapdoorGeometry.COVER_OVERHANG*(widthX?facing.getFrontOffsetX():facing.getFrontOffsetZ());maxU=minU+1;minV=(widthX?target.getZ():target.getX())+TrapdoorGeometry.COVER_OVERHANG*(widthX?facing.getFrontOffsetZ():facing.getFrontOffsetX());maxV=minV+1;}
             double mappedU=u-minU,mappedV=tall?maxV-v:v-minV;
             if(tile.isTileTexture()){if(door){mappedV/=2;if(maxV-minV<1.5)mappedV+=.5;}}
             else{mappedU/=maxU-minU;mappedV/=maxV-minV;if(door && maxV-minV<1.5)mappedV=.5+.5*mappedV;}

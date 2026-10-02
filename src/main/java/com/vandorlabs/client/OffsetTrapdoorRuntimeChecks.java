@@ -55,12 +55,33 @@ final class OffsetTrapdoorRuntimeChecks {
             if(++scenario<16){stage=0;return false;}
             System.out.println("[vandorlabs][reprolab] offset-trapdoor-hitbox-runtime PASS (all hinges, both states, both movements, real aim/use input and client/server collision)");
             mc.getIntegratedServer().addScheduledTask(()->{
+                for(int i=0;i<4;i++) {
+                    BlockPos source=pos.add(8,0,i*4);EnumFacing facing=EnumFacing.HORIZONTALS[i];
+                    TileEntityProgrammableTrapdoor first=TrapdoorGallery.place(world,source,false,0,0,i%2==0,facing);
+                    first.configureGroup(0,0,i%2==0,0,0,false,true,true,facing);
+                    net.minecraft.item.ItemStack tool=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
+                    if(com.vandorlabs.items.ItemDuplifier.copyFrom(world,source,tool)==null)throw new IllegalStateException("live offset copy capture failed");
+                    TileEntityProgrammableTrapdoor second=TrapdoorGallery.place(world,source.east(),false,0,0,i%2!=0,EnumFacing.NORTH);
+                    if(!com.vandorlabs.items.ItemDuplifier.applyTo(world,source.east(),tool,null))throw new IllegalStateException("live offset copy application failed");
+                    for(TileEntityProgrammableTrapdoor leaf:new TileEntityProgrammableTrapdoor[]{first,second}) {
+                        if(!leaf.isCover() || !leaf.canOffsetClosedLeaf() || leaf.isSliding()!=(i%2==0) || leaf.coverFacing()!=facing)throw new IllegalStateException("live offset copying/adjacency lost settings");
+                        leaf.configureGroup(0,0,i%2==0,0,0,false,true,true,facing.rotateY());
+                    }
+                }
                 TileEntityProgrammableTrapdoor root=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos);root.setCover(false);root.requestOpen(false);
                 for(int z=0;z<2;z++)for(int x=0;x<2;x++)if(x!=0 || z!=0)TrapdoorGallery.place(world,pos.add(x,0,z),false,root.getHousingTexture(),0,false,EnumFacing.NORTH);
                 root.configureGroup(root.getHousingTexture(),0,false,0,0,false,false,true,EnumFacing.NORTH);
                 EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());owner.connection.setPlayerLocation(pos.getX()+.5,pos.getY(),pos.getZ()-2,0,0);
             });
-            stage=3;wait=30;return false;
+            stage=6;wait=30;return false;
+        }
+        if(stage==6) {
+            for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)})for(int i=0;i<4;i++)for(int member=0;member<2;member++) {
+                TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos.add(8+member,0,i*4));
+                if(leaf==null || !leaf.isCover() || !leaf.canOffsetClosedLeaf() || leaf.isSliding()!=(i%2==0) || leaf.coverFacing()!=EnumFacing.HORIZONTALS[i].rotateY())throw new IllegalStateException("synchronized offset copy/neighbor hinge failed");
+            }
+            System.out.println("[vandorlabs][reprolab] trapdoor-offset-copy-neighbor-runtime PASS (movement, closed leaf and hinge retained on client/server)");
+            stage=3;return false;
         }
         if(stage==3) {
             mc.getIntegratedServer().addScheduledTask(()->{

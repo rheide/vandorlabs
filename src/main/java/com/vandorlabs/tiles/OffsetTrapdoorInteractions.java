@@ -32,7 +32,7 @@ public final class OffsetTrapdoorInteractions {
         }
         int limit=Math.abs(cell[0]-last[0])+Math.abs(cell[1]-last[1])+Math.abs(cell[2]-last[2])+3;
         for(int i=0;i<limit;i++) {
-            for(int dy=-1;dy<=1;dy++)for(int[] offset:new int[][]{{0,0},{-1,0},{1,0},{0,-1},{0,1}})
+            for(int dy=-1;dy<=1;dy++)for(int[] offset:new int[][]{{0,0},{-1,0},{1,0},{0,-1},{0,1},{-2,0},{2,0},{0,-2},{0,2}})
                 owners.add(new BlockPos(cell[0]+offset[0],cell[1]+dy,cell[2]+offset[1]));
             if(Arrays.equals(cell,last))break;
             int axis=next[0]<=next[1] && next[0]<=next[2]?0:next[1]<=next[2]?1:2;
@@ -52,7 +52,7 @@ public final class OffsetTrapdoorInteractions {
         addCollisions(event.getWorld(),event.getAabb(),event.getCollisionBoxesList());
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
-        for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(query.minX-1,query.minY-1,query.minZ-1),new BlockPos(query.maxX+1,query.maxY+1,query.maxZ+1))) {
+        for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null)continue;
             AxisAlignedBB box=bounds(leaf);
             if(box.intersects(query) && !boxes.contains(box))boxes.add(box);

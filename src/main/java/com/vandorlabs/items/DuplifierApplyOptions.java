@@ -57,7 +57,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.DOOR_DETAIL, "Door Detail", 3),
             option(ProgrammableSettings.DOOR_SLIDE_DIRECTION, "Slide Direction", 3),
             option(ProgrammableSettings.DOOR_MIDDLE, "Middle Door", 3),
-            option(ProgrammableSettings.DOOR_SLIDING, "Sliding Door", 3),
+            option(ProgrammableSettings.DOOR_SLIDING, "Door / Trapdoor Movement", 3),
             option(ProgrammableSettings.DOOR_HINGES, "Door Hinges", 3),
             option(ProgrammableSettings.DOOR_PANEL, "Door Panel", 3),
             option(ProgrammableSettings.DOOR_DEPTH, "Door Depth", 3),

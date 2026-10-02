@@ -22,7 +22,7 @@ final class TrapdoorMaterialRuntimeChecks {
             TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(leaf.getHousingTexture()));
             TEProgrammableTrapdoor.drawConfiguredLeaf(buffer,sprite,leaf,mc.world.getBlockState(leaf.getPos()),mc.world.getBlockState(leaf.getPos()).getValue(BlockProgrammableTrapdoor.OPEN)?1:0,0xF000A0);
             buffer.finishDrawing();ByteBuffer bytes=buffer.getByteBuffer();int stride=buffer.getVertexFormat().getNextOffset(),tex=buffer.getVertexFormat().getUvOffsetById(0),count=buffer.getVertexCount();
-            TextureAtlasSprite edge=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
+            TextureAtlasSprite edge=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
             for(int i=0;i<count;i++) {
                 int offset=i*stride;float u=bytes.getFloat(offset+tex),v=bytes.getFloat(offset+tex+4);
                 if(i>=count-16){if(!inside(edge,u,v))throw new IllegalStateException("trapdoor thin edge uses selected face artwork");}

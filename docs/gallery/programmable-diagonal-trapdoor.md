@@ -45,7 +45,7 @@ layout to form the new group. No unloaded chunk is forced to load.
 
 ## Texture layout
 
-**Texture: Tile / mirror** uses one-block-wide, two-block-high door art on tall surfaces and two-block-long door art on shallow surfaces. Alternating columns mirror left/right, so a 2×2 surface shows two doors rather than one image stretched across both columns. This works with built-in door artwork and Custom vanilla/mod `BlockDoor` items, retaining separate upper/lower sprites. **Texture: Fit** stretches one complete image over the connected group. Ordinary block art tiles once per cell. The four thin edges always use standard native door-edge artwork. Layout is saved in worlds, configured items and Duplifier settings.
+**Texture: Tile / mirror** uses one-block-wide, two-block-high door art on tall surfaces and two-block-long door art on shallow surfaces. Alternating columns mirror left/right, so a 2×2 surface shows two doors rather than one image stretched across both columns. This works with built-in door artwork and Custom vanilla/mod `BlockDoor` items, retaining separate upper/lower sprites. **Texture: Fit** stretches one complete image over the connected group. Ordinary block art tiles once per cell. The four thin edges always use the standard programmable door’s metal side artwork. Layout is saved in worlds, configured items and Duplifier settings.
 
 ## Crafting and validation
 

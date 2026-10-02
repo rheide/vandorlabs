@@ -6,6 +6,7 @@ public final class TrapdoorGeometry {
     public static final double THICKNESS=3/16D;
     public static final double EDGE_CLEARANCE=1/1024D;
     public static final double OPEN_HINGE=1/16D;
+    public static final double COVER_OVERHANG=1/16D;
     private TrapdoorGeometry() { }
     public static double low(int position) {
         return position==TOP?12/16D:position==MIDDLE?6.5/16D:1/16D;
@@ -45,8 +46,9 @@ public final class TrapdoorGeometry {
         double p=Math.max(0,Math.min(1,pose)),pivot=low(position)+(position==TOP?THICKNESS:0);
         double angle=(position==TOP?1:-1)*p*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),hinge=1/16D;
         for(double[] point:vertices){
-            point[2]-=1;
-            if(sliding)point[2]+=p;
+            // Project one pixel beyond the covered cell, retracting fully into the mount.
+            point[2]-=1+COVER_OVERHANG;
+            if(sliding)point[2]+=p*(1+COVER_OVERHANG);
             else {double dy=point[1]-pivot,dz=point[2]-hinge;point[1]=pivot+dy*cos+dz*sin;point[2]=hinge+dz*cos-dy*sin;}
             for(int turn=0;turn<(quarterTurns&3);turn++){double x=point[0];point[0]=1-point[2];point[2]=x;}
         }
