@@ -489,10 +489,17 @@ final class ScreenRuntimeChecks {
                         && GuiProgrammableInput.scrollForDrag(145, 100, 100, 20, 10, 5) == 5
                         && GuiProgrammableInput.scrollForDrag(185, 100, 100, 20, 10, 5) == 10,
                 "half-input scrollbar drag does not cover its full range");
-        HousingTextureList finishes = new HousingTextureList(0, 0, 120, 0);
-        finishes.wheel(10, 10, -1);
-        finishes.click(10, 14, 0);
-        require(finishes.selected() == 1, "housing finish list did not scroll and select");
+        java.util.List<HousingTextureList.Option> options=java.util.Arrays.asList(
+                new HousingTextureList.Option(0,"Zulu","B","test"),new HousingTextureList.Option(1,"Bravo","A","test"),
+                new HousingTextureList.Option(2,"Alpha","A","test"),new HousingTextureList.Option(3,"Charlie","A","test"),
+                new HousingTextureList.Option(4,"Delta","A","test"),new HousingTextureList.Option(5,"Echo","A","test"));
+        HousingTextureList finishes=new HousingTextureList(0,0,120,2,8,options);
+        finishes.click(10,HousingTextureList.ROW_HEIGHT*2+1,0);
+        require(finishes.selected()==1,"material names did not sort alphabetically");
+        finishes.wheel(10,10,-1);finishes.wheel(10,10,-1);finishes.click(10,HousingTextureList.ROW_HEIGHT+1,0);
+        require(finishes.selected()==3,"scrolling categorized list did not select visible entry");
+        finishes.click(10,1,0);
+        require(finishes.selected()==3 && !finishes.picked(),"pinned category click changed material instead of folding category");
         require(GuiProgrammableWall.scrollForDrag(105, 100, 100, 20, 4, 5) == 0
                         && GuiProgrammableWall.scrollForDrag(145, 100, 100, 20, 4, 5) == 2
                         && GuiProgrammableWall.scrollForDrag(185, 100, 100, 20, 4, 5) == 4,

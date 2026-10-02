@@ -58,8 +58,8 @@ public final class GuiProgrammableLight extends GuiContainer {
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
         faceList=new HousingTextureList(guiLeft+12,guiTop+40,190,selected).custom(value->{selected=value;tile.setFaceTexture(value);send();});
         housingList = new HousingTextureList(guiLeft + 218, guiTop + 40, 182, housing).custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame) buttonList.add(new GuiButton(103,guiLeft+12,guiTop+140,190,20,sizeLabel()));
-        buttonList.add(new GuiButton(104,guiLeft+218,guiTop+140,190,20,sidesLabel()));
+        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame) buttonList.add(new GuiButton(103,guiLeft+12,guiTop+134,190,20,sizeLabel()));
+        buttonList.add(new GuiButton(104,guiLeft+218,guiTop+134,190,20,sidesLabel()));
         buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 214,
                 96, 20, joinLabel()));
         buttonList.add(new GuiButton(102, guiLeft + 112, guiTop + 214,
