@@ -61,5 +61,8 @@ IMI
 
 Non-rendering checks cover all finishes, heights and motion directions,
 opposite-facing pairs, all 24 square placement orders, persistence, group repair,
-redstone, copying, recipe matching and submitted mesh data. Hardware client
-screenshots and Complementary Unbound 5.6.1 visual checks remain pending.
+redstone, copying, recipe matching and submitted mesh data. Live Forge checks cover
+combined dialog edits, saved/copied layout and hinge settings, door-art tiling,
+edge textures and clearance scenes; see the [illustrated examples](task-improvements.md).
+These regression captures use software rendering. Hardware gameplay and
+Complementary Unbound 5.6.1 shader appearance still need verification.

@@ -1,7 +1,6 @@
 # Programmable block improvements
 
-These captures show the updated blocks in the live Forge test world. See the
-[task checklist](../TASKS-2026-10-02.md) for the complete requested scope.
+These captures show the programmable blocks, material pickers and connected trapdoors in the live Forge test world.
 
 ## Connected trapdoors
 
@@ -55,5 +54,33 @@ block image can fit once across the leaf or tile at one-block scale.
 | --- | --- | --- |
 | ![Square lower door half](../images/gallery/tasks/door-block-half.png) | ![Fitted brick door face](../images/gallery/tasks/door-face-fit.png) | ![Tiled brick door face](../images/gallery/tasks/door-face-tile.png) |
 
-The [material picker follow-up checklist](../TASKS-material-picker-followup.md)
-tracks the thumbnail, category, dialog and material fixes.
+The categorized lists use large, aspect-preserving thumbnails, alphabetic categories and entries, and a category heading that stays visible while scrolling. Native screens keep their animation controls. Programmable Light lists show the On artwork and switch to Off automatically with the light state.
+
+## Trapdoor door artwork and controls
+
+Tile / mirror keeps door artwork one block wide and two blocks long/high, with alternating columns mirrored. Fit stretches one image over the connected surface. Custom vanilla and mod `BlockDoor` items retain their upper/lower sprites. Both layouts keep the standard artwork on the four thin edges.
+
+| Surface | Built-in door, Tile / mirror | Custom oak door, Tile / mirror | Built-in door, Fit |
+| --- | --- | --- | --- |
+| Flat 2×2 | ![Tiled flat doors](../images/gallery/tasks/trapdoor-flat-door-tile.png) | ![Tiled flat oak doors](../images/gallery/tasks/trapdoor-flat-custom-door-tile.png) | ![Fitted flat door](../images/gallery/tasks/trapdoor-flat-door-fit.png) |
+| Diagonal 2×2 | ![Tiled diagonal doors](../images/gallery/tasks/trapdoor-diagonal-door-tile.png) | ![Tiled diagonal oak doors](../images/gallery/tasks/trapdoor-diagonal-custom-door-tile.png) | ![Fitted diagonal door](../images/gallery/tasks/trapdoor-diagonal-door-fit.png) |
+
+The diagonal dialog separates width and height, so Full/Half width updates a tall group together. The normal dialog separates closed-leaf placement from Rotating/Sliding and offers a direction control for Next block mounts.
+
+| Normal controls | Diagonal controls |
+| --- | --- |
+| ![Next-block placement and independent rotating movement](../images/gallery/tasks/trapdoor-config.png) | ![Separate diagonal width, height and texture layout](../images/gallery/tasks/diagonal-trapdoor-config.png) |
+
+## Motion clearance and next-block placement
+
+Rotating normal leaves keep their thickness inside the mounting cell when open. Sliding diagonal leaves lift clear of the continuation wall before moving sideways. Next block places the untriggered leaf across the neighboring cell; rotating then folds it upright into its own mount.
+
+| Rotating beside blocks | Sliding over a diagonal wall |
+| --- | --- |
+| ![Open rotating leaf beside solid neighbors](../images/gallery/tasks/trapdoor-flat-rotate-neighbors.png) | ![Open diagonal leaf clear of its continuation wall](../images/gallery/tasks/trapdoor-diagonal-slide-wall.png) |
+
+| Next-block leaf, closed | Next-block leaf, rotating open |
+| --- | --- |
+| ![Closed leaf covers the neighboring cell](../images/gallery/tasks/trapdoor-next-rotating-closed.png) | ![Rotated leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-next-rotating-open.png) |
+
+These are software-rendered Forge regression captures. Hardware shader appearance still needs verification in the target client.

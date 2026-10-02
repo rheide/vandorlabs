@@ -55,5 +55,8 @@ settings; opening-side and group links stay in the world.
 
 Non-rendering checks cover wall placement alignment, one-pixel insets, rigid
 motion, mesh normals/UVs/lightmaps, all square placement orders, persistence,
-redstone, copying and recipe matching. Hardware client and Complementary
-Unbound 5.6.1 visual checks remain pending. Live software-rendered regression captures validate the documented scenes.
+redstone, copying and recipe matching. Live Forge checks cover repeated combined
+width edits, material preservation, upper/lower door sprites, thin-edge artwork
+and sliding clearance; see the [illustrated examples](task-improvements.md).
+These regression captures use software rendering. Hardware gameplay and
+Complementary Unbound 5.6.1 shader appearance still need verification.
