@@ -117,6 +117,8 @@ public final class ScreenHousingTextures {
     public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
     public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
     public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
+    /** Static Off artwork remains available as a material, but not in light menus. */
+    public static boolean isLightOff(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null && "Lights".equals(e.get("category").getAsString()) && e.get("id").getAsString().endsWith("_off");}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
     public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=entry(choice);return !lit && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
 

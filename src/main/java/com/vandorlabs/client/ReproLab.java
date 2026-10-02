@@ -934,6 +934,7 @@ public class ReproLab {
                 break;
             case 19:
                 if (--holdTicks > 0) break;
+                CustomMaterialRuntimeChecks.checkLightPicker((GuiProgrammableLight)mc.currentScreen);
                 saveNamed(mc,"programmable_light_gui");
                 mc.displayGuiScreen(null);
                 BlockPos triggerGui=CONSOLE.add(5,0,3);

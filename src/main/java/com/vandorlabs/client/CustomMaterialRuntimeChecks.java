@@ -70,5 +70,25 @@ final class CustomMaterialRuntimeChecks {
         }catch(java.io.IOException e){throw new RuntimeException(e);}finally{player.inventory.setInventorySlotContents(0,original);mc.displayGuiScreen(previous);}
         System.out.println("[vandorlabs][reprolab] custom-materials-runtime PASS");
     }
+    static void checkLightPicker(GuiProgrammableLight gui) {
+        try {
+            java.lang.reflect.Field options=HousingTextureList.class.getDeclaredField("options"),count=HousingTextureList.class.getDeclaredField("count");
+            options.setAccessible(true);count.setAccessible(true);
+            int expected=Math.max(4,Math.min(8,(gui.height-168)/HousingTextureList.ROW_HEIGHT));
+            for(String name:new String[]{"faceList","housingList"}) {
+                java.lang.reflect.Field field=GuiProgrammableLight.class.getDeclaredField(name);field.setAccessible(true);
+                HousingTextureList list=(HousingTextureList)field.get(gui);
+                require(count.getInt(list)==expected,"light picker visible rows");
+                java.util.Map<?,?> entries=(java.util.Map<?,?>)options.get(list);
+                int on=0,off=0;
+                for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
+                    if(ScreenHousingTextures.isLightOff(i)){off++;require(!entries.containsKey(i),"Off texture in light picker");}
+                }
+                for(int style=0;style<6;style++)if(entries.containsKey(ScreenHousingTextures.lightIndex(style)))on++;
+                require(on==6 && off==6,"light picker paired artwork coverage");
+            }
+            System.out.println("[vandorlabs][reprolab] light-picker-runtime PASS rows="+expected);
+        } catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+    }
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("Custom material: "+message);}
 }

@@ -2,7 +2,7 @@
 
 Programmable blocks, slabs, stairs, walls, trapdoors, doors, lights and static screen/control surfaces share a texture picker. Categories expand and collapse, and each texture has a larger thumbnail with its original aspect ratio. Categories and texture names are sorted alphabetically, and the current category heading stays visible while scrolling within it. The category containing the selected material opens automatically. Options are grouped and sorted once per dialog; expanding a category reuses those groups. Only visible rows draw thumbnails, using the already-loaded Minecraft atlas. PNGs are not loaded on demand, so large catalogs still increase startup time and atlas memory use.
 
-Built-in categories include Materials, Texture Pack 1, Texture Pack 2, Hull Plating, Lights, Doors and Screens. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Door entries provide Small, Medium and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
+Built-in categories include Materials, Texture Pack 1, Texture Pack 2, Hull Plating, Lights, Doors and Screens. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Programmable light dialogs hide the separate Off choices in both lists; select the On material and let the light switch its artwork automatically. Their taller dialog shows up to seven textures plus the pinned category heading, reducing the list height on smaller GUI resolutions. Door entries provide Small, Medium and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
 
 ## Choose a surface
 
@@ -27,6 +27,8 @@ To import PNG files instead, see [filesystem texture categories](filesystem-text
 Slabs, stairs and lights keep their side-layout controls. Screens, half/full inputs and consoles offer **Sides: Fit/Tile** directly in their main dialogs and inside **Surface textures**. Programmable Half-Input labels its main control **Wall texture: Tile/Fit**. Fit scales the complete housing image onto each shortened housing face; Tile retains the original pixel-space UV layout. Existing screen/input/console saves retain Tile until changed. The choice is saved and copied by the Duplifier.
 
 ## Transparency assessment
+
+Custom door faces use the sampled texture's alpha pixels, without a hardcoded mask for individual door types. They retain the programmable door's leaf geometry and collision. Cutout pixels can be visually transparent, but do not create passable holes; smooth partial-alpha glass is not reliably supported by the replacement-face rendering path. Other mods' doors receive upper/lower sampling when they inherit Minecraft's `BlockDoor`; other implementations use their model's representative texture. The source door's mesh and glass rendering are not imported.
 
 Transparent artwork does not generate holes in block geometry or collision. In particular, solid chunk-rendered programmable blocks do not yet offer reliable transparent apertures: their solid render layer and opaque-neighbor culling assume a complete surface. Slabs and tile-rendered housings also retain their existing collision shapes, regardless of image alpha.
 

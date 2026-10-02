@@ -40,3 +40,11 @@ The full live suite at `testclient/render-run.sUQUgP` passed every runtime marke
 Final validation: standard Java 8 build, non-rendering and filesystem contracts pass. Full Forge live suite `testclient/render-run.qg1MEr` exited successfully with every runtime marker and all six image analyzers. Reviewed supported Fit/Tile doors, square door halves, categorized screen/control/material lists, light and propulsion dialogs, and Half-Input title/layout. Exported all 164 curated screenshots through the gallery exporter; checked documentation links, whitespace and packaged classes/catalog/license. These are software-rendered client checks, not hardware shader acceptance.
 
 Tested source: `087d6ddac62c31ea7060e38afba47c695fd6a6f4`. Standard artifact: `build/libs/vandorlabs-1.3.jar`, SHA-256 `c55f0fbf947ac354814d049e2d970f08d4861b2a54681a9b32cab52c51e3f383`. Setup and limitations are in [unified materials](unified-materials.md); new door examples are in the [illustrated improvements](gallery/task-improvements.md).
+
+## Light picker refinement (2026-10-02)
+
+- [x] Hide separate Off light artwork in both programmable light texture lists; retain it in the shared catalog for ordinary materials and saved IDs.
+- [x] Make the light dialog taller, with up to eight list rows (seven textures and a pinned category); adapt to the available GUI height and move all lower controls together.
+- [x] Document Custom door alpha handling and other-mod door recognition.
+
+Validation: pending build and live client suite.

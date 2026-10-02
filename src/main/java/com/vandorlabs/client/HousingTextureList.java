@@ -31,10 +31,13 @@ final class HousingTextureList {
     HousingTextureList(int x,int y,int width,int selected){this(x,y,width,selected,8);}
     HousingTextureList(int x,int y,int width,int selected,int count) {this(x,y,width,selected,count,null);}
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries) {
+        this(x,y,width,selected,count,nativeEntries,choice->true);
+    }
+    HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include) {
         this.x=x;this.y=y;this.width=width;this.count=Math.max(2,count*12/ROW_HEIGHT);
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
-        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(include.test(i))options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
         categories.addAll(groups.keySet());categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
         for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
