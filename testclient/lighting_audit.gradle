@@ -1,0 +1,12 @@
+// Run with Java 8: ./gradlew -I testclient/lighting_audit.gradle auditProgrammableLighting --no-daemon
+allprojects {
+    afterEvaluate {
+        task auditProgrammableLighting(type: JavaExec) {
+            dependsOn compileNonRenderingChecks
+            classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+            main = 'com.vandorlabs.client.ProgrammableLightingAudit'
+            workingDir = file("$buildDir/non-rendering-checks")
+            doFirst { workingDir.mkdirs() }
+        }
+    }
+}
