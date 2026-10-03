@@ -120,6 +120,8 @@ public final class ScreenHousingTextures {
         DEFAULT_STORAGE=screenIndex("storage/cabinet_front");
         DEFAULT_TRAPDOOR=screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4");
         if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");
+        // Keep saved choice numbers while omitting retired artwork from the runtime JAR.
+        for(int i=0;i<BUILTIN_COUNT;i++)if(!visible(i))TEXTURES[i]=TEXTURES[0];
     }
     public static com.google.gson.JsonObject entry(int choice){int index=localIndex(choice)-LEGACY_COUNT;return index>=0 && index<EXTRAS.size()?EXTRAS.get(index):null;}
     /** Menu metadata changes presentation without moving persisted numeric choices. */
@@ -143,7 +145,7 @@ public final class ScreenHousingTextures {
     /** Static Off artwork remains available as a material, but not in light menus. */
     public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && "Lights".equals(category(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
-    public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=menu(choice);return !lit && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
+    public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=menu(choice);return !lit && visible(choice) && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
 
     public static final int INDUSTRIAL_BLOCK = 9;
 
@@ -169,6 +171,6 @@ public final class ScreenHousingTextures {
     public static String texture(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
         com.google.gson.JsonObject e=entry(choice);
-        return TEXTURES[localIndex(choice)]+(e!=null && e.has("design")?"_half":"");
+        return TEXTURES[localIndex(choice)]+(e!=null && e.has("design") && visible(choice)?"_half":"");
     }
 }

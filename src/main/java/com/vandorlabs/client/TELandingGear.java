@@ -39,7 +39,7 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = Minecraft.getMinecraft()
                 .getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         BufferBuilder b=Tessellator.getInstance().getBuffer();
-        b.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION_TEX);
+        b.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         double low=extraLarge?4/16D:6/16D,high=extraLarge?12/16D:10/16D;
         for(double upper=top;upper>bottom+1E-8;upper-=1) {
             double lower=Math.max(bottom,upper-1),v=(upper-lower)*16;
@@ -56,10 +56,11 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
             double x0,double y0,double z0,double x1,double y1,double z1,
             double x2,double y2,double z2,double x3,double y3,double z3,
             double u0,double v0,double u1,double v1) {
-        b.pos(x0,y0,z0).tex(s.getInterpolatedU(u0),s.getInterpolatedV(v0)).endVertex();
-        b.pos(x1,y1,z1).tex(s.getInterpolatedU(u1),s.getInterpolatedV(v0)).endVertex();
-        b.pos(x2,y2,z2).tex(s.getInterpolatedU(u1),s.getInterpolatedV(v1)).endVertex();
-        b.pos(x3,y3,z3).tex(s.getInterpolatedU(u0),s.getInterpolatedV(v1)).endVertex();
+        WorldSurface.rawQuad(b,false,
+                x0,y0,z0,s.getInterpolatedU(u0),s.getInterpolatedV(v0),
+                x1,y1,z1,s.getInterpolatedU(u1),s.getInterpolatedV(v0),
+                x2,y2,z2,s.getInterpolatedU(u1),s.getInterpolatedV(v1),
+                x3,y3,z3,s.getInterpolatedU(u0),s.getInterpolatedV(v1));
     }
     private void draw(ModelResourceLocation model) {
         Minecraft mc=Minecraft.getMinecraft();

@@ -230,11 +230,21 @@ task installDefaultTextures {
             from 'texture-packs/additional/assets/vandorlabs/textures'
             into target
         }
+        exec {
+            commandLine 'python3', 'tools/prune_retired_textures.py', '--stage', target.parentFile
+        }
         logger.lifecycle("Installed ${supplied.size()} default runtime textures")
     }
 }
 
 jar.dependsOn installDefaultTextures
+
+task testPackagedTexturePruning(type: Exec) {
+    dependsOn jar
+    workingDir projectDir
+    commandLine 'python3', 'tools/prune_retired_textures.py', '--check-jar', jar.archivePath
+}
+check.dependsOn testPackagedTexturePruning
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 

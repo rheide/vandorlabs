@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
-/** Loaded-world geometry, invalidated by the one-cell neighborhood read by diagonal walls. */
+/** Bounded wall geometry cache; porthole slice identity also tracks distant group changes. */
 public final class DiagonalWallMeshCache {
     static final int MAX_ENTRIES=4096,MAX_VERTICES=524288; // At most 16 MiB of vertex payload per world.
     private static final Map<World,WorldCache> WORLDS=new WeakHashMap<>();
@@ -24,23 +24,42 @@ public final class DiagonalWallMeshCache {
 
     static StaticSurfaceMesh get(TileEntityAnimatedScreenSelector tile,IBlockState state,
             TextureAtlasSprite wall,TextureAtlasSprite metal) {
+        return get(tile,state,wall,metal,null);
+    }
+    static StaticSurfaceMesh get(TileEntityAnimatedScreenSelector tile,IBlockState state,
+            TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice slice) {
+        return entry(tile,state,wall,metal,slice).mesh;
+    }
+    static StaticSurfaceMesh glass(TileEntityAnimatedScreenSelector tile,IBlockState state,
+            TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice slice) {
+        return entry(tile,state,wall,metal,slice).glass;
+    }
+    private static Entry entry(TileEntityAnimatedScreenSelector tile,IBlockState state,
+            TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice slice) {
         World world=tile.getWorld();WorldCache cache=WORLDS.get(world);
         if(cache==null) { cache=new WorldCache();WORLDS.put(world,cache);world.addEventListener(cache); }
         int settings=(tile.isDiagonalHalfHeight()?1:0)|(tile.isDiagonalFullWidth()?2:0)|(tile.getDiagonalFill()<<2);
         Entry entry=cache.entries.get(tile.getPos());
         if(entry!=null && entry.tile.get()==tile && entry.state==state && entry.settings==settings
-                && entry.wall==wall && entry.metal==metal)return entry.mesh;
+                && entry.wall==wall && entry.metal==metal && entry.slice==slice)return entry;
         cache.remove(tile.getPos());
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
-        TEAnimatedScreenSelector.drawConfiguredDiagonalWall(capture,tile,state,wall,metal);
-        StaticSurfaceMesh mesh=capture.finish();
-        if(mesh.vertexCount()<=MAX_VERTICES) {
-            cache.entries.put(tile.getPos().toImmutable(),new Entry(tile,state,settings,wall,metal,mesh));
-            cache.vertices+=mesh.vertexCount();
+        TEAnimatedScreenSelector.drawConfiguredWall(capture,tile,state,wall,metal,slice);
+        StaticSurfaceMesh mesh=capture.finish(),glass=null;
+        if(slice!=null) {
+            capture=StaticSurfaceMesh.capture();
+            TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,slice,
+                    TEAnimatedScreenSelector.portholeMesh(tile,state));
+            glass=capture.finish();
+        }
+        Entry built=new Entry(tile,state,settings,wall,metal,mesh,glass,slice);
+        if(built.vertices()<=MAX_VERTICES) {
+            cache.entries.put(tile.getPos().toImmutable(),built);
+            cache.vertices+=built.vertices();
             while(cache.entries.size()>MAX_ENTRIES || cache.vertices>MAX_VERTICES)
                 cache.remove(cache.entries.keySet().iterator().next());
         }
-        return mesh;
+        return built;
     }
 
     static void invalidate(World world,int x1,int y1,int z1,int x2,int y2,int z2) {
@@ -61,17 +80,19 @@ public final class DiagonalWallMeshCache {
         final IBlockState state;
         final int settings;
         final TextureAtlasSprite wall,metal;
-        final StaticSurfaceMesh mesh;
+        final StaticSurfaceMesh mesh,glass;
+        final PortholeHex.Slice slice;
+        int vertices(){return mesh.vertexCount()+(glass==null?0:glass.vertexCount());}
         Entry(TileEntityAnimatedScreenSelector tile,IBlockState state,int settings,
-                TextureAtlasSprite wall,TextureAtlasSprite metal,StaticSurfaceMesh mesh) {
+                TextureAtlasSprite wall,TextureAtlasSprite metal,StaticSurfaceMesh mesh,StaticSurfaceMesh glass,PortholeHex.Slice slice) {
             this.tile=new WeakReference<>(tile);this.state=state;this.settings=settings;
-            this.wall=wall;this.metal=metal;this.mesh=mesh;
+            this.wall=wall;this.metal=metal;this.mesh=mesh;this.glass=glass;this.slice=slice;
         }
     }
     private static final class WorldCache implements IWorldEventListener {
         final LinkedHashMap<BlockPos,Entry> entries=new LinkedHashMap<>(64,.75F,true);
         int vertices;
-        void remove(BlockPos pos) { Entry removed=entries.remove(pos);if(removed!=null)vertices-=removed.mesh.vertexCount(); }
+        void remove(BlockPos pos) { Entry removed=entries.remove(pos);if(removed!=null)vertices-=removed.vertices(); }
         void invalidate(int x1,int y1,int z1,int x2,int y2,int z2) {
             if(entries.isEmpty())return;
             int minX=Math.min(x1,x2)-1,maxX=Math.max(x1,x2)+1;
@@ -88,7 +109,7 @@ public final class DiagonalWallMeshCache {
             while(it.hasNext()) {
                 Map.Entry<BlockPos,Entry> entry=it.next();BlockPos pos=entry.getKey();
                 if(pos.getX()>=minX && pos.getX()<=maxX && pos.getY()>=minY && pos.getY()<=maxY
-                        && pos.getZ()>=minZ && pos.getZ()<=maxZ) { vertices-=entry.getValue().mesh.vertexCount();it.remove(); }
+                        && pos.getZ()>=minZ && pos.getZ()<=maxZ) { vertices-=entry.getValue().vertices();it.remove(); }
             }
         }
         @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags) {

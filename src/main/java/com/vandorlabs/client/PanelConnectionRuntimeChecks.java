@@ -18,17 +18,30 @@ final class PanelConnectionRuntimeChecks {
                     (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)player.world.getTileEntity(pos);
             int light=TEAnimatedScreenSelector.neighborLight(tile);
             require((light >>> 16)!=(light & 65535),"lighting fixture needs unequal sky/block values");
-            net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(4096);
-            buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,
-                    net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
-            ProgrammableSolidRenderer.emit(tile,0,0,0,buffer);
-            require(buffer.getVertexCount()==24,"cube must emit six quads");
-            buffer.finishDrawing();
-            java.nio.ByteBuffer data=buffer.getByteBuffer();
-            for (int i=0; i<24; i++) {
-                require((data.getShort(i*28+24)&65535)==(light & 65535),"packed block light is wrong");
-                require((data.getShort(i*28+26)&65535)==(light >>> 16),"packed sky light is wrong");
+            for(net.minecraft.client.renderer.vertex.VertexFormat format:new net.minecraft.client.renderer.vertex.VertexFormat[]{
+                    net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK,BlockSurfaceFormat.get()}) {
+                net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(4096);
+                buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,format);
+                ProgrammableSolidRenderer.emit(tile,0,0,0,buffer);
+                require(buffer.getVertexCount()==24,"cube must emit six quads");buffer.finishDrawing();
+                java.nio.ByteBuffer data=buffer.getByteBuffer();int stride=format.getNextOffset(),lm=format.getUvOffsetById(1);
+                for(int i=0;i<24;i++) {
+                    require((data.getShort(i*stride+lm)&65535)==(light & 65535),"packed block light is wrong");
+                    require((data.getShort(i*stride+lm+2)&65535)==(light >>> 16),"packed sky light is wrong");
+                    if(i%4==0) {
+                        float ax=data.getFloat(i*stride),ay=data.getFloat(i*stride+4),az=data.getFloat(i*stride+8);
+                        float bx=data.getFloat((i+1)*stride),by=data.getFloat((i+1)*stride+4),bz=data.getFloat((i+1)*stride+8);
+                        float cx=data.getFloat((i+2)*stride),cy=data.getFloat((i+2)*stride+4),cz=data.getFloat((i+2)*stride+8);
+                        float nx=(by-ay)*(cz-az)-(bz-az)*(cy-ay),ny=(bz-az)*(cx-ax)-(bx-ax)*(cz-az),nz=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+                        require((ax-.5)*nx+(ay-.5)*ny+(az-.5)*nz>0,"batched cube winding points inward");
+                        if(format.hasNormal()) {
+                            int normal=i*stride+format.getNormalOffset();
+                            require(nx*data.get(normal)+ny*data.get(normal+1)+nz*data.get(normal+2)>0,"batched shader normal disagrees with winding");
+                        }
+                    }
+                }
             }
+            System.out.println("[vandorlabs][reprolab] batched-lighting-inputs PASS: base and normal-bearing formats");
         } finally {
             player.world.setBlockToAir(pos);
         }

@@ -15,6 +15,12 @@ final class StaticSurfaceMesh {
                     .tex(vertices[i+3],vertices[i+4]).lightmap(lightmapA,lightmapB)
                     .normal(vertices[i+5],vertices[i+6],vertices[i+7]).endVertex();
     }
+    void drawColored(BufferBuilder buffer,int lightmapA,int lightmapB,float r,float g,float b,float a) {
+        for(int i=0;i<vertices.length;i+=8)
+            buffer.pos(vertices[i],vertices[i+1],vertices[i+2]).color(r,g,b,a)
+                    .tex(vertices[i+3],vertices[i+4]).lightmap(lightmapA,lightmapB)
+                    .normal(vertices[i+5],vertices[i+6],vertices[i+7]).endVertex();
+    }
 
     private static final ThreadLocal<Capture> CAPTURE=ThreadLocal.withInitial(Capture::new);
     static Capture capture() { Capture result=CAPTURE.get();result.used=0;return result; }

@@ -7,7 +7,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
@@ -47,19 +46,19 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.disableCull();
         GlStateManager.color(1F, 1F, 1F, 1F);
         BufferBuilder b=Tessellator.getInstance().getBuffer();
-        b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
-        texturedFace(b, PANE_NEAR);
-        texturedFace(b, PANE_FAR);
+        b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+        pane(b,PANE_NEAR,1,1,1,1);
+        pane(b,PANE_FAR,1,1,1,1);
         Tessellator.getInstance().draw();
         if (tile.getShade()!=0) {
             GlStateManager.disableTexture2D();
             // Both pane surfaces contribute to the tint. These per-face
             // opacities preserve the apparent shade of the old single face.
-            if (tile.getShade()==1) GlStateManager.color(.20F,.85F,.95F,.0513F);
-            else GlStateManager.color(.10F,.12F,.16F,.1754F);
-            b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION);
-            tintedFace(b, PANE_NEAR);
-            tintedFace(b, PANE_FAR);
+
+            b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            for(double paneDepth:new double[]{PANE_NEAR,PANE_FAR})
+                if(tile.getShade()==1)pane(b,paneDepth,.20F,.85F,.95F,.0513F);
+                else pane(b,paneDepth,.10F,.12F,.16F,.1754F);
             Tessellator.getInstance().draw();
             GlStateManager.enableTexture2D();
         }
@@ -73,17 +72,14 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
     }
 
-    private static void texturedFace(BufferBuilder b, double depth) {
-        b.pos(0,0,depth).tex(0,1).endVertex();
-        b.pos(1,0,depth).tex(1,1).endVertex();
-        b.pos(1,1,depth).tex(1,0).endVertex();
-        b.pos(0,1,depth).tex(0,0).endVertex();
-    }
-
-    private static void tintedFace(BufferBuilder b, double depth) {
-        b.pos(0,0,depth).endVertex();
-        b.pos(1,0,depth).endVertex();
-        b.pos(1,1,depth).endVertex();
-        b.pos(0,1,depth).endVertex();
+    static void pane(BufferBuilder buffer,double depth,float r,float g,float b,float a) {
+        boolean near=depth==PANE_NEAR;
+        for(int i=0;i<4;i++) {
+            int index=near?(4-i)&3:i;
+            double x=index==1 || index==2?1:0,y=index<2?0:1;
+            buffer.pos(x,y,depth).color(r,g,b,a).tex(x,1-y)
+                    .lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX)
+                    .normal(0,0,near?-1:1).endVertex();
+        }
     }
 }

@@ -16,6 +16,8 @@ public final class ProgrammableLightingAudit {
 
     public static void main(String[] args) throws Exception {
         net.minecraft.init.Bootstrap.register();
+        net.minecraft.client.renderer.OpenGlHelper.lastBrightnessX=80;
+        net.minecraft.client.renderer.OpenGlHelper.lastBrightnessY=192;
         SPRITE.setIconWidth(16);
         SPRITE.setIconHeight(16);
         SPRITE.initSprite(256, 256, 32, 48, false);
@@ -74,11 +76,14 @@ public final class ProgrammableLightingAudit {
             }
         }
         System.out.println("Trapdoor control: explicit normals agree with winding; block=80, sky=192.");
+        surfaces();
+        RampRenderChecks.run();
+        System.out.println("PASS: programmable surfaces have matching normals/winding and separate live lightmap channels");
     }
 
     private static BufferBuilder legacyBuffer() {
         BufferBuilder buffer = new BufferBuilder(4096);
-        buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+        buffer.begin(7, BlockSurfaceFormat.get());
         return buffer;
     }
 
@@ -118,8 +123,69 @@ public final class ProgrammableLightingAudit {
                 if (Math.abs(a[1]) < 1E-6 && n[1] > 1E-6) inward[3]++;
             }
         }
+        if(inward[0]+inward[1]+inward[2]+inward[3]!=0)
+            throw new IllegalStateException(label+": inward boundary face");
+        verifyInputs(buffer,label);
         System.out.printf("%s,%d,%d,%d,%d,%d,%s,%s%n", label, buffer.getVertexCount() / 4,
                 inward[0], inward[1], inward[2], inward[3], format.hasNormal(), format.hasUvOffset(1));
+    }
+
+    private static void verifyInputs(BufferBuilder buffer,String label) {
+        VertexFormat format=buffer.getVertexFormat();ByteBuffer data=buffer.getByteBuffer();
+        if(!format.hasNormal() || !format.hasUvOffset(1))throw new IllegalStateException(label+": missing shader inputs");
+        int stride=format.getNextOffset();
+        for(int i=0;i<buffer.getVertexCount();i++) {
+            int offset=i*stride,lm=offset+format.getUvOffsetById(1),normal=offset+format.getNormalOffset();
+            if(data.getShort(lm)!=80 || data.getShort(lm+2)!=192)throw new IllegalStateException(label+": incorrect lightmap");
+            double nx=data.get(normal)/127D,ny=data.get(normal+1)/127D,nz=data.get(normal+2)/127D;
+            if(Math.abs(nx*nx+ny*ny+nz*nz-1)>.03)throw new IllegalStateException(label+": invalid unit normal");
+            if(i%4==0) {
+                double[] a=position(data,offset),b=position(data,offset+stride),c=position(data,offset+2*stride),d=position(data,offset+3*stride);
+                double ux=c[0]-a[0],uy=c[1]-a[1],uz=c[2]-a[2],vx=d[0]-b[0],vy=d[1]-b[1],vz=d[2]-b[2];
+                if((uy*vz-uz*vy)*nx+(uz*vx-ux*vz)*ny+(ux*vy-uy*vx)*nz<=0)
+                    throw new IllegalStateException(label+": normal/winding disagreement");
+            }
+        }
+    }
+
+    private static void surfaces() throws Exception {
+        for(int mode=0;mode<3;mode++)for(boolean inverted:new boolean[]{false,true})for(int shape=0;shape<4;shape++) {
+            DiagonalPortholeMesh mesh=new DiagonalPortholeMesh(mode,inverted,.25,.75,null);
+            PortholeHex.Slice slice=new PortholeHex(1,1,shape).slice(0,0);
+            BufferBuilder buffer=legacyBuffer();
+            for(double[] q:slice.frameQuads)
+                invoke("panelQuad",buffer,SPRITE,mesh,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
+            rims(buffer,mesh);TEAnimatedScreenSelector.drawPortholeGlassGeometry(buffer,slice,mesh);
+            buffer.finishDrawing();verifyInputs(buffer,"diagonal porthole "+mode+"/"+inverted+"/"+shape);
+        }
+        for(com.vandorlabs.render.ScreenHousingMesh mesh:new com.vandorlabs.render.ScreenHousingMesh[]{
+                com.vandorlabs.render.ScreenHousingMesh.cube(),com.vandorlabs.render.ScreenHousingMesh.console(),
+                com.vandorlabs.render.ScreenHousingMesh.halfConsole(),com.vandorlabs.render.ScreenHousingMesh.diagonal(false),
+                com.vandorlabs.render.ScreenHousingMesh.diagonal(true)})for(boolean ceiling:new boolean[]{false,true}) {
+            BufferBuilder buffer=legacyBuffer();invoke("drawWallFaces",buffer,SPRITE,mesh.quads,ceiling);
+            buffer.finishDrawing();verifyInputs(buffer,"housing/ceiling="+ceiling);
+        }
+        for(com.vandorlabs.render.ScreenSurface.Kind kind:com.vandorlabs.render.ScreenSurface.Kind.values())
+            for(boolean inverted:new boolean[]{false,true})for(boolean ceiling:new boolean[]{false,true}) {
+                BufferBuilder buffer=legacyBuffer();
+                invoke("drawScreenQuad",buffer,com.vandorlabs.render.ScreenSurface.quad(kind,inverted),0D,1D,0D,1D,ceiling);
+                buffer.finishDrawing();verifyInputs(buffer,"screen "+kind);
+            }
+        for(boolean full:new boolean[]{false,true})for(boolean small:new boolean[]{false,true})for(int depth=0;depth<3;depth++) {
+            BufferBuilder buffer=legacyBuffer();
+            TEAnimatedScreenSelector.drawInputQuad(buffer,com.vandorlabs.render.InputSurfaceLayout.ceilingInput(full,small,depth).surface,new double[]{0,1});
+            buffer.finishDrawing();verifyInputs(buffer,"ceiling input");
+        }
+        for(double depth:new double[]{7/16D,9/16D}) {
+            BufferBuilder buffer=legacyBuffer();TEProgrammableGlass.pane(buffer,depth,.2F,.85F,.95F,.0513F);
+            buffer.finishDrawing();verifyInputs(buffer,"glass");
+        }
+        com.vandorlabs.ramp.RampGeometry.Box box=new com.vandorlabs.ramp.RampGeometry.Box(0,0,0,1,1,1);
+        for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values()) {
+            BufferBuilder buffer=legacyBuffer();
+            TEControlledRamp.emitFace(buffer,box,face,SPRITE,0,1,0,0,0xFFFFFF);
+            buffer.finishDrawing();verifyInputs(buffer,"ramp "+face);
+        }
     }
 
     private static boolean same(double a, double b, double c, double d) {

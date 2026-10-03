@@ -74,6 +74,7 @@ python3 testclient/analyze_landing_gear.py "$RUN_OUT"
 python3 testclient/analyze_seat_icons.py "$RUN_OUT"
 python3 testclient/analyze_light_and_glass.py "$RUN_OUT"
 python3 testclient/analyze_diagonal_joins.py "$RUN_OUT"
+python3 testclient/analyze_ramp_rendering.py "$RUN_OUT"
 for shape in halfwidth shallow; do
     for layout in horizontal stagger; do
         for motion in rotating sliding inset_sliding; do
@@ -102,6 +103,8 @@ grep -q 'sliding-next-mount-overlap-runtime PASS client closed' "$RUN_OUT/client
 grep -q 'sliding-next-mount-overlap-runtime PASS client open' "$RUN_OUT/client.log"
 grep -q 'vanilla-trapdoor-alignment-runtime PASS client' "$RUN_OUT/client.log"
 grep -q 'imported-materials-runtime PASS' "$RUN_OUT/client.log"
+grep -q 'retired-texture-fallback PASS' "$RUN_OUT/client.log"
+grep -q 'batched-lighting-inputs PASS' "$RUN_OUT/client.log"
 grep -q 'trapdoor-movement-hinge-gui PASS' "$RUN_OUT/client.log"
 grep -q 'trapdoor-material-runtime PASS diagonal_custom_door_tile' "$RUN_OUT/client.log"
 grep -q 'trapdoor-material-runtime PASS flat_custom_door_tile' "$RUN_OUT/client.log"

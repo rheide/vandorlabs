@@ -6,8 +6,8 @@ import com.vandorlabs.ramp.RampGeometry;
 public final class CuboidMesh {
     public enum Face { DOWN, UP, NORTH, SOUTH, WEST, EAST }
     public interface VertexConsumer { void vertex(double x,double y,double z,double u,double v); }
-    private static final int[][] CORNERS={{4,5,1,0},{2,3,7,6},{0,1,3,2},
-            {5,4,6,7},{4,0,2,6},{1,5,7,3}};
+    private static final int[][] CORNERS={{4,0,1,5},{2,6,7,3},{0,2,3,1},
+            {5,7,6,4},{4,6,2,0},{1,3,7,5}};
     public static final class Vertex {
         public final double x,y,z,u,v;
         private Vertex(double x,double y,double z,double u,double v) {

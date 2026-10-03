@@ -15,6 +15,8 @@ import java.util.function.Function;
 public final class UnifiedTextureSprites {
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
+            // Filesystem examples may be hidden but remain valid external choices.
+            if(i<ScreenHousingTextures.BUILTIN_COUNT && !ScreenHousingTextures.visible(i))continue;
             com.google.gson.JsonObject e=ScreenHousingTextures.entry(i);
             if(e!=null && e.has("top"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),false,false));
             else if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));

@@ -42,9 +42,12 @@ final class ProgrammableSolidRenderer {
             // The artwork IS the front face. Never submit housing underneath.
             if(light && (MESH_FACES[i]==EnumFacing.NORTH
                     || (visible & (1 << MESH_FACES[i].getIndex()))==0))continue;
-            for (ScreenHousingMesh.Vertex vertex : mesh.quads[i].vertices)
-                vertex(buffer, housing, rotation, brightness, x,y,z,
-                        vertex.x,vertex.y,vertex.z,vertex.u,vertex.v);
+            ScreenHousingMesh.Face face=mesh.quads[i];
+            for(int j=0;j<4;j++) {
+                ScreenHousingMesh.Vertex vertex=face.vertices[(4-j)&3];
+                vertex(buffer,housing,rotation,brightness,x,y,z,
+                        vertex.x,vertex.y,vertex.z,vertex.u,vertex.v,face.nx,face.ny,face.nz);
+            }
         }
         if (light && (visible & (1 << EnumFacing.NORTH.getIndex()))!=0) {
             TileEntityProgrammableLight lamp = (TileEntityProgrammableLight) tile;
@@ -53,10 +56,10 @@ final class ProgrammableSolidRenderer {
             TEAnimatedScreenSelector.LightGroup group = TEAnimatedScreenSelector.lightGroup(lamp,state);
             double left=group.left(tile.getPos()), right=group.right(tile.getPos());
             double top=group.top(tile.getPos()), bottom=group.bottom(tile.getPos());
-            vertex(buffer,face,rotation,brightness,x,y,z,16,16,0,right,top);
-            vertex(buffer,face,rotation,brightness,x,y,z,0,16,0,left,top);
-            vertex(buffer,face,rotation,brightness,x,y,z,0,0,0,left,bottom);
-            vertex(buffer,face,rotation,brightness,x,y,z,16,0,0,right,bottom);
+            vertex(buffer,face,rotation,brightness,x,y,z,16,16,0,right,top,0,0,-1);
+            vertex(buffer,face,rotation,brightness,x,y,z,16,0,0,right,bottom,0,0,-1);
+            vertex(buffer,face,rotation,brightness,x,y,z,0,0,0,left,bottom,0,0,-1);
+            vertex(buffer,face,rotation,brightness,x,y,z,0,16,0,left,top,0,0,-1);
         }
     }
 
@@ -77,7 +80,7 @@ final class ProgrammableSolidRenderer {
 
     private static void vertex(BufferBuilder buffer, TextureAtlasSprite sprite, int rotation,
             int light, double x, double y, double z, double px, double py, double pz,
-            double u, double v) {
+            double u, double v,float nx,float ny,float nz) {
         double a=px/16, b=py/16, c=pz/16;
         double rx=a, ry=b, rz=c;
         switch (rotation) {
@@ -88,8 +91,20 @@ final class ProgrammableSolidRenderer {
             case 5: ry=c; rz=1-b; break;
             default: break;
         }
+        float fx=nx,fy=ny,fz=nz;
+        switch(rotation) {
+            case 1:fx=nz;fz=-nx;break;
+            case 2:fx=-nx;fz=-nz;break;
+            case 3:fx=-nz;fz=nx;break;
+            case 4:fy=-nz;fz=ny;break;
+            case 5:fy=nz;fz=-ny;break;
+            default:break;
+        }
         buffer.pos(x+rx,y+ry,z+rz).color(255,255,255,255)
                 .tex(sprite.getInterpolatedU(u),sprite.getInterpolatedV(v))
-                .lightmap(light >>> 16,light & 65535).endVertex();
+                .lightmap(light >>> 16,light & 65535);
+        // Forge's normal buffer is 28 bytes; OptiFine adds a normal element.
+        if(buffer.getVertexFormat().hasNormal())buffer.normal(fx,fy,fz);
+        buffer.endVertex();
     }
 }

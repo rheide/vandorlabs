@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Correct shader inputs across programmable wall/porthole frames, screen/control housings, shaped lights, glass panes, moving ramp cells, landing-gear arms and optional door panels: outward faces, geometric normals and explicit vertex lighting. Preserve existing brightness, emission and transparency rules. Cache ordinary wall and porthole geometry alongside diagonal walls to reduce allocation; see the [lighting and performance report](docs/performance/SHADER_LIGHTING_FIXES.md).
+- Correct ramp vertex attribute ordering after the lighting-format change, preventing disappearing deployed cells and corrupt black/blue texture strips. Regression checks exercise production color, opacity, UV, normal and lightmap packing for thin and full-height moving slices.
+- Exclude all 16 retired picker textures from the standard JAR and atlas. Preserve saved choice numbers with default-material fallback, and retarget 180 legacy configured-item models and Dynmap texture aliases so removed artwork produces no missing-texture references. Keep source archives for validation.
+
 - Add Industrial to the shared picker and apply the approved Hull/Panels/Tech moves for 27 finishes, preserving numeric choices and source artwork.
 
 - Replace door/trapdoor/ramp motion illustrations with smaller 420×350 live GIFs and add an animated 1.3 highlights guide. Buffer capture frames and use a steady output cadence to reduce jitter.
@@ -11,7 +15,7 @@
 
 - Demonstrate animated documentation with a live captured Observation door GIF and a reproducible capture/encoding workflow.
 
-- Reorganize shared texture categories into Tech, Hull and Panels, simplify names, and hide removed picker entries while retaining saved finishes.
+- Reorganize shared texture categories into Tech, Hull and Panels, simplify names, and hide removed picker entries while preserving saved choice numbers. Retired artwork is excluded from the runtime build and uses the default-material fallback described above.
 - Add paired Blue Hex and Amber Hex programmable lights and four 140×140 overhead-bin storage sets (fourteen storage choices total).
 
 - Cached static Programmable Diagonal Wall meshes and Programmable Door replacement-material surfaces/model quads, reducing per-frame geometry allocation while retaining live lighting, motion and resource reloads. Reapplying identical programmable settings no longer triggers appearance rebuilds; shallow-wall Duplifier copies avoid the redundant legacy width reset.

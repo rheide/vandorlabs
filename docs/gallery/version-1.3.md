@@ -40,6 +40,8 @@ Categorized lists with thumbnails bring hull finishes, interior panels, industri
 
 Hull, Panels and the new Industrial category separate exterior plating, interior wall/access panels and mechanical finishes. Microchip and Matter variants move to Tech; saved material choices retain their artwork.
 
+The sixteen retired picker finishes are omitted from the runtime JAR and texture atlas. Their saved choice numbers remain valid and render with the default material; the reorganized, selectable finishes keep their existing artwork. Legacy configured items and map texture aliases use the same fallback.
+
 The pickers now use taller lists, simpler labels and a separate Small/Medium/Large choice for door artwork. Reopening a Custom choice brings its selected row and sample back into view. See [material selection](../unified-materials.md) and [filesystem textures](../filesystem-textures.md).
 
 ## Programmable Storage
@@ -59,6 +61,8 @@ Use per-face overrides when a cabinet needs different trim on one side. The Dupl
 
 Static diagonal-wall meshes and door material surfaces are cached, and reapplying identical settings avoids unnecessary appearance rebuilds. These changes reduce rendering CPU work and allocation in dense scenes; the [performance report](../performance/COMMON_BLOCK_OPTIMIZATION.md) records the checks and benchmark limits.
 
+Ordinary walls and all porthole variants now cache their frames and glass geometry too. Wall/porthole faces, screen and input housings, shaped lights, glass panes, moving ramp cells, landing-gear arms and optional door panels now supply consistent outward faces, normals and vertex lighting for shaders. Existing brightness and emitting-screen behavior are preserved. The [lighting and performance report](../performance/SHADER_LIGHTING_FIXES.md) records the benefits and costs: substantially less wall/porthole allocation, faster diagonal portholes, and extra submission work for some screen/control housings. Complementary Unbound appearance still requires hardware validation.
+
 Diagonal walls, landing gear and ramp-controlled blocks now remain visible at the same distance, subject to loaded terrain and the camera's view. The Diagonal Screen hotbar icon matches its solid wedge housing. Landing gear preserves manual extension across reloads when its redstone input is unchanged, and unloading a channel member no longer resets its saved extension.
 
 Configured block/stair placement predicts the saved appearance on the client. Diagonal surfaces use consistent winding, normals and lightmap data, while connected walls and open trapdoor selection follow their geometry.
@@ -70,6 +74,8 @@ The documentation now shows complete motion at 70% of the original GIF dimension
 ![Programmable Door sliding upward](../images/gallery/doors/observation-up.gif)
 
 All four existing Programmable Ramp modes have deployment/retraction clips, with separate upward/downward smooth and stair examples. Clearance respects source slab thickness so slabs can meet floors or ceilings without accepting real obstructions.
+
+Moving cells retain opaque colors and their source texture coordinates with the new lighting format; packed-vertex checks cover thin slices as well as full-height cells to prevent disappearing ramps and corrupt texture strips.
 
 | Lift | Extend |
 | --- | --- |

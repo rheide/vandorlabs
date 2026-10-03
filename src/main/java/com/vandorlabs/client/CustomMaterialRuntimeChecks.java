@@ -115,7 +115,24 @@ final class CustomMaterialRuntimeChecks {
     }
     private static void checkMenu(Minecraft mc) {
         HousingTextureList list=new HousingTextureList(0,0,180,23);
-        require(list.selected()==23 && ScreenHousingTextures.texture(23).endsWith("seamed_padding"),"hidden saved selection lost");
+        require(list.selected()==23 && "seamed_padding".equals(ScreenHousingTextures.IDS[23]),"hidden saved selection lost");
+        int retired=0;
+        String fallback=ScreenHousingTextures.texture(0);
+        for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(!ScreenHousingTextures.visible(choice)) {
+            retired++;
+            require(ScreenHousingTextures.clamp(choice)==choice,"retired saved choice number changed");
+            require(ScreenHousingTextures.texture(choice).equals(fallback)
+                    && ScreenHousingTextures.fullTexture(choice).equals(fallback)
+                    && ScreenHousingTextures.texture(choice,false).equals(fallback),"retired choice references removed artwork");
+            require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice))
+                    !=mc.getTextureMapBlocks().getMissingSprite(),"retired fallback missing from atlas");
+            TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setHousingTexture(choice);
+            TileEntityAnimatedScreenSelector copy=new TileEntityAnimatedScreenSelector();
+            copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+            require(copy.getHousingTexture()==choice,"retired saved choice did not survive reload");
+        }
+        require(retired==16,"unexpected retired texture count");
+        System.out.println("[vandorlabs][reprolab] retired-texture-fallback PASS: 16 saved IDs, default atlas artwork and persistence");
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++) {
             require(!ScreenHousingTextures.category(choice).matches("Texture Pack [12]|Hull Plating|Computing|Fuel|Power"),"obsolete category");
             if(ScreenHousingTextures.visible(choice))require(!HousingTextureList.name(choice).matches("T[12] .*"),"texture pack prefix retained");

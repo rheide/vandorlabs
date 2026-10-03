@@ -19,20 +19,25 @@ final class DiagonalPortholeMesh {
 
     static void quad(BufferBuilder buf, TextureAtlasSprite sprite, boolean textured,
             DiagonalPortholeMesh mesh, double[]... vertices) {
+        quad(buf,sprite,textured,mesh,false,vertices);
+    }
+
+    static void quad(BufferBuilder buf, TextureAtlasSprite sprite, boolean textured,
+            DiagonalPortholeMesh mesh, boolean reverse, double[]... vertices) {
         if(mesh==null && vertices.length==4) {
-            for(double[] v:vertices)vertex(buf,sprite,textured,v);
+            WorldSurface.quad(buf,sprite,reverse,vertices);
             return;
         }
-        if (mesh==null) { emit(buf,sprite,textured,null,Arrays.asList(vertices)); return; }
+        if (mesh==null) { emit(buf,sprite,textured,null,reverse,Arrays.asList(vertices)); return; }
         double[] cuts=Double.isNaN(mesh.lower) && Double.isNaN(mesh.upper)
                 ? new double[]{0,16} : new double[]{0,4,12,16};
         // Horizontal rims belong to exactly one band.
         boolean horizontal=true;
         for(double[] v:vertices) horizontal &= Math.abs(v[1]-vertices[0][1])<1e-8;
-        if(horizontal) { emit(buf,sprite,textured,mesh,Arrays.asList(vertices)); return; }
+        if(horizontal) { emit(buf,sprite,textured,mesh,reverse,Arrays.asList(vertices)); return; }
         for(int i=0;i<cuts.length-1;i++) {
             List<double[]> polygon=clip(clip(Arrays.asList(vertices),cuts[i],true),cuts[i+1],false);
-            if(polygon.size()>=3) emit(buf,sprite,textured,mesh,polygon);
+            if(polygon.size()>=3) emit(buf,sprite,textured,mesh,reverse,polygon);
         }
     }
 
@@ -54,7 +59,7 @@ final class DiagonalPortholeMesh {
     }
 
     private static void emit(BufferBuilder buf,TextureAtlasSprite sprite,boolean textured,
-            DiagonalPortholeMesh mesh,List<double[]> polygon) {
+            DiagonalPortholeMesh mesh,boolean reverse,List<double[]> polygon) {
         List<double[]> transformed=new ArrayList<>();
         for(double[] source:polygon) {
             double[] v=source.clone();
@@ -65,14 +70,10 @@ final class DiagonalPortholeMesh {
             }
             transformed.add(v);
         }
-        for(double[] v:com.vandorlabs.render.DiagonalMeshClip.quads(mesh==null?null:mesh.bounds,
-                transformed.toArray(new double[transformed.size()][])))vertex(buf,sprite,textured,v);
-    }
-
-    private static void vertex(BufferBuilder buf,TextureAtlasSprite sprite,boolean textured,double[] v) {
-        buf.pos(v[0],v[1],v[2]);
-        if(textured)buf.tex(sprite==null?v[3]:sprite.getInterpolatedU(v[3]),
-                sprite==null?v[4]:sprite.getInterpolatedV(v[4]));
-        buf.endVertex();
+        List<double[]> clipped=com.vandorlabs.render.DiagonalMeshClip.quads(mesh==null?null:mesh.bounds,
+                transformed.toArray(new double[transformed.size()][]));
+        boolean flipped=reverse ^ (mesh!=null && mesh.mode==2);
+        for(int i=0;i<clipped.size();i+=4)
+            WorldSurface.quad(buf,sprite,flipped,clipped.get(i),clipped.get(i+1),clipped.get(i+2),clipped.get(i+3));
     }
 }

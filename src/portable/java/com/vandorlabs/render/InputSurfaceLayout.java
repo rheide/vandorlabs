@@ -17,7 +17,15 @@ public final class InputSurfaceLayout {
     }
     public static final class Quad {
         public final Vertex[] vertices;
-        private Quad(Vertex... vertices) { this.vertices=vertices; }
+        public final float nx,ny,nz;
+        private Quad(Vertex... vertices) {
+            this.vertices=vertices;
+            Vertex a=vertices[0],b=vertices[1],c=vertices[2];
+            double ux=b.x-a.x,uy=b.y-a.y,uz=b.z-a.z,vx=c.x-a.x,vy=c.y-a.y,vz=c.z-a.z;
+            double x=uy*vz-uz*vy,y=uz*vx-ux*vz,z=ux*vy-uy*vx;
+            double length=Math.sqrt(x*x+y*y+z*z);
+            nx=(float)(x/length);ny=(float)(y/length);nz=(float)(z/length);
+        }
     }
     public static final class Mounted {
         public final Box housing;

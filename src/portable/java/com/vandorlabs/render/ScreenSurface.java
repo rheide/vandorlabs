@@ -9,9 +9,14 @@ public final class ScreenSurface {
     }
     public static final class Quad {
         public final Vertex topLeft,topRight,bottomRight,bottomLeft;
+        public final Vertex[] vertices;
+        public final float nx,ny,nz;
         private Quad(double x0,double x1,double bottomY,double bottomZ,double topY,double topZ) {
             topLeft=new Vertex(x0,topY,topZ); topRight=new Vertex(x1,topY,topZ);
             bottomRight=new Vertex(x1,bottomY,bottomZ); bottomLeft=new Vertex(x0,bottomY,bottomZ);
+            vertices=new Vertex[]{topLeft,topRight,bottomRight,bottomLeft};
+            double y=bottomZ-topZ,z=topY-bottomY,length=Math.sqrt(y*y+z*z);
+            nx=0;ny=(float)(-y/length);nz=(float)(-z/length);
         }
     }
     private static final Quad FLAT=new Quad(0,16,0,-.1,16,-.1);

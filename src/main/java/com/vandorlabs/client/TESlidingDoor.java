@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
@@ -282,7 +281,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         float topV0=wall.getInterpolatedV(textureZ0),topV1=wall.getInterpolatedV(textureZ1);
         float wallX0=wall.getInterpolatedU(x0),wallX1=wall.getInterpolatedU(x1);
         BufferBuilder buf=Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         if (side==SpaceDoorControlPanel.Side.LEFT) {
             quad(buf,x1,y1,z1,x1,y0,z1,x1,y0,z0,x1,y1,z0,
                     u0,v0,u0,v1,u1,v1,u1,v0);
@@ -338,10 +337,8 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             float x0, float y0, float z0, float x1, float y1, float z1,
             float x2, float y2, float z2, float x3, float y3, float z3,
             float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
-        buf.pos(x0, y0, z0).tex(u0, v0).endVertex();
-        buf.pos(x1, y1, z1).tex(u1, v1).endVertex();
-        buf.pos(x2, y2, z2).tex(u2, v2).endVertex();
-        buf.pos(x3, y3, z3).tex(u3, v3).endVertex();
+        WorldSurface.rawQuad(buf,false,x0,y0,z0,u0,v0,x1,y1,z1,u1,v1,
+                x2,y2,z2,u2,v2,x3,y3,z3,u3,v3);
     }
 
 }

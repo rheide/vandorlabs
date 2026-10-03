@@ -5,8 +5,9 @@ Programmable storage, blocks, slabs, stairs, walls, trapdoors, doors, lights and
 Built-in categories include Materials, Panels, Tech, Hull, Industrial, Lights, Doors,
 Screens, Trapdoors, Windows and Storage. Dark Hull 1–12 replace the old
 coordinate labels; moved texture-pack choices no longer carry T1/T2 prefixes.
-Removed finishes are omitted from the picker while their saved identifiers
-and artwork remain available to existing builds. The Example filesystem
+The sixteen retired built-in finishes are omitted from both the picker and
+runtime JAR/atlas. Their saved identifiers remain valid and render with Dark
+Wall Panel; reorganized selectable finishes keep their artwork. The Example filesystem
 category is hidden when its only entry is the default sample panel.
 Storage offers fourteen matching top/side/front sets; [Programmable
 Storage](programmable-storage.md) uses all three faces and other shapes use

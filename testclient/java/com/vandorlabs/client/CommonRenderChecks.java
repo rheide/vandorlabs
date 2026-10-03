@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 /** Real vertex buffers and world event listeners, without a GL context. */
 final class CommonRenderChecks {
     static void run() {
-        walls(); doors(); settings(); distance(); clipping();
+        walls(); wallFamilies(); doors(); settings(); distance(); clipping(); RampRenderChecks.run();
         System.out.println("PASS: cached wall/door vertex equivalence, live lightmaps, invalidation and limits; no-op settings; distant gear/ramp policy; clipping equivalence");
     }
     private static TextureAtlasSprite sprite(String name) {
@@ -37,6 +37,47 @@ final class CommonRenderChecks {
     private static void put(NonRenderingChecks.MemoryWorld world,BlockPos pos,IBlockState state) {
         IBlockState before=world.getBlockState(pos);world.setBlockState(pos,state,2);
         world.notifyBlockUpdate(pos,before,state,2);
+    }
+    private static void wallFamilies() {
+        TextureAtlasSprite wall=sprite("wall"),trim=sprite("trim");
+        BlockPos pos=new BlockPos(15,100,15);
+        float oldX=OpenGlHelper.lastBrightnessX,oldY=OpenGlHelper.lastBrightnessY;
+        try {
+            for(BlockProgrammableWall block:new BlockProgrammableWall[]{
+                    new BlockProgrammableWall("audit_plain",BlockProgrammableWall.Shape.PLAIN),
+                    new BlockProgrammableWall("audit_porthole",BlockProgrammableWall.Shape.PORTHOLE),
+                    new BlockProgrammablePortholeBlock(),
+                    new BlockProgrammableWall("audit_diagonal_porthole",BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE)})
+                for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int mode=0;mode<(block.isDiagonalShape()?3:1);mode++) {
+                    NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+                    IBlockState state=block.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing);
+                    put(world,pos,state);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);
+                    tile.setDiagonalGeometry(mode,0);
+                    PortholeHex.Slice slice=block.isPortholeShape()?new PortholeHex(1,1,PortholeHex.ROUND).slice(0,0):null;
+                    OpenGlHelper.lastBrightnessX=80;OpenGlHelper.lastBrightnessY=192;
+                    StaticSurfaceMesh mesh=DiagonalWallMeshCache.get(tile,state,wall,trim,slice);
+                    final PortholeHex.Slice current=slice;
+                    require(Arrays.equals(bytes(b->TEAnimatedScreenSelector.drawConfiguredWall(b,tile,state,wall,trim,current)),
+                            bytes(b->mesh.draw(b,192,80))),"wall family cache differs from direct vertices");
+                    require(mesh==DiagonalWallMeshCache.get(tile,state,wall,trim,slice),"unchanged wall family rebuilt");
+                    OpenGlHelper.lastBrightnessX=16;OpenGlHelper.lastBrightnessY=240;
+                    world.notifyLightSet(pos);
+                    require(mesh==DiagonalWallMeshCache.get(tile,state,wall,trim,slice),"lighting evicted wall family geometry");
+                    require(Arrays.equals(bytes(b->TEAnimatedScreenSelector.drawConfiguredWall(b,tile,state,wall,trim,current)),
+                            bytes(b->mesh.draw(b,240,16))),"wall family cached stale lightmap");
+                    if(slice!=null) {
+                        StaticSurfaceMesh glass=DiagonalWallMeshCache.glass(tile,state,wall,trim,slice);
+                        require(glass==DiagonalWallMeshCache.glass(tile,state,wall,trim,slice),"glass geometry rebuilt every frame");
+                        require(Arrays.equals(bytes(b->TEAnimatedScreenSelector.drawPortholeGlassGeometry(b,current,
+                                        TEAnimatedScreenSelector.portholeMesh(tile,state))),bytes(b->glass.draw(b,240,16))),
+                                "glass cache differs from direct vertices");
+                        PortholeHex.Slice expanded=new PortholeHex(2,1,PortholeHex.ROUND).slice(0,0);
+                        require(mesh!=DiagonalWallMeshCache.get(tile,state,wall,trim,expanded),"distant group-size change left stale wall");
+                    }
+                    new DiagonalWallMeshCache.Events().worldUnloaded(new WorldEvent.Unload(world));
+                }
+        } finally {OpenGlHelper.lastBrightnessX=oldX;OpenGlHelper.lastBrightnessY=oldY;}
+        System.out.println("PASS: all wall-family caches retain live lighting, track porthole group changes and reuse glass geometry");
     }
     private static void walls() {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);

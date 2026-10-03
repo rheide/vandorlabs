@@ -1,6 +1,6 @@
 # Programmable lighting audit
 
-Investigated 2026-10-03 against `47314980`, for Complementary Unbound (the owner's existing shader pack). This is an investigation: no production renderer, lighting setting, texture or block behavior was changed.
+Investigated 2026-10-03 against `47314980`, for Complementary Unbound (the owner's existing shader pack). The findings below record the **before state**: this investigation initially changed diagnostics and documentation only. The owner subsequently authorized implementation; see the [corrections and measured performance](performance/SHADER_LIGHTING_FIXES.md) for the current result.
 
 ## Wall versus Porthole Wall
 
@@ -68,7 +68,7 @@ JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew \
 
 Before accepting a fix, compare matching materials under Complementary Unbound on hardware: all four horizontal orientations; front/back/top views; daylight, enclosed torch light and light from below; isolated and corner-connected walls; joined portholes with clear/tinted glass; all diagonal modes and inversion. Include nearby programmable Block/Slab/Stairs/Door/Trapdoor controls, and check render order by changing the camera angle. Also check the same scene without shaders so a shader correction does not introduce a base-renderer regression. Run the live client suite for any subsequent renderer change.
 
-**Hardware appearance remains unverified.** The available headless launcher forces software rendering; the exposed DRM device uses `vmwgfx`, and no local copy of the owner's shader pack was found in the inspected client/share directories. No software-rendered images are being presented as Complementary Unbound acceptance. This audit changes diagnostic files and documentation only; changing lighting across these families requires the owner's go-ahead.
+**Hardware appearance remains unverified.** The available headless launcher forces software rendering; the exposed DRM device uses `vmwgfx`, and no local copy of the owner's shader pack was found in the inspected client/share directories. No software-rendered images are being presented as Complementary Unbound acceptance. The owner authorized the subsequent changes; their implementation and validation are documented separately.
 
 ## Code references
 

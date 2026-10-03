@@ -31,7 +31,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -388,11 +387,10 @@ public class TEAnimatedScreenSelector
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite(ScreenHousingTextures.texture(
                             light.getFaceTexture(), light.isOn() && light.getLightLevel() > 0));
-            // The shared box/art quads have inward winding. Cull their front
-            // sides so hidden rear housing cannot compete with the artwork
-            // when distance reduces depth-buffer precision.
+            // Cull outward back faces so hidden rear housing cannot compete
+            // with the artwork when distance reduces depth-buffer precision.
             GlStateManager.enableCull();
-            GlStateManager.cullFace(GlStateManager.CullFace.FRONT);
+            GlStateManager.cullFace(GlStateManager.CullFace.BACK);
             int visible=lightVisibleFaces(light,state.getValue(BlockAnimatedScreenSelector.FACING));
             net.minecraft.util.math.AxisAlignedBB box=com.vandorlabs.blocks.ProgrammableLightShape.local(state,light.isSmallInput());
             double minX=box.minX*16,maxX=box.maxX*16,minY=box.minY*16,maxY=box.maxY*16,minZ=box.minZ*16,maxZ=box.maxZ*16;
@@ -451,18 +449,13 @@ public class TEAnimatedScreenSelector
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole) {
             beginLocalTransform(x,y,z,state.getValue(BlockAnimatedScreenSelector.FACING));
             GlStateManager.disableLighting();
-            if (state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER)) {
-                GlStateManager.translate(0,16,0); GlStateManager.scale(1,-1,1);
-            }
+            boolean ceiling=state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER);
             GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
-            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).sideLayout(te.isSurfaceTileSides()));
+            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).sideLayout(te.isSurfaceTileSides()),ceiling);
             double[] uv=bindInput(te,te.getInputPanel());
             com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
-            BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
-            b.pos(q.topLeft.x,q.topLeft.y,q.topLeft.z).tex(1,uv[0]).endVertex();
-            b.pos(q.topRight.x,q.topRight.y,q.topRight.z).tex(0,uv[0]).endVertex();
-            b.pos(q.bottomRight.x,q.bottomRight.y,q.bottomRight.z).tex(0,uv[1]).endVertex();
-            b.pos(q.bottomLeft.x,q.bottomLeft.y,q.bottomLeft.z).tex(1,uv[1]).endVertex();
+            BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            drawScreenQuad(b,q,0,1,uv[0],uv[1],ceiling);
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
             Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             GlStateManager.enableLighting();endLocalTransform();return;
@@ -571,7 +564,7 @@ public class TEAnimatedScreenSelector
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS, BlockSurfaceFormat.get());
         // U runs 1->0 toward +X so paint reads like a vanilla north face.
         // Diagonal artwork lies on the housing plane; depth bias makes it win
         // the depth test without opening a visible slit along the side.
@@ -579,10 +572,7 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
-        buf.pos(quad.topLeft.x,quad.topLeft.y,quad.topLeft.z).tex(uMax,vTop).endVertex();
-        buf.pos(quad.topRight.x,quad.topRight.y,quad.topRight.z).tex(uMin,vTop).endVertex();
-        buf.pos(quad.bottomRight.x,quad.bottomRight.y,quad.bottomRight.z).tex(uMin,vBottom).endVertex();
-        buf.pos(quad.bottomLeft.x,quad.bottomLeft.y,quad.bottomLeft.z).tex(uMax,vBottom).endVertex();
+        drawScreenQuad(buf,quad,uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(-4.0F,-4.0F);
@@ -710,13 +700,17 @@ public class TEAnimatedScreenSelector
     private static void drawInputSurface(InputSurfaceLayout.Quad quad,double[] uv) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
-        buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+        drawInputQuad(buf,quad,uv);
+        tess.draw();
+    }
+
+    static void drawInputQuad(BufferBuilder buf,InputSurfaceLayout.Quad quad,double[] uv) {
         for (InputSurfaceLayout.Vertex vertex:quad.vertices) {
             double v=uv[0]+vertex.v*(uv[1]-uv[0]);
             double u=uv.length==4?uv[2]+vertex.u*(uv[3]-uv[2]):vertex.u;
-            buf.pos(vertex.x,vertex.y,vertex.z).tex(u,v).endVertex();
+            WorldSurface.vertex(buf,vertex.x,vertex.y,vertex.z,u,v,quad.nx,quad.ny,quad.nz);
         }
-        tess.draw();
     }
 
     private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
@@ -796,7 +790,7 @@ public class TEAnimatedScreenSelector
             double x1, double y1, double z1, boolean front) {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder b = tess.getBuffer();
-        b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        b.begin(GL11.GL_QUADS, BlockSurfaceFormat.get());
         spriteQuad(b, side, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,0,16,16);
         spriteQuad(b, side, x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0, 0,0,16,16);
         TextureAtlasSprite xFace = faceAlongZ ? side : face;
@@ -840,19 +834,12 @@ public class TEAnimatedScreenSelector
         } else if (!wallBlock.isDiagonalShape() && flat == null)
             GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(
                     state.getValue(BlockProgrammableWall.DEPTH)));
-        DiagonalPortholeMesh mesh=wallBlock.getShape()==BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE
-                ? new DiagonalPortholeMesh(BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),
-                        state.getValue(BlockProgrammableWall.INVERTED),
-                        BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false),
-                        BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true),
-                        com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16)) : null;
         GlStateManager.disableLighting();
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(wallBlock.isPortholeShape() && te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side");
-        double rimDepthUv = wallBlock instanceof BlockProgrammablePortholeBlock ? 16 : 4;
         PortholeHex.Slice porthole = wallBlock.isPortholeShape()
                 ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),
                         wallBlock.isDiagonalShape() && te.isDiagonalHalfHeight()
@@ -860,17 +847,39 @@ public class TEAnimatedScreenSelector
         // Draw glass after all opaque tile housings, so adjacent blocks cannot
         // overwrite an earlier tile's transparent surface at oblique angles.
         if (net.minecraftforge.client.MinecraftForgeClient.getRenderPass() == 1) {
-            if (porthole != null) renderPortholeGlass(te.getGlassShade(), porthole, mesh);
+            if (porthole != null) renderPortholeGlass(te.getGlassShade(),
+                    DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
         }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_QUADS, wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL
-                ? BlockSurfaceFormat.get() : DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+        DiagonalWallMeshCache.get(te,state,wall,metal,porthole).draw(buf,
+                (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+        Tessellator.getInstance().draw();
+        GlStateManager.enableLighting();
+        endLocalTransform();
+    }
+
+    static DiagonalPortholeMesh portholeMesh(TileEntityAnimatedScreenSelector te,IBlockState state) {
+        BlockProgrammableWall wallBlock=(BlockProgrammableWall)state.getBlock();
+        return wallBlock.getShape()==BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE
+                ? new DiagonalPortholeMesh(BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),
+                        state.getValue(BlockProgrammableWall.INVERTED),
+                        BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false),
+                        BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true),
+                        com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16)) : null;
+    }
+
+    static void drawConfiguredWall(BufferBuilder buf,TileEntityAnimatedScreenSelector te,IBlockState state,
+            TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice porthole) {
+        BlockProgrammableWall wallBlock=(BlockProgrammableWall)state.getBlock();
+        BlockProgrammableWall.FlatCorner flat=wallBlock.flatCorner(state,te.getWorld(),te.getPos());
+        DiagonalPortholeMesh mesh=portholeMesh(te,state);
+        double rimDepthUv=wallBlock instanceof BlockProgrammablePortholeBlock?16:4;
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
-            DiagonalWallMeshCache.get(te,state,wall,metal).draw(buf,
-                    (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+            drawConfiguredDiagonalWall(buf,te,state,wall,metal);
         } else if (flat != null) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -888,9 +897,6 @@ public class TEAnimatedScreenSelector
             }
             panelOuterRim(buf, metal, mesh, porthole, te, state, rimDepthUv);
         }
-        Tessellator.getInstance().draw();
-        GlStateManager.enableLighting();
-        endLocalTransform();
     }
 
     /** Build only when this wall or its immediate neighbors change. */
@@ -918,12 +924,6 @@ public class TEAnimatedScreenSelector
         EnumFacing side = state.getValue(BlockProgrammableWall.FACING).rotateY();
         if (!right) side = side.getOpposite();
         return adjacentPorthole(tile, state, side);
-    }
-
-    private static void wallVertex(BufferBuilder buf, TextureAtlasSprite sprite,
-            double x, double y, double z, double u, double v) {
-        buf.pos(x, y, z).tex(sprite.getInterpolatedU(u),
-                sprite.getInterpolatedV(v)).endVertex();
     }
 
     /** The diagonal wall uses per-face normals so shader lighting stays stable as the camera moves. */
@@ -962,7 +962,7 @@ public class TEAnimatedScreenSelector
     private static void panelRect(BufferBuilder buf, TextureAtlasSprite sprite, DiagonalPortholeMesh mesh,
             int x0, int y0, int x1, int y1) {
         for (int z : new int[] {6, 10}) {
-            DiagonalPortholeMesh.quad(buf, sprite, true, mesh,
+            DiagonalPortholeMesh.quad(buf, sprite, true, mesh, z==6,
                     new double[]{x0, y0, z, x0, 16 - y0},
                     new double[]{x1, y0, z, x1, 16 - y0},
                     new double[]{x1, y1, z, x1, 16 - y1},
@@ -974,7 +974,7 @@ public class TEAnimatedScreenSelector
             double x0, double y0, double x1, double y1, double x2, double y2,
             double x3, double y3) {
         for (int z : new int[] {6, 10}) {
-            DiagonalPortholeMesh.quad(buf, sprite, true, mesh,
+            DiagonalPortholeMesh.quad(buf, sprite, true, mesh, z==6,
                     new double[]{x0, y0, z, x0, 16 - y0},
                     new double[]{x1, y1, z, x1, 16 - y1},
                     new double[]{x2, y2, z, x2, 16 - y2},
@@ -1072,7 +1072,7 @@ public class TEAnimatedScreenSelector
     private static void topRim(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,
             double y, double x0, double x1, double depthUv) {
         if (x1 - x0 < 1.0E-7) return;
-        DiagonalPortholeMesh.quad(buf, metal, true, mesh,
+        DiagonalPortholeMesh.quad(buf, metal, true, mesh, y==16,
                 new double[]{x0, y, 6, x0, 0},
                 new double[]{x1, y, 6, x1, 0},
                 new double[]{x1, y, 10, x1, depthUv},
@@ -1082,7 +1082,7 @@ public class TEAnimatedScreenSelector
     private static void sideRim(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,
             double x, double y0, double y1, double depthUv) {
         if (y1 - y0 < 1.0E-7) return;
-        DiagonalPortholeMesh.quad(buf, metal, true, mesh,
+        DiagonalPortholeMesh.quad(buf, metal, true, mesh, x==16,
                 new double[]{x, y0, 6, 0, 16 - y0},
                 new double[]{x, y0, 10, depthUv, 16 - y0},
                 new double[]{x, y1, 10, depthUv, 16 - y1},
@@ -1100,7 +1100,7 @@ public class TEAnimatedScreenSelector
             double ay = y0 + (y1 - y0) * start / length;
             double bx = x0 + (x1 - x0) * end / length;
             double by = y0 + (y1 - y0) * end / length;
-            DiagonalPortholeMesh.quad(buf, metal, true, mesh,
+            DiagonalPortholeMesh.quad(buf, metal, true, mesh, true,
                     new double[]{ax, ay, 6, 0, 0},
                     new double[]{bx, by, 6, end - start, 0},
                     new double[]{bx, by, 10, end - start, depthUv},
@@ -1197,10 +1197,9 @@ public class TEAnimatedScreenSelector
             boolean acrossX = Math.abs(a[0] - b[0]) > Math.abs(a[1] - b[1]);
             double u0 = acrossX ? a[0] : a[1];
             double u1 = acrossX ? b[0] : b[1];
-            wallVertex(buf, sprite, a[0], 0, a[1], u0, 16);
-            wallVertex(buf, sprite, b[0], 0, b[1], u1, 16);
-            wallVertex(buf, sprite, b[0], 16, b[1], u1, 0);
-            wallVertex(buf, sprite, a[0], 16, a[1], u0, 0);
+            WorldSurface.quad(buf,sprite,true,
+                    new double[]{a[0],0,a[1],u0,16},new double[]{b[0],0,b[1],u1,16},
+                    new double[]{b[0],16,b[1],u1,0},new double[]{a[0],16,a[1],u0,0});
         }
         for (int y : new int[] {0, 16}) {
             roofRect(buf, metal, y, corner.left(), corner.right(), near, near + 4);
@@ -1312,53 +1311,40 @@ public class TEAnimatedScreenSelector
                     new double[]{x0,y,z1,x0,z1-uvOrigin});
             return;
         }
-        wallVertex(buf, sprite, x0, y, z0, x0, z0 - uvOrigin);
-        wallVertex(buf, sprite, x1, y, z0, x1, z0 - uvOrigin);
-        wallVertex(buf, sprite, x1, y, z1, x1, z1 - uvOrigin);
-        wallVertex(buf, sprite, x0, y, z1, x0, z1 - uvOrigin);
+        WorldSurface.quad(buf,sprite,y==16,
+                new double[]{x0,y,z0,x0,z0-uvOrigin},new double[]{x1,y,z0,x1,z0-uvOrigin},
+                new double[]{x1,y,z1,x1,z1-uvOrigin},new double[]{x0,y,z1,x0,z1-uvOrigin});
     }
 
-    private void renderPortholeGlass(int shade, PortholeHex.Slice opening, DiagonalPortholeMesh mesh) {
-        if (opening.glassQuads.isEmpty()) return;
-        bindTexture(new ResourceLocation(VandorLabs.MODID,
-                "textures/blocks/space_doors/medium/glass_tile.png"));
+    static void drawPortholeGlassGeometry(BufferBuilder buf,PortholeHex.Slice opening,DiagonalPortholeMesh mesh) {
+        for(int depth:new int[]{7,9})for(double[] quad:opening.glassQuads) {
+            double[][] vertices=new double[4][5];
+            for(int v=0;v<4;v++)vertices[v]=new double[]{quad[v*2],quad[v*2+1],depth,quad[v*2]/16,1-quad[v*2+1]/16};
+            DiagonalPortholeMesh.quad(buf,null,true,mesh,depth==7,vertices);
+        }
+    }
+
+    private void renderPortholeGlass(int shade,StaticSurfaceMesh glass) {
+        if(glass.vertexCount()==0)return;
+        bindTexture(new ResourceLocation(VandorLabs.MODID,"textures/blocks/space_doors/medium/glass_tile.png"));
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.alphaFunc(GL11.GL_GREATER, .003F);
-        GlStateManager.depthMask(false);
-        GlStateManager.color(1F, 1F, 1F, 1F);
-        BufferBuilder buf = Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        for (int depth : new int[] {7, 9}) {
-            for (double[] quad : opening.glassQuads) {
-                double[][] vertices=new double[4][5];
-                for(int v=0;v<4;v++)vertices[v]=new double[]{quad[v*2],quad[v*2+1],depth,quad[v*2]/16,1-quad[v*2+1]/16};
-                DiagonalPortholeMesh.quad(buf,null,true,mesh,vertices);
-            }
-        }
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
+        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
+        GlStateManager.color(1,1,1,1);
+        BufferBuilder buf=Tessellator.getInstance().getBuffer();
+        int sky=(int)OpenGlHelper.lastBrightnessY,block=(int)OpenGlHelper.lastBrightnessX;
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());glass.draw(buf,sky,block);
         Tessellator.getInstance().draw();
-        if (shade != 0) {
+        if(shade!=0) {
             GlStateManager.disableTexture2D();
-            if (shade == 1) GlStateManager.color(.20F, .85F, .95F, .0513F);
-            else GlStateManager.color(.10F, .12F, .16F, .1754F);
-            buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-            for (int depth : new int[] {7, 9}) {
-                for (double[] quad : opening.glassQuads) {
-                    double[][] vertices=new double[4][5];
-                for(int v=0;v<4;v++)vertices[v]=new double[]{quad[v*2],quad[v*2+1],depth,quad[v*2]/16,1-quad[v*2+1]/16};
-                DiagonalPortholeMesh.quad(buf,null,false,mesh,vertices);
-                }
-            }
-            Tessellator.getInstance().draw();
-            GlStateManager.enableTexture2D();
+            buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            if(shade==1)glass.drawColored(buf,sky,block,.20F,.85F,.95F,.0513F);
+            else glass.drawColored(buf,sky,block,.10F,.12F,.16F,.1754F);
+            Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
         }
-        GlStateManager.color(1F, 1F, 1F, 1F);
-        GlStateManager.depthMask(true);
-        GlStateManager.alphaFunc(GL11.GL_GREATER, .1F);
-        GlStateManager.disableBlend();
-        bindAtlas();
+        GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
+        GlStateManager.disableBlend();bindAtlas();
     }
 
     /** Full solid half-cube wedge used by the standalone diagonal display. */
@@ -1404,7 +1390,7 @@ public class TEAnimatedScreenSelector
             double x0,double y0,double z0,double x1,double y1,double z1,boolean tileSides) {
         double u=tileSides?x1-x0:16,v=tileSides?y1-y0:16,w=tileSides?z1-z0:16;
         BufferBuilder b=Tessellator.getInstance().getBuffer();
-        b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+        b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         if ((visible & (1 << EnumFacing.UP.getIndex())) != 0)
             spriteQuad(b,sprite,x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1,0,0,u,w);
         if ((visible & (1 << EnumFacing.DOWN.getIndex())) != 0)
@@ -1422,7 +1408,7 @@ public class TEAnimatedScreenSelector
             LightGroup group, BlockPos pos,double minX,double maxX,double minY,double maxY,double minZ) {
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        buf.begin(GL11.GL_QUADS, BlockSurfaceFormat.get());
         spriteQuad(buf, face, maxX,maxY,minZ, minX,maxY,minZ,
                 minX,minY,minZ, maxX,minY,minZ, group.right(pos), group.top(pos),
                 group.left(pos), group.bottom(pos));
@@ -1449,33 +1435,48 @@ public class TEAnimatedScreenSelector
         double va = sprite.getInterpolatedV(v0);
         double ub = sprite.getInterpolatedU(u1);
         double vb = sprite.getInterpolatedV(v1);
-        buf.pos(x0, y0, z0).tex(ua, va).endVertex();
-        buf.pos(x1, y1, z1).tex(ub, va).endVertex();
-        buf.pos(x2, y2, z2).tex(ub, vb).endVertex();
-        buf.pos(x3, y3, z3).tex(ua, vb).endVertex();
+        WorldSurface.rawQuad(buf,true,x0,y0,z0,ua,va,x1,y1,z1,ub,va,
+                x2,y2,z2,ub,vb,x3,y3,z3,ua,vb);
     }
 
     private static void drawWallMesh(TextureAtlasSprite sprite,ScreenHousingMesh mesh) {
+        drawWallMesh(sprite,mesh,false);
+    }
+
+    private static void drawWallMesh(TextureAtlasSprite sprite,ScreenHousingMesh mesh,boolean ceiling) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
         if (mesh.quads.length>0) {
-            buf.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
-            drawWallFaces(buf,sprite,mesh.quads);
+            buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            drawWallFaces(buf,sprite,mesh.quads,ceiling);
             tess.draw();
         }
         if (mesh.triangles.length>0) {
-            buf.begin(GL11.GL_TRIANGLES,DefaultVertexFormats.POSITION_TEX);
-            drawWallFaces(buf,sprite,mesh.triangles);
+            buf.begin(GL11.GL_TRIANGLES,BlockSurfaceFormat.get());
+            drawWallFaces(buf,sprite,mesh.triangles,ceiling);
             tess.draw();
         }
     }
 
     private static void drawWallFaces(BufferBuilder buf,TextureAtlasSprite sprite,
-            ScreenHousingMesh.Face[] faces) {
-        for (ScreenHousingMesh.Face face:faces) for (ScreenHousingMesh.Vertex vertex:face.vertices)
-            buf.pos(vertex.x,vertex.y,vertex.z)
-                    .tex(sprite.getInterpolatedU(vertex.u),sprite.getInterpolatedV(vertex.v))
-                    .endVertex();
+            ScreenHousingMesh.Face[] faces,boolean ceiling) {
+        for (ScreenHousingMesh.Face face:faces) for(int i=0;i<face.vertices.length;i++) {
+            ScreenHousingMesh.Vertex vertex=face.vertices[ceiling?i:(face.vertices.length-i)%face.vertices.length];
+            WorldSurface.vertex(buf,vertex.x,ceiling?32-vertex.y:vertex.y,vertex.z,
+                    sprite.getInterpolatedU(vertex.u),sprite.getInterpolatedV(vertex.v),
+                    face.nx,ceiling?-face.ny:face.ny,face.nz);
+        }
+    }
+
+    private static void drawScreenQuad(BufferBuilder buf,ScreenSurface.Quad quad,double uMin,double uMax,
+            double vTop,double vBottom,boolean ceiling) {
+        for(int i=0;i<4;i++) {
+            int index=ceiling?(4-i)&3:i;
+            ScreenSurface.Vertex vertex=quad.vertices[index];
+            WorldSurface.vertex(buf,vertex.x,ceiling?32-vertex.y:vertex.y,vertex.z,
+                    index==0 || index==3?uMax:uMin,index<2?vTop:vBottom,
+                    quad.nx,ceiling?-quad.ny:quad.ny,quad.nz);
+        }
     }
 
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
