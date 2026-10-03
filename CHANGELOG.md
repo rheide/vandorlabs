@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.3
+
+See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated programmable block improvements](docs/gallery/task-improvements.md), and [filesystem texture setup](docs/filesystem-textures.md).
+
+### Latest improvements
 
 - Correct shader inputs across programmable wall/porthole frames, screen/control housings, shaped lights, glass panes, moving ramp cells, landing-gear arms and optional door panels: outward faces, geometric normals and explicit vertex lighting. Preserve existing brightness, emission and transparency rules. Cache ordinary wall and porthole geometry alongside diagonal walls to reduce allocation; see the [lighting and performance report](docs/performance/SHADER_LIGHTING_FIXES.md).
 - Correct ramp vertex attribute ordering after the lighting-format change, preventing disappearing deployed cells and corrupt black/blue texture strips. Regression checks exercise production color, opacity, UV, normal and lightmap packing for thin and full-height moving slices.
@@ -44,10 +48,6 @@
 - Diagonal trapdoors offer Rotating, Slide over wall (the existing lift-and-slide motion), and Slide into wall (sideways motion without lifting). The sliding choice is saved in worlds/items, synchronized across groups, and copied with the Duplifier movement option.
 - Opposing Next block trapdoors spanning a two-block opening suppress their one-pixel protrusion so their leaves meet without overlap or a visible mount gap. Configured Next block items place open on client and server.
 - Shared material dialogs reopen with the Custom row selected, scrolled into view, and showing the current sample thumbnail instead of highlighting a built-in fallback.
-
-## 1.3
-
-See the [illustrated programmable block improvements](docs/gallery/task-improvements.md) and [filesystem texture setup](docs/filesystem-textures.md).
 
 ### Added
 

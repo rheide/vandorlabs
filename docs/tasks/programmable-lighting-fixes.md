@@ -35,3 +35,8 @@ Owner regression report: "Whatever you did, the programmable ramp is completely 
 - [x] Correct ramp vertex attribute order to match the new format, retaining opacity, source UVs and directional shading.
 - [x] The corrected standard build, lighting diagnostic and full non-rendering suite pass; the production-emitter check covers all six faces, two tints and four slice thicknesses.
 - [ ] Verify the correction with the packed-vertex check and a fresh live run including deployed ramp modes.
+
+Release documentation request: "Make sure this is all tracked as version 1.3 in the changelog and that the version-1.3md is linked near the top of the readme"
+
+- [x] Place all current improvements under version 1.3 in the changelog; keep Gradle, mod metadata and the standard JAR at 1.3.
+- [x] Link the animated 1.3 guide near the top of `README.md` and update its catalog description.

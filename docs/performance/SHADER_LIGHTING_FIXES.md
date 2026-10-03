@@ -12,7 +12,7 @@ The lighting audit found that Wall and Porthole Wall share the same brightness p
 
 Cached Block/Slab/Storage models already have outward geometry and use Forge's geometry-derived normals. Their six-neighbor flat brightness policy, deliberately perpendicular face metadata and disabled AO/diffuse shading remain. Vanilla-style Stairs, selected Door faces, regular/diagonal Trapdoors and Diagonal Walls remain controls. The fix does not add redstone polling, chunk loading or world-light queries per vertex.
 
-The wall cache remains bounded at 4,096 entries and 524,288 vertices (16 MiB of float vertex payload, plus bookkeeping). This limit now covers frame **and glass** geometry. Neighbors, settings, resource reloads and immutable porthole slice identity invalidate geometry; the latter catches changes elsewhere in a joined opening. Lightmaps are supplied at every draw and do not rebuild the meshes. First use or invalidation still incurs geometry construction cost.
+The wall cache remains bounded at 4,096 entries and 524,288 vertices (16 MiB of float vertex payload, plus bookkeeping). This limit now covers frame **and glass** geometry. Neighbors, settings, resource reloads and immutable porthole slice identity invalidate geometry; the latter catches changes elsewhere in a joined opening. Lightmaps are supplied at every draw and do not rebuild the meshes. First use or invalidation still incurs geometry construction cost. Scenes exceeding either capacity can evict meshes between frames; the 64-block benchmark does not measure that cache churn, so its benefits should not be extrapolated to arbitrarily large scenes.
 
 ## Measured rendering cost
 
