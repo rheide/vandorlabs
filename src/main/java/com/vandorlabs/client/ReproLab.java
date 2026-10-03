@@ -314,6 +314,7 @@ public class ReproLab {
             boolean opposed=scene.startsWith("opposing_next"),neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
             SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,opposed?GALLERY_X+.5:GALLERY_X-(wall?3:.7),galleryFeet+(opposed?4.5:neighbors?1.5:3.2),opposed?-23:neighbors || wall?-14.5:-21.5,opposed?0:neighbors?180:wall?-155:-8,opposed?35:neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
+        SHOTS.add(new Shot("gallery_trapdoor_followup_vanilla_alignment_open",GALLERY_X-1.5,galleryFeet+4,-17.5,180,70));
         for(String surface:new String[]{"floor","ceiling"})SHOTS.add(new Shot("gallery_trapdoor_followup_flush_"+surface,GALLERY_X-.7,galleryFeet+(surface.equals("floor")?1.12:1.85),-21.5,-8,0));
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
         SHOTS.add(new Shot("gallery_v12_controller",GALLERY_X+.7,galleryFeet+1,-19.8,12,20));
@@ -571,6 +572,7 @@ public class ReproLab {
                     System.out.println("[vandorlabs][reprolab] diagonal-staggered-mode-runtime PASS "+s.name);
                 }
                 if(s.name.startsWith("gallery_trapdoor_patch_"))TrapdoorGallery.checkPatch(mc.world,s.name.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);
+                if(s.name.contains("vanilla_alignment"))TrapdoorGallery.checkVanillaAlignment(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.contains("opposing_next_"))TrapdoorGallery.checkOpposing(mc.world,GALLERY_X,GALLERY_Y);
                 save(mc, s);
                 shotIndex++;

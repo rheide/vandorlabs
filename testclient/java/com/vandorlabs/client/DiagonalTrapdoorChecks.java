@@ -25,6 +25,7 @@ final class DiagonalTrapdoorChecks {
         GameRegistry.registerTileEntity(TileEntityProgrammableDiagonalTrapdoor.class,new ResourceLocation("minecraft:vandorlabs_data_check_diagonal_trapdoor"));
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
+        require(new TileEntityProgrammableDiagonalTrapdoor().getHousingTexture()==ScreenHousingTextures.DEFAULT_TRAPDOOR,"default diagonal hatch texture missing");
         mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }

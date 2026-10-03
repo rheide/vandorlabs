@@ -27,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
+        checkMesh();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -64,6 +64,19 @@ final class TrapdoorChecks {
             }
         }
     }
+    private static void checkVanillaAlignment() {
+        NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos at=new BlockPos(0,100,0);
+        for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int height:new int[]{0,2}) {
+            IBlockState reference=Blocks.TRAPDOOR.getDefaultState().withProperty(BlockTrapDoor.FACING,facing.getOpposite())
+                    .withProperty(BlockTrapDoor.OPEN,true).withProperty(BlockTrapDoor.HALF,height==0?BlockTrapDoor.DoorHalf.BOTTOM:BlockTrapDoor.DoorHalf.TOP);
+            AxisAlignedBB vanilla=Blocks.TRAPDOOR.getBoundingBox(reference,world,at);
+            double[] ours=TrapdoorGeometry.bounds(height,false,BlockProgrammableTrapdoor.quarterTurns(facing),1);
+            require(Math.abs(ours[0]-vanilla.minX)<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8
+                    && Math.abs(ours[3]-vanilla.maxX)<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8
+                    && Math.abs(ours[2]-vanilla.minZ)<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8
+                    && Math.abs(ours[5]-vanilla.maxZ)<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8,"open trapdoor differs from vanilla alignment: "+facing);
+        }
+    }
     private static void checkNextBlockAndLayout() {
         for(int position=0;position<3;position++)for(int turn=0;turn<4;turn++)for(boolean sliding:new boolean[]{false,true}) {
             double[][] closed=TrapdoorGeometry.coverCorners(position,sliding,turn,0),open=TrapdoorGeometry.coverCorners(position,sliding,turn,1);
@@ -79,6 +92,8 @@ final class TrapdoorChecks {
             double[] normal=TrapdoorGeometry.bounds(position,false,turn,1);
             require(normal[0]>0 && normal[3]<1 && normal[2]>0 && normal[5]<1,"rotated normal leaf shares a neighboring block plane");
             if(position!=1)require(normal[1]>0 && normal[4]<1,"open bottom/top leaf clips into supporting floor or ceiling");
+            double gap=turn==0?normal[2]:turn==1?1-normal[3]:turn==2?1-normal[5]:normal[0];
+            require(Math.abs(gap-TrapdoorGeometry.EDGE_CLEARANCE)<1e-8,"ordinary rotating leaf leaves a one-pixel hinge gap");
         }
         TileEntityProgrammableTrapdoor tile=new TileEntityProgrammableTrapdoor();require(tile.isTileTexture(),"trapdoors default to Tile");tile.setTileTexture(false);tile.setCover(true);
         NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityProgrammableTrapdoor restored=new TileEntityProgrammableTrapdoor();restored.readFromNBT(saved);
@@ -146,6 +161,7 @@ final class TrapdoorChecks {
             require(item.placeBlockAt(stack,placer,world,p,side,.5F,hit,.5F,placedState),"plain placement failed");
             int expected=side==EnumFacing.UP?0:side==EnumFacing.DOWN?2:hit<1/3F?0:hit>2/3F?2:1;
             require(((TileEntityProgrammableTrapdoor)world.getTileEntity(p)).getPosition()==expected,"click band lost");
+            require(((TileEntityProgrammableTrapdoor)world.getTileEntity(p)).getHousingTexture()==ScreenHousingTextures.DEFAULT_TRAPDOOR,"plain trapdoor lost default hatch texture");
             require(stack.getSubCompound("BlockEntityTag")==null,"placement changed held stack");
         }
         for(int pos=0;pos<3;pos++)for(boolean sliding:new boolean[]{false,true}) {

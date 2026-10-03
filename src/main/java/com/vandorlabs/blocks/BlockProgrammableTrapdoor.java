@@ -3,6 +3,7 @@ package com.vandorlabs.blocks;
 import com.vandorlabs.*;
 import com.vandorlabs.render.TrapdoorGeometry;
 import com.vandorlabs.tiles.TileEntityProgrammableTrapdoor;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.*;
@@ -77,7 +78,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
             data.removeTag("TrapdoorPartner");data.removeTag("TrapdoorSquare");data.removeTag("ChannelSignal");
             data.removeTag("TrapdoorPowerKnown");data.removeTag("TrapdoorLastPower");
             data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());tile.readFromNBT(data);
-        } else tile.configure(0,state.getValue(HALF)==DoorHalf.TOP?2:0,false,
+        } else tile.configure(ScreenHousingTextures.DEFAULT_TRAPDOOR,state.getValue(HALF)==DoorHalf.TOP?2:0,false,
                 com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON,0);
         if(saved!=null)tile.configure(tile.getHousingTexture(),tile.getPosition(),tile.isSliding(),tile.getTrigger(),tile.getRedstoneChannel());
         if(saved!=null && saved.hasKey("TrapdoorCoverFacing",3))tile.setHingeFacing(EnumFacing.getHorizontal(saved.getInteger("TrapdoorCoverFacing")));

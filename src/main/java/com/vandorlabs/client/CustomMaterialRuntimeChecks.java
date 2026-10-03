@@ -12,6 +12,18 @@ import net.minecraft.util.math.BlockPos;
 final class CustomMaterialRuntimeChecks {
     static void run(net.minecraft.entity.player.EntityPlayer player) {
         Minecraft mc=Minecraft.getMinecraft();
+        int imported=0;java.util.Set<String> categories=new java.util.HashSet<>();
+        for(int i=ScreenHousingTextures.LEGACY_COUNT;i<ScreenHousingTextures.BUILTIN_COUNT;i++)if(ScreenHousingTextures.IDS[i].startsWith("imported_")) {
+            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(i));
+            require(!sprite.getIconName().equals("missingno") && sprite.getIconWidth()>0,"imported texture missing from atlas: "+ScreenHousingTextures.IDS[i]);
+            categories.add(ScreenHousingTextures.category(i));imported++;
+        }
+        require(imported==33 && categories.size()==6,"imported category/texture counts");
+        for(net.minecraft.block.Block hatch:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_TRAPDOOR,ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR}) {
+            net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(hatch),mc.world,player);
+            require(model.getParticleTexture().getIconName().equals(ScreenHousingTextures.fullTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"plain hatch item uses old default artwork");
+        }
+        System.out.println("[vandorlabs][reprolab] imported-materials-runtime PASS (33 textures, six categories, both default hatch icons)");
         ItemStack stone=new ItemStack(Blocks.STONE),door=new ItemStack(Items.OAK_DOOR);
         int stoneId=CustomBlockMaterials.choice(stone),doorId=CustomBlockMaterials.choice(door);
         require(CustomBlockMaterials.block(door)==Blocks.OAK_DOOR,"vanilla door item mapping");

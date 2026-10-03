@@ -2,7 +2,7 @@
 
 Default, configured and Custom-finish inventory icons use a reduced scale to fit the hotbar slot; see the [hotbar comparison](../images/gallery/tasks/diagonal-trapdoor-hotbar.png).
 
-A movable panel aligned with Programmable Diagonal Walls. Choose the shared categorized
+A movable panel aligned with Programmable Diagonal Walls. New panels use **Cyan-lit Armored Sci-Fi Hatch-4** from the Trapdoors category by default. Choose the shared categorized
 material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
 with Rotating, Slide over wall or Slide into wall movement and no frame or hinge hardware.
 

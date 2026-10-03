@@ -94,6 +94,7 @@ public final class ScreenHousingTextures {
     private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
     public static final int LEGACY_COUNT=FINISHES.length;
     public static final int BUILTIN_COUNT;
+    public static final int DEFAULT_TRAPDOOR;
     private static final java.util.Map<Integer,Integer> FILE_CHOICES=new java.util.HashMap<>();
     static {
         try(java.io.InputStream stream=ScreenHousingTextures.class.getResourceAsStream("/assets/vandorlabs/data/unified_textures.json")) {
@@ -110,6 +111,8 @@ public final class ScreenHousingTextures {
             if(entry.has("key"))FILE_CHOICES.put(entry.get("key").getAsInt(),index);
             TEXTURES[index]="vandorlabs:blocks/"+(entry.has("rectangular")?"unified/"+IDS[index]:entry.get("source").getAsString());
         }
+        DEFAULT_TRAPDOOR=screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4");
+        if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");
     }
     public static com.google.gson.JsonObject entry(int choice){int index=localIndex(choice)-LEGACY_COUNT;return index>=0 && index<EXTRAS.size()?EXTRAS.get(index):null;}
     public static String category(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null?e.get("category").getAsString():choice<28?"Materials":choice<44?"Texture Pack 1":choice<67?"Texture Pack 2":"Hull Plating";}

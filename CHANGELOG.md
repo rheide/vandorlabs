@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Ordinary rotating trapdoors align with vanilla trapdoors when open, retaining only a tiny anti-z-fighting clearance. The alignment applies to existing saved groups as well as individual leaves.
+- Bundled 33 additional materials in Computing, Fuel, Hull, Power, Trapdoors and Windows. New normal and diagonal trapdoors use Cyan-lit Armored Sci-Fi Hatch-4 by default; saved material choices retain their existing indices.
+
 - Normal trapdoors combine placement and motion in four Movement choices: Rotating, Sliding, Rotate into next block, and Slide into next block. Individual sliding trapdoors allow hinge selection, saved in configured items and copied by the Duplifier. Next-block rotating leaves open flush to the covered cell with only a tiny z-fighting clearance.
 
 - Half-width and half-height diagonal trapdoors join connected partial patches, including three-leaf corners and mixed ordinary/staggered neighbors, rather than splitting into separate pairs. Membership and shared settings survive saves.

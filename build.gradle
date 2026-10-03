@@ -198,6 +198,7 @@ processResources.dependsOn testCopyCompatibility
 // default pack from silently dropping textures.
 task installDefaultTextures {
     dependsOn processResources
+    inputs.dir('texture-packs/additional/assets/vandorlabs/textures')
     inputs.dir('texture-packs/default/assets/vandorlabs/textures')
     inputs.dir('texture-packs/original/assets/vandorlabs/textures')
     outputs.upToDateWhen { false }
@@ -223,6 +224,10 @@ task installDefaultTextures {
         delete target
         copy {
             from replacement
+            into target
+        }
+        copy {
+            from 'texture-packs/additional/assets/vandorlabs/textures'
             into target
         }
         logger.lifecycle("Installed ${supplied.size()} default runtime textures")

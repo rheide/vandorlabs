@@ -114,11 +114,29 @@ final class TrapdoorGallery {
         if(!((ItemBlock)stack.getItem()).placeBlockAt(stack,null,world,pos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing).withProperty(BlockTrapDoor.HALF,inverted?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM)))throw new IllegalStateException("followup trapdoor placement failed");
         return (TileEntityProgrammableTrapdoor)world.getTileEntity(pos);
     }
+    static void checkVanillaAlignment(World world,int x,int y) {
+        BlockPos base=new BlockPos(x-1,y+2,-18);TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(base);
+        net.minecraft.util.math.AxisAlignedBB ours=world.getBlockState(base).getBoundingBox(world,base);
+        BlockPos at=base.west(2);net.minecraft.util.math.AxisAlignedBB vanilla=world.getBlockState(at).getBoundingBox(world,at);
+        if(leaf.getHousingTexture()!=ScreenHousingTextures.DEFAULT_TRAPDOOR || Math.abs(ours.minZ-vanilla.minZ)>com.vandorlabs.render.TrapdoorGeometry.EDGE_CLEARANCE+1e-8
+                || Math.abs(ours.maxZ-vanilla.maxZ)>com.vandorlabs.render.TrapdoorGeometry.EDGE_CLEARANCE+1e-8)throw new IllegalStateException("default rotating leaf is not aligned with vanilla");
+        System.out.println("[vandorlabs][reprolab] vanilla-trapdoor-alignment-runtime PASS "+(world.isRemote?"client":"server"));
+    }
     static void buildFollowup(World world,String scene,int x,int y) {
         BlockPos base=new BlockPos(x-1,y+2,-18);
         boolean diagonal=scene.contains("diagonal"),custom=scene.contains("custom"),fit=scene.endsWith("fit");
         int texture=custom?CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Items.OAK_DOOR)):ScreenHousingTextures.doorIndex(1,1);
-        if(scene.contains("opposing_next_")) {
+        if(scene.contains("vanilla_alignment")) {
+            if(world.isRemote)return;
+            BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
+            ItemStack stack=new ItemStack(block);
+            if(!((ItemBlock)stack.getItem()).placeBlockAt(stack,null,world,base,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState().withProperty(BlockTrapDoor.FACING,EnumFacing.NORTH)))throw new IllegalStateException("default hatch placement failed");
+            TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(base);leaf.requestOpen(true);
+            BlockPos vanilla=base.west(2);
+            world.setBlockState(vanilla,net.minecraft.init.Blocks.TRAPDOOR.getDefaultState().withProperty(BlockTrapDoor.OPEN,true).withProperty(BlockTrapDoor.FACING,EnumFacing.SOUTH),3);
+            for(BlockPos support:new BlockPos[]{base.north(),vanilla.north(),base.down(),vanilla.down()})world.setBlockState(support,net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+            checkVanillaAlignment(world,x,y);
+        } else if(scene.contains("opposing_next_")) {
             if(world.isRemote)return;
             TileEntityProgrammableTrapdoor a=placeCover(world,base,EnumFacing.NORTH),b=placeCover(world,base.north(3),EnumFacing.SOUTH);
             boolean open=scene.endsWith("open");a.requestOpen(open);b.requestOpen(open);

@@ -15,7 +15,7 @@ import net.minecraft.world.World;
 
 /** Settings and pair links; event-driven power, no idle tile ticks. */
 public class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
-    protected int texture,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
+    protected int texture=ScreenHousingTextures.DEFAULT_TRAPDOOR,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
     protected boolean sliding,slideIntoWall,channelSignal,powerKnown,lastPower,configuring;
     private boolean tileTexture=true;
     public boolean isTileTexture(){return tileTexture;}
@@ -311,7 +311,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         int old=channel;super.readFromNBT(tag);
-        texture=ScreenHousingTextures.clamp(tag.getInteger("housingTexture"));
+        texture=tag.hasKey("housingTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("housingTexture")):ScreenHousingTextures.DEFAULT_TRAPDOOR;
         position=Math.max(0,Math.min(2,tag.getInteger("TrapdoorPosition")));
         tileTexture=!tag.hasKey("TrapdoorTileTexture",1) || tag.getBoolean("TrapdoorTileTexture");
         cover=tag.getBoolean("TrapdoorCover") && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);

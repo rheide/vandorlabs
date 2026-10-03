@@ -20,7 +20,7 @@ public final class UnifiedItemModels implements ICustomModelLoader {
     @Override public IModel loadModel(ResourceLocation location) throws Exception {
         int i=choice(location);String path=location.getResourcePath().replace("_"+ScreenHousingTextures.IDS[i],"_dark_wall_panel");
         return ModelLoaderRegistry.getModel(new ResourceLocation(location.getResourceDomain(),path))
-            .retexture(ImmutableMap.of("all",ScreenHousingTextures.texture(i),"particle",ScreenHousingTextures.texture(i)));
+            .retexture(ImmutableMap.of("all",ScreenHousingTextures.texture(i),"wall",ScreenHousingTextures.texture(i),"particle",ScreenHousingTextures.texture(i)));
     }
     @Override public void onResourceManagerReload(IResourceManager manager){ }
 }

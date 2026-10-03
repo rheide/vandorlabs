@@ -31,9 +31,11 @@ public final class TrapdoorGeometry {
                 // Closed floor/ceiling leaves sit flush. Move the rotating panel
                 // slightly inward to retain clearance from its support when open.
                 if(position!=MIDDLE)y+=Math.abs(sin)*(position==TOP?-1:1)*(OPEN_HINGE-EDGE_CLEARANCE);
-                // Translate the thickness inward as it turns; keep the original
-                // hinge height and legacy saved assembly pivots.
-                z=hinge+(z-hinge)*cos-dy*sin+p*THICKNESS;
+                // Keep the full thickness inside the mounting edge throughout
+                // rotation, finishing flush like vanilla. Retain saved assembly
+                // pivots while removing their original one-pixel open inset.
+                z=hinge+(z-hinge)*cos-dy*sin+Math.abs(sin)*THICKNESS
+                        -(OPEN_HINGE-EDGE_CLEARANCE)*(1-cos);
             }
             for(int turn=0;turn<(quarterTurns&3);turn++) {double old=x;x=1-z;z=old;}
             out[i]=new double[]{x,y,z};

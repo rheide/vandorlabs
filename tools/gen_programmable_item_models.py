@@ -26,7 +26,7 @@ for block in ('programmable_block', 'programmable_trigger_block',
     for choice, texture in zip(ids, textures):
         model = json.loads(json.dumps(base))
         for key, value in model['textures'].items():
-            if value == 'vandorlabs:blocks/dark_wall_panel':
+            if value in ('vandorlabs:blocks/dark_wall_panel', 'vandorlabs:blocks/imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4'):
                 model['textures'][key] = 'vandorlabs:blocks/' + texture
         (out / (block + '_' + choice + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')
@@ -35,7 +35,7 @@ for style in ('fit', 'tile'):
     for choice, texture in zip(ids, textures):
         model = json.loads(json.dumps(base))
         for key, value in model['textures'].items():
-            if value == 'vandorlabs:blocks/dark_wall_panel':
+            if value in ('vandorlabs:blocks/dark_wall_panel', 'vandorlabs:blocks/imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4'):
                 model['textures'][key] = 'vandorlabs:blocks/' + texture
         (out / ('programmable_slab_' + choice + '_' + style + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')

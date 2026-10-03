@@ -21,6 +21,8 @@ for source in sources:
 # Append Off choices to keep all existing catalog identifiers stable.
 for name in ['porthole','light_column_wall','slatted_lamp','window_lamp','lightbar_wall','logo']:
     entries.append(dict(id='light_'+name+'_off',label=name.replace('_wall','').replace('_',' ').title()+' Off',category='Lights',source=name+'_off'))
+# Imported categories follow every existing choice, preserving saved indices.
+entries.extend(json.loads((root/'texture-packs/additional/catalog.json').read_text()))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

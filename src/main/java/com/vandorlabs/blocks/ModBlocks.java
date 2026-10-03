@@ -548,8 +548,9 @@ public class ModBlocks {
         ModelLoader.registerItemVariants(item, variants);
         ModelLoader.setCustomMeshDefinition(item, stack -> {
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
-            int choice = tag == null ? 0 : com.vandorlabs.tiles.ScreenHousingTextures.clamp(
-                    tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+            int choice = tag == null || !tag.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3)
+                    ? (block instanceof BlockProgrammableTrapdoor ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR : 0)
+                    : com.vandorlabs.tiles.ScreenHousingTextures.clamp(tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
             return new ModelResourceLocation(variants[com.vandorlabs.tiles.ScreenHousingTextures.localIndex(choice)], "inventory");
         });
     }

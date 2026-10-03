@@ -1,13 +1,13 @@
 # Programmable Trapdoor
 
-Programmable Trapdoors use the shared categorized material catalog, including door artwork and Custom block/door textures.
+Programmable Trapdoors use the shared categorized material catalog, including door artwork and Custom block/door textures. New trapdoors default to **Cyan-lit Armored Sci-Fi Hatch-4** in the Trapdoors category.
 Right-click to open or close. Shift-right-click in creative mode, or right-click
 with the Configurizer in either game mode, to choose the finish, movement,
 height, redstone trigger, and channel.
 
 **Rotating** swings the leaf 90 degrees around its facing edge. **Sliding**
 moves it 15 pixels sideways, leaving one pixel visible in its own block. Side placement hinges toward the clicked supporting block; floor and ceiling placement uses your horizontal facing. sliding always
-stays horizontal. Rotating leaves keep their full thickness at least one pixel inside the mounting cell at the hinge, with a tiny perimeter inset to avoid coplanar neighboring faces. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
+stays horizontal. Open rotating leaves align with vanilla trapdoors at the mounting edge, with only a tiny perimeter inset to avoid coplanar neighboring faces. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
 
 The leaf is 3px thick. **Bottom** spans approximately 0–3px above the block’s base,
 **Middle** spans 6.5–9.5px, and **Top** spans approximately 13–16px. Floor and ceiling mounts use only a 1/1024-block inset (1/64 of a texture pixel) to prevent coplanar faces, so closed leaves sit flush visually. Rotating panels move inward during opening to retain clearance from their support; sliding leaves keep their selected height.
