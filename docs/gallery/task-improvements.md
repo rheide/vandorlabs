@@ -42,7 +42,7 @@ Follow the [gear alignment and cover setup](../landing-gear-covers.md).
 ## Shared materials
 
 The same categorized picker offers built-in finishes, door artwork, lights,
-static screens, filesystem PNGs and a Custom block or door sample. Custom
+static screens, filesystem PNGs and a Custom block or door sample. Computing, Fuel, Hull, Power, Trapdoors and Windows add 33 bundled materials. New normal and diagonal trapdoors use Cyan-lit Armored Sci-Fi Hatch-4 by default. Custom
 selection uses the sampled block's texture while keeping the programmable
 block's shape.
 
@@ -114,7 +114,11 @@ The current Custom material is highlighted and automatically scrolled into view 
 
 ## Motion clearance and next-block placement
 
-Rotating normal leaves keep their thickness inside the mounting cell when open. Sliding diagonal leaves lift clear of the continuation wall before moving sideways. Next block places the untriggered leaf across the neighboring cell with a one-pixel overhang beyond its far edge; rotating then folds it upright into its own mount. Normal and diagonal leaf edges use the standard programmable door’s metal side artwork.
+Rotating normal leaves align with vanilla trapdoors at the mounting edge when open, with only a tiny anti-z-fighting inset. Sliding diagonal leaves lift clear of the continuation wall before moving sideways. Rotate into next block places the untriggered leaf across the neighboring cell with a one-pixel overhang beyond its far edge, then folds it upright into its own mount. Slide into next block instead overlaps the owning mounting cell by one pixel while closed, then retracts horizontally into that cell. Normal and diagonal leaf edges use the standard programmable door’s metal side artwork.
+
+The vanilla oak leaf (left) and default programmable leaf (right) share the same open alignment against their supporting blocks.
+
+![Vanilla and programmable trapdoors align at the mounting edge](../images/gallery/tasks/trapdoor-vanilla-alignment-open.png)
 
 | Rotating beside blocks | Sliding over a diagonal wall |
 | --- | --- |
@@ -123,6 +127,10 @@ Rotating normal leaves keep their thickness inside the mounting cell when open. 
 | Next-block leaf, closed | Next-block leaf, rotating open |
 | --- | --- |
 | ![Closed leaf covers the neighboring cell](../images/gallery/tasks/trapdoor-next-rotating-closed.png) | ![Rotated leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-next-rotating-open.png) |
+
+| Slide into next block, closed | Slide into next block, open |
+| --- | --- |
+| ![Closed slider keeps its one-pixel overlap at the mounting end](../images/gallery/tasks/trapdoor-next-sliding-closed.png) | ![The slider retracts into its owning cell](../images/gallery/tasks/trapdoor-next-sliding-open.png) |
 
 Matching-height next-block covers on opposite sides of a two-block opening omit the standalone one-pixel protrusion. They meet without overlapping and remain independently controlled. Configured next-block items place open, showing which cell owns the leaf. Open rotating covers use only a tiny clearance from the covered block, rather than a one-pixel gap.
 

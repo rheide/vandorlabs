@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Copy documentation-worthy ReproLab shots to stable GitHub paths."""
 
+import argparse
 import re
 import shutil
 import sys
@@ -139,23 +140,40 @@ SHOTS["programmable_diagonal_width_gui"] = "v1.1/diagonal-config.png"
 
 
 def main():
-    if len(sys.argv) != 2:
-        raise SystemExit("usage: export_gallery.py RENDER_RUN_DIRECTORY")
-    source = Path(sys.argv[1]).resolve()
-    if DEST.exists():
-        shutil.rmtree(DEST)
-    missing = []
-    for shot, relative in SHOTS.items():
-        image = source / f"shot_{shot}.png"
-        if not image.is_file():
-            missing.append(image.name)
-            continue
+    parser = argparse.ArgumentParser(description="Incrementally export available gallery captures; preserve unrelated images.")
+    parser.add_argument("source", type=Path)
+    parser.add_argument("--full", action="store_true", help="Require every mapped screenshot before exporting anything")
+    parser.add_argument("--prefix", action="append", default=[], help="Export only mapped shots with this prefix; may repeat")
+    parser.add_argument("--only", nargs="+", default=[], help="Export only these exact shot names")
+    args = parser.parse_args()
+    if args.full and (args.prefix or args.only):
+        parser.error("--full cannot be combined with a selection")
+    unknown = set(args.only) - SHOTS.keys()
+    if unknown:
+        parser.error("Unknown shots: " + ", ".join(sorted(unknown)))
+    selected = {name: dest for name, dest in SHOTS.items()
+                if not (args.prefix or args.only) or name in args.only
+                or any(name.startswith(prefix) for prefix in args.prefix)}
+    if not selected:
+        parser.error("No mapped shots match the selection")
+    available = {name: dest for name, dest in selected.items()
+                 if (args.source / ("shot_" + name + ".png")).is_file()}
+    if args.full or args.prefix or args.only:
+        missing = selected.keys() - available.keys()
+        if missing:
+            raise SystemExit("Missing gallery screenshots: " + ", ".join(sorted(missing)))
+    if not available:
+        raise SystemExit("No mapped screenshots in " + str(args.source))
+    changed = 0
+    for name, relative in available.items():
+        source = args.source / ("shot_" + name + ".png")
         target = DEST / relative
+        if target.exists() and source.read_bytes() == target.read_bytes():
+            continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(image, target)
-    if missing:
-        raise SystemExit("missing gallery screenshots: " + ", ".join(missing))
-    print(f"Exported {len(SHOTS)} gallery screenshots to {DEST}")
+        shutil.copy2(source, target)
+        changed += 1
+    print(f"Exported {changed} changed gallery images; {len(available)-changed} unchanged; unrelated images preserved")
 
 
 if __name__ == "__main__":

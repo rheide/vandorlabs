@@ -1,27 +1,15 @@
 #!/bin/bash
-# Build the mod, run the deterministic Forge client scene, and publish curated
-# screenshots under docs/images/gallery for the GitHub documentation.
+# Capture the requested scope once, validate it, and merge changed gallery images.
 set -euo pipefail
-
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
-RUN_OUT=$(mktemp -d "$ROOT/testclient/gallery-run.XXXXXX")
-
 cd "$ROOT"
-JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew build --no-daemon
-mkdir -p testclient/runtime/game/mods
-VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
-rm -f testclient/runtime/game/mods/vandorlabs-*.jar
-cp "build/libs/vandorlabs-$VERSION.jar" \
-    "testclient/runtime/game/mods/vandorlabs-$VERSION.jar"
-cp "$HOME/MC-Forge12-2/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
-    testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar
-cp "$HOME/MC-Forge12-2/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
-    testclient/runtime/game/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar
-cp "$HOME/MC-Forge12-2/mods/ImmersiveEngineering-0.12-98.jar" testclient/runtime/game/mods/
-VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout --kill-after=15 1200 testclient/run.sh \
-    > "$RUN_OUT/client.log" 2>&1
-grep -q '\[vandorlabs\]\[reprolab\] redstone-channel-runtime PASS' "$RUN_OUT/client.log"
-grep -q '\[vandorlabs\]\[reprolab\] screen-runtime PASS' "$RUN_OUT/client.log"
-python3 testclient/export_gallery.py "$RUN_OUT"
+RUN_LOG=$(mktemp)
+trap 'rm -f "$RUN_LOG"' EXIT
+bash testclient/test_viewscreen.sh "$@" | tee "$RUN_LOG"
+RUN_OUT=$(sed -n 's/^Live-client artifacts: //p' "$RUN_LOG" | tail -1)
+if [ "${1:-}" = --full ]; then
+    python3 testclient/export_gallery.py "$RUN_OUT" --full
+else
+    python3 testclient/export_gallery.py "$RUN_OUT"
+fi
 echo "Gallery source run: $RUN_OUT"

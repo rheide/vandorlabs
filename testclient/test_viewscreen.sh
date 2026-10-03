@@ -2,6 +2,25 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 
+unset VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY
+
+# Capture scope is explicit: routine fixes use --focus, full regressions use --full.
+case "${1:-}" in
+    --full) MODE=full; PREFIX= ;;
+    --focus)
+        MODE=focus
+        TARGET=${2:?Usage: test_viewscreen.sh --focus trapdoors-or-scene-prefix}
+        if [ "$TARGET" = trapdoors ]; then
+            PREFIX=gallery_trapdoor_followup_
+            export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
+        else
+            PREFIX=$TARGET
+        fi
+        export VANDOR_LABS_REPRO_SHOT_PREFIX=$PREFIX
+        ;;
+    *) echo "Usage: test_viewscreen.sh --focus trapdoors-or-scene-prefix | --full"; exit 2 ;;
+esac
+
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
 RUN_OUT=$(mktemp -d "$ROOT/testclient/render-run.XXXXXX")
@@ -26,6 +45,11 @@ VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" tes
 if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     echo "FAIL: missing or invalid baked model; see $RUN_OUT/client.log"
     exit 1
+fi
+if [ "$MODE" = focus ]; then
+    python3 testclient/validate_focused_gallery.py "$RUN_OUT" "$PREFIX" "$TARGET"
+    echo "Live-client artifacts: $RUN_OUT"
+    exit 0
 fi
 grep -q '\[vandorlabs\]\[reprolab\] followup-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] version-1.2-runtime PASS' "$RUN_OUT/client.log"

@@ -185,7 +185,7 @@ original baseline coverage is in `testclient/render-run.gRvrGz`.
 
 ```bash
 JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew build --no-daemon
-testclient/test_viewscreen.sh
+testclient/test_viewscreen.sh --full
 testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py before.csv after.csv
 python3 testclient/compare_programmable_images.py BEFORE_RUN_DIR AFTER_RUN_DIR

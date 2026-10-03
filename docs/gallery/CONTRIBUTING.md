@@ -3,24 +3,37 @@
 The gallery is generated from a real Forge client and should never be updated
 by manually staging or cropping screenshots.
 
-To regenerate everything:
+For a small trapdoor change, capture and validate just the affected scenes:
 
 ```bash
-testclient/generate_gallery.sh
+testclient/generate_gallery.sh --focus trapdoors
 ```
 
-The command builds the current jar, starts a fresh deterministic superflat
-world under software rendering, disables tutorial prompts and mob spawning,
-runs the live runtime contracts, captures the curated scenes, replaces
-`docs/images/gallery`, and fails if any expected image is missing.
+`--focus` also accepts a mapped scene prefix. It runs the focused runtime checks
+and verifies the requested captures; it does not run the full-gallery pixel
+analyzers. Inspect the changed images before publishing them.
 
-A successful `testclient/test_viewscreen.sh` run captures the same curated scenes
-and also runs the image analyzers. You can publish that validated capture without
-starting a second client:
+A full regression and gallery refresh is explicit:
 
 ```bash
-python3 testclient/export_gallery.py testclient/render-run.<id>
+testclient/generate_gallery.sh --full
 ```
+
+Both commands build the current standard jar and start a real Forge client in a
+fresh deterministic world under software rendering. The exporter merges captures
+into `docs/images/gallery`, preserving unrelated images and byte-identical files.
+It never deletes the gallery directory.
+
+To reuse a successful live check without starting a second client:
+
+```bash
+testclient/test_viewscreen.sh --focus trapdoors
+python3 testclient/export_gallery.py testclient/render-run.<id> --prefix gallery_trapdoor_followup_
+```
+
+The exporter also accepts `--only shot_name another_shot`. Without a selection it
+exports whichever mapped captures exist in the supplied run. `--full` requires
+all mapped captures before writing any images.
 
 The live-suite run includes `artifact.sha256` and `source-commit.txt` to identify
 the tested binary and source. Check that the artifact hash still matches before
@@ -33,7 +46,7 @@ When adding or changing a showcased block:
    `src/main/java/com/vandorlabs/client/ReproLab.java`.
 2. Add its stable output path to `SHOTS` in `testclient/export_gallery.py`.
 3. Reference that stable path from the appropriate page in `docs/gallery`.
-4. Run `testclient/generate_gallery.sh` and visually inspect every changed PNG.
+4. Run `testclient/generate_gallery.sh --focus <scene-prefix>` and visually inspect every changed PNG.
 
 Frame individual blocks tightly enough to show their geometry and texture.
 Show both states when appearance changes with activation. Use matching camera

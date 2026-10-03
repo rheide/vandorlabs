@@ -214,7 +214,7 @@ facing, hinge side, door state, and which side was viewed — or better, a
 screenshot.
 
 For a repeatable rendering regression test, run
-`testclient/test_viewscreen.sh`. It builds the jar, boots a real Forge 1.12.2
+`testclient/test_viewscreen.sh --full`. It builds the jar, boots a real Forge 1.12.2
 client under Xvfb with Mesa software rendering, constructs a deterministic
 test scene, captures the viewscreen and console from several angles, and
 checks the resulting pixels against an Engineering Display control, samples
@@ -222,10 +222,10 @@ every engineering animation slot for black frames, and runs door state and
 pairing contracts inside the integrated world. Each run
 keeps its screenshots, manifest, and client log under `testclient/render-run.*`.
 
-To rebuild the documentation gallery, run `testclient/generate_gallery.sh`.
-It performs the build and live client contracts, captures all curated scenes,
-and publishes the stable images used by the Markdown pages under
-`docs/images/gallery`.
+For incremental gallery updates, run `testclient/generate_gallery.sh --focus trapdoors`
+or use another scene prefix. Unrelated images are preserved. Use `--full` for a
+complete refresh. See [gallery maintenance](docs/gallery/CONTRIBUTING.md) for
+reusing an existing validated capture without starting another client.
 
 ## Dynmap compatibility
 
