@@ -34,7 +34,7 @@ public class GuiSpaceDoor extends GuiContainer {
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
             "Quarantine Seal","Reactor Barrier","Modular Shutter"};
-    private static final String[] SIZES={"Small (128 x 256)","Medium (256 x 512)","Large (512 x 1024)"};
+    private static final String[] SIZES={"Size: Small","Size: Medium","Size: Large"};
     private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
             "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
             "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter"};
@@ -58,7 +58,7 @@ public class GuiSpaceDoor extends GuiContainer {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         listLeft=layout.listX;listRight=listLeft+layout.listWidth;listTop=guiTop+38;
-        textureList=HousingTextureList.forCategory("Doors",listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture)
+        textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture)
                 .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.control(11,50,SIZES[detail]));
@@ -107,7 +107,7 @@ public class GuiSpaceDoor extends GuiContainer {
             motionButton.displayString=motion.label;
             updateHingeButton();
         }
-        else if (button.id==11) { detail=(detail+1)%SIZES.length; button.displayString=SIZES[detail];if(faceTexture<0)textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail)); }
+        else if (button.id==11) { detail=(detail+1)%SIZES.length; faceTexture=HousingTextureList.doorSizeChoice(faceTexture,detail);initGui(); }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
         else if (button.id==13) { depth=(depth+1)%3; button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }

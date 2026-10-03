@@ -48,3 +48,12 @@
 - First updated focused live run passed all nine dialog classes and sixteen fresh captures: `testclient/render-run.2uB4Gg`. Inspected Console, Controls and Porthole screenshots. Final rerun includes the slab sprite assertions and frame-selection highlight refresh.
 - Final Java 8 standard build and focused live suite passed: `testclient/render-run.E6vx2G`, all nine dialog classes, artwork-category assertions, both slab-half sprite checks, persistence/copy checks and sixteen fresh GUI captures. Inspected the face-button row as well. `git diff --check` and packaged class inspection passed; the removed Static Face component is absent from the JAR.
 - Final standard artifact: `build/libs/vandorlabs-1.3.jar`, SHA-256 `ff5ea3de553eca37b64cf8ac617292c6a2ee5f912b8f143fb7119ddf9a59e66f`.
+
+## Light labels and door design/size pickers
+
+- Owner requested removing the trailing “ On” from Programmable Light texture names, restoring Doors in both trapdoor families, and selecting Small/Medium/Large separately from door design.
+- Light menu labels remove the suffix while preserving artwork and saved choices.
+- Programmable Door and regular/diagonal trapdoors expose fifteen door designs once each. Their size button changes the existing artwork tier and preserves the design. Saved native door choices restore the matching size on reopening. Custom and general materials retain their selected texture when changing the catalog size.
+- The diagonal trapdoor width and height buttons share one row to leave space for the size button, channel and Done.
+- First focused live run passed: `testclient/render-run.B0PvMP`. Inspected light labels, the door design list and diagonal trapdoor sidebar. Added final runtime checks for all three size filters, unique design rows, stable design identity and actual size-button clicks at each tested GUI size.
+- Final Java 8 build and focused live suite passed: `testclient/render-run.pLphcv`, sixteen fresh GUI captures, all nine dialog classes, all three size choices, unique design labels and preserved Custom selections. `git diff --check` passed. Standard artifact remains `build/libs/vandorlabs-1.3.jar`, SHA-256 `c295cde2803d0620c5c0a7ee031363ff9e778e9cb02e4013c7ea3490d06c53e6`.

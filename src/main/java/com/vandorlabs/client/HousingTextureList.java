@@ -59,6 +59,22 @@ final class HousingTextureList {
         return new HousingTextureList(x,y,width,selected,count,null,
                 choice->generalTexture(choice) || category.equals(ScreenHousingTextures.category(choice)));
     }
+    /** One row per door design, using the size selected beside the list. */
+    static HousingTextureList forDoors(int detail,int x,int y,int width,int selected) {
+        return new HousingTextureList(x,y,width,selected,8,null,choice->{
+            com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+            return generalTexture(choice) || "Doors".equals(ScreenHousingTextures.category(choice))
+                    && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
+        });
+    }
+    static int doorDetail(int choice) {
+        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+        return entry!=null && entry.has("detail")?entry.get("detail").getAsInt():0;
+    }
+    static int doorSizeChoice(int choice,int detail) {
+        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+        return entry!=null && entry.has("design")?ScreenHousingTextures.doorIndex(entry.get("design").getAsInt(),detail):choice;
+    }
     HousingTextureList visibleRows(int rows) {
         count=Math.max(2,rows);
         setSelected(selected());
@@ -121,6 +137,8 @@ final class HousingTextureList {
         if(com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return CustomBlockTextures.label(choice);
         choice=ScreenHousingTextures.localIndex(choice);
         String label=ScreenHousingTextures.label(choice);
+        if(label!=null && "Lights".equals(ScreenHousingTextures.category(choice)))label=label.replaceFirst(" On$","");
+        if(label!=null && "Doors".equals(ScreenHousingTextures.category(choice)))label=label.replaceFirst(" (Small|Medium|Large)$","");
         return label!=null?label:I18n.format("tile.vandorlabs."+ScreenHousingTextures.IDS[choice]+".name");
     }
     private void drawThumbnail(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,int yy) {

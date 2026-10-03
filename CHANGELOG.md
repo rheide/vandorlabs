@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fixed repeating diagonal wall connections, neighboring-block clipping, stacked orientation and opened diagonal trapdoor selection. Added regular trapdoor Slide over surface movement.
+- Expanded programmable dialogs with tall texture lists, shared two-column layouts, full-width face buttons and independent porthole/slab side textures. Screen and Controls pickers share general materials while keeping full-height and half-height artwork separate.
+- Simplified light texture labels and restored Doors in regular/diagonal trapdoor pickers. Door pickers now show each design once, with a separate Small/Medium/Large selector.
+
 - Programmable Storage now supports optional per-face texture overrides, including inherited Storage-set faces, configured-item persistence and Duplifier copying without changing inventory contents.
 
 - Added Programmable Storage: 27 inventory slots, hopper/item-handler access, comparator output, shared material picker and matching top/side/front Storage sets. Defaults to Cabinet; crafted from a chest and Programmable Block. Appearance copying preserves target contents, and mining drops contents separately.

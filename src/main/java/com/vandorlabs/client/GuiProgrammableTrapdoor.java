@@ -15,7 +15,7 @@ import java.io.IOException;
 public final class GuiProgrammableTrapdoor extends GuiContainer {
     private final TileEntityProgrammableTrapdoor tile;
     private HousingTextureList textures;
-    private int position,trigger,channel,tallWidth;
+    private int position,trigger,channel,tallWidth,doorDetail;
     private net.minecraft.util.EnumFacing facing;
     private boolean sliding,slideIntoWall,slideOverSurface,inverted,cover,tileTexture;
     private boolean diagonal(){return tile instanceof TileEntityProgrammableDiagonalTrapdoor;}
@@ -24,25 +24,29 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     public GuiProgrammableTrapdoor(TileEntityProgrammableTrapdoor tile) {
         super(new ContainerProgrammableTrapdoor(tile));this.tile=tile;
         cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channel=tile.getRedstoneChannel();
+        doorDetail=HousingTextureList.doorDetail(tile.getHousingTexture());
         tileTexture=tile.isTileTexture();tallWidth=position==0?0:1;facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING);
         inverted=diagonal() && ((TileEntityProgrammableDiagonalTrapdoor)tile).isInverted();
         xSize=360;ySize=240;
     }
     private int controlsX, channelLabelY;
     @Override public void initGui() {
+        String channelText=channelField==null?Integer.toString(channel):channelField.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;
         super.initGui();
         Keyboard.enableRepeatEvents(true);buttonList.clear();
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH;
         controlsX=guiLeft+xSize-controlsWidth-12;
-        textures=new HousingTextureList(guiLeft+12,guiTop+38,controlsX-guiLeft-31,tile.getHousingTexture())
+        textures=HousingTextureList.forDoors(doorDetail,guiLeft+12,guiTop+38,controlsX-guiLeft-31,tile.getHousingTexture())
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->send());
         int y=guiTop+38;
         buttonList.add(new GuiButton(1,controlsX,y,controlsWidth,20,motionLabel()));y+=22;
-        GuiButton positionButton=new GuiButton(2,controlsX,y,controlsWidth,20,positionLabel());
-        positionButton.enabled=!diagonal() || position!=2;buttonList.add(positionButton);y+=22;
-        if(diagonal()){buttonList.add(new GuiButton(7,controlsX,y,controlsWidth,20,heightLabel()));y+=22;}
+        buttonList.add(new GuiButton(9,controlsX,y,controlsWidth,20,doorSizeLabel()));y+=22;
+        GuiButton positionButton=new GuiButton(2,controlsX,y,diagonal()?(controlsWidth-2)/2:controlsWidth,20,positionLabel());
+        positionButton.enabled=!diagonal() || position!=2;buttonList.add(positionButton);
+        if(diagonal())buttonList.add(new GuiButton(7,controlsX+(controlsWidth+2)/2,y,(controlsWidth-2)/2,20,heightLabel()));
+        y+=22;
         buttonList.add(new GuiButton(6,controlsX,y,controlsWidth,20,layoutLabel()));y+=22;
         GuiButton direction=new GuiButton(diagonal()?5:8,controlsX,y,controlsWidth,20,diagonal()?"Reverse slope":facingLabel());
         direction.enabled=diagonal() || tile.canOffsetClosedLeaf();buttonList.add(direction);y+=22;
@@ -50,9 +54,10 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         channelLabelY=y;
         channelField=new GuiTextField(0,fontRenderer,controlsX,y+11,controlsWidth,18);
         channelField.setMaxStringLength(10);channelField.setValidator(s->s.isEmpty() || s.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(channel));
-        done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");buttonList.add(done);
+        channelField.setText(channelText);
+        done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
     }
+    private String doorSizeLabel(){return "Door size: "+new String[]{"Small","Medium","Large"}[doorDetail];}
     private String motionLabel(){return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
     private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
     private String layoutLabel(){return "Texture: "+(tileTexture?"Tile / mirror":"Fit");}
@@ -68,6 +73,11 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
+        if(button.id==9) {
+            doorDetail=(doorDetail+1)%3;
+            textures.setSelected(HousingTextureList.doorSizeChoice(textures.selected(),doorDetail));
+            send();initGui();return;
+        }
         if(button.id==1){if(diagonal()){if(!sliding){sliding=true;slideIntoWall=false;}else if(!slideIntoWall)slideIntoWall=true;else{sliding=false;slideIntoWall=false;}}else{int mode=cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;mode=(mode+1)%(tile.canOffsetClosedLeaf()?5:3);cover=mode>=3;sliding=mode==1 || mode==2 || mode==4;slideOverSurface=mode==2;}button.displayString=motionLabel();}
         else if(button.id==2){position=diagonal()?(position==0?1:0):(position+1)%3;if(diagonal())tallWidth=position;button.displayString=positionLabel();}
         else if(button.id==3){trigger=(trigger+1)%3;button.displayString=triggerLabel();}
