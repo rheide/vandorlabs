@@ -32,19 +32,14 @@ Observation, Viewport, Laboratory, and Glazed Hangar have translucent windows. A
 
 ## Choose how the door opens
 
-The framed Observation door opening and closing with rotating motion:
+Each clip shows a complete open/close cycle. These are live in-game captures at 420×350; [capture workflow](../animated-documentation.md).
 
-![Observation door rotating open and closed](../images/gallery/doors/observation-rotating.gif)
-
-This is a live in-game capture. See [animated documentation](../animated-documentation.md)
-for the capture and encoding workflow.
-
-| Motion | Closed | Open |
-| --- | --- | --- |
-| Rotate | ![Rotating closed](../images/gallery/doors/rotating-closed.png) | ![Rotating open](../images/gallery/doors/rotating-open.png) |
-| Slide sideways | ![Sideways closed](../images/gallery/doors/sideways-closed.png) | ![Sideways open](../images/gallery/doors/sideways-open.png) |
-| Slide up | ![Upward slide closed](../images/gallery/doors/up-closed.png) | ![Upward slide open](../images/gallery/doors/up-open.png) |
-| Slide down | ![Downward slide closed](../images/gallery/doors/down-closed.png) | ![Downward slide open](../images/gallery/doors/down-open.png) |
+| Motion | Opening and closing |
+| --- | --- |
+| Rotate | ![Rotate](../images/gallery/doors/observation-rotating.gif) |
+| Slide sideways | ![Slide sideways](../images/gallery/doors/observation-sideways.gif) |
+| Slide up | ![Slide up](../images/gallery/doors/observation-up.gif) |
+| Slide down | ![Slide down](../images/gallery/doors/observation-down.gif) |
 
 The frame stays in place while the leaf moves. Rotating doors can show or hide their hinges; the hinge setting is saved even when you temporarily switch to sliding motion. Paired doors share appearance and settings.
 

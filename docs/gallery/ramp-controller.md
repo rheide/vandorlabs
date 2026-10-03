@@ -3,14 +3,15 @@
 Version 1.1 seals transparent controller texture edges. See the
 [controller close-up](version-1.1.md#placement-and-compatibility-fixes).
 
-The Programmable Ramp controls a platform of matching slabs or solid blocks. It can form a slope, fill the space beneath that slope, lift the whole platform, or extend it into a solid run. The images show each mode in its off and on positions.
+The Programmable Ramp controls a platform of matching slabs or solid blocks. It can form a slope, fill the space beneath that slope, lift the whole platform, or extend it into a solid run. The clips show each mode deploying and returning to its off position.
 
-| Mode | Off | On |
-| --- | --- | --- |
-| Ramp | ![Ramp off](../images/gallery/ramp-controller/ramp-off.png) | ![Ramp on](../images/gallery/ramp-controller/ramp-on.png) |
-| Filled ramp | ![Filled ramp off](../images/gallery/ramp-controller/filled-off.png) | ![Filled ramp on](../images/gallery/ramp-controller/filled-on.png) |
-| Lift | ![Lift off](../images/gallery/ramp-controller/lift-off.png) | ![Lift on](../images/gallery/ramp-controller/lift-on.png) |
-| Extend | ![Extend off](../images/gallery/ramp-controller/extend-off.png) | ![Extend on](../images/gallery/ramp-controller/extend-on.png) |
+| Mode | Deploying and retracting |
+| --- | --- |
+| Ramp | ![Ramp](../images/gallery/ramp-controller/ramp.gif) |
+| Filled ramp | ![Filled ramp](../images/gallery/ramp-controller/filled.gif) |
+| Lift | ![Lift](../images/gallery/ramp-controller/lift.gif) |
+| Extend | ![Extend](../images/gallery/ramp-controller/extend.gif) |
+
 
 **Ramp** moves successive treads by different amounts. **Filled ramp** follows the same slope and fills from each tread's starting point. **Lift** moves the whole platform together. **Extend** moves the leading surface and fills the space behind it. Ramp and lift carry standing entities; filled ramp and extend are intended as changing structure.
 
@@ -43,8 +44,8 @@ Ramp direction can be north, east, south, or west. Small treads make a smoother 
 
 | Direction | Smooth, 2 px | Stairs, 8 px |
 | --- | --- | --- |
-| Up | ![Upward smooth ramp](../images/gallery/ramp-controller/up-smooth.png) | ![Upward stair ramp](../images/gallery/ramp-controller/up-stairs.png) |
-| Down | ![Downward smooth ramp](../images/gallery/ramp-controller/down-smooth.png) | ![Downward stair ramp](../images/gallery/ramp-controller/down-stairs.png) |
+| Up | ![Upward smooth ramp](../images/gallery/ramp-controller/up-smooth.gif) | ![Upward stair ramp](../images/gallery/ramp-controller/up-stairs.gif) |
+| Down | ![Downward smooth ramp](../images/gallery/ramp-controller/down-smooth.gif) | ![Downward stair ramp](../images/gallery/ramp-controller/down-stairs.gif) |
 
 ## Troubleshooting
 

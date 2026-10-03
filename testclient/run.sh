@@ -11,14 +11,20 @@ CP=$(paste -sd: cp.txt)
 TROVE_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" | rg '/trove4j-3.0.3.jar$' | head -n 1)
 CP="$CP:$TROVE_JAR"
 mkdir -p game
+CAPTURE_JVM=()
+if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" = true ]; then
+  CAPTURE_JVM=(-XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps "-Xloggc:$REPRO_OUT/gc.log")
+fi
 exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" \
   env LIBGL_ALWAYS_SOFTWARE=1 \
-  "$JAVA" -Xmx2G \
+  "$JAVA" -Xmx2G "${CAPTURE_JVM[@]}" \
   -Dvandorlabs.duplifierChecksOnly="${VANDOR_LABS_DUPLIFIER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.reproShotPrefix="${VANDOR_LABS_REPRO_SHOT_PREFIX:-}" \
   -Dvandorlabs.storageChecksOnly="${VANDOR_LABS_STORAGE_CHECKS_ONLY:-false}" \
   -Dvandorlabs.dialogChecksOnly="${VANDOR_LABS_DIALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.documentationDoorGif="${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" \
+  -Dvandorlabs.documentationAnimations="${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" \
+  -Dvandorlabs.documentationAnimationFilter="${VANDOR_LABS_DOCUMENTATION_ANIMATION_FILTER:-}" \
   -Dvandorlabs.trapdoorChecksOnly="${VANDOR_LABS_TRAPDOOR_CHECKS_ONLY:-false}" \
   -Dvandorlabs.lightPickerChecksOnly="${VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.lightChecksOnly="${VANDOR_LABS_LIGHT_CHECKS_ONLY:-false}" \
@@ -32,4 +38,4 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   --gameDir "$PWD/game" --assetsDir "$PWD/assets" --assetIndex 1.12 \
   --username REPROBOT --accessToken duck0000 --version "1.12.2-Forge14.23.5.2864" \
   --fml.forgeVersion 14.23.5.2864 --fml.mcVersion 1.12.2 --fml.forgeGroup net.minecraftforge \
-  --width 1280 --height 720 "$@"
+  --width "${VANDOR_LABS_REPRO_WIDTH:-1280}" --height "${VANDOR_LABS_REPRO_HEIGHT:-720}" "$@"

@@ -1,12 +1,12 @@
 # Programmable Trapdoor
 
-Programmable Trapdoors use the shared categorized material catalog, including door artwork and Custom block/door textures. New trapdoors default to **Cyan-lit Armored Sci-Fi Hatch-4** in the Trapdoors category.
+Programmable Trapdoors use the shared categorized material catalog, including door artwork and Custom block/door textures. New trapdoors default to **Armored Hatch** in the Trapdoors category.
 Right-click to open or close. Shift-right-click in creative mode, or right-click
 with the Configurizer in either game mode, to choose the finish, movement,
 height, redstone trigger, and channel.
 
 **Rotating** swings the leaf 90 degrees around its facing edge. **Sliding**
-moves it 15 pixels sideways, leaving one pixel visible in its own block. Side placement hinges toward the clicked supporting block; floor and ceiling placement uses your horizontal facing. sliding always
+moves it 15 pixels sideways, leaving one pixel visible in its own block. Side placement hinges toward the clicked supporting block; floor and ceiling placement uses your horizontal facing. Sliding always
 stays horizontal. Open rotating leaves align with vanilla trapdoors at the mounting edge, with only a tiny perimeter inset to avoid coplanar neighboring faces. Click the lower, middle, or upper third of a wall face to place a plain trapdoor at Bottom, Middle, or Top; floor and ceiling clicks choose Bottom and Top. Configured items retain their saved position. The model has no frame or hinge hardware.
 
 The leaf is 3px thick. **Bottom** spans approximately 0–3px above the block’s base,
@@ -14,13 +14,24 @@ The leaf is 3px thick. **Bottom** spans approximately 0–3px above the block’
 
 ## Movement, next-block placement and texture layout
 
-The **Movement** button cycles **Rotating**, **Sliding**, **Rotate into next block**, and **Slide into next block**. The next-block movements place the closed leaf across the neighboring cell in its facing direction, with the trapdoor tile remaining in its own mounting cell.
+The **Movement** button cycles **Rotating**, **Sliding**, **Slide over surface**, **Rotate into next block**, and **Slide into next block**. The next-block movements place the closed leaf across the neighboring cell in its facing direction, with the trapdoor tile remaining in its own mounting cell.
+
+**Slide over surface** first raises the horizontal leaf clear of the neighboring surface, then slides it sideways. Ordinary Sliding travels sideways at its selected height.
+
+| Movement | Opening and closing |
+| --- | --- |
+| Rotating, joined 2×4 | ![Rotating, joined 2×4](../images/gallery/tasks/trapdoor-flat-rotating.gif) |
+| Sliding, joined 2×4 | ![Sliding, joined 2×4](../images/gallery/tasks/trapdoor-flat-sliding.gif) |
+| Slide over surface, joined 2×4 | ![Slide over surface, joined 2×4](../images/gallery/tasks/trapdoor-flat-over-surface.gif) |
+| Rotate into next block | ![Rotate into next block](../images/gallery/tasks/trapdoor-next-rotating.gif) |
+| Slide into next block | ![Slide into next block](../images/gallery/tasks/trapdoor-next-sliding.gif) |
+| Opposing next-block mounts | ![Opposing next-block mounts](../images/gallery/tasks/trapdoor-opposing-next.gif) |
 
 A single Rotate into next block leaf projects one pixel past the covered cell’s far edge. A Slide into next block leaf instead overlaps its owning mounting cell by one pixel, leaving the overlap at the mounting end. Selection and collision include the corresponding overlap. When matching-height Next block mounts face each other across a two-block opening, both omit this protrusion and meet at the seam without overlap or a visible mount gap. The mounts remain independently controlled. Configured Next block items start open when placed, showing their owning mounting cell; ordinary use and subsequent redstone changes still control them.
 
-**Hinge: north/east/south/west** is available for all four movements on individual trapdoors. For next-block movements it selects the covered neighboring cell; for Sliding it selects the travel direction. Rotating folds the leaf upright into the mounting cell, flush to its edge next to the covered block with only a 1/1024-block clearance; Sliding brings it back horizontally.
+**Hinge: north/east/south/west** is available for all five movements on individual trapdoors. For next-block movements it selects the covered neighboring cell; for Sliding it selects the travel direction. Rotating folds the leaf upright into the mounting cell, flush to its edge next to the covered block with only a 1/1024-block clearance; Sliding brings it back horizontally.
 
-These offset mounts remain individual rather than joining a rectangle. Joined trapdoors cycle only Rotating and Sliding and keep their hinges at their outer edges; configuration packets and Duplifier copies cannot turn them into offset mounts. Selection and collision follow an offset leaf into the neighboring cell for all four hinge directions, with interaction still routed to its owning tile. There is no separate Closed leaf control. Existing saved next-block settings map to the corresponding Movement choice. See [landing gear covers](../landing-gear-covers.md) for a gear shaft example.
+These offset mounts remain individual rather than joining a rectangle. Joined trapdoors cycle Rotating, Sliding and Slide over surface and keep their hinges at their outer edges; configuration packets and Duplifier copies cannot turn them into offset mounts. Selection and collision follow an offset leaf into the neighboring cell for all four hinge directions, with interaction still routed to its owning tile. There is no separate Closed leaf control. Existing saved next-block settings map to the corresponding Movement choice. See [landing gear covers](../landing-gear-covers.md) for a gear shaft example.
 
 If an older version split an assembly after selecting Next block, select each shifted leaf and choose **Rotating** or **Sliding**. Once all members are restored at the same height, replace one member to rebuild the joined footprint.
 
@@ -29,7 +40,7 @@ If an older version split an assembly after selecting Next block, select each sh
 ## Connected groups
 
 Place two trapdoors side by side at the same height to pair them automatically.
-They face opposite directions and open together in either movement mode.
+They face opposite directions and open together in all three in-block movement modes.
 The new member adopts the existing member's movement and redstone settings.
 Each leaf retains its selected finish until you change the group's settings.
 

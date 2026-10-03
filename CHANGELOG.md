@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Replace door/trapdoor/ramp motion illustrations with smaller 420×350 live GIFs and add an animated 1.3 highlights guide. Buffer capture frames and use a steady output cadence to reduce jitter.
+- Shorten the eight trapdoor finish labels without changing saved material IDs.
+- Match the Programmable Diagonal Screen hotbar icon to its current solid wedge housing.
+- Preserve manually extended landing gear on reload when redstone input is unchanged; channel unregistration during unload no longer overwrites saved extension.
+
 - Demonstrate animated documentation with a live captured Observation door GIF and a reproducible capture/encoding workflow.
 
 - Reorganize shared texture categories into Tech, Hull and Panels, simplify names, and hide removed picker entries while retaining saved finishes.

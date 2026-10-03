@@ -1,57 +1,99 @@
-# Animated documentation demonstration
+# Animated documentation
 
-Animated GIFs work with the documentation's existing Markdown image links.
-The example uses the already documented **Observation Programmable Door**,
-framed, rotating, with the existing medium-detail artwork. It shows one real
-server-driven open/close cycle captured from Minecraft's live renderer.
+The door, trapdoor and Programmable Ramp guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
 
 ![Observation door opening and closing](images/gallery/doors/observation-rotating.gif)
 
-The capture helper is enabled only by `vandorlabs.documentationDoorGif` in
-ReproLab. It uses the existing renderer and animation clock, changes the
-server's normal OPEN blockstate, waits for client synchronization, and records
-real frame times. No door behavior or animation speed changes are required.
-A fixed camera, noon lighting, hidden HUD and cleared gallery backdrop keep
-the example readable. The supplied demo uses the software-rendered test
-client; it is documentation footage, with no GPU performance or shader claim.
+The recorder changes normal server-side block states or redstone inputs and captures the real renderer and animation clocks. It holds each endpoint, buffers cropped framebuffer images during motion, and writes PNGs after the cycle. A fixed camera, noon lighting and hidden HUD keep clips readable. The capture client uses G1 garbage collection and a small view distance to avoid long collection/render stalls in the software renderer; these are documentation launch settings, with no changes to gameplay animation speed.
 
-The encoder crops screenshots to 600×500, uses a shared 256-color palette,
-keeps recorded timing at GIF's 10ms resolution, and loops continuously. GIF
-works in Markdown viewers that support animated images, including GitHub;
-PDF/print exports may show only a still frame. Its palette cannot preserve all
-24-bit screenshot colors. Short, cropped clips keep documentation downloads
-small; longer demonstrations would be better served by video.
+The encoder uses a shared 256-color palette and a regular 50 ms output timeline, selecting the nearest real captured pose. It does not interpolate geometry or alter motion speed. GIFs loop continuously; palette colors have less precision than the original screenshots. Viewers that render GIF animations show movement; print/PDF exports may show a still.
 
 ## Reproduce
 
 With the existing testclient runtime installed:
 
 ```bash
+# Every documented scene
+bash testclient/capture_animations.sh
+
+# One motion or a comma-separated subset
+bash testclient/capture_animations.sh --filter door-rotating,ramp-lift
+
+# Compatibility shortcut for the original door example
 bash testclient/capture_door_gif.sh
 ```
 
-This builds only the standard mod JAR in `build/libs/`, installs it into the
-disposable testclient runtime, captures PNG frames and `door-frames.tsv`, then
-validates and writes `docs/images/gallery/doors/observation-rotating.gif`.
-The source directory and encoded frame count, loop duration and byte size
-are printed when the run finishes. Raw frames and the review contact sheet
-stay in the ignored `testclient/door-animation.*` directory.
+The script builds the standard Java 8 mod JAR in `build/libs/`, installs it into the disposable testclient runtime, records all selected scenes, then validates and encodes their GIFs. Raw PNGs, `frames.tsv`, scene metadata, GC/client logs, artifact checksum and decoded-GIF review sheets remain in the ignored `testclient/door-animation.*` directory. The source directory is printed when capture finishes.
 
-To re-encode an existing capture without restarting Minecraft:
+To re-encode without restarting Minecraft:
 
 ```bash
-python3 testclient/encode_door_gif.py testclient/door-animation.RUN
+python3 testclient/encode_animations.py testclient/door-animation.RUN
+# Or just one scene in that directory
+python3 testclient/encode_animations.py testclient/door-animation.RUN/door-rotating
 ```
 
-Validation requires synchronized closed/open/closed states, intermediate
-opening and closing geometry, an animated file, a continuous loop, and the
-expected dimensions and duration. The contact sheet supports visual review
-of both transitions and the complete motion footprint.
+Each clip must contain synchronized closed/open/closed states, visible intermediate geometry in both transitions, a returned endpoint and a motion footprint inside the crop. The encoder checks dimensions, frame count, exact loop duration and loop settings, and writes timing/size results plus a decoded contact sheet for review. Doors and trapdoors have 2.6-second cycles; ramps have 4.6-second cycles. See [capture validation](animation-validation.md) for the current results.
 
-## Demonstration result
+## Motion index
 
-Capture: `testclient/door-animation.beMkA1` (36 real PNG frames).
-Validated output: **20 GIF frames, 3.4-second loop, 600×500, 282,513 bytes**
-(about 276 KiB). Both transitions and the final closed state were verified
-from the geometry, and decoded GIF frames were visually reviewed. The source
-capture used the Java 8 standard JAR build.
+- [Programmable Door](gallery/doors.md): four motions.
+- [Programmable Trapdoor](gallery/programmable-trapdoor.md): three in-block motions, two next-block motions and opposing mounts.
+- [Programmable Diagonal Trapdoor](gallery/programmable-diagonal-trapdoor.md): three motions, all three shapes, rectangular/staggered/partial groups and joined slope orientations.
+- [Programmable Ramp](gallery/ramp-controller.md): four modes and four slope/tread examples.
+- [Version 1.3 highlights](gallery/version-1.3.md): selected animations with the new features.
+
+The complete capture set:
+
+| Scene | GIF |
+| --- | --- |
+| door-rotating | [Open clip](images/gallery/doors/observation-rotating.gif) |
+| door-sideways | [Open clip](images/gallery/doors/observation-sideways.gif) |
+| door-up | [Open clip](images/gallery/doors/observation-up.gif) |
+| door-down | [Open clip](images/gallery/doors/observation-down.gif) |
+| trapdoor-flat-rotating | [Open clip](images/gallery/tasks/trapdoor-flat-rotating.gif) |
+| trapdoor-flat-sliding | [Open clip](images/gallery/tasks/trapdoor-flat-sliding.gif) |
+| trapdoor-flat-over-surface | [Open clip](images/gallery/tasks/trapdoor-flat-over-surface.gif) |
+| trapdoor-next-rotating | [Open clip](images/gallery/tasks/trapdoor-next-rotating.gif) |
+| trapdoor-next-sliding | [Open clip](images/gallery/tasks/trapdoor-next-sliding.gif) |
+| trapdoor-opposing-next | [Open clip](images/gallery/tasks/trapdoor-opposing-next.gif) |
+| trapdoor-v-rotating | [Open clip](images/gallery/tasks/trapdoor-v-rotating.gif) |
+| trapdoor-v-sliding | [Open clip](images/gallery/tasks/trapdoor-v-sliding.gif) |
+| trapdoor-rectangle-rotating | [Open clip](images/gallery/tasks/trapdoor-rectangle-rotating.gif) |
+| trapdoor-rectangle-sliding | [Open clip](images/gallery/tasks/trapdoor-rectangle-sliding.gif) |
+| trapdoor-stagger-rotating | [Open clip](images/gallery/tasks/trapdoor-stagger-rotating.gif) |
+| trapdoor-stagger-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-sliding.gif) |
+| trapdoor-stagger-halfwidth-rotating | [Open clip](images/gallery/tasks/trapdoor-stagger-halfwidth-rotating.gif) |
+| trapdoor-stagger-halfwidth-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-halfwidth-sliding.gif) |
+| trapdoor-stagger-shallow-rotating | [Open clip](images/gallery/tasks/trapdoor-stagger-shallow-rotating.gif) |
+| trapdoor-stagger-shallow-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-shallow-sliding.gif) |
+| trapdoor-rectangle-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-rectangle-inset-sliding.gif) |
+| trapdoor-patch-halfwidth-horizontal-rotating | [Open clip](images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating.gif) |
+| trapdoor-patch-halfwidth-horizontal-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-sliding.gif) |
+| trapdoor-patch-halfwidth-horizontal-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-inset-sliding.gif) |
+| trapdoor-patch-halfwidth-stagger-rotating | [Open clip](images/gallery/tasks/trapdoor-patch-halfwidth-stagger-rotating.gif) |
+| trapdoor-patch-halfwidth-stagger-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-halfwidth-stagger-sliding.gif) |
+| trapdoor-patch-halfwidth-stagger-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-halfwidth-stagger-inset-sliding.gif) |
+| trapdoor-patch-shallow-horizontal-rotating | [Open clip](images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating.gif) |
+| trapdoor-patch-shallow-horizontal-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-shallow-horizontal-sliding.gif) |
+| trapdoor-patch-shallow-horizontal-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-shallow-horizontal-inset-sliding.gif) |
+| trapdoor-patch-shallow-stagger-rotating | [Open clip](images/gallery/tasks/trapdoor-patch-shallow-stagger-rotating.gif) |
+| trapdoor-patch-shallow-stagger-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-shallow-stagger-sliding.gif) |
+| trapdoor-patch-shallow-stagger-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-patch-shallow-stagger-inset-sliding.gif) |
+| trapdoor-diagonal-opposite-slopes-rotating | [Open clip](images/gallery/tasks/trapdoor-diagonal-opposite-slopes-rotating.gif) |
+| trapdoor-diagonal-opposite-slopes-sliding | [Open clip](images/gallery/tasks/trapdoor-diagonal-opposite-slopes-sliding.gif) |
+| trapdoor-diagonal-reversed-plane-rotating | [Open clip](images/gallery/tasks/trapdoor-diagonal-reversed-plane-rotating.gif) |
+| trapdoor-diagonal-reversed-plane-sliding | [Open clip](images/gallery/tasks/trapdoor-diagonal-reversed-plane-sliding.gif) |
+| trapdoor-diagonal-slide-wall | [Open clip](images/gallery/tasks/trapdoor-diagonal-slide-wall.gif) |
+| trapdoor-flat-rotate-neighbors | [Open clip](images/gallery/tasks/trapdoor-flat-rotate-neighbors.gif) |
+| ramp-ramp | [Open clip](images/gallery/ramp-controller/ramp.gif) |
+| ramp-filled | [Open clip](images/gallery/ramp-controller/filled.gif) |
+| ramp-lift | [Open clip](images/gallery/ramp-controller/lift.gif) |
+| ramp-extend | [Open clip](images/gallery/ramp-controller/extend.gif) |
+| ramp-up-smooth | [Open clip](images/gallery/ramp-controller/up-smooth.gif) |
+| ramp-up-stairs | [Open clip](images/gallery/ramp-controller/up-stairs.gif) |
+| ramp-down-smooth | [Open clip](images/gallery/ramp-controller/down-smooth.gif) |
+| ramp-down-stairs | [Open clip](images/gallery/ramp-controller/down-stairs.gif) |
+| trapdoor-stagger-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-inset-sliding.gif) |
+| trapdoor-stagger-halfwidth-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-halfwidth-inset-sliding.gif) |
+| trapdoor-stagger-shallow-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-shallow-inset-sliding.gif) |

@@ -1,0 +1,502 @@
+[
+  {
+    "id": "door-down",
+    "output": "doors/observation-down.gif",
+    "frames": 19,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 64782,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 57.54
+  },
+  {
+    "id": "door-rotating",
+    "output": "doors/observation-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 213466,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 58.56
+  },
+  {
+    "id": "door-sideways",
+    "output": "doors/observation-sideways.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 88478,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 58.5
+  },
+  {
+    "id": "door-up",
+    "output": "doors/observation-up.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 87453,
+    "median_gap_ms": 50.02,
+    "max_gap_ms": 57.17
+  },
+  {
+    "id": "ramp-down-smooth",
+    "output": "ramp-controller/down-smooth.gif",
+    "frames": 64,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 161556,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 57.41
+  },
+  {
+    "id": "ramp-down-stairs",
+    "output": "ramp-controller/down-stairs.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 145093,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 57.28
+  },
+  {
+    "id": "ramp-extend",
+    "output": "ramp-controller/extend.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 159519,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 58.45
+  },
+  {
+    "id": "ramp-filled",
+    "output": "ramp-controller/filled.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 210285,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 56.51
+  },
+  {
+    "id": "ramp-lift",
+    "output": "ramp-controller/lift.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 205334,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 60.92
+  },
+  {
+    "id": "ramp-ramp",
+    "output": "ramp-controller/ramp.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 224180,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 60.69
+  },
+  {
+    "id": "ramp-up-smooth",
+    "output": "ramp-controller/up-smooth.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 244353,
+    "median_gap_ms": 50.02,
+    "max_gap_ms": 63.42
+  },
+  {
+    "id": "ramp-up-stairs",
+    "output": "ramp-controller/up-stairs.gif",
+    "frames": 65,
+    "captured": 92,
+    "duration_ms": 4600,
+    "bytes": 244674,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 57.15
+  },
+  {
+    "id": "trapdoor-diagonal-opposite-slopes-rotating",
+    "output": "tasks/trapdoor-diagonal-opposite-slopes-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 283625,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 58.1
+  },
+  {
+    "id": "trapdoor-diagonal-opposite-slopes-sliding",
+    "output": "tasks/trapdoor-diagonal-opposite-slopes-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 365042,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 58.43
+  },
+  {
+    "id": "trapdoor-diagonal-reversed-plane-rotating",
+    "output": "tasks/trapdoor-diagonal-reversed-plane-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 288057,
+    "median_gap_ms": 50.02,
+    "max_gap_ms": 57.1
+  },
+  {
+    "id": "trapdoor-diagonal-reversed-plane-sliding",
+    "output": "tasks/trapdoor-diagonal-reversed-plane-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 421846,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 58.37
+  },
+  {
+    "id": "trapdoor-diagonal-slide-wall",
+    "output": "tasks/trapdoor-diagonal-slide-wall.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 108113,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 61.04
+  },
+  {
+    "id": "trapdoor-flat-over-surface",
+    "output": "tasks/trapdoor-flat-over-surface.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 81366,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 57.45
+  },
+  {
+    "id": "trapdoor-flat-rotate-neighbors",
+    "output": "tasks/trapdoor-flat-rotate-neighbors.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 93083,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 57.23
+  },
+  {
+    "id": "trapdoor-flat-rotating",
+    "output": "tasks/trapdoor-flat-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 84160,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 57.08
+  },
+  {
+    "id": "trapdoor-flat-sliding",
+    "output": "tasks/trapdoor-flat-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 85418,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 58.35
+  },
+  {
+    "id": "trapdoor-next-rotating",
+    "output": "tasks/trapdoor-next-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 109832,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 58.09
+  },
+  {
+    "id": "trapdoor-next-sliding",
+    "output": "tasks/trapdoor-next-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 96992,
+    "median_gap_ms": 50.03,
+    "max_gap_ms": 57.31
+  },
+  {
+    "id": "trapdoor-opposing-next",
+    "output": "tasks/trapdoor-opposing-next.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 92119,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 60.21
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-horizontal-inset-sliding",
+    "output": "tasks/trapdoor-patch-halfwidth-horizontal-inset-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 74142,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 58.18
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-horizontal-rotating",
+    "output": "tasks/trapdoor-patch-halfwidth-horizontal-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 68723,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 57.11
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-horizontal-sliding",
+    "output": "tasks/trapdoor-patch-halfwidth-horizontal-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 75054,
+    "median_gap_ms": 50.02,
+    "max_gap_ms": 57.16
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-stagger-inset-sliding",
+    "output": "tasks/trapdoor-patch-halfwidth-stagger-inset-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 78379,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 56.97
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-stagger-rotating",
+    "output": "tasks/trapdoor-patch-halfwidth-stagger-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 70787,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 57.21
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-stagger-sliding",
+    "output": "tasks/trapdoor-patch-halfwidth-stagger-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 76397,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 58.24
+  },
+  {
+    "id": "trapdoor-patch-shallow-horizontal-inset-sliding",
+    "output": "tasks/trapdoor-patch-shallow-horizontal-inset-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 70895,
+    "median_gap_ms": 50.03,
+    "max_gap_ms": 58.27
+  },
+  {
+    "id": "trapdoor-patch-shallow-horizontal-rotating",
+    "output": "tasks/trapdoor-patch-shallow-horizontal-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 69879,
+    "median_gap_ms": 50.03,
+    "max_gap_ms": 56.84
+  },
+  {
+    "id": "trapdoor-patch-shallow-horizontal-sliding",
+    "output": "tasks/trapdoor-patch-shallow-horizontal-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 71219,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 57.22
+  },
+  {
+    "id": "trapdoor-patch-shallow-stagger-inset-sliding",
+    "output": "tasks/trapdoor-patch-shallow-stagger-inset-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 72088,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 57.23
+  },
+  {
+    "id": "trapdoor-patch-shallow-stagger-rotating",
+    "output": "tasks/trapdoor-patch-shallow-stagger-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 72740,
+    "median_gap_ms": 50.02,
+    "max_gap_ms": 57.13
+  },
+  {
+    "id": "trapdoor-patch-shallow-stagger-sliding",
+    "output": "tasks/trapdoor-patch-shallow-stagger-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 74856,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 58.18
+  },
+  {
+    "id": "trapdoor-rectangle-inset-sliding",
+    "output": "tasks/trapdoor-rectangle-inset-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 109561,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 57.46
+  },
+  {
+    "id": "trapdoor-rectangle-rotating",
+    "output": "tasks/trapdoor-rectangle-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 94745,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 57.81
+  },
+  {
+    "id": "trapdoor-rectangle-sliding",
+    "output": "tasks/trapdoor-rectangle-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 107185,
+    "median_gap_ms": 50.02,
+    "max_gap_ms": 52.01
+  },
+  {
+    "id": "trapdoor-stagger-halfwidth-inset-sliding",
+    "output": "tasks/trapdoor-stagger-halfwidth-inset-sliding.gif",
+    "frames": 20,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 76539,
+    "median_gap_ms": 50.04,
+    "max_gap_ms": 57.38
+  },
+  {
+    "id": "trapdoor-stagger-halfwidth-rotating",
+    "output": "tasks/trapdoor-stagger-halfwidth-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 65647,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 60.76
+  },
+  {
+    "id": "trapdoor-stagger-halfwidth-sliding",
+    "output": "tasks/trapdoor-stagger-halfwidth-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 77628,
+    "median_gap_ms": 50.03,
+    "max_gap_ms": 57.14
+  },
+  {
+    "id": "trapdoor-stagger-inset-sliding",
+    "output": "tasks/trapdoor-stagger-inset-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 78843,
+    "median_gap_ms": 49.92,
+    "max_gap_ms": 57.17
+  },
+  {
+    "id": "trapdoor-stagger-rotating",
+    "output": "tasks/trapdoor-stagger-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 66704,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 58.19
+  },
+  {
+    "id": "trapdoor-stagger-shallow-inset-sliding",
+    "output": "tasks/trapdoor-stagger-shallow-inset-sliding.gif",
+    "frames": 20,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 68961,
+    "median_gap_ms": 50.06,
+    "max_gap_ms": 57.84
+  },
+  {
+    "id": "trapdoor-stagger-shallow-rotating",
+    "output": "tasks/trapdoor-stagger-shallow-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 67867,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 57.16
+  },
+  {
+    "id": "trapdoor-stagger-shallow-sliding",
+    "output": "tasks/trapdoor-stagger-shallow-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 71213,
+    "median_gap_ms": 50.0,
+    "max_gap_ms": 58.42
+  },
+  {
+    "id": "trapdoor-stagger-sliding",
+    "output": "tasks/trapdoor-stagger-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 77588,
+    "median_gap_ms": 50.04,
+    "max_gap_ms": 59.32
+  },
+  {
+    "id": "trapdoor-v-rotating",
+    "output": "tasks/trapdoor-v-rotating.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 63939,
+    "median_gap_ms": 49.99,
+    "max_gap_ms": 57.85
+  },
+  {
+    "id": "trapdoor-v-sliding",
+    "output": "tasks/trapdoor-v-sliding.gif",
+    "frames": 21,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 68488,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 60.4
+  }
+]

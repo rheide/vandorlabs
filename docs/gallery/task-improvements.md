@@ -8,21 +8,21 @@ Rotating and sliding groups support rectangles up to eight cells on each axis,
 opposite-slope diagonal rows, and staggered diagonal panels in all three shape modes. Their
 membership and configuration survive saving and copying. Half-width and half-height diagonal leaves also support connected partial patches, including three-leaf corners.
 
-| Assembly | Closed | Open |
-| --- | --- | --- |
-| Flat 2×4, rotating | ![Closed flat rectangle](../images/gallery/tasks/trapdoor-flat-rotating-closed.png) | ![Open flat rectangle](../images/gallery/tasks/trapdoor-flat-rotating-open.png) |
-| Diagonal 5×2, sliding | ![Closed diagonal rectangle](../images/gallery/tasks/trapdoor-rectangle-sliding-closed.png) | ![Open diagonal rectangle](../images/gallery/tasks/trapdoor-rectangle-sliding-open.png) |
-| Opposite slopes, rotating | ![Closed V assembly](../images/gallery/tasks/trapdoor-v-rotating-closed.png) | ![Open V assembly](../images/gallery/tasks/trapdoor-v-rotating-open.png) |
-| Full-width / full-height staggered panels, sliding | ![Closed staggered assembly](../images/gallery/tasks/trapdoor-stagger-sliding-closed.png) | ![Open staggered assembly](../images/gallery/tasks/trapdoor-stagger-sliding-open.png) |
-| Half-width / full-height staggered panels, sliding | ![Closed half-width staggered group](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding-closed.png) | ![Open half-width staggered group](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding-open.png) |
-| Full-width / half-height staggered panels, rotating | ![Closed shallow staggered group](../images/gallery/tasks/trapdoor-stagger-shallow-rotating-closed.png) | ![Open shallow staggered group](../images/gallery/tasks/trapdoor-stagger-shallow-rotating-open.png) |
+| Assembly | Opening and closing |
+| --- | --- |
+| Flat 2×4, rotating | ![Flat 2×4, rotating](../images/gallery/tasks/trapdoor-flat-rotating.gif) |
+| Diagonal 5×2, sliding | ![Diagonal 5×2, sliding](../images/gallery/tasks/trapdoor-rectangle-sliding.gif) |
+| Opposite slopes, rotating | ![Opposite slopes, rotating](../images/gallery/tasks/trapdoor-v-rotating.gif) |
+| Full-width / full-height staggered panels, sliding | ![Full-width / full-height staggered panels, sliding](../images/gallery/tasks/trapdoor-stagger-sliding.gif) |
+| Half-width / full-height staggered panels, sliding | ![Half-width / full-height staggered panels, sliding](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding.gif) |
+| Full-width / half-height staggered panels, rotating | ![Full-width / half-height staggered panels, rotating](../images/gallery/tasks/trapdoor-stagger-shallow-rotating.gif) |
 
 Opposite-slope rows move toward the convex outside of their bend for both movements. Rotating retains the inset and hinge animation; Sliding clears that outside face before separating sideways. Reversed rows that continue the same plane share an outside face.
 
-| Assembly | Rotating open | Sliding open |
+| Assembly | Rotating | Slide over wall |
 | --- | --- | --- |
-| Opposite-slope bend | ![Both rows rotate outside the bend](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-open.png) | ![Both rows slide clear of the bend](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-sliding-open.png) |
-| Reversed coplanar rows | ![Reversed rows rotate outside the continued plane](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-open.png) | ![Reversed rows slide clear of the continued plane](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-sliding-open.png) |
+| Opposite-slope bend | ![Both rows rotate outside the bend](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-rotating.gif) | ![Both rows slide clear of the bend](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-sliding.gif) |
+| Reversed coplanar rows | ![Reversed rows rotate outside the continued plane](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-rotating.gif) | ![Reversed rows slide clear of the continued plane](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-sliding.gif) |
 
 See the [normal](programmable-trapdoor.md) and
 [diagonal](programmable-diagonal-trapdoor.md) trapdoor guides for placement.
@@ -42,7 +42,7 @@ Follow the [gear alignment and cover setup](../landing-gear-covers.md).
 ## Shared materials
 
 The same categorized picker offers built-in finishes, door artwork, lights,
-static screens, filesystem PNGs and a Custom block or door sample. Computing, Fuel, Hull, Power, Trapdoors and Windows add 33 bundled materials. New normal and diagonal trapdoors use Cyan-lit Armored Sci-Fi Hatch-4 by default. Custom
+static screens, filesystem PNGs and a Custom block or door sample. The additional material pack adds 33 finishes across the shared categories. New normal and diagonal trapdoors use Armored Hatch by default. Custom
 selection uses the sampled block's texture while keeping the programmable
 block's shape.
 
@@ -84,19 +84,19 @@ The diagonal dialog separates width and height, so Full/Half width updates a tal
 
 Half-width tall and full-width half-height trapdoors join connected partial patches. These examples contain three leaves at `(X,Y,Z)`, `(X,Y,Z+1)`, and `(X+1,Y,Z+1)`. Using any member opens all three, including mixed ordinary/staggered neighbors.
 
-| Half-width patch, closed | Half-width patch, rotating open |
-| --- | --- |
-| ![Three connected half-width leaves](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating-closed.png) | ![All three half-width leaves open together](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating-open.png) |
+| Half-width patch, rotating |
+| --- |
+| ![Half-width patch, rotating](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating.gif) |
 
-| Half-height patch, closed | Half-height patch, rotating open |
-| --- | --- |
-| ![Three connected shallow leaves](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating-closed.png) | ![All three half-height leaves open together](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating-open.png) |
+| Half-height patch, rotating |
+| --- |
+| ![Half-height patch, rotating](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating.gif) |
 
 **Slide over wall** retains the lifted animation. **Slide into wall** moves sideways directly without the lift. Both choices synchronize across the group and survive saves and copying.
 
-| Slide over wall, open | Slide into wall, open |
+| Slide over wall | Slide into wall |
 | --- | --- |
-| ![Partial patch uses the lifted sliding motion](../images/gallery/tasks/trapdoor-patch-shallow-stagger-sliding-open.png) | ![The same partial patch slides sideways without lifting](../images/gallery/tasks/trapdoor-patch-shallow-stagger-inset-sliding-open.png) |
+| ![Partial patch uses the lifted sliding motion](../images/gallery/tasks/trapdoor-patch-shallow-stagger-sliding.gif) | ![The same partial patch slides sideways without lifting](../images/gallery/tasks/trapdoor-patch-shallow-stagger-inset-sliding.gif) |
 
 ![Diagonal movement includes Slide into wall](../images/gallery/tasks/diagonal-trapdoor-into-wall-config.png)
 
@@ -122,21 +122,21 @@ The vanilla oak leaf (left) and default programmable leaf (right) share the same
 
 | Rotating beside blocks | Sliding over a diagonal wall |
 | --- | --- |
-| ![Open rotating leaf beside solid neighbors](../images/gallery/tasks/trapdoor-flat-rotate-neighbors.png) | ![Open diagonal leaf clear of its continuation wall](../images/gallery/tasks/trapdoor-diagonal-slide-wall.png) |
+| ![Open rotating leaf beside solid neighbors](../images/gallery/tasks/trapdoor-flat-rotate-neighbors.gif) | ![Open diagonal leaf clear of its continuation wall](../images/gallery/tasks/trapdoor-diagonal-slide-wall.gif) |
 
-| Next-block leaf, closed | Next-block leaf, rotating open |
-| --- | --- |
-| ![Closed leaf covers the neighboring cell](../images/gallery/tasks/trapdoor-next-rotating-closed.png) | ![Rotated leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-next-rotating-open.png) |
+| Rotate into next block |
+| --- |
+| ![Rotate into next block](../images/gallery/tasks/trapdoor-next-rotating.gif) |
 
-| Slide into next block, closed | Slide into next block, open |
-| --- | --- |
-| ![Closed slider keeps its one-pixel overlap at the mounting end](../images/gallery/tasks/trapdoor-next-sliding-closed.png) | ![The slider retracts into its owning cell](../images/gallery/tasks/trapdoor-next-sliding-open.png) |
+| Slide into next block |
+| --- |
+| ![Slide into next block](../images/gallery/tasks/trapdoor-next-sliding.gif) |
 
 Matching-height next-block covers on opposite sides of a two-block opening omit the standalone one-pixel protrusion. They meet without overlapping and remain independently controlled. Configured next-block items place open, showing which cell owns the leaf. Open rotating covers use only a tiny clearance from the covered block, rather than a one-pixel gap.
 
-| Opposing next-block covers, closed | Opposing next-block covers, open |
-| --- | --- |
-| ![Opposing leaves meet across the opening](../images/gallery/tasks/trapdoor-opposing-next-closed.png) | ![Each opposing leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-opposing-next-open.png) |
+| Opposing next-block covers |
+| --- |
+| ![Opposing next-block covers](../images/gallery/tasks/trapdoor-opposing-next.gif) |
 
 ## Flush floor and ceiling mounts
 
@@ -154,9 +154,9 @@ Individual Next block mounts can be selected at the leaf's actual position after
 | --- | --- |
 | ![Selection follows the closed leaf into the neighboring cell](../images/gallery/tasks/trapdoor-offset-closed-selection.png) | ![Selection follows the open leaf after changing the hinge](../images/gallery/tasks/trapdoor-offset-open-selection.png) |
 
-Joined trapdoors offer only Rotating and Sliding in Movement, with hinges fixed at their outer edges. Server configuration and Duplifier copies preserve the group if they request next-block movement.
+Joined trapdoors offer Rotating, Sliding and Slide over surface in Movement, with hinges fixed at their outer edges. Server configuration and Duplifier copies preserve the group if they request next-block movement.
 
-![Joined trapdoor Movement offers only the two in-block motions](../images/gallery/tasks/trapdoor-joined-config.png)
+![Joined trapdoor controls keep next-block offsets out of joined groups](../images/gallery/tasks/trapdoor-joined-config.png)
 
 For an assembly split by an older version, follow the recovery instructions in the [trapdoor guide](programmable-trapdoor.md).
 

@@ -42,6 +42,8 @@ if target == 'gallery_distant_geometry':
 require('custom-materials-runtime PASS')
 require('imported-materials-runtime PASS')
 if target == 'dialogs':
+    for marker in ('landing-gear-reload PASS', 'diagonal-screen-item-runtime PASS', 'short-trapdoor-labels PASS'):
+        require(marker)
     for gui in ('GuiProgrammableWall', 'GuiProgrammableTrapdoor', 'GuiSpaceDoor', 'GuiProgrammableLight', 'GuiAnimatedScreenSelector', 'GuiProgrammableInput', 'GuiProgrammableHalfConsole', 'GuiProgrammableTrigger', 'GuiRedstoneChannel'):
         require('programmable-dialog-layout PASS ' + gui)
     for family in ('block', 'slab', 'door', 'trapdoor'):

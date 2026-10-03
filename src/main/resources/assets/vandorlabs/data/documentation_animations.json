@@ -1,0 +1,307 @@
+[
+  {
+    "id": "door-rotating",
+    "shot": "gallery_door_motion_rotating_closed",
+    "kind": "door",
+    "output": "doors/observation-rotating.gif"
+  },
+  {
+    "id": "door-sideways",
+    "shot": "gallery_door_motion_sideways_closed",
+    "kind": "door",
+    "output": "doors/observation-sideways.gif"
+  },
+  {
+    "id": "door-up",
+    "shot": "gallery_door_motion_up_closed",
+    "kind": "door",
+    "output": "doors/observation-up.gif"
+  },
+  {
+    "id": "door-down",
+    "shot": "gallery_door_motion_down_closed",
+    "kind": "door",
+    "output": "doors/observation-down.gif"
+  },
+  {
+    "id": "trapdoor-flat-rotating",
+    "shot": "gallery_trapdoor_flat_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-flat-rotating.gif"
+  },
+  {
+    "id": "trapdoor-flat-sliding",
+    "shot": "gallery_trapdoor_flat_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-flat-sliding.gif"
+  },
+  {
+    "id": "trapdoor-flat-over-surface",
+    "shot": "gallery_trapdoor_flat_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-flat-over-surface.gif",
+    "overSurface": true
+  },
+  {
+    "id": "trapdoor-next-rotating",
+    "shot": "gallery_trapdoor_followup_next_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-next-rotating.gif"
+  },
+  {
+    "id": "trapdoor-next-sliding",
+    "shot": "gallery_trapdoor_followup_next_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-next-sliding.gif"
+  },
+  {
+    "id": "trapdoor-opposing-next",
+    "shot": "gallery_trapdoor_followup_opposing_next_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-opposing-next.gif"
+  },
+  {
+    "id": "trapdoor-v-rotating",
+    "shot": "gallery_trapdoor_v_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-v-rotating.gif"
+  },
+  {
+    "id": "trapdoor-v-sliding",
+    "shot": "gallery_trapdoor_v_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-v-sliding.gif"
+  },
+  {
+    "id": "trapdoor-rectangle-rotating",
+    "shot": "gallery_trapdoor_rectangle_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-rectangle-rotating.gif"
+  },
+  {
+    "id": "trapdoor-rectangle-sliding",
+    "shot": "gallery_trapdoor_rectangle_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-rectangle-sliding.gif"
+  },
+  {
+    "id": "trapdoor-stagger-rotating",
+    "shot": "gallery_trapdoor_stagger_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-rotating.gif"
+  },
+  {
+    "id": "trapdoor-stagger-sliding",
+    "shot": "gallery_trapdoor_stagger_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-sliding.gif"
+  },
+  {
+    "id": "trapdoor-stagger-halfwidth-rotating",
+    "shot": "gallery_trapdoor_stagger_halfwidth_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-halfwidth-rotating.gif"
+  },
+  {
+    "id": "trapdoor-stagger-halfwidth-sliding",
+    "shot": "gallery_trapdoor_stagger_halfwidth_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-halfwidth-sliding.gif"
+  },
+  {
+    "id": "trapdoor-stagger-shallow-rotating",
+    "shot": "gallery_trapdoor_stagger_shallow_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-shallow-rotating.gif"
+  },
+  {
+    "id": "trapdoor-stagger-shallow-sliding",
+    "shot": "gallery_trapdoor_stagger_shallow_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-shallow-sliding.gif"
+  },
+  {
+    "id": "trapdoor-stagger-inset-sliding",
+    "shot": "gallery_trapdoor_stagger_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-inset-sliding.gif",
+    "intoWall": true
+  },
+  {
+    "id": "trapdoor-stagger-halfwidth-inset-sliding",
+    "shot": "gallery_trapdoor_stagger_halfwidth_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-halfwidth-inset-sliding.gif",
+    "intoWall": true
+  },
+  {
+    "id": "trapdoor-stagger-shallow-inset-sliding",
+    "shot": "gallery_trapdoor_stagger_shallow_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-stagger-shallow-inset-sliding.gif",
+    "intoWall": true
+  },
+  {
+    "id": "trapdoor-rectangle-inset-sliding",
+    "shot": "gallery_trapdoor_rectangle_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-rectangle-inset-sliding.gif",
+    "intoWall": true
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-horizontal-rotating",
+    "shot": "gallery_trapdoor_patch_halfwidth_horizontal_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-halfwidth-horizontal-rotating.gif"
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-horizontal-sliding",
+    "shot": "gallery_trapdoor_patch_halfwidth_horizontal_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-halfwidth-horizontal-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-horizontal-inset-sliding",
+    "shot": "gallery_trapdoor_patch_halfwidth_horizontal_inset_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-halfwidth-horizontal-inset-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-stagger-rotating",
+    "shot": "gallery_trapdoor_patch_halfwidth_stagger_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-halfwidth-stagger-rotating.gif"
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-stagger-sliding",
+    "shot": "gallery_trapdoor_patch_halfwidth_stagger_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-halfwidth-stagger-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-halfwidth-stagger-inset-sliding",
+    "shot": "gallery_trapdoor_patch_halfwidth_stagger_inset_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-halfwidth-stagger-inset-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-shallow-horizontal-rotating",
+    "shot": "gallery_trapdoor_patch_shallow_horizontal_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-shallow-horizontal-rotating.gif"
+  },
+  {
+    "id": "trapdoor-patch-shallow-horizontal-sliding",
+    "shot": "gallery_trapdoor_patch_shallow_horizontal_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-shallow-horizontal-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-shallow-horizontal-inset-sliding",
+    "shot": "gallery_trapdoor_patch_shallow_horizontal_inset_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-shallow-horizontal-inset-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-shallow-stagger-rotating",
+    "shot": "gallery_trapdoor_patch_shallow_stagger_rotating_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-shallow-stagger-rotating.gif"
+  },
+  {
+    "id": "trapdoor-patch-shallow-stagger-sliding",
+    "shot": "gallery_trapdoor_patch_shallow_stagger_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-shallow-stagger-sliding.gif"
+  },
+  {
+    "id": "trapdoor-patch-shallow-stagger-inset-sliding",
+    "shot": "gallery_trapdoor_patch_shallow_stagger_inset_sliding_closed",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-patch-shallow-stagger-inset-sliding.gif"
+  },
+  {
+    "id": "trapdoor-diagonal-opposite-slopes-rotating",
+    "shot": "gallery_trapdoor_followup_diagonal_opposite_slopes_open",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-diagonal-opposite-slopes-rotating.gif"
+  },
+  {
+    "id": "trapdoor-diagonal-opposite-slopes-sliding",
+    "shot": "gallery_trapdoor_followup_diagonal_opposite_slopes_sliding_open",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-diagonal-opposite-slopes-sliding.gif"
+  },
+  {
+    "id": "trapdoor-diagonal-reversed-plane-rotating",
+    "shot": "gallery_trapdoor_followup_diagonal_reversed_plane_open",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-diagonal-reversed-plane-rotating.gif"
+  },
+  {
+    "id": "trapdoor-diagonal-reversed-plane-sliding",
+    "shot": "gallery_trapdoor_followup_diagonal_reversed_plane_sliding_open",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-diagonal-reversed-plane-sliding.gif"
+  },
+  {
+    "id": "trapdoor-diagonal-slide-wall",
+    "shot": "gallery_trapdoor_followup_diagonal_slide_wall",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-diagonal-slide-wall.gif"
+  },
+  {
+    "id": "trapdoor-flat-rotate-neighbors",
+    "shot": "gallery_trapdoor_followup_flat_rotate_neighbors",
+    "kind": "trapdoor",
+    "output": "tasks/trapdoor-flat-rotate-neighbors.gif"
+  },
+  {
+    "id": "ramp-ramp",
+    "shot": "gallery_ramp_mode_ramp_off",
+    "kind": "ramp",
+    "output": "ramp-controller/ramp.gif"
+  },
+  {
+    "id": "ramp-filled",
+    "shot": "gallery_ramp_mode_filled_off",
+    "kind": "ramp",
+    "output": "ramp-controller/filled.gif"
+  },
+  {
+    "id": "ramp-lift",
+    "shot": "gallery_ramp_mode_lift_off",
+    "kind": "ramp",
+    "output": "ramp-controller/lift.gif"
+  },
+  {
+    "id": "ramp-extend",
+    "shot": "gallery_ramp_mode_extend_off",
+    "kind": "ramp",
+    "output": "ramp-controller/extend.gif"
+  },
+  {
+    "id": "ramp-up-smooth",
+    "shot": "gallery_ramp_up_smooth",
+    "kind": "ramp",
+    "output": "ramp-controller/up-smooth.gif"
+  },
+  {
+    "id": "ramp-up-stairs",
+    "shot": "gallery_ramp_up_stairs",
+    "kind": "ramp",
+    "output": "ramp-controller/up-stairs.gif"
+  },
+  {
+    "id": "ramp-down-smooth",
+    "shot": "gallery_ramp_down_smooth",
+    "kind": "ramp",
+    "output": "ramp-controller/down-smooth.gif"
+  },
+  {
+    "id": "ramp-down-stairs",
+    "shot": "gallery_ramp_down_stairs",
+    "kind": "ramp",
+    "output": "ramp-controller/down-stairs.gif"
+  }
+]

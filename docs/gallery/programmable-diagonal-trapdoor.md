@@ -2,7 +2,7 @@
 
 Default, configured and Custom-finish inventory icons use a reduced scale to fit the hotbar slot; see the [hotbar comparison](../images/gallery/tasks/diagonal-trapdoor-hotbar.png).
 
-A movable panel aligned with Programmable Diagonal Walls. New panels use **Cyan-lit Armored Sci-Fi Hatch-4** from the Trapdoors category by default. Choose the shared categorized
+A movable panel aligned with Programmable Diagonal Walls. New panels use **Armored Hatch** from the Trapdoors category by default. Choose the shared categorized
 material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
 with Rotating, Slide over wall or Slide into wall movement and no frame or hinge hardware.
 
@@ -46,6 +46,39 @@ at any member controls the whole group. Configuration and copying update the
 group together, subject to edit permission on every member. Switching between
 tall and shallow geometry removes the previous links; place members in the new
 layout to form the new group. No unloaded chunk is forced to load.
+
+## Watch the movements
+
+Each clip opens and closes the same connected surface. The half-width tall 5×2 example makes the lifting stage easy to compare with direct sliding.
+
+| Movement | Half-width / tall rectangle |
+| --- | --- |
+| Rotating | ![Rotating](../images/gallery/tasks/trapdoor-rectangle-rotating.gif) |
+| Slide over wall | ![Slide over wall](../images/gallery/tasks/trapdoor-rectangle-sliding.gif) |
+| Slide into wall | ![Slide into wall](../images/gallery/tasks/trapdoor-rectangle-inset-sliding.gif) |
+
+All three shape modes also work on staggered surfaces:
+
+| Shape | Rotating | Slide over wall | Slide into wall |
+| --- | --- | --- | --- |
+| Full width / tall | ![Full width / tall rotating](../images/gallery/tasks/trapdoor-stagger-rotating.gif) | ![Full width / tall sliding](../images/gallery/tasks/trapdoor-stagger-sliding.gif) ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-inset-sliding.gif) |
+| Half width / tall | ![Half width / tall rotating](../images/gallery/tasks/trapdoor-stagger-halfwidth-rotating.gif) | ![Half width / tall sliding](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding.gif) ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-halfwidth-inset-sliding.gif) |
+| Full width / shallow | ![Full width / shallow rotating](../images/gallery/tasks/trapdoor-stagger-shallow-rotating.gif) | ![Full width / shallow sliding](../images/gallery/tasks/trapdoor-stagger-shallow-sliding.gif) ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-shallow-inset-sliding.gif) |
+
+Partial patches open together in each movement. Horizontal and staggered examples use the same three-leaf corner:
+
+| Patch | Rotating | Slide over wall | Slide into wall |
+| --- | --- | --- | --- |
+| Half-width horizontal | ![Half-width horizontal rotating](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating.gif) | ![Half-width horizontal sliding](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-sliding.gif) | ![Half-width horizontal inset sliding](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-inset-sliding.gif) |
+| Half-width staggered | ![Half-width staggered rotating](../images/gallery/tasks/trapdoor-patch-halfwidth-stagger-rotating.gif) | ![Half-width staggered sliding](../images/gallery/tasks/trapdoor-patch-halfwidth-stagger-sliding.gif) | ![Half-width staggered inset sliding](../images/gallery/tasks/trapdoor-patch-halfwidth-stagger-inset-sliding.gif) |
+| Shallow horizontal | ![Shallow horizontal rotating](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating.gif) | ![Shallow horizontal sliding](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-sliding.gif) | ![Shallow horizontal inset sliding](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-inset-sliding.gif) |
+| Shallow staggered | ![Shallow staggered rotating](../images/gallery/tasks/trapdoor-patch-shallow-stagger-rotating.gif) | ![Shallow staggered sliding](../images/gallery/tasks/trapdoor-patch-shallow-stagger-sliding.gif) | ![Shallow staggered inset sliding](../images/gallery/tasks/trapdoor-patch-shallow-stagger-inset-sliding.gif) |
+
+| Joined orientation | Rotating | Slide over wall |
+| --- | --- | --- |
+| 2×2 V assembly | ![2×2 V assembly rotating](../images/gallery/tasks/trapdoor-v-rotating.gif) | ![2×2 V assembly sliding](../images/gallery/tasks/trapdoor-v-sliding.gif) |
+| Opposite slopes | ![Opposite slopes rotating](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-rotating.gif) | ![Opposite slopes sliding](../images/gallery/tasks/trapdoor-diagonal-opposite-slopes-sliding.gif) |
+| Reversed coplanar rows | ![Reversed coplanar rows rotating](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-rotating.gif) | ![Reversed coplanar rows sliding](../images/gallery/tasks/trapdoor-diagonal-reversed-plane-sliding.gif) |
 
 ## Texture layout
 

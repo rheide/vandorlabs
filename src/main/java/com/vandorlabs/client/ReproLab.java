@@ -448,7 +448,9 @@ public class ReproLab {
         mc.displayGuiScreen(new GuiProgrammableLight(mc.player.inventory,(com.vandorlabs.tiles.TileEntityProgrammableLight)raw));
     }
     private boolean storageGuiDone;
-    private DocumentationDoorCapture doorCapture;
+    private DocumentationAnimationCapture documentationCapture;
+    private java.util.List<com.google.gson.JsonObject> documentationScenes;
+    private int documentationIndex;
     private int lightPickerPreviousScale;
     private int state = 0; // 0 menu, 1 wait, 2 build, 3 shots, 4-7 GUIs, 8 hotbar, 9 done
     private int tick = 0;
@@ -473,8 +475,8 @@ public class ReproLab {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
-        if(event.phase==TickEvent.Phase.END && enabled && state==300 && doorCapture!=null)
-            doorCapture.render(Minecraft.getMinecraft());
+        if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
+            documentationCapture.render(Minecraft.getMinecraft());
     }
 
     @SideOnly(Side.CLIENT)
@@ -546,17 +548,13 @@ public class ReproLab {
                 if (--holdTicks > 0) {
                     break;
                 }
-                if(Boolean.getBoolean("vandorlabs.documentationDoorGif")) {
+                if(Boolean.getBoolean("vandorlabs.documentationDoorGif") || Boolean.getBoolean("vandorlabs.documentationAnimations")) {
                     mc.gameSettings.clouds=0;
-                    Shot doorShot=new Shot("documentation_door_camera",
-                            GALLERY_X+1.1D,GALLERY_Y+1.25D-1.62D,-19.9D,18,0);
-                    beginShot(mc,doorShot,true);
-                    // Build on the server after teleporting; the client chunk
-                    // and tile arrive normally during the settle period.
-                    mc.getIntegratedServer().addScheduledTask(()->buildGalleryStage(
-                            mc.getIntegratedServer().getWorld(0),"gallery_door_motion_rotating_closed"));
-                    mc.world.setWorldTime(6000);
-                    state=299;holdTicks=100;break;
+                    mc.gameSettings.renderDistanceChunks=2;
+                    mc.gameSettings.limitFramerate=120;
+                    documentationScenes=DocumentationAnimationCapture.scenes(Boolean.getBoolean("vandorlabs.documentationAnimations"));
+                    beginDocumentationScene(mc);
+                    break;
                 }
                 if(Boolean.getBoolean("vandorlabs.dialogChecksOnly")) {
                     mc.gameSettings.hideGUI=false;state=11;holdTicks=GUI_SETTLE_TICKS;break;
@@ -641,11 +639,23 @@ public class ReproLab {
                 break;
             case 299:
                 if(--holdTicks>0)break;
-                doorCapture=new DocumentationDoorCapture(outDir,new BlockPos(GALLERY_X,GALLERY_Y,-18));
                 state=300;break;
             case 300:
-                if(doorCapture.isFinished()){state=999;mc.shutdown();return;}
+                if(documentationCapture.isFinished()) {
+                    if(++documentationIndex<documentationScenes.size())beginDocumentationScene(mc);
+                    else {
+                        beginShot(mc,new Shot("documentation_item_camera",GALLERY_X+.7,GALLERY_Y+1D-1.62D+.75,-19.8,12,29),false);
+                        mc.getIntegratedServer().addScheduledTask(()->buildGalleryStage(mc.getIntegratedServer().getWorld(0),"gallery_close_display_diagonal_up"));
+                        mc.gameSettings.hideGUI=false;
+                        for(int slot=0;slot<9;slot++)mc.player.inventory.setInventorySlotContents(slot,ItemStack.EMPTY);
+                        mc.player.inventory.setInventorySlotContents(0,new ItemStack(ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN));
+                        mc.player.inventory.currentItem=0;state=301;holdTicks=40;
+                    }
+                }
                 break;
+            case 301:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"diagonal_screen_item_hotbar");state=999;mc.shutdown();return;
             case 11:
                 if (--holdTicks > 0) break;
                 rebuildGuiFixture(mc, CONSOLE, ModBlocks.PROGRAMMABLE_CONSOLE);
@@ -1943,7 +1953,7 @@ public class ReproLab {
         for (Entity entity : new ArrayList<Entity>(world.loadedEntityList)) {
             if (!(entity instanceof EntityPlayer)) entity.setDead();
         }
-        if(Boolean.getBoolean("vandorlabs.documentationDoorGif")) {
+        if(Boolean.getBoolean("vandorlabs.documentationDoorGif") || Boolean.getBoolean("vandorlabs.documentationAnimations")) {
             // A clean backdrop also removes leftovers from earlier gallery runs.
             BlockPos.getAllInBox(new BlockPos(GALLERY_X-20,GALLERY_Y,-32),
                     new BlockPos(GALLERY_X+20,GALLERY_Y+30,0)).forEach(world::setBlockToAir);
@@ -2568,6 +2578,39 @@ public class ReproLab {
         World server = mc.getIntegratedServer().getWorld(0);
         server.setBlockState(pos, block.getDefaultState(), 2);
         mc.world.setBlockState(pos, block.getDefaultState(), 2);
+    }
+
+    private void beginDocumentationScene(Minecraft mc) {
+        com.google.gson.JsonObject spec=documentationScenes.get(documentationIndex);
+        String name=spec.get("shot").getAsString(),kind=spec.get("kind").getAsString();
+        Shot source=null;for(Shot candidate:SHOTS)if(candidate.name.equals(name)){source=candidate;break;}
+        if(source==null)throw new IllegalStateException("Documentation scene missing: "+name);
+        Shot camera=new Shot("documentation_camera",source.x,source.y,source.z,source.yaw,source.pitch);
+        if(kind.equals("door") && !name.contains("rotating"))
+            camera=new Shot("documentation_camera",GALLERY_X+2,GALLERY_Y+2.5D-1.62D,-23,22,0);
+        else if(kind.equals("trapdoor") && name.contains("_patch_"))
+            camera=new Shot("documentation_camera",GALLERY_X+7,GALLERY_Y+6D-1.62D,-22.5,60,20);
+        else if(kind.equals("trapdoor") && name.contains("rotate_neighbors"))
+            camera=new Shot("documentation_camera",GALLERY_X+.5,GALLERY_Y+5D-1.62D,-14.5,165,35);
+        else if(kind.equals("trapdoor") && name.contains("_flat_") && !name.contains("followup"))
+            camera=new Shot("documentation_camera",GALLERY_X-2,GALLERY_Y+5D-1.62D,-24,-15,16);
+        else if(kind.equals("trapdoor") && !name.contains("followup"))
+            camera=new Shot("documentation_camera",GALLERY_X-3,GALLERY_Y+6.5D-1.62D,-27,-18,16);
+        else if(kind.equals("ramp"))
+            camera=new Shot("documentation_camera",GALLERY_X+8,GALLERY_Y+6-1.62D,-27,40,18);
+        beginShot(mc,camera,documentationIndex==0);
+        documentationCapture=new DocumentationAnimationCapture(outDir,spec);
+        DocumentationAnimationCapture current=documentationCapture;
+        mc.getIntegratedServer().addScheduledTask(()-> {
+            World world=mc.getIntegratedServer().getWorld(0);
+            buildGalleryStage(world,name);current.prepare(world);
+            if(kind.equals("ramp") && !name.contains("_mode_"))
+                BlockPos.getAllInBox(new BlockPos(GALLERY_X-10,0,-32),new BlockPos(GALLERY_X+10,0,0))
+                        .forEach(p->world.setBlockState(p,Blocks.STONEBRICK.getDefaultState(),2));
+        });
+        mc.world.setWorldTime(6000);
+        state=299;holdTicks=documentationIndex==0?100:60;
+        System.out.println("[vandorlabs][reprolab] documentation-animation begin "+spec.get("id").getAsString());
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {

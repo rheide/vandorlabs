@@ -128,49 +128,49 @@
   },
   {
     "id": "imported_trapdoors_cyan_lit_armored_sci_fi_hatch_4",
-    "label": "Cyan-Lit Armored Sci-Fi Hatch-4",
+    "label": "Armored Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4"
   },
   {
     "id": "imported_trapdoors_cyan_lit_gunmetal_slit_hatch_6",
-    "label": "Cyan-Lit Gunmetal Slit Hatch-6",
+    "label": "Slit Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/cyan_lit_gunmetal_slit_hatch_6"
   },
   {
     "id": "imported_trapdoors_cyan_lit_gunmetal_utility_hatch_1",
-    "label": "Cyan-Lit Gunmetal Utility Hatch-1",
+    "label": "Utility Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/cyan_lit_gunmetal_utility_hatch_1"
   },
   {
     "id": "imported_trapdoors_cyan_lit_gunmetal_window_hatch_8",
-    "label": "Cyan-Lit Gunmetal Window Hatch-8",
+    "label": "Viewport Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/cyan_lit_gunmetal_window_hatch_8"
   },
   {
     "id": "imported_trapdoors_cyan_lit_industrial_sci_fi_hatch_5",
-    "label": "Cyan-Lit Industrial Sci-Fi Hatch-5",
+    "label": "Industrial Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/cyan_lit_industrial_sci_fi_hatch_5"
   },
   {
     "id": "imported_trapdoors_gunmetal_service_hatch_with_cyan_lights_3",
-    "label": "Gunmetal Service Hatch With Cyan Lights-3",
+    "label": "Service Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/gunmetal_service_hatch_with_cyan_lights_3"
   },
   {
     "id": "imported_trapdoors_gunmetal_twin_window_sci_fi_hatch_7",
-    "label": "Gunmetal Twin-Window Sci-Fi Hatch-7",
+    "label": "Twin-Window Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/gunmetal_twin_window_sci_fi_hatch_7"
   },
   {
     "id": "imported_trapdoors_reinforced_cyan_x_hatch_2",
-    "label": "Reinforced Cyan X Hatch-2",
+    "label": "Reinforced Hatch",
     "category": "Trapdoors",
     "source": "imported/trapdoors/reinforced_cyan_x_hatch_2"
   },

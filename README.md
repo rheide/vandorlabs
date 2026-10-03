@@ -274,3 +274,5 @@ The visual assets were generated with ChatGPT and are included under this
 license. The license does not grant rights in third-party names or trademarks.
 Earlier releases published under CC0 remain available under that irrevocable
 dedication.
+
+See the [1.3 highlights](docs/gallery/version-1.3.md) for new blocks and animated motion examples.
