@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String TRAPDOOR_SLIDE_INTO_WALL="trapdoor_slide_into_wall";
     public static final String TRAPDOOR_COVER_FACING="trapdoor_cover_facing";
     public static final String TRAPDOOR_TILE_TEXTURE="trapdoor_tile_texture";
     public static final String TRAPDOOR_COVER="trapdoor_cover";
@@ -128,7 +129,7 @@ public final class ProgrammableSettings {
                 NBTTagCompound geometry=new NBTTagCompound();geometry.setInteger("mode",hatch.getPosition());out.setTag(DIAGONAL_GEOMETRY,geometry);
             } else out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
             if(hatch.isCover())out.setInteger(TRAPDOOR_COVER_FACING,hatch.coverFacing().getHorizontalIndex());
-            out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());out.setInteger(TRIGGER,hatch.getTrigger());
+            out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
         } else if (tile instanceof TileEntityProgrammableLight) {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
             out.setInteger(WALL_TEXTURE, light.getHousingTexture());
@@ -309,6 +310,7 @@ public final class ProgrammableSettings {
                     if(values.hasKey(TRAPDOOR_TILE_TEXTURE,1))leaf.setTileTexture(values.getBoolean(TRAPDOOR_TILE_TEXTURE));
                     if(values.hasKey(TRAPDOOR_COVER,1))leaf.setCover(values.getBoolean(TRAPDOOR_COVER));
                     if(leaf.isCover() && values.hasKey(TRAPDOOR_COVER_FACING,3))leaf.setCoverFacing(EnumFacing.getHorizontal(values.getInteger(TRAPDOOR_COVER_FACING)));
+                    if(diagonal && values.hasKey(DOOR_SLIDING,1) && values.hasKey(TRAPDOOR_SLIDE_INTO_WALL,1))leaf.setSlideIntoWall(values.getBoolean(TRAPDOOR_SLIDE_INTO_WALL));
                     leaf.configure(
                         number(values,WALL_TEXTURE,leaf.getHousingTexture()),diagonal?(values.hasKey(DIAGONAL_GEOMETRY,10)?Math.max(0,Math.min(2,values.getCompoundTag(DIAGONAL_GEOMETRY).getInteger("mode"))):leaf.getPosition()):number(values,TRAPDOOR_POSITION,leaf.getPosition()),
                         flag(values,DOOR_SLIDING,leaf.isSliding()),number(values,TRIGGER,leaf.getTrigger()),

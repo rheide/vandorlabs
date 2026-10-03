@@ -66,8 +66,8 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         TileEntityProgrammableDiagonalTrapdoor other=(TileEntityProgrammableDiagonalTrapdoor)raw;
         if(world==null || other.world==null)return true;
         if(facing().getAxis()==other.facing().getAxis() && (position==2
-                ? pos.getY()==other.pos.getY() && com.vandorlabs.blocks.PanelPlane.axis(other.pos.subtract(pos),facing())!=0
-                : pos.getY()!=other.pos.getY()))return true;
+                ? com.vandorlabs.blocks.PanelPlane.axis(other.pos.subtract(pos),facing())!=0
+                : pos.getY()!=other.pos.getY() || position==0 && com.vandorlabs.blocks.PanelPlane.axis(other.pos.subtract(pos),facing())!=0))return true;
         if(facing()==other.facing() && isInverted()==other.isInverted())return true;
         if(!(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor)
                 || !(world.getBlockState(other.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor))return false;
@@ -97,7 +97,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         if(pos.distanceSq(other.pos)!=1 || direction.getAxis()!=width().getAxis() && direction.getAxis()!=along().getAxis())return;
         partner=other.pos.toImmutable();other.partner=pos.toImmutable();
         reverse=direction!=width();other.reverse=direction.getOpposite()!=other.width();
-        sliding=other.sliding;trigger=other.trigger;setRedstoneChannel(other.channel);
+        sliding=other.sliding;slideIntoWall=other.slideIntoWall;trigger=other.trigger;setRedstoneChannel(other.channel);
         requestOpen(world.getBlockState(other.pos).getValue(BlockTrapDoor.OPEN));sync();other.sync();evaluatePower(true);
     }
     @Override public void completeSquare(EntityPlayer player,ItemStack stack) {
@@ -122,7 +122,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
             boolean motion=reference.sliding,open=world.getBlockState(reference.pos).getValue(BlockTrapDoor.OPEN);
             int linked=reference.channel,activation=reference.trigger;
             EnumFacing basis=facing();
-            for(TileEntityProgrammableDiagonalTrapdoor leaf:leaves){leaf.groupFacing=basis;leaf.partner=null;leaf.sliding=motion;leaf.trigger=activation;leaf.squareOrigin=base;leaf.setRedstoneChannel(linked);}
+            for(TileEntityProgrammableDiagonalTrapdoor leaf:leaves){leaf.groupFacing=basis;leaf.partner=null;leaf.sliding=motion;leaf.slideIntoWall=reference.slideIntoWall;leaf.trigger=activation;leaf.squareOrigin=base;leaf.setRedstoneChannel(linked);}
             leaves.get(1).pairWith(leaves.get(0));leaves.get(3).pairWith(leaves.get(2));
             requestOpen(open);for(TileEntityProgrammableDiagonalTrapdoor leaf:leaves)leaf.sync();evaluatePower(true);return;
         }
@@ -131,6 +131,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         if(valid(texture,mode,trigger,channel) && (position==2)!=(mode==2) && world!=null && !world.isRemote)unpair();
         super.configure(texture,mode,sliding,trigger,channel);
     }
+    @Override protected void reconnectLoadedGroup(){if(position!=1)completeSquare(null,ItemStack.EMPTY);}
     @Override public NBTTagCompound itemSettings(){NBTTagCompound tag=super.itemSettings();tag.setBoolean("DiagonalHalfHeight",position==2);tag.setBoolean("DiagonalFullWidth",position==1);return tag;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("DiagonalReverse",reverse);tag.setInteger("DiagonalFacing",facing().getHorizontalIndex());tag.setBoolean("DiagonalInverted",isInverted());tag.setInteger("DiagonalGroupFacing",groupFacing.getHorizontalIndex());return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);reverse=tag.getBoolean("DiagonalReverse");cachedFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalFacing"));cachedInverted=tag.getBoolean("DiagonalInverted");groupFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalGroupFacing"));}

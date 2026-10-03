@@ -6,7 +6,7 @@ These captures show the programmable blocks, material pickers and connected trap
 
 Rotating and sliding groups support rectangles up to eight cells on each axis,
 opposite-slope diagonal rows, and staggered diagonal panels in all three shape modes. Their
-membership and configuration survive saving and copying.
+membership and configuration survive saving and copying. Half-width and half-height diagonal leaves also support connected partial patches, including three-leaf corners.
 
 | Assembly | Closed | Open |
 | --- | --- | --- |

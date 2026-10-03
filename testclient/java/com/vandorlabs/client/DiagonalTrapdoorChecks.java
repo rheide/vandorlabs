@@ -25,7 +25,7 @@ final class DiagonalTrapdoorChecks {
         GameRegistry.registerTileEntity(TileEntityProgrammableDiagonalTrapdoor.class,new ResourceLocation("minecraft:vandorlabs_data_check_diagonal_trapdoor"));
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();boundaries();recipe();
+        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }
     private static void mesh() {
@@ -256,6 +256,83 @@ final class DiagonalTrapdoorChecks {
             place(world,base.up().offset(facing.getOpposite()),1,facing,false,slide,0);
             require(first.group().size()==2,"staggered full-width panels did not connect");
         }
+    }
+    private static void partialPatches() {
+        List<int[]> orders=new ArrayList<>();permutations(new int[]{0,1,2},0,orders);
+        for(int mode:new int[]{0,2})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean sliding:new boolean[]{false,true})for(int layout=0;layout<3;layout++)for(int variant=0;variant<3;variant++)for(int[] order:orders) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos base=new BlockPos(10,100,10);
+            EnumFacing across=facing.rotateY(),depth=facing.getOpposite(),along=mode==2?depth:EnumFacing.UP;
+            BlockPos step=layout==0?new BlockPos(depth.getDirectionVec()):layout==1?new BlockPos(along.getDirectionVec())
+                    :mode==2?new BlockPos(depth.getDirectionVec()).add(0,inverted?-1:1,0):new BlockPos((inverted?facing:depth).getDirectionVec()).up();
+            BlockPos[] cells={base,base.offset(across),base.offset(across).add(step)};
+            for(int i:order)place(world,cells[i],mode,i==2 && variant==2?facing.getOpposite():facing,inverted ^ (i==2 && variant!=0),sliding,0);
+            for(BlockPos cell:cells) {
+                TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(cell);
+                require(leaf.group().size()==3,"partial mode "+mode+" layout "+layout+" missed third member: "+Arrays.toString(order));
+                leaf.requestOpen(true);for(BlockPos other:cells)require(open(world,other),"partial patch did not open from every member");
+                leaf.requestOpen(false);for(BlockPos other:cells)require(!open(world,other),"partial patch did not close from every member");
+            }
+            for(BlockPos cell:cells){TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(cell);leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));}
+            TileEntityProgrammableDiagonalTrapdoor root=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base);
+            require(root.group().size()==3,"partial patch lost saved links");
+            // Reload the old pair-plus-single save representation, then use any member.
+            for(int i=0;i<cells.length;i++) {
+                TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(cells[i]);NBTTagCompound old=leaf.writeToNBT(new NBTTagCompound());
+                old.removeTag("TrapdoorAssembly");old.removeTag("TrapdoorSquare");old.removeTag("TrapdoorPartner");
+                if(i<2)old.setLong("TrapdoorPartner",cells[1-i].toLong());leaf.readFromNBT(old);
+            }
+            require(root.group().size()==2,"legacy split-pair fixture did not reload");
+            EntityPlayer owner=player(world);block.onBlockActivated(world,cells[2],world.getBlockState(cells[2]),owner,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            require(root.group().size()==3,"ordinary use did not repair old split patch");
+            for(BlockPos cell:cells)require(open(world,cell),"old patch activation missed member");
+            root.configureGroup(7,mode,sliding,0,19,inverted,false,false,facing);
+            for(TileEntityProgrammableTrapdoor leaf:root.group())require(leaf.getHousingTexture()==7 && leaf.getRedstoneChannel()==19 && !leaf.isTileTexture(),"partial patch configuration missed member");
+            block.breakBlock(world,cells[1],world.getBlockState(cells[1]));world.setBlockState(cells[1],Blocks.AIR.getDefaultState(),2);
+            for(BlockPos cell:new BlockPos[]{cells[0],cells[2]})require(((TileEntityProgrammableTrapdoor)world.getTileEntity(cell)).group().size()==1,"removed bridge retained stale membership");
+            place(world,cells[1],mode,facing,inverted,sliding,0);require(root.group().size()==3,"replaced bridge did not rebuild patch");
+            TileEntityProgrammableDiagonalTrapdoor perpendicular=place(world,base.down(),mode,facing.rotateY(),inverted,sliding,0);require(perpendicular.group().size()==1 && root.group().size()==3,"perpendicular neighbor joined patch");
+        }
+        System.out.println("PASS: three-leaf half-width/half-height patches, horizontal/ordinary/staggered layouts and every placement order");
+    }
+    private static void slidingStyles() {
+        for(int mode=0;mode<3;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean reverse:new boolean[]{false,true}) {
+            int turns=BlockProgrammableTrapdoor.quarterTurns(facing);EnumFacing across=facing.rotateY();
+            double[][] closed=DiagonalTrapdoorGeometry.corners(mode,inverted,turns,true,reverse,0);
+            for(int step=0;step<=16;step++) {
+                double pose=step/16D;
+                double[][] inset=DiagonalTrapdoorGeometry.corners(mode,inverted,turns,true,reverse,pose,reverse?15/16D:1/16D,15/16D,1,true);
+                double[][] old=DiagonalTrapdoorGeometry.corners(mode,inverted,turns,true,reverse,pose);
+                double[][] over=DiagonalTrapdoorGeometry.corners(mode,inverted,turns,true,reverse,pose,reverse?15/16D:1/16D,15/16D,1,false);
+                for(int v=0;v<8;v++)for(int axis=0;axis<3;axis++) {
+                    double shift=(reverse?1:-1)*pose*15/16D*(axis==0?across.getFrontOffsetX():axis==2?across.getFrontOffsetZ():0);
+                    require(Math.abs(inset[v][axis]-closed[v][axis]-shift)<1e-8,"into-wall slider lifts or delays sideways motion");
+                    require(Math.abs(old[v][axis]-over[v][axis])<1e-8,"over-wall slider changed legacy motion");
+                }
+            }
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos base=new BlockPos(10,100,10);
+            TileEntityProgrammableDiagonalTrapdoor source=place(world,base,mode,facing,inverted,true,0);source.setSlideIntoWall(true);
+            ItemStack configured=block.configuredDrop(source);require(configured.getSubCompound("BlockEntityTag").getBoolean("TrapdoorSlideIntoWall"),"configured item lost sliding style");
+            place(world,base.offset(across),mode,facing,inverted,true,0);
+            for(TileEntityProgrammableTrapdoor leaf:source.group())require(leaf.isSlideIntoWall(),"joining lost sliding style");
+            source.configureGroup(0,mode,true,0,0,inverted,false,true,facing,false);
+            for(TileEntityProgrammableTrapdoor leaf:source.group())require(!leaf.isSlideIntoWall(),"group switch did not restore over-wall mode");
+            source.configureGroup(0,mode,true,0,0,inverted,false,true,facing,true);
+            NBTTagCompound captured=ProgrammableSettings.capture(world,source.getPos());
+            require(ProgrammableSettings.applyToItem(new ItemStack(item),captured).getSubCompound("BlockEntityTag").getBoolean("TrapdoorSlideIntoWall"),"Duplifier configured item lost sliding style");
+            TileEntityProgrammableDiagonalTrapdoor target=place(world,base.offset(across,5),mode,facing,inverted,false,0);
+            require(ProgrammableSettings.apply(world,target.getPos(),captured) && target.isSliding() && target.isSlideIntoWall(),"Duplifier lost sliding style");
+            int movement=0;while(!DuplifierApplyOptions.OPTIONS[movement].key.equals(ProgrammableSettings.DOOR_SLIDING))movement++;
+            NBTTagCompound filtered=DuplifierApplyOptions.selected(captured,DuplifierApplyOptions.ALL & ~(1L<<movement));
+            target.setSlideIntoWall(false);target.configure(0,mode,false,0,0);ProgrammableSettings.apply(world,target.getPos(),filtered);
+            require(!target.isSliding() && !target.isSlideIntoWall(),"disabled movement copy overwrote sliding style");
+            NBTTagCompound saved=source.writeToNBT(new NBTTagCompound());source.readFromNBT(saved);require(source.isSlideIntoWall(),"saved sliding style lost");
+            saved.removeTag("TrapdoorSlideIntoWall");source.readFromNBT(saved);require(!source.isSlideIntoWall(),"legacy slider no longer uses over-wall mode");
+        }
+        io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();
+        com.vandorlabs.network.MessageProgrammableTrapdoor packet=new com.vandorlabs.network.MessageProgrammableTrapdoor(new BlockPos(1,2,3),0,2,true,0,0,false,false,true,EnumFacing.NORTH,true);
+        packet.toBytes(bytes);com.vandorlabs.network.MessageProgrammableTrapdoor decoded=new com.vandorlabs.network.MessageProgrammableTrapdoor();decoded.fromBytes(bytes);
+        io.netty.buffer.ByteBuf roundTrip=io.netty.buffer.Unpooled.buffer();decoded.toBytes(roundTrip);require(roundTrip.getBoolean(roundTrip.writerIndex()-1),"packet lost into-wall style");bytes.release();roundTrip.release();
+        System.out.println("PASS: both diagonal sliding styles, all poses, saved items, joining, group edits, copying and packet round trip");
     }
     private static void boundaries() {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos a=new BlockPos(10,100,10),b=a.west();

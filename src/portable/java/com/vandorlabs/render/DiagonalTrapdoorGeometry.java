@@ -10,6 +10,9 @@ public final class DiagonalTrapdoorGeometry {
         return corners(mode,inverted,turns,sliding,reverse,pose,hinge,travel,1);
     }
     public static double[][] corners(int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,double hinge,double travel,int slideLiftDirection) {
+        return corners(mode,inverted,turns,sliding,reverse,pose,hinge,travel,slideLiftDirection,false);
+    }
+    public static double[][] corners(int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,double hinge,double travel,int slideLiftDirection,boolean slideIntoWall) {
         double span=mode==1?.75:.375,p=Math.max(0,Math.min(1,pose));
         double slope=inverted?-span:span;
         double base=(inverted?span:0)+(mode==2 && inverted?.375:0)+1/16D;
@@ -24,9 +27,9 @@ public final class DiagonalTrapdoorGeometry {
             double y=mode==2?base+slope*((i&4)==0?0:1)+((i&2)==0?0:2/16D):((i&2)==0?0:1);
             double z=mode==2?((i&4)==0?0:1):base+slope*y+((i&4)==0?0:2/16D);
             if(sliding){
-                x+=(reverse?1:-1)*Math.max(0,(p-.25)/.75)*travel;
+                x+=(reverse?1:-1)*(slideIntoWall?p:Math.max(0,(p-.25)/.75))*travel;
                 // Lift clear of a solid continuation wall before sliding across it.
-                double lift=.25*Math.min(1,p*4);
+                double lift=slideIntoWall?0:.25*Math.min(1,p*4);
                 if(mode==2)y+=lift;else z+=slideLiftDirection*lift;
             }
             else {

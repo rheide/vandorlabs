@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 /** Settings and pair links; event-driven power, no idle tile ticks. */
 public class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
     protected int texture,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
-    protected boolean sliding,channelSignal,powerKnown,lastPower,configuring;
+    protected boolean sliding,slideIntoWall,channelSignal,powerKnown,lastPower,configuring;
     private boolean tileTexture=true;
     public boolean isTileTexture(){return tileTexture;}
     public void setTileTexture(boolean value){tileTexture=value;sync();}
@@ -39,8 +39,24 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         if(cover==value)return;
         cover=value;sync();if(world!=null&&!world.isRemote)evaluatePower(true);
     }
-    public double[][] corners(net.minecraft.block.state.IBlockState state,double pose){int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));return cover?com.vandorlabs.render.TrapdoorGeometry.coverCorners(position,sliding,turns,pose):com.vandorlabs.render.TrapdoorGeometry.corners(position,sliding,turns,pose,motionHinge(),motionTravel());}
+    public double[][] corners(net.minecraft.block.state.IBlockState state,double pose){int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));return cover?com.vandorlabs.render.TrapdoorGeometry.coverCorners(position,sliding,turns,pose,coverOverhang()):com.vandorlabs.render.TrapdoorGeometry.corners(position,sliding,turns,pose,motionHinge(),motionTravel());}
+    /** Opposing covers meet at the two-cell opening's seam without overshooting it. */
+    public double coverOverhang() {
+        if(cover && world!=null) {
+            BlockPos opposite=pos.offset(coverFacing(),3);
+            if(world.isBlockLoaded(opposite)) {
+                TileEntity raw=world.getTileEntity(opposite);
+                if(raw instanceof TileEntityProgrammableTrapdoor) {
+                    TileEntityProgrammableTrapdoor other=(TileEntityProgrammableTrapdoor)raw;
+                    if(other.cover && other.getClass()==getClass() && other.position==position && other.coverFacing()==coverFacing().getOpposite())return 0;
+                }
+            }
+        }
+        return com.vandorlabs.render.TrapdoorGeometry.COVER_OVERHANG;
+    }
     public boolean isSliding(){return sliding;}
+    public boolean isSlideIntoWall(){return slideIntoWall;}
+    public void setSlideIntoWall(boolean value){slideIntoWall=this instanceof TileEntityProgrammableDiagonalTrapdoor && value;sync();}
     public int getTrigger(){return trigger;}
     @Override public int getRedstoneChannel(){return channel;}
     @Override public TileEntity channelTile(){return this;}
@@ -69,7 +85,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
                 || pos.getY()!=other.pos.getY() || pos.distanceSq(other.pos)!=1 || !compatible(other))return;
         partner=other.pos.toImmutable();other.partner=pos.toImmutable();
         // The placed neighbour joins the existing trapdoor's motion/channel.
-        sliding=other.sliding; trigger=other.trigger;
+        sliding=other.sliding;slideIntoWall=other.slideIntoWall; trigger=other.trigger;
         setRedstoneChannel(other.channel);
         EnumFacing toward=EnumFacing.getFacingFromVector(pos.getX()-other.pos.getX(),0,pos.getZ()-other.pos.getZ());
         world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockProgrammableTrapdoor.FACING,toward),2);
@@ -201,12 +217,15 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         }
     }
     public void configureGroup(int texture,int position,boolean sliding,int trigger,int channel,boolean inverted,boolean cover,boolean tileTexture,EnumFacing facing) {
+        configureGroup(texture,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall);
+    }
+    public void configureGroup(int texture,int position,boolean sliding,int trigger,int channel,boolean inverted,boolean cover,boolean tileTexture,EnumFacing facing,boolean intoWall) {
         if(!valid(texture,position,trigger,channel))return;
         java.util.List<TileEntityProgrammableTrapdoor> leaves=new java.util.ArrayList<>(group());
         boolean flip=this instanceof TileEntityProgrammableDiagonalTrapdoor && ((TileEntityProgrammableDiagonalTrapdoor)this).isInverted()!=inverted;
         configureGroup(leaves,()->{
             for(TileEntityProgrammableTrapdoor leaf:leaves){
-                leaf.setCover(cover);leaf.setTileTexture(tileTexture);leaf.configure(texture,position,sliding,trigger,channel);
+                leaf.setCover(cover);leaf.setTileTexture(tileTexture);leaf.setSlideIntoWall(intoWall);leaf.configure(texture,position,sliding,trigger,channel);
                 if(flip && leaf instanceof TileEntityProgrammableDiagonalTrapdoor){TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)leaf;diagonal.setInverted(!diagonal.isInverted());}
                 if(leaf.cover && facing!=null)leaf.setCoverFacing(facing);
             }
@@ -271,7 +290,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         NBTTagCompound tag=new NBTTagCompound();
         tag.setInteger("housingTexture",texture);tag.setInteger("TrapdoorPosition",position);
         if(cover)tag.setInteger("TrapdoorCoverFacing",coverFacing().getHorizontalIndex());
-        tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setInteger("TrapdoorTrigger",trigger);
+        tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setBoolean("TrapdoorSlideIntoWall",slideIntoWall);tag.setInteger("TrapdoorTrigger",trigger);
         tag.setInteger("RedstoneChannel",channel);return tag;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
@@ -292,6 +311,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         cover=tag.getBoolean("TrapdoorCover") && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);
         coverFacing=EnumFacing.getHorizontal(tag.getInteger("TrapdoorCoverFacing"));
         sliding=tag.getBoolean("TrapdoorSliding");
+        slideIntoWall=this instanceof TileEntityProgrammableDiagonalTrapdoor && tag.getBoolean("TrapdoorSlideIntoWall");
         int saved=tag.hasKey("TrapdoorTrigger",3)?tag.getInteger("TrapdoorTrigger"):SpaceDoorData.TRIGGER_REDSTONE_ON;
         trigger=SpaceDoorData.validTrigger(saved)?saved:SpaceDoorData.TRIGGER_REDSTONE_ON;
         channel=Math.max(0,tag.getInteger("RedstoneChannel"));channelSignal=tag.getBoolean("ChannelSignal");
@@ -306,9 +326,10 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
             DeferredTileLoad.schedule(this,()->RedstoneChannels.channelChanged(this,old));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }
+    protected void reconnectLoadedGroup() { }
     @Override public void onLoad() {
         super.onLoad();DeferredTileLoad.schedule(this,()->{
-            repairLinks();
+            repairLinks();reconnectLoadedGroup();
             RedstoneChannels.register(this);evaluatePower(false);
         });
     }

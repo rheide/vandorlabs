@@ -10,6 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    **{f"gallery_trapdoor_{group}_{motion}_{pose}":f"tasks/trapdoor-{group.replace('_','-')}-{motion.replace('_','-')}-{pose}.png" for group in ("patch_halfwidth_horizontal","patch_halfwidth_stagger","patch_shallow_horizontal","patch_shallow_stagger") for motion in ("rotating","sliding","inset_sliding") for pose in ("closed","open")},
+    **{f"custom_{family}_texture_gui":f"tasks/custom-{family}-texture-config.png" for family in ("block","slab","door","trapdoor")},
+    "diagonal_trapdoor_into_wall_gui": "tasks/diagonal-trapdoor-into-wall-config.png",
+    "gallery_trapdoor_followup_opposing_next_closed": "tasks/trapdoor-opposing-next-closed.png",
+    "gallery_trapdoor_followup_opposing_next_open": "tasks/trapdoor-opposing-next-open.png",
     **{f"gallery_trapdoor_{group}_{motion}_{pose}":f"tasks/trapdoor-{group.replace('_','-')}-{motion}-{pose}.png" for group in ("stagger_halfwidth","stagger_shallow") for motion in ("rotating","sliding") for pose in ("closed","open")},
     "gallery_trapdoor_followup_diagonal_opposite_slopes_sliding_open": "tasks/trapdoor-diagonal-opposite-slopes-sliding-open.png",
     "gallery_trapdoor_followup_diagonal_reversed_plane_sliding_open": "tasks/trapdoor-diagonal-reversed-plane-sliding-open.png",

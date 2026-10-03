@@ -55,13 +55,16 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   Select manual operation or redstone on/off triggering, including virtual channels.
   Craft one from six Programmable Matter Ingots in two columns of three.
 - **Programmable Trapdoor**: categorized block/door artwork with Fit/Tile and mirrored door panels, rotating or sideways sliding,
-  and Bottom, Middle, or Top placement. Choose This block or Next block for the closed leaf independently of movement; Next block is available for individual mounts and folds into the outside mount when rotating; joined groups retain This block. Adjacent pairs and complete 2×2 squares
+  and Bottom, Middle, or Top placement. Choose This block or Next block for the closed leaf independently of movement; Next block is available for individual mounts, starts open when placed, and folds into the outside mount when rotating; joined groups retain This block. Adjacent pairs and complete 2×2 squares
   open together toward opposite sides, manually or through local/virtual redstone.
   Craft two from five Industrial Alloy Ingots and one Programmable Matter Ingot;
   see the [trapdoor guide](docs/gallery/programmable-trapdoor.md).
 - **Programmable Diagonal Trapdoor**: wall-aligned 2px leaves with half-width/full-height,
   full-width/full-height or full-width/half-height geometry. Pairs and 2×2 surface
-  groups open together, rotating or sliding horizontally toward opposite sides.
+  groups open together, rotating or sliding toward opposite sides. Half-width and
+  half-height leaves also join three-leaf and other partial patches. Choose
+  Slide over wall for the existing lift-and-slide motion, or Slide into wall
+  for direct sideways retraction.
   Craft one from a Programmable Trapdoor and an Industrial Alloy Ingot;
   see the [diagonal trapdoor guide](docs/gallery/programmable-diagonal-trapdoor.md).
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all

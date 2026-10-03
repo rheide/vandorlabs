@@ -37,3 +37,5 @@ Generating a porthole-shaped block from an arbitrary alpha mask needs a defined 
 Dynmap's existing material table covers the original finishes. New static catalog artwork, filesystem textures and Custom materials use its default panel fallback; client rendering remains independent.
 
 Screen, input and console configuration dialogs preview artwork in their categorized list thumbnails. Separate preview panels are removed, including both Half-Console input panels. Off/Static/Animated modes, frame and size controls, and animation speed retain their existing behavior.
+
+When a block uses a Custom sample, reopening its dialog selects and reveals the **Custom** row, with the sample name and current thumbnail. The sample remains selected until you choose another material or confirm a replacement in the Custom picker.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Half-width and half-height diagonal trapdoors join connected partial patches, including three-leaf corners and mixed ordinary/staggered neighbors, rather than splitting into separate pairs. Membership and shared settings survive saves.
+- Diagonal trapdoors offer Rotating, Slide over wall (the existing lift-and-slide motion), and Slide into wall (sideways motion without lifting). The sliding choice is saved in worlds/items, synchronized across groups, and copied with the Duplifier movement option.
+- Opposing Next block trapdoors spanning a two-block opening suppress their one-pixel protrusion so their leaves meet without overlap or a visible mount gap. Configured Next block items place open on client and server.
+- Shared material dialogs reopen with the Custom row selected, scrolled into view, and showing the current sample thumbnail instead of highlighting a built-in fallback.
+
 ## 1.3
 
 See the [illustrated programmable block improvements](docs/gallery/task-improvements.md) and [filesystem texture setup](docs/filesystem-textures.md).

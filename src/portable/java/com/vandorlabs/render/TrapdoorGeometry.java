@@ -45,13 +45,16 @@ public final class TrapdoorGeometry {
         return coverCorners(position,true,quarterTurns,pose);
     }
     public static double[][] coverCorners(int position,boolean sliding,int quarterTurns,double pose) {
+        return coverCorners(position,sliding,quarterTurns,pose,COVER_OVERHANG);
+    }
+    public static double[][] coverCorners(int position,boolean sliding,int quarterTurns,double pose,double overhang) {
         double[][] vertices=corners(position,true,0,0);
         double p=Math.max(0,Math.min(1,pose)),pivot=low(position)+(position==TOP?THICKNESS:0);
         double angle=(position==TOP?1:-1)*p*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),hinge=1/16D;
         for(double[] point:vertices){
             // Project one pixel beyond the covered cell, retracting fully into the mount.
-            point[2]-=1+COVER_OVERHANG;
-            if(sliding)point[2]+=p*(1+COVER_OVERHANG);
+            point[2]-=1+overhang;
+            if(sliding)point[2]+=p*(1+overhang);
             else {double dy=point[1]-pivot,dz=point[2]-hinge;point[1]=pivot+dy*cos+dz*sin;point[2]=hinge+dz*cos-dy*sin;}
             for(int turn=0;turn<(quarterTurns&3);turn++){double x=point[0];point[0]=1-point[2];point[2]=x;}
         }

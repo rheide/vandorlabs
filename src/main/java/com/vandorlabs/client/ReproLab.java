@@ -308,7 +308,9 @@ public class ReproLab {
                 galleryFeet + 0.5D, -27.0D, 0.0F, 5.0F));
         for(String group:new String[]{"flat","v","rectangle","stagger","stagger_halfwidth","stagger_shallow"})for(String motion:new String[]{"rotating","sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
-        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open","diagonal_opposite_slopes_sliding_open","diagonal_reversed_plane_sliding_open"}) {
+        for(String group:new String[]{"patch_halfwidth_horizontal","patch_halfwidth_stagger","patch_shallow_horizontal","patch_shallow_stagger"})for(String motion:new String[]{"rotating","sliding","inset_sliding"})for(String pose:new String[]{"closed","open"})
+            SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
+        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open","diagonal_opposite_slopes_sliding_open","diagonal_reversed_plane_sliding_open","opposing_next_closed","opposing_next_open"}) {
             boolean neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
             SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-(wall?3:.7),galleryFeet+(neighbors?1.5:3.2),neighbors || wall?-14.5:-21.5,neighbors?180:wall?-155:-8,neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
@@ -454,7 +456,9 @@ public class ReproLab {
         if (enabled) {
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
-            if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_"));
+            String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
+            if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
+            if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
         }
     }
 
@@ -566,6 +570,8 @@ public class ReproLab {
                     if(root==null || root.group().size()!=4 || root.getPosition()!=(s.name.contains("_shallow_")?2:0))throw new IllegalStateException("staggered mode did not synchronize a four-leaf group");
                     System.out.println("[vandorlabs][reprolab] diagonal-staggered-mode-runtime PASS "+s.name);
                 }
+                if(s.name.startsWith("gallery_trapdoor_patch_"))TrapdoorGallery.checkPatch(mc.world,s.name.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);
+                if(s.name.contains("opposing_next_"))TrapdoorGallery.checkOpposing(mc.world,GALLERY_X,GALLERY_Y);
                 save(mc, s);
                 shotIndex++;
                 if (shotIndex < SHOTS.size()) {
@@ -1183,17 +1189,26 @@ public class ReproLab {
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("diagonal trapdoor GUI did not open");
                 pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,2);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
                 state=51;holdTicks=20;break;
             case 51:
                 if(--holdTicks>0)break;
                 checkTrapdoorGroup(mc,1,true);
+                checkSlidingStyle(mc,false);pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                state=60;holdTicks=20;break;
+            case 60:
+                if(--holdTicks>0)break;
+                checkSlidingStyle(mc,true);saveNamed(mc,"diagonal_trapdoor_into_wall_gui");
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
                 pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,6);
                 pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,2);
                 state=52;holdTicks=20;break;
             case 52:
                 if(--holdTicks>0)break;
                 checkTrapdoorGroup(mc,0,false);saveNamed(mc,"diagonal_trapdoor_gui");
-                mc.player.closeScreen();state=55;holdTicks=10;break;
+                mc.player.closeScreen();customPickerChecks=new CustomPickerReopenChecks(CONSOLE.add(30,0,5));state=61;break;
+            case 61:
+                if(customPickerChecks.tick(mc)){state=55;holdTicks=10;}break;
             case 55:
                 if(--holdTicks>0)break;openTrapdoorFollowup(mc,false);state=57;holdTicks=40;break;
             case 53:
@@ -1224,11 +1239,19 @@ public class ReproLab {
         }
     }
 
+    private static void checkSlidingStyle(Minecraft mc,boolean intoWall) {
+        for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(CONSOLE.add(15,0,3));
+            for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:root.group())if(!leaf.isSliding() || leaf.isSlideIntoWall()!=intoWall)throw new IllegalStateException("diagonal sliding GUI did not synchronize group style");
+        }
+        System.out.println("[vandorlabs][reprolab] diagonal-sliding-style-gui PASS "+(intoWall?"into wall":"over wall"));
+    }
     private static void pressTrapdoorControl(GuiProgrammableTrapdoor gui,int id) {
         java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
         for(net.minecraft.client.gui.GuiButton button:buttons)if(button.id==id && button.enabled){gui.actionPerformed(button);return;}
         throw new IllegalStateException("trapdoor control missing or disabled: "+id);
     }
+    private CustomPickerReopenChecks customPickerChecks;
     private OffsetTrapdoorRuntimeChecks offsetTrapdoorChecks;
     private void openTrapdoorFollowup(Minecraft mc,boolean diagonal) {
         mc.getIntegratedServer().addScheduledTask(()->{

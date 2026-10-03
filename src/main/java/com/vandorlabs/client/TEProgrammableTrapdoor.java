@@ -63,7 +63,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             double u=(widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2]);
             double v=tall?tile.getPos().getY()+closed[i][1]:widthX?tile.getPos().getZ()+closed[i][2]:tile.getPos().getX()+closed[i][0];
             // Offset covers live in the neighboring cell, independent of their owning tile.
-            if(tile.isCover()){net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);minU=(widthX?target.getX():target.getZ())+TrapdoorGeometry.COVER_OVERHANG*(widthX?facing.getFrontOffsetX():facing.getFrontOffsetZ());maxU=minU+1;minV=(widthX?target.getZ():target.getX())+TrapdoorGeometry.COVER_OVERHANG*(widthX?facing.getFrontOffsetZ():facing.getFrontOffsetX());maxV=minV+1;}
+            if(tile.isCover()){net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);minU=(widthX?target.getX():target.getZ())+tile.coverOverhang()*(widthX?facing.getFrontOffsetX():facing.getFrontOffsetZ());maxU=minU+1;minV=(widthX?target.getZ():target.getX())+tile.coverOverhang()*(widthX?facing.getFrontOffsetZ():facing.getFrontOffsetX());maxV=minV+1;}
             double mappedU=u-minU,mappedV=tall?maxV-v:v-minV;
             if(tile.isTileTexture()){if(door){mappedV/=2;if(maxV-minV<1.5)mappedV+=.5;}}
             else{mappedU/=maxU-minU;mappedV/=maxV-minV;if(door && maxV-minV<1.5)mappedV=.5+.5*mappedV;}

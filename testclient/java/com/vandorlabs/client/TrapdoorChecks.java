@@ -27,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkPermissions();checkRecipe();
+        checkMesh();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkMesh() {
@@ -303,6 +303,41 @@ final class TrapdoorChecks {
             TileEntityProgrammableTrapdoor placed=(TileEntityProgrammableTrapdoor)world.getTileEntity(itemPos);
             require(placed.isCover() && placed.isSliding()==sliding && placed.coverFacing()==facing,"copied item lost movement, hinge or closed leaf");
         }
+    }
+    private static void checkOpposingCovers() {
+        BlockPos base=new BlockPos(10,100,10);
+        for(int position=0;position<3;position++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean sliding:new boolean[]{false,true}) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            TileEntityProgrammableTrapdoor first=place(world,base,position,sliding);first.setCover(true);first.setCoverFacing(facing);
+            BlockPos opposite=base.offset(facing,3);
+            TileEntityProgrammableTrapdoor second=place(world,opposite,position,sliding);second.setCover(true);second.setCoverFacing(facing.getOpposite());
+            require(first.coverOverhang()==0 && second.coverOverhang()==0,"opposing offset leaves overshoot seam");
+            first.requestOpen(false);second.requestOpen(false);
+            AxisAlignedBB a=OffsetTrapdoorInteractions.bounds(first),b=OffsetTrapdoorInteractions.bounds(second);
+            require(!a.intersects(b),"opposing leaves overlap");
+            double seam=facing.getAxis()==EnumFacing.Axis.X?Math.min(Math.abs(a.maxX-b.minX),Math.abs(b.maxX-a.minX)):Math.min(Math.abs(a.maxZ-b.minZ),Math.abs(b.maxZ-a.minZ));
+            require(seam<=2*TrapdoorGeometry.EDGE_CLEARANCE+1e-8,"opposing leaves leave visible seam gap");
+            for(TileEntityProgrammableTrapdoor leaf:new TileEntityProgrammableTrapdoor[]{first,second}) {
+                AxisAlignedBB bounds=OffsetTrapdoorInteractions.bounds(leaf);BlockPos covered=leaf.getPos().offset(leaf.coverFacing());
+                require(Math.abs(bounds.minX-covered.getX())<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8 && Math.abs(bounds.maxX-covered.getX()-1)<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8
+                        && Math.abs(bounds.minZ-covered.getZ())<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8 && Math.abs(bounds.maxZ-covered.getZ()-1)<=TrapdoorGeometry.EDGE_CLEARANCE+1e-8,"offset leaf leaves one-pixel mount gap");
+                leaf.requestOpen(true);AxisAlignedBB retracted=OffsetTrapdoorInteractions.bounds(leaf);
+                require(retracted.minX>=leaf.getPos().getX() && retracted.maxX<=leaf.getPos().getX()+1 && retracted.minZ>=leaf.getPos().getZ() && retracted.maxZ<=leaf.getPos().getZ()+1,"opposing leaf did not retract into owning mount");
+            }
+            block.breakBlock(world,opposite,world.getBlockState(opposite));world.setBlockToAir(opposite);
+            require(first.coverOverhang()==TrapdoorGeometry.COVER_OVERHANG,"single cover lost one-pixel protrusion after opposite removal");
+            for(boolean client:new boolean[]{false,true}) {
+                NonRenderingChecks.MemoryWorld placement=new NonRenderingChecks.MemoryWorld(client);
+                TileEntityProgrammableTrapdoor configured=new TileEntityProgrammableTrapdoor();configured.configure(0,position,sliding,0,0);configured.setCover(true);
+                NBTTagCompound settings=configured.itemSettings();settings.setInteger("TrapdoorCoverFacing",facing.getHorizontalIndex());
+                ItemStack stack=new ItemStack(item);stack.setTagInfo("BlockEntityTag",settings);
+                require(item.placeBlockAt(stack,null,placement,base,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState()),"next-block item placement failed");
+                TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)placement.getTileEntity(base);
+                require(leaf.isCover() && leaf.coverFacing()==facing && leaf.getPosition()==position && leaf.isSliding()==sliding && placement.getBlockState(base).getValue(BlockTrapDoor.OPEN),"Next block placement did not start open with saved mount settings");
+                if(!client){leaf.evaluatePower(false);require(open(placement,base),"unchanged initial power immediately closed newly placed cover");leaf.requestOpen(false);require(!open(placement,base),"newly placed cover cannot close manually");}
+            }
+        }
+        System.out.println("PASS: opposing Next block leaves meet without overlap/mount gaps; new offset items place open on both sides");
     }
     private static void checkPermissions() {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos a=new BlockPos(10,100,10),b=a.east();

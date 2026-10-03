@@ -4,7 +4,7 @@ Default, configured and Custom-finish inventory icons use a reduced scale to fit
 
 A movable panel aligned with Programmable Diagonal Walls. Choose the shared categorized
 material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
-with Rotating or Sliding movement and no frame or hinge hardware.
+with Rotating, Slide over wall or Slide into wall movement and no frame or hinge hardware.
 
 ## Geometry and placement
 
@@ -28,7 +28,7 @@ Geometry copies between diagonal walls and trapdoors through the Duplifier's
 
 ## Motion and groups
 
-Sliding first lifts the leaf clear of a solid continuation wall, then slides along the surface's width, leaving roughly one pixel visible in its original block. Tall leaves lift in their depth coordinate; shallow leaves lift vertically. Joined tall rows clear the group’s common outside face (the convex side for an opposite-slope bend) before separating sideways, including opposite slopes and reversed-facing continuations. Rendered vertices, selection and collision use the same motion. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
+**Slide over wall** preserves the existing sliding motion: it first lifts the leaf clear of a solid continuation wall, then slides along the surface's width, leaving roughly one pixel visible in its original block. Tall leaves lift in their depth coordinate; shallow leaves lift vertically. Joined tall rows clear the group’s common outside face (the convex side for an opposite-slope bend) before separating sideways, including opposite slopes and reversed-facing continuations. **Slide into wall** instead moves sideways from the start, without lifting, so the leaf retracts into the neighboring wall/block like an ordinary sliding door. Both sliding choices work in all three shape modes and share the group’s sideways travel. Existing saved sliders retain Slide over wall. The choice is saved in configured items and copied by **Door / Trapdoor Movement**. Rendered vertices, selection and collision use the same motion. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
 compatible leaves pair and open toward opposite sides without reversing their
 closed surface. Compatible leaves have the same shape and matching orientation, opposite slopes in neighboring rows (V-shaped assemblies), or the reversed
 facing/inversion that continues the same wall plane.
@@ -38,6 +38,8 @@ groups span two blocks across and two vertically; shallow groups span two
 across and two along their footprint. The two columns open outward. Groups
 retain their links on save/reload, and rebuilding a broken square restores the
 four-leaf group. Complete rectangular surfaces through 8×8 open together, including 5×2. All three modes also connect across a one-block vertical plus one-block depth offset along their slope. Tall rows step up and toward the facing’s opposite direction for a normal slope, or toward its facing for an inverted slope. Shallow rows step along the facing’s opposite direction and up for a normal slope, or down for an inverted slope. Complete staggered rectangles through 8×8 share movement and settings and retain their links on save/reload. Larger rotating halves share their outer hinge. Individual tall panels prefer upward opening for either slope. Both rows of an opposite-slope V assembly open toward the convex outside of the bend. Reversed coplanar rows share the same outside face. Their inset and hinge animation is retained; rows may rotate upward or downward as needed to stay outside the bend.
+
+Half-width tall and full-width half-height leaves also join connected partial patches across face, edge or corner neighbors. A three-leaf corner, including cells at `(X,Y,Z)`, `(X,Y,Z+1)` and `(X+1,Y,Z+1)`, opens as one group rather than whichever pair formed first. Ordinary and staggered neighbors can belong to the same patch; a complete rectangle is not required. Compatible shape/orientation, edit permissions, loaded chunks, at most 64 members and eight-cell bounds still apply. Existing ordinary pairs and complete 2×2 squares retain their paired layout. Older pair-plus-single patches reconnect when their loaded tiles initialize or when you use a member, without requiring replacement blocks.
 
 Right-click any member to toggle the loaded group. Physical or virtual redstone
 at any member controls the whole group. Configuration and copying update the

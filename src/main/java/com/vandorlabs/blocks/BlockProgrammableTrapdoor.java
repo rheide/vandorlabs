@@ -55,6 +55,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
             TileEntity raw=world.getTileEntity(pos);
             if(raw instanceof TileEntityProgrammableTrapdoor) {
                 TileEntityProgrammableTrapdoor tile=(TileEntityProgrammableTrapdoor)raw;
+                if(tile instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor && tile.getPosition()!=1)tile.completeSquare(player,player.getHeldItem(hand));
                 boolean editable=true;
                 for(TileEntityProgrammableTrapdoor leaf:tile.group())
                     editable &= player.canPlayerEdit(leaf.getPos(),face,player.getHeldItem(hand)) && world.isBlockModifiable(player,leaf.getPos());
@@ -80,7 +81,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
                 com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON,0);
         if(saved!=null)tile.configure(tile.getHousingTexture(),tile.getPosition(),tile.isSliding(),tile.getTrigger(),tile.getRedstoneChannel());
         if(saved!=null && tile.isCover() && saved.hasKey("TrapdoorCoverFacing",3))tile.setCoverFacing(EnumFacing.getHorizontal(saved.getInteger("TrapdoorCoverFacing")));
-        if(world.isRemote)return;
+        if(world.isRemote){if(tile.isCover())world.setBlockState(pos,world.getBlockState(pos).withProperty(OPEN,true),2);return;}
         for(EnumFacing side:tile instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor?EnumFacing.values():EnumFacing.HORIZONTALS) {
             BlockPos next=pos.offset(side);if(!world.isBlockLoaded(next))continue;
             TileEntity neighbor=world.getTileEntity(next);
@@ -93,6 +94,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
         }
         tile.completeSquare(placer instanceof EntityPlayer?(EntityPlayer)placer:null,stack);
         tile.evaluatePower(true);
+        if(tile.isCover())tile.requestOpen(true);
     }
     public ItemStack configuredDrop(@Nullable TileEntity raw) {
         ItemStack stack=new ItemStack(Item.getItemFromBlock(this));

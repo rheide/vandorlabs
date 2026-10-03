@@ -43,6 +43,20 @@ python3 testclient/analyze_landing_gear.py "$RUN_OUT"
 python3 testclient/analyze_seat_icons.py "$RUN_OUT"
 python3 testclient/analyze_light_and_glass.py "$RUN_OUT"
 python3 testclient/analyze_diagonal_joins.py "$RUN_OUT"
+for shape in halfwidth shallow; do
+    for layout in horizontal stagger; do
+        for motion in rotating sliding inset_sliding; do
+            grep -q "diagonal-partial-patch-runtime PASS client patch_${shape}_${layout}_${motion}_open" "$RUN_OUT/client.log"
+        done
+    done
+done
+for family in block slab door trapdoor; do
+    grep -q "custom-picker-reopen-runtime PASS $family" "$RUN_OUT/client.log"
+done
+grep -q 'diagonal-sliding-style-gui PASS into wall' "$RUN_OUT/client.log"
+grep -q 'diagonal-sliding-style-gui PASS over wall' "$RUN_OUT/client.log"
+grep -q 'opposing-next-block-runtime PASS client' "$RUN_OUT/client.log"
+grep -q 'next-block-open-placement-runtime PASS' "$RUN_OUT/client.log"
 grep -q 'diagonal-staggered-mode-runtime PASS gallery_trapdoor_stagger_halfwidth_sliding_open' "$RUN_OUT/client.log"
 grep -q 'diagonal-staggered-mode-runtime PASS gallery_trapdoor_stagger_shallow_rotating_open' "$RUN_OUT/client.log"
 grep -q 'diagonal-outward-runtime PASS client' "$RUN_OUT/client.log"
