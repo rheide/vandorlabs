@@ -32,5 +32,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageLandingGear.Handler.class, MessageLandingGear.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableTrapdoor.Handler.class, MessageProgrammableTrapdoor.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageSurfaceTexture.Handler.class,MessageSurfaceTexture.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageSideTexture.Handler.class,MessageSideTexture.class,id++,Side.SERVER);
     }
 }

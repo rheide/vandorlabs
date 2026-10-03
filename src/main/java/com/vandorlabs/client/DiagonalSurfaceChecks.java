@@ -21,14 +21,14 @@ final class DiagonalSurfaceChecks {
                     BlockProgrammableWall.Corner.class, double.class, int.class, double.class, double.class, double.class);
             draw.setAccessible(true);
             for (boolean shallow : new boolean[]{false,true}) for (boolean inverted : new boolean[]{false,true})
-                for (double span : new double[]{6,12}) for (int fill = 0; fill <= 3; fill++) {
-                    if (shallow && span != 6) continue;
+                for (double span : new double[]{8,16}) for (int fill = 0; fill <= 3; fill++) {
+                    if (shallow && span != 8) continue;
                     BufferBuilder buf = new BufferBuilder(4096);
                     net.minecraft.client.renderer.vertex.VertexFormat format=BlockSurfaceFormat.get();
                     buf.begin(7, format);
-                    double low = shallow && inverted ? -6 : 0;
+                    double low = shallow && inverted ? -8 : 0;
                     draw.invoke(null,buf,wall,trim,inverted,null,span,fill,low,low+16,
-                            shallow ? (inverted ? 6D : 0D) : Double.NaN);
+                            shallow ? (inverted ? 8D : 0D) : Double.NaN);
                     buf.finishDrawing();
                     ByteBuffer data = buf.getByteBuffer();
                     require(buf.getVertexCount() > 0, "empty diagonal panel");
@@ -54,8 +54,8 @@ final class DiagonalSurfaceChecks {
                             require((uy*vz-uz*vy)*nx+(uz*vx-ux*vz)*ny+(ux*vy-uy*vx)*nz>0,
                                     "shader-derived normal opposes supplied normal");
                             if (fill == 0) {
-                                double[] center={8,8,(inverted?span:0)+(inverted?-span:span)*.5+2};
-                                if(shallow){double y=center[1];center[1]=center[2]+(inverted?6:0);center[2]=y;}
+                                double[] center={8,8,(inverted?span:0)+(inverted?-span:span)*.5};
+                                if(shallow){double y=center[1];center[1]=center[2]+(inverted?8:0);center[2]=y;}
                                 require((a[0]-center[0])*nx+(a[1]-center[1])*ny+(a[2]-center[2])*nz>0,
                                         "inward face normal");
                             }

@@ -37,6 +37,7 @@ public final class NonRenderingChecks {
         rampClearance();
         TrapdoorChecks.run();
         DiagonalTrapdoorChecks.run();
+        DiagonalAlignmentChecks.run();
         LandingGearFootprintChecks.run();
         SurfaceLayoutChecks.run();
         DoorMaterialChecks.run();

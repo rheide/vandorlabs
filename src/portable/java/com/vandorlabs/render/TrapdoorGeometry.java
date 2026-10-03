@@ -42,6 +42,15 @@ public final class TrapdoorGeometry {
         }
         return out;
     }
+    /** Lift above a neighbouring full-block surface, then retract across it. */
+    public static double[][] surfaceCorners(int position,int quarterTurns,double pose,double hinge,double travel) {
+        double p=Math.max(0,Math.min(1,pose));
+        double[][] vertices=corners(position,true,quarterTurns,Math.max(0,(p-.25)/.75),hinge,travel);
+        double lift=(1+EDGE_CLEARANCE-low(position))*Math.min(1,p*4);
+        for(double[] vertex:vertices)vertex[1]+=lift;
+        return vertices;
+    }
+
     /** An adjacent mount owns the cover while its closed leaf spans the neighboring cell. */
     public static double[][] coverCorners(int position,int quarterTurns,double pose) {
         return coverCorners(position,true,quarterTurns,pose);

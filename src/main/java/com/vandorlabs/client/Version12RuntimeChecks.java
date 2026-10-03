@@ -144,7 +144,7 @@ final class Version12RuntimeChecks {
                 settings.setDiagonalGeometry(mode,fill);
                 boxes.clear();diagonal.addCollisionBoxToList(world.getBlockState(p),world,p,new AxisAlignedBB(p),boxes,null,false);
                 require(!boxes.isEmpty(),"empty diagonal collision");
-                for (AxisAlignedBB box:boxes) require(box.minY>=p.getY()-1e-8 && box.maxY<=p.getY()+1+1e-8,"diagonal collision outside block");
+                for (AxisAlignedBB box:boxes) require(box.minY>=p.getY()-.125-1e-8 && box.maxY<=p.getY()+1.125+1e-8,"diagonal collision exceeds two-pixel overhang");
                 if (mode==2 && fill==0) for (AxisAlignedBB box:boxes) require(box.maxY<=p.getY()+.625+1e-8,"half-height exceeds rotated panel bounds");
                 NBTTagCompound saved=settings.writeToNBT(new NBTTagCompound());
                 TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);

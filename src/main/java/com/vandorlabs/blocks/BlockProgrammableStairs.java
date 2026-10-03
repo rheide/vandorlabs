@@ -30,7 +30,7 @@ public final class BlockProgrammableStairs extends BlockStairs {
     }
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this,new IProperty[]{FACING,HALF,SHAPE},
-                new IUnlistedProperty[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.FACES,
+                new IUnlistedProperty[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH,ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES});
     }
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
@@ -39,6 +39,7 @@ public final class BlockProgrammableStairs extends BlockStairs {
         TileEntity raw=world.getTileEntity(pos);
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
         return ((IExtendedBlockState)state).withProperty(ProgrammableHousingState.FINISH,tile==null?0:tile.getHousingTexture())
+                .withProperty(ProgrammableHousingState.SIDE_FINISH,tile==null?-1:tile.getSideTexture())
                 .withProperty(ProgrammableHousingState.FACES,tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures())
                 .withProperty(ProgrammableHousingState.TILE_SIDES,tile!=null&&tile.isSlabTileSides()?1:0);
     }

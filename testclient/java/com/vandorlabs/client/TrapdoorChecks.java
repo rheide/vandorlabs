@@ -27,9 +27,42 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
+        checkMesh();checkSurfaceSlide();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
+    private static void checkSurfaceSlide() {
+        for(int position=0;position<3;position++)for(int turns=0;turns<4;turns++)for(int step=0;step<=20;step++) {
+            double pose=step/20D;
+            double[][] v=TrapdoorGeometry.surfaceCorners(position,turns,pose,TrapdoorGeometry.OPEN_HINGE,15/16D);
+            require(Math.abs(distance(v[0],v[2])-TrapdoorGeometry.THICKNESS)<1e-9,"surface slide changes thickness");
+            if(pose>=.25)for(double[] point:v)require(point[1]>1,"surface slide enters neighbouring full block");
+            if(pose<=.25) {
+                double[][] closed=TrapdoorGeometry.corners(position,true,turns,0);
+                for(int n=0;n<8;n++)require(v[n][0]==closed[n][0] && v[n][2]==closed[n][2],"surface slide moves sideways before clearing surface");
+            }
+        }
+        NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+        BlockPos pos=new BlockPos(10,100,10),target=pos.east(5);
+        TileEntityProgrammableTrapdoor tile=place(world,pos,2,true);tile.setSlideOverSurface(true);
+        tile.requestOpen(true);
+        AxisAlignedBB box=OffsetTrapdoorInteractions.bounds(tile);
+        Vec3d center=box.getCenter();
+        RayTraceResult hit=OffsetTrapdoorInteractions.trace(world,center.addVector(0,1,0),center.addVector(0,-1,0));
+        require(hit!=null && hit.getBlockPos().equals(pos),"surface slider cannot be selected");
+        TileEntityProgrammableTrapdoor restored=new TileEntityProgrammableTrapdoor();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+        require(restored.isSlideOverSurface() && tile.itemSettings().getBoolean("TrapdoorSlideOverSurface"),"surface style not saved");
+        NBTTagCompound legacy=tile.itemSettings();legacy.removeTag("TrapdoorSlideOverSurface");restored.readFromNBT(legacy);
+        require(!restored.isSlideOverSurface(),"legacy sliding behaviour changed");
+        TileEntityProgrammableTrapdoor copy=place(world,target,0,false);
+        require(ProgrammableSettings.apply(world,target,ProgrammableSettings.capture(world,pos)) && copy.isSlideOverSurface(),"surface style not copied");
+        io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();
+        new com.vandorlabs.network.MessageProgrammableTrapdoor(pos,0,2,true,0,0,false,false,true,EnumFacing.NORTH,false,true).toBytes(bytes);
+        com.vandorlabs.network.MessageProgrammableTrapdoor decoded=new com.vandorlabs.network.MessageProgrammableTrapdoor();decoded.fromBytes(bytes);
+        io.netty.buffer.ByteBuf result=io.netty.buffer.Unpooled.buffer();decoded.toBytes(result);
+        require(result.getBoolean(result.writerIndex()-1),"surface slide packet loses setting");bytes.release();result.release();
+        System.out.println("PASS: surface sliding clearance, selection, legacy defaults, persistence, copy and packet");
+    }
+
     private static void checkMesh() {
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=new net.minecraft.client.renderer.texture.TextureAtlasSprite("trapdoor_check"){};
         sprite.setIconWidth(16);sprite.setIconHeight(16);sprite.initSprite(256,256,32,48,false);

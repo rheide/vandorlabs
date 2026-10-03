@@ -18,7 +18,7 @@ public final class OffsetTrapdoorSelection {
         RayTraceResult hit=event.getTarget();
         if(hit!=null && hit.typeOfHit==RayTraceResult.Type.BLOCK && isOffset(event.getPlayer().world.getTileEntity(hit.getBlockPos())))event.setCanceled(true);
     }
-    private static boolean isOffset(TileEntity tile) {return tile instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)tile).isCover();}
+    private static boolean isOffset(TileEntity tile) {return tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor);}
     @SubscribeEvent(priority=EventPriority.HIGHEST) public void tick(TickEvent.ClientTickEvent event) {
         Minecraft mc=Minecraft.getMinecraft();
         if(event.phase==TickEvent.Phase.START && mc.world!=null && mc.playerController!=null && mc.playerController.getClass()==net.minecraft.client.multiplayer.PlayerControllerMP.class)

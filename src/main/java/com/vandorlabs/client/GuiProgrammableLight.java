@@ -32,8 +32,9 @@ public final class GuiProgrammableLight extends GuiContainer {
     private HousingTextureList housingList,faceList;
     private GuiTextField channelField;
     private boolean draggingLevel;
-    private int previousGuiScale=-1;
-    private static final int SLIDER_W = 286;
+    private ProgrammableDialogLayout layout;
+    private int textureTab;
+    private static final int SLIDER_W = 138;
 
     public GuiProgrammableLight(InventoryPlayer inventory, TileEntityProgrammableLight tile) {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
@@ -49,41 +50,22 @@ public final class GuiProgrammableLight extends GuiContainer {
     }
 
     @Override public void initGui() {
-        // Auto scale can leave only 240 GUI pixels at 720p. Give this tall
-        // dialog room, then restore the user's setting when it closes.
-        if(height<344) {
-            if(previousGuiScale<0)previousGuiScale=mc.gameSettings.guiScale;
-            int scale=new net.minecraft.client.gui.ScaledResolution(mc).getScaleFactor();
-            net.minecraft.client.gui.ScaledResolution resolution;
-            do {
-                mc.gameSettings.guiScale=Math.max(1,--scale);
-                resolution=new net.minecraft.client.gui.ScaledResolution(mc);
-            } while(resolution.getScaledHeight()<344 && scale>1);
-            width=resolution.getScaledWidth();height=resolution.getScaledHeight();
-        }
-        int rows=Math.max(4,Math.min(8,(height-168)/HousingTextureList.ROW_HEIGHT));
-        ySize=152+rows*HousingTextureList.ROW_HEIGHT;
-        int extra=ySize-240;
-        int listBudget=(rows*HousingTextureList.ROW_HEIGHT+11)/12;
-        super.initGui();
-        buttonList.clear();
-        Keyboard.enableRepeatEvents(true);
-        channelField = new GuiTextField(0, fontRenderer, guiLeft + 150,
-                guiTop + ySize - 52, 164, 18);
-        channelField.setMaxStringLength(10);
-        channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
+        layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
+        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+177,154,18);
+        channelField.setMaxStringLength(10);channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(tile.getRedstoneChannel()));
-        faceList=new HousingTextureList(guiLeft+12,guiTop+40,190,selected,listBudget,null,choice->!ScreenHousingTextures.isLightOff(choice)).custom(value->{selected=value;tile.setFaceTexture(value);send();});
-        housingList = new HousingTextureList(guiLeft + 218, guiTop + 40, 182, housing,listBudget,null,choice->!ScreenHousingTextures.isLightOff(choice)).custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame) buttonList.add(new GuiButton(103,guiLeft+12,guiTop+134+extra,190,20,sizeLabel()));
-        buttonList.add(new GuiButton(104,guiLeft+218,guiTop+134+extra,190,20,sidesLabel()));
-        buttonList.add(new GuiButton(101, guiLeft + 12, guiTop + 214 + extra,
-                96, 20, joinLabel()));
-        buttonList.add(new GuiButton(102, guiLeft + 112, guiTop + 214 + extra,
-                184, 20, triggerLabel()));
-        buttonList.add(new GuiButton(100, guiLeft + 300, guiTop + 214 + extra,
-                108, 20, I18n.format("gui.done")));
+        java.util.function.IntPredicate include=choice->!ScreenHousingTextures.isLightOff(choice) && (HousingTextureList.generalTexture(choice) || "Lights".equals(ScreenHousingTextures.category(choice)));
+        faceList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,selected,8,null,include).visibleRows(layout.rows(true))
+                .custom(value->{selected=value;tile.setFaceTexture(value);send();});
+        housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housing,8,null,include).visibleRows(layout.rows(true))
+                .custom(value->{housing=value;tile.setHousingTexture(value);send();});
+        buttonList.add(layout.tab(90,0,2,"Light texture"));buttonList.add(layout.tab(91,1,2,"Housing"));
+        buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
+        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
+        buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
 
     private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
     private String sidesLabel(){return "Side layout: "+(tileSides?"Tile":"Fit");}
@@ -118,7 +100,7 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     private void setLevelFromMouse(int mouseX) {
         int next = Math.max(0, Math.min(15,
-                Math.round(15F * (mouseX - guiLeft - 16) / SLIDER_W)));
+                Math.round(15F * (mouseX - layout.controlsX - 8) / SLIDER_W)));
         if (next != level) {
             level = next;
             send();
@@ -128,8 +110,8 @@ public final class GuiProgrammableLight extends GuiContainer {
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
         int before=faceList.selected();
-        if(faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){selected=faceList.selected();send();}return;}
-        if (housingList.click(mouseX, mouseY, button)) {
+        if(textureTab==0 && faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){selected=faceList.selected();send();}return;}
+        if (textureTab==1 && housingList.click(mouseX, mouseY, button)) {
             if (housing != housingList.selected()) {
                 housing = housingList.selected();
                 send();
@@ -137,8 +119,8 @@ public final class GuiProgrammableLight extends GuiContainer {
             return;
         }
         if (button == 0) {
-            if (mouseX >= guiLeft + 12 && mouseX <= guiLeft + 318
-                    && mouseY >= guiTop + ySize - 72 && mouseY <= guiTop + ySize - 58) {
+            if (mouseX >= layout.controlsX && mouseX <= layout.controlsX+154
+                    && mouseY >= guiTop+138 && mouseY <= guiTop+152) {
                 draggingLevel = true;
                 setLevelFromMouse(mouseX);
                 return;
@@ -163,13 +145,14 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        faceList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
-        housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+        if(textureTab==0)faceList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
+        if(textureTab==1)housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1,
                 Mouse.getEventDWheel());
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==90 || button.id==91){textureTab=button.id-90;refreshTabs();return;}
         if (button.id == 101) {
             join = !join;
             button.displayString = joinLabel();
@@ -206,33 +189,24 @@ public final class GuiProgrammableLight extends GuiContainer {
     @Override public void onGuiClosed() {
         super.onGuiClosed();
         Keyboard.enableRepeatEvents(false);
-        if(previousGuiScale>=0){mc.gameSettings.guiScale=previousGuiScale;previousGuiScale=-1;}
     }
 
     @Override protected void drawGuiContainerBackgroundLayer(float partialTicks,
             int mouseX, int mouseY) { }
 
-    @Override public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    @Override public void drawScreen(int mouseX,int mouseY,float partialTicks) {
         drawDefaultBackground();
-        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
-        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 18, 0xFF202028);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),
-                guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.housing"),
-                guiLeft + 218, guiTop + 27, 0xFFD8D8D8);
-        housingList.draw(fontRenderer, mouseX, mouseY);
-        fontRenderer.drawString("Light texture",guiLeft+12,guiTop+27,0xFFD8D8D8);
-        faceList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level") + ": " + level,
-                guiLeft + 13, guiTop + ySize - 84, 0xFFD8D8D8);
-        drawRect(guiLeft + 16, guiTop + ySize - 67, guiLeft + 16 + SLIDER_W,
-                guiTop + ySize - 61, 0xFF555560);
-        int thumb = guiLeft + 16 + Math.round(SLIDER_W * level / 15F);
-        drawRect(thumb - 3, guiTop + ySize - 72, thumb + 3, guiTop + ySize - 58, 0xFFB8D7E8);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.channel"),
-                guiLeft + 13, guiTop + ySize - 47, 0xFFD8D8D8);
-        super.drawScreen(mouseX, mouseY, partialTicks);
-        channelField.drawTextBox();
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),guiLeft+12,guiTop+8,0xFFFFFF);
+        if(textureTab==0)faceList.draw(fontRenderer,mouseX,mouseY);else housingList.draw(fontRenderer,mouseX,mouseY);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level")+": "+level,layout.controlsX,guiTop+124,0xDAE8F0);
+        int sliderX=layout.controlsX+8;
+        drawRect(sliderX,guiTop+142,sliderX+SLIDER_W,guiTop+148,0xFF555560);
+        int thumb=sliderX+Math.round(SLIDER_W*level/15F);
+        drawRect(thumb-3,guiTop+138,thumb+3,guiTop+152,0xFFB8D7E8);
+        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }

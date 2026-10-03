@@ -21,7 +21,7 @@ public class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
 
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this, new IProperty<?>[]{FACING},
-                new IUnlistedProperty<?>[]{ProgrammableHousingState.FINISH, ProgrammableHousingState.FACES,
+                new IUnlistedProperty<?>[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH, ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES, ProgrammableHousingState.VISIBLE,
                         ProgrammableHousingState.LIGHT});
     }

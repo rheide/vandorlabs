@@ -22,6 +22,8 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     private HousingTextureList offList;
     private HousingTextureList onList;
     private GuiTextField channelField;
+    private ProgrammableDialogLayout layout;
+    private int textureTab;
     private int off;
     private int on;
 
@@ -36,19 +38,16 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override public void initGui() {
-        super.initGui();
-        buttonList.clear();
-        Keyboard.enableRepeatEvents(true);
-        offList = new HousingTextureList(guiLeft + 12, guiTop + 41, 180, off).custom(value->{off=value;send();});
-        onList = new HousingTextureList(guiLeft + 216, guiTop + 41, 180, on).custom(value->{on=value;send();});
-        channelField = new GuiTextField(0, fontRenderer, guiLeft + 132,
-                guiTop + 144, 110, 18);
-        channelField.setMaxStringLength(10);
-        channelField.setValidator(value -> value.isEmpty() || value.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(tile.getRedstoneChannel()));
-        buttonList.add(new GuiButton(100, guiLeft + 110, guiTop + 169,
-                200, 20, "Done"));
+        layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
+        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        offList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,off).visibleRows(layout.rows(true)).custom(value->{off=value;send();});
+        onList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,on).visibleRows(layout.rows(true)).custom(value->{on=value;send();});
+        buttonList.add(layout.tab(90,0,2,"Redstone Off"));buttonList.add(layout.tab(91,1,2,"Redstone On"));
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+42,154,18);
+        channelField.setMaxStringLength(10);channelField.setValidator(value->value.isEmpty() || value.matches("[0-9]{1,10}"));
+        channelField.setText(Integer.toString(tile.getRedstoneChannel()));buttonList.add(layout.done(100));refreshTabs();
     }
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
 
     private int channel() {
         try {
@@ -66,11 +65,11 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
-        if (offList.click(x, y, button)) {
+        if (textureTab==0 && offList.click(x, y, button)) {
             if (off != offList.selected()) { off = offList.selected(); send(); }
             return;
         }
-        if (onList.click(x, y, button)) {
+        if (textureTab==1 && onList.click(x, y, button)) {
             if (on != onList.selected()) { on = onList.selected(); send(); }
             return;
         }
@@ -94,11 +93,12 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         int x = Mouse.getEventX() * width / mc.displayWidth;
         int y = height - Mouse.getEventY() * height / mc.displayHeight - 1;
         int wheel = Mouse.getEventDWheel();
-        offList.wheel(x, y, wheel);
-        onList.wheel(x, y, wheel);
+        if(textureTab==0)offList.wheel(x, y, wheel);
+        if(textureTab==1)onList.wheel(x, y, wheel);
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==90 || button.id==91){textureTab=button.id-90;refreshTabs();return;}
         if (button.id == 100) { send(); mc.player.closeScreen(); }
     }
 
@@ -126,15 +126,11 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {
         drawDefaultBackground();
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
-        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 18, 0xFF202028);
-        fontRenderer.drawString("Programmable Trigger Block", guiLeft + 8,
-                guiTop + 5, 0xFFFFFFFF);
-        fontRenderer.drawString("Redstone Off", guiLeft + 12, guiTop + 27, 0xFFD8D8D8);
-        fontRenderer.drawString("Redstone On", guiLeft + 216, guiTop + 27, 0xFFD8D8D8);
-        offList.draw(fontRenderer, mouseX, mouseY);
-        onList.draw(fontRenderer, mouseX, mouseY);
-        fontRenderer.drawString("Redstone Channel", guiLeft + 12,
-                guiTop + 149, 0xFFD8D8D8);
+        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 24, 0xFF202028);
+        fontRenderer.drawString("Programmable Trigger Block", guiLeft + 12,
+                guiTop + 8, 0xFFFFFFFF);
+        if(textureTab==0)offList.draw(fontRenderer,mouseX,mouseY);else onList.draw(fontRenderer,mouseX,mouseY);
+        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+30,0xDAE8F0);
         super.drawScreen(mouseX, mouseY, partial);
         channelField.drawTextBox();
     }

@@ -26,7 +26,7 @@ final class DiagonalTrapdoorChecks {
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
         require(new TileEntityProgrammableDiagonalTrapdoor().getHousingTexture()==ScreenHousingTextures.DEFAULT_TRAPDOOR,"default diagonal hatch texture missing");
-        mesh();clearance();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
+        mesh();clearance();openSelection();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }
     private static void mesh() {
@@ -54,9 +54,9 @@ final class DiagonalTrapdoorChecks {
             buffer.reset();
         }
         for(int mode=0;mode<3;mode++)for(boolean inverted:new boolean[]{false,true}) {
-            double[][] v=DiagonalTrapdoorGeometry.corners(mode,inverted,0,false,false,0);double span=mode==1?.75:.375;
+            double[][] v=DiagonalTrapdoorGeometry.corners(mode,inverted,0,false,false,0);double span=mode==1?1:.5;
             for(int i=0;i<8;i++) {
-                double along=mode==2?v[i][2]:v[i][1],near=(inverted?span*(1-along):span*along)+(mode==2 && inverted?.375:0);
+                double along=mode==2?v[i][2]:v[i][1],near=(inverted?span*(1-along):span*along)+(mode==2 && inverted?.5:0)-.125;
                 double depth=mode==2?v[i][1]:v[i][2];int bit=mode==2?2:4;
                 require(Math.abs(depth-near-((i&bit)==0?1/16D:3/16D))<1e-9,"one-pixel wall inset differs");
             }
@@ -70,12 +70,36 @@ final class DiagonalTrapdoorChecks {
                 double[][] closed=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,0),lifting=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,.2);
                 for(int i=0;i<8;i++)require(Math.abs(closed[i][0]-lifting[i][0])<1e-8,"diagonal slide enters wall before lifting clear");
                 double[][] vertices=DiagonalTrapdoorGeometry.corners(mode,inverted,0,true,reverse,1);
-                double span=mode==1?.75:.375;
-                for(double[] point:vertices){double along=mode==2?point[2]:point[1],near=(inverted?span*(1-along):span*along)+(mode==2 && inverted?.375:0),depth=mode==2?point[1]:point[2];require(depth-near>=5/16D-1e-8,"sliding leaf intersects continuation wall");}
+                double span=mode==1?1:.5;
+                for(double[] point:vertices){double along=mode==2?point[2]:point[1],near=(inverted?span*(1-along):span*along)+(mode==2 && inverted?.5:0)-.125,depth=mode==2?point[1]:point[2];require(depth-near>=5/16D-1e-8,"sliding leaf intersects continuation wall");}
             }
             if(slide)require(Math.abs((reverse?b[0]:b[3])-(reverse?15/16D+TrapdoorGeometry.EDGE_CLEARANCE:1/16D-TrapdoorGeometry.EDGE_CLEARANCE))<1e-8,"diagonal slide clearance");
         }
     }
+    private static void openSelection() {
+        BlockPos pos=new BlockPos(8,100,8);
+        for(int mode=0;mode<3;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true}) {
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            IBlockState state=block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing)
+                    .withProperty(BlockTrapDoor.HALF,inverted?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM)
+                    .withProperty(BlockTrapDoor.OPEN,true);
+            world.setBlockState(pos,state,2);
+            TileEntityProgrammableDiagonalTrapdoor tile=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(pos);
+            tile.configure(0,mode,true,SpaceDoorData.TRIGGER_DISABLED,0);
+            world.setBlockState(pos,state,2);
+            double[][] vertices=BlockProgrammableDiagonalTrapdoor.corners(state,tile,1);
+            int[] face=TrapdoorGeometry.FACES[mode==2?0:2];
+            Vec3d center=Vec3d.ZERO;
+            for(int vertex:face)center=center.add(new Vec3d(vertices[vertex][0],vertices[vertex][1],vertices[vertex][2]).scale(.25));
+            Vec3d a=new Vec3d(vertices[face[0]][0],vertices[face[0]][1],vertices[face[0]][2]),b=new Vec3d(vertices[face[1]][0],vertices[face[1]][1],vertices[face[1]][2]),c=new Vec3d(vertices[face[2]][0],vertices[face[2]][1],vertices[face[2]][2]);
+            Vec3d normal=b.subtract(a).crossProduct(c.subtract(a)).normalize();
+            center=center.add(new Vec3d(pos));
+            RayTraceResult hit=OffsetTrapdoorInteractions.trace(world,center.add(normal.scale(.5)),center.subtract(normal.scale(.5)));
+            require(hit!=null && hit.getBlockPos().equals(pos),"open diagonal leaf cannot be selected away from its owner cell");
+        }
+        System.out.println("PASS: open over-wall diagonal leaf selection, all shapes, slopes and directions");
+    }
+
     private static void placement() {
         BlockPos p=new BlockPos(8,100,8);
         for(int mode=0;mode<3;mode++)for(EnumFacing side:EnumFacing.values())for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inv:new boolean[]{false,true}) {
@@ -85,6 +109,11 @@ final class DiagonalTrapdoorChecks {
             ((TileEntityAnimatedScreenSelector)world.getTileEntity(support)).setDiagonalGeometry(mode,0);
             EntityPlayer player=player(world);player.rotationYaw=facing.getHorizontalAngle();player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(item));
             IBlockState expected=wall.getStateForPlacement(world,p,side,.1F,.7F,.9F,0,player),actual=block.getStateForPlacement(world,p,side,.1F,.7F,.9F,0,player);
+            if(mode==1 && side==EnumFacing.UP) {
+                require(expected.getValue(BlockProgrammableWall.FACING)==facing
+                        && expected.getValue(BlockProgrammableWall.INVERTED)==inv,
+                        "stacked full diagonal reverses clicked orientation");
+            }
             require(actual.getValue(BlockTrapDoor.FACING)==expected.getValue(BlockProgrammableWall.FACING),"placement facing differs from wall");
             require((actual.getValue(BlockTrapDoor.HALF)==BlockTrapDoor.DoorHalf.TOP)==expected.getValue(BlockProgrammableWall.INVERTED),"placement inversion differs from wall");
             require(item.placeBlockAt(new ItemStack(item),player,world,p,side,.1F,.7F,.9F,actual),"wall-adjacent placement failed");
@@ -332,7 +361,7 @@ final class DiagonalTrapdoorChecks {
         io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();
         com.vandorlabs.network.MessageProgrammableTrapdoor packet=new com.vandorlabs.network.MessageProgrammableTrapdoor(new BlockPos(1,2,3),0,2,true,0,0,false,false,true,EnumFacing.NORTH,true);
         packet.toBytes(bytes);com.vandorlabs.network.MessageProgrammableTrapdoor decoded=new com.vandorlabs.network.MessageProgrammableTrapdoor();decoded.fromBytes(bytes);
-        io.netty.buffer.ByteBuf roundTrip=io.netty.buffer.Unpooled.buffer();decoded.toBytes(roundTrip);require(roundTrip.getBoolean(roundTrip.writerIndex()-1),"packet lost into-wall style");bytes.release();roundTrip.release();
+        io.netty.buffer.ByteBuf roundTrip=io.netty.buffer.Unpooled.buffer();decoded.toBytes(roundTrip);require(roundTrip.getBoolean(roundTrip.writerIndex()-2),"packet lost into-wall style");bytes.release();roundTrip.release();
         System.out.println("PASS: both diagonal sliding styles, all poses, saved items, joining, group edits, copying and packet round trip");
     }
     private static void boundaries() {

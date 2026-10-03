@@ -48,6 +48,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.PROPULSION_SHAPE, "Thruster Shape", 2),
             option(ProgrammableSettings.PORTHOLE_SHAPE, "Porthole Shape", 2),
             option(ProgrammableSettings.GLASS_SIZE, "Glass Size", 2),
+            option(ProgrammableSettings.SIDE_TEXTURE,"Side Texture",2),
             option(ProgrammableSettings.SLAB_TILE_SIDES, "Slab Side Layout", 2),
             option(ProgrammableSettings.CHAIR_STYLE, "Chair Style", 2),
             option(ProgrammableSettings.CHAIR_HEIGHT, "Chair Height", 2),
@@ -121,7 +122,7 @@ public final class DuplifierApplyOptions {
         NBTTagCompound selected = captured.copy();
         for (int i = 0; i < OPTIONS.length; i++)
             if (!enabled(mask, i)) selected.removeTag(OPTIONS[i].key);
-        if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL);
+        if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
         if (!selected.hasKey(ProgrammableSettings.PRIMARY_TEXTURE))
             selected.removeTag(ProgrammableSettings.PRIMARY_KIND);

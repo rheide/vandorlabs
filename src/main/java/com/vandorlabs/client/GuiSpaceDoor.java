@@ -4,6 +4,7 @@ import com.vandorlabs.container.ContainerSpaceDoor;
 import com.vandorlabs.network.MessageSpaceDoor;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
+import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.render.SpaceDoorMotion;
 import com.vandorlabs.persistence.SpaceDoorData;
 import net.minecraft.client.gui.GuiButton;
@@ -20,6 +21,7 @@ public class GuiSpaceDoor extends GuiContainer {
     private static final int ROW_H=14, LIST_ROWS=10, LIST_H=ROW_H*LIST_ROWS;
     private final TileEntitySpaceDoor tile;
     private HousingTextureList textureList;
+    private ProgrammableDialogLayout layout;
     private int faceTexture;
     private int design,detail,depth,scrollIndex,lastValidChannel;
     private int trigger;
@@ -53,30 +55,21 @@ public class GuiSpaceDoor extends GuiContainer {
     }
     @Override public void initGui() {
         String channelText=channelField==null?Integer.toString(lastValidChannel):channelField.getText();
-        super.initGui();
-        buttonList.clear();
-        Keyboard.enableRepeatEvents(true);
-        listLeft=guiLeft+12; listRight=listLeft+200; listTop=guiTop+40; listBottom=listTop+LIST_H;
-        textureList=new HousingTextureList(listLeft,listTop,200,faceTexture<0?com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail):faceTexture,11).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
-        previewX=guiLeft+338; previewY=guiTop+42;
-        motionButton=new GuiButton(10,guiLeft+228,guiTop+40,180,20,motion.label);
-        buttonList.add(motionButton);
-        buttonList.add(new GuiButton(11,guiLeft+228,guiTop+66,180,20,SIZES[detail]));
-        buttonList.add(new GuiButton(12,guiLeft+228,guiTop+92,180,20,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(new GuiButton(16,guiLeft+228,guiTop+118,180,20,triggerLabel()));
-        buttonList.add(new GuiButton(13,guiLeft+228,guiTop+144,180,20,depthLabel()));
-        hingeButton=new GuiButton(15,guiLeft+12,guiTop+190,96,20,"");
-        buttonList.add(hingeButton);
-        updateHingeButton();
-        buttonList.add(new GuiButton(17,guiLeft+116,guiTop+190,96,20,panel?"Panel: On":"Panel: Off"));
-        channelField=new GuiTextField(0,fontRenderer,guiLeft+228,guiTop+190,180,18);
-        channelField.setMaxStringLength(10);
-        channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
-        channelField.setText(channelText);
-        done=new GuiButton(1,guiLeft+228,guiTop+216,180,20,"Done");
-        buttonList.add(done);
-        buttonList.add(new GuiButton(18,guiLeft+12,guiTop+216,200,20,layoutLabel()));
-        updateChannelValidity();
+        layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
+        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        listLeft=layout.listX;listRight=listLeft+layout.listWidth;listTop=guiTop+38;
+        textureList=HousingTextureList.forCategory("Doors",listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture)
+                .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
+        motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
+        buttonList.add(layout.control(11,50,SIZES[detail]));
+        buttonList.add(layout.control(12,70,framed?"Frame: Framed":"Frame: Bare"));
+        buttonList.add(layout.control(16,90,triggerLabel()));buttonList.add(layout.control(13,110,depthLabel()));
+        hingeButton=layout.choice(15,0,2,130,"");buttonList.add(hingeButton);updateHingeButton();
+        buttonList.add(layout.choice(17,1,2,130,panel?"Panel: On":"Panel: Off"));
+        buttonList.add(layout.control(18,150,layoutLabel()));
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+185,154,18);
+        channelField.setMaxStringLength(10);channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));channelField.setText(channelText);
+        done=layout.done(1);buttonList.add(done);updateChannelValidity();
     }
     private int channel() {
         try {
@@ -187,9 +180,9 @@ public class GuiSpaceDoor extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString("Programmable Door",12,8,0xFFFFFF);
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
-        fontRenderer.drawString("Options",228,28,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",228,178,0xDAE8F0);
-        if (channel()<0) fontRenderer.drawString("Invalid channel",228,212,0xFF7777);
+
+        fontRenderer.drawString("Channel (0 = none)",layout.controlsX-guiLeft,174,0xDAE8F0);
+        if (channel()<0) fontRenderer.drawString("Invalid channel",12,ySize-18,0xFF7777);
 
     }
     @Override public void drawScreen(int x,int y,float partial) {

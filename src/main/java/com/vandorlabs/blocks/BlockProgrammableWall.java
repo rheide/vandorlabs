@@ -61,7 +61,30 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         net.minecraft.tileentity.TileEntity tile = world.getTileEntity(pos);
         return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                 && ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector) tile)
-                .isDiagonalFullWidth() && !((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight() ? 12D : 6D;
+                .isDiagonalFullWidth() && !((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight() ? 16D : 8D;
+    }
+
+    public static double flatEnd(IBlockState state, IBlockAccess world, BlockPos pos, boolean upper) {
+        if (halfHeight(world,pos)) return Double.NaN;
+        if (world instanceof World && DiagonalPanelGeometry.coveredEnd((World)world,pos,state,upper))
+            return Double.NaN;
+        EnumFacing facing=state.getValue(FACING);
+        double expected=com.vandorlabs.render.DiagonalWallGeometry.near(geometry(world,pos),
+                state.getValue(INVERTED),upper?1:0);
+        for (int offset=-1;offset<=1;offset++) {
+            BlockPos next=pos.offset(upper?EnumFacing.UP:EnumFacing.DOWN).offset(facing.getOpposite(),offset);
+            if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
+            IBlockState other=world.getBlockState(next);
+            if (!(other.getBlock() instanceof BlockProgrammableWall)
+                    || ((BlockProgrammableWall)other.getBlock()).isDiagonalShape()) continue;
+            EnumFacing otherFacing=other.getValue(FACING);
+            if (otherFacing.getAxis()!=facing.getAxis()) continue;
+            double near=PanelDepth.start(other.getValue(DEPTH))/16D;
+            if (otherFacing!=facing) near=.75-near;
+            near+=offset;
+            if (Math.abs(near-expected)<=.1250001) return near;
+        }
+        return Double.NaN;
     }
 
     private static boolean sameDiagonalWidth(IBlockAccess world, BlockPos a,
@@ -82,7 +105,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
     private AxisAlignedBB diagonalBox(AxisAlignedBB box,IBlockState state,IBlockAccess world,BlockPos pos) {
         if (halfHeight(world,pos)) {
-            double base=state.getValue(INVERTED)?.375:0;
+            double base=state.getValue(INVERTED)?.5:0;
             box=new AxisAlignedBB(box.minX,base+box.minZ,box.minY,
                     box.maxX,base+box.maxZ,box.maxY);
         }
@@ -124,6 +147,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                         return candidate;
                 }
             }
+            if (side.getAxis()==EnumFacing.Axis.Y) return getDefaultState().withProperty(FACING,clicked.getValue(FACING))
+                    .withProperty(INVERTED,clicked.getValue(INVERTED));
         }
         EnumFacing facing = placer.getHorizontalFacing().getOpposite();
         boolean inverted = side == EnumFacing.DOWN
@@ -177,10 +202,17 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         Corner corner = corner(state, world, pos);
         if (isDiagonalShape()) {
             boolean half=halfHeight(world,pos);
-            if (fill(world,pos)!=0) return FULL_BLOCK_AABB;
-            if (half) return new AxisAlignedBB(0,state.getValue(INVERTED)?.375:0,0,1,state.getValue(INVERTED)?1:.625,1);
-            return rotate(new AxisAlignedBB(0,0,0,1,1,
-                    corner != null && corner.backRight != null ? 1 : (diagonalSpan(world,pos)+4)/16D),state.getValue(FACING));
+            double low = -.125, high = (diagonalSpan(world,pos)+2)/16D;
+            if (half) {
+                double base=state.getValue(INVERTED)?.5:0;
+                low+=base; high+=base;
+            }
+            if (fill(world,pos)!=0 || corner!=null) {
+                low=Math.min(0,low); high=Math.max(1,high);
+            }
+            if (half) return new AxisAlignedBB(0,low,0,1,high,1);
+            double left=corner==null?0:-.125, right=corner==null?1:1.125;
+            return rotate(new AxisAlignedBB(left,0,low,right,1,high),state.getValue(FACING));
         }
         FlatCorner flat = flatCorner(state, world, pos);
         double near = PanelDepth.start(state.getValue(DEPTH));
@@ -387,13 +419,15 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                         flat.backArm, flat.backArm + 4, near + 4, 16);
             return;
         }
+        int firstBox=boxes.size();
         Corner corner = corner(state, world, pos);
-        double span = diagonalSpan(world, pos);
+        int mode=geometry(world,pos);
+        double lower=flatEnd(state,world,pos,false), upper=flatEnd(state,world,pos,true);
         // Thin vertical slices follow the rendered slope and its short arm.
         for (int slice = 0; slice < 16; slice++) {
-            double a = span * slice / 16D, b = span * (slice + 1) / 16D;
-            double near0 = state.getValue(INVERTED) ? span - b : a;
-            double near1 = state.getValue(INVERTED) ? span - a : b;
+            double start = 16 * com.vandorlabs.render.DiagonalWallGeometry.near(mode,state.getValue(INVERTED),slice / 16D,lower,upper);
+            double end = 16 * com.vandorlabs.render.DiagonalWallGeometry.near(mode,state.getValue(INVERTED),(slice + 1) / 16D,lower,upper);
+            double near0 = Math.min(start,end), near1 = Math.max(start,end);
             double left = corner == null ? 0 : Math.min(corner.left(near0),
                     corner.left(near1));
             double right = corner == null ? 16 : Math.max(corner.right(near0),
@@ -406,12 +440,12 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             int fill = fill(world,pos);
             if (halfHeight(world,pos)) {
                 // Fill below/above the rotated incline, including the unused half of the cell.
-                double base=state.getValue(INVERTED)?.375:0;
-                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,0,slice/16D,1,base+(near1+4)/16D,(slice+1)/16D),state.getValue(FACING)));
-                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,base+near0/16D,slice/16D,1,1,(slice+1)/16D),state.getValue(FACING)));
+                double base=state.getValue(INVERTED)?.5:0;
+                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,0,slice/16D,1,Math.max(0,base+(near1+4)/16D),(slice+1)/16D),state.getValue(FACING)));
+                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(0,Math.min(1,base+near0/16D),slice/16D,1,1,(slice+1)/16D),state.getValue(FACING)));
             } else {
-                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,0,right/16D,(slice+1)/16D,near1/16D),state.getValue(FACING)));
-                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,(near0+4)/16D,right/16D,(slice+1)/16D,1),state.getValue(FACING)));
+                if ((fill&1)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,0,right/16D,(slice+1)/16D,Math.max(0,near1/16D)),state.getValue(FACING)));
+                if ((fill&2)!=0) addCollisionBoxToList(pos,entityBox,boxes,rotate(new AxisAlignedBB(left/16D,slice/16D,Math.min(1,(near0+4)/16D),right/16D,(slice+1)/16D,1),state.getValue(FACING)));
             }
             if (corner != null) {
                 if (corner.frontRight != null)
@@ -422,6 +456,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                             false, slice, near0, near1, world);
             }
         }
+        DiagonalNeighbourBounds.clipCollision(boxes,firstBox,world,pos,state,mode);
+
     }
 
     private void addFlatBox(BlockPos pos, AxisAlignedBB entityBox,

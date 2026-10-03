@@ -47,6 +47,8 @@ public final class BlockProgrammableDiagonalTrapdoor extends BlockProgrammableTr
                     IBlockState candidate=getDefaultState().withProperty(FACING,facing).withProperty(HALF,inverted?DoorHalf.TOP:DoorHalf.BOTTOM);
                     if(DiagonalPanelGeometry.samePlane(support,plane,pos,wallState(candidate),mode))return candidate;
                 }
+            if(side.getAxis()==EnumFacing.Axis.Y) return getDefaultState().withProperty(FACING,plane.getValue(BlockProgrammableWall.FACING))
+                    .withProperty(HALF,plane.getValue(BlockProgrammableWall.INVERTED)?DoorHalf.TOP:DoorHalf.BOTTOM);
         }
         EnumFacing facing=placer.getHorizontalFacing().getOpposite();
         boolean inverted=side==EnumFacing.DOWN || side.getAxis().isHorizontal() && y>.5F;

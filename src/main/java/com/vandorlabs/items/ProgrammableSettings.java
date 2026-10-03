@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
     public static final String TRAPDOOR_SLIDE_INTO_WALL="trapdoor_slide_into_wall";
     public static final String TRAPDOOR_COVER_FACING="trapdoor_cover_facing";
     public static final String TRAPDOOR_TILE_TEXTURE="trapdoor_tile_texture";
@@ -45,6 +46,7 @@ public final class ProgrammableSettings {
     public static final String PORTHOLE_SHAPE = "porthole_shape";
     public static final String GLASS_SHADE = "glass_shade";
     public static final String GLASS_SIZE = "glass_size";
+    public static final String SIDE_TEXTURE="side_texture";
     public static final String SLAB_TILE_SIDES = "slab_tile_sides";
     public static final String DIAGONAL_FULL_WIDTH = "diagonal_full_width";
     public static final String TRIGGER_ON_TEXTURE = "trigger_on_texture";
@@ -129,7 +131,7 @@ public final class ProgrammableSettings {
                 NBTTagCompound geometry=new NBTTagCompound();geometry.setInteger("mode",hatch.getPosition());out.setTag(DIAGONAL_GEOMETRY,geometry);
             } else out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
             if(hatch.canOffsetClosedLeaf())out.setInteger(TRAPDOOR_COVER_FACING,hatch.coverFacing().getHorizontalIndex());
-            out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
+            out.setBoolean(TRAPDOOR_SLIDE_OVER_SURFACE,hatch.isSlideOverSurface());out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
         } else if (tile instanceof TileEntityProgrammableLight) {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
             out.setInteger(WALL_TEXTURE, light.getHousingTexture());
@@ -148,6 +150,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
+            if(TileEntityAnimatedScreenSelector.supportsSideTexture(block))out.setInteger(SIDE_TEXTURE,screen.getSideTexture());
             if (block == ModBlocks.PROGRAMMABLE_STORAGE || block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS) {
                 NBTTagCompound faces = new NBTTagCompound();
                 faces.setBoolean("enabled", screen.getFaceTextures().enabled);
@@ -311,6 +314,7 @@ public final class ProgrammableSettings {
                     if(values.hasKey(TRAPDOOR_TILE_TEXTURE,1))leaf.setTileTexture(values.getBoolean(TRAPDOOR_TILE_TEXTURE));
                     if(values.hasKey(TRAPDOOR_COVER,1))leaf.setCover(values.getBoolean(TRAPDOOR_COVER));
                     if(values.hasKey(TRAPDOOR_COVER_FACING,3))leaf.setHingeFacing(EnumFacing.getHorizontal(values.getInteger(TRAPDOOR_COVER_FACING)));
+                    if(!diagonal && values.hasKey(DOOR_SLIDING,1) && values.hasKey(TRAPDOOR_SLIDE_OVER_SURFACE,1))leaf.setSlideOverSurface(values.getBoolean(TRAPDOOR_SLIDE_OVER_SURFACE));
                     if(diagonal && values.hasKey(DOOR_SLIDING,1) && values.hasKey(TRAPDOOR_SLIDE_INTO_WALL,1))leaf.setSlideIntoWall(values.getBoolean(TRAPDOOR_SLIDE_INTO_WALL));
                     leaf.configure(
                         number(values,WALL_TEXTURE,leaf.getHousingTexture()),diagonal?(values.hasKey(DIAGONAL_GEOMETRY,10)?Math.max(0,Math.min(2,values.getCompoundTag(DIAGONAL_GEOMETRY).getInteger("mode"))):leaf.getPosition()):number(values,TRAPDOOR_POSITION,leaf.getPosition()),
@@ -382,6 +386,7 @@ public final class ProgrammableSettings {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
                 applicable = true;
             }
+            if(TileEntityAnimatedScreenSelector.supportsSideTexture(block) && values.hasKey(SIDE_TEXTURE,3)){screen.setSideTexture(values.getInteger(SIDE_TEXTURE));applicable=true;}
             if ((block == ModBlocks.PROGRAMMABLE_STORAGE || block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS)
                     && values.hasKey(FACE_TEXTURES, 10)) {
                 NBTTagCompound faces = values.getCompoundTag(FACE_TEXTURES);

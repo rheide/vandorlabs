@@ -24,9 +24,7 @@ import java.io.IOException;
 
 /** Scrollable finish picker shared by programmable walls and the full block. */
 public class GuiProgrammableWall extends GuiContainer {
-    private static final int ROW_H = 12;
     private int rows = 8;
-    private static final int LIST_W = 310;
     private HousingTextureList textureList;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
     private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
@@ -44,7 +42,8 @@ public class GuiProgrammableWall extends GuiContainer {
                 || block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
     }
     private int selectedTexture() {
-        return faceTarget < 0 ? tile.getHousingTexture()
+        return faceTarget == -2 ? (tile.getSideTexture()>=0?tile.getSideTexture():porthole?26:tile.getHousingTexture())
+                : faceTarget < 0 ? tile.getHousingTexture()
                 : tile.getFaceTextures().texture(faceTarget, tile.getHousingTexture());
     }
     private void sendFaces(com.vandorlabs.tiles.FaceTextures faces) {
@@ -56,11 +55,8 @@ public class GuiProgrammableWall extends GuiContainer {
     private boolean join;
     private boolean tileSides;
     private boolean fullWidth;
-    private int scroll;
     private int listX;
     private int listY;
-    private boolean draggingScrollbar;
-    private int scrollbarDragOffset;
 
     public GuiProgrammableWall(InventoryPlayer inventory,
             TileEntityAnimatedScreenSelector tile) {
@@ -89,53 +85,63 @@ public class GuiProgrammableWall extends GuiContainer {
         ySize = porthole ? 272 : slab || diagonal ? 216 : 190;
     }
 
-    @Override public void initGui() {
-        rows=8;
-        ySize = porthole ? (diagonal ? 298 : 272) : diagonal ? 242 : slab ? 242 : supportsFaces() ? 216 : 190;
-        if (supportsFaces() && tile.getFaceTextures().enabled) ySize+=52;
-        if (diagonal) ySize += 26;
-        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) {
-            ySize = Math.min(height - 8, 264);
-            rows = Math.max(4, (ySize - 86 - (tile.getFaceTextures().enabled ? 52 : 0)) / ROW_H);
-        }
-        while (ySize > height-8 && rows > (diagonal && porthole ? 2 : 3)) { rows--; ySize-=ROW_H; }
+    @Override public void initGui() { initWallLayout(); }
+
+    private void initWallLayout() {
+        ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
+        xSize=layout.width;ySize=layout.height;
         super.initGui();
         buttonList.clear();
-        listX = guiLeft + 11;
-        listY = guiTop + (porthole ? 106 : supportsFaces() && tile.getFaceTextures().enabled ? 79 : 27);
-        textureList=new HousingTextureList(listX,listY,LIST_W,selected,rows).custom(this::choose);
+        int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
+        boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
+        listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
+        rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
+        textureList=new HousingTextureList(listX,listY,controlsX-listX-19,selected)
+                .visibleRows(rows).custom(this::choose);
+        if(faceTabs || slab || porthole) {
+            int count=faceTabs?(slab?8:7):2;
+            int span=faceTabs?xSize-24:controlsX-listX-19;
+            int tabWidth=span/count;
+            for(int i=0;i<count;i++) {
+                boolean side=(slab || porthole) && i==1;
+                int face=i-((slab || porthole)?2:1);
+                int id=i==0?120:side?127:121+face;
+                String label=i==0?"Main":side?"Side":FACE_NAMES[face];
+                GuiButton tab=new GuiButton(id,listX+i*tabWidth,guiTop+30,
+                        i==count-1?span-i*tabWidth-2:tabWidth-2,18,label);
+                tab.enabled=faceTarget!=(i==0?-1:side?-2:face);buttonList.add(tab);
+            }
+        }
+        int y=guiTop+(faceTabs?54:30);
         if (supportsFaces()) {
-            buttonList.add(new GuiButton(106, guiLeft + 14, guiTop + ySize - 51, 312, 20,
-                    "Face overrides: " + (tile.getFaceTextures().enabled ? "On" : "Off")));
+            buttonList.add(new GuiButton(106,controlsX,y,controlsWidth,20,
+                    "Face overrides: "+(tile.getFaceTextures().enabled?"On":"Off")));y+=24;
             if (tile.getFaceTextures().enabled) {
-                buttonList.add(new GuiButton(107, guiLeft + 14, guiTop + 25, 312, 20,
-                        "Texture for: " + (faceTarget < 0 ? "Main" : FACE_NAMES[faceTarget])));
-                GuiButton inherit = new GuiButton(108, guiLeft + 14, guiTop + 51, 312, 20,
-                        faceTarget < 0 ? "Select a face to override" : tile.getFaceTextures().choice(faceTarget) < 0
-                                ? "Using main texture" : "Use main texture");
-                inherit.enabled = faceTarget >= 0 && tile.getFaceTextures().choice(faceTarget) >= 0;
-                buttonList.add(inherit);
+                GuiButton inherit=new GuiButton(108,controlsX,y,controlsWidth,20,
+                        faceTarget<0?"Select a face":tile.getFaceTextures().choice(faceTarget)<0?"Using main texture":"Use main texture");
+                inherit.enabled=faceTarget>=0 && tile.getFaceTextures().choice(faceTarget)>=0;
+                buttonList.add(inherit);y+=24;
             }
         }
-        if (porthole) buttonList.add(new GuiButton(101, guiLeft + 14,
-                guiTop + 25, 312, 20, shadeLabel()));
-        if (porthole) buttonList.add(new GuiButton(102, guiLeft + 14,
-                guiTop + 51, 312, 20, joinLabel()));
-        if (porthole) buttonList.add(new GuiButton(104, guiLeft + 14,
-                guiTop + 77, 312, 20, shapeLabel()));
-        if (slab) buttonList.add(new GuiButton(103, guiLeft + 14,
-                guiTop + ySize - 77, 312, 20, slabSidesLabel()));
+        if(faceTarget==-2) {
+            GuiButton reset=new GuiButton(128,controlsX,y,controlsWidth,20,"Use default side texture");
+            reset.enabled=tile.getSideTexture()>=0;buttonList.add(reset);y+=24;
+        }
+        if (slab) { buttonList.add(new GuiButton(103,controlsX,y,controlsWidth,20,slabSidesLabel())); y+=24; }
+        if (porthole) {
+            buttonList.add(new GuiButton(101,controlsX,y,controlsWidth,20,shadeLabel())); y+=24;
+            buttonList.add(new GuiButton(102,controlsX,y,controlsWidth,20,joinLabel())); y+=24;
+            buttonList.add(new GuiButton(104,controlsX,y,controlsWidth,20,shapeLabel())); y+=24;
+        }
         if (diagonal) {
-            buttonList.add(new GuiButton(105,guiLeft+14,guiTop+ySize-(porthole?77:103),312,20,diagonalWidthLabel()));
-            buttonList.add(new GuiButton(111, guiLeft+14,
-                    guiTop+ySize-(porthole?51:77), 312, 20, slopeLabel()));
+            buttonList.add(new GuiButton(105,controlsX,y,controlsWidth,20,diagonalWidthLabel())); y+=24;
+            buttonList.add(new GuiButton(111,controlsX,y,controlsWidth,20,slopeLabel())); y+=24;
             if (!porthole) {
-                buttonList.add(new GuiButton(109,guiLeft+14,guiTop+ySize-51,153,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off")));
-                buttonList.add(new GuiButton(110,guiLeft+173,guiTop+ySize-51,153,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
+                buttonList.add(new GuiButton(109,controlsX,y,controlsWidth,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off"))); y+=24;
+                buttonList.add(new GuiButton(110,controlsX,y,controlsWidth,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
             }
         }
-        buttonList.add(new GuiButton(100, guiLeft + 14, guiTop + ySize - 25, 312, 20,
-                I18n.format("gui.done")));
+        buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
     }
 
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
@@ -152,25 +158,13 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     private String diagonalWidthLabel() {
-        return tile.isDiagonalHalfHeight() ? "Shape: Half height, full width"
-                : "Shape: " + (tile.isDiagonalFullWidth() ? "Full height, full width" : "Full height, half width");
+        return tile.isDiagonalHalfHeight() ? "Size: Wide / half height"
+                : "Size: " + (tile.isDiagonalFullWidth() ? "Full width / height" : "Tall / half width");
     }
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
                 tile.getPos(), shade, join, shape));
-    }
-
-    private int maxScroll() {
-        return Math.max(0, ScreenHousingTextures.IDS.length - rows);
-    }
-
-    private int thumbHeight() {
-        return Math.max(8, ROW_H * rows * rows / ScreenHousingTextures.IDS.length);
-    }
-
-    private int thumbY() {
-        return listY + (ROW_H * rows - thumbHeight()) * scroll / maxScroll();
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -182,13 +176,13 @@ public class GuiProgrammableWall extends GuiContainer {
         return Math.round((float) thumbTop * maximum / travel);
     }
 
-    private void dragTo(int mouseY) {
-        scroll = scrollForDrag(mouseY, listY, ROW_H * rows,
-                thumbHeight(), maxScroll(), scrollbarDragOffset);
-    }
-
     private void choose(int choice) {
         selected = choice;
+        if(faceTarget==-2) {
+            tile.setSideTexture(choice);
+            PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),choice));
+            initGui();return;
+        }
         if (supportsFaces() && tile.getFaceTextures().enabled && faceTarget >= 0) {
             int[] choices = tile.getFaceTextures().choices();
             choices[faceTarget] = choice;
@@ -245,10 +239,15 @@ public class GuiProgrammableWall extends GuiContainer {
             selected = selectedTexture();
             initGui();
         }
-        if (button.id == 107) {
-            faceTarget = (faceTarget + 2) % 7 - 1;
+        if (button.id == 120 || (button.id >= 121 && button.id <= 126 && supportsFaces() && tile.getFaceTextures().enabled)) {
+            faceTarget = button.id - 121;
             selected = selectedTexture();
             initGui();
+        }
+        if(button.id==127 || button.id==128) {
+            faceTarget=-2;
+            if(button.id==128){tile.setSideTexture(-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),-1));}
+            selected=selectedTexture();initGui();
         }
         if (button.id == 108 && faceTarget >= 0) {
             int[] choices = tile.getFaceTextures().choices();

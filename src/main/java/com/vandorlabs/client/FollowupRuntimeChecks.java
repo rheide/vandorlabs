@@ -109,7 +109,7 @@ final class FollowupRuntimeChecks {
                 require(wall.corner(state,world,p)!=null,"filled diagonal lost unfilled neighbor connection");
                 java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
                 wall.addCollisionBoxToList(state,world,p,new AxisAlignedBB(p),boxes,null,false);
-                for(AxisAlignedBB box:boxes) require(box.minX>=p.getX()&&box.maxX<=p.getX()+1&&box.minZ>=p.getZ()&&box.maxZ<=p.getZ()+1,"corner fill escaped cell");
+                for(AxisAlignedBB box:boxes) require(box.minX>=p.getX()-.125&&box.maxX<=p.getX()+1.125&&box.minZ>=p.getZ()-.125&&box.maxZ<=p.getZ()+1.125,"corner fill exceeds two-pixel overhang");
                 world.setBlockToAir(neighbor);world.setBlockToAir(p);
             }
             checkDiagonalPlacement(world,player,p);

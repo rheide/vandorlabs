@@ -13,9 +13,9 @@ public final class DiagonalTrapdoorGeometry {
         return corners(mode,inverted,turns,sliding,reverse,pose,hinge,travel,slideLiftDirection,false);
     }
     public static double[][] corners(int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,double hinge,double travel,int slideLiftDirection,boolean slideIntoWall) {
-        double span=mode==1?.75:.375,p=Math.max(0,Math.min(1,pose));
+        double span=DiagonalWallGeometry.span(mode),p=Math.max(0,Math.min(1,pose));
         double slope=inverted?-span:span;
-        double base=(inverted?span:0)+(mode==2 && inverted?.375:0)+1/16D;
+        double base=(inverted?span:0)+DiagonalWallGeometry.band(mode,inverted)-1/16D;
         double ay=mode==2?slope:1,az=mode==2?1:slope;
         double length=Math.sqrt(ay*ay+az*az);ay/=length;az/=length;
         double pivotY=mode==2?base+1/16D:0,pivotZ=mode==2?0:base+1/16D;

@@ -37,6 +37,21 @@ final class FaceTextureRuntimeChecks {
             saved.removeTag("FaceTexturesEnabled"); saved.removeTag("FaceTextures");
             b.readFromNBT(saved);
             require(!b.getFaceTextures().enabled && b.getFaceTextures().choice(1) == -1, "legacy data default");
+            b.setSideTexture(5);
+            require(b.getSideTexture()==5 && b.getHousingTexture()==a.getHousingTexture(),"side choice changed main");
+            NBTTagCompound sideSaved=b.writeToNBT(new NBTTagCompound());
+            TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(sideSaved);
+            require(restored.getSideTexture()==5,"side texture save round trip");
+            player.world.setBlockState(source,ModBlocks.PROGRAMMABLE_SLAB.getDefaultState(),3);
+            a=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(source);
+            require(a.getSideTexture()==-1,"new slab does not inherit sides");
+            ProgrammableSettings.apply(player.world,source,ProgrammableSettings.capture(player.world,target));
+            require(a.getSideTexture()==5,"side texture copy");
+            b.setSideTexture(-1);
+            ProgrammableSettings.apply(player.world,source,ProgrammableSettings.capture(player.world,target));
+            require(a.getSideTexture()==-1,"side texture reset copy");
+            sideSaved.removeTag("SideTexture");restored.readFromNBT(sideSaved);
+            require(restored.getSideTexture()==-1,"legacy side default");
             require(new FaceTextures(true, new int[]{999,-2,0,1,2,3}).choice(0) == -1, "invalid texture fallback");
         } finally {
             player.world.setBlockToAir(source); player.world.setBlockToAir(target);

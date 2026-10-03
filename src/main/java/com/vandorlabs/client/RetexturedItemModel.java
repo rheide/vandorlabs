@@ -12,6 +12,11 @@ public final class RetexturedItemModel implements IBakedModel {
     private final TextureAtlasSprite sprite;
     private final boolean lightOnly;
     private int storageChoice = -1;
+    private TextureAtlasSprite sideSprite;
+    private boolean slabSides,portholeSides;
+    public RetexturedItemModel(IBakedModel base,TextureAtlasSprite main,TextureAtlasSprite side,boolean slab,boolean porthole) {
+        this(base,main,false);sideSprite=side;slabSides=slab;portholeSides=porthole;
+    }
     public RetexturedItemModel(IBakedModel base, int storageChoice) {
         this(base, net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                 com.vandorlabs.tiles.ScreenHousingTextures.texture(storageChoice)));
@@ -25,6 +30,10 @@ public final class RetexturedItemModel implements IBakedModel {
             if(lightOnly && !isLamp(quad.getSprite().getIconName())){result.add(quad);continue;}
             TextureAtlasSprite target = storageChoice < 0 ? sprite : net.minecraft.client.Minecraft.getMinecraft()
                     .getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.storageTexture(storageChoice,quad.getFace()));
+            boolean edge=slabSides && quad.getFace().getAxis()!=EnumFacing.Axis.Y
+                    || portholeSides && quad.getSprite().getIconName().contains("programmable_glass/metal_side");
+            if(edge)target=sideSprite!=null?sideSprite:portholeSides?quad.getSprite():target;
+            if(target==null){result.add(quad);continue;}
             int[] data=quad.getVertexData().clone();int stride=data.length/4;
             for(int v=0;v<4;v++) {
                 float u=quad.getSprite().getUnInterpolatedU(Float.intBitsToFloat(data[v*stride+4]));
@@ -40,7 +49,7 @@ public final class RetexturedItemModel implements IBakedModel {
     @Override public boolean isAmbientOcclusion(){return base.isAmbientOcclusion();}
     @Override public boolean isGui3d(){return base.isGui3d();}
     @Override public boolean isBuiltInRenderer(){return base.isBuiltInRenderer();}
-    @Override public TextureAtlasSprite getParticleTexture(){return sprite;}
+    @Override public TextureAtlasSprite getParticleTexture(){return sprite==null?base.getParticleTexture():sprite;}
     @Override public ItemCameraTransforms getItemCameraTransforms(){return base.getItemCameraTransforms();}
     @Override public ItemOverrideList getOverrides(){return base.getOverrides();}
 }

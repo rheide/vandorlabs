@@ -115,6 +115,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+        if (world != null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).isDiagonalShape())
+            return new net.minecraft.util.math.AxisAlignedBB(pos).grow(.125);
         if (ceilingMounted) return new net.minecraft.util.math.AxisAlignedBB(
                 pos.add(-1,0,-1),pos.add(2,1,2));
         return super.getRenderBoundingBox();
@@ -134,6 +137,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int redstoneChannel;
     private boolean channelSignal;
     private int housingTexture;
+    private int sideTexture=-1;
     private FaceTextures faceTextures = FaceTextures.DEFAULT;
     private boolean slabTileSides;
     private boolean surfaceTileSides=true;
@@ -189,6 +193,19 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public int getHousingTexture() { return housingTexture; }
+    public int getSideTexture(){return sideTexture;}
+    public static boolean supportsSideTexture(net.minecraft.block.Block block) {
+        return block instanceof com.vandorlabs.blocks.BlockProgrammableSlab
+                || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
+                || block instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                && ((com.vandorlabs.blocks.BlockProgrammableWall)block).isPortholeShape();
+    }
+    public void setSideTexture(int choice) {
+        int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
+        if(sideTexture==next)return;
+        sideTexture=next;markDirty();
+        if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);if(world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);}
+    }
     public boolean isSlabTileSides() { return slabTileSides; }
     public boolean isDiagonalHalfHeight() { return diagonalHalfHeight; }
     public int getDiagonalFill() { return diagonalFill; }
@@ -396,6 +413,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("PortholeShape", portholeShape);
         compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
         compound.setIntArray("FaceTextures", faceTextures.choices());
+        compound.setInteger("SideTexture",sideTexture);
         compound.setBoolean("SlabTileSides", slabTileSides);
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
@@ -409,6 +427,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void readFromNBT(NBTTagCompound compound) {
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
+        int previousSide=sideTexture;
         boolean previousSlabSides = slabTileSides;
         boolean previousSurfaceSides=surfaceTileSides;
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");
@@ -445,6 +464,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             else if (savedHousing > 14) savedHousing--;
         }
         housingTexture = ScreenHousingTextures.clamp(savedHousing);
+        sideTexture=compound.hasKey("SideTexture",3) && compound.getInteger("SideTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SideTexture")):-1;
         glassShade = compound.hasKey("GlassShade", 3)
                 ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
         joinPortholes = compound.getBoolean("JoinPortholes");
@@ -458,7 +478,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         diagonalHalfHeight = compound.getBoolean("DiagonalHalfHeight");
         diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
         if (world != null && world.isRemote
-                && (!previousFaces.equals(faceTextures) || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
+                && (!previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
                 || previousFill != diagonalFill))
             world.markBlockRangeForRenderUpdate(pos,pos);

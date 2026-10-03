@@ -156,8 +156,7 @@ final class StorageRuntimeChecks {
 
     static void beginFaces(GuiProgrammableWall gui) {
         gui.actionPerformed(new net.minecraft.client.gui.GuiButton(106,0,0,""));
-        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(107,0,0,""));
-        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(107,0,0,""));
+        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(122,0,0,"Top"));
         try {
             java.lang.reflect.Method choose=GuiProgrammableWall.class.getDeclaredMethod("choose",int.class);
             choose.setAccessible(true);choose.invoke(gui,ScreenHousingTextures.DEFAULT_STORAGE);

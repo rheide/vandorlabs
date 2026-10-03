@@ -47,12 +47,14 @@ public final class ProgrammableHousingModel implements IBakedModel {
             @Nullable EnumFacing side, long rand) {
         if (state == null) return delegate.getQuads(null, side, rand);
         if (side != null) return Collections.emptyList();
-        int finish = 0, visible = 63, tileSides = 0;
+        int finish = 0, sideFinish=-1, visible = 63, tileSides = 0;
         com.vandorlabs.tiles.FaceTextures faces = com.vandorlabs.tiles.FaceTextures.DEFAULT;
         if (state instanceof IExtendedBlockState) {
             IExtendedBlockState extended = (IExtendedBlockState)state;
             if (extended.getValue(ProgrammableHousingState.FACES) != null)
                 faces = extended.getValue(ProgrammableHousingState.FACES);
+            Integer sf=extended.getValue(ProgrammableHousingState.SIDE_FINISH);
+            if(sf!=null)sideFinish=sf;
             Integer f = extended.getValue(ProgrammableHousingState.FINISH);
             Integer v = extended.getValue(ProgrammableHousingState.VISIBLE);
             Integer t = extended.getValue(ProgrammableHousingState.TILE_SIDES);
@@ -67,7 +69,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
         for (int local = 0; local < 6; local++) {
             EnumFacing worldFace = worldFace(FACE[local], facing);
             if ((visible & (1 << worldFace.getIndex())) == 0) continue;
-            int texture = faces.texture(FACE[local].getIndex(), finish);
+            int texture = faces.texture(FACE[local].getIndex(), slab && FACE[local].getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish);
             final boolean storageSet = storage && !(faces.enabled && faces.choice(FACE[local].getIndex()) >= 0);
             long key = (((((long)texture * 6 + facing.getIndex()) * 2 + (upper ? 1 : 0)) * 2
                     + (tileSides != 0 ? 1 : 0)) * 6 + local) * 2 + (storageSet ? 1 : 0);

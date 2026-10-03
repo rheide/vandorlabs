@@ -534,6 +534,9 @@ public class ReproLab {
                 if (--holdTicks > 0) {
                     break;
                 }
+                if(Boolean.getBoolean("vandorlabs.dialogChecksOnly")) {
+                    mc.gameSettings.hideGUI=false;state=11;holdTicks=GUI_SETTLE_TICKS;break;
+                }
                 if(Boolean.getBoolean("vandorlabs.lightPickerChecksOnly")) {
                     mc.gameSettings.hideGUI=false;
                     openLightPicker(mc);state=19;holdTicks=GUI_SETTLE_TICKS;break;
@@ -656,6 +659,12 @@ public class ReproLab {
             case 7:
                 if (--holdTicks > 0) break;
                 saveNamed(mc, "full_input_gui");
+                rebuildGuiFixture(mc,SELECTOR,ModBlocks.ANIMATED_SCREEN_SELECTOR);
+                mc.displayGuiScreen(new GuiAnimatedScreenSelector(mc.player.inventory,(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(SELECTOR)));
+                state=143;holdTicks=GUI_SETTLE_TICKS;break;
+            case 143:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"screen_gui");
                 BlockPos porthole = WALL_DISPLAY.east();
                 rebuildGuiFixture(mc, porthole, ModBlocks.PROGRAMMABLE_PORTHOLE_WALL);
                 TileEntity wallRaw = mc.world.getTileEntity(porthole);
@@ -1223,6 +1232,7 @@ public class ReproLab {
                 GuiProgrammableTrapdoor hatch=(GuiProgrammableTrapdoor)mc.currentScreen;
                 pressTrapdoorControl(hatch,1);
                 pressTrapdoorControl(hatch,1);
+                pressTrapdoorControl(hatch,1);
                 pressTrapdoorControl(hatch,8);
                 pressTrapdoorControl(hatch,6);
                 state=54;holdTicks=20;break;
@@ -1248,9 +1258,19 @@ public class ReproLab {
             case 64:
                 if(--holdTicks>0)break;
                 checkNormalMovement(mc,true,false,EnumFacing.WEST);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                state=65;holdTicks=20;break;
+            case 65:
+                if(--holdTicks>0)break;
+                for(World w:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
+                    com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)w.getTileEntity(CONSOLE.add(15,0,3));
+                    if(!leaf.isSliding() || !leaf.isSlideOverSurface() || leaf.isCover())throw new IllegalStateException("surface sliding GUI packet failed");
+                }
+                saveNamed(mc,"trapdoor_surface_gui");
+                System.out.println("[vandorlabs][reprolab] trapdoor-surface-sliding-gui PASS");
                 mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] trapdoor-controls-runtime PASS");
-                System.out.println("[vandorlabs][reprolab] trapdoor-movement-hinge-gui PASS (all four movements, sliding hinge, client/server)");
+                System.out.println("[vandorlabs][reprolab] trapdoor-movement-hinge-gui PASS (all five movements, sliding hinge, client/server)");
                 offsetTrapdoorChecks=new OffsetTrapdoorRuntimeChecks(CONSOLE.add(15,0,3));state=58;break;
             case 58:
                 if(offsetTrapdoorChecks.tick(mc)){state=9;holdTicks=10;}break;
@@ -2604,6 +2624,7 @@ public class ReproLab {
     }
 
     private void saveNamed(Minecraft mc, String name) {
+        ProgrammableDialogRuntimeChecks.check(mc);
         try {
             BufferedImage img = ScreenShotHelper.createScreenshot(
                     mc.displayWidth, mc.displayHeight, mc.getFramebuffer());

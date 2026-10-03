@@ -86,8 +86,8 @@ final class CustomMaterialRuntimeChecks {
         try {
             java.lang.reflect.Field options=HousingTextureList.class.getDeclaredField("options"),count=HousingTextureList.class.getDeclaredField("count");
             options.setAccessible(true);count.setAccessible(true);
-            require(gui.height>=344,"light dialog remains cramped by Auto GUI scale");
-            int expected=Math.max(4,Math.min(8,(gui.height-168)/HousingTextureList.ROW_HEIGHT));
+            int expected=new ProgrammableDialogLayout(gui.width,gui.height).rows(true);
+            require(expected>=7,"light dialog has too few texture rows");
             for(String name:new String[]{"faceList","housingList"}) {
                 java.lang.reflect.Field field=GuiProgrammableLight.class.getDeclaredField(name);field.setAccessible(true);
                 HousingTextureList list=(HousingTextureList)field.get(gui);
@@ -99,15 +99,6 @@ final class CustomMaterialRuntimeChecks {
                 }
                 for(int style=0;style<6;style++)if(entries.containsKey(ScreenHousingTextures.lightIndex(style)))on++;
                 require(on==6 && off==6,"light picker paired artwork coverage");
-            }
-            Minecraft mc=Minecraft.getMinecraft();
-            java.lang.reflect.Field previous=GuiProgrammableLight.class.getDeclaredField("previousGuiScale");previous.setAccessible(true);
-            int saved=previous.getInt(gui),active=mc.gameSettings.guiScale;
-            if(saved>=0) {
-                mc.displayGuiScreen(new GuiCustomTexture(gui,value->{}));
-                require(mc.gameSettings.guiScale==saved,"Custom picker did not restore GUI scale");
-                mc.displayGuiScreen(gui);
-                require(mc.gameSettings.guiScale==active,"return from Custom picker lost tall dialog scale");
             }
             System.out.println("[vandorlabs][reprolab] light-picker-runtime PASS rows="+expected);
         } catch(ReflectiveOperationException e){throw new RuntimeException(e);}

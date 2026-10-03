@@ -17,19 +17,21 @@ import java.util.*;
 public final class ProgrammableStairsModel implements IBakedModel {
     private final IBakedModel base;
     private final int itemFinish;
+    private final int itemSide;
     private final FaceTextures itemFaces;
     private final boolean itemTile;
     private final Map<BakedQuad,Map<Integer,BakedQuad>> cache=new java.util.concurrent.ConcurrentHashMap<>();
-    public ProgrammableStairsModel(IBakedModel base) { this(base,0,FaceTextures.DEFAULT,false); }
-    private ProgrammableStairsModel(IBakedModel base,int finish,FaceTextures faces,boolean tile) {
-        this.base=base;itemFinish=finish;itemFaces=faces;itemTile=tile;
+    public ProgrammableStairsModel(IBakedModel base) { this(base,0,-1,FaceTextures.DEFAULT,false); }
+    private ProgrammableStairsModel(IBakedModel base,int finish,int sideFinish,FaceTextures faces,boolean tile) {
+        this.base=base;itemFinish=finish;itemSide=sideFinish;itemFaces=faces;itemTile=tile;
     }
     public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed) {
-        int finish=itemFinish;FaceTextures faces=itemFaces;boolean tile=itemTile;
+        int finish=itemFinish,sideFinish=itemSide;FaceTextures faces=itemFaces;boolean tile=itemTile;
         EnumFacing facing=EnumFacing.EAST; // vanilla item stairs rise towards +X
         if (state!=null) facing=state.getValue(BlockStairs.FACING);
         if (state instanceof IExtendedBlockState) {
             IExtendedBlockState e=(IExtendedBlockState)state;
+            Integer sf=e.getValue(ProgrammableHousingState.SIDE_FINISH);if(sf!=null)sideFinish=sf;
             Integer value=e.getValue(ProgrammableHousingState.FINISH);
             if(value!=null)finish=value;
             if(e.getValue(ProgrammableHousingState.FACES)!=null)faces=e.getValue(ProgrammableHousingState.FACES);
@@ -41,7 +43,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
             // Front is the low riser facing the player, opposite the rise direction.
             if(local.getAxis()!=EnumFacing.Axis.Y)
                 for(int i=0;i<((facing.getOpposite().getHorizontalIndex()+2)&3);i++)local=local.rotateYCCW();
-            int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(finish));
+            int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(local.getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish));
             final int key=texture*2+(tile?1:0);final boolean repeat=tile;
             result.add(cache.computeIfAbsent(quad,q->new java.util.concurrent.ConcurrentHashMap<>())
                     .computeIfAbsent(key,k->retexture(quad,texture,repeat)));
@@ -75,7 +77,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
             NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
             if(tag==null)return original;
             return new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
-                    new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.getBoolean("SlabTileSides"));
+                    tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.getBoolean("SlabTileSides"));
         }
     };}
 }

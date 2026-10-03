@@ -23,6 +23,17 @@ public final class ConfiguredMaterialItemModel implements IBakedModel {
         @Override public IBakedModel handleItemState(IBakedModel original,ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity) {
             NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");if(tag==null)return original;
             int choice=tag.getInteger(light?"LightFaceTexture":"housingTexture");
+            net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromItem(stack.getItem());
+            boolean slab=block instanceof com.vandorlabs.blocks.BlockProgrammableSlab;
+            boolean porthole=block instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                    && ((com.vandorlabs.blocks.BlockProgrammableWall)block).isPortholeShape();
+            if(!light && (slab || porthole) && tag.hasKey("SideTexture",3) && tag.getInteger("SideTexture")>=0) {
+                net.minecraft.client.renderer.texture.TextureMap atlas=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks();
+                TextureAtlasSprite main=com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)
+                        ?atlas.getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice,true)):null;
+                TextureAtlasSprite side=atlas.getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tag.getInteger("SideTexture")));
+                return new RetexturedItemModel(base,main,side,slab,porthole);
+            }
             if(light && !tag.hasKey("LightFaceTexture",3) || !light && !com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return original;
             if(choice<0)return original;
             TextureAtlasSprite next=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice,true));

@@ -20,7 +20,8 @@ final class HousingTextureList {
         final int choice; final String label,category,texture;
         Option(int choice,String label,String category,String texture){this.choice=choice;this.label=label;this.category=category;this.texture=texture;}
     }
-    private final int x,y,width,count;
+    private final int x,y,width;
+    private int count;
     private final List<String> categories=new ArrayList<>();
     private final Set<String> expanded=new HashSet<>();
     private final List<Integer> rows=new ArrayList<>();
@@ -32,17 +33,36 @@ final class HousingTextureList {
     HousingTextureList(int x,int y,int width,int selected){this(x,y,width,selected,8);}
     HousingTextureList(int x,int y,int width,int selected,int count) {this(x,y,width,selected,count,null);}
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries) {
-        this(x,y,width,selected,count,nativeEntries,choice->true);
+        this(x,y,width,selected,count,nativeEntries,HousingTextureList::generalTexture);
     }
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include) {
+        this(x,y,width,selected,count,nativeEntries,include,ScreenHousingTextures::category);
+    }
+    HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include,java.util.function.IntFunction<String> category) {
         this.x=x;this.y=y;this.width=width;this.count=Math.max(2,count*12/ROW_HEIGHT);
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
-        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(include.test(i))options.put(i,new Option(i,name(i),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(include.test(i))options.put(i,new Option(i,name(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
         categories.addAll(groups.keySet());categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
         for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
         setSelected(selected);
+    }
+    static boolean generalTexture(int choice) {
+        String category=ScreenHousingTextures.category(choice);
+        return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors");
+    }
+    static HousingTextureList forCategory(String category,int x,int y,int width,int selected) {
+        return forCategory(category,x,y,width,selected,8);
+    }
+    static HousingTextureList forCategory(String category,int x,int y,int width,int selected,int count) {
+        return new HousingTextureList(x,y,width,selected,count,null,
+                choice->generalTexture(choice) || category.equals(ScreenHousingTextures.category(choice)));
+    }
+    HousingTextureList visibleRows(int rows) {
+        count=Math.max(2,rows);
+        setSelected(selected());
+        return this;
     }
     void setSelected(int choice) {
         custom=!nativeOptions && com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)?choice:-1;

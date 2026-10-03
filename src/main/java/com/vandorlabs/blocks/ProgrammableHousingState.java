@@ -13,6 +13,7 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Settings sampled when a chunk mesh is built. Registry metadata is unchanged. */
 public final class ProgrammableHousingState {
+    public static final IUnlistedProperty<Integer> SIDE_FINISH=integer("housing_side_finish");
     public static final IUnlistedProperty<Integer> FINISH = integer("housing_finish");
     public static final IUnlistedProperty<Integer> VISIBLE = integer("housing_visible_faces");
     public static final IUnlistedProperty<Integer> TILE_SIDES = integer("housing_tile_sides");
@@ -64,6 +65,7 @@ public final class ProgrammableHousingState {
             if (hide) visible &= ~(1 << side.getIndex());
         }
         return ((IExtendedBlockState)state).withProperty(FINISH, finish)
+                .withProperty(SIDE_FINISH,tile==null?-1:tile.getSideTexture())
                 .withProperty(FACES, tile == null ? com.vandorlabs.tiles.FaceTextures.DEFAULT : tile.getFaceTextures())
                 .withProperty(TILE_SIDES, tileSides).withProperty(VISIBLE, visible)
                 .withProperty(LIGHT, neighborLight(world, pos));

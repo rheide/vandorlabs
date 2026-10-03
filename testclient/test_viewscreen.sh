@@ -2,26 +2,29 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 
-unset VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY
+unset VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
     --full) MODE=full; PREFIX= ;;
     --focus)
         MODE=focus
-        TARGET=${2:?Usage: test_viewscreen.sh --focus trapdoors-or-scene-prefix}
+        TARGET=${2:?Usage: test_viewscreen.sh --focus trapdoors/dialogs/storage/scene-prefix}
         if [ "$TARGET" = trapdoors ]; then
             PREFIX=gallery_trapdoor_followup_
             export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = dialogs ]; then
+            PREFIX=console_gui
+            export VANDOR_LABS_DIALOG_CHECKS_ONLY=true
         elif [ "$TARGET" = storage ]; then
             PREFIX=gallery_storage_
             export VANDOR_LABS_STORAGE_CHECKS_ONLY=true
         else
             PREFIX=$TARGET
         fi
-        export VANDOR_LABS_REPRO_SHOT_PREFIX=$PREFIX
+        if [ "$TARGET" != dialogs ]; then export VANDOR_LABS_REPRO_SHOT_PREFIX=$PREFIX; fi
         ;;
-    *) echo "Usage: test_viewscreen.sh --focus trapdoors-or-scene-prefix | --full"; exit 2 ;;
+    *) echo "Usage: test_viewscreen.sh --focus trapdoors/dialogs/storage/scene-prefix | --full"; exit 2 ;;
 esac
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)

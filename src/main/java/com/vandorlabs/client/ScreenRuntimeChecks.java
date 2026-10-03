@@ -1211,8 +1211,8 @@ final class ScreenRuntimeChecks {
                         && wall.getBoundingBox(lower, player.world, pos).maxZ == 10 / 16D,
                 "existing diagonal walls must retain their half-width slope");
         tile.setDiagonalFullWidth(true);
-        require(BlockProgrammableWall.diagonalSpan(player.world, pos) == 12
-                        && wall.getBoundingBox(lower, player.world, pos).maxZ == 1,
+        require(BlockProgrammableWall.diagonalSpan(player.world, pos) == 16
+                        && wall.getBoundingBox(lower, player.world, pos).maxZ == 1.125,
                 "full-width diagonal does not reach the far block edge");
         for (boolean inverted : new boolean[] {false, true}) {
             IBlockState state = lower.withProperty(BlockProgrammableWall.INVERTED, inverted);
@@ -1222,7 +1222,7 @@ final class ScreenRuntimeChecks {
             require(boxes.size() == 16 && (inverted
                             ? boxes.get(0).minZ > boxes.get(15).minZ
                             : boxes.get(0).minZ < boxes.get(15).minZ)
-                            && boxes.get(inverted ? 0 : 15).maxZ == pos.getZ() + 1,
+                            && boxes.get(inverted ? 0 : 15).maxZ == pos.getZ() + 1.125,
                     "full-width diagonal collision does not follow the rendered slope");
         }
         NBTTagCompound saved = tile.writeToNBT(new NBTTagCompound());

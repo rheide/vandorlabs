@@ -20,7 +20,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     private static final int ROW_H = 12;
     private static final int ROWS = 8;
-    private SurfaceTexturePicker surfacePicker;
+    private ProgrammableDialogLayout layout;
+    private int textureTab;
     private final TileEntityAnimatedScreenSelector te;
     private String topPanel;
     private String bottomPanel;
@@ -53,44 +54,31 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         ySize = 240;
     }
 
-    @Override
-    public void initGui() {
-        super.initGui();
-        buttonList.clear();
-        surfacePicker=new SurfaceTexturePicker(te,true);
-        surfacePicker.init(guiLeft,guiTop,xSize,ySize);
-        Keyboard.enableRepeatEvents(true);
-        int x = (width - xSize) / 2;
-        int y = (height - ySize) / 2;
-        left = x + 8;
-        right = x + 146;
-        top = y + 34;
-        buttonList.add(new GuiButton(1, x + 8, y + 146, 84, 18,
-                I18n.format("gui.vandorlabs.selector.off")));
-        buttonList.add(new GuiButton(2, x + 98, y + 146, 84, 18,
-                I18n.format("gui.vandorlabs.selector.static")));
-        buttonList.add(new GuiButton(3, x + 188, y + 146, 84, 18,
-                I18n.format("gui.vandorlabs.selector.animated")));
-        buttonList.add(new GuiButton(10, x + 8, y + 174, 100, 18,
-                I18n.format("gui.vandorlabs.selector.slow")));
-        buttonList.add(new GuiButton(11, x + 115, y + 174, 100, 18,
-                I18n.format("gui.vandorlabs.selector.normal")));
-        buttonList.add(new GuiButton(12, x + 222, y + 174, 100, 18,
-                I18n.format("gui.vandorlabs.selector.fast")));
-        buttonList.add(new GuiButton(0, x + 278, y + 146, 134, 18, ""));
-        channelField = new GuiTextField(40,fontRenderer,x+338,y+174,74,18);
+    @Override public void initGui() {
+        layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
+        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        int cx=layout.controlsX, rows=layout.rows(true);
+        buttonList.add(layout.tab(90,0,3,"Bottom"));
+        buttonList.add(layout.tab(91,1,3,"Top"));
+        buttonList.add(layout.tab(92,2,3,"Housing"));
+        left=right=layout.listX;top=guiTop+54;
+        topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1));
+        bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0));
+        for(int i=0;i<3;i++) {
+            buttonList.add(layout.choice(1+i,i,3,42,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
+            buttonList.add(layout.choice(10+i,i,3,76,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
+        }
+        buttonList.add(layout.control(0,120,""));
+        buttonList.add(layout.control(32,142,sidesLabel()));
+        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+177,154,18);
         channelField.setMaxStringLength(10);
-        channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
+        channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
         channelField.setText(Integer.toString(te.getRedstoneChannel()));
-        housingList = new HousingTextureList(x + 284, y + 34, 120,
-                housingTexture).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
-        buttonList.add(new GuiButton(20, x + 214, y + 208, 198, 20,
-                I18n.format("gui.done")));
-        topList=new ScreenTextureList(right,top,112,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
-        bottomList=new ScreenTextureList(left,top,112,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true);
-        buttonList.add(new GuiButton(32,x+284,y+126,120,18,sidesLabel()));
-        refreshButtons();
+        housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housingTexture)
+                .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
+        buttonList.add(layout.done(20));refreshButtons();refreshTabs();
     }
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
     private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
@@ -126,6 +114,13 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
                 housingTexture));
     }
 
+    private void chooseArtwork(ScreenTextureList picker,int slot) {
+        String nativeId=picker.selected();int choice=nativeId==null?picker.choice():-1;
+        if(nativeId!=null){if(slot==0)bottomPanel=nativeId;else topPanel=nativeId;}
+        te.setSurfaceTexture(slot,choice);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,choice));
+        if(nativeId!=null)sendUpdate();
+    }
+
     private int channel() {
         try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
         catch (NumberFormatException e) { return -1; }
@@ -133,33 +128,27 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
-        if(surfacePicker.click(mouseX,mouseY,button))return;
-        if (housingList.click(mouseX, mouseY, button)) {
+        if (textureTab==2 && housingList.click(mouseX, mouseY, button)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();
                 sendUpdate();
             }
             return;
         }
-        boolean first=bottomList.click(mouseX,mouseY,button),second=topList.click(mouseX,mouseY,button);
-        if(first || second) {
-            if(bottomList.picked() || topList.picked()) {
-                int slot=first?0:1;bottomPanel=bottomList.selected();topPanel=topList.selected();te.setSurfaceTexture(slot,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,-1));sendUpdate();
-            }return;
-        }
+        boolean first=textureTab==0 && bottomList.click(mouseX,mouseY,button),second=textureTab==1 && topList.click(mouseX,mouseY,button);
+        if(first || second){ScreenTextureList picker=first?bottomList:topList;if(picker.picked())chooseArtwork(picker,first?0:1);return;}
         super.mouseClicked(mouseX, mouseY, button);
         channelField.mouseClicked(mouseX,mouseY,button);
     }
 
     @Override protected void mouseReleased(int mouseX,int mouseY,int state) {
-        topList.release();bottomList.release();surfacePicker.release();
+        topList.release();bottomList.release();
         draggingList = 0;
         if (housingList != null) housingList.release();
         super.mouseReleased(mouseX,mouseY,state);
     }
 
     @Override protected void mouseClickMove(int mouseX,int mouseY,int button,long elapsed) {
-        if(surfacePicker.drag(mouseY))return;
         if (housingList != null && housingList.drag(mouseY)) return;
         if(topList.drag(mouseY) || bottomList.drag(mouseY))return;
         super.mouseClickMove(mouseX,mouseY,button,elapsed);
@@ -174,6 +163,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        if(button.id>=90 && button.id<=92){textureTab=button.id-90;refreshTabs();return;}
         if (button.id == 20) { if (channel()>=0) sendUpdate(); mc.player.closeScreen(); return; }
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
@@ -187,12 +177,11 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        if(surfacePicker.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel()))return;
         int wheel = Mouse.getEventDWheel();
-        if (housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+        if (textureTab==2 && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         int mx=Mouse.getEventX()*width/mc.displayWidth,my=height-Mouse.getEventY()*height/mc.displayHeight-1;
-        topList.wheel(mx,my,wheel);bottomList.wheel(mx,my,wheel);
+        if(textureTab==0)bottomList.wheel(mx,my,wheel);else if(textureTab==1)topList.wheel(mx,my,wheel);
     }
 
     private int clamp(int value) { return Math.max(0, Math.min(maxScroll(), value)); }
@@ -225,32 +214,18 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         drawRect(x + 114, thumbY, x + 120, thumbY + thumbH, 0xFF808090);
     }
 
-    @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    @Override public void drawScreen(int mouseX,int mouseY,float partialTicks) {
         drawDefaultBackground();
-        int x = (width - xSize) / 2;
-        int y = (height - ySize) / 2;
-        drawRect(x, y, x + xSize, y + ySize, 0xFF101012);
-        drawRect(x, y, x + xSize, y + 16, 0xFF202028);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.title"),
-                x + 8, y + 5, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.bottom"),
-                left, y + 22, 0xFFA0A0A8);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.top"),
-                right, y + 22, 0xFFA0A0A8);
-        bottomList.draw(fontRenderer,mouseX,mouseY);
-        topList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),
-                left, y + 136, 0xFFA0A0A8);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),
-                left, y + 164, 0xFFA0A0A8);
-        fontRenderer.drawString("Channel", x + 338, y + 164, 0xFFA0A0A8);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.housing"),
-                x + 284, y + 22, 0xFFA0A0A8);
-        housingList.draw(fontRenderer, mouseX, mouseY);
-        super.drawScreen(mouseX, mouseY, partialTicks);
-        channelField.drawTextBox();
-        surfacePicker.draw(fontRenderer,mouseX,mouseY);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.title"),guiLeft+12,guiTop+8,0xFFFFFF);
+        if(textureTab==0)bottomList.draw(fontRenderer,mouseX,mouseY);
+        else if(textureTab==1)topList.draw(fontRenderer,mouseX,mouseY);
+        else housingList.draw(fontRenderer,mouseX,mouseY);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
+        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {

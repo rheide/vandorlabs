@@ -71,7 +71,7 @@ final class TrapdoorAssemblies {
             TileEntityProgrammableDiagonalTrapdoor leaf=cells.get(at);int col=com.vandorlabs.blocks.PanelPlane.axis(at,across)-minCol;
             boolean highSide=col>=split;int distance=highSide?width-1-col:col;
             leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=new ArrayList<>(members);
-            leaf.sliding=reference.sliding;leaf.slideIntoWall=reference.slideIntoWall;leaf.trigger=reference.trigger;
+            leaf.sliding=reference.sliding;leaf.slideIntoWall=reference.slideIntoWall;leaf.slideOverSurface=reference.slideOverSurface;leaf.trigger=reference.trigger;
             boolean reversed=leaf.facing().rotateY()==across?highSide:!highSide;
             leaf.setOpeningSide(reversed);leaf.assemblyHinge=reversed?1+distance-1/16D:-distance+1/16D;
             leaf.assemblyTravel=(highSide?width-split:split)-1/16D;
@@ -113,7 +113,7 @@ final class TrapdoorAssemblies {
             TileEntityProgrammableTrapdoor leaf=entry.getValue();int col=entry.getKey().getX()-minX;
             boolean high=col>=split;int distance=high?width-1-col:col;
             leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=new ArrayList<>(members);
-            leaf.sliding=reference.sliding;leaf.slideIntoWall=reference.slideIntoWall;leaf.trigger=reference.trigger;
+            leaf.sliding=reference.sliding;leaf.slideIntoWall=reference.slideIntoWall;leaf.slideOverSurface=reference.slideOverSurface;leaf.trigger=reference.trigger;
             leaf.assemblyTravel=(high?width-split:split)-1/16D;
             if(leaf instanceof TileEntityProgrammableDiagonalTrapdoor) {
                 TileEntityProgrammableDiagonalTrapdoor d=(TileEntityProgrammableDiagonalTrapdoor)leaf;

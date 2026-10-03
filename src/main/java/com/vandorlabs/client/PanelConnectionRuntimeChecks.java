@@ -50,6 +50,23 @@ final class PanelConnectionRuntimeChecks {
             require(renderedVertices(world,pos)==24,"baked bottom slab is missing faces");
             require(!world.getTileEntity(pos).shouldRenderInPass(0),
                     "baked slab still submits an empty tile renderer");
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector slabTile=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(pos);
+            slabTile.setHousingTexture(2);slabTile.setSideTexture(5);
+            for(net.minecraft.block.BlockSlab.EnumBlockHalf half:net.minecraft.block.BlockSlab.EnumBlockHalf.values()) {
+                net.minecraft.block.state.IBlockState slabState=bottom.withProperty(com.vandorlabs.blocks.BlockProgrammableSlab.HALF,half);
+                net.minecraft.block.state.IBlockState extended=slabState.getBlock().getExtendedState(slabState,world,pos);
+                java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=net.minecraft.client.Minecraft.getMinecraft()
+                        .getBlockRendererDispatcher().getModelForState(slabState).getQuads(extended,null,0);
+                require(quads.size()==6,"side texture changed slab geometry");
+                for(net.minecraft.client.renderer.block.model.BakedQuad quad:quads) {
+                    int[] vertices=quad.getVertexData();int stride=vertices.length/4;
+                    boolean horizontal=true;
+                    for(int vertex=1;vertex<4;vertex++)horizontal &= vertices[1]==vertices[vertex*stride+1];
+                    int choice=horizontal?2:5;
+                    require(quad.getSprite().getIconName().equals(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice)),"slab side texture assigned to wrong face");
+                }
+            }
+            slabTile.setSideTexture(-1);
             world.setBlockState(east,bottom,2);
             require(renderedVertices(world,pos)==20,"matching slab halves retained internal face");
             world.setBlockState(east,bottom.withProperty(
