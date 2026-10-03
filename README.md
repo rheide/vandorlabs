@@ -55,7 +55,7 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   Select manual operation or redstone on/off triggering, including virtual channels.
   Craft one from six Programmable Matter Ingots in two columns of three.
 - **Programmable Trapdoor**: categorized block/door artwork with Fit/Tile and mirrored door panels, rotating or sideways sliding,
-  and Bottom, Middle, or Top placement. Choose This block or Next block for the closed leaf independently of movement; Next block is available for individual mounts, starts open when placed, and folds into the outside mount when rotating; joined groups retain This block. Adjacent pairs and complete 2×2 squares
+  and Bottom, Middle, or Top placement. Movement also offers Rotate into next block and Slide into next block for individual mounts; configured next-block items start open when placed. Hinge direction can be selected for all individual movements; joined groups keep their outer hinges. Adjacent pairs and complete 2×2 squares
   open together toward opposite sides, manually or through local/virtual redstone.
   Craft two from five Industrial Alloy Ingots and one Programmable Matter Ingot;
   see the [trapdoor guide](docs/gallery/programmable-trapdoor.md).

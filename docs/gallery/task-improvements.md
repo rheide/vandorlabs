@@ -74,11 +74,43 @@ Tile / mirror keeps door artwork one block wide and two blocks long/high, with a
 | Flat 2×2 | ![Tiled flat doors](../images/gallery/tasks/trapdoor-flat-door-tile.png) | ![Tiled flat oak doors](../images/gallery/tasks/trapdoor-flat-custom-door-tile.png) | ![Fitted flat door](../images/gallery/tasks/trapdoor-flat-door-fit.png) |
 | Diagonal 2×2 | ![Tiled diagonal doors](../images/gallery/tasks/trapdoor-diagonal-door-tile.png) | ![Tiled diagonal oak doors](../images/gallery/tasks/trapdoor-diagonal-custom-door-tile.png) | ![Fitted diagonal door](../images/gallery/tasks/trapdoor-diagonal-door-fit.png) |
 
-The diagonal dialog separates width and height, so Full/Half width updates a tall group together. The normal dialog separates closed-leaf placement from Rotating/Sliding and offers a direction control for Next block mounts.
+The diagonal dialog separates width and height, so Full/Half width updates a tall group together. The normal dialog folds next-block placement into Movement and offers hinge direction for every individual rotating/sliding choice.
 
 | Normal controls | Diagonal controls |
 | --- | --- |
 | ![Rotate into next block combines movement and placement](../images/gallery/tasks/trapdoor-config.png) | ![Separate diagonal width, height and texture layout](../images/gallery/tasks/diagonal-trapdoor-config.png) |
+
+## Partial diagonal groups and sliding choices
+
+Half-width tall and full-width half-height trapdoors join connected partial patches. These examples contain three leaves at `(X,Y,Z)`, `(X,Y,Z+1)`, and `(X+1,Y,Z+1)`. Using any member opens all three, including mixed ordinary/staggered neighbors.
+
+| Half-width patch, closed | Half-width patch, rotating open |
+| --- | --- |
+| ![Three connected half-width leaves](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating-closed.png) | ![All three half-width leaves open together](../images/gallery/tasks/trapdoor-patch-halfwidth-horizontal-rotating-open.png) |
+
+| Half-height patch, closed | Half-height patch, rotating open |
+| --- | --- |
+| ![Three connected shallow leaves](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating-closed.png) | ![All three half-height leaves open together](../images/gallery/tasks/trapdoor-patch-shallow-horizontal-rotating-open.png) |
+
+**Slide over wall** retains the lifted animation. **Slide into wall** moves sideways directly without the lift. Both choices synchronize across the group and survive saves and copying.
+
+| Slide over wall, open | Slide into wall, open |
+| --- | --- |
+| ![Partial patch uses the lifted sliding motion](../images/gallery/tasks/trapdoor-patch-shallow-stagger-sliding-open.png) | ![The same partial patch slides sideways without lifting](../images/gallery/tasks/trapdoor-patch-shallow-stagger-inset-sliding-open.png) |
+
+![Diagonal movement includes Slide into wall](../images/gallery/tasks/diagonal-trapdoor-into-wall-config.png)
+
+## Custom textures when reopening a dialog
+
+The current Custom material is highlighted and automatically scrolled into view on reopening, with its sample artwork shown in the row.
+
+| Programmable Block | Programmable Slab |
+| --- | --- |
+| ![Custom Stone selected after reopening the block dialog](../images/gallery/tasks/custom-block-texture-config.png) | ![Custom Stone selected after reopening the slab dialog](../images/gallery/tasks/custom-slab-texture-config.png) |
+
+| Programmable Door | Programmable Trapdoor |
+| --- | --- |
+| ![Custom Stone selected after reopening the door dialog](../images/gallery/tasks/custom-door-texture-config.png) | ![Custom Stone selected after reopening the trapdoor dialog](../images/gallery/tasks/custom-trapdoor-texture-config.png) |
 
 ## Motion clearance and next-block placement
 
@@ -91,6 +123,12 @@ Rotating normal leaves keep their thickness inside the mounting cell when open. 
 | Next-block leaf, closed | Next-block leaf, rotating open |
 | --- | --- |
 | ![Closed leaf covers the neighboring cell](../images/gallery/tasks/trapdoor-next-rotating-closed.png) | ![Rotated leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-next-rotating-open.png) |
+
+Matching-height next-block covers on opposite sides of a two-block opening omit the standalone one-pixel protrusion. They meet without overlapping and remain independently controlled. Configured next-block items place open, showing which cell owns the leaf. Open rotating covers use only a tiny clearance from the covered block, rather than a one-pixel gap.
+
+| Opposing next-block covers, closed | Opposing next-block covers, open |
+| --- | --- |
+| ![Opposing leaves meet across the opening](../images/gallery/tasks/trapdoor-opposing-next-closed.png) | ![Each opposing leaf folds back into its mounting cell](../images/gallery/tasks/trapdoor-opposing-next-open.png) |
 
 ## Flush floor and ceiling mounts
 
