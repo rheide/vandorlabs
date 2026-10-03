@@ -82,8 +82,10 @@ final class TrapdoorChecks {
             double[][] closed=TrapdoorGeometry.coverCorners(position,sliding,turn,0),open=TrapdoorGeometry.coverCorners(position,sliding,turn,1);
             double[] closedBounds=DiagonalTrapdoorGeometry.bounds(closed);
             double far=turn==0?closedBounds[2]:turn==1?closedBounds[3]:turn==2?closedBounds[5]:closedBounds[0];
-            double expected=turn==0?-1-TrapdoorGeometry.COVER_OVERHANG+TrapdoorGeometry.EDGE_CLEARANCE:turn==3?-1-TrapdoorGeometry.COVER_OVERHANG+TrapdoorGeometry.EDGE_CLEARANCE:2+TrapdoorGeometry.COVER_OVERHANG-TrapdoorGeometry.EDGE_CLEARANCE;
-            require(Math.abs(far-expected)<1e-8,"next-block closed leaf must project one pixel past far edge");
+            double extension=(sliding?-1:1)*TrapdoorGeometry.COVER_OVERHANG;
+            double expected=turn==0 || turn==3?-1-extension+TrapdoorGeometry.EDGE_CLEARANCE:2+extension-TrapdoorGeometry.EDGE_CLEARANCE;
+            require(Math.abs(far-expected)<1e-8,"next-block closed leaf overlap is at the wrong end");
+            if(sliding){double near=turn==0?closedBounds[5]:turn==1?1-closedBounds[0]:turn==2?1-closedBounds[2]:closedBounds[3];require(Math.abs(near-(TrapdoorGeometry.COVER_OVERHANG-TrapdoorGeometry.EDGE_CLEARANCE))<1e-8,"next-block slider does not extend one pixel into owning mount");}
             double[] b=DiagonalTrapdoorGeometry.bounds(open);
             require(b[0]>0 && b[3]<1 && b[2]>0 && b[5]<1,"next-block open leaf intrudes into adjacent solid block");
             if(!sliding){double gap=turn==0?b[2]:turn==1?1-b[3]:turn==2?1-b[5]:b[0];require(Math.abs(gap-TrapdoorGeometry.EDGE_CLEARANCE)<1e-8,"next-block upright leaf leaves a one-pixel gap to the covered cell");}

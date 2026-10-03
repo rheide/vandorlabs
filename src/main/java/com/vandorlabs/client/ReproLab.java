@@ -310,7 +310,7 @@ public class ReproLab {
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
         for(String group:new String[]{"patch_halfwidth_horizontal","patch_halfwidth_stagger","patch_shallow_horizontal","patch_shallow_stagger"})for(String motion:new String[]{"rotating","sliding","inset_sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
-        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open","diagonal_opposite_slopes_sliding_open","diagonal_reversed_plane_sliding_open","opposing_next_closed","opposing_next_open"}) {
+        for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","next_sliding_closed","next_sliding_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open","diagonal_opposite_slopes_sliding_open","diagonal_reversed_plane_sliding_open","opposing_next_closed","opposing_next_open"}) {
             boolean opposed=scene.startsWith("opposing_next"),neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
             SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,opposed?GALLERY_X+.5:GALLERY_X-(wall?3:.7),galleryFeet+(opposed?4.5:neighbors?1.5:3.2),opposed?-23:neighbors || wall?-14.5:-21.5,opposed?0:neighbors?180:wall?-155:-8,opposed?35:neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
@@ -572,6 +572,7 @@ public class ReproLab {
                     System.out.println("[vandorlabs][reprolab] diagonal-staggered-mode-runtime PASS "+s.name);
                 }
                 if(s.name.startsWith("gallery_trapdoor_patch_"))TrapdoorGallery.checkPatch(mc.world,s.name.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);
+                if(s.name.contains("next_sliding_"))TrapdoorGallery.checkSlidingMountOverlap(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.contains("vanilla_alignment"))TrapdoorGallery.checkVanillaAlignment(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.contains("opposing_next_"))TrapdoorGallery.checkOpposing(mc.world,GALLERY_X,GALLERY_Y);
                 save(mc, s);

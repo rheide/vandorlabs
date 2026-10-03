@@ -60,6 +60,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         }
         return com.vandorlabs.render.TrapdoorGeometry.COVER_OVERHANG;
     }
+    public double coverOffset(){return (sliding?-1:1)*coverOverhang();}
     public boolean isSliding(){return sliding;}
     public boolean isSlideIntoWall(){return slideIntoWall;}
     public void setSlideIntoWall(boolean value){slideIntoWall=this instanceof TileEntityProgrammableDiagonalTrapdoor && value;sync();}

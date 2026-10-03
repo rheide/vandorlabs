@@ -8,7 +8,7 @@ The mod reserves the matching two-by-two cells for the mount and moving wheel. T
 
 ## Adjacent trapdoor covers
 
-The Programmable Trapdoor Movement button offers **Rotate into next block** and **Slide into next block** in addition to ordinary Rotating and Sliding. Both next-block choices keep the owning tile outside the shaft while the closed leaf covers the adjacent shaft cell. Rotation folds it upright into its mounting cell; sliding brings it back horizontally. There is no separate Closed leaf control.
+The Programmable Trapdoor Movement button offers **Rotate into next block** and **Slide into next block** in addition to ordinary Rotating and Sliding. Both next-block choices keep the owning tile outside the shaft while the closed leaf covers the adjacent shaft cell. Rotation folds it upright into its mounting cell; sliding brings it back horizontally. A closed sliding cover overlaps the owning mounting cell by one pixel; its far edge stays inside the covered cell. There is no separate Closed leaf control.
 
 For a rotating gear cover:
 

@@ -114,6 +114,15 @@ final class TrapdoorGallery {
         if(!((ItemBlock)stack.getItem()).placeBlockAt(stack,null,world,pos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing).withProperty(BlockTrapDoor.HALF,inverted?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM)))throw new IllegalStateException("followup trapdoor placement failed");
         return (TileEntityProgrammableTrapdoor)world.getTileEntity(pos);
     }
+    static void checkSlidingMountOverlap(World world,int x,int y) {
+        BlockPos at=new BlockPos(x-1,y+2,-18);TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(at);
+        boolean open=world.getBlockState(at).getValue(BlockProgrammableTrapdoor.OPEN);
+        net.minecraft.util.math.AxisAlignedBB bounds=OffsetTrapdoorInteractions.bounds(leaf);
+        double start=at.getZ()+(open?com.vandorlabs.render.TrapdoorGeometry.EDGE_CLEARANCE:-1+1/16D+com.vandorlabs.render.TrapdoorGeometry.EDGE_CLEARANCE);
+        double end=at.getZ()+(open?1:1/16D)-com.vandorlabs.render.TrapdoorGeometry.EDGE_CLEARANCE;
+        if(!leaf.isCover() || !leaf.isSliding() || Math.abs(bounds.minZ-start)>1e-8 || Math.abs(bounds.maxZ-end)>1e-8)throw new IllegalStateException("next-block slider overlaps the far end instead of its own mount");
+        System.out.println("[vandorlabs][reprolab] sliding-next-mount-overlap-runtime PASS "+(world.isRemote?"client":"server")+" "+(open?"open":"closed"));
+    }
     static void checkVanillaAlignment(World world,int x,int y) {
         BlockPos base=new BlockPos(x-1,y+2,-18);TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)world.getTileEntity(base);
         net.minecraft.util.math.AxisAlignedBB ours=world.getBlockState(base).getBoundingBox(world,base);
@@ -156,9 +165,10 @@ final class TrapdoorGallery {
             for(BlockPos support:new BlockPos[]{base.north(),base.west(),base.east(),base.down()})world.setBlockState(support,net.minecraft.init.Blocks.STONE.getDefaultState(),3);
             leaf.requestOpen(true);
         } else if(scene.contains("next_")) {
-            TileEntityProgrammableTrapdoor leaf=place(world,base,false,texture,0,false,EnumFacing.NORTH);
+            boolean sliding=scene.contains("sliding");
+            TileEntityProgrammableTrapdoor leaf=place(world,base,false,texture,0,sliding,EnumFacing.NORTH);
             world.setBlockState(base.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
-            leaf.configureGroup(texture,0,false,0,0,false,true,true,EnumFacing.NORTH);leaf.requestOpen(scene.endsWith("open"));
+            leaf.configureGroup(texture,0,sliding,0,0,false,true,true,EnumFacing.NORTH);leaf.requestOpen(scene.endsWith("open"));
         } else {
             TileEntityProgrammableTrapdoor first=null;
             for(int row=0;row<2;row++)for(int col=0;col<2;col++) {

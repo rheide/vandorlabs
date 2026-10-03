@@ -1415,5 +1415,203 @@
     "label": "Logo Off",
     "category": "Lights",
     "source": "logo_off"
+  },
+  {
+    "id": "imported_computing_server_compute_rack",
+    "label": "Server Compute Rack",
+    "category": "Computing",
+    "source": "imported/computing/server_compute_rack"
+  },
+  {
+    "id": "imported_computing_server_data_storage",
+    "label": "Server Data Storage",
+    "category": "Computing",
+    "source": "imported/computing/server_data_storage"
+  },
+  {
+    "id": "imported_computing_server_network_core",
+    "label": "Server Network Core",
+    "category": "Computing",
+    "source": "imported/computing/server_network_core"
+  },
+  {
+    "id": "imported_fuel_fuel_port_dual",
+    "label": "Fuel Port Dual",
+    "category": "Fuel",
+    "source": "imported/fuel/fuel_port_dual"
+  },
+  {
+    "id": "imported_fuel_fuel_port_round",
+    "label": "Fuel Port Round",
+    "category": "Fuel",
+    "source": "imported/fuel/fuel_port_round"
+  },
+  {
+    "id": "imported_hull_dark_r1_c2",
+    "label": "Dark R1 C2",
+    "category": "Hull",
+    "source": "imported/hull/dark_r1_c2"
+  },
+  {
+    "id": "imported_hull_dark_r1_c3",
+    "label": "Dark R1 C3",
+    "category": "Hull",
+    "source": "imported/hull/dark_r1_c3"
+  },
+  {
+    "id": "imported_hull_dark_r1_c6",
+    "label": "Dark R1 C6",
+    "category": "Hull",
+    "source": "imported/hull/dark_r1_c6"
+  },
+  {
+    "id": "imported_hull_dark_r2_c2",
+    "label": "Dark R2 C2",
+    "category": "Hull",
+    "source": "imported/hull/dark_r2_c2"
+  },
+  {
+    "id": "imported_hull_dark_r2_c6",
+    "label": "Dark R2 C6",
+    "category": "Hull",
+    "source": "imported/hull/dark_r2_c6"
+  },
+  {
+    "id": "imported_hull_dark_t1_r1_c1",
+    "label": "Dark T1 R1 C1",
+    "category": "Hull",
+    "source": "imported/hull/dark_t1_r1_c1"
+  },
+  {
+    "id": "imported_hull_dark_t1_r1_c2",
+    "label": "Dark T1 R1 C2",
+    "category": "Hull",
+    "source": "imported/hull/dark_t1_r1_c2"
+  },
+  {
+    "id": "imported_hull_dark_t1_r1_c3",
+    "label": "Dark T1 R1 C3",
+    "category": "Hull",
+    "source": "imported/hull/dark_t1_r1_c3"
+  },
+  {
+    "id": "imported_hull_dark_t1_r1_c4",
+    "label": "Dark T1 R1 C4",
+    "category": "Hull",
+    "source": "imported/hull/dark_t1_r1_c4"
+  },
+  {
+    "id": "imported_hull_dark_t2_r1_c3",
+    "label": "Dark T2 R1 C3",
+    "category": "Hull",
+    "source": "imported/hull/dark_t2_r1_c3"
+  },
+  {
+    "id": "imported_hull_dark_t2_r1_c4",
+    "label": "Dark T2 R1 C4",
+    "category": "Hull",
+    "source": "imported/hull/dark_t2_r1_c4"
+  },
+  {
+    "id": "imported_hull_dark_t3_r3_c5",
+    "label": "Dark T3 R3 C5",
+    "category": "Hull",
+    "source": "imported/hull/dark_t3_r3_c5"
+  },
+  {
+    "id": "imported_hull_dark_t3_r3_c6",
+    "label": "Dark T3 R3 C6",
+    "category": "Hull",
+    "source": "imported/hull/dark_t3_r3_c6"
+  },
+  {
+    "id": "imported_power_battery_cell_bank",
+    "label": "Battery Cell Bank",
+    "category": "Power",
+    "source": "imported/power/battery_cell_bank"
+  },
+  {
+    "id": "imported_power_battery_charging_dock",
+    "label": "Battery Charging Dock",
+    "category": "Power",
+    "source": "imported/power/battery_charging_dock"
+  },
+  {
+    "id": "imported_power_battery_power_buffer",
+    "label": "Battery Power Buffer",
+    "category": "Power",
+    "source": "imported/power/battery_power_buffer"
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_armored_sci_fi_hatch_4",
+    "label": "Cyan-Lit Armored Sci-Fi Hatch-4",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4"
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_gunmetal_slit_hatch_6",
+    "label": "Cyan-Lit Gunmetal Slit Hatch-6",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_gunmetal_slit_hatch_6"
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_gunmetal_utility_hatch_1",
+    "label": "Cyan-Lit Gunmetal Utility Hatch-1",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_gunmetal_utility_hatch_1"
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_gunmetal_window_hatch_8",
+    "label": "Cyan-Lit Gunmetal Window Hatch-8",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_gunmetal_window_hatch_8"
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_industrial_sci_fi_hatch_5",
+    "label": "Cyan-Lit Industrial Sci-Fi Hatch-5",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_industrial_sci_fi_hatch_5"
+  },
+  {
+    "id": "imported_trapdoors_gunmetal_service_hatch_with_cyan_lights_3",
+    "label": "Gunmetal Service Hatch With Cyan Lights-3",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/gunmetal_service_hatch_with_cyan_lights_3"
+  },
+  {
+    "id": "imported_trapdoors_gunmetal_twin_window_sci_fi_hatch_7",
+    "label": "Gunmetal Twin-Window Sci-Fi Hatch-7",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/gunmetal_twin_window_sci_fi_hatch_7"
+  },
+  {
+    "id": "imported_trapdoors_reinforced_cyan_x_hatch_2",
+    "label": "Reinforced Cyan X Hatch-2",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/reinforced_cyan_x_hatch_2"
+  },
+  {
+    "id": "imported_windows_window_armored_slit",
+    "label": "Window Armored Slit",
+    "category": "Windows",
+    "source": "imported/windows/window_armored_slit"
+  },
+  {
+    "id": "imported_windows_window_clear_frame",
+    "label": "Window Clear Frame",
+    "category": "Windows",
+    "source": "imported/windows/window_clear_frame"
+  },
+  {
+    "id": "imported_windows_window_cross_brace",
+    "label": "Window Cross Brace",
+    "category": "Windows",
+    "source": "imported/windows/window_cross_brace"
+  },
+  {
+    "id": "imported_windows_window_observation",
+    "label": "Window Observation",
+    "category": "Windows",
+    "source": "imported/windows/window_observation"
   }
 ]

@@ -56,7 +56,7 @@ SHOTS["trapdoor_joined_gui"]="tasks/trapdoor-joined-config.png"
 SHOTS["offset_trapdoor_closed_selection"]="tasks/trapdoor-offset-closed-selection.png"
 SHOTS["offset_trapdoor_open_selection"]="tasks/trapdoor-offset-open-selection.png"
 SHOTS["diagonal_trapdoor_gui"]="tasks/diagonal-trapdoor-config.png"
-for scene in ("flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open"):
+for scene in ("flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","next_sliding_closed","next_sliding_open"):
     SHOTS[f"gallery_trapdoor_followup_{scene}"]=f"tasks/trapdoor-{scene.replace('_','-')}.png"
 
 for group in ("flat", "v", "rectangle", "stagger"):

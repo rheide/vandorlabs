@@ -53,10 +53,12 @@ public final class TrapdoorGeometry {
         double[][] vertices=corners(position,true,0,0);
         double p=Math.max(0,Math.min(1,pose)),pivot=low(position)+(position==TOP?THICKNESS:0);
         double angle=(position==TOP?1:-1)*p*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),hinge=EDGE_CLEARANCE;
+        double extension=sliding?-overhang:overhang;
         for(double[] point:vertices){
-            // Project one pixel beyond the covered cell, retracting fully into the mount.
-            point[2]-=1+overhang;
-            if(sliding)point[2]+=p*(1+overhang);
+            // Sliding overlaps the owning mount by one pixel; rotation retains
+            // its far-edge protrusion. Both retract fully into the owning cell.
+            point[2]-=1+extension;
+            if(sliding)point[2]+=p*(1+extension);
             else {double dy=point[1]-pivot,dz=point[2]-hinge;point[1]=pivot+dy*cos+dz*sin;point[2]=hinge+dz*cos-dy*sin;}
             for(int turn=0;turn<(quarterTurns&3);turn++){double x=point[0];point[0]=1-point[2];point[2]=x;}
         }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Slide into next block overlaps the owning mounting block by one pixel when closed, rather than protruding past the far edge of the covered block. Texture mapping, selection and collision follow the corrected leaf.
+
 - Ordinary rotating trapdoors align with vanilla trapdoors when open, retaining only a tiny anti-z-fighting clearance. The alignment applies to existing saved groups as well as individual leaves.
 - Bundled 33 additional materials in Computing, Fuel, Hull, Power, Trapdoors and Windows. New normal and diagonal trapdoors use Cyan-lit Armored Sci-Fi Hatch-4 by default; saved material choices retain their existing indices.
 
