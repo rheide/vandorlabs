@@ -196,5 +196,85 @@
     "label": "Window Observation",
     "category": "Windows",
     "source": "imported/windows/window_observation"
+  },
+  {
+    "id": "storage_cabinet",
+    "label": "Cabinet",
+    "category": "Storage",
+    "source": "storage/cabinet_front",
+    "top": "storage/cabinet_top",
+    "side": "storage/cabinet_side"
+  },
+  {
+    "id": "storage_chest",
+    "label": "Chest",
+    "category": "Storage",
+    "source": "storage/chest_front",
+    "top": "storage/chest_top",
+    "side": "storage/chest_side"
+  },
+  {
+    "id": "storage_drawers",
+    "label": "Drawers",
+    "category": "Storage",
+    "source": "storage/drawers_front",
+    "top": "storage/drawers_top",
+    "side": "storage/drawers_side"
+  },
+  {
+    "id": "storage_lab_drawer",
+    "label": "Lab Drawer",
+    "category": "Storage",
+    "source": "storage/lab_drawer_front",
+    "top": "storage/lab_drawer_top",
+    "side": "storage/lab_drawer_side"
+  },
+  {
+    "id": "storage_metal_cabinet",
+    "label": "Metal Cabinet",
+    "category": "Storage",
+    "source": "storage/metal_cabinet_front",
+    "top": "storage/metal_cabinet_top",
+    "side": "storage/metal_cabinet_side"
+  },
+  {
+    "id": "storage_metal_drawers",
+    "label": "Metal Drawers",
+    "category": "Storage",
+    "source": "storage/metal_drawers_front",
+    "top": "storage/metal_drawers_top",
+    "side": "storage/metal_drawers_side"
+  },
+  {
+    "id": "storage_military_cabinet",
+    "label": "Military Cabinet",
+    "category": "Storage",
+    "source": "storage/military_cabinet_front",
+    "top": "storage/military_cabinet_top",
+    "side": "storage/military_cabinet_side"
+  },
+  {
+    "id": "storage_storage_atlas",
+    "label": "Storage Atlas",
+    "category": "Storage",
+    "source": "storage/storage_atlas_front",
+    "top": "storage/storage_atlas_top",
+    "side": "storage/storage_atlas_side"
+  },
+  {
+    "id": "storage_storage_cabinet",
+    "label": "Storage Cabinet",
+    "category": "Storage",
+    "source": "storage/storage_cabinet_front",
+    "top": "storage/storage_cabinet_top",
+    "side": "storage/storage_cabinet_side"
+  },
+  {
+    "id": "storage_storagecrate",
+    "label": "Storagecrate",
+    "category": "Storage",
+    "source": "storage/storagecrate_front",
+    "top": "storage/storagecrate_top",
+    "side": "storage/storagecrate_side"
   }
 ]

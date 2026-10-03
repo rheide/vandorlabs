@@ -17,3 +17,17 @@ material indices.
 
 Cyan-lit Armored Sci-Fi Hatch-4 is the default finish for new normal and diagonal
 trapdoors. Existing saved material choices remain selected.
+
+## Storage sets
+
+Ten user-supplied horizontal top/side/front sheets were imported with
+`tools/import_storage_textures.py SOURCE EXPORT`. Each square panel is reduced
+on a 70px grid using area averaging, lightly sharpened, and enlarged with
+nearest-neighbor sampling to exactly 140×140. This preserves the original
+artwork while giving it crisp two-pixel steps. The original sheets are unchanged.
+
+The `Storage` category uses the front panel for each picker thumbnail and for
+ordinary programmable surfaces. Programmable Storage uses the accompanying
+`top` and `side` entries, with the top also used underneath. Cabinet is first
+alphabetically and is the default storage set. Catalog IDs are appended to
+preserve existing saved material indices.
