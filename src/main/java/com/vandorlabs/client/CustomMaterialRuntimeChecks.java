@@ -123,6 +123,17 @@ final class CustomMaterialRuntimeChecks {
         for(int choice:new int[]{12,23,24,25,67,77})require(!ScreenHousingTextures.visible(choice),"removed choice visible");
         require(ScreenHousingTextures.category(31).equals("Tech") && ScreenHousingTextures.category(35).equals("Hull")
                 && ScreenHousingTextures.category(29).equals("Panels"),"legacy category moves");
+        java.util.Map<String,Integer> counts=new java.util.HashMap<>();
+        for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(ScreenHousingTextures.visible(choice))
+            counts.merge(ScreenHousingTextures.category(choice),1,Integer::sum);
+        require(counts.get("Hull")==21 && counts.get("Panels")==13 && counts.get("Industrial")==14 && counts.get("Tech")==22,"approved Hull/Panels/Industrial/Tech counts");
+        HousingTextureList moved=new HousingTextureList(0,0,180,32);
+        require(moved.selected()==32 && "Heavy Bulkhead 1".equals(HousingTextureList.name(32)) && "Industrial".equals(ScreenHousingTextures.category(32)),"moved saved choice changed identity");
+        try {
+            java.lang.reflect.Field expanded=HousingTextureList.class.getDeclaredField("expanded");expanded.setAccessible(true);
+            require(((java.util.Set<?>)expanded.get(moved)).contains("Industrial"),"moved material did not expand its new category");
+        }catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+        System.out.println("[vandorlabs][reprolab] industrial-category-runtime PASS Hull=21 Panels=13 Industrial=14 Tech=22; saved material opens new category");
         int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
         for(int choice:new int[]{64,amber}) {
             TileEntityProgrammableLight tile=new TileEntityProgrammableLight();tile.setFaceTexture(choice);

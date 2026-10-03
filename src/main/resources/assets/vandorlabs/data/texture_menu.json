@@ -48,27 +48,27 @@
     "label": "Nano-Fiber Hull"
   },
   "perforated_decking_1": {
-    "category": "Hull",
+    "category": "Industrial",
     "label": "Perforated Deck"
   },
   "textures2_t1_r3_c8": {
-    "category": "Hull",
+    "category": "Industrial",
     "label": "Braced Hull"
   },
   "textures2_t1_r4_c7": {
-    "category": "Hull",
+    "category": "Panels",
     "label": "Green Panel"
   },
   "textures2_t2_r1_c3": {
-    "category": "Hull",
+    "category": "Panels",
     "label": "Gray Panel 1"
   },
   "textures2_t2_r1_c4": {
-    "category": "Hull",
+    "category": "Panels",
     "label": "Gray Panel 2"
   },
   "textures2_t2_r3_c1": {
-    "category": "Hull",
+    "category": "Industrial",
     "label": "Industrial Frame"
   },
   "textures2_t2_r3_c2": {
@@ -84,15 +84,15 @@
     "label": "Weathered Hull 2"
   },
   "textures2_t3_r3_c5": {
-    "category": "Hull",
+    "category": "Panels",
     "label": "Ivory Hatch 1"
   },
   "textures2_t3_r3_c6": {
-    "category": "Hull",
+    "category": "Panels",
     "label": "Ivory Hatch 2"
   },
   "textures2_t4_r3_c6": {
-    "category": "Hull",
+    "category": "Industrial",
     "label": "Dark Socket"
   },
   "dark_wall_panel": {
@@ -108,19 +108,19 @@
     "label": "Light Industrial Panel"
   },
   "ribbed_wall": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Ribbed Wall"
   },
   "industrial_block": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Industrial Block"
   },
   "industrial_trim": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Industrial Trim"
   },
   "industrial_grate": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Industrial Grate"
   },
   "bolted_wall_plate": {
@@ -128,27 +128,27 @@
     "label": "Bolted Wall Plate"
   },
   "matter": {
-    "category": "Panels",
+    "category": "Tech",
     "label": "Matter"
   },
   "matter_amber": {
-    "category": "Panels",
+    "category": "Tech",
     "label": "Matter - Amber"
   },
   "matter_cyan": {
-    "category": "Panels",
+    "category": "Tech",
     "label": "Matter - Cyan"
   },
   "matter_red": {
-    "category": "Panels",
+    "category": "Tech",
     "label": "Matter - Red"
   },
   "wall_pipes": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Wall Pipes"
   },
   "framed_wall_pipes": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Framed Wall Pipes"
   },
   "intricate_composite_wall_1": {
@@ -160,31 +160,31 @@
     "label": "Composite Wall 2"
   },
   "heavy_duty_bulkhead_1": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Heavy Bulkhead 1"
   },
   "heavy_duty_bulkhead_2": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Heavy Bulkhead 2"
   },
   "thermal_shielding_panel_1": {
-    "category": "Panels",
+    "category": "Hull",
     "label": "Thermal Shield 1"
   },
   "thermal_shielding_panel_2": {
-    "category": "Panels",
+    "category": "Hull",
     "label": "Thermal Shield 2"
   },
   "advanced_biomechanical_tech_block_1": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Biomech Block 1"
   },
   "advanced_biomechanical_tech_block_2": {
-    "category": "Panels",
+    "category": "Industrial",
     "label": "Biomech Block 2"
   },
   "textures2_t1_r1_c7": {
-    "category": "Panels",
+    "category": "Tech",
     "label": "Microchip"
   },
   "textures2_t2_r3_c7": {
@@ -196,7 +196,7 @@
     "label": "Twin Panels"
   },
   "textures2_t3_r3_c3": {
-    "category": "Panels",
+    "category": "Hull",
     "label": "Scaled Armor"
   },
   "wall_vent": {

@@ -47,4 +47,6 @@
 
 > Sounds good, apply all of that.
 
-- [ ] Apply the full approved Hull/Panels/Industrial/Tech move list, preserving saved choices and validate the revised shared picker.
+- [x] Apply the full approved Hull/Panels/Industrial/Tech move list, preserving saved choices and validate the revised shared picker.
+
+Applied all 27 category moves. Live picker counts are Hull 21, Panels 13, Industrial 14 and Tech 22. Grouping-only metadata comparison and packaged-JAR inspection passed; the focused live dialog suite passed in `testclient/render-run.JbrCvG`.

@@ -2,7 +2,7 @@
 
 Programmable storage, blocks, slabs, stairs, walls, trapdoors, doors, lights and static screen/control surfaces share a texture picker. Categories expand and collapse, and each texture has a larger thumbnail with its original aspect ratio. Categories and texture names are sorted alphabetically, and the current category heading stays visible while scrolling within it. The category containing the selected material opens automatically. Options are grouped and sorted once per dialog; expanding a category reuses those groups. Only visible rows draw thumbnails, using the already-loaded Minecraft atlas. PNGs are not loaded on demand, so large catalogs still increase startup time and atlas memory use.
 
-Built-in categories include Materials, Panels, Tech, Hull, Lights, Doors,
+Built-in categories include Materials, Panels, Tech, Hull, Industrial, Lights, Doors,
 Screens, Trapdoors, Windows and Storage. Dark Hull 1–12 replace the old
 coordinate labels; moved texture-pack choices no longer carry T1/T2 prefixes.
 Removed finishes are omitted from the picker while their saved identifiers
@@ -12,6 +12,8 @@ Storage offers fourteen matching top/side/front sets; [Programmable
 Storage](programmable-storage.md) uses all three faces and other shapes use
 the front artwork. Blue Hex and Amber Hex are paired light finishes, with
 separate lit and unlit artwork. Newly placed normal and diagonal trapdoors use **Armored Hatch** from Trapdoors. Existing saved selections retain their artwork. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Programmable light dialogs hide the separate Off choices in both lists; select the On material and let the light switch its artwork automatically. Their taller dialog shows up to seven textures plus the pinned category heading, temporarily reducing Minecraft's GUI scale when necessary to fit, and restoring that setting on close. Door entries provide Small, Medium and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
+
+Hull groups exterior plating and protective cladding; Panels groups interior sheets and access covers. Industrial holds fourteen pipe, grille, rib, bulkhead and machinery finishes. Microchip and the Matter color variants are in Tech. The [complete category moves](texture-category-proposal.md) preserve saved selections.
 
 ## Choose a surface
 

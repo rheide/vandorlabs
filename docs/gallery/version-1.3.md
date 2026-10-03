@@ -30,13 +30,15 @@ The [diagonal trapdoor guide](programmable-diagonal-trapdoor.md) illustrates eve
 
 ## One material catalog across programmable shapes
 
-Categorized lists with thumbnails bring hull finishes, panels, glass, light artwork, door designs and static screen/control images into compatible programmable dialogs. Choose an ordinary block or door in the **Custom** sample slot to reuse its artwork without consuming the item. Add your own PNGs under `config/vandorlabs/textures` to create filesystem categories.
+Categorized lists with thumbnails bring hull finishes, interior panels, industrial machinery finishes, glass, light artwork, door designs and static screen/control images into compatible programmable dialogs. Choose an ordinary block or door in the **Custom** sample slot to reuse its artwork without consuming the item. Add your own PNGs under `config/vandorlabs/textures` to create filesystem categories.
 
 ![Shared material examples](../images/gallery/tasks/material-choices.png)
 
 **Fit** stretches an image across the chosen surface; **Tile** keeps block-scale repetition. Trapdoors can tile and mirror complete door artwork across a connected hatch, including separate upper/lower sprites from sampled doors. Replacement Programmable Door faces retain the native thin edges and selected hinges. Slabs and portholes offer independent side finishes. Programmable Block, Slab and Storage can use optional per-face overrides.
 
 ![Door artwork tiled across a flat hatch](../images/gallery/tasks/trapdoor-flat-door-tile.png)
+
+Hull, Panels and the new Industrial category separate exterior plating, interior wall/access panels and mechanical finishes. Microchip and Matter variants move to Tech; saved material choices retain their artwork.
 
 The pickers now use taller lists, simpler labels and a separate Small/Medium/Large choice for door artwork. Reopening a Custom choice brings its selected row and sample back into view. See [material selection](../unified-materials.md) and [filesystem textures](../filesystem-textures.md).
 

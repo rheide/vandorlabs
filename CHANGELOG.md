@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Industrial to the shared picker and apply the approved Hull/Panels/Tech moves for 27 finishes, preserving numeric choices and source artwork.
+
 - Replace door/trapdoor/ramp motion illustrations with smaller 420×350 live GIFs and add an animated 1.3 highlights guide. Buffer capture frames and use a steady output cadence to reduce jitter.
 - Shorten the eight trapdoor finish labels without changing saved material IDs.
 - Match the Programmable Diagonal Screen hotbar icon to its current solid wedge housing.
