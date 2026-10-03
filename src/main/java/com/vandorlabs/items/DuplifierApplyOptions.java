@@ -84,7 +84,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.DOOR_FACE_TEXTURE, "Door Face Texture", 3),
             option(ProgrammableSettings.DOOR_TILE_TEXTURE, "Door Face Layout", 3),
             option(ProgrammableSettings.TRAPDOOR_TILE_TEXTURE, "Trapdoor Face Layout", 3),
-            option(ProgrammableSettings.TRAPDOOR_COVER_FACING, "Next-block Hinge Direction", 3)
+            option(ProgrammableSettings.TRAPDOOR_COVER_FACING, "Trapdoor Hinge Direction", 3)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;

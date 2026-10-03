@@ -50,7 +50,7 @@ public final class TrapdoorGeometry {
     public static double[][] coverCorners(int position,boolean sliding,int quarterTurns,double pose,double overhang) {
         double[][] vertices=corners(position,true,0,0);
         double p=Math.max(0,Math.min(1,pose)),pivot=low(position)+(position==TOP?THICKNESS:0);
-        double angle=(position==TOP?1:-1)*p*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),hinge=1/16D;
+        double angle=(position==TOP?1:-1)*p*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),hinge=EDGE_CLEARANCE;
         for(double[] point:vertices){
             // Project one pixel beyond the covered cell, retracting fully into the mount.
             point[2]-=1+overhang;

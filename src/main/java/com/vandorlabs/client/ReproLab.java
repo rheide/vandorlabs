@@ -311,8 +311,8 @@ public class ReproLab {
         for(String group:new String[]{"patch_halfwidth_horizontal","patch_halfwidth_stagger","patch_shallow_horizontal","patch_shallow_stagger"})for(String motion:new String[]{"rotating","sliding","inset_sliding"})for(String pose:new String[]{"closed","open"})
             SHOTS.add(new Shot("gallery_trapdoor_"+group+"_"+motion+"_"+pose,GALLERY_X-2,galleryFeet+4,-23,-15,24));
         for(String scene:new String[]{"flat_door_tile","flat_door_fit","flat_custom_door_tile","diagonal_door_tile","diagonal_door_fit","diagonal_custom_door_tile","diagonal_slide_wall","flat_rotate_neighbors","next_rotating_closed","next_rotating_open","diagonal_opposite_slopes_open","diagonal_reversed_plane_open","diagonal_opposite_slopes_sliding_open","diagonal_reversed_plane_sliding_open","opposing_next_closed","opposing_next_open"}) {
-            boolean neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
-            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,GALLERY_X-(wall?3:.7),galleryFeet+(neighbors?1.5:3.2),neighbors || wall?-14.5:-21.5,neighbors?180:wall?-155:-8,neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
+            boolean opposed=scene.startsWith("opposing_next"),neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
+            SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,opposed?GALLERY_X+.5:GALLERY_X-(wall?3:.7),galleryFeet+(opposed?4.5:neighbors?1.5:3.2),opposed?-23:neighbors || wall?-14.5:-21.5,opposed?0:neighbors?180:wall?-155:-8,opposed?35:neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
         for(String surface:new String[]{"floor","ceiling"})SHOTS.add(new Shot("gallery_trapdoor_followup_flush_"+surface,GALLERY_X-.7,galleryFeet+(surface.equals("floor")?1.12:1.85),-21.5,-8,0));
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
@@ -1215,18 +1215,36 @@ public class ReproLab {
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("normal trapdoor GUI did not open");
                 GuiProgrammableTrapdoor hatch=(GuiProgrammableTrapdoor)mc.currentScreen;
-                pressTrapdoorControl(hatch,7);
+                pressTrapdoorControl(hatch,1);
+                pressTrapdoorControl(hatch,1);
                 pressTrapdoorControl(hatch,8);
-                pressTrapdoorControl(hatch,1);
-                pressTrapdoorControl(hatch,1);
                 pressTrapdoorControl(hatch,6);
                 state=54;holdTicks=20;break;
             case 54:
                 if(--holdTicks>0)break;
                 com.vandorlabs.tiles.TileEntityProgrammableTrapdoor offset=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(15,0,3));
                 if(!offset.isCover() || offset.isSliding() || offset.isTileTexture() || offset.coverFacing()!=EnumFacing.EAST)throw new IllegalStateException("next-block/motion/layout/hinge GUI packets failed");
-                saveNamed(mc,"trapdoor_gui");mc.player.closeScreen();
+                saveNamed(mc,"trapdoor_gui");
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,8);
+                state=62;holdTicks=20;break;
+            case 62:
+                if(--holdTicks>0)break;
+                checkNormalMovement(mc,true,true,EnumFacing.SOUTH);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                state=63;holdTicks=20;break;
+            case 63:
+                if(--holdTicks>0)break;
+                checkNormalMovement(mc,false,false,EnumFacing.SOUTH);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,8);
+                state=64;holdTicks=20;break;
+            case 64:
+                if(--holdTicks>0)break;
+                checkNormalMovement(mc,true,false,EnumFacing.WEST);
+                mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] trapdoor-controls-runtime PASS");
+                System.out.println("[vandorlabs][reprolab] trapdoor-movement-hinge-gui PASS (all four movements, sliding hinge, client/server)");
                 offsetTrapdoorChecks=new OffsetTrapdoorRuntimeChecks(CONSOLE.add(15,0,3));state=58;break;
             case 58:
                 if(offsetTrapdoorChecks.tick(mc)){state=9;holdTicks=10;}break;
@@ -1239,6 +1257,12 @@ public class ReproLab {
         }
     }
 
+    private static void checkNormalMovement(Minecraft mc,boolean sliding,boolean next,EnumFacing facing) {
+        for(net.minecraft.world.World world:new net.minecraft.world.World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(CONSOLE.add(15,0,3));
+            if(leaf.isSliding()!=sliding || leaf.isCover()!=next || leaf.coverFacing()!=facing)throw new IllegalStateException("normal movement/hinge GUI failed on "+(world.isRemote?"client":"server"));
+        }
+    }
     private static void checkSlidingStyle(Minecraft mc,boolean intoWall) {
         for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(CONSOLE.add(15,0,3));

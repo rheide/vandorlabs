@@ -129,9 +129,11 @@ final class OffsetTrapdoorRuntimeChecks {
             if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("joined offset guard GUI missing");
             GuiProgrammableTrapdoor gui=(GuiProgrammableTrapdoor)mc.currentScreen;
             java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
-            boolean guarded=false;for(net.minecraft.client.gui.GuiButton button:buttons)if(button.id==7)guarded=!button.enabled;
-            if(!guarded)throw new IllegalStateException("joined Next block control still enabled");
-            gui.actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Next block"));
+            for(net.minecraft.client.gui.GuiButton button:buttons)if(button.id==7)throw new IllegalStateException("separate Closed leaf control still present");
+            for(int step=0;step<4;step++){
+                gui.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Movement"));
+                if(((TileEntityProgrammableTrapdoor)mc.world.getTileEntity(pos)).isCover())throw new IllegalStateException("joined movement cycle enabled Next block");
+            }
             TileEntityProgrammableTrapdoor root=(TileEntityProgrammableTrapdoor)mc.world.getTileEntity(pos);
             PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(pos,root.getHousingTexture(),0,false,0,0,false,true,true,EnumFacing.NORTH));
             stage=5;wait=20;return false;

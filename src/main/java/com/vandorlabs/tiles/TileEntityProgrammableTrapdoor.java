@@ -31,6 +31,12 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     private EnumFacing coverFacing=EnumFacing.NORTH;
     public EnumFacing coverFacing(){if(world!=null && world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor)coverFacing=world.getBlockState(pos).getValue(BlockProgrammableTrapdoor.FACING);return coverFacing;}
     public void setCoverFacing(EnumFacing value){coverFacing=value;if(cover && world!=null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockProgrammableTrapdoor.FACING,value),2);sync();}
+    public void setHingeFacing(EnumFacing value){
+        if(!canOffsetClosedLeaf() || value==null || !value.getAxis().isHorizontal())return;
+        coverFacing=value;
+        if(world!=null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockProgrammableTrapdoor.FACING,value),2);
+        sync();
+    }
     public boolean isCover(){return cover;}
     /** Offset mounts require an individual leaf, including when linked chunks are unloaded. */
     public boolean canOffsetClosedLeaf(){return !(this instanceof TileEntityProgrammableDiagonalTrapdoor) && partner==null && squareOrigin==null && assembly.isEmpty();}
@@ -227,7 +233,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
             for(TileEntityProgrammableTrapdoor leaf:leaves){
                 leaf.setCover(cover);leaf.setTileTexture(tileTexture);leaf.setSlideIntoWall(intoWall);leaf.configure(texture,position,sliding,trigger,channel);
                 if(flip && leaf instanceof TileEntityProgrammableDiagonalTrapdoor){TileEntityProgrammableDiagonalTrapdoor diagonal=(TileEntityProgrammableDiagonalTrapdoor)leaf;diagonal.setInverted(!diagonal.isInverted());}
-                if(leaf.cover && facing!=null)leaf.setCoverFacing(facing);
+                if(facing!=null)leaf.setHingeFacing(facing);
             }
         });
     }
@@ -289,7 +295,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     public NBTTagCompound itemSettings() {
         NBTTagCompound tag=new NBTTagCompound();
         tag.setInteger("housingTexture",texture);tag.setInteger("TrapdoorPosition",position);
-        if(cover)tag.setInteger("TrapdoorCoverFacing",coverFacing().getHorizontalIndex());
+        if(canOffsetClosedLeaf())tag.setInteger("TrapdoorCoverFacing",coverFacing().getHorizontalIndex());
         tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setBoolean("TrapdoorSlideIntoWall",slideIntoWall);tag.setInteger("TrapdoorTrigger",trigger);
         tag.setInteger("RedstoneChannel",channel);return tag;
     }

@@ -73,6 +73,7 @@ final class TrapdoorChecks {
             require(Math.abs(far-expected)<1e-8,"next-block closed leaf must project one pixel past far edge");
             double[] b=DiagonalTrapdoorGeometry.bounds(open);
             require(b[0]>0 && b[3]<1 && b[2]>0 && b[5]<1,"next-block open leaf intrudes into adjacent solid block");
+            if(!sliding){double gap=turn==0?b[2]:turn==1?1-b[3]:turn==2?1-b[5]:b[0];require(Math.abs(gap-TrapdoorGeometry.EDGE_CLEARANCE)<1e-8,"next-block upright leaf leaves a one-pixel gap to the covered cell");}
             for(int i=0;i<8;i++)for(int j=i+1;j<8;j++)require(Math.abs(distance(closed[i],closed[j])-distance(open[i],open[j]))<1e-8,"next-block leaf deforms");
             if(!sliding)require(Math.abs(open[0][1]-closed[0][1])>.5,"next-block rotating leaf slides instead");
             double[] normal=TrapdoorGeometry.bounds(position,false,turn,1);
@@ -177,6 +178,18 @@ final class TrapdoorChecks {
             TileEntityProgrammableTrapdoor predicted=(TileEntityProgrammableTrapdoor)client.getTileEntity(p);
             require(predicted.getHousingTexture()==finish && predicted.getPosition()==position && predicted.isSliding()==slide,"placement texture flicker or settings lost");
             require(client.getBlockState(p).getValue(BlockTrapDoor.HALF)==(position==2?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM),"placement HALF differs from configured position");
+        }
+        for(boolean sliding:new boolean[]{false,true})for(boolean next:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS) {
+            world.clear();TileEntityProgrammableTrapdoor leaf=place(world,p,0,sliding);
+            leaf.configureGroup(0,0,sliding,0,0,false,next,true,facing);
+            require(leaf.coverFacing()==facing && leaf.isCover()==next && leaf.isSliding()==sliding,"individual motion hinge ignored");
+            ItemStack pick=block.configuredDrop(leaf);
+            NonRenderingChecks.MemoryWorld target=new NonRenderingChecks.MemoryWorld(false);
+            require(item.placeBlockAt(pick,null,target,p,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState()),"configured hinge placement failed");
+            require(((TileEntityProgrammableTrapdoor)target.getTileEntity(p)).coverFacing()==facing,"configured item lost ordinary/sliding hinge");
+            NBTTagCompound settings=ProgrammableSettings.capture(world,p);
+            BlockPos copyPos=p.east(3);TileEntityProgrammableTrapdoor copied=place(world,copyPos,0,false);
+            require(ProgrammableSettings.apply(world,copyPos,settings) && copied.coverFacing()==facing && copied.isCover()==next && copied.isSliding()==sliding,"Duplifier lost ordinary/sliding hinge");
         }
         require(!TileEntityProgrammableTrapdoor.valid(-1,0,1,0) && !TileEntityProgrammableTrapdoor.valid(0,3,1,0)
                 && !TileEntityProgrammableTrapdoor.valid(0,0,8,0) && !TileEntityProgrammableTrapdoor.valid(0,0,1,-1),"invalid settings accepted");

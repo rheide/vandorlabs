@@ -78,7 +78,7 @@ The diagonal dialog separates width and height, so Full/Half width updates a tal
 
 | Normal controls | Diagonal controls |
 | --- | --- |
-| ![Next-block placement and independent rotating movement](../images/gallery/tasks/trapdoor-config.png) | ![Separate diagonal width, height and texture layout](../images/gallery/tasks/diagonal-trapdoor-config.png) |
+| ![Rotate into next block combines movement and placement](../images/gallery/tasks/trapdoor-config.png) | ![Separate diagonal width, height and texture layout](../images/gallery/tasks/diagonal-trapdoor-config.png) |
 
 ## Motion clearance and next-block placement
 
@@ -108,9 +108,9 @@ Individual Next block mounts can be selected at the leaf's actual position after
 | --- | --- |
 | ![Selection follows the closed leaf into the neighboring cell](../images/gallery/tasks/trapdoor-offset-closed-selection.png) | ![Selection follows the open leaf after changing the hinge](../images/gallery/tasks/trapdoor-offset-open-selection.png) |
 
-Joined trapdoors retain This block placement. The dialog disables the placement switch, and server configuration and Duplifier copies preserve the group if they request Next block.
+Joined trapdoors offer only Rotating and Sliding in Movement, with hinges fixed at their outer edges. Server configuration and Duplifier copies preserve the group if they request next-block movement.
 
-![Joined trapdoor placement control is disabled](../images/gallery/tasks/trapdoor-joined-config.png)
+![Joined trapdoor Movement offers only the two in-block motions](../images/gallery/tasks/trapdoor-joined-config.png)
 
 For an assembly split by an older version, follow the recovery instructions in the [trapdoor guide](programmable-trapdoor.md).
 
