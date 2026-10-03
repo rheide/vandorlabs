@@ -61,9 +61,9 @@ All three shape modes also work on staggered surfaces:
 
 | Shape | Rotating | Slide over wall | Slide into wall |
 | --- | --- | --- | --- |
-| Full width / tall | ![Full width / tall rotating](../images/gallery/tasks/trapdoor-stagger-rotating.gif) | ![Full width / tall sliding](../images/gallery/tasks/trapdoor-stagger-sliding.gif) ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-inset-sliding.gif) |
-| Half width / tall | ![Half width / tall rotating](../images/gallery/tasks/trapdoor-stagger-halfwidth-rotating.gif) | ![Half width / tall sliding](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding.gif) ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-halfwidth-inset-sliding.gif) |
-| Full width / shallow | ![Full width / shallow rotating](../images/gallery/tasks/trapdoor-stagger-shallow-rotating.gif) | ![Full width / shallow sliding](../images/gallery/tasks/trapdoor-stagger-shallow-sliding.gif) ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-shallow-inset-sliding.gif) |
+| Full width / tall | ![Full width / tall rotating](../images/gallery/tasks/trapdoor-stagger-rotating.gif) | ![Full width / tall sliding](../images/gallery/tasks/trapdoor-stagger-sliding.gif) | ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-inset-sliding.gif) |
+| Half width / tall | ![Half width / tall rotating](../images/gallery/tasks/trapdoor-stagger-halfwidth-rotating.gif) | ![Half width / tall sliding](../images/gallery/tasks/trapdoor-stagger-halfwidth-sliding.gif) | ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-halfwidth-inset-sliding.gif) |
+| Full width / shallow | ![Full width / shallow rotating](../images/gallery/tasks/trapdoor-stagger-shallow-rotating.gif) | ![Full width / shallow sliding](../images/gallery/tasks/trapdoor-stagger-shallow-sliding.gif) | ![Slide into wall](../images/gallery/tasks/trapdoor-stagger-shallow-inset-sliding.gif) |
 
 Partial patches open together in each movement. Horizontal and staggered examples use the same three-leaf corner:
 
