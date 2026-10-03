@@ -431,6 +431,9 @@ public class ReproLab {
             for (String pose : new String[]{"off", "on"})
                 SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
+        SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
+                GALLERY_Y+3D,-98D,0,2));
+
     }
 
     private final File outDir;
@@ -450,6 +453,7 @@ public class ReproLab {
     private int tick = 0;
     private int holdTicks = 0;
     private int shotIndex = 0;
+    private boolean distantReady;
     private boolean worldSpawned = false;
 
     public ReproLab() {
@@ -545,6 +549,7 @@ public class ReproLab {
                 if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){mc.shutdown();return;}
                 ProgrammableRenderBenchmark.run(outDir);
                 if (Boolean.getBoolean("vandorlabs.benchmarkOnly")) {
+                    state=999; // Shutdown is asynchronous; do not rerun probes on the next tick.
                     mc.shutdown();
                     return;
                 }
@@ -554,15 +559,26 @@ public class ReproLab {
                     holdTicks = GUI_SETTLE_TICKS;
                     break;
                 }
-                beginShot(mc, SHOTS.get(shotIndex), true);
+                Shot firstShot=SHOTS.get(shotIndex);
+                if(firstShot.name.equals("gallery_distant_geometry")) {
+                    mc.gameSettings.renderDistanceChunks=12;
+                    // Compile the new scene nearby before testing its distant visibility.
+                    beginShot(mc,new Shot(firstShot.name,firstShot.x,firstShot.y,-34,0,2),true);
+                } else beginShot(mc,firstShot,true);
                 state = 3;
-                holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly") || Boolean.getBoolean("vandorlabs.storageChecksOnly")?100:CAPTURE_SETTLE_TICKS;
+                holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly") || Boolean.getBoolean("vandorlabs.storageChecksOnly")
+                        || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
                 break;
             case 3:
                 if (--holdTicks > 0) {
                     break;
                 }
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1 && !distantReady) {
+                    saveNamed(mc,"distant_geometry_near");
+                    beginShot(mc,new Shot("distance_camera",s.x,s.y,s.z,s.yaw,s.pitch),false);
+                    distantReady=true;holdTicks=100;break;
+                }
                 if(s.name.equals("gallery_v12_door_fit") || s.name.equals("gallery_v12_door_tile")) {
                     TileEntity rawDoor=mc.world.getTileEntity(new BlockPos(GALLERY_X,GALLERY_Y+1,-18));
                     if(!(rawDoor instanceof com.vandorlabs.tiles.TileEntitySpaceDoor))throw new IllegalStateException("Door material gallery fixture disappeared");
@@ -581,7 +597,11 @@ public class ReproLab {
                 if(s.name.contains("next_sliding_"))TrapdoorGallery.checkSlidingMountOverlap(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.contains("vanilla_alignment"))TrapdoorGallery.checkVanillaAlignment(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.contains("opposing_next_"))TrapdoorGallery.checkOpposing(mc.world,GALLERY_X,GALLERY_Y);
+                if(s.name.equals("gallery_distant_geometry"))checkDistantGeometry(mc);
                 save(mc, s);
+                if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1) {
+                    state=999;mc.shutdown();return;
+                }
                 shotIndex++;
                 if (shotIndex < SHOTS.size()) {
                     Shot next = SHOTS.get(shotIndex);
@@ -618,6 +638,18 @@ public class ReproLab {
                     break;
                 }
                 saveNamed(mc, "console_gui");
+                ((GuiAnimatedScreenSelector)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(91,0,0,""));
+                state=110;holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 110:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"console_controls_gui");
+                ((GuiAnimatedScreenSelector)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(92,0,0,""));
+                state=111;holdTicks=GUI_SETTLE_TICKS;
+                break;
+            case 111:
+                if(--holdTicks>0)break;
+                saveNamed(mc,"console_housing_gui");
                 rebuildGuiFixture(mc, HALF_CONSOLE, ModBlocks.PROGRAMMABLE_HALF_CONSOLE);
                 TileEntity halfRaw = mc.world.getTileEntity(HALF_CONSOLE);
                 if (!(halfRaw instanceof TileEntityAnimatedScreenSelector)) {
@@ -1839,6 +1871,28 @@ public class ReproLab {
         System.out.println("[vandorlabs][reprolab] platform built");
     }
 
+    private static void checkDistantGeometry(Minecraft mc) {
+        int gear=0,ramps=0,walls=0;
+        if(Math.abs(mc.player.posX-(GALLERY_X+.5))>1 || Math.abs(mc.player.posZ+98)>1)
+            throw new IllegalStateException("distant camera not settled: "+mc.player.posX+","+mc.player.posY+","+mc.player.posZ);
+        for(TileEntity tile:mc.world.loadedTileEntityList) {
+            BlockPos p=tile.getPos();
+            if(Math.abs(p.getX()-GALLERY_X)>14 || p.getZ()<-22 || p.getZ()>-14)continue;
+            boolean moved=tile instanceof com.vandorlabs.tiles.TileEntityControlledRamp;
+            boolean wheel=tile instanceof com.vandorlabs.tiles.TileEntityLandingGear
+                    && p.equals(new BlockPos(GALLERY_X-6,GALLERY_Y+5,-18));
+            boolean diagonal=tile instanceof TileEntityAnimatedScreenSelector
+                    && mc.world.getBlockState(p).getBlock()==ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+            if(!moved && !wheel && !diagonal)continue;
+            double distance=tile.getDistanceSq(mc.player.posX,mc.player.posY,mc.player.posZ);
+            if(distance<=4096 || distance>=tile.getMaxRenderDistanceSquared())
+                throw new IllegalStateException("world geometry still uses short tile cutoff: "+tile.getClass());
+            if(moved)ramps++;if(wheel)gear++;if(diagonal)walls++;
+        }
+        if(gear!=1 || ramps==0 || walls!=4)throw new IllegalStateException("distant geometry fixture not synchronized: gear="+gear+" ramps="+ramps+" walls="+walls);
+        System.out.println("[vandorlabs][reprolab] distant-geometry-runtime PASS gear="+gear+" rampCells="+ramps+" walls="+walls+" at more than 64 blocks");
+    }
+
     private static void onServer(Minecraft mc,Runnable action){
         try {mc.getIntegratedServer().addScheduledTask(action).get();}
         catch(Exception e){throw new IllegalStateException("Render lab server world setup failed",e);}
@@ -1880,7 +1934,26 @@ public class ReproLab {
                 new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
-        if (shot.equals("gallery_storage_sets")) {
+        if(shot.equals("gallery_distant_geometry")) {
+            world.setWorldTime(6000);
+            world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
+            BlockPos gearPos=new BlockPos(GALLERY_X-6,GALLERY_Y+5,-18);
+            com.vandorlabs.blocks.BlockTelescopicLandingGear gear=(com.vandorlabs.blocks.BlockTelescopicLandingGear)block("landing_gear");
+            world.setBlockState(gearPos,gear.getDefaultState(),3);
+            if(!world.isRemote) {
+                com.vandorlabs.tiles.TileEntityLandingGear tile=(com.vandorlabs.tiles.TileEntityLandingGear)world.getTileEntity(gearPos);
+                if(!tile.configure(0,0,32,3))throw new IllegalStateException("distant gear configuration failed");
+                gear.setExtended(world,gearPos,true);
+                EntityPlayerMP owner=null;
+                for(EntityPlayer player:world.playerEntities)if(player instanceof EntityPlayerMP){owner=(EntityPlayerMP)player;break;}
+                if(owner==null)throw new IllegalStateException("distant ramp owner missing");
+                ControllerRuntimeChecks.buildGalleryModeFixture(world,owner,new BlockPos(GALLERY_X+6,GALLERY_Y,-21),false,false,true);
+            }
+            for(int row=0;row<4;row++) {
+                BlockPos wall=new BlockPos(GALLERY_X,GALLERY_Y+row,-18);
+                world.setBlockState(wall,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState(),3);
+            }
+        } else if (shot.equals("gallery_storage_sets")) {
             StorageRuntimeChecks.build(world,GALLERY_X,GALLERY_Y);
         } else if (shot.startsWith("gallery_trapdoor_")) {
             TrapdoorGallery.build(world,shot.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);

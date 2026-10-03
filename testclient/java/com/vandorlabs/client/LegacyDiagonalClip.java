@@ -1,12 +1,12 @@
-package com.vandorlabs.render;
+package com.vandorlabs.client;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /** Clips positions and interpolated vertex attributes without moving the remaining surface. */
-public final class DiagonalMeshClip {
-    private DiagonalMeshClip() { }
+final class LegacyDiagonalClip {
+    private LegacyDiagonalClip() { }
 
     public static List<double[]> polygon(double[] bounds, double[]... vertices) {
         List<double[]> polygon=new ArrayList<>(Arrays.asList(vertices));
@@ -35,7 +35,6 @@ public final class DiagonalMeshClip {
 
     /** GL_QUADS representation; triangles use a repeated final vertex. */
     public static List<double[]> quads(double[] bounds,double[]... vertices) {
-        if(vertices.length==4 && unclipped(bounds,vertices))return Arrays.asList(vertices);
         List<List<double[]>> pieces=new ArrayList<>();
         pieces.add(polygon(bounds,vertices));
         if(bounds!=null)for(int box=6;box<bounds.length;box+=6) {
@@ -60,16 +59,6 @@ public final class DiagonalMeshClip {
             }
         }
         return out;
-    }
-
-    private static boolean unclipped(double[] bounds,double[][] vertices) {
-        if(bounds==null)return true;
-        for(int axis=0;axis<3;axis++)for(double[] v:vertices)
-            if(v[axis]<bounds[axis] || v[axis]>bounds[axis+3])return false;
-        // Obstacle subtraction also determines tessellation order. Preserve it
-        // even when a face lies outside a later axis of an obstacle box.
-        if(bounds.length>6)return false;
-        return true;
     }
 
     private static List<double[]> half(List<double[]> input,int axis,double edge,boolean above,boolean strict) {

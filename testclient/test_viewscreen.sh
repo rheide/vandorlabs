@@ -58,6 +58,7 @@ if [ "$MODE" = focus ]; then
     exit 0
 fi
 grep -q '\[vandorlabs\]\[reprolab\] followup-1.2-runtime PASS' "$RUN_OUT/client.log"
+grep -q '\[vandorlabs\]\[reprolab\] distant-geometry-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] version-1.2-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] face-textures-runtime PASS' "$RUN_OUT/client.log"
 grep -q '\[vandorlabs\]\[reprolab\] duplifier-connected-runtime PASS' "$RUN_OUT/client.log"

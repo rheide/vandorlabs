@@ -145,23 +145,20 @@ def main():
         failures.append("missing live console selector GUI screenshot")
     else:
         gui = Image.open(gui_path).convert("RGB")
-        # The screen, input, and housing choices remain visible together.
-        screen_list = ImageStat.Stat(gui.crop((40, 70, 390, 345))).stddev
-        input_list = ImageStat.Stat(gui.crop((430, 70, 720, 345))).stddev
-        housing_list = ImageStat.Stat(gui.crop((750, 70, 1215, 345))).stddev
-        screen_detail = sum(screen_list) / 3.0
-        input_detail = sum(input_list) / 3.0
-        housing_detail = sum(housing_list) / 3.0
-        thumbnail_screen = mean_chroma(gui_path, (40, 205, 90, 255))
-        thumbnail_input = mean_chroma(gui_path, (425, 205, 475, 245))
-        print("console GUI list detail: screens %.2f, controls %.2f, housing %.2f"
-              % (screen_detail, input_detail, housing_detail))
-        print("console GUI thumbnail chroma: screen %.2f, controls %.2f"
-              % (thumbnail_screen, thumbnail_input))
-        if min(screen_detail, input_detail, housing_detail) < 8.0:
-            failures.append("console GUI does not show three populated peer lists")
-        if thumbnail_screen < 10.0 or thumbnail_input < 10.0:
-            failures.append("console GUI list thumbnails are missing screen or control artwork")
+        # The current dialog shows one tabbed list, rather than three peer lists.
+        for name in ("console_gui","console_controls_gui","console_housing_gui"):
+            path=args.shots / ("shot_"+name+".png")
+            if not path.is_file():
+                failures.append("missing console tab capture: "+name)
+                continue
+            tab=Image.open(path).convert("RGB")
+            detail=sum(ImageStat.Stat(tab.crop((48,175,713,633))).stddev)/3.0
+            print("console tab list detail: %s %.2f" % (name,detail))
+            if detail<8.0:failures.append("console tab list is empty: "+name)
+            if name!="console_housing_gui":
+                chroma=mean_chroma(path,(58,251,104,291))
+                print("console tab thumbnail chroma: %s %.2f" % (name,chroma))
+                if chroma<10.0:failures.append("console tab artwork missing: "+name)
 
     diagonal_views = {
         "front": ((575, 305, 705, 430), 20.0),

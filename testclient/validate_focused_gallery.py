@@ -7,6 +7,8 @@ from export_gallery import SHOTS
 
 source, prefix, target = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 selected = [name for name in SHOTS if name.startswith(prefix)]
+if target == 'gallery_distant_geometry':
+    selected=['gallery_distant_geometry']
 if target == 'dialogs':
     selected = ['screen_gui', 'console_gui', 'half_console_gui', 'input_gui', 'full_input_gui', 'programmable_wall_gui', 'programmable_diagonal_width_gui', 'programmable_block_gui', 'programmable_face_overrides_gui', 'space_door_gui', 'programmable_light_gui', 'programmable_trigger_gui', 'thruster_gui', 'diagonal_trapdoor_gui', 'trapdoor_gui', 'trapdoor_surface_gui']
 assert selected, 'No mapped screenshots match ' + prefix
@@ -26,6 +28,17 @@ for name in selected:
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):
         require('diagonal-partial-patch-runtime PASS client ' + name[len('gallery_trapdoor_'):])
+if target == 'gallery_distant_geometry':
+    require('distant-geometry-runtime PASS')
+    import numpy as np
+    pixels=np.asarray(Image.open(source/'shot_gallery_distant_geometry.png').convert('RGB'),dtype=np.int16)
+    for label,box,minimum in [('gear',(668,334,680,363),25),
+                              ('walls',(635,349,644,373),50),
+                              ('ramp',(581,347,619,363),80)]:
+        x1,y1,x2,y2=box;region=pixels[y1:y2,x1:x2]
+        neutral=(region.max(axis=2)-region.min(axis=2)<24)&(region.mean(axis=2)<180)
+        assert np.count_nonzero(neutral)>=minimum, 'Distant geometry not visible: '+label
+    print('PASS: gear, diagonal walls and ramp surfaces visible beyond 64 blocks')
 require('custom-materials-runtime PASS')
 require('imported-materials-runtime PASS')
 if target == 'dialogs':

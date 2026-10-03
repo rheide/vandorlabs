@@ -869,19 +869,8 @@ public class TEAnimatedScreenSelector
         buf.begin(GL11.GL_QUADS, wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL
                 ? BlockSurfaceFormat.get() : DefaultVertexFormats.POSITION_TEX);
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
-            boolean halfHeight=te.isDiagonalHalfHeight();
-            renderDiagonalWall(buf, wall, metal,
-                    state.getValue(BlockProgrammableWall.INVERTED),
-                    wallBlock.corner(state, te.getWorld(), te.getPos()),
-                    BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()),
-                    te.getDiagonalFill(), halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?-8:0) : 0,
-                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?8:16) : 16,
-                    halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED) ? 8 : 0) : Double.NaN,
-                    BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false)*16,
-                    BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true)*16,
-                    com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,false),
-                    com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,true),
-                    com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16));
+            DiagonalWallMeshCache.get(te,state,wall,metal).draw(buf,
+                    (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
         } else if (flat != null) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -902,6 +891,25 @@ public class TEAnimatedScreenSelector
         Tessellator.getInstance().draw();
         GlStateManager.enableLighting();
         endLocalTransform();
+    }
+
+    /** Build only when this wall or its immediate neighbors change. */
+    static void drawConfiguredDiagonalWall(BufferBuilder buf,TileEntityAnimatedScreenSelector te,
+            IBlockState state,TextureAtlasSprite wall,TextureAtlasSprite metal) {
+        BlockProgrammableWall wallBlock=(BlockProgrammableWall)state.getBlock();
+        boolean halfHeight=te.isDiagonalHalfHeight();
+        renderDiagonalWall(buf, wall, metal,
+                state.getValue(BlockProgrammableWall.INVERTED),
+                wallBlock.corner(state, te.getWorld(), te.getPos()),
+                BlockProgrammableWall.diagonalSpan(te.getWorld(), te.getPos()),
+                te.getDiagonalFill(), halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?-8:0) : 0,
+                halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED)?8:16) : 16,
+                halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED) ? 8 : 0) : Double.NaN,
+                BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false)*16,
+                BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true)*16,
+                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,false),
+                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,true),
+                com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16));
     }
 
     static boolean joinsPorthole(TileEntityAnimatedScreenSelector tile,

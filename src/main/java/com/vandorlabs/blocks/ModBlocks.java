@@ -625,6 +625,7 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
         com.vandorlabs.client.DoorRenderModels.clear();
+        com.vandorlabs.client.DiagonalWallMeshCache.clear();
         String[] shapes={"programmable_storage","programmable_block","programmable_trapdoor","programmable_diagonal_trapdoor",
                 "programmable_trigger_block","programmable_wall","programmable_diagonal_wall",
                 "programmable_porthole_wall","programmable_porthole_block","programmable_slab"};

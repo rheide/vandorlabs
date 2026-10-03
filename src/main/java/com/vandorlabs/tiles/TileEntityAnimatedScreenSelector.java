@@ -84,6 +84,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return getInputFrameCount(id) > 1;
     }
 
+    private long settingsRevision;
+    public long getSettingsRevision() { return settingsRevision; }
+    private void settingsChanged() { settingsRevision++; markDirty(); }
+
     private String selectedScreen = "engineering_screen";
     private boolean redstoneEnabled = false;
     private int displayMode = MODE_ANIMATED;
@@ -101,7 +105,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return ceilingPosition<0?legacyPosition:ceilingPosition;
     }
     public void setCeilingPosition(int position) {
-        ceilingPosition=Math.max(0,Math.min(2,position));markDirty();
+        int next=Math.max(0,Math.min(2,position));
+        if(ceilingPosition==next)return;
+        ceilingPosition=next;settingsChanged();
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     @Override public double getMaxRenderDistanceSquared() {
@@ -123,7 +129,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return super.getRenderBoundingBox();
     }
     public void setCeilingMounted(boolean value) {
-        ceilingMounted=value;markDirty();
+        if(ceilingMounted==value)return;
+        ceilingMounted=value;settingsChanged();
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     private boolean smallInput = false;
@@ -131,8 +138,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int getSurfaceTexture(int slot){return slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
         int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
+        if(getSurfaceTexture(slot)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
-        markDirty();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
+        settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
     }
     private int redstoneChannel;
     private boolean channelSignal;
@@ -142,7 +150,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean slabTileSides;
     private boolean surfaceTileSides=true;
     public boolean isSurfaceTileSides(){return surfaceTileSides;}
-    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value)return;surfaceTileSides=value;markDirty();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
+    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value)return;surfaceTileSides=value;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
     private boolean diagonalFullWidth;
     private boolean diagonalHalfHeight;
     private int diagonalFill;
@@ -159,7 +167,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (shape < 0 || shape > 3 || shape == portholeShape) return;
         portholeShape = shape;
         portholeRevision++;
-        markDirty();
+        settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
@@ -167,7 +175,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (join == joinPortholes) return;
         joinPortholes = join;
         portholeRevision++;
-        markDirty();
+        settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
@@ -176,7 +184,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setGlassShade(int shade) {
         if (shade < 0 || shade > 2 || shade == glassShade) return;
         glassShade = shade;
-        markDirty();
+        settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
@@ -185,7 +193,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setFaceTextures(FaceTextures value) {
         if (faceTextures.equals(value)) return;
         faceTextures = value;
-        markDirty();
+        settingsChanged();
         if (world != null) {
             world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
             if (world.isRemote) world.markBlockRangeForRenderUpdate(pos, pos);
@@ -203,17 +211,20 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setSideTexture(int choice) {
         int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
         if(sideTexture==next)return;
-        sideTexture=next;markDirty();
+        sideTexture=next;settingsChanged();
         if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);if(world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);}
     }
     public boolean isSlabTileSides() { return slabTileSides; }
     public boolean isDiagonalHalfHeight() { return diagonalHalfHeight; }
     public int getDiagonalFill() { return diagonalFill; }
     public void setDiagonalGeometry(int mode, int fill) {
-        diagonalHalfHeight = mode == 2;
-        diagonalFullWidth = mode == 1 || mode == 2;
-        diagonalFill = Math.max(0, Math.min(3, fill));
-        markDirty(); portholeRevision++;
+        boolean halfHeight=mode==2,fullWidth=mode==1 || mode==2;
+        int nextFill=Math.max(0,Math.min(3,fill));
+        if(diagonalHalfHeight==halfHeight && diagonalFullWidth==fullWidth && diagonalFill==nextFill)return;
+        diagonalHalfHeight=halfHeight;
+        diagonalFullWidth=fullWidth;
+        diagonalFill=nextFill;
+        settingsChanged(); portholeRevision++;
         if (world != null) {
             world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
             world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1), pos.add(1,1,1));
@@ -225,14 +236,14 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         diagonalHalfHeight = false;
         diagonalFullWidth = fullWidth;
         portholeRevision++;
-        markDirty();
+        settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
     public void setSlabTileSides(boolean tileSides) {
         if (slabTileSides == tileSides) return;
         slabTileSides = tileSides;
-        markDirty();
+        settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
@@ -240,7 +251,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         int next = ScreenHousingTextures.clamp(choice);
         if (housingTexture == next) return;
         housingTexture = next;
-        markDirty();
+        settingsChanged();
         if (world != null && world.isRemote) world.markBlockRangeForRenderUpdate(pos,pos);
     }
 
@@ -263,7 +274,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (next == redstoneChannel) return;
         int old = redstoneChannel;
         redstoneChannel = next;
-        markDirty();
+        settingsChanged();
         RedstoneChannels.channelChanged(this, old);
     }
     public void localInputChanged() { RedstoneChannels.inputChanged(this); }
@@ -292,8 +303,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setInputPanel(String inputPanel) {
-        this.inputPanel = isValidInputPanel(inputPanel) ? inputPanel : INPUT_PANELS[0];
-        markDirty();
+        String next=isValidInputPanel(inputPanel)?inputPanel:INPUT_PANELS[0];
+        if(this.inputPanel.equals(next))return;
+        this.inputPanel=next;
+        settingsChanged();
     }
 
     public String getSecondaryInputPanel() {
@@ -301,9 +314,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setSecondaryInputPanel(String inputPanel) {
-        this.secondaryInputPanel = isValidInputPanel(inputPanel)
-                ? inputPanel : INPUT_PANELS[0];
-        markDirty();
+        String next=isValidInputPanel(inputPanel)?inputPanel:INPUT_PANELS[0];
+        if(this.secondaryInputPanel.equals(next))return;
+        this.secondaryInputPanel=next;
+        settingsChanged();
     }
 
     public int getWallPosition(int legacyPosition) {
@@ -311,8 +325,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setWallPosition(int wallPosition) {
-        this.wallPosition = Math.max(0, Math.min(2, wallPosition));
-        markDirty();
+        int next=Math.max(0,Math.min(2,wallPosition));
+        if(this.wallPosition==next)return;
+        this.wallPosition=next;
+        settingsChanged();
     }
 
     public boolean isSmallInput() {
@@ -320,8 +336,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setSmallInput(boolean smallInput) {
+        if(this.smallInput==smallInput)return;
         this.smallInput = smallInput;
-        markDirty();
+        settingsChanged();
     }
 
     public String getSelectedScreen() {
@@ -329,8 +346,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setSelectedScreen(String selectedScreen) {
+        if(java.util.Objects.equals(this.selectedScreen,selectedScreen))return;
         this.selectedScreen = selectedScreen;
-        markDirty();
+        settingsChanged();
     }
 
     public boolean isRedstoneEnabled() {
@@ -338,8 +356,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setRedstoneEnabled(boolean redstoneEnabled) {
+        if(this.redstoneEnabled==redstoneEnabled)return;
         this.redstoneEnabled = redstoneEnabled;
-        markDirty();
+        settingsChanged();
     }
 
     public int getDisplayMode() {
@@ -347,8 +366,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setDisplayMode(int displayMode) {
-        this.displayMode = ScreenBehavior.clampMode(displayMode);
-        markDirty();
+        int next=ScreenBehavior.clampMode(displayMode);
+        if(this.displayMode==next)return;
+        this.displayMode=next;
+        settingsChanged();
     }
 
     public boolean isFramed() {
@@ -356,8 +377,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setFramed(boolean framed) {
+        if(this.framed==framed)return;
         this.framed = framed;
-        markDirty();
+        settingsChanged();
     }
 
     public int getAnimationSpeedIndex() {
@@ -365,8 +387,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setAnimationSpeedIndex(int animationSpeedIndex) {
-        this.animationSpeedIndex = ScreenBehavior.clampSpeedIndex(animationSpeedIndex);
-        markDirty();
+        int next=ScreenBehavior.clampSpeedIndex(animationSpeedIndex);
+        if(this.animationSpeedIndex==next)return;
+        this.animationSpeedIndex=next;
+        settingsChanged();
     }
 
     public int getAnimationSpeedTicks() {

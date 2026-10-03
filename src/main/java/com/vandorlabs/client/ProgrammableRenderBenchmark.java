@@ -90,8 +90,12 @@ final class ProgrammableRenderBenchmark {
                         measure(mc, csv, id, "door_open", 64);
                     if (id.equals("vandorlabs:programmable_door"))
                         for (String doorVariant : Arrays.asList("door_glass", "door_sliding",
-                                "door_hingeless", "door_center", "door_paired"))
+                                "door_hingeless", "door_center", "door_paired",
+                                "door_material_fit", "door_material_tile", "door_material_custom"))
                             measure(mc,csv,id,doorVariant,64);
+                    if (id.equals("vandorlabs:programmable_diagonal_wall"))
+                        for (String wallVariant : Arrays.asList("wall_filled", "wall_shallow", "wall_clipped"))
+                            measure(mc,csv,id,wallVariant,64);
                     if (Arrays.asList("vandorlabs:rocket_thruster", "vandorlabs:ion_drive",
                             "vandorlabs:plasma_vent", "vandorlabs:impulse_engine").contains(id)) {
                         measure(mc, csv, id + "_hexagonal", "default", 64);
@@ -201,6 +205,20 @@ final class ProgrammableRenderBenchmark {
                         door.configure(2,1,true,0,false,false,false,0,false);
                     else if (variant.equals("door_center"))
                         door.configure(2,1,true,0,true,false,true,0,false);
+                    if (variant.startsWith("door_material_")) {
+                        door.setFaceTexture(variant.equals("door_material_custom")
+                                ? com.vandorlabs.tiles.CustomBlockMaterials.identifier(net.minecraft.init.Blocks.OAK_DOOR,0) : 4);
+                        door.setTileTexture(variant.equals("door_material_tile"));
+                    }
+                }
+                if (tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("wall_")) {
+                    ((TileEntityAnimatedScreenSelector)tile).setDiagonalGeometry(
+                            variant.equals("wall_shallow") ? 2 : 1,variant.equals("wall_filled") ? 3 : 0);
+                    if (variant.equals("wall_clipped")) {
+                        BlockPos obstacle=pos.north();
+                        mc.world.setBlockState(obstacle,net.minecraft.init.Blocks.STONE.getDefaultState(),2);
+                        extraPositions.add(obstacle);
+                    }
                 }
                 if (variant.startsWith("facing_") && tile instanceof TileEntityAnimatedScreenSelector)
                     ((TileEntityAnimatedScreenSelector) tile).setHousingTexture(3);

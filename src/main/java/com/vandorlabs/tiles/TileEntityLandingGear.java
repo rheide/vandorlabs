@@ -13,6 +13,9 @@ import net.minecraft.world.World;
 
 /** Progress is extension distance in blocks. Lower cells only store their owner. */
 public final class TileEntityLandingGear extends TileEntity implements ITickable, RedstoneChannelMember {
+    /** World geometry follows loaded terrain visibility, like diagonal walls. */
+    @Override public double getMaxRenderDistanceSquared() { return Double.MAX_VALUE; }
+
     public float progress, previous;
     private int extensionPixels=16, mode=1, channel, configurationRevision, size;
     public int getSize(){return size;}

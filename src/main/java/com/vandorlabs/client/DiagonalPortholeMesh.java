@@ -19,6 +19,10 @@ final class DiagonalPortholeMesh {
 
     static void quad(BufferBuilder buf, TextureAtlasSprite sprite, boolean textured,
             DiagonalPortholeMesh mesh, double[]... vertices) {
+        if(mesh==null && vertices.length==4) {
+            for(double[] v:vertices)vertex(buf,sprite,textured,v);
+            return;
+        }
         if (mesh==null) { emit(buf,sprite,textured,null,Arrays.asList(vertices)); return; }
         double[] cuts=Double.isNaN(mesh.lower) && Double.isNaN(mesh.upper)
                 ? new double[]{0,16} : new double[]{0,4,12,16};

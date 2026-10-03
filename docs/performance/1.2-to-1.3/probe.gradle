@@ -1,0 +1,21 @@
+// Run with: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew --no-daemon -I docs/performance/1.2-to-1.3/probe.gradle performanceReportProbe
+allprojects {
+    afterEvaluate {
+        task compilePerformanceReportProbe(type: JavaCompile) {
+            dependsOn classes
+            source = project.files(project.file('docs/performance/1.2-to-1.3/PerformanceProbe.java'))
+            classpath = sourceSets.main.runtimeClasspath
+            destinationDir = file("$buildDir/performance-report-probe/classes")
+            sourceCompatibility = '1.8'
+            targetCompatibility = '1.8'
+        }
+        task performanceReportProbe(type: JavaExec) {
+            dependsOn compilePerformanceReportProbe
+            classpath = sourceSets.main.runtimeClasspath + files(compilePerformanceReportProbe.destinationDir)
+            main = 'com.vandorlabs.client.PerformanceProbe'
+            workingDir = file("$buildDir/performance-report-probe")
+            jvmArgs '-Xms512m', '-Xmx512m'
+            doFirst { workingDir.mkdirs() }
+        }
+    }
+}

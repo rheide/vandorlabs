@@ -382,6 +382,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
+            long before=screen.getSettingsRevision();
             if (values.hasKey(WALL_TEXTURE, 3)) {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
                 applicable = true;
@@ -437,7 +438,7 @@ public final class ProgrammableSettings {
             }
             if (block instanceof BlockProgrammableWall
                     && ((BlockProgrammableWall) block).isDiagonalShape()
-                    && values.hasKey(DIAGONAL_FULL_WIDTH, 1)) {
+                    && values.hasKey(DIAGONAL_FULL_WIDTH, 1) && !values.hasKey(DIAGONAL_GEOMETRY,10)) {
                 screen.setDiagonalFullWidth(values.getBoolean(DIAGONAL_FULL_WIDTH));
                 applicable = true;
             }
@@ -460,7 +461,7 @@ public final class ProgrammableSettings {
                     screen.setGlassShade(values.getInteger(GLASS_SHADE)); applicable = true;
                 }
             }
-            if (applicable && world != null) {
+            if (applicable && world != null && screen.getSettingsRevision()!=before) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
                 world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
@@ -561,8 +562,10 @@ public final class ProgrammableSettings {
             }
         }
         if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL, 3)) {
+            int before=((RedstoneChannelMember)tile).getRedstoneChannel();
             ((RedstoneChannelMember) tile).setRedstoneChannel(values.getInteger(CHANNEL));
-            if (world != null && tile instanceof TileEntityAnimatedScreenSelector) {
+            if (world != null && tile instanceof TileEntityAnimatedScreenSelector
+                    && before!=((RedstoneChannelMember)tile).getRedstoneChannel()) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
             }

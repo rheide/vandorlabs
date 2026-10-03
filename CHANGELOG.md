@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Cached static Programmable Diagonal Wall meshes and Programmable Door replacement-material surfaces/model quads, reducing per-frame geometry allocation while retaining live lighting, motion and resource reloads. Reapplying identical programmable settings no longer triggers appearance rebuilds; shallow-wall Duplifier copies avoid the redundant legacy width reset.
+- Landing gear and blocks moved by Programmable Ramps now share diagonal walls' loaded-terrain render distance instead of disappearing beyond 64 blocks.
+
 - Fixed repeating diagonal wall connections, neighboring-block clipping, stacked orientation and opened diagonal trapdoor selection. Added regular trapdoor Slide over surface movement.
 - Expanded programmable dialogs with tall texture lists, shared two-column layouts, full-width face buttons and independent porthole/slab side textures. Screen and Controls pickers share general materials while keeping full-height and half-height artwork separate.
 - Simplified light texture labels and restored Doors in regular/diagonal trapdoor pickers. Door pickers now show each design once, with a separate Small/Medium/Large selector.

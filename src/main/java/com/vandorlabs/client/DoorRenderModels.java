@@ -30,7 +30,7 @@ public final class DoorRenderModels {
         return entry;
     }
 
-    public static void clear() { MODELS.clear(); }
+    public static void clear() { MODELS.clear(); SelectedDoorFaceCache.clear(); }
 
     static final class Entry {
         final ItemStack stack;

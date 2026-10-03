@@ -27,6 +27,9 @@ import java.util.LinkedHashMap;
 
 /** Non-ticking occupied/next-step cell. Carries its own recovery journal and timeline. */
 public class TileEntityControlledRamp extends TileEntity {
+    /** World geometry follows loaded terrain visibility, like diagonal walls. */
+    @Override public double getMaxRenderDistanceSquared() { return Double.MAX_VALUE; }
+
     public BlockPos controller=BlockPos.ORIGIN;
     public IBlockState source=Blocks.STONE.getDefaultState();
     public int startOffset,treadPixels=8;
