@@ -43,7 +43,7 @@ nearest-neighbor enlargement. Source artwork remains unchanged. Reimport the
 four additional sets with:
 
 ```bash
-python3 tools/import_storage_bins.py ~/LLMShareDrive/bins
+python3 tools/import_storage_bins.py /path/to/source-bin-textures
 ```
 
 Dynmap shows the default Cabinet finish and block orientation. Configured

@@ -141,7 +141,7 @@ def main(archive, detail, expansion, lift):
                     dest=library/level/Path(name).name
                     dest.parent.mkdir(parents=True,exist_ok=True)
                     dest.write_bytes(pack.read(name))
-            for name in ('README.md','ASSET_MANIFEST.json','GLASS_REVISION.json','hinge/geometry.json'):
+            for name in ('ASSET_MANIFEST.json','hinge/geometry.json'):
                 dest=ROOT/'docs/space-door-pack'/name
                 dest.parent.mkdir(parents=True,exist_ok=True)
                 dest.write_bytes(pack.read(PREFIX+name))
@@ -153,7 +153,7 @@ def main(archive, detail, expansion, lift):
                 for name in pack.namelist():
                     if name.startswith(source) and not name.endswith('/'):
                         (library/level/Path(name).name).write_bytes(pack.read(name))
-            for name in ('README.md','ASSET_MANIFEST.json','VALIDATION.json'):
+            for name in ('ASSET_MANIFEST.json','VALIDATION.json'):
                 dest=ROOT/'docs/space-door-pack/expansion'/name
                 dest.parent.mkdir(parents=True,exist_ok=True)
                 dest.write_bytes(pack.read(prefix+name))
@@ -167,7 +167,7 @@ def main(archive, detail, expansion, lift):
                         dest=library/level/Path(name).name
                         dest.parent.mkdir(parents=True,exist_ok=True)
                         dest.write_bytes(pack.read(name))
-            for name in ('README.md','ASSET_MANIFEST.json'):
+            for name in ('ASSET_MANIFEST.json',):
                 dest=ROOT/'docs/space-door-pack/lift'/name
                 dest.parent.mkdir(parents=True,exist_ok=True)
                 dest.write_bytes(pack.read(prefix+name))

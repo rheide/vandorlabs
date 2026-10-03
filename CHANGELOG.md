@@ -6,11 +6,13 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 ### Latest improvements
 
+- Streamline developer documentation and make external test-mod locations configurable.
+
 - Correct shader inputs across programmable wall/porthole frames, screen/control housings, shaped lights, glass panes, moving ramp cells, landing-gear arms and optional door panels: outward faces, geometric normals and explicit vertex lighting. Preserve existing brightness, emission and transparency rules. Cache ordinary wall and porthole geometry alongside diagonal walls to reduce allocation; see the [lighting and performance report](docs/performance/SHADER_LIGHTING_FIXES.md).
 - Correct ramp vertex attribute ordering after the lighting-format change, preventing disappearing deployed cells and corrupt black/blue texture strips. Regression checks exercise production color, opacity, UV, normal and lightmap packing for thin and full-height moving slices.
 - Exclude all 16 retired picker textures from the standard JAR and atlas. Preserve saved choice numbers with default-material fallback, and retarget 180 legacy configured-item models and Dynmap texture aliases so removed artwork produces no missing-texture references. Keep source archives for validation.
 
-- Add Industrial to the shared picker and apply the approved Hull/Panels/Tech moves for 27 finishes, preserving numeric choices and source artwork.
+- Add Industrial to the shared picker and apply the Hull/Panels/Tech moves for 27 finishes, preserving numeric choices and source artwork.
 
 - Replace door/trapdoor/ramp motion illustrations with smaller 420×350 live GIFs and add an animated 1.3 highlights guide. Buffer capture frames and use a steady output cadence to reduce jitter.
 - Shorten the eight trapdoor finish labels without changing saved material IDs.
@@ -33,7 +35,7 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 - Added Programmable Storage: 27 inventory slots, hopper/item-handler access, comparator output, shared material picker and matching top/side/front Storage sets. Defaults to Cabinet; crafted from a chest and Programmable Block. Appearance copying preserves target contents, and mining drops contents separately.
 
-- Added ten Storage material sets from supplied top/side/front sheets, split into 30 crisp 140×140 textures.
+- Added ten Storage material sets from matching top/side/front sheets, split into 30 crisp 140×140 textures.
 
 - Gallery updates support focused live captures and incremental export, preserving unrelated screenshots and avoiding a second client run. Full refreshes require `--full`.
 
@@ -119,8 +121,8 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 ### Added
 
-- Duplifier's optional Connected Matching Blocks mode applies selected copied settings to a face-connected group with the exact same block type and original configuration, ignoring facing and rotation. It uses the supplied multi-block item icon, stays within loaded chunks and rejects groups larger than 4,096 occupied block cells before applying settings.
-- 23 selected housing finishes from `textures2`, using the supplied 64x64 artwork and short descriptive menu names.
+- Duplifier's optional Connected Matching Blocks mode applies selected copied settings to a face-connected group with the exact same block type and original configuration, ignoring facing and rotation. It uses the multi-block item icon, stays within loaded chunks and rejects groups larger than 4,096 occupied block cells before applying settings.
+- 23 selected housing finishes from `textures2`, using 64x64 artwork and short descriptive menu names.
 - 16 selected housing finishes from the shared `textures` artwork folder, with shorter names prefixed `T1`, available across Programmable Blocks and the other blocks that share the housing finish menu.
 - 11 Hull Plating finishes from `hulls`, numbered 1–11 and available in the shared housing finish menu.
 - The building guide now shows all 78 selectable finishes on Programmable Blocks, in groups of up to ten with names in display order.

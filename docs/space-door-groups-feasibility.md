@@ -6,7 +6,7 @@ Investigated separately after the frame-pixel / live-selector fix, commit
 ## Verdict
 
 A 3-block-wide, 2-block-high opening is feasible, but it is not a small extension
-of the current pair mechanism. Leave it out of this test build under the requested
+of the current pair mechanism. Leave it out of this test build under the current
 "only if it does not require much structural change" constraint. Vertical motion
 itself is already supported; the significant work is connected geometry and
 consistent group membership across interaction, configuration and power.
@@ -59,7 +59,7 @@ necessary; discovery can be bounded and event-driven, with geometry membership
 cached or restricted to immediate neighbors during rendering.
 
 The current travel is 31/16 block: it hides framed leaves beyond the inner rail
-and retains the requested one-pixel bare reveal. An exact 2-block group lift is
+and retains a one-pixel bare reveal. An exact 2-block group lift is
 easy mathematically, but is a separate policy for bare groups and should not
 silently erase the existing bare-door reveal. Native 1x2 artwork can repeat
 across the row; no stretching or new texture sizes are needed.

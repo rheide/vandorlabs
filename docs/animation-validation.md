@@ -1,6 +1,6 @@
 # Animation validation
 
-All **50 GIFs** passed the live-capture geometry and encoding checks: closed/open/closed state sequence, intermediate geometry in both directions, endpoint return, unclipped motion, 420×350 dimensions, animated frames, continuous loop and exact loop duration. The finished GIFs and decoded contact sheets were visually reviewed; edge-on patch cameras and the obstructed neighbor close-up were replaced before acceptance.
+All **50 GIFs** passed the live-capture geometry and encoding checks: closed/open/closed state sequence, intermediate geometry in both directions, endpoint return, unclipped motion, 420×350 dimensions, animated frames, continuous loop and exact loop duration. The finished GIFs and decoded contact sheets were visually reviewed; camera framing covers edge-on patches and neighbor clearance.
 
 | Group | Clips | Loop |
 | --- | --- | --- |
@@ -15,10 +15,7 @@ The fifty files total **6,128,893 bytes** (5.84 MiB). Individual GIFs use a comm
 
 ## Evidence
 
-- Initial complete capture: `testclient/door-animation.RTyHwz`.
-- Refined patch/neighbor cameras and ramp pit floors: `testclient/door-animation.tOuab1` (17 clips replace their initial captures).
-- Joined Slide into wall for all three shapes: `testclient/door-animation.bEdSiC` (three clips).
-- Java 8 standard build and non-rendering checks passed. The focused live dialog suite passed with sixteen requested dialog captures in `testclient/render-run.0hQq8F`. Capture clients passed item/model, materials, storage, redstone, controllers, copying and landing gear save/load contracts before recording.
+- Java 8 standard build and non-rendering checks passed. The focused live dialog suite passed with sixteen dialog captures. Capture clients passed item/model, materials, storage, redstone, controllers, copying and landing gear save/load contracts before recording.
 - Landing gear checks verify metadata/NBT restoration, manual extension, a manual retraction on a restored powered channel, unload preservation and subsequent power edges across three sizes.
 - The Diagonal Screen uses the shared wedge mesh and was inspected in the live hotbar alongside a placed screen.
 

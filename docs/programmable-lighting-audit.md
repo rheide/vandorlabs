@@ -1,6 +1,6 @@
 # Programmable lighting audit
 
-Investigated 2026-10-03 against `47314980`, for Complementary Unbound (the owner's existing shader pack). The findings below record the **before state**: this investigation initially changed diagnostics and documentation only. The owner subsequently authorized implementation; see the [corrections and measured performance](performance/SHADER_LIGHTING_FIXES.md) for the current result.
+Source and geometry review against `47314980`, for Complementary Unbound. The findings below record the **before state**; see the [corrections and measured performance](performance/SHADER_LIGHTING_FIXES.md) for the implemented result.
 
 ## Wall versus Porthole Wall
 
@@ -12,7 +12,7 @@ Their geometry differs: the ordinary wall has solid broad faces, while the porth
 
 Both wall types have a concrete shader-input weakness: their ordinary surfaces use `POSITION_TEX`, without explicitly supplied face normals, vertex color or vertex lightmap coordinates. Several faces also have inward winding. Disabling culling hides that winding problem in the base renderer; it does not establish correct surface orientation for a shader.
 
-This makes them candidates for correction together. It does **not** prove which missing attribute, inherited GL state, or shader effect caused the owner's particular comparison. The isolated front faces of both wall types have the same winding problem, so that alone cannot explain a difference between otherwise identical isolated samples. A corner-connected plain wall takes an additional mesh path and has further winding inconsistencies.
+This makes them candidates for correction together. It does **not** prove which missing attribute, inherited GL state, or shader effect caused a particular visual comparison. The isolated front faces of both wall types have the same winding problem, so that alone cannot explain a difference between otherwise identical isolated samples. A corner-connected plain wall takes an additional mesh path and has further winding inconsistencies.
 
 ## Check of other programmable blocks
 
@@ -51,7 +51,7 @@ The corner fixture also emitted one inward back-face quad. The audit does not co
 
 Controls passed: diagonal-wall normals, outward winding, UV bounds and packed lighting; flat trapdoor normal/winding agreement and separate block=80 / sky=192 lightmap values. Wall and Porthole Wall propagation settings were also checked at runtime and matched.
 
-The existing `testNonRendering` suite also passed, including cached wall/door vertex equivalence and live-lightmap contracts. No live rendering suite was run because production rendering was not changed, and the available launcher cannot validate the owner's hardware shader appearance.
+The existing `testNonRendering` suite also passed, including cached wall/door vertex equivalence and live-lightmap contracts. No live rendering suite was run because production rendering was not changed, and geometry diagnostics cannot validate hardware shader appearance.
 
 Reproduce from the repository root:
 
@@ -68,7 +68,7 @@ JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew \
 
 Before accepting a fix, compare matching materials under Complementary Unbound on hardware: all four horizontal orientations; front/back/top views; daylight, enclosed torch light and light from below; isolated and corner-connected walls; joined portholes with clear/tinted glass; all diagonal modes and inversion. Include nearby programmable Block/Slab/Stairs/Door/Trapdoor controls, and check render order by changing the camera angle. Also check the same scene without shaders so a shader correction does not introduce a base-renderer regression. Run the live client suite for any subsequent renderer change.
 
-**Hardware appearance remains unverified.** The available headless launcher forces software rendering; the exposed DRM device uses `vmwgfx`, and no local copy of the owner's shader pack was found in the inspected client/share directories. No software-rendered images are being presented as Complementary Unbound acceptance. The owner authorized the subsequent changes; their implementation and validation are documented separately.
+**Hardware shader appearance remains unverified.** Software-rendered images establish base-renderer behavior only. The implemented correction and validation are documented separately.
 
 ## Code references
 

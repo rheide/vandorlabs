@@ -152,8 +152,7 @@ and pick-block. Dynmap shows the default retracted model.
 - The Ramp controller's transparent texture-edge pixels are filled during
   texture loading, closing the reported seam beside another block.
 - Custom door sprites use mutable frame lists so TextureFix can release their
-  image data. Both supplied crash reports show this same failure on 1.1.
-  The isolated client verifies sprite cleanup; the full external modpack has
+  image data. The isolated client verifies sprite cleanup; the full external modpack has
   not been tested here.
 
 ![Ramp controller touching a stone block](../images/gallery/v1.1/controller.png)
@@ -236,4 +235,4 @@ preventing neighboring housings from overwriting portions of joined panes.
 
 Redstone lights defer channel registration and power checks until their first
 normal tick. Power checks only inspect loaded neighbors, avoiding the chunk-load
-iteration crash found in the supplied startup logs.
+iteration crash during startup.

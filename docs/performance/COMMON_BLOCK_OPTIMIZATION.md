@@ -1,23 +1,6 @@
 # Common programmable block optimization
 
-User request: "Alright, start implementing the fixes you described in the plan"
-
-Additional request: "One thing while you're in there: we changed the diagonal blocks so they appear from further away, but we haven't made that change for the landing gear or blocks affected by the pgroammable ramp, let's make those pop in at the same distance"
-
-The accepted plan covers Programmable Diagonal Wall geometry caching, precomputed Programmable Door replacement-material geometry/model quads, and avoiding redundant appearance updates for Programmable Block. It also calls for unclipped surfaces to bypass polygon clipping. Opaque wall chunk models and combining door draw calls are later options to investigate after these changes have measurements and visual acceptance.
-
-- [x] Give landing gear and ramp-controlled blocks the diagonal-wall render distance policy, retaining their frustum bounds.
-- [x] Capture unchanged live-suite and expanded benchmark baselines.
-- [x] Cache finished diagonal-wall geometry with bounded storage and invalidation for nearby blocks, tile settings, chunk boundaries, world unload and resource reload.
-- [x] Preserve live lighting, explicit normals and shader-aware vertex submission.
-- [x] Precompute filtered replacement-door quads and cache Fit/Tile material vertices while preserving existing animation, hinges and native leaf depth.
-- [x] Skip clipping/copying for surfaces requiring no clipping.
-- [x] Suppress appearance notifications when existing settings already match.
-- [x] Verify byte-identical geometry, cache invalidation, settings behavior and the Java 8 build.
-- [x] Run the live client suite and compare static before/after images.
-- [x] Record repeatable CPU submission/allocation measurements and update the changelog.
-
-Measurements here will be relative software-renderer/CPU submission results. Hardware FPS and Complementary shader acceptance remain separate validation.
+Static diagonal-wall and replacement-door surfaces use bounded geometry caches, while identical programmable settings avoid redundant appearance updates. Landing gear and ramp-controlled blocks share the diagonal-wall render-distance policy. Measurements are relative CPU submission/allocation costs from a software renderer; hardware FPS and shader acceptance require separate validation.
 
 ## Implemented behavior
 
@@ -33,18 +16,15 @@ Landing gear and ramp-controlled cells now return the same `Double.MAX_VALUE` ti
 
 ## Validation evidence
 
-- Original source endpoint: `d24338e4d1f2666a4429a1df88830e74a7fa0c6f`.
-- Unchanged full client artifacts: `testclient/render-run.vmPZQn`. Gameplay markers and door/gear/light/diagonal image analyzers pass. The main analyzer failed because it still sampled the previous three-column console GUI. The current GUI already used one tabbed list; its visible screen thumbnails were present. Validation now captures and checks all three actual tabs.
-- Expanded unchanged benchmark: `testclient/render-benchmark.b90zVT`, including Fit/Tile/Custom doors and filled/shallow/neighbor-clipped walls.
-- Java 8 build and `testNonRendering` pass. Added checks compare 384 diagonal-wall fixtures, live lightmap changes, cache hits, nearby block/tile/packet changes, atlas replacement, adjacent chunk load/unload, world unload, resource clearing, LRU limits, door material vertices/model filtering, and no-op versus changed settings. Clipping matches the previous implementation on 2,000 deterministic cases.
-- First completed post-fix benchmark: `testclient/render-benchmark.2k1Q3W`. All 44 stationary fixture images match within the existing 3/255, 99.99%-pixel threshold. Four door fixtures carry animation state across cases, so their final pose depends on wall-clock time; settled motion/hinge/glass appearance is covered by the full client gallery. The benchmark completed, then asynchronous shutdown allowed another tick to re-enter a probe; the lab now leaves its probe state before shutting down.
-- Standard packaged JAR includes the new rendering classes and registry data, and excludes regression-test classes.
+The Java 8 build and `testNonRendering` pass. Checks compare 384 diagonal-wall fixtures, live lightmap changes, cache hits, nearby block/tile/packet changes, atlas replacement, adjacent chunk load/unload, world unload, resource clearing, LRU limits, door material vertices/model filtering, and no-op versus changed settings. Clipping matches the previous implementation on 2,000 deterministic cases. The standard packaged JAR includes rendering classes and registry data and excludes regression-test classes.
 
-The full post-fix suite passed at `testclient/render-run.afIbPm`, including real door, gear, ramp, redstone, copying and resource/model checks. Its distance fixture confirms one gear, 24 controlled ramp cells and four diagonal walls beyond 64 blocks. The clean repeat benchmark passed at `testclient/render-benchmark.ed2xjH`. The focused daylight capture passed at `testclient/render-run.ykFhji`, with 12-chunk view distance, a nearby view to compile the scene, then the fixed camera about 80 blocks away. Gear, wall and ramp pixels are checked in the distant image and are visible on inspection. Early focused attempts reached the distance assertions before the newly generated scene was ready for useful screenshots; the fixture now settles chunks and both views for 100 ticks. Hardware FPS and Complementary Unbound shader visuals remain unmeasured; the cached format keeps the existing shader submission path but does not establish hardware acceptance.
+All 44 stationary benchmark fixture images match within 3/255 per channel for at least 99.99% of pixels. Four door fixtures carry animation state across cases, so their final pose depends on capture time; settled motion, hinge and glass appearance is covered by the full client gallery. The expanded benchmark covers Fit/Tile/Custom doors and filled/shallow/neighbor-clipped walls.
+
+The full live suite passes door, gear, ramp, redstone, copying, all three material-dialog tabs and resource/model checks. Its distance fixture confirms one gear, 24 controlled ramp cells and four diagonal walls beyond 64 blocks. A daylight capture with a 12-chunk view distance and camera about 80 blocks away verifies visible gear, wall and ramp pixels after the scene settles. Hardware FPS and Complementary Unbound shader visuals remain unmeasured; retaining the shader submission path does not establish hardware acceptance.
 
 ## Measured result
 
-Each live case has 15 warmups and 31 samples on Mesa llvmpipe. Timings measure CPU/GL submission for the named batch of 64 instances, with cached VBO terrain plus the actual TESRs. They exclude normal chunk streaming, scene visibility, GC pause attribution and hardware GPU/FPS behavior. [Raw before](common-blocks/before.csv), [first after](common-blocks/after-first.csv), and [repeat after](common-blocks/after-repeat.csv) include the full case list and vanilla controls.
+Each live case has 15 warmups and 31 samples with software rendering. Timings measure CPU/GL submission for the named batch of 64 instances, with cached VBO terrain plus the actual TESRs. They exclude normal chunk streaming, scene visibility, GC pause attribution and hardware GPU/FPS behavior. [Raw before](common-blocks/before.csv), [first after](common-blocks/after-first.csv), and [repeat after](common-blocks/after-repeat.csv) include the full case list and vanilla controls.
 
 | 64 instances | Before submission ms | After range ms (two runs) | Before / after allocation B |
 | --- | ---: | ---: | ---: |

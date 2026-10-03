@@ -67,7 +67,6 @@ For a rolling shutter, the texture can be used on separate horizontal slats, but
 - `previews/tileability.png`: 3 × 3 native low-detail Modular Shutter tiles.
 - `ASSET_MANIFEST.json`: exact asset sizes, crop margin and glass bounds.
 - `VALIDATION.json`: dimension, alpha, seams, resource-name and original-file checks.
-- `AUTHORING_PROMPTS.json`: generation prompts and export method.
 - `SHA256SUMS.txt`: file integrity hashes.
 
 Created with the built-in image-generation tool, then mechanically sliced, palette-limited, alpha-composited and checked for exact game-asset requirements.

@@ -3,7 +3,7 @@
 **Industrial has been added.** There are enough visibly different mechanical finishes to
 make it useful: fourteen choices from the current Hull and Panels lists. This
 proposal was based on inspecting all 53 actual texture images, rather than
-matching their names. The owner approved the complete mapping below, and all 27 moves have been applied.
+matching their names. The complete mapping below has been applied to all 27 finishes.
 
 Use the categories to describe appearance; every finish can still be used on
 any compatible programmable shape.
@@ -104,6 +104,6 @@ These are menu-metadata changes only. Numeric choices, identifiers, source image
 
 Exactly 27 category fields changed. A comparison with the previous metadata confirmed that labels, IDs, visibility flags, source artwork and ordered catalog entries were unchanged. The standard JAR contains all fourteen Industrial finishes. Live shared-picker checks verify category counts and restore saved Heavy Bulkhead 1 (choice 32) with Industrial expanded automatically. The updated Panels dialog visibly includes Gray Panel 1/2 and Green Panel.
 
-The focused live dialog suite passed with sixteen fresh dialog captures in `testclient/render-run.JbrCvG`.
+The focused live dialog suite passed with sixteen fresh dialog captures.
 
 ![Updated Panels picker with the moved gray and green panels](images/materials/panels-picker.png)

@@ -25,4 +25,4 @@ Next-block placement applies to normal horizontal trapdoors and uses individual 
 
 Movement, next-block placement, texture layout and hinge direction survive configured items and Duplifier copying. Shift-right-click configuration requires Creative mode; the Configurizer also opens these settings in Survival.
 
-Landing gear retains manual extension across world/chunk reloads when its redstone input is unchanged. A subsequent power edge still applies the chosen On/Off mode; see the [load-state fix](landing-gear-load-fix.md).
+Landing gear retains manual extension across world/chunk reloads when its redstone input is unchanged. A subsequent power edge still applies the chosen On/Off mode.

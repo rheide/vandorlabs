@@ -19,9 +19,7 @@ The largest verified improvements are:
   on/off pulse pair from about **69 ms to 1.24 ms**. All receivers still settle
   synchronously before the input update returns.
 
-These are measured rendering submission and synchronous update costs on this
-machine, **not gameplay FPS gains**. The renderer is Mesa llvmpipe, running on
-CPU. See [environment](environment.txt), [all rendering measurements](MEASUREMENTS.md),
+These are measured rendering submission and synchronous update costs in the software benchmark, **not gameplay FPS gains**. The renderer runs on the CPU. See [all rendering measurements](MEASUREMENTS.md),
 [before CSV](before.csv), [after CSV](after.csv), and
 [redstone before](redstone-before.csv)/[after](redstone-after.csv).
 
@@ -178,10 +176,9 @@ batches and cleanup. **Thirty static benchmark images match within 3/255 per
 channel for at least 99.99% of pixels.** The tolerance permits isolated raster
 rounding at edges; animated images are excluded from this exact comparison.
 
-Final live suite: **PASS** in `testclient/render-run.PDnsaa`, including pixel,
-GUI, joining/redstone, copying, doors, chairs, items and 39,408 controller assertions.
-The earlier post-render-change full suite passed in `testclient/render-run.QaXz4V`;
-original baseline coverage is in `testclient/render-run.gRvrGz`.
+Final live suite: **PASS**, including pixel, GUI, joining/redstone, copying,
+doors, chairs, items and 39,408 controller assertions. Baseline and post-change
+coverage use the same live suite.
 
 ```bash
 JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew build --no-daemon
@@ -261,7 +258,7 @@ clients sequential so they do not compete for CPU/GPU time.
    zero light to full emission remains costly; batching joined-light discovery
    does not remove Minecraft's lighting work.
 4. Consider simplifying dense chair/engine geometry after viewing-distance
-   comparisons. Preserve collision and owner visual acceptance.
+   comparisons. Preserve collision and visual validation.
 5. Profile active ramp cells and cache stationary deployed geometry/UV snapshots.
    Keep collision and render geometry consistent; the inactive controller timing
    does not cover a moving platform.

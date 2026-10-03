@@ -206,14 +206,15 @@ triangular display wedge),
 `BlockDetailedDoor` (manifest-driven detailed moving leaves),
 `BlockBridgeChair` (simple two-cell chair with a server-owned sittable mount),
 `TileEntitySlidingDoor` + `TESlidingDoor` (slide animation renderer) and the
-`ClientProxy`/`CommonProxy` split. `docs/animation-attempts.md` records the
-animation work and current architecture.
+`ClientProxy`/`CommonProxy` split.
 
 [Programmable Storage](docs/programmable-storage.md) holds 27 stacks, supports hoppers,
 and uses matching front/side/top sets from the shared texture picker. Craft it
 with a chest and a Programmable Block.
 
 ## Testing in game
+
+For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
 
 Copy the jar to `mods/`, or `./gradlew runClient` for dev. Report issues with
 facing, hinge side, door state, and which side was viewed — or better, a

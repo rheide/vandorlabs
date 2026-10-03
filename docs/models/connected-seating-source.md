@@ -1,8 +1,8 @@
 # MCTrek connected seating
 
-Luxury airline-style seating and military harness seating, based on the approved concept. Luxury headrests have no side wings. Each style has single, left end, middle, and right end variants. A couch is two neighboring chair blocks using matching end variants, not a separate wide in-game block.
+Luxury airline-style seating and military harness seating. Luxury headrests have no side wings. Each style has single, left end, middle, and right end variants. A couch is two neighboring chair blocks using matching end variants, not a separate wide in-game block.
 
-All geometry uses integer voxel coordinates (16 units per Minecraft block). Each chair occupies a 16×16 footprint. The luxury back is 24 units (1.5 blocks) tall; military is 20 units (1.25 blocks) tall. The taller silhouette follows the approved concept. Textures are 16×16 PNGs with at most one texel per voxel on the mapped surfaces. No bevels, sloping faces or sub-voxel geometry.
+All geometry uses integer voxel coordinates (16 units per Minecraft block). Each chair occupies a 16×16 footprint. The luxury back is 24 units (1.5 blocks) tall; military is 20 units (1.25 blocks) tall. Textures are 16×16 PNGs with at most one texel per voxel on the mapped surfaces. No bevels, sloping faces or sub-voxel geometry.
 
 ## Contents
 

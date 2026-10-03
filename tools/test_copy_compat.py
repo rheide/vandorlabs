@@ -2,6 +2,7 @@
 """Pin the external copy semantics that Vandor Labs' live tests depend on."""
 
 import argparse
+import os
 import subprocess
 from pathlib import Path
 
@@ -22,7 +23,7 @@ def require(text, needles, label):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mods", type=Path,
-                        default=Path.home() / "MC-Forge12-2" / "mods")
+                        default=Path(os.environ.get("VANDOR_LABS_COMPAT_MODS", str(Path.home() / ".minecraft" / "mods"))))
     args = parser.parse_args()
     worldedit = args.mods / "worldedit-forge-mc1.12.2-6.1.10-dist.jar"
     bbw = args.mods / "BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"

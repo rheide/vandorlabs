@@ -4,7 +4,7 @@ Four additional door families in the same industrial gray, cyan and amber style.
 
 | Door | Main texture | Design |
 |---|---|---|
-| Viewport | `door_viewport.png` | Tall, narrow transparent porthole inspired by the supplied example; cyan rim and a low vented kick plate. |
+| Viewport | `door_viewport.png` | Tall, narrow transparent porthole with a cyan rim and a low vented kick plate. |
 | Laboratory | `door_laboratory.png` | Two stacked horizontal transparent windows and a sealed lower service hatch. |
 | Cargo | `door_cargo.png` | Opaque X-braced freight bulkhead, central locking hub and amber hazard band. The side tabs are locking dogs, not animated hinges. |
 | Ventilation | `door_ventilation.png` | Opaque broad upper louvers, paired lower grille banks and a central service coupler. |
@@ -17,7 +17,7 @@ Four additional door families in the same industrial gray, cyan and amber style.
 | `medium` | 256 × 512 PNG |
 | `high` | 512 × 1024 PNG |
 
-Each level was drawn independently with the built-in image-generation tool, then exported to its exact pixel dimensions. Lower detail levels are not reductions of the high-detail doors. Broad structural features stay consistent, while panels, bevels and fasteners vary by level. `AUTHORING_PROMPTS.json` records the original prompts and the two control-placement corrections.
+Each level was drawn independently with the built-in image-generation tool, then exported to its exact pixel dimensions. Lower detail levels are not reductions of the high-detail doors. Broad structural features stay consistent, while panels, bevels and fasteners vary by level.
 
 Choose one detail folder. Copy its `assets/scifidoors/` into your mod's `src/main/resources/assets/scifidoors/`, or package that folder's `pack.mcmeta` and `assets/` at a resource pack's root. This expansion uses **new resource names only**, so its texture files can coexist with the original pack. It does not register blocks or add compiled mod code.
 

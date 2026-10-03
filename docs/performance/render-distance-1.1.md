@@ -33,8 +33,8 @@ from that work, rather than new block IDs.
 Raising the tile range to 128 blocks is a small code change, but can draw up to
 four times as many fixtures across a uniformly populated horizontal area. It
 adds per-frame work and does not give these blocks the terrain rendering path.
-No distance increase was made, as requested for changes with a performance cost.
+The render distance remains unchanged.
 
-If full cubes still disappear in the user's instance with the 1.1 JAR, reproduce
-that separately with its renderer mods/settings; the 64-block tile cutoff does
-not explain it in this checkout. The supplied client log includes OptiFine.
+Full cubes disappearing beyond a distance threshold require a separate
+compatibility check with the active renderer mods and settings: the tile
+renderer cutoff does not apply to their terrain meshes.

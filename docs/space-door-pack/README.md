@@ -10,7 +10,7 @@ Five coordinated door families: Observation, Airlock, Standard, Security and Rea
 | `medium` | 256 × 512 | 512 × 512 | 64 × 64 |
 | `high` | 512 × 1024 | 1024 × 1024 | 128 × 128 |
 
-Every door/frame detail level was generated as a separate design. The low and medium files are **not reductions of the high files**. Each independent source was exported to its exact requested resolution with nearest-neighbor sampling and restrained palette quantization. Designs deliberately vary in panel layout, bolt count and bevel treatment across detail levels. The hinge uses the same seven-cuboid geometry and three natively authored material atlases.
+Every door/frame detail level was generated as a separate design. The low and medium files are **not reductions of the high files**. Each independent source was exported to its exact resolution with nearest-neighbor sampling and restrained palette quantization. Designs deliberately vary in panel layout, bolt count and bevel treatment across detail levels. The hinge uses the same seven-cuboid geometry and three natively authored material atlases.
 
 Each level has a Minecraft 1.12.2 resource layout. Use **one** level at a time. Copy its `assets/scifidoors/` folder to `src/main/resources/assets/scifidoors/` in your mod, or package that level's `pack.mcmeta` and `assets/` at the root of a resource-pack ZIP. These are assets and integration helpers; this is not a compiled mod and does not register new blocks by itself. Replace the `scifidoors` namespace everywhere if your mod uses another ID.
 
@@ -21,7 +21,7 @@ Texture paths in `textures/blocks/`:
 - `standard.png`: simple sealed panel and bottom grille.
 - `security.png`: heavier plates, locking bars and bottom grille.
 - `reactor.png`: sealed service hatch, broad latch straps and amber hazard markings.
-- `double_frame_glass.png`: the requested combined transparent frame and glass-shimmer image.
+- `double_frame_glass.png`: the combined transparent frame and glass-shimmer image.
 - `double_frame_metal.png`, `glass_overlay.png`: separate rendering layers of the same frame.
 - `hinge.png`: four-tile native hinge material atlas.
 
@@ -98,7 +98,7 @@ The Java helper targets the Minecraft 1.12.2 `BufferBuilder` / `Tessellator` / `
 
 ## Sources and authoring
 
-The attached image was inspiration only. No reference pixels were copied into the deliverable textures. `AUTHORING_PROMPTS.json` records the built-in image-generation prompts and repairs; `ASSET_MANIFEST.json` records dimensions and mesh counts.
+`ASSET_MANIFEST.json` records dimensions and mesh counts.
 
 Forge references used for integration:
 
