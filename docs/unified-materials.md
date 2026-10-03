@@ -6,7 +6,7 @@ Built-in categories include Materials, Texture Pack 1, Texture Pack 2, Hull Plat
 
 ## Choose a surface
 
-Shift-right-click in Creative mode, or open the block's menu with the Configurizer. Choose a category and material. Lights have separate face and housing lists; triggers have Off and On lists. Blocks and slabs retain their optional per-face overrides.
+Shift-right-click in Creative mode, or open the block's menu with the Configurizer. Choose a category and material. Lights have separate face and housing lists; triggers have Off and On lists. Blocks, slabs and storage offer optional per-face overrides. Storage faces that inherit the main finish retain its matching top/side/front artwork.
 
 For screens, inputs and consoles, open **Surface textures** to choose a static front surface. Consoles also have a second surface choice. **Use screen / animation** restores the original configured screen or control panel. The native screen/control lists now use the same categorized thumbnail presentation, containing their original options. They still select the original animated screen or control family: Off/Static/Animated, speed and frame controls retain their behavior. Selecting a native option restores that surface from a static override. Housing lists use the shared material catalog.
 

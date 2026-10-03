@@ -27,7 +27,7 @@ for name in selected:
 require('custom-materials-runtime PASS')
 require('imported-materials-runtime PASS')
 if target == 'storage':
-    for marker in ('storage-inventory-runtime PASS','storage-material-runtime PASS','storage-gui-runtime PASS','storage-hotbar-runtime PASS'):
+    for marker in ('storage-inventory-runtime PASS','storage-material-runtime PASS','storage-gui-runtime PASS','storage-hotbar-runtime PASS','storage-faces-gui PASS override','storage-faces-gui PASS inherited'):
         require(marker)
 if target == 'trapdoors':
     for marker in ['sliding-next-mount-overlap-runtime PASS client closed',

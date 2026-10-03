@@ -148,7 +148,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
-            if (block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS) {
+            if (block == ModBlocks.PROGRAMMABLE_STORAGE || block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS) {
                 NBTTagCompound faces = new NBTTagCompound();
                 faces.setBoolean("enabled", screen.getFaceTextures().enabled);
                 if (screen.getFaceTextures().enabled)
@@ -382,7 +382,7 @@ public final class ProgrammableSettings {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
                 applicable = true;
             }
-            if ((block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS)
+            if ((block == ModBlocks.PROGRAMMABLE_STORAGE || block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS)
                     && values.hasKey(FACE_TEXTURES, 10)) {
                 NBTTagCompound faces = values.getCompoundTag(FACE_TEXTURES);
                 boolean enabled = faces.getBoolean("enabled");

@@ -68,19 +68,20 @@ public final class ProgrammableHousingModel implements IBakedModel {
             EnumFacing worldFace = worldFace(FACE[local], facing);
             if ((visible & (1 << worldFace.getIndex())) == 0) continue;
             int texture = faces.texture(FACE[local].getIndex(), finish);
+            final boolean storageSet = storage && !(faces.enabled && faces.choice(FACE[local].getIndex()) >= 0);
             long key = (((((long)texture * 6 + facing.getIndex()) * 2 + (upper ? 1 : 0)) * 2
-                    + (tileSides != 0 ? 1 : 0)) * 6 + local);
+                    + (tileSides != 0 ? 1 : 0)) * 6 + local) * 2 + (storageSet ? 1 : 0);
             final int faceIndex = local;
             final boolean tiled = tileSides != 0;
             result.add(variants.computeIfAbsent(key,
-                    ignored -> build(texture, facing, upper, tiled, faceIndex)));
+                    ignored -> build(texture, facing, upper, tiled, faceIndex, storageSet)));
         }
         return result;
     }
 
-    private BakedQuad build(int finish, EnumFacing facing, boolean upper, boolean tileSides, int i) {
+    private BakedQuad build(int finish, EnumFacing facing, boolean upper, boolean tileSides, int i, boolean storageSet) {
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite(storage ? ScreenHousingTextures.storageTexture(finish, FACE[i]) : ScreenHousingTextures.texture(finish));
+                .getAtlasSprite(storageSet ? ScreenHousingTextures.storageTexture(finish, FACE[i]) : ScreenHousingTextures.texture(finish));
         ScreenHousingMesh mesh = slab ? ScreenHousingMesh.slab(upper, tileSides)
                 : ScreenHousingMesh.cube();
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;

@@ -16,6 +16,17 @@ have matching front, side and top artwork. The back uses the side, and the
 underside uses the top. Other categories, filesystem textures and Custom block
 samples apply the selected finish to all six faces.
 
+Enable **Face overrides** to choose separate Bottom, Top, Front, Back, Left and
+Right textures, just like Programmable Block. Directions are relative to the
+storage block's front. Choose **Main** to change the overall finish; choose a
+face to override only that surface. **Use main texture** restores that face's
+normal artwork from the main set (including its matching top or side).
+An explicit Storage-category override uses the selected front artwork shown in
+the picker. Overrides start disabled; switching them off preserves the saved
+face choices. Configured items and the Duplifier preserve these settings, while
+a disabled Duplifier source leaves the destination's saved face choices intact.
+Inventory contents are unaffected.
+
 The Storage category is available in every shared material picker. Other
 programmable blocks use the selected set's front artwork as their material.
 
@@ -38,6 +49,8 @@ storage finishes are rendered in Minecraft.
 ![27-slot storage inventory](images/gallery/storage/inventory.png)
 
 ![Shared storage texture picker](images/gallery/storage/picker.png)
+
+![Storage face overrides](images/gallery/storage/face-overrides.png)
 
 ![Default and configured storage hotbar icons](images/gallery/storage/hotbar.png)
 

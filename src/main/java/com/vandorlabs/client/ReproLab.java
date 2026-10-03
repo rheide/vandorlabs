@@ -1297,6 +1297,17 @@ public class ReproLab {
                 StorageRuntimeChecks.require(mc.currentScreen instanceof GuiProgrammableWall,"creative shift interaction opens shared picker");
                 save(mc,new Shot("gallery_storage_picker",0,0,0,0,0));
                 System.out.println("[vandorlabs][reprolab] storage-gui-runtime PASS");
+                StorageRuntimeChecks.beginFaces((GuiProgrammableWall)mc.currentScreen);
+                state=105;holdTicks=30;break;
+            case 105:
+                if(--holdTicks>0)break;
+                StorageRuntimeChecks.checkFaces(mc,new BlockPos(GALLERY_X-4,GALLERY_Y,-18),false);
+                save(mc,new Shot("gallery_storage_face_overrides",0,0,0,0,0));
+                ((GuiProgrammableWall)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(108,0,0,""));
+                state=106;holdTicks=30;break;
+            case 106:
+                if(--holdTicks>0)break;
+                StorageRuntimeChecks.checkFaces(mc,new BlockPos(GALLERY_X-4,GALLERY_Y,-18),true);
                 mc.player.closeScreen();
                 for(int slot=0;slot<3;slot++)mc.player.inventory.setInventorySlotContents(slot,StorageRuntimeChecks.hotbarStack(slot));
                 onServer(mc, () -> {

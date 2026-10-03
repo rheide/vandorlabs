@@ -10,7 +10,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.simpleimpl.*;
 
-/** Configures optional local-face overrides for the full block and slab. */
+/** Configures optional local-face overrides for supported programmable solid blocks. */
 public final class MessageFaceTextures implements IMessage {
     private BlockPos pos;
     private boolean enabled;
@@ -35,7 +35,7 @@ public final class MessageFaceTextures implements IMessage {
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector)) return;
                 net.minecraft.block.Block block = player.world.getBlockState(msg.pos).getBlock();
-                if (block != ModBlocks.PROGRAMMABLE_BLOCK && block != ModBlocks.PROGRAMMABLE_SLAB && block != ModBlocks.PROGRAMMABLE_STAIRS) return;
+                if (block != ModBlocks.PROGRAMMABLE_STORAGE && block != ModBlocks.PROGRAMMABLE_BLOCK && block != ModBlocks.PROGRAMMABLE_SLAB && block != ModBlocks.PROGRAMMABLE_STAIRS) return;
                 for (int choice : msg.choices)
                     if (choice < -1 || (choice!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(choice))) return;
                 ContainerAnimatedScreenSelector container = (ContainerAnimatedScreenSelector) player.openContainer;

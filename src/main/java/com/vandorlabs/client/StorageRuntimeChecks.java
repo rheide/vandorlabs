@@ -31,9 +31,12 @@ final class StorageRuntimeChecks {
         for (int i = 0; i < 27; i++) tile.setInventorySlotContents(i, new ItemStack(Items.IRON_INGOT, 64));
         require(block.getComparatorInputOverride(world.getBlockState(pos), world, pos) == 15, "full comparator");
         require(tile.getStackInSlot(26).getCount() == 64, "last slot available");
+        FaceTextures overrides = new FaceTextures(true, new int[]{-1,1,3,-1,-1,-1});
+        tile.setFaceTextures(overrides);
         NBTTagCompound saved = tile.writeToNBT(new NBTTagCompound());
         TileEntityProgrammableStorage loaded = new TileEntityProgrammableStorage();
         loaded.readFromNBT(saved);
+        require(loaded.getFaceTextures().equals(overrides), "face override persistence");
         require(loaded.getStackInSlot(26).getCount() == 64, "inventory persistence");
         require(!tile.getUpdateTag().hasKey("Items"), "appearance packet contains inventory");
         require(!block.createConfiguredDrop(tile).getSubCompound("BlockEntityTag").hasKey("Items"), "pick/mining drop duplicates inventory");
@@ -43,8 +46,15 @@ final class StorageRuntimeChecks {
         require(ProgrammableSettings.apply(world, other, settings), "Duplifier applies appearance");
         require(target.getHousingTexture() == tile.getHousingTexture() && target.getStackInSlot(0).getCount() == 7
                 && target.getStackInSlot(0).getItem() == Items.DIAMOND, "copy preserves target contents");
+        require(target.getFaceTextures().equals(overrides), "copy includes face overrides");
         ItemStack configured = ProgrammableSettings.applyToItem(new ItemStack(block), settings);
         require(!configured.isEmpty() && !configured.getSubCompound("BlockEntityTag").hasKey("Items"), "crafted copy excludes inventory");
+        loaded.readFromNBT(configured.getSubCompound("BlockEntityTag"));
+        require(loaded.getFaceTextures().equals(overrides), "configured item preserves faces");
+        tile.setFaceTextures(new FaceTextures(false, new int[]{2,2,2,2,2,2}));
+        ProgrammableSettings.apply(world, other, ProgrammableSettings.capture(world, pos));
+        require(!target.getFaceTextures().enabled && target.getFaceTextures().choice(1)==1
+                && target.getStackInSlot(0).getCount()==7,"disabled copy retains stored faces and contents");
         tile.clear();
         require(block.getComparatorInputOverride(world.getBlockState(pos), world, pos) == 0, "empty comparator");
         for (EnumFacing face : EnumFacing.values()) {
@@ -109,6 +119,13 @@ final class StorageRuntimeChecks {
         for(net.minecraft.client.renderer.block.model.BakedQuad quad:model.getQuads(state.getBlock().getExtendedState(state,mc.world,pos),null,0))sprites.add(quad.getSprite().getIconName());
         require(sprites.size()==3 && sprites.contains("vandorlabs:blocks/storage/cabinet_front")
                 && sprites.contains("vandorlabs:blocks/storage/cabinet_top") && sprites.contains("vandorlabs:blocks/storage/cabinet_side"),"three matching world faces");
+        int[] sameSet={-1,ScreenHousingTextures.DEFAULT_STORAGE,-1,-1,-1,-1};
+        tile.setFaceTextures(new FaceTextures(true,sameSet));
+        java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> overridden=model.getQuads(state.getBlock().getExtendedState(state,mc.world,pos),null,0);
+        require(overridden.get(0).getSprite().getIconName().endsWith("cabinet_front"),"explicit top override uses selected artwork, not set top");
+        tile.setFaceTextures(new FaceTextures(false,sameSet));
+        require(model.getQuads(state.getBlock().getExtendedState(state,mc.world,pos),null,0).get(0).getSprite().getIconName().endsWith("cabinet_top"),"disabled override restores cached set top");
+        tile.setFaceTextures(FaceTextures.DEFAULT);
         net.minecraft.client.renderer.block.model.IBakedModel item=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(ModBlocks.PROGRAMMABLE_STORAGE),mc.world,mc.player);
         require(item.getParticleTexture().getIconName().equals("vandorlabs:blocks/storage/cabinet_front"),"default inventory material");
         System.out.println("[vandorlabs][reprolab] storage-material-runtime PASS");
@@ -135,6 +152,24 @@ final class StorageRuntimeChecks {
                 && sprites.contains("vandorlabs:blocks/storage/"+set+"_side") && sprites.contains("vandorlabs:blocks/storage/"+set+"_top"),"hotbar uses matching set "+set);
         }
         System.out.println("[vandorlabs][reprolab] storage-hotbar-runtime PASS");
+    }
+
+    static void beginFaces(GuiProgrammableWall gui) {
+        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(106,0,0,""));
+        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(107,0,0,""));
+        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(107,0,0,""));
+        try {
+            java.lang.reflect.Method choose=GuiProgrammableWall.class.getDeclaredMethod("choose",int.class);
+            choose.setAccessible(true);choose.invoke(gui,ScreenHousingTextures.DEFAULT_STORAGE);
+        } catch(ReflectiveOperationException e){throw new IllegalStateException(e);}
+    }
+    static void checkFaces(net.minecraft.client.Minecraft mc, BlockPos pos, boolean inherited) {
+        for(World world:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
+            TileEntityProgrammableStorage tile=(TileEntityProgrammableStorage)world.getTileEntity(pos);
+            require(tile.getFaceTextures().enabled && tile.getFaceTextures().choice(1)==(inherited?-1:ScreenHousingTextures.DEFAULT_STORAGE),"face picker synchronized "+inherited);
+            if(!world.isRemote)require(tile.getStackInSlot(0).getCount()==32,"face picker preserves inventory");
+        }
+        System.out.println("[vandorlabs][reprolab] storage-faces-gui PASS " +(inherited?"inherited":"override"));
     }
 
 }

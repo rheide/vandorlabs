@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "docs/images/gallery"
 SHOTS = {
+    "gallery_storage_face_overrides": "storage/face-overrides.png",
     "gallery_storage_hotbar": "storage/hotbar.png",
     "gallery_storage_sets": "storage/sets.png",
     "gallery_storage_inventory": "storage/inventory.png",

@@ -40,7 +40,8 @@ public class GuiProgrammableWall extends GuiContainer {
     private static final String[] FACE_NAMES = {"Bottom", "Top", "Front", "Back", "Left", "Right"};
     private boolean supportsFaces() {
         net.minecraft.block.Block block = tile.getBlockType();
-        return block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
+        return block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STORAGE
+                || block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
     }
     private int selectedTexture() {
         return faceTarget < 0 ? tile.getHousingTexture()
@@ -95,7 +96,7 @@ public class GuiProgrammableWall extends GuiContainer {
         if (diagonal) ySize += 26;
         if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) {
             ySize = Math.min(height - 8, 264);
-            rows = Math.max(4, (ySize - 60) / ROW_H);
+            rows = Math.max(4, (ySize - 86 - (tile.getFaceTextures().enabled ? 52 : 0)) / ROW_H);
         }
         while (ySize > height-8 && rows > (diagonal && porthole ? 2 : 3)) { rows--; ySize-=ROW_H; }
         super.initGui();
