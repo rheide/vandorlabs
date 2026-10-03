@@ -19,6 +19,9 @@ public final class FilesystemTextureChecks {
                 FilesystemTextures.initialize(root);
                 require(Files.isRegularFile(root.resolve("Example/sample_panel.png")),"first-run sample");
                 require(ImageIO.read(root.resolve("Example/sample_panel.png").toFile())!=null,"valid sample PNG");
+                int sample=FilesystemTextures.identifier("Example/sample_panel.png");
+                require(!ScreenHousingTextures.visible(sample),"sole Example sample is visible");
+                require(ScreenHousingTextures.choiceAt(ScreenHousingTextures.localIndex(sample))==sample,"hidden sample identity lost");
                 byte[] before=Files.readAllBytes(root.resolve("Example/sample_panel.png"));
                 FilesystemTextures.initialize(root);
                 require(java.util.Arrays.equals(before,Files.readAllBytes(root.resolve("Example/sample_panel.png"))),"preserved sample");
@@ -28,7 +31,12 @@ public final class FilesystemTextureChecks {
             BufferedImage image=new BufferedImage(16,32,BufferedImage.TYPE_INT_ARGB);
             ImageIO.write(image,"PNG",root.resolve("Bridge/blue.png").toFile());
             ImageIO.write(image,"PNG",root.resolve("Engineering/Panels/red.png").toFile());
+            Files.createDirectories(root.resolve("Example"));
+            ImageIO.write(image,"PNG",root.resolve("Example/sample_panel.png").toFile());
+            ImageIO.write(image,"PNG",root.resolve("Example/owner_panel.png").toFile());
             FilesystemTextures.initialize(root);
+            require(ScreenHousingTextures.visible(FilesystemTextures.identifier("Example/sample_panel.png"))
+                    && ScreenHousingTextures.visible(FilesystemTextures.identifier("Example/owner_panel.png")),"populated Example category hidden");
             int blue=FilesystemTextures.identifier("Bridge/blue.png"),red=FilesystemTextures.identifier("Engineering/Panels/red.png");
             require(blue!=red && ScreenHousingTextures.validChoice(blue),"stable identifiers");
             require("Bridge".equals(ScreenHousingTextures.category(blue)),"category");

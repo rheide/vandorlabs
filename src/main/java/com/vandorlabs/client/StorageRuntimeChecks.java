@@ -95,7 +95,7 @@ final class StorageRuntimeChecks {
             world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
             index++;
         }
-        require(index == 10, "ten storage sets");
+        require(index == 14, "fourteen storage sets");
     }
     static void client(net.minecraft.client.Minecraft mc, int x, int y) {
         int count = 0;
@@ -106,9 +106,21 @@ final class StorageRuntimeChecks {
                 net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(name);
                 require(sprite!=mc.getTextureMapBlocks().getMissingSprite(), "missing face " + name);
             }
+            BlockPos placed=new BlockPos(x+(count%5)*2-4,y,-18+(count/5)*3);
+            TileEntityProgrammableStorage placedTile=(TileEntityProgrammableStorage)mc.world.getTileEntity(placed);
+            require(placedTile!=null && placedTile.getHousingTexture()==choice,"storage set synchronization");
+            net.minecraft.block.state.IBlockState placedState=mc.world.getBlockState(placed);
+            java.util.Set<String> expected=new java.util.HashSet<>(), actual=new java.util.HashSet<>();
+            for(EnumFacing face:EnumFacing.values())expected.add(ScreenHousingTextures.storageTexture(choice,face));
+            for(net.minecraft.client.renderer.block.model.BakedQuad quad:mc.getBlockRendererDispatcher().getModelForState(placedState)
+                    .getQuads(placedState.getBlock().getExtendedState(placedState,mc.world,placed),null,0))actual.add(quad.getSprite().getIconName());
+            require(actual.equals(expected),"rendered faces do not match storage set "+choice);
+            TileEntityProgrammableStorage restored=new TileEntityProgrammableStorage();
+            restored.readFromNBT(placedTile.writeToNBT(new NBTTagCompound()));
+            require(restored.getHousingTexture()==choice,"storage set persistence");
             count++;
         }
-        require(count==10,"catalog sets");
+        require(count==14,"catalog sets");
         BlockPos pos=new BlockPos(x-4,y,-18);
         require(mc.world.getTileEntity(pos) instanceof TileEntityProgrammableStorage,"client storage tile");
         TileEntityProgrammableStorage tile=(TileEntityProgrammableStorage)mc.world.getTileEntity(pos);

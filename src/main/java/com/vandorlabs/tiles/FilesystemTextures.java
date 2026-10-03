@@ -49,6 +49,11 @@ public final class FilesystemTextures {
                 int slash=relative.lastIndexOf('/');e.addProperty("category",slash<0?"Filesystem":relative.substring(0,slash));
                 String name=file.getFileName().toString();e.addProperty("label",name.substring(0,name.length()-4).replace('_',' '));entries.add(e);
             }catch(IOException e){warn("Skipping "+file+": "+e.getMessage());}
+            // Keep the sample's identifier resolvable in old saves, but omit its
+            // category when no other Example artwork has been added.
+            long examples=entries.stream().filter(e->"Example".equals(e.get("category").getAsString())).count();
+            if(examples==1)for(JsonObject e:entries)
+                if("Example/sample_panel.png".equals(e.get("source").getAsString()))e.addProperty("hidden",true);
         }catch(IOException e){warn("Could not initialize filesystem textures at "+root+": "+e.getMessage());}
     }
     public static int identifier(String relative){CRC32 crc=new CRC32();try{crc.update(relative.getBytes("UTF-8"));}catch(UnsupportedEncodingException impossible){throw new AssertionError(impossible);}return ID_BASE | ((int)crc.getValue() & 0x3fffffff);}

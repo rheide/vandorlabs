@@ -1,0 +1,110 @@
+[
+  {
+    "source": "Blue-gray overhead bin front texture-2.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "443529ba5ef2cc4bfe1cb917aa7c788e96ab54f228703cf2695f5a499a7ca80e",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/blue_gray_overhead_bin_front.png"
+  },
+  {
+    "source": "Blue-gray overhead bin side panel-3.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "f3f8c4c46b08856b71d374b1aa875fc666694d50dcff394bb9a3c44facff3905",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/blue_gray_overhead_bin_side.png"
+  },
+  {
+    "source": "Blue-gray overhead bin panel-1.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "c310a9ae07673dfa3076adefeb6ec76cb08147e4248a6ad17f9fbaaf11448543",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/blue_gray_overhead_bin_top.png"
+  },
+  {
+    "source": "Metal overhead Bin front-5.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "97b6174def769706dbdcb7d4382137300e9f1736e72eb2c86e58e206361ccdb3",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/metal_overhead_bin_front.png"
+  },
+  {
+    "source": "Metal overhead bin texture-6.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "f15d077130544b7bc304ffee5adeb8dc63d1af17f101f68ed7f1d9a0889ad1de",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/metal_overhead_bin_side.png"
+  },
+  {
+    "source": "Metal overhead bin top texture-4.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "8441a2c95fc4fdb62eaa20ff4c34b0fbeb3da92e1029c6f51eb301fdc4ccd7e6",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/metal_overhead_bin_top.png"
+  },
+  {
+    "source": "Square Matte overhead-bin front-3.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "86a09156d4ec90c4a8ffb156f5f1564ca50d8f2be062d08337f35baaf784bef0",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/square_matte_overhead_bin_front.png"
+  },
+  {
+    "source": "Square matte overhead bin side texture-1.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "7aa20551f57513011bb74f822d89807a629ef657cfac866b2a78cae39e49b1b5",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/square_matte_overhead_bin_side.png"
+  },
+  {
+    "source": "Square Matte Overhead Bin Top-2.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "fd69e956c0600e7e819c741062c95bb0dfe06c92a59df60040da9ba57b2be1ba",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/square_matte_overhead_bin_top.png"
+  },
+  {
+    "source": "Square charcoal overhead-bin door-6.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "bea63301fdf4b7a3298358b7fd74de867e6cc7b3ae04fa3171212f4d8448dbd4",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/square_charcoal_overhead_bin_front.png"
+  },
+  {
+    "source": "Square charcoal overhead-bin side texture-5.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "cf2859980cb0c0ba14257a3af44c11b5cee1488b9698a6f11a59ffb29f6be678",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/square_charcoal_overhead_bin_side.png"
+  },
+  {
+    "source": "Square charcoal overhead bin texture-4.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "sha256": "de3061901f4a7da2e519de76cd5867004a6204deafc6487ecf36023f129e0727",
+    "output": "texture-packs/additional/assets/vandorlabs/textures/blocks/storage/square_charcoal_overhead_bin_top.png"
+  }
+]

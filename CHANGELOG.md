@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reorganize shared texture categories into Tech, Hull and Panels, simplify names, and hide removed picker entries while retaining saved finishes.
+- Add paired Blue Hex and Amber Hex programmable lights and four 140×140 overhead-bin storage sets (fourteen storage choices total).
+
 - Cached static Programmable Diagonal Wall meshes and Programmable Door replacement-material surfaces/model quads, reducing per-frame geometry allocation while retaining live lighting, motion and resource reloads. Reapplying identical programmable settings no longer triggers appearance rebuilds; shallow-wall Duplifier copies avoid the redundant legacy width reset.
 - Landing gear and blocks moved by Programmable Ramps now share diagonal walls' loaded-terrain render distance instead of disappearing beyond 64 blocks.
 

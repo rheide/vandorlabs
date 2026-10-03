@@ -23,7 +23,9 @@ for path in sorted(source.glob('*/*.png')):
     entry = dict(id=identifier, label=path.stem.replace('_', ' ').title(),
                  category=category.title(), source='imported/' + folder + '/' + slug)
     if identifier in known:
-        assert known[identifier] == entry, 'Existing catalog metadata changed: ' + identifier
+        # Source identity is fixed; labels, grouping and visibility are curated
+        # independently in the catalog and must survive reimporting artwork.
+        assert known[identifier]['source'] == entry['source'], 'Existing source changed: ' + identifier
     else:
         entries.append(entry)
     target = pack / 'assets/vandorlabs/textures/blocks' / (entry['source'] + '.png')

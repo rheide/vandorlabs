@@ -45,3 +45,7 @@ To see the same artwork, install the same PNG at the same relative path on each 
 Keep relative paths and capitalization consistent between machines. Renaming a file creates a different texture identifier. The mod detects local identifier collisions during discovery and skips the conflicting entry with a log message; rename that file if this occurs.
 
 Texture selection changes appearance. It does not carve collision holes from transparent pixels or change the block's geometry.
+
+The default Example category is hidden from pickers when it contains only
+`sample_panel.png`. Adding another PNG to Example reveals the category after
+a restart; existing saved sample selections remain valid.

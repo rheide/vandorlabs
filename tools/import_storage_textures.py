@@ -30,7 +30,8 @@ for source in sorted(args.source.glob('*.png')):
         filename = name + '_' + face + '.png'
         panel.save(target / filename, optimize=True)
         (args.export / filename).write_bytes((target / filename).read_bytes())
-    entries.append(dict(id='storage_' + name, label=source.stem.replace('-', ' ').title(),
+    label = 'Storage Crate' if name == 'storagecrate' else source.stem.replace('-', ' ').title()
+    entries.append(dict(id='storage_' + name, label=label,
                         category='Storage', source='storage/' + name + '_front',
                         top='storage/' + name + '_top', side='storage/' + name + '_side'))
 manifest = root / 'texture-packs/additional/catalog.json'

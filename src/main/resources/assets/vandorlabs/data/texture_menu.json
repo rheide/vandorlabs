@@ -1,0 +1,262 @@
+{
+  "integrated_circuit_board_panel_1": {
+    "category": "Tech",
+    "label": "Circuit Panel"
+  },
+  "non_glowing_data_core_cluster_1": {
+    "category": "Tech",
+    "label": "Data Cores"
+  },
+  "greebled_tech_panel_1": {
+    "category": "Tech",
+    "label": "Greebled Panel 1"
+  },
+  "greebled_tech_panel_2": {
+    "category": "Tech",
+    "label": "Greebled Panel 2"
+  },
+  "textures2_t1_r1_c8": {
+    "category": "Tech",
+    "label": "Blue Node"
+  },
+  "textures2_t1_r4_c1": {
+    "category": "Tech",
+    "label": "Green Console"
+  },
+  "textures2_t1_r4_c8": {
+    "category": "Tech",
+    "label": "Green Core"
+  },
+  "textures2_t2_r4_c5": {
+    "category": "Tech",
+    "label": "Switch Bank"
+  },
+  "textures2_t4_r3_c5": {
+    "category": "Tech",
+    "label": "Blue Socket"
+  },
+  "modular_polished_metal_floor_1": {
+    "category": "Hull",
+    "label": "Metal Floor"
+  },
+  "anti_gravity_control_panel_floor_1": {
+    "category": "Hull",
+    "label": "Gravity Floor"
+  },
+  "composite_nano_fiber_hull_1": {
+    "category": "Hull",
+    "label": "Nano-Fiber Hull"
+  },
+  "perforated_decking_1": {
+    "category": "Hull",
+    "label": "Perforated Deck"
+  },
+  "textures2_t1_r3_c8": {
+    "category": "Hull",
+    "label": "Braced Hull"
+  },
+  "textures2_t1_r4_c7": {
+    "category": "Hull",
+    "label": "Green Panel"
+  },
+  "textures2_t2_r1_c3": {
+    "category": "Hull",
+    "label": "Gray Panel 1"
+  },
+  "textures2_t2_r1_c4": {
+    "category": "Hull",
+    "label": "Gray Panel 2"
+  },
+  "textures2_t2_r3_c1": {
+    "category": "Hull",
+    "label": "Industrial Frame"
+  },
+  "textures2_t2_r3_c2": {
+    "category": "Hull",
+    "label": "Worn Bulkhead"
+  },
+  "textures2_t3_r1_c7": {
+    "category": "Hull",
+    "label": "Weathered Hull 1"
+  },
+  "textures2_t3_r1_c8": {
+    "category": "Hull",
+    "label": "Weathered Hull 2"
+  },
+  "textures2_t3_r3_c5": {
+    "category": "Hull",
+    "label": "Ivory Hatch 1"
+  },
+  "textures2_t3_r3_c6": {
+    "category": "Hull",
+    "label": "Ivory Hatch 2"
+  },
+  "textures2_t4_r3_c6": {
+    "category": "Hull",
+    "label": "Dark Socket"
+  },
+  "dark_wall_panel": {
+    "category": "Panels",
+    "label": "Dark Wall Panel"
+  },
+  "light_wall_panel": {
+    "category": "Panels",
+    "label": "Light Wall Panel"
+  },
+  "light_industrial_panel": {
+    "category": "Panels",
+    "label": "Light Industrial Panel"
+  },
+  "ribbed_wall": {
+    "category": "Panels",
+    "label": "Ribbed Wall"
+  },
+  "industrial_block": {
+    "category": "Panels",
+    "label": "Industrial Block"
+  },
+  "industrial_trim": {
+    "category": "Panels",
+    "label": "Industrial Trim"
+  },
+  "industrial_grate": {
+    "category": "Panels",
+    "label": "Industrial Grate"
+  },
+  "bolted_wall_plate": {
+    "category": "Panels",
+    "label": "Bolted Wall Plate"
+  },
+  "matter": {
+    "category": "Panels",
+    "label": "Matter"
+  },
+  "matter_amber": {
+    "category": "Panels",
+    "label": "Matter - Amber"
+  },
+  "matter_cyan": {
+    "category": "Panels",
+    "label": "Matter - Cyan"
+  },
+  "matter_red": {
+    "category": "Panels",
+    "label": "Matter - Red"
+  },
+  "wall_pipes": {
+    "category": "Panels",
+    "label": "Wall Pipes"
+  },
+  "framed_wall_pipes": {
+    "category": "Panels",
+    "label": "Framed Wall Pipes"
+  },
+  "intricate_composite_wall_1": {
+    "category": "Panels",
+    "label": "Composite Wall 1"
+  },
+  "intricate_composite_wall_2": {
+    "category": "Panels",
+    "label": "Composite Wall 2"
+  },
+  "heavy_duty_bulkhead_1": {
+    "category": "Panels",
+    "label": "Heavy Bulkhead 1"
+  },
+  "heavy_duty_bulkhead_2": {
+    "category": "Panels",
+    "label": "Heavy Bulkhead 2"
+  },
+  "thermal_shielding_panel_1": {
+    "category": "Panels",
+    "label": "Thermal Shield 1"
+  },
+  "thermal_shielding_panel_2": {
+    "category": "Panels",
+    "label": "Thermal Shield 2"
+  },
+  "advanced_biomechanical_tech_block_1": {
+    "category": "Panels",
+    "label": "Biomech Block 1"
+  },
+  "advanced_biomechanical_tech_block_2": {
+    "category": "Panels",
+    "label": "Biomech Block 2"
+  },
+  "textures2_t1_r1_c7": {
+    "category": "Panels",
+    "label": "Microchip"
+  },
+  "textures2_t2_r3_c7": {
+    "category": "Panels",
+    "label": "Octagon Plate"
+  },
+  "textures2_t2_r3_c8": {
+    "category": "Panels",
+    "label": "Twin Panels"
+  },
+  "textures2_t3_r3_c3": {
+    "category": "Panels",
+    "label": "Scaled Armor"
+  },
+  "wall_vent": {
+    "hidden": true
+  },
+  "seamed_padding": {
+    "hidden": true
+  },
+  "ribbed_padding": {
+    "hidden": true
+  },
+  "stitched_padding": {
+    "hidden": true
+  },
+  "hull_plating_1": {
+    "hidden": true
+  },
+  "hull_plating_2": {
+    "hidden": true
+  },
+  "hull_plating_3": {
+    "hidden": true
+  },
+  "hull_plating_4": {
+    "hidden": true
+  },
+  "hull_plating_5": {
+    "hidden": true
+  },
+  "hull_plating_6": {
+    "hidden": true
+  },
+  "hull_plating_7": {
+    "hidden": true
+  },
+  "hull_plating_8": {
+    "hidden": true
+  },
+  "hull_plating_9": {
+    "hidden": true
+  },
+  "hull_plating_10": {
+    "hidden": true
+  },
+  "hull_plating_11": {
+    "hidden": true
+  },
+  "textures2_t3_r2_c2": {
+    "category": "Lights",
+    "label": "Amber Hex Off",
+    "off": true
+  },
+  "textures2_t4_r2_c7": {
+    "category": "Lights",
+    "label": "Blue Hex Off",
+    "off": true
+  },
+  "textures2_t4_r2_c8": {
+    "category": "Lights",
+    "label": "Blue Hex On",
+    "unlit": "textures2_t4_r2_c7"
+  }
+}

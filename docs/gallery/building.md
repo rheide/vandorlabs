@@ -22,7 +22,11 @@ Block, Slab and Stairs have optional per-face texture overrides, disabled by def
 
 ## Programmable Block finishes
 
-Every finish in the Creative-mode Programmable Block dialog is shown below on a full Programmable Block. Each image shows up to ten finishes, with the top row followed by the bottom row. Names run left to right in each row.
+The original 78 saved finishes are shown below on full Programmable Blocks.
+These reference images also include retired finishes retained for existing
+builds: Wall Vent, the three Padding choices and Hull Plating are hidden from
+new selections. Blue/Amber Hex now belong to Programmable Light. For the
+current categories and additional choices, see [unified materials](../unified-materials.md). Each image shows up to ten finishes, with the top row followed by the bottom row. Names run left to right in each row.
 
 ### Finishes 1–10
 
@@ -49,7 +53,7 @@ Every finish in the Creative-mode Programmable Block dialog is shown below on a 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
 | Top | Wall Pipes | Framed Wall Pipes | Midnight Satin Hull | Seamed Padding | Ribbed Padding |
-| Bottom | Stitched Padding | Glass Frame Interior | Door Interior (Dark) | T1 Metal Floor | T1 Composite Wall 1 |
+| Bottom | Stitched Padding | Glass Frame Interior | Door Interior (Dark) | Metal Floor | Composite Wall 1 |
 
 ### Finishes 31–40
 
@@ -57,8 +61,8 @@ Every finish in the Creative-mode Programmable Block dialog is shown below on a 
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | T1 Composite Wall 2 | T1 Circuit Panel | T1 Heavy Bulkhead 1 | T1 Heavy Bulkhead 2 | T1 Data Cores |
-| Bottom | T1 Gravity Floor | T1 Thermal Shield 1 | T1 Thermal Shield 2 | T1 Nano-Fiber Hull | T1 Perforated Deck |
+| Top | Composite Wall 2 | Circuit Panel | Heavy Bulkhead 1 | Heavy Bulkhead 2 | Data Cores |
+| Bottom | Gravity Floor | Thermal Shield 1 | Thermal Shield 2 | Nano-Fiber Hull | Perforated Deck |
 
 ### Finishes 41–50
 
@@ -66,8 +70,8 @@ Every finish in the Creative-mode Programmable Block dialog is shown below on a 
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | T1 Greebled Panel 1 | T1 Greebled Panel 2 | T1 Biomech Block 1 | T1 Biomech Block 2 | T2 Microchip |
-| Bottom | T2 Blue Node | T2 Braced Hull | T2 Green Console | T2 Green Panel | T2 Green Core |
+| Top | Greebled Panel 1 | Greebled Panel 2 | Biomech Block 1 | Biomech Block 2 | Microchip |
+| Bottom | Blue Node | Braced Hull | Green Console | Green Panel | Green Core |
 
 ### Finishes 51–60
 
@@ -75,8 +79,8 @@ Every finish in the Creative-mode Programmable Block dialog is shown below on a 
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | T2 Gray Panel 1 | T2 Gray Panel 2 | T2 Industrial Frame | T2 Worn Bulkhead | T2 Octagon Plate |
-| Bottom | T2 Twin Panels | T2 Switch Bank | T2 Weathered Hull 1 | T2 Weathered Hull 2 | T2 Amber Hex |
+| Top | Gray Panel 1 | Gray Panel 2 | Industrial Frame | Worn Bulkhead | Octagon Plate |
+| Bottom | Twin Panels | Switch Bank | Weathered Hull 1 | Weathered Hull 2 | Amber Hex Off |
 
 ### Finishes 61–70
 
@@ -84,8 +88,8 @@ Every finish in the Creative-mode Programmable Block dialog is shown below on a 
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | T2 Scaled Armor | T2 Ivory Hatch 1 | T2 Ivory Hatch 2 | T2 Blue Hex 1 | T2 Blue Hex 2 |
-| Bottom | T2 Blue Socket | T2 Dark Socket | Hull Plating 1 | Hull Plating 2 | Hull Plating 3 |
+| Top | Scaled Armor | Ivory Hatch 1 | Ivory Hatch 2 | Blue Hex Off | Blue Hex On |
+| Bottom | Blue Socket | Dark Socket | Hull Plating 1 | Hull Plating 2 | Hull Plating 3 |
 
 ### Finishes 71–78
 

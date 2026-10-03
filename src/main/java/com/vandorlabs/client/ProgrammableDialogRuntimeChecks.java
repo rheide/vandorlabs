@@ -133,6 +133,9 @@ final class ProgrammableDialogRuntimeChecks {
         }
     }
     private static void checkList(HousingTextureList list,List<GuiButton> buttons)throws ReflectiveOperationException {
+        Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);
+        for(Object entry:((java.util.Map<?,?>)options.get(list)).values())
+            require(com.vandorlabs.tiles.ScreenHousingTextures.visible(((HousingTextureList.Option)entry).choice),"hidden texture in picker");
         int x=integer(list,"x"),y=integer(list,"y"),width=integer(list,"width"),count=integer(list,"count");
         require(count>=7,"texture list has fewer than seven rows");
         for(GuiButton b:buttons)if(b.visible)require(!overlaps(x-1,y-1,width+9,count*HousingTextureList.ROW_HEIGHT+2,b.x,b.y,b.width,b.height),"texture list overlaps button "+b.id);

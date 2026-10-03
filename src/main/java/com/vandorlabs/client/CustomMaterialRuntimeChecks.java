@@ -18,12 +18,13 @@ final class CustomMaterialRuntimeChecks {
             require(!sprite.getIconName().equals("missingno") && sprite.getIconWidth()>0,"imported texture missing from atlas: "+ScreenHousingTextures.IDS[i]);
             categories.add(ScreenHousingTextures.category(i));imported++;
         }
-        require(imported==33 && categories.size()==6,"imported category/texture counts");
+        require(imported==33 && categories.equals(new java.util.HashSet<>(java.util.Arrays.asList("Tech","Hull","Trapdoors","Windows"))),"imported category/texture coverage");
+        checkMenu(mc);
         for(net.minecraft.block.Block hatch:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_TRAPDOOR,ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR}) {
             net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(hatch),mc.world,player);
             require(model.getParticleTexture().getIconName().equals(ScreenHousingTextures.fullTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"plain hatch item uses old default artwork");
         }
-        System.out.println("[vandorlabs][reprolab] imported-materials-runtime PASS (33 textures, six categories, both default hatch icons)");
+        System.out.println("[vandorlabs][reprolab] imported-materials-runtime PASS (33 retained textures, four categories, both default hatch icons)");
         ItemStack stone=new ItemStack(Blocks.STONE),door=new ItemStack(Items.OAK_DOOR);
         int stoneId=CustomBlockMaterials.choice(stone),doorId=CustomBlockMaterials.choice(door);
         require(CustomBlockMaterials.block(door)==Blocks.OAK_DOOR,"vanilla door item mapping");
@@ -98,10 +99,39 @@ final class CustomMaterialRuntimeChecks {
                     if(ScreenHousingTextures.isLightOff(i)){off++;require(!entries.containsKey(i),"Off texture in light picker");}
                 }
                 for(int style=0;style<6;style++)if(entries.containsKey(ScreenHousingTextures.lightIndex(style)))on++;
-                require(on==6 && off==6,"light picker paired artwork coverage");
+                int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
+                require(entries.containsKey(64) && entries.containsKey(amber),"hex light choices missing");
+                require(on==6 && off==8,"light picker paired artwork coverage");
             }
             System.out.println("[vandorlabs][reprolab] light-picker-runtime PASS rows="+expected);
         } catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+    }
+    private static void checkMenu(Minecraft mc) {
+        HousingTextureList list=new HousingTextureList(0,0,180,23);
+        require(list.selected()==23 && ScreenHousingTextures.texture(23).endsWith("seamed_padding"),"hidden saved selection lost");
+        for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++) {
+            require(!ScreenHousingTextures.category(choice).matches("Texture Pack [12]|Hull Plating|Computing|Fuel|Power"),"obsolete category");
+            if(ScreenHousingTextures.visible(choice))require(!HousingTextureList.name(choice).matches("T[12] .*"),"texture pack prefix retained");
+        }
+        for(int choice:new int[]{12,23,24,25,67,77})require(!ScreenHousingTextures.visible(choice),"removed choice visible");
+        require(ScreenHousingTextures.category(31).equals("Tech") && ScreenHousingTextures.category(35).equals("Hull")
+                && ScreenHousingTextures.category(29).equals("Panels"),"legacy category moves");
+        int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
+        for(int choice:new int[]{64,amber}) {
+            TileEntityProgrammableLight tile=new TileEntityProgrammableLight();tile.setFaceTexture(choice);
+            for(boolean on:new boolean[]{false,true}) {
+                tile.setOn(on);
+                String texture=ScreenHousingTextures.texture(tile.getFaceTexture(),tile.isOn());
+                require(!texture.equals(ScreenHousingTextures.texture(choice,!on)),"hex artwork did not switch");
+                require(mc.getTextureMapBlocks().getAtlasSprite(texture)!=mc.getTextureMapBlocks().getMissingSprite(),"hex atlas artwork missing");
+                TileEntityProgrammableLight copy=new TileEntityProgrammableLight();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                require(copy.getFaceTexture()==choice && copy.isOn()==on,"hex save/load state");
+            }
+            tile.configure(0,15,false,17,0,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON);
+            tile.setChannelSignal(false);require(!tile.isOn(),"unpowered hex light on");
+            tile.setChannelSignal(true);require(tile.isOn(),"powered hex light off");
+        }
+        System.out.println("[vandorlabs][reprolab] texture-menu-runtime PASS saved hidden choices, categories, paired hex light state and persistence");
     }
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("Custom material: "+message);}
 }

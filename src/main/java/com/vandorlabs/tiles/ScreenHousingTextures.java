@@ -92,12 +92,17 @@ public final class ScreenHousingTextures {
     public static final String[] IDS;
     private static final String[] TEXTURES;
     private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
+    private static final com.google.gson.JsonObject MENU;
     public static final int LEGACY_COUNT=FINISHES.length;
     public static final int BUILTIN_COUNT;
     public static final int DEFAULT_TRAPDOOR;
     public static final int DEFAULT_STORAGE;
     private static final java.util.Map<Integer,Integer> FILE_CHOICES=new java.util.HashMap<>();
     static {
+        try(java.io.InputStream stream=ScreenHousingTextures.class.getResourceAsStream("/assets/vandorlabs/data/texture_menu.json")) {
+            if(stream==null)throw new IllegalStateException("Texture menu metadata missing");
+            MENU=new com.google.gson.JsonParser().parse(new java.io.InputStreamReader(stream,"UTF-8")).getAsJsonObject();
+        } catch(java.io.IOException e){throw new ExceptionInInitializerError(e);}
         try(java.io.InputStream stream=ScreenHousingTextures.class.getResourceAsStream("/assets/vandorlabs/data/unified_textures.json")) {
             if(stream==null)throw new IllegalStateException("Shared texture catalog missing");
             for(com.google.gson.JsonElement e:new com.google.gson.JsonParser().parse(new java.io.InputStreamReader(stream,"UTF-8")).getAsJsonArray())EXTRAS.add(e.getAsJsonObject());
@@ -117,8 +122,14 @@ public final class ScreenHousingTextures {
         if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");
     }
     public static com.google.gson.JsonObject entry(int choice){int index=localIndex(choice)-LEGACY_COUNT;return index>=0 && index<EXTRAS.size()?EXTRAS.get(index):null;}
-    public static String category(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null?e.get("category").getAsString():choice<28?"Materials":choice<44?"Texture Pack 1":choice<67?"Texture Pack 2":"Hull Plating";}
-    public static String label(int choice){com.google.gson.JsonObject e=entry(choice);return e==null?null:e.get("label").getAsString();}
+    /** Menu metadata changes presentation without moving persisted numeric choices. */
+    private static com.google.gson.JsonObject menu(int choice) {
+        int index=localIndex(choice);
+        return index<LEGACY_COUNT && MENU.has(IDS[index])?MENU.getAsJsonObject(IDS[index]):entry(choice);
+    }
+    public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}
+    public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.get("label").getAsString();}
+    public static boolean visible(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("hidden") || !e.get("hidden").getAsBoolean();}
     public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
     /** Storage sets use their front as the ordinary shared material thumbnail. */
     public static String storageTexture(int choice, net.minecraft.util.EnumFacing localFace) {
@@ -130,9 +141,9 @@ public final class ScreenHousingTextures {
     public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
     public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
     /** Static Off artwork remains available as a material, but not in light menus. */
-    public static boolean isLightOff(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null && "Lights".equals(e.get("category").getAsString()) && e.get("id").getAsString().endsWith("_off");}
+    public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && "Lights".equals(category(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
-    public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=entry(choice);return !lit && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
+    public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=menu(choice);return !lit && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
 
     public static final int INDUSTRIAL_BLOCK = 9;
 

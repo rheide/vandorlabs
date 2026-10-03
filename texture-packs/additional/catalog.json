@@ -2,72 +2,72 @@
   {
     "id": "imported_computing_server_compute_rack",
     "label": "Server Compute Rack",
-    "category": "Computing",
+    "category": "Tech",
     "source": "imported/computing/server_compute_rack"
   },
   {
     "id": "imported_computing_server_data_storage",
     "label": "Server Data Storage",
-    "category": "Computing",
+    "category": "Tech",
     "source": "imported/computing/server_data_storage"
   },
   {
     "id": "imported_computing_server_network_core",
     "label": "Server Network Core",
-    "category": "Computing",
+    "category": "Tech",
     "source": "imported/computing/server_network_core"
   },
   {
     "id": "imported_fuel_fuel_port_dual",
     "label": "Fuel Port Dual",
-    "category": "Fuel",
+    "category": "Tech",
     "source": "imported/fuel/fuel_port_dual"
   },
   {
     "id": "imported_fuel_fuel_port_round",
     "label": "Fuel Port Round",
-    "category": "Fuel",
+    "category": "Tech",
     "source": "imported/fuel/fuel_port_round"
   },
   {
     "id": "imported_hull_dark_r1_c2",
-    "label": "Dark R1 C2",
+    "label": "Dark Hull 1",
     "category": "Hull",
     "source": "imported/hull/dark_r1_c2"
   },
   {
     "id": "imported_hull_dark_r1_c3",
-    "label": "Dark R1 C3",
+    "label": "Dark Hull 2",
     "category": "Hull",
     "source": "imported/hull/dark_r1_c3"
   },
   {
     "id": "imported_hull_dark_r1_c6",
-    "label": "Dark R1 C6",
+    "label": "Dark Hull 3",
     "category": "Hull",
     "source": "imported/hull/dark_r1_c6"
   },
   {
     "id": "imported_hull_dark_r2_c2",
-    "label": "Dark R2 C2",
+    "label": "Dark Hull 4",
     "category": "Hull",
     "source": "imported/hull/dark_r2_c2"
   },
   {
     "id": "imported_hull_dark_r2_c6",
-    "label": "Dark R2 C6",
+    "label": "Dark Hull 5",
     "category": "Hull",
     "source": "imported/hull/dark_r2_c6"
   },
   {
     "id": "imported_hull_dark_t1_r1_c1",
-    "label": "Dark T1 R1 C1",
+    "label": "Dark Hull 6",
     "category": "Hull",
     "source": "imported/hull/dark_t1_r1_c1"
   },
   {
     "id": "imported_hull_dark_t1_r1_c2",
-    "label": "Dark T1 R1 C2",
+    "label": "Dark Hull 7",
     "category": "Hull",
     "source": "imported/hull/dark_t1_r1_c2"
   },
@@ -75,54 +75,55 @@
     "id": "imported_hull_dark_t1_r1_c3",
     "label": "Dark T1 R1 C3",
     "category": "Hull",
-    "source": "imported/hull/dark_t1_r1_c3"
+    "source": "imported/hull/dark_t1_r1_c3",
+    "hidden": true
   },
   {
     "id": "imported_hull_dark_t1_r1_c4",
-    "label": "Dark T1 R1 C4",
+    "label": "Dark Hull 8",
     "category": "Hull",
     "source": "imported/hull/dark_t1_r1_c4"
   },
   {
     "id": "imported_hull_dark_t2_r1_c3",
-    "label": "Dark T2 R1 C3",
+    "label": "Dark Hull 9",
     "category": "Hull",
     "source": "imported/hull/dark_t2_r1_c3"
   },
   {
     "id": "imported_hull_dark_t2_r1_c4",
-    "label": "Dark T2 R1 C4",
+    "label": "Dark Hull 10",
     "category": "Hull",
     "source": "imported/hull/dark_t2_r1_c4"
   },
   {
     "id": "imported_hull_dark_t3_r3_c5",
-    "label": "Dark T3 R3 C5",
+    "label": "Dark Hull 11",
     "category": "Hull",
     "source": "imported/hull/dark_t3_r3_c5"
   },
   {
     "id": "imported_hull_dark_t3_r3_c6",
-    "label": "Dark T3 R3 C6",
+    "label": "Dark Hull 12",
     "category": "Hull",
     "source": "imported/hull/dark_t3_r3_c6"
   },
   {
     "id": "imported_power_battery_cell_bank",
     "label": "Battery Cell Bank",
-    "category": "Power",
+    "category": "Tech",
     "source": "imported/power/battery_cell_bank"
   },
   {
     "id": "imported_power_battery_charging_dock",
     "label": "Battery Charging Dock",
-    "category": "Power",
+    "category": "Tech",
     "source": "imported/power/battery_charging_dock"
   },
   {
     "id": "imported_power_battery_power_buffer",
     "label": "Battery Power Buffer",
-    "category": "Power",
+    "category": "Tech",
     "source": "imported/power/battery_power_buffer"
   },
   {
@@ -271,10 +272,49 @@
   },
   {
     "id": "storage_storagecrate",
-    "label": "Storagecrate",
+    "label": "Storage Crate",
     "category": "Storage",
     "source": "storage/storagecrate_front",
     "top": "storage/storagecrate_top",
     "side": "storage/storagecrate_side"
+  },
+  {
+    "id": "storage_blue_gray_overhead_bin",
+    "label": "Blue-Gray Overhead Bin",
+    "category": "Storage",
+    "source": "storage/blue_gray_overhead_bin_front",
+    "top": "storage/blue_gray_overhead_bin_top",
+    "side": "storage/blue_gray_overhead_bin_side"
+  },
+  {
+    "id": "storage_metal_overhead_bin",
+    "label": "Metal Overhead Bin",
+    "category": "Storage",
+    "source": "storage/metal_overhead_bin_front",
+    "top": "storage/metal_overhead_bin_top",
+    "side": "storage/metal_overhead_bin_side"
+  },
+  {
+    "id": "storage_square_matte_overhead_bin",
+    "label": "Square Matte Overhead Bin",
+    "category": "Storage",
+    "source": "storage/square_matte_overhead_bin_front",
+    "top": "storage/square_matte_overhead_bin_top",
+    "side": "storage/square_matte_overhead_bin_side"
+  },
+  {
+    "id": "storage_square_charcoal_overhead_bin",
+    "label": "Square Charcoal Overhead Bin",
+    "category": "Storage",
+    "source": "storage/square_charcoal_overhead_bin_front",
+    "top": "storage/square_charcoal_overhead_bin_top",
+    "side": "storage/square_charcoal_overhead_bin_side"
+  },
+  {
+    "id": "light_amber_hex",
+    "label": "Amber Hex On",
+    "category": "Lights",
+    "source": "lights/amber_hex_on",
+    "unlit": "textures2_t3_r2_c2"
   }
 ]
