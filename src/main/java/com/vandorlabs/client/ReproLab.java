@@ -448,6 +448,7 @@ public class ReproLab {
         mc.displayGuiScreen(new GuiProgrammableLight(mc.player.inventory,(com.vandorlabs.tiles.TileEntityProgrammableLight)raw));
     }
     private boolean storageGuiDone;
+    private DocumentationDoorCapture doorCapture;
     private int lightPickerPreviousScale;
     private int state = 0; // 0 menu, 1 wait, 2 build, 3 shots, 4-7 GUIs, 8 hotbar, 9 done
     private int tick = 0;
@@ -467,6 +468,13 @@ public class ReproLab {
             if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
             if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void onDocumentationRender(TickEvent.RenderTickEvent event) {
+        if(event.phase==TickEvent.Phase.END && enabled && state==300 && doorCapture!=null)
+            doorCapture.render(Minecraft.getMinecraft());
     }
 
     @SideOnly(Side.CLIENT)
@@ -537,6 +545,18 @@ public class ReproLab {
             case 2:
                 if (--holdTicks > 0) {
                     break;
+                }
+                if(Boolean.getBoolean("vandorlabs.documentationDoorGif")) {
+                    mc.gameSettings.clouds=0;
+                    Shot doorShot=new Shot("documentation_door_camera",
+                            GALLERY_X+1.1D,GALLERY_Y+1.25D-1.62D,-19.9D,18,0);
+                    beginShot(mc,doorShot,true);
+                    // Build on the server after teleporting; the client chunk
+                    // and tile arrive normally during the settle period.
+                    mc.getIntegratedServer().addScheduledTask(()->buildGalleryStage(
+                            mc.getIntegratedServer().getWorld(0),"gallery_door_motion_rotating_closed"));
+                    mc.world.setWorldTime(6000);
+                    state=299;holdTicks=100;break;
                 }
                 if(Boolean.getBoolean("vandorlabs.dialogChecksOnly")) {
                     mc.gameSettings.hideGUI=false;state=11;holdTicks=GUI_SETTLE_TICKS;break;
@@ -618,6 +638,13 @@ public class ReproLab {
                     state = Boolean.getBoolean("vandorlabs.storageChecksOnly")?100:Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")?49:11;
                     holdTicks = 40;
                 }
+                break;
+            case 299:
+                if(--holdTicks>0)break;
+                doorCapture=new DocumentationDoorCapture(outDir,new BlockPos(GALLERY_X,GALLERY_Y,-18));
+                state=300;break;
+            case 300:
+                if(doorCapture.isFinished()){state=999;mc.shutdown();return;}
                 break;
             case 11:
                 if (--holdTicks > 0) break;
@@ -1915,6 +1942,13 @@ public class ReproLab {
         // regression fixtures never appear behind the catalog.
         for (Entity entity : new ArrayList<Entity>(world.loadedEntityList)) {
             if (!(entity instanceof EntityPlayer)) entity.setDead();
+        }
+        if(Boolean.getBoolean("vandorlabs.documentationDoorGif")) {
+            // A clean backdrop also removes leftovers from earlier gallery runs.
+            BlockPos.getAllInBox(new BlockPos(GALLERY_X-20,GALLERY_Y,-32),
+                    new BlockPos(GALLERY_X+20,GALLERY_Y+30,0)).forEach(world::setBlockToAir);
+            world.setWorldTime(6000);
+            world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
         }
         if (shot.equals("gallery_close_display_viewscreen")) {
             // The earlier ramp examples reserve cells beyond the ordinary

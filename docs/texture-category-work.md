@@ -108,7 +108,7 @@ T2 Amber Hex: move this to Programmable Light, use the image skill to create an 
 - [x] Import four storage sets and verify all twelve faces are 140×140.
 - [x] Build and run relevant live client checks; refresh documentation images.
 - [x] Commit texture work separately.
-- [ ] Demonstrate a documented door as an animated GIF after texture work.
+- [x] Demonstrate a documented door as an animated GIF after texture work.
 
 ## Evidence
 
@@ -120,3 +120,5 @@ T2 Amber Hex: move this to Programmable Light, use the image skill to create an 
 - Live menu checks passed for moved categories, hidden saved choices, and paired Hex light manual/redstone state and persistence.
 - `testclient/render-run.392gKU`: sixteen dialog captures and shared picker layout checks passed, including both eight-style light pickers and Custom reopen behavior. The outer shell returned 143; the client continued and shut down normally. The focused validator was run directly and passed before exporting images.
 - Standard `build/libs/vandorlabs-1.3.jar` contains the menu metadata, all twelve new 140×140 storage faces and the 64×64 Amber On artwork. No archive texture JAR or external build copy was produced.
+- Texture/category work committed separately as `1d0fda83`, after performance commit `d109a3c9`.
+- `testclient/door-animation.beMkA1`: live renderer captured 36 PNGs and a real server-driven closed/open/closed cycle. Encoding and geometry/timing validation passed after anchoring checks to observed network state transitions. The finished GIF contains 20 frames, loops in 3.4 seconds, measures 600×500 and is 282,513 bytes. Decoded GIF frames were visually reviewed.

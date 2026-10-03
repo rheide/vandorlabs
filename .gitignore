@@ -18,3 +18,4 @@ __pycache__/
 /testclient/archive/
 /testclient/*.log
 /testclient/render-benchmark.*/
+testclient/door-animation.*/

@@ -32,6 +32,13 @@ Observation, Viewport, Laboratory, and Glazed Hangar have translucent windows. A
 
 ## Choose how the door opens
 
+The framed Observation door opening and closing with rotating motion:
+
+![Observation door rotating open and closed](../images/gallery/doors/observation-rotating.gif)
+
+This is a live in-game capture. See [animated documentation](../animated-documentation.md)
+for the capture and encoding workflow.
+
 | Motion | Closed | Open |
 | --- | --- | --- |
 | Rotate | ![Rotating closed](../images/gallery/doors/rotating-closed.png) | ![Rotating open](../images/gallery/doors/rotating-open.png) |

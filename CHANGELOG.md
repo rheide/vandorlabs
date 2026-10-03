@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Demonstrate animated documentation with a live captured Observation door GIF and a reproducible capture/encoding workflow.
+
 - Reorganize shared texture categories into Tech, Hull and Panels, simplify names, and hide removed picker entries while retaining saved finishes.
 - Add paired Blue Hex and Amber Hex programmable lights and four 140×140 overhead-bin storage sets (fourteen storage choices total).
 
