@@ -38,14 +38,20 @@ public final class DeferredTileLoad {
 
     @SubscribeEvent public void worldTick(TickEvent.WorldTickEvent event) {
         if (event.phase != TickEvent.Phase.END || event.world.isRemote) return;
+        flush(event.world);
+    }
+
+    /** Same settlement boundary used by load lifecycle runtime checks. */
+    public static void flush(World world) {
+        if (world.isRemote) return;
         Map<TileEntity, Runnable> ready;
-        synchronized (PENDING) { ready = PENDING.remove(event.world); }
+        synchronized (PENDING) { ready = PENDING.remove(world); }
         if (ready == null) return;
         for (Map.Entry<TileEntity, Runnable> entry : ready.entrySet()) {
             TileEntity tile = entry.getKey();
-            if (!tile.isInvalid() && tile.getWorld() == event.world && tile.getPos() != null
-                    && event.world.isBlockLoaded(tile.getPos())
-                    && event.world.getChunkFromBlockCoords(tile.getPos())
+            if (!tile.isInvalid() && tile.getWorld() == world && tile.getPos() != null
+                    && world.isBlockLoaded(tile.getPos())
+                    && world.getChunkFromBlockCoords(tile.getPos())
                             .getTileEntityMap().get(tile.getPos()) == tile)
                 entry.getValue().run();
         }

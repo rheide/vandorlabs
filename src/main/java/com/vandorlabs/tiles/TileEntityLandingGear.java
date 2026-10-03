@@ -20,7 +20,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     private int extensionPixels=16, mode=1, channel, configurationRevision, size;
     public int getSize(){return size;}
     public int getConfigurationRevision(){return configurationRevision;}
-    private boolean channelSignal, lastSignal;
+    private boolean channelSignal, lastSignal, detached, restoringSignal;
     private int ownerDistance,ownerX,ownerZ;
     private boolean hasOwner;
     public BlockPos owner(){return hasOwner?pos.add(ownerX,ownerDistance,ownerZ):null;}
@@ -45,6 +45,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
         if((extended||nextSize>=3) && !block.reserve(world,pos,
                 extended?Math.max(progress,pixels/16F):progress,nextSize))return false;
+        restoringSignal=false;
         boolean automationChanged=mode!=nextMode||channel!=nextChannel;
         mode=nextMode;extensionPixels=pixels;size=nextSize;setRedstoneChannel(nextChannel);
         if(!world.isRemote)block.releaseBelow(world,pos,
@@ -63,13 +64,14 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
                 if(progress==target)LandingGearCovers.refresh(world,pos);}
         }
     }
-    public void placed(){if(isRoot()){RedstoneChannels.register(this);evaluateSignal(true);}}
+    public void placed(){restoringSignal=false;if(isRoot()){RedstoneChannels.register(this);evaluateSignal(true);}}
     public void inputChanged(){RedstoneChannels.inputChanged(this);evaluateSignal(false);}
     private void evaluateSignal(boolean force){
-        if(!isRoot()||world.isRemote)return;
+        if(detached||restoringSignal&&!force||!isRoot()||world.isRemote)return;
         boolean signal=hasLocalRedstoneSignal()||channelSignal;
         if(mode!=0 && (force||signal!=lastSignal))
             ((BlockTelescopicLandingGear)getBlockType()).setExtended(world,pos,mode==1?signal:!signal);
+        if(lastSignal!=signal)markDirty();
         lastSignal=signal;
     }
     public TileEntity channelTile(){return this;}
@@ -80,9 +82,18 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     }
     public boolean hasLocalRedstoneSignal(){return isRoot()&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);}
     public void setChannelSignal(boolean value){if(channelSignal!=value){channelSignal=value;evaluateSignal(false);}}
-    public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::placed);}
-    public void invalidate(){RedstoneChannels.unregister(this);super.invalidate();}
-    public void onChunkUnload(){RedstoneChannels.unregister(this);super.onChunkUnload();}
+    public void onLoad(){
+        super.onLoad();detached=false;restoringSignal=true;
+        // Loading is not placement: retain a manual override until the input changes.
+        DeferredTileLoad.schedule(this,()->{
+            if(!isRoot())return;
+            RedstoneChannels.register(this);
+            // Let every member in this load batch register before deciding the input edge.
+            DeferredTileLoad.schedule(this,()->{restoringSignal=false;evaluateSignal(false);});
+        });
+    }
+    public void invalidate(){detached=true;RedstoneChannels.unregister(this);super.invalidate();}
+    public void onChunkUnload(){detached=true;RedstoneChannels.unregister(this);super.onChunkUnload();}
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
