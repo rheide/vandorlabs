@@ -693,6 +693,9 @@ public class ModBlocks {
                 if(base!=null)event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConfiguredMaterialItemModel(base,path.startsWith("configured/programmable_light")));
             }
         }
+        ModelResourceLocation diagonalScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_screen","inventory");
+        if(event.getModelRegistry().getObject(diagonalScreenItem)!=null)
+            event.getModelRegistry().putObject(diagonalScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(diagonalScreenItem)));
         ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");
         if (event.getModelRegistry().getObject(stairItem)!=null)
             event.getModelRegistry().putObject(stairItem,new com.vandorlabs.client.ProgrammableStairsModel(event.getModelRegistry().getObject(stairItem)));

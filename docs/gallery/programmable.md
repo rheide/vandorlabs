@@ -19,11 +19,15 @@ The Viewscreen shows the selected screen across its forward face. It can use reg
 
 ## Diagonal screen
 
-The stair-shaped screen can rise or descend from the mounting surface while keeping the selected artwork on its sloped face.
+The solid wedge screen can rise or descend from the mounting surface while keeping the selected artwork on its sloped face.
 
 | Rising | Descending |
 | --- | --- |
 | ![Rising diagonal screen](../images/gallery/programmable/diagonal-up.png) | ![Descending diagonal screen](../images/gallery/programmable/diagonal-down.png) |
+
+The hotbar icon now uses the same solid housing and inset sloped display as the placed block.
+
+![Placed diagonal screen with its matching item icon](../images/gallery/programmable/diagonal-screen-hotbar.png)
 
 ## Input and console family
 

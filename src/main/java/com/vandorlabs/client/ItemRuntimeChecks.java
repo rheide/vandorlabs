@@ -154,6 +154,18 @@ final class ItemRuntimeChecks {
                         != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),
                 "programmable block item/name/model");
         checkConfiguredItemModels(mc);
+        net.minecraft.client.renderer.block.model.IBakedModel diagonal=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN),mc.world,player);
+        require(diagonal instanceof DiagonalScreenItemModel,"diagonal screen inventory still uses the legacy thin panel");
+        java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> wedge=diagonal.getQuads(null,null,0);
+        require(wedge.size()==com.vandorlabs.render.ScreenHousingMesh.diagonal(false).quads.length+1,"diagonal screen item missing housing faces or display");
+        double volume=0;
+        for(net.minecraft.client.renderer.block.model.BakedQuad q:wedge)for(int vertex=0;vertex<4;vertex++) {
+            int[] d=q.getVertexData();float y=Float.intBitsToFloat(d[vertex*7+1]),z=Float.intBitsToFloat(d[vertex*7+2]);
+            if(y==1 && z==1)volume++;
+        }
+        require(volume>0,"diagonal screen item missing full-height solid rear");
+        System.out.println("[vandorlabs][reprolab] diagonal-screen-item-runtime PASS shared solid wedge and display face");
+
         for (String family : new String[]{"rocket_thruster","ion_drive",
                 "plasma_vent","impulse_engine"}) {
             Block base = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", family));
