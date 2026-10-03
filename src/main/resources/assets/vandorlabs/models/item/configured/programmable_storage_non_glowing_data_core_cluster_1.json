@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/non_glowing_data_core_cluster_1",
+    "front": "vandorlabs:blocks/non_glowing_data_core_cluster_1",
+    "side": "vandorlabs:blocks/non_glowing_data_core_cluster_1",
+    "particle": "vandorlabs:blocks/non_glowing_data_core_cluster_1"
+  }
+}

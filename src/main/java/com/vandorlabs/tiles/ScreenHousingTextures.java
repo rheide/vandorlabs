@@ -95,6 +95,7 @@ public final class ScreenHousingTextures {
     public static final int LEGACY_COUNT=FINISHES.length;
     public static final int BUILTIN_COUNT;
     public static final int DEFAULT_TRAPDOOR;
+    public static final int DEFAULT_STORAGE;
     private static final java.util.Map<Integer,Integer> FILE_CHOICES=new java.util.HashMap<>();
     static {
         try(java.io.InputStream stream=ScreenHousingTextures.class.getResourceAsStream("/assets/vandorlabs/data/unified_textures.json")) {
@@ -111,6 +112,7 @@ public final class ScreenHousingTextures {
             if(entry.has("key"))FILE_CHOICES.put(entry.get("key").getAsInt(),index);
             TEXTURES[index]="vandorlabs:blocks/"+(entry.has("rectangular")?"unified/"+IDS[index]:entry.get("source").getAsString());
         }
+        DEFAULT_STORAGE=screenIndex("storage/cabinet_front");
         DEFAULT_TRAPDOOR=screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4");
         if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");
     }
@@ -118,6 +120,13 @@ public final class ScreenHousingTextures {
     public static String category(int choice){com.google.gson.JsonObject e=entry(choice);return e!=null?e.get("category").getAsString():choice<28?"Materials":choice<44?"Texture Pack 1":choice<67?"Texture Pack 2":"Hull Plating";}
     public static String label(int choice){com.google.gson.JsonObject e=entry(choice);return e==null?null:e.get("label").getAsString();}
     public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
+    /** Storage sets use their front as the ordinary shared material thumbnail. */
+    public static String storageTexture(int choice, net.minecraft.util.EnumFacing localFace) {
+        com.google.gson.JsonObject e = entry(choice);
+        String key = localFace.getAxis() == net.minecraft.util.EnumFacing.Axis.Y ? "top" : "side";
+        return localFace == net.minecraft.util.EnumFacing.NORTH || e == null || !e.has(key)
+                ? texture(choice) : "vandorlabs:blocks/" + e.get(key).getAsString();
+    }
     public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
     public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
     /** Static Off artwork remains available as a material, but not in light menus. */

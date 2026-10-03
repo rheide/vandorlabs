@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/bolted_wall_plate",
+    "front": "vandorlabs:blocks/bolted_wall_plate",
+    "side": "vandorlabs:blocks/bolted_wall_plate",
+    "particle": "vandorlabs:blocks/bolted_wall_plate"
+  }
+}

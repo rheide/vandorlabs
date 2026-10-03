@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/seamed_padding",
+    "front": "vandorlabs:blocks/seamed_padding",
+    "side": "vandorlabs:blocks/seamed_padding",
+    "particle": "vandorlabs:blocks/seamed_padding"
+  }
+}

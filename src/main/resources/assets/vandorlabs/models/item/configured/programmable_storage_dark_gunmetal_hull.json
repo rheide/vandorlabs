@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/dark_gunmetal_hull",
+    "front": "vandorlabs:blocks/dark_gunmetal_hull",
+    "side": "vandorlabs:blocks/dark_gunmetal_hull",
+    "particle": "vandorlabs:blocks/dark_gunmetal_hull"
+  }
+}

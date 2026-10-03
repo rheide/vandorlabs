@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/hull_plating_6",
+    "front": "vandorlabs:blocks/hull_plating_6",
+    "side": "vandorlabs:blocks/hull_plating_6",
+    "particle": "vandorlabs:blocks/hull_plating_6"
+  }
+}

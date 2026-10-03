@@ -93,6 +93,10 @@ public class GuiProgrammableWall extends GuiContainer {
         ySize = porthole ? (diagonal ? 298 : 272) : diagonal ? 242 : slab ? 242 : supportsFaces() ? 216 : 190;
         if (supportsFaces() && tile.getFaceTextures().enabled) ySize+=52;
         if (diagonal) ySize += 26;
+        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) {
+            ySize = Math.min(height - 8, 264);
+            rows = Math.max(4, (ySize - 60) / ROW_H);
+        }
         while (ySize > height-8 && rows > (diagonal && porthole ? 2 : 3)) { rows--; ySize-=ROW_H; }
         super.initGui();
         buttonList.clear();
@@ -300,6 +304,7 @@ public class GuiProgrammableWall extends GuiContainer {
         fontRenderer.drawString(I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                         instanceof com.vandorlabs.blocks.BlockProgrammableStairs ? "gui.vandorlabs.stairs.title"
                 : tile.getBlockType() instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
+                        : tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage ? "tile.vandorlabs.programmable_storage.name"
                         : fullBlock ? "gui.vandorlabs.block.title"
                         : "gui.vandorlabs.wall.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);

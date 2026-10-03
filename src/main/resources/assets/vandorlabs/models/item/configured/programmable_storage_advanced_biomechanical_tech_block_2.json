@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/advanced_biomechanical_tech_block_2",
+    "front": "vandorlabs:blocks/advanced_biomechanical_tech_block_2",
+    "side": "vandorlabs:blocks/advanced_biomechanical_tech_block_2",
+    "particle": "vandorlabs:blocks/advanced_biomechanical_tech_block_2"
+  }
+}

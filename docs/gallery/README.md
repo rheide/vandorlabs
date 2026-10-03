@@ -11,6 +11,7 @@ at full size to inspect its texture and model.
 ## Blocks and systems
 
 - [Programmable displays and consoles](programmable.md)
+- [Programmable Storage](../programmable-storage.md)
 - [Programmable Door](doors.md)
 - [Programmable Trapdoor](programmable-trapdoor.md)
 - [Programmable Diagonal Trapdoor](programmable-diagonal-trapdoor.md)
@@ -29,7 +30,7 @@ Crafting recipes are listed in the in-game recipe book and in the main
 
 ## Regenerating screenshots
 
-Run `bash testclient/generate_gallery.sh` from the repository root. This builds
+Run `bash testclient/generate_gallery.sh --focus storage` from the repository root. This builds
 the current jar, starts the software-rendered client, checks live behavior, and
 exports the selected screenshots to `docs/images/gallery`. See the
 [gallery maintenance guide](CONTRIBUTING.md) for details.

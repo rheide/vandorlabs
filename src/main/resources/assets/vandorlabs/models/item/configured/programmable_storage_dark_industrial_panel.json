@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/thrusters/dark_trim",
+    "front": "vandorlabs:blocks/thrusters/dark_trim",
+    "side": "vandorlabs:blocks/thrusters/dark_trim",
+    "particle": "vandorlabs:blocks/thrusters/dark_trim"
+  }
+}

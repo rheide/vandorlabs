@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/midnight_satin_hull",
+    "front": "vandorlabs:blocks/midnight_satin_hull",
+    "side": "vandorlabs:blocks/midnight_satin_hull",
+    "particle": "vandorlabs:blocks/midnight_satin_hull"
+  }
+}

@@ -30,9 +30,15 @@ public final class ProgrammableHousingModel implements IBakedModel {
             EnumFacing.WEST, EnumFacing.EAST, EnumFacing.NORTH, EnumFacing.SOUTH};
     private final IBakedModel delegate;
     private final boolean slab;
+    private final boolean storage;
     private final Map<Long, BakedQuad> variants = new ConcurrentHashMap<>();
 
     public ProgrammableHousingModel(IBakedModel delegate, boolean slab) {
+        this(delegate, slab, false);
+    }
+
+    public ProgrammableHousingModel(IBakedModel delegate, boolean slab, boolean storage) {
+        this.storage = storage;
         this.delegate = delegate;
         this.slab = slab;
     }
@@ -74,7 +80,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
 
     private BakedQuad build(int finish, EnumFacing facing, boolean upper, boolean tileSides, int i) {
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite(ScreenHousingTextures.texture(finish));
+                .getAtlasSprite(storage ? ScreenHousingTextures.storageTexture(finish, FACE[i]) : ScreenHousingTextures.texture(finish));
         ScreenHousingMesh mesh = slab ? ScreenHousingMesh.slab(upper, tileSides)
                 : ScreenHousingMesh.cube();
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;

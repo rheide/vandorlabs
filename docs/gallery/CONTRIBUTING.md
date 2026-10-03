@@ -9,6 +9,9 @@ For a small trapdoor change, capture and validate just the affected scenes:
 testclient/generate_gallery.sh --focus trapdoors
 ```
 
+`--focus storage` captures the storage sets, inventory, material picker and hotbar icons and
+runs the storage inventory and rendering contracts.
+
 `--focus` also accepts a mapped scene prefix. It runs the focused runtime checks
 and verifies the requested captures; it does not run the full-gallery pixel
 analyzers. Inspect the changed images before publishing them.

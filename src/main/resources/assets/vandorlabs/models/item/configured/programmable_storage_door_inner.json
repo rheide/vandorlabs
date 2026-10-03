@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/programmable_glass/door_side",
+    "front": "vandorlabs:blocks/programmable_glass/door_side",
+    "side": "vandorlabs:blocks/programmable_glass/door_side",
+    "particle": "vandorlabs:blocks/programmable_glass/door_side"
+  }
+}

@@ -40,3 +40,9 @@ for style in ('fit', 'tile'):
         (out / ('programmable_slab_' + choice + '_' + style + '.json')).write_text(
             json.dumps(model, indent=2) + '\n')
 print('Generated', len(ids) * 11, 'configured item models')
+
+# Storage has three faces for its sets and a uniform finish for legacy choices.
+for choice, texture in zip(ids, textures):
+    model = {'parent': 'block/orientable', 'textures': {face: 'vandorlabs:blocks/' + texture
+             for face in ('top', 'front', 'side', 'particle')}}
+    (out / ('programmable_storage_' + choice + '.json')).write_text(json.dumps(model, indent=2) + '\n')

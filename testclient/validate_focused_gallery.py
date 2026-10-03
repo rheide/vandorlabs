@@ -26,6 +26,9 @@ for name in selected:
         require('diagonal-partial-patch-runtime PASS client ' + name[len('gallery_trapdoor_'):])
 require('custom-materials-runtime PASS')
 require('imported-materials-runtime PASS')
+if target == 'storage':
+    for marker in ('storage-inventory-runtime PASS','storage-material-runtime PASS','storage-gui-runtime PASS','storage-hotbar-runtime PASS'):
+        require(marker)
 if target == 'trapdoors':
     for marker in ['sliding-next-mount-overlap-runtime PASS client closed',
                    'sliding-next-mount-overlap-runtime PASS client open',

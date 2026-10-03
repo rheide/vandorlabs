@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/burgundy_carpet",
+    "front": "vandorlabs:blocks/burgundy_carpet",
+    "side": "vandorlabs:blocks/burgundy_carpet",
+    "particle": "vandorlabs:blocks/burgundy_carpet"
+  }
+}

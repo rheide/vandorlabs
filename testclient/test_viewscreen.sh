@@ -2,7 +2,7 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 
-unset VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY
+unset VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -13,6 +13,9 @@ case "${1:-}" in
         if [ "$TARGET" = trapdoors ]; then
             PREFIX=gallery_trapdoor_followup_
             export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = storage ]; then
+            PREFIX=gallery_storage_
+            export VANDOR_LABS_STORAGE_CHECKS_ONLY=true
         else
             PREFIX=$TARGET
         fi

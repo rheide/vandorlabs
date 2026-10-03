@@ -86,7 +86,8 @@ def main():
         texture_text, re.MULTILINE))
     missing_files = sorted(name for name, relative in declarations.items()
                            if relative.startswith("assets/vandorlabs/textures/")
-                           and not (TEXTURES / relative.split("assets/vandorlabs/textures/",1)[1]).is_file())
+                           and not any((folder / relative.split("assets/vandorlabs/textures/",1)[1]).is_file()
+                                       for folder in (TEXTURES, ROOT / "texture-packs/additional/assets/vandorlabs/textures")))
     if missing_files:
         raise AssertionError("missing declared textures: " + repr(missing_files))
     referenced = set(re.findall(r"patch\d+=\d+:([^,\n]+)", texture_text))

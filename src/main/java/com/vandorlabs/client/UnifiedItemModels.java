@@ -19,6 +19,11 @@ public final class UnifiedItemModels implements ICustomModelLoader {
     @Override public boolean accepts(ResourceLocation location){return choice(location)>=0;}
     @Override public IModel loadModel(ResourceLocation location) throws Exception {
         int i=choice(location);String path=location.getResourcePath().replace("_"+ScreenHousingTextures.IDS[i],"_dark_wall_panel");
+        if(path.contains("programmable_storage_"))
+            return ModelLoaderRegistry.getModel(new ResourceLocation(location.getResourceDomain(),path))
+                .retexture(ImmutableMap.of("top",ScreenHousingTextures.storageTexture(i,net.minecraft.util.EnumFacing.UP),
+                    "side",ScreenHousingTextures.storageTexture(i,net.minecraft.util.EnumFacing.EAST),
+                    "front",ScreenHousingTextures.texture(i),"particle",ScreenHousingTextures.texture(i)));
         return ModelLoaderRegistry.getModel(new ResourceLocation(location.getResourceDomain(),path))
             .retexture(ImmutableMap.of("all",ScreenHousingTextures.texture(i),"wall",ScreenHousingTextures.texture(i),"particle",ScreenHousingTextures.texture(i)));
     }

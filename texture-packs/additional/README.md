@@ -31,3 +31,7 @@ ordinary programmable surfaces. Programmable Storage uses the accompanying
 `top` and `side` entries, with the top also used underneath. Cabinet is first
 alphabetically and is the default storage set. Catalog IDs are appended to
 preserve existing saved material indices.
+
+Storage PNGs remain 140×140 on disk. The shared atlas loader pads them internally
+with edge pixels and bounds their UVs to the artwork, supporting Minecraft
+mipmaps without stretching or changing the exported files.

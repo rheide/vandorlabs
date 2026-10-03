@@ -266,6 +266,7 @@ public final class ProgrammableSettings {
         net.minecraft.item.ItemStack output = input.copy(); output.setCount(1);
         NBTTagCompound data = tile.writeToNBT(new NBTTagCompound());
         data.removeTag("x"); data.removeTag("y"); data.removeTag("z"); data.removeTag("id");
+        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) data.removeTag("Items");
         output.setTagInfo("BlockEntityTag", data);
         if (tile instanceof TileEntitySpaceDoor) output.setTagInfo("SpaceDoorSettings", ((TileEntitySpaceDoor)tile).itemSettings());
         if (tile instanceof TileEntityProgrammableGlass) {

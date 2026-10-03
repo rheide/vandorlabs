@@ -180,6 +180,7 @@ public final class BetterBuildersWandsCompat {
             TileEntity tile = world.getTileEntity(pos);
             tileNbt = tile == null ? null
                     : tile.writeToNBT(new NBTTagCompound());
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) tileNbt.removeTag("Items");
         }
     }
 

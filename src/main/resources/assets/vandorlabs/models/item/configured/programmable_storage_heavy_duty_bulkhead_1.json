@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/heavy_duty_bulkhead_1",
+    "front": "vandorlabs:blocks/heavy_duty_bulkhead_1",
+    "side": "vandorlabs:blocks/heavy_duty_bulkhead_1",
+    "particle": "vandorlabs:blocks/heavy_duty_bulkhead_1"
+  }
+}

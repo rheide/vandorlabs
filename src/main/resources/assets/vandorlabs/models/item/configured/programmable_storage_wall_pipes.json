@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/wall_pipes",
+    "front": "vandorlabs:blocks/wall_pipes",
+    "side": "vandorlabs:blocks/wall_pipes",
+    "particle": "vandorlabs:blocks/wall_pipes"
+  }
+}

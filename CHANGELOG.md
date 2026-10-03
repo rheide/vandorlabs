@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Programmable Storage: 27 inventory slots, hopper/item-handler access, comparator output, shared material picker and matching top/side/front Storage sets. Defaults to Cabinet; crafted from a chest and Programmable Block. Appearance copying preserves target contents, and mining drops contents separately.
+
 - Added ten Storage material sets from supplied top/side/front sheets, split into 30 crisp 140×140 textures.
 
 - Gallery updates support focused live captures and incremental export, preserving unrelated screenshots and avoiding a second client run. Full refreshes require `--full`.

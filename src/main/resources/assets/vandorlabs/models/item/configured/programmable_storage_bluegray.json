@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/bluegray_carpet",
+    "front": "vandorlabs:blocks/bluegray_carpet",
+    "side": "vandorlabs:blocks/bluegray_carpet",
+    "particle": "vandorlabs:blocks/bluegray_carpet"
+  }
+}

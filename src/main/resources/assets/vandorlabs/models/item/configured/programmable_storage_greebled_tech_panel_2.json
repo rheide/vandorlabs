@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/greebled_tech_panel_2",
+    "front": "vandorlabs:blocks/greebled_tech_panel_2",
+    "side": "vandorlabs:blocks/greebled_tech_panel_2",
+    "particle": "vandorlabs:blocks/greebled_tech_panel_2"
+  }
+}

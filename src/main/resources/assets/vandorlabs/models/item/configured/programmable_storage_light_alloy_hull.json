@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/light_alloy_hull",
+    "front": "vandorlabs:blocks/light_alloy_hull",
+    "side": "vandorlabs:blocks/light_alloy_hull",
+    "particle": "vandorlabs:blocks/light_alloy_hull"
+  }
+}

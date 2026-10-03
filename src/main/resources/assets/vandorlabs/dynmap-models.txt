@@ -20501,3 +20501,8 @@ modellist:id=%programmable_stairs,state=facing:north/half:top/shape:inner_left,b
 
 customblock:id=%programmable_trapdoor,state=*,class=com.vandorlabs.dynmap.ProgrammableTrapdoorRenderer
 customblock:id=%programmable_diagonal_trapdoor,state=*,class=com.vandorlabs.dynmap.ProgrammableDiagonalTrapdoorRenderer
+
+modellist:id=%programmable_storage,state=facing:north,box=0/0/0:16/16/16:e/0:u/1:n/2:s/0:d/1:w/0
+modellist:id=%programmable_storage,state=facing:east,box=0/0/0:16/16/16:e/0:u/1:n/2:s/0:d/1:w/0:R/0/90/0
+modellist:id=%programmable_storage,state=facing:south,box=0/0/0:16/16/16:e/0:u/1:n/2:s/0:d/1:w/0:R/0/180/0
+modellist:id=%programmable_storage,state=facing:west,box=0/0/0:16/16/16:e/0:u/1:n/2:s/0:d/1:w/0:R/0/270/0

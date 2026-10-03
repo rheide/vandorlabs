@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/thermal_shielding_panel_1",
+    "front": "vandorlabs:blocks/thermal_shielding_panel_1",
+    "side": "vandorlabs:blocks/thermal_shielding_panel_1",
+    "particle": "vandorlabs:blocks/thermal_shielding_panel_1"
+  }
+}

@@ -37,6 +37,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_CONSOLE;
     public static Block PROGRAMMABLE_WALL;
     public static Block PROGRAMMABLE_BLOCK;
+    public static Block PROGRAMMABLE_STORAGE;
     public static Block PROGRAMMABLE_TRAPDOOR;
     public static Block PROGRAMMABLE_DIAGONAL_TRAPDOOR;
     public static Block PROGRAMMABLE_TRIGGER_BLOCK;
@@ -180,6 +181,7 @@ public class ModBlocks {
         PROGRAMMABLE_WALL = add(new BlockProgrammableWall("programmable_wall",
                 BlockProgrammableWall.Shape.PLAIN));
         PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
+        PROGRAMMABLE_STORAGE = add(new BlockProgrammableStorage());
         PROGRAMMABLE_TRAPDOOR = add(new BlockProgrammableTrapdoor());
         PROGRAMMABLE_DIAGONAL_TRAPDOOR = add(new BlockProgrammableDiagonalTrapdoor());
         PROGRAMMABLE_TRIGGER_BLOCK = add(new BlockProgrammableTrigger());
@@ -460,7 +462,7 @@ public class ModBlocks {
                     ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
                     continue;
                 }
-                if (block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_TRAPDOOR || block == PROGRAMMABLE_DIAGONAL_TRAPDOOR || block == PROGRAMMABLE_TRIGGER_BLOCK
+                if (block == PROGRAMMABLE_STORAGE || block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_TRAPDOOR || block == PROGRAMMABLE_DIAGONAL_TRAPDOOR || block == PROGRAMMABLE_TRIGGER_BLOCK
                         || block == PROGRAMMABLE_SLAB
                         || block == PROGRAMMABLE_WALL || block == PROGRAMMABLE_DIAGONAL_WALL
                         || block == PROGRAMMABLE_PORTHOLE_WALL
@@ -549,7 +551,7 @@ public class ModBlocks {
         ModelLoader.setCustomMeshDefinition(item, stack -> {
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int choice = tag == null || !tag.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3)
-                    ? (block instanceof BlockProgrammableTrapdoor ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR : 0)
+                    ? (block instanceof BlockProgrammableStorage ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_STORAGE : block instanceof BlockProgrammableTrapdoor ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR : 0)
                     : com.vandorlabs.tiles.ScreenHousingTextures.clamp(tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
             return new ModelResourceLocation(variants[com.vandorlabs.tiles.ScreenHousingTextures.localIndex(choice)], "inventory");
         });
@@ -623,7 +625,7 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
         com.vandorlabs.client.DoorRenderModels.clear();
-        String[] shapes={"programmable_block","programmable_trapdoor","programmable_diagonal_trapdoor",
+        String[] shapes={"programmable_storage","programmable_block","programmable_trapdoor","programmable_diagonal_trapdoor",
                 "programmable_trigger_block","programmable_wall","programmable_diagonal_wall",
                 "programmable_porthole_wall","programmable_porthole_block","programmable_slab"};
         for(String shape:shapes)for(String suffix:shape.equals("programmable_slab")?new String[]{"_fit","_tile"}:new String[]{""}) {
@@ -632,7 +634,7 @@ public class ModBlocks {
             if(base==null)continue;
             for(int i=com.vandorlabs.tiles.ScreenHousingTextures.LEGACY_COUNT;i<com.vandorlabs.tiles.ScreenHousingTextures.IDS.length;i++) {
                 ModelResourceLocation target=new ModelResourceLocation("vandorlabs:configured/"+shape+"_"+com.vandorlabs.tiles.ScreenHousingTextures.IDS[i]+suffix,"inventory");
-                event.getModelRegistry().putObject(target,new com.vandorlabs.client.RetexturedItemModel(base,
+                event.getModelRegistry().putObject(target,shape.equals("programmable_storage") ? new com.vandorlabs.client.RetexturedItemModel(base,i) : new com.vandorlabs.client.RetexturedItemModel(base,
                     net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(i))));
             }
         }
@@ -650,6 +652,11 @@ public class ModBlocks {
             if ("programmable_stairs".equals(path)) {
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.ProgrammableStairsModel(
                         event.getModelRegistry().getObject(location)));
+                continue;
+            }
+            if ("programmable_storage".equals(path)) {
+                event.getModelRegistry().putObject(location, new com.vandorlabs.client.ProgrammableHousingModel(
+                        event.getModelRegistry().getObject(location), false, true));
                 continue;
             }
             if (!"programmable_block".equals(path) && !"programmable_slab".equals(path)) continue;

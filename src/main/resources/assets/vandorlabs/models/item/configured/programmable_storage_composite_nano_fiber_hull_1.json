@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/composite_nano_fiber_hull_1",
+    "front": "vandorlabs:blocks/composite_nano_fiber_hull_1",
+    "side": "vandorlabs:blocks/composite_nano_fiber_hull_1",
+    "particle": "vandorlabs:blocks/composite_nano_fiber_hull_1"
+  }
+}

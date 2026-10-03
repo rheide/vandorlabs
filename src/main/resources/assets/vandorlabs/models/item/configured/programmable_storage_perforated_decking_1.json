@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/perforated_decking_1",
+    "front": "vandorlabs:blocks/perforated_decking_1",
+    "side": "vandorlabs:blocks/perforated_decking_1",
+    "particle": "vandorlabs:blocks/perforated_decking_1"
+  }
+}

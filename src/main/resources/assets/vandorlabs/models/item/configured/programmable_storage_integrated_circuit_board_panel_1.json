@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/integrated_circuit_board_panel_1",
+    "front": "vandorlabs:blocks/integrated_circuit_board_panel_1",
+    "side": "vandorlabs:blocks/integrated_circuit_board_panel_1",
+    "particle": "vandorlabs:blocks/integrated_circuit_board_panel_1"
+  }
+}

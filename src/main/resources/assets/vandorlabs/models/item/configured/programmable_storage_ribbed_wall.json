@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/ribbed_wall",
+    "front": "vandorlabs:blocks/ribbed_wall",
+    "side": "vandorlabs:blocks/ribbed_wall",
+    "particle": "vandorlabs:blocks/ribbed_wall"
+  }
+}

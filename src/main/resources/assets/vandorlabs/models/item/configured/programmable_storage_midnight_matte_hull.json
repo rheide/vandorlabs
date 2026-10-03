@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/midnight_matte_hull",
+    "front": "vandorlabs:blocks/midnight_matte_hull",
+    "side": "vandorlabs:blocks/midnight_matte_hull",
+    "particle": "vandorlabs:blocks/midnight_matte_hull"
+  }
+}

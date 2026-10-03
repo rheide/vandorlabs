@@ -33,6 +33,7 @@ public class GuiHandler implements IGuiHandler {
     public static final int GUI_DUPLIFIER = 7;
     public static final int GUI_LANDING_GEAR = 8;
     public static final int GUI_PROGRAMMABLE_TRAPDOOR = 9;
+    public static final int GUI_PROGRAMMABLE_STORAGE = 10;
 
     private static TileEntity doorTile(World world, BlockPos pos) {
         net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
@@ -51,6 +52,13 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_PROGRAMMABLE_STORAGE) {
+            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage
+                    && ((com.vandorlabs.tiles.TileEntityProgrammableStorage)tile).isUsableByPlayer(player))
+                return new net.minecraft.inventory.ContainerChest(player.inventory, (com.vandorlabs.tiles.TileEntityProgrammableStorage)tile, player);
+            return null;
+        }
         if (ID == GUI_DUPLIFIER && player.getHeldItemMainhand().getItem()
                 == com.vandorlabs.items.ModItems.DUPLIFIER)
             return new com.vandorlabs.container.ContainerDuplifier(player.inventory);
@@ -99,6 +107,8 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+            if (te instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage
+                    && !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) return null;
             if (te instanceof TileEntityAnimatedScreenSelector) {
                 return new ContainerAnimatedScreenSelector(player.inventory, (TileEntityAnimatedScreenSelector) te);
             }
@@ -108,6 +118,13 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_PROGRAMMABLE_STORAGE) {
+            TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
+            if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage
+                    && ((com.vandorlabs.tiles.TileEntityProgrammableStorage)tile).isUsableByPlayer(player))
+                return new net.minecraft.client.gui.inventory.GuiChest(player.inventory, (com.vandorlabs.tiles.TileEntityProgrammableStorage)tile);
+            return null;
+        }
         if (ID == GUI_DUPLIFIER && player.getHeldItemMainhand().getItem()
                 == com.vandorlabs.items.ModItems.DUPLIFIER)
             return new com.vandorlabs.client.GuiDuplifier(player.inventory);
@@ -158,6 +175,8 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+            if (te instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage
+                    && !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)) return null;
             if (te instanceof TileEntityAnimatedScreenSelector) {
                 if (world.getBlockState(new BlockPos(x, y, z)).getBlock()
                         instanceof BlockProgrammableTrigger)

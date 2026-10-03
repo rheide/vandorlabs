@@ -3516,5 +3516,12 @@
     "class": "BlockProgrammableDiagonalTrapdoor",
     "item": true,
     "programmable_only": true
+  },
+  {
+    "id": "programmable_storage",
+    "type": "storage",
+    "item": true,
+    "class": "BlockProgrammableStorage",
+    "programmable_only": true
   }
 ]

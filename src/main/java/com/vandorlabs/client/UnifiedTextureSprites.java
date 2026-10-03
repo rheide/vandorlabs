@@ -16,9 +16,14 @@ public final class UnifiedTextureSprites {
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             com.google.gson.JsonObject e=ScreenHousingTextures.entry(i);
-            if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
+            if(e!=null && e.has("top"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),false,false));
+            else if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
             else event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i)));
             if(e!=null && e.has("design"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),true,false,true));
+            if(e!=null && e.has("top")) {
+                event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/"+e.get("top").getAsString(),e.get("top").getAsString(),false,false));
+                event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/"+e.get("side").getAsString(),e.get("side").getAsString(),false,false));
+            }
             if(e!=null && e.has("unlit"))event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i,false)));
         }
     }

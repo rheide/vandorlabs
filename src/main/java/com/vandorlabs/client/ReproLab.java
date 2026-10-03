@@ -314,6 +314,7 @@ public class ReproLab {
             boolean opposed=scene.startsWith("opposing_next"),neighbors=scene.equals("flat_rotate_neighbors"),wall=scene.equals("diagonal_slide_wall");
             SHOTS.add(new Shot("gallery_trapdoor_followup_"+scene,opposed?GALLERY_X+.5:GALLERY_X-(wall?3:.7),galleryFeet+(opposed?4.5:neighbors?1.5:3.2),opposed?-23:neighbors || wall?-14.5:-21.5,opposed?0:neighbors?180:wall?-155:-8,opposed?35:neighbors?0:wall?20:scene.startsWith("flat") || scene.startsWith("next")?30:12));
         }
+        SHOTS.add(new Shot("gallery_storage_sets",GALLERY_X-5,galleryFeet+5,-22, -37, 30));
         SHOTS.add(new Shot("gallery_trapdoor_followup_vanilla_alignment_open",GALLERY_X-1.5,galleryFeet+4,-17.5,180,70));
         for(String surface:new String[]{"floor","ceiling"})SHOTS.add(new Shot("gallery_trapdoor_followup_flush_"+surface,GALLERY_X-.7,galleryFeet+(surface.equals("floor")?1.12:1.85),-21.5,-8,0));
         for(String scene:new String[]{"door_fit","door_tile","door_block_half"})SHOTS.add(new Shot("gallery_v12_"+scene,GALLERY_X+.8,galleryFeet+1,-20,14,5));
@@ -443,6 +444,7 @@ public class ReproLab {
         lightPickerPreviousScale=mc.gameSettings.guiScale;
         mc.displayGuiScreen(new GuiProgrammableLight(mc.player.inventory,(com.vandorlabs.tiles.TileEntityProgrammableLight)raw));
     }
+    private boolean storageGuiDone;
     private int lightPickerPreviousScale;
     private int state = 0; // 0 menu, 1 wait, 2 build, 3 shots, 4-7 GUIs, 8 hotbar, 9 done
     private int tick = 0;
@@ -551,7 +553,7 @@ public class ReproLab {
                 }
                 beginShot(mc, SHOTS.get(shotIndex), true);
                 state = 3;
-                holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")?100:CAPTURE_SETTLE_TICKS;
+                holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly") || Boolean.getBoolean("vandorlabs.storageChecksOnly")?100:CAPTURE_SETTLE_TICKS;
                 break;
             case 3:
                 if (--holdTicks > 0) {
@@ -564,6 +566,7 @@ public class ReproLab {
                     com.vandorlabs.tiles.TileEntitySpaceDoor door=(com.vandorlabs.tiles.TileEntitySpaceDoor)rawDoor;
                     if(door.getFaceTexture()!=com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(Blocks.BRICK_BLOCK)) || door.isTileTexture()!=s.name.endsWith("_tile"))throw new IllegalStateException("Door material gallery settings did not synchronize");
                 }
+                if(s.name.equals("gallery_storage_sets"))StorageRuntimeChecks.client(mc,GALLERY_X,GALLERY_Y);
                 if(s.name.startsWith("gallery_trapdoor_followup_"))TrapdoorMaterialRuntimeChecks.checkScene(mc,s.name.substring("gallery_trapdoor_followup_".length()),GALLERY_X,GALLERY_Y);
                 if(s.name.startsWith("gallery_trapdoor_v_") || s.name.contains("diagonal_opposite_slopes") || s.name.contains("diagonal_reversed_plane"))TrapdoorGallery.checkOutside(mc.world,(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)mc.world.getTileEntity(new BlockPos(GALLERY_X-1,GALLERY_Y+2,-18)),s.name.startsWith("gallery_trapdoor_v_") || s.name.contains("opposite_slopes"));
                 if(s.name.startsWith("gallery_trapdoor_stagger_halfwidth_") || s.name.startsWith("gallery_trapdoor_stagger_shallow_")) {
@@ -589,7 +592,7 @@ public class ReproLab {
                     beginShot(mc, new Shot("gui_return", CONSOLE.getX() + 0.5D,
                             Y + 1.0D - 1.62D, CONSOLE.getZ() - 2.5D,
                             0.0F, -90.0F), false);
-                    state = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")?49:11;
+                    state = Boolean.getBoolean("vandorlabs.storageChecksOnly")?100:Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")?49:11;
                     holdTicks = 40;
                 }
                 break;
@@ -1251,7 +1254,64 @@ public class ReproLab {
                 offsetTrapdoorChecks=new OffsetTrapdoorRuntimeChecks(CONSOLE.add(15,0,3));state=58;break;
             case 58:
                 if(offsetTrapdoorChecks.tick(mc)){state=9;holdTicks=10;}break;
+            case 100:
+                onServer(mc, () -> StorageRuntimeChecks.build(mc.getIntegratedServer().getWorld(0),GALLERY_X,GALLERY_Y));
+                BlockPos storagePos=new BlockPos(GALLERY_X-4,GALLERY_Y,-18);
+                mc.player.setPositionAndUpdate(storagePos.getX()+.5,storagePos.getY()+1,storagePos.getZ()-2);
+                onServer(mc, () -> {
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.setPositionAndUpdate(storagePos.getX()+.5,storagePos.getY()+1,storagePos.getZ()-2);
+                });
+                state=101;holdTicks=40;break;
+            case 101:
+                if(--holdTicks>0)break;
+                mc.gameSettings.hideGUI=false;
+                onServer(mc, () -> {
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    BlockPos at=new BlockPos(GALLERY_X-4,GALLERY_Y,-18);
+                    ((com.vandorlabs.tiles.TileEntityProgrammableStorage)owner.world.getTileEntity(at))
+                        .setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.IRON_INGOT,32));
+                    owner.setSneaking(false);
+                    boolean creative=owner.capabilities.isCreativeMode;
+                    owner.capabilities.isCreativeMode=false;
+                    ModBlocks.PROGRAMMABLE_STORAGE.onBlockActivated(owner.world,at,owner.world.getBlockState(at),owner,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.NORTH,0,0,0);
+                    owner.capabilities.isCreativeMode=creative;
+                });
+                state=102;holdTicks=40;break;
+            case 102:
+                if(--holdTicks>0)break;
+                StorageRuntimeChecks.require(mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiChest,"normal interaction opens inventory");
+                StorageRuntimeChecks.require(mc.player.openContainer.inventorySlots.size()==63 && mc.player.openContainer.getSlot(0).getStack().getCount()==32,"inventory contents synchronize");
+                save(mc,new Shot("gallery_storage_inventory",0,0,0,0,0));
+                mc.player.closeScreen();
+                onServer(mc, () -> {
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    BlockPos at=new BlockPos(GALLERY_X-4,GALLERY_Y,-18);
+                    owner.setSneaking(true);
+                    ModBlocks.PROGRAMMABLE_STORAGE.onBlockActivated(owner.world,at,owner.world.getBlockState(at),owner,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.NORTH,0,0,0);
+                    owner.setSneaking(false);
+                });
+                state=103;holdTicks=40;break;
+            case 103:
+                if(--holdTicks>0)break;
+                StorageRuntimeChecks.require(mc.currentScreen instanceof GuiProgrammableWall,"creative shift interaction opens shared picker");
+                save(mc,new Shot("gallery_storage_picker",0,0,0,0,0));
+                System.out.println("[vandorlabs][reprolab] storage-gui-runtime PASS");
+                mc.player.closeScreen();
+                for(int slot=0;slot<3;slot++)mc.player.inventory.setInventorySlotContents(slot,StorageRuntimeChecks.hotbarStack(slot));
+                onServer(mc, () -> {
+                    EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    for(int slot=0;slot<3;slot++)owner.inventory.setInventorySlotContents(slot,StorageRuntimeChecks.hotbarStack(slot));
+                });
+                mc.player.inventory.currentItem=0;
+                state=104;holdTicks=30;break;
+            case 104:
+                if(--holdTicks>0)break;
+                StorageRuntimeChecks.checkHotbar(mc);
+                save(mc,new Shot("gallery_storage_hotbar",0,0,0,0,0));
+                storageGuiDone=true;state=9;break;
             case 9:
+                if(!storageGuiDone && !Boolean.getBoolean("vandorlabs.trapdoorChecksOnly")){state=100;break;}
                 if (--holdTicks > 0) break;
                 mc.shutdown();
                 break;
@@ -1632,6 +1692,7 @@ public class ReproLab {
         onServer(mc, () -> {
             ScreenRuntimeChecks.run(serverPlayer);
             MaterialRuntimeChecks.run(serverPlayer);
+            StorageRuntimeChecks.server(world,serverPlayer);
         });
         ScreenRuntimeChecks.checkClientPlacement(mc);
         CustomMaterialRuntimeChecks.run(mc.player);
@@ -1788,7 +1849,9 @@ public class ReproLab {
                 new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
-        if (shot.startsWith("gallery_trapdoor_")) {
+        if (shot.equals("gallery_storage_sets")) {
+            StorageRuntimeChecks.build(world,GALLERY_X,GALLERY_Y);
+        } else if (shot.startsWith("gallery_trapdoor_")) {
             TrapdoorGallery.build(world,shot.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);
         } else if (shot.startsWith("gallery_close_display_")) {
             String kind = shot.substring("gallery_close_display_".length());

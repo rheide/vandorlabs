@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/matter",
+    "front": "vandorlabs:blocks/matter",
+    "side": "vandorlabs:blocks/matter",
+    "particle": "vandorlabs:blocks/matter"
+  }
+}

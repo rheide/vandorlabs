@@ -11,20 +11,28 @@ public final class RetexturedItemModel implements IBakedModel {
     private final IBakedModel base;
     private final TextureAtlasSprite sprite;
     private final boolean lightOnly;
+    private int storageChoice = -1;
+    public RetexturedItemModel(IBakedModel base, int storageChoice) {
+        this(base, net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
+                com.vandorlabs.tiles.ScreenHousingTextures.texture(storageChoice)));
+        this.storageChoice = storageChoice;
+    }
     public RetexturedItemModel(IBakedModel base,TextureAtlasSprite sprite){this(base,sprite,false);}
     public RetexturedItemModel(IBakedModel base,TextureAtlasSprite sprite,boolean lightOnly){this.base=base;this.sprite=sprite;this.lightOnly=lightOnly;}
     @Override public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed){
         List<BakedQuad> result=new ArrayList<>();
         for(BakedQuad quad:base.getQuads(state,side,seed)) {
             if(lightOnly && !isLamp(quad.getSprite().getIconName())){result.add(quad);continue;}
+            TextureAtlasSprite target = storageChoice < 0 ? sprite : net.minecraft.client.Minecraft.getMinecraft()
+                    .getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.storageTexture(storageChoice,quad.getFace()));
             int[] data=quad.getVertexData().clone();int stride=data.length/4;
             for(int v=0;v<4;v++) {
                 float u=quad.getSprite().getUnInterpolatedU(Float.intBitsToFloat(data[v*stride+4]));
                 float t=quad.getSprite().getUnInterpolatedV(Float.intBitsToFloat(data[v*stride+5]));
-                data[v*stride+4]=Float.floatToRawIntBits(sprite.getInterpolatedU(u));
-                data[v*stride+5]=Float.floatToRawIntBits(sprite.getInterpolatedV(t));
+                data[v*stride+4]=Float.floatToRawIntBits(target.getInterpolatedU(u));
+                data[v*stride+5]=Float.floatToRawIntBits(target.getInterpolatedV(t));
             }
-            result.add(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
+            result.add(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),target,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
         }
         return result;
     }

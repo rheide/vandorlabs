@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/anti_gravity_control_panel_floor_1",
+    "front": "vandorlabs:blocks/anti_gravity_control_panel_floor_1",
+    "side": "vandorlabs:blocks/anti_gravity_control_panel_floor_1",
+    "particle": "vandorlabs:blocks/anti_gravity_control_panel_floor_1"
+  }
+}

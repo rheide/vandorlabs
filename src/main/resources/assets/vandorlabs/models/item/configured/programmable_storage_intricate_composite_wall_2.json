@@ -1,0 +1,9 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "top": "vandorlabs:blocks/intricate_composite_wall_2",
+    "front": "vandorlabs:blocks/intricate_composite_wall_2",
+    "side": "vandorlabs:blocks/intricate_composite_wall_2",
+    "particle": "vandorlabs:blocks/intricate_composite_wall_2"
+  }
+}
