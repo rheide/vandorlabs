@@ -43,6 +43,7 @@ public final class NonRenderingChecks {
         DoorMaterialChecks.run();
         CommonRenderChecks.run();
         TrapdoorTextureChecks.run();
+        TrapdoorMeshParityChecks.run();
     }
 
     private static void placement() {

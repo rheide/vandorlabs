@@ -13,7 +13,8 @@ def main():
     args = parser.parse_args()
     families=('programmable_block-', 'programmable_trigger_block-', 'programmable_slab-',
               'programmable_light-', 'programmable_porthole_', 'programmable_door-',
-              'programmable_diagonal_wall-')
+              'programmable_diagonal_wall-', 'programmable_trapdoor-',
+              'programmable_diagonal_trapdoor-')
     def relevant(path):
         return any(name in path.name for name in families)
     before_names={p.name for p in (args.before/'screenshots').glob('*.png') if relevant(p)}

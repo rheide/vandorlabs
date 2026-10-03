@@ -93,6 +93,11 @@ final class ProgrammableRenderBenchmark {
                                 "door_hingeless", "door_center", "door_paired",
                                 "door_material_fit", "door_material_tile", "door_material_custom"))
                             measure(mc,csv,id,doorVariant,64);
+                    if (id.equals("vandorlabs:programmable_trapdoor")
+                            || id.equals("vandorlabs:programmable_diagonal_trapdoor"))
+                        for (String trapdoorVariant : Arrays.asList("trapdoor_open", "trapdoor_sliding",
+                                "trapdoor_fit", "trapdoor_custom", "trapdoor_shallow"))
+                            measure(mc,csv,id,trapdoorVariant,64);
                     if (id.equals("vandorlabs:programmable_diagonal_wall"))
                         for (String wallVariant : Arrays.asList("wall_filled", "wall_shallow", "wall_clipped"))
                             measure(mc,csv,id,wallVariant,64);
@@ -210,6 +215,19 @@ final class ProgrammableRenderBenchmark {
                                 ? com.vandorlabs.tiles.CustomBlockMaterials.identifier(net.minecraft.init.Blocks.OAK_DOOR,0) : 4);
                         door.setTileTexture(variant.equals("door_material_tile"));
                     }
+                }
+                if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor && variant.startsWith("trapdoor_")) {
+                    com.vandorlabs.tiles.TileEntityProgrammableTrapdoor trapdoor =
+                            (com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) tile;
+                    trapdoor.configure(variant.equals("trapdoor_custom")
+                                    ? com.vandorlabs.tiles.CustomBlockMaterials.identifier(net.minecraft.init.Blocks.OAK_DOOR,0)
+                                    : com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR,
+                            variant.equals("trapdoor_shallow") ? 2 : 0,
+                            variant.equals("trapdoor_sliding"), 0, 0);
+                    trapdoor.setTileTexture(!variant.equals("trapdoor_fit"));
+                    if (variant.equals("trapdoor_open") || variant.equals("trapdoor_sliding"))
+                        mc.world.setBlockState(pos,mc.world.getBlockState(pos)
+                                .withProperty(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN,true),2);
                 }
                 if (tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("wall_")) {
                     ((TileEntityAnimatedScreenSelector)tile).setDiagonalGeometry(
