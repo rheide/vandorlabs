@@ -50,8 +50,10 @@ final class ProgrammableRenderBenchmark {
                 "minecraft:glass", "minecraft:glass_pane", "minecraft:oak_stairs",
                 "minecraft:redstone_lamp", "minecraft:chest", "minecraft:iron_door"));
         try (PrintWriter csv = new PrintWriter(new File(output, "render-benchmark.csv"));
-                PrintWriter info = new PrintWriter(new File(output, "render-benchmark.txt"))) {
+                PrintWriter info = new PrintWriter(new File(output, "render-benchmark.txt"));
+                PrintWriter meshes = new PrintWriter(new File(output, "mesh-build-benchmark.csv"))) {
             ProgrammableRedstoneBenchmark.run(mc, output);
+            meshes.println("block,variant,count,vertices,build_p50_ms,build_p95_ms,allocated_bytes_p50");
             info.println("GL renderer: " + GL11.glGetString(GL11.GL_RENDERER));
             info.println("GL version: " + GL11.glGetString(GL11.GL_VERSION));
             info.println("Java: " + System.getProperty("java.version"));
@@ -77,46 +79,46 @@ final class ProgrammableRenderBenchmark {
             GlStateManager.clearColor(0, 0, 0, 1);
             try {
                 for (String id : ids) {
-                    measure(mc, csv, id, "default", 16);
-                    measure(mc, csv, id, "default", 64);
+                    measure(mc, csv, meshes, id, "default", 16);
+                    measure(mc, csv, meshes, id, "default", 64);
                     if (Arrays.asList("minecraft:stone", "minecraft:stone_slab",
                             "vandorlabs:programmable_block", "vandorlabs:programmable_slab")
                             .contains(id)) {
-                        measure(mc, csv, id, "floor_8x8", 64);
-                        measure(mc, csv, id, "solid_4x4x4", 64);
+                        measure(mc, csv, meshes, id, "floor_8x8", 64);
+                        measure(mc, csv, meshes, id, "solid_4x4x4", 64);
                     }
                     if (id.equals("minecraft:iron_door")
                             || id.equals("vandorlabs:programmable_door"))
-                        measure(mc, csv, id, "door_open", 64);
+                        measure(mc, csv, meshes, id, "door_open", 64);
                     if (id.equals("vandorlabs:programmable_door"))
                         for (String doorVariant : Arrays.asList("door_glass", "door_sliding",
                                 "door_hingeless", "door_center", "door_paired",
                                 "door_material_fit", "door_material_tile", "door_material_custom"))
-                            measure(mc,csv,id,doorVariant,64);
+                            measure(mc,csv,meshes,id,doorVariant,64);
                     if (id.equals("vandorlabs:programmable_trapdoor")
                             || id.equals("vandorlabs:programmable_diagonal_trapdoor"))
                         for (String trapdoorVariant : Arrays.asList("trapdoor_open", "trapdoor_sliding",
                                 "trapdoor_fit", "trapdoor_custom", "trapdoor_shallow"))
-                            measure(mc,csv,id,trapdoorVariant,64);
+                            measure(mc,csv,meshes,id,trapdoorVariant,64);
                     if (id.equals("vandorlabs:programmable_diagonal_wall"))
                         for (String wallVariant : Arrays.asList("wall_filled", "wall_shallow", "wall_clipped"))
-                            measure(mc,csv,id,wallVariant,64);
+                            measure(mc,csv,meshes,id,wallVariant,64);
                     if (Arrays.asList("vandorlabs:rocket_thruster", "vandorlabs:ion_drive",
                             "vandorlabs:plasma_vent", "vandorlabs:impulse_engine").contains(id)) {
-                        measure(mc, csv, id + "_hexagonal", "default", 64);
-                        measure(mc, csv, id + "_wedge", "default", 64);
-                        measure(mc, csv, id, "engine_joined", 64);
+                        measure(mc, csv, meshes, id + "_hexagonal", "default", 64);
+                        measure(mc, csv, meshes, id + "_wedge", "default", 64);
+                        measure(mc, csv, meshes, id, "engine_joined", 64);
                     }
                     if (Arrays.asList("vandorlabs:programmable_block", "vandorlabs:programmable_slab",
                             "vandorlabs:programmable_light").contains(id)) {
                         for (net.minecraft.util.EnumFacing facing : net.minecraft.util.EnumFacing.values())
-                            measure(mc, csv, id, "facing_" + facing.getName(), 16);
+                            measure(mc, csv, meshes, id, "facing_" + facing.getName(), 16);
                     }
-                    if (id.endsWith("programmable_slab")) measure(mc, csv, id, "upper_tiled", 16);
-                    if (id.endsWith("programmable_light")) measure(mc, csv, id, "light_joined", 64);
+                    if (id.endsWith("programmable_slab")) measure(mc, csv, meshes, id, "upper_tiled", 16);
+                    if (id.endsWith("programmable_light")) measure(mc, csv, meshes, id, "light_joined", 64);
                     if (id.contains("porthole")) {
-                        measure(mc, csv, id, "round_joined", 64);
-                        measure(mc, csv, id, "round_unjoined", 64);
+                        measure(mc, csv, meshes, id, "round_joined", 64);
+                        measure(mc, csv, meshes, id, "round_unjoined", 64);
                     }
                 }
             } finally {
@@ -135,7 +137,7 @@ final class ProgrammableRenderBenchmark {
         System.out.println("[vandorlabs][reprolab] render-benchmark PASS");
     }
 
-    private static void measure(Minecraft mc, PrintWriter csv, String id,
+    private static void measure(Minecraft mc, PrintWriter csv, PrintWriter meshes, String id,
             String variant, int count) {
         Block block = Block.REGISTRY.getObject(new ResourceLocation(id));
         if (block == null || block == net.minecraft.init.Blocks.AIR)
@@ -279,6 +281,9 @@ final class ProgrammableRenderBenchmark {
             ForgeHooksClient.setRenderLayer(null);
 
             double build = (System.nanoTime() - start) / 1E6;
+            if (Arrays.asList("minecraft:stone", "minecraft:stone_slab", "vandorlabs:programmable_block",
+                    "vandorlabs:programmable_slab", "vandorlabs:programmable_stairs", "vandorlabs:programmable_storage").contains(id))
+                ProgrammableMeshBuildBenchmark.measure(mc,meshes,block,positions,variant,count,vertices);
             double[] submit = new double[SAMPLES], complete = new double[SAMPLES];
             long[] allocated = new long[SAMPLES];
             for (int i = -WARMUP; i < SAMPLES; i++) {
