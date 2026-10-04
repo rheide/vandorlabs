@@ -98,7 +98,11 @@ public final class TileEntityRedstoneScreen extends TileEntityAnimatedScreenSele
         public boolean latchOn(){return !channels.isEmpty() && latched.containsAll(channels);}
         public ChannelList latchedChannels(){return latched;}
         public void applyLinkedLatch(boolean on){applyLinkedChannels(on?channels:ChannelList.EMPTY);}
-        public void applyLinkedChannels(ChannelList value){if(!latched.equals(value)){latched=value;changed();}}
+        public void applyLinkedChannels(ChannelList value){
+            // Latch subsets are server persistence, not visible row state. The
+            // settled ALL-power callback sends a packet only if the highlight changes.
+            if(!latched.equals(value)){latched=value;markDirty();}
+        }
         public void setChannelSignal(boolean ignored){boolean next=RedstoneChannels.allPowered(world,channels);if(active!=next){active=next;changed();}}
     }
 }

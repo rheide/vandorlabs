@@ -6,7 +6,6 @@ import com.vandorlabs.tiles.TileEntityRedstoneScreen;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.*;
 import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
@@ -29,7 +28,18 @@ final class RedstoneScreenRenderer {
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
-        Gui.drawRect(0,0,128,128,0xFF0A141D);Gui.drawRect(3,3,125,20,0xFF23465A);
+        // Submit every solid panel together, before the font pass. Small depth
+        // layers prevent coplanar text/background flicker at oblique angles.
+        GlStateManager.disableTexture2D();
+        BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+        buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION_COLOR);
+        rect(buffer,0,0,128,128,0,0xFF0A141D);rect(buffer,3,3,125,20,.01,0xFF23465A);
+        for(int i=0;i<tile.rows().size();i++){
+            TileEntityRedstoneScreen.Row row=tile.rows().get(i);int y=RedstoneScreenInteractions.ROW_TOP+i*RedstoneScreenInteractions.ROW_HEIGHT;
+            rect(buffer,6,y,122,y+10,.01,row.active()?0xFF174C3B:0xFF1C2B37);
+            rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
+        }
+        Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
         text(font,"REDSTONE CONTROL",8,8,0xC8EEFF);
         if(tile.rows().isEmpty()){
@@ -38,15 +48,18 @@ final class RedstoneScreenRenderer {
         }
         for(int i=0;i<tile.rows().size();i++){
             TileEntityRedstoneScreen.Row row=tile.rows().get(i);int y=RedstoneScreenInteractions.ROW_TOP+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            Gui.drawRect(6,y,122,y+10,row.active()?0xFF174C3B:0xFF1C2B37);
-            Gui.drawRect(98,y,120,y+10,row.active()?0xFF30C58A:0xFF45576A);
-            text(font,font.trimStringToWidth(row.label,86),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
+            text(font,font.getStringWidth(row.label)<=86?row.label:font.trimStringToWidth(row.label,86),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
             text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
     }
+    private static void rect(BufferBuilder b,int left,int top,int right,int bottom,double z,int color){
+        int r=color>>16&255,g=color>>8&255,blue=color&255,a=color>>>24;
+        b.pos(left,bottom,z).color(r,g,blue,a).endVertex();b.pos(right,bottom,z).color(r,g,blue,a).endVertex();
+        b.pos(right,top,z).color(r,g,blue,a).endVertex();b.pos(left,top,z).color(r,g,blue,a).endVertex();
+    }
     private static void text(FontRenderer font,String value,int x,int y,int color){
-        GlStateManager.pushMatrix();GlStateManager.translate(0,0,.025F);
+        GlStateManager.pushMatrix();GlStateManager.translate(0,0,.04F);
         font.drawString(value,x,y,color);GlStateManager.popMatrix();
     }
     private RedstoneScreenRenderer(){}

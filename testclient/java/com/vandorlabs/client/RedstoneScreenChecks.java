@@ -21,6 +21,9 @@ final class RedstoneScreenChecks {
         require(!screen.rows().get(0).active(),"new rows active");
         screen.toggleRow(0);require(RedstoneChannels.allPowered(world,ChannelList.of(41,42)),"row did not power all channels");
         require(screen.rows().get(0).active() && screen.rows().get(1).active(),"overlapping rows did not highlight");
+        Receiver receiver=new Receiver();receiver.setWorld(world);receiver.setPos(pos.east());RedstoneChannels.register(receiver);int edges=receiver.edges;
+        screen.configureRows(Arrays.asList("Door bank","Lights","Unlinked"),Arrays.asList(ChannelList.of(41,42),ChannelList.of(42),ChannelList.EMPTY),0);
+        require(receiver.edges==edges && receiver.powered,"editing a label interrupted a powered channel");
         screen.toggleRow(1);require(RedstoneChannels.allPowered(world,ChannelList.of(41)) && !RedstoneChannels.allPowered(world,ChannelList.of(42)),"overlap bridged independent channels");
         require(!screen.rows().get(0).active() && !screen.rows().get(1).active(),"mixed channels highlighted active");
         NBTTagCompound saved=screen.writeToNBT(new NBTTagCompound());
@@ -38,8 +41,33 @@ final class RedstoneScreenChecks {
         TileEntityRedstoneScreen copy=(TileEntityRedstoneScreen)world.getTileEntity(target);
         require(com.vandorlabs.items.ProgrammableSettings.apply(world,target,com.vandorlabs.items.ProgrammableSettings.capture(world,pos)),"Duplifier rows not applicable");
         require(copy.rows().size()==1 && copy.rows().get(0).label.equals("Saved") && copy.rows().get(0).channels.equals(ChannelList.of(41)),"Duplifier lost screen row configuration");
-        projection();packets();
+        updates();projection();packets();
         System.out.println("PASS: redstone-screen row toggles, ALL highlight, independent overlap, NBT, removal/unload and all 14 mounting projections");
+    }
+    private static void updates(){
+        NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(0,100,0);
+        world.setBlockState(pos,ModBlocks.PROGRAMMABLE_REDSTONE_SCREEN.getDefaultState(),2);
+        TileEntityRedstoneScreen screen=(TileEntityRedstoneScreen)world.getTileEntity(pos);
+        screen.configureRows(Arrays.asList("Both","Second"),Arrays.asList(ChannelList.of(41,42),ChannelList.of(42)),0);
+        PhysicalSource source=new PhysicalSource();source.setWorld(world);source.setPos(pos.east());RedstoneChannels.register(source);
+        require(screen.rows().get(0).active() && screen.rows().get(1).active(),"physical source not highlighted");
+        int before=world.updates,dirty=world.dirty;
+        RedstoneChannels.latchChanged(screen.rows().get(0),true);
+        require(world.updates==before && world.dirty>dirty,"unchanged highlight sent packet or failed to save latch");
+        require(screen.rows().get(0).latchedChannels().equals(ChannelList.of(41,42)),"hidden latch state lost");
+        source.on=false;RedstoneChannels.inputChanged(source);
+        require(screen.rows().get(0).active() && world.updates==before,"physical release dropped latched power");
+        screen.toggleRow(0);
+        require(!screen.rows().get(0).active() && !screen.rows().get(1).active() && world.updates==before+1,"row status updates were not coalesced");
+    }
+    private static final class PhysicalSource extends TileEntity implements RedstoneChannelMember {
+        boolean on=true;
+        public TileEntity channelTile(){return this;}
+        public int getRedstoneChannel(){return 41;}
+        public ChannelList getRedstoneChannels(){return ChannelList.of(41,42);}
+        public void setRedstoneChannel(int channel){}
+        public boolean hasLocalRedstoneSignal(){return on;}
+        public void setChannelSignal(boolean value){}
     }
     static Vec3d world(Vec3d point,EnumFacing facing){
         double x=point.x/16-.5,y=point.y/16-.5,z=point.z/16-.5,wx=x,wy=y,wz=z;
@@ -73,6 +101,14 @@ final class RedstoneScreenChecks {
                 if(mode==0){io.netty.buffer.ByteBuf encoded=io.netty.buffer.Unpooled.buffer();decoded.toBytes(encoded);require(io.netty.buffer.ByteBufUtil.equals(buffer,encoded),"row packet changed contents");encoded.release();}
             }
         }catch(ReflectiveOperationException e){throw new AssertionError(e);}finally{buffer.release();}
+    }
+    private static final class Receiver extends TileEntity implements RedstoneChannelMember {
+        int edges;boolean powered;
+        public TileEntity channelTile(){return this;}
+        public int getRedstoneChannel(){return 41;}
+        public void setRedstoneChannel(int channel){}
+        public boolean hasLocalRedstoneSignal(){return false;}
+        public void setChannelSignal(boolean value){if(powered!=value){edges++;powered=value;}}
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
 }

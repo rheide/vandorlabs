@@ -2,6 +2,7 @@
 
 ## 1.4-alpha
 
+- Batch redstone-screen panel geometry, avoid unused animation work, and provide distinct row-control inventory icons. Keep text clear on all mounting directions, preserve power while editing row labels, and send row-status updates only when their visible highlight changes.
 - Add Programmable Redstone Screen and Programmable Diagonal Redstone Screen. Configure up to eight labelled controls with channel lists, toggle them directly in the world, and highlight a row only when every listed channel is powered. Support saved rows, configurable housings, picked-item settings and Duplifier copying.
 - Rename Programmable Viewscreen to Programmable Screen in the interface, preserving its registry ID and existing worlds.
 

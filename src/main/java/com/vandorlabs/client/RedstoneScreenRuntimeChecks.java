@@ -31,9 +31,11 @@ final class RedstoneScreenRuntimeChecks {
             if(stage==0){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP owner=owner(mc);owner.closeScreen();owner.capabilities.isCreativeMode=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
+                    owner.inventory.clear();owner.inventory.setInventorySlotContents(0,new net.minecraft.item.ItemStack(ModBlocks.PROGRAMMABLE_REDSTONE_SCREEN));
+                    owner.inventory.setInventorySlotContents(1,new net.minecraft.item.ItemStack(ModBlocks.PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN));owner.inventory.currentItem=8;
+                    owner.inventoryContainer.detectAndSendChanges();owner.connection.sendPacket(new net.minecraft.network.play.server.SPacketHeldItemChange(8));
                     for(BlockPos p:BlockPos.getAllInBox(POS.add(-3,-3,-3),POS.add(3,3,3)))owner.world.setBlockToAir(p);
-                    IBlockState state=shape==0?ModBlocks.PROGRAMMABLE_REDSTONE_SCREEN.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH):
-                        ModBlocks.PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN.getDefaultState().withProperty(BlockProgrammableDiagonalScreen.FACING,EnumFacing.NORTH).withProperty(BlockProgrammableDiagonalScreen.INVERTED,shape==2);
+                    IBlockState state=fixtureState();
                     owner.world.setBlockState(POS,state,3);
                     TileEntityRedstoneScreen tile=(TileEntityRedstoneScreen)owner.world.getTileEntity(POS);
                     require(tile.configureRows(Arrays.asList("Doors","Lights","Unlinked"),Arrays.asList(ChannelList.of(14901,14902),ChannelList.of(14902),ChannelList.EMPTY),0),"fixture rows");
@@ -74,7 +76,7 @@ final class RedstoneScreenRuntimeChecks {
                 gui.actionPerformed(new GuiButton(3,0,0,"Remove"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(11);return;
             }
             if(stage==11 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().size()==3 && tile(mc).rows().get(0).label.equals("Lights"),"GUI row removal failed"));next(12);return;}
-            if(stage==12){System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);shape++;next(shape<3?0:99);if(stage==99)mc.shutdown();}
+            if(stage==12){System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);shape++;next(shape<14?0:99);if(stage==99)mc.shutdown();}
         }catch(Exception e){throw new IllegalStateException("redstone-screen live check shape="+shape+" stage="+stage,e);}
     }
     private static void next(int value){stage=value;ticks=0;}
@@ -84,12 +86,32 @@ final class RedstoneScreenRuntimeChecks {
     private static void open(Minecraft mc){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_REDSTONE_SCREEN,p.world,POS.getX(),POS.getY(),POS.getZ());});}
     private static void aim(EntityPlayerMP owner,IBlockState state,int row){
         ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state);double u=109/128D,v=(24+row*12+5)/128D;
-        hit=new Vec3d(POS.getX()+(q.topRight.x+(q.topLeft.x-q.topRight.x)*u)/16,POS.getY()+(q.topRight.y+(q.bottomRight.y-q.topRight.y)*v)/16,POS.getZ()+(q.topRight.z+(q.bottomRight.z-q.topRight.z)*v)/16);
-        Vec3d eye=hit.addVector(0,q.ny*2,q.nz*2),look=hit.subtract(eye);
+        Vec3d localHit=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v);
+        EnumFacing facing=RedstoneScreenInteractions.facing(state);
+        hit=worldPoint(localHit,facing);
+        Vec3d eye=worldPoint(localHit.addVector(0,q.ny*32,q.nz*32),facing),look=hit.subtract(eye);
         float yaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z)),pitch=(float)-Math.toDegrees(Math.atan2(look.y,Math.sqrt(look.x*look.x+look.z*look.z)));
         owner.connection.setPlayerLocation(eye.x,eye.y-owner.getEyeHeight(),eye.z,yaw,pitch);
     }
-    private static void click(Minecraft mc){mc.playerController.processRightClickBlock(mc.player,mc.world,POS,EnumFacing.NORTH,hit,EnumHand.MAIN_HAND);}
+    private static IBlockState fixtureState(){
+        if(shape==0 || shape>=3 && shape<=7){
+            EnumFacing[] directions={EnumFacing.NORTH,EnumFacing.EAST,EnumFacing.SOUTH,EnumFacing.WEST,EnumFacing.UP,EnumFacing.DOWN};
+            return ModBlocks.PROGRAMMABLE_REDSTONE_SCREEN.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,directions[shape==0?0:shape-2]);
+        }
+        EnumFacing facing=shape<3?EnumFacing.NORTH:shape<10?EnumFacing.EAST:shape<12?EnumFacing.SOUTH:EnumFacing.WEST;
+        return ModBlocks.PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN.getDefaultState().withProperty(BlockProgrammableDiagonalScreen.FACING,facing).withProperty(BlockProgrammableDiagonalScreen.INVERTED,shape==2 || shape>=8 && shape%2==1);
+    }
+    private static Vec3d worldPoint(Vec3d point,EnumFacing facing){
+        double x=point.x/16-.5,y=point.y/16-.5,z=point.z/16-.5,wx=x,wy=y,wz=z;
+        switch(facing){case EAST:wx=-z;wz=x;break;case SOUTH:wx=-x;wz=-z;break;case WEST:wx=z;wz=-x;break;
+            case UP:wx=-x;wy=-z;wz=-y;break;case DOWN:wy=z;wz=-y;break;default:break;}
+        return new Vec3d(POS.getX()+wx+.5,POS.getY()+wy+.5,POS.getZ()+wz+.5);
+    }
+    private static void click(Minecraft mc){
+        RayTraceResult trace=mc.objectMouseOver;
+        require(trace!=null && trace.typeOfHit==RayTraceResult.Type.BLOCK && POS.equals(trace.getBlockPos()),"crosshair did not select screen");
+        mc.playerController.processRightClickBlock(mc.player,mc.world,POS,trace.sideHit,trace.hitVec,EnumHand.MAIN_HAND);
+    }
     private static void capture(Minecraft mc,File output,String name)throws java.io.IOException{ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_redstone_screen_"+shape+"_"+name+".png"));}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
 }

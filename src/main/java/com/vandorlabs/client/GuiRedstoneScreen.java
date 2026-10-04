@@ -68,8 +68,10 @@ public final class GuiRedstoneScreen extends GuiContainer {
             int next=scroll+(y-guiTop-54)/20;if(next<labels.size() && store()){selected=next;load();refresh();}
         }
     }
+    protected void mouseReleased(int x,int y,int button){housing.release();super.mouseReleased(x,y,button);}
+    protected void mouseClickMove(int x,int y,int button,long elapsed){if(materials && housing.drag(y))return;super.mouseClickMove(x,y,button,elapsed);}
     public void handleMouseInput()throws IOException{super.handleMouseInput();int wheel=Mouse.getEventDWheel();if(wheel!=0){
-        if(materials)housing.wheel(guiLeft+20,guiTop+60,wheel);else scroll=Math.max(0,Math.min(Math.max(0,labels.size()-visibleRows()),scroll+(wheel>0?-1:1)));
+        if(materials)housing.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);else scroll=Math.max(0,Math.min(Math.max(0,labels.size()-visibleRows()),scroll+(wheel>0?-1:1)));
     }}
     protected void keyTyped(char c,int key)throws IOException{
         if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){send();return;}
@@ -82,7 +84,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         drawDefaultBackground();super.drawScreen(x,y,partial);
         net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();
         net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
-        fontRenderer.drawString("Programmable Redstone Screen",guiLeft+12,guiTop+10,0xFFFFFF);
+        fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.getBlockType().getUnlocalizedName()+".name"),guiLeft+12,guiTop+10,0xFFFFFF);
         if(materials){housing.draw(fontRenderer,x,y);net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();return;}
         for(int i=0;i<visibleRows() && scroll+i<labels.size();i++){
             int row=scroll+i,yy=guiTop+54+i*20;drawRect(guiLeft+12,yy,guiLeft+xSize-180,yy+18,row==selected?0xFF365C70:0xFF22313E);

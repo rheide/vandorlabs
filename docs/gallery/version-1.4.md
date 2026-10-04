@@ -1,7 +1,8 @@
 # Version 1.4 alpha
 
-Version 1.4 reduces repeated rendering, collision and redstone work in builds
-containing many programmable blocks. Existing saved materials, geometry and
+Version 1.4 adds multi-channel controls and editable redstone screens, while
+reducing repeated rendering, collision and redstone work in builds containing
+many programmable blocks. Existing saved materials, geometry and
 configuration remain compatible.
 
 ## Redstone channel lists
@@ -43,7 +44,8 @@ Rows and latch states survive world saves. Pick-block copies labels, channel
 lists and housing without copying the live latch state. The Duplifier's
 **Redstone Screen Items** option copies row definitions between either screen
 shape. Editing labels does not interrupt an already active channel bank.
-Only loaded rows participate in the channel network.
+Only loaded rows participate in the channel network. Row changes are
+event-driven; unchanged highlights do not send redundant status updates.
 
 Craft either redstone screen by combining its regular screen counterpart
 with one redstone dust. The former **Programmable Viewscreen** is now named

@@ -487,6 +487,40 @@ public class TEAnimatedScreenSelector
                 : state.getValue(BlockAnimatedScreenSelector.FACING);
         boolean diagonalInverted = diagonal
                 && state.getValue(BlockProgrammableDiagonalScreen.INVERTED);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, z);
+        // Centered on all axes: X-rotations for floor/ceiling mounts swing
+        // around the block middle, otherwise the quad lands mid-block.
+        GlStateManager.translate(0.5D, 0.5D, 0.5D);
+        if (facing == EnumFacing.UP) {
+            // Local -Z (face normal) -> +Y, local +Y (texture top) -> north,
+            // unmirrored viewed from above with north up.
+            GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+        } else if (facing == EnumFacing.DOWN) {
+            // Local -Z -> -Y, texture top -> north.
+            GlStateManager.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+        } else {
+            GlStateManager.rotate(180.0F - facing.getHorizontalAngle(), 0.0F, 1.0F, 0.0F);
+        }
+        GlStateManager.translate(-0.5D, -0.5D, -0.5D);
+        GlStateManager.scale(1.0F / 16.0F, 1.0F / 16.0F, 1.0F / 16.0F);
+        GlStateManager.disableCull();
+
+        GlStateManager.disableLighting();
+        if (state.getBlock() instanceof BlockProgrammableConsole) {
+            renderConsoleHousing(te);
+        } else if (state.getBlock() instanceof BlockProgrammableDiagonalScreen) {
+            renderDiagonalHousing(te, diagonalInverted);
+        } else {
+            bindAtlas();
+            setWorldLight(te);
+            renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
+        }
+        if(te instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen){
+            RedstoneScreenRenderer.draw((com.vandorlabs.tiles.TileEntityRedstoneScreen)te,state);
+            GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
+        }
         int mode = te.getEffectiveMode();
         boolean off = mode == TileEntityAnimatedScreenSelector.MODE_OFF;
 
@@ -536,40 +570,6 @@ public class TEAnimatedScreenSelector
             lightV = 240.0F;
         }
 
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y, z);
-        // Centered on all axes: X-rotations for floor/ceiling mounts swing
-        // around the block middle, otherwise the quad lands mid-block.
-        GlStateManager.translate(0.5D, 0.5D, 0.5D);
-        if (facing == EnumFacing.UP) {
-            // Local -Z (face normal) -> +Y, local +Y (texture top) -> north,
-            // unmirrored viewed from above with north up.
-            GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(90.0F, 1.0F, 0.0F, 0.0F);
-        } else if (facing == EnumFacing.DOWN) {
-            // Local -Z -> -Y, texture top -> north.
-            GlStateManager.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-        } else {
-            GlStateManager.rotate(180.0F - facing.getHorizontalAngle(), 0.0F, 1.0F, 0.0F);
-        }
-        GlStateManager.translate(-0.5D, -0.5D, -0.5D);
-        GlStateManager.scale(1.0F / 16.0F, 1.0F / 16.0F, 1.0F / 16.0F);
-        GlStateManager.disableCull();
-
-        GlStateManager.disableLighting();
-        if (state.getBlock() instanceof BlockProgrammableConsole) {
-            renderConsoleHousing(te);
-        } else if (state.getBlock() instanceof BlockProgrammableDiagonalScreen) {
-            renderDiagonalHousing(te, diagonalInverted);
-        } else {
-            bindAtlas();
-            setWorldLight(te);
-            renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
-        }
-        if(te instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen){
-            RedstoneScreenRenderer.draw((com.vandorlabs.tiles.TileEntityRedstoneScreen)te,state);
-            GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
-        }
         float uMin=0,uMax=1;
         bindTexture(texture);
         if(te.getSurfaceTexture(0)>=0){double[] uv=bindSurface(te,0);vTop=(float)uv[0];vBottom=(float)uv[1];uMin=(float)uv[2];uMax=(float)uv[3];}

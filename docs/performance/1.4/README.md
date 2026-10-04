@@ -451,3 +451,23 @@ while reporting additional fixtures that need a separate before/after baseline.
 The live rendering benchmark uses Mesa software rendering. Its submission and
 completion times are synthetic batch measurements, not hardware GPU or shader
 performance claims. The CSVs retain the vanilla controls for comparison.
+
+## Editable redstone screens
+
+The new flat and diagonal control screens use cached display-plane transforms
+and submit their solid background, row highlights and buttons in one geometry
+draw per visible screen. They skip the animated-artwork preparation used by
+regular screens. Short labels reuse their existing strings when they fit.
+
+Each row subscribes to its configured channels. Channel transitions refresh
+its all-channels-active highlight without a per-tick scan. Signal batches
+coalesce changed rows into one tile update; hidden latch changes are persisted
+without sending an unchanged display to clients. Row replacements register
+before their predecessors are removed, avoiding a temporary loss of power
+when labels or order change.
+
+`testclient/test_redstone_screens.sh` exercises in-world clicks, row editing,
+reopening and saved settings for all six flat mounts and eight diagonal
+mounts. Set `VANDOR_LABS_OPTIFINE_JAR` to an OptiFine JAR to repeat the same
+checks in an isolated client with shaders off. These checks establish behavior
+and captured appearance, not hardware FPS or shader compatibility.

@@ -6,8 +6,18 @@ cd "$ROOT"
 JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew build --no-daemon
 RUN_OUT=$(mktemp -d "$ROOT/testclient/render-channel.XXXXXX")
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
-rm -f testclient/runtime/game/mods/vandorlabs-*.jar
-cp "build/libs/vandorlabs-$VERSION.jar" testclient/runtime/game/mods/
-VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY=true VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 600 testclient/run.sh > "$RUN_OUT/client.log" 2>&1
-rg -q 'redstone-screen-runtime PASS shape=2' "$RUN_OUT/client.log"
+SCREEN_GAME_DIR="$ROOT/testclient/runtime/game"
+if [ -n "${VANDOR_LABS_OPTIFINE_JAR:-}" ]; then
+    SCREEN_GAME_DIR="$RUN_OUT/game"
+    mkdir -p "$SCREEN_GAME_DIR/mods" "$SCREEN_GAME_DIR/config"
+    cp testclient/runtime/game/mods/*.jar "$SCREEN_GAME_DIR/mods/"
+    cp "$VANDOR_LABS_OPTIFINE_JAR" "$SCREEN_GAME_DIR/mods/"
+    cp testclient/runtime/game/options.txt "$SCREEN_GAME_DIR/options.txt"
+    cp testclient/runtime/game/config/forge.cfg "$SCREEN_GAME_DIR/config/forge.cfg"
+    echo 'shaderPack=OFF' > "$SCREEN_GAME_DIR/optionsshaders.txt"
+fi
+rm -f "$SCREEN_GAME_DIR"/mods/vandorlabs-*.jar
+cp "build/libs/vandorlabs-$VERSION.jar" "$SCREEN_GAME_DIR/mods/"
+VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY=true VANDOR_LABS_TEST_GAME_DIR="$SCREEN_GAME_DIR" VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 600 testclient/run.sh > "$RUN_OUT/client.log" 2>&1
+rg -q 'redstone-screen-runtime PASS shape=13' "$RUN_OUT/client.log"
 echo "Live redstone-screen artifacts: $RUN_OUT"
