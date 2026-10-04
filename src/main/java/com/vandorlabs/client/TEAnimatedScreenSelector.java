@@ -460,15 +460,18 @@ public class TEAnimatedScreenSelector
             beginLocalTransform(x,y,z,state.getValue(BlockAnimatedScreenSelector.FACING));
             GlStateManager.disableLighting();
             boolean ceiling=state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER);
-            GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
+            GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
             bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).sideLayout(te.isSurfaceTileSides()),ceiling);
+            if(te.hasRedstoneScreen(0)){
+                GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
+            }
             double[] uv=bindInput(te,te.getInputPanel());
             com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
             BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             drawScreenQuad(b,q,0,1,uv[0],uv[1],ceiling);
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
             Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
-            GlStateManager.enableLighting();endLocalTransform();return;
+            GlStateManager.popMatrix();GlStateManager.enableLighting();endLocalTransform();return;
         }
         if (state.getBlock() instanceof BlockProgrammableHalfConsole) {
             EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
@@ -517,8 +520,8 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
         }
-        if(te instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen){
-            RedstoneScreenRenderer.draw((com.vandorlabs.tiles.TileEntityRedstoneScreen)te,state);
+        if(te.hasRedstoneScreen(0)){
+            RedstoneScreenRenderer.draw(te.redstoneScreen(0),state);
             GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
         }
         int mode = te.getEffectiveMode();
@@ -641,7 +644,7 @@ public class TEAnimatedScreenSelector
                 :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
         renderWallBox(wall,wall,true,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.isSurfaceTileSides());
-        drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
+        if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
     }
 
     /** Full-square screen surface using the half-input's mount/fold state. */
@@ -651,15 +654,13 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
-        double[] uv=bindScreenSurface(te);
         InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
                 ?InputSurfaceLayout.ceilingInput(true,false,te.getCeilingPosition(1))
                 :InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
         renderWallBox(wall,wall,true,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.isSurfaceTileSides());
-        bindScreenSurface(te);
-        drawInputSurface(layout.surface,uv);
+        if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindScreenSurface(te));
     }
 
     /** Bind a regular full-height programmable animation and return its V range. */
@@ -700,13 +701,14 @@ public class TEAnimatedScreenSelector
         renderWallBox(wall,wall,true,0,0,0,16,1,16,te.isSurfaceTileSides());
         drawWallMesh(wall,ScreenHousingMesh.halfConsole().sideLayout(te.isSurfaceTileSides()));
 
-        double[] frontUv = bindInput(te, te.getInputPanel());
-        drawInputSurface(InputSurfaceLayout.halfConsoleFront(),frontUv);
-
-        double[] rearUv = bindInput(te, te.getSecondaryInputPanel(),1);
-        drawInputSurface(InputSurfaceLayout.halfConsoleRear(),rearUv);
+        if(!redstoneFace(te,0))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));
+        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));
     }
 
+    private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
+        if(!tile.hasRedstoneScreen(slot))return false;
+        RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
+    }
     private static void drawInputSurface(InputSurfaceLayout.Quad quad,double[] uv) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
@@ -818,8 +820,7 @@ public class TEAnimatedScreenSelector
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
         // fills the deck without cropping or atlas-induced aspect changes.
-        double[] inputUv = bindInput(te, te.getInputPanel(),1);
-        drawInputSurface(InputSurfaceLayout.halfConsoleFront(),inputUv);
+        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));
     }
 
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,

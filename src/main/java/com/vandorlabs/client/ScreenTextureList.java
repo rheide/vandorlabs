@@ -22,8 +22,9 @@ final class ScreenTextureList {
                 && entry.get("source").getAsString().startsWith("console_inputs/")==input;
     }
     ScreenTextureList visibleRows(int rows){list.visibleRows(rows);return this;}
-    ScreenTextureList restore(int choice){if(choice>=0)list.setSelected(choice);return this;}
+    ScreenTextureList restore(int choice){if(choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)list.setSelected(choice);return this;}
     ScreenTextureList custom(java.util.function.IntConsumer action){list.custom(action);return this;}
+    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot){list.redstone(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)));return this;}
     boolean picked(){return list.picked();}
     int choice(){return list.selected();}
     private String source(){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice());return entry==null?"":entry.get("source").getAsString();}

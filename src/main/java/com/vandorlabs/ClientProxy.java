@@ -29,6 +29,7 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.SpaceDoorTextures());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.UnifiedTextureSprites());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.OffsetTrapdoorSelection());
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.DiagonalScreenSelection());
     }
 
     @Override public void spawnThrusterParticle(World world, BlockPos pos,
@@ -73,7 +74,6 @@ public class ClientProxy extends CommonProxy {
                 new com.vandorlabs.client.TEProgrammableGlass());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityControlledRamp.class, new TEControlledRamp());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityAnimatedScreenSelector.class, new TEAnimatedScreenSelector());
-        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityRedstoneScreen.class,new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableTrigger.class,
                 new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableLight.class,

@@ -19,13 +19,16 @@ public final class MessageSurfaceTexture implements IMessage {
         @Override public IMessage onMessage(MessageSurfaceTexture m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(m.pos==null || m.slot<0 || m.slot>1 || m.choice< -1 || (m.choice!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.choice))
+                if(m.pos==null || m.slot<0 || m.slot>1 || m.choice< TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || (m.choice>=0 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.choice))
                         || !player.world.isBlockLoaded(m.pos) || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
                 TileEntity tile=player.world.getTileEntity(m.pos);
                 if(player.openContainer instanceof ContainerAnimatedScreenSelector && tile instanceof TileEntityAnimatedScreenSelector) {
                     ContainerAnimatedScreenSelector c=(ContainerAnimatedScreenSelector)player.openContainer;
                     if(c.getTileEntity()!=tile || !c.canInteractWith(player))return;
+                    if(!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),m.slot))return;
                     ((TileEntityAnimatedScreenSelector)tile).setSurfaceTexture(m.slot,m.choice);
+                    if(m.choice==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)
+                        player.openGui(com.vandorlabs.VandorLabs.instance,m.slot==0?com.vandorlabs.GuiHandler.GUI_REDSTONE_SCREEN:com.vandorlabs.GuiHandler.GUI_REDSTONE_SCREEN_SECONDARY,player.world,m.pos.getX(),m.pos.getY(),m.pos.getZ());
                 }
             });return null;
         }

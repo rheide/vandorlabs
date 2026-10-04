@@ -30,7 +30,9 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private int channel;
     private boolean channelSignal;
     private boolean manualOn;
-    private boolean particleStreamSelected;
+    private int particleLevel;
+    public static final String[] PARTICLE_LEVELS={"Off","Light","Medium","Heavy"};
+    public int getParticleLevel(){return particleLevel;}
     private boolean initialized;
     private boolean loadPending, initialStateDirty;
     private boolean join = true;
@@ -76,20 +78,24 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return channel; }
     public boolean isChannelSignalPowered() { return channelSignal; }
-    public boolean isParticleStreamSelected() { return particleStreamSelected; }
-    public int getManualMode() { return manualOn ? (particleStreamSelected ? 2 : 1) : 0; }
+    public boolean isParticleStreamSelected() { return particleLevel>0; }
+    public int getManualMode() { return manualOn ? (particleLevel>0 ? 2 : 1) : 0; }
 
     public void setParticleStreamSelected(boolean selected) {
         setParticleStreamSelected(selected, true);
     }
 
     public void setParticleStreamSelected(boolean selected, boolean refreshConnected) {
-        if (particleStreamSelected == selected) return;
-        particleStreamSelected = selected;
+        setParticleLevel(selected?Math.max(1,particleLevel):0,refreshConnected);
+    }
+    public void setParticleLevel(int level){setParticleLevel(level,true);}
+    public void setParticleLevel(int level,boolean refreshConnected){
+        int next=Math.max(0,Math.min(3,level));if(particleLevel==next)return;
+        boolean visibilityChanged=(particleLevel==0)!=(next==0);particleLevel=next;
         markDirty();
         if (world != null && pos != null) {
             IBlockState state = world.getBlockState(pos);
-            if (refreshConnected && state.getBlock() instanceof BlockConnectedPropulsionLight)
+            if (refreshConnected && visibilityChanged && state.getBlock() instanceof BlockConnectedPropulsionLight)
                 ((BlockConnectedPropulsionLight) state.getBlock())
                         .refreshConnectedModels(world, pos,
                                 state.getValue(BlockPropulsionLight.FACING));
@@ -151,7 +157,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         if (channel > 0) return;
         int normalized = Math.max(0, Math.min(2, mode));
         manualOn = normalized > 0;
-        particleStreamSelected = normalized == 2;
+        particleLevel = normalized==2?Math.max(1,particleLevel):0;
         initialized = true;
         markDirty();
         IBlockState state = world == null || pos == null ? null : world.getBlockState(pos);
@@ -236,7 +242,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
             loadPending = false;
             finishLoading();
         }
-        if (world == null || !world.isRemote || pos == null || !particleStreamSelected) return;
+        if (world == null || !world.isRemote || pos == null || particleLevel==0) return;
         IBlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockPropulsionLight)
                 || !state.getValue(BlockPropulsionLight.POWERED)) return;
@@ -257,6 +263,8 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         int baseCount = particleCount(style);
         int count = assemblySize > 1
                 ? baseCount * assemblySize + assemblySize - 1 : baseCount;
+        int coreCount=count;count*=particleLevel==2?3:particleLevel==3?6:1;
+        float widerSpread=particleLevel==2?1.75F:2.75F;
         EnumFacing facing = state.getValue(BlockPropulsionLight.FACING);
         if (assemblySize > 1) {
             net.minecraft.util.math.Vec3d center = BlockConnectedPropulsionLight
@@ -265,11 +273,12 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
             for (int i = 0; i < count; i++)
                 com.vandorlabs.VandorLabs.proxy.spawnThrusterParticle(world,
                         center.x, center.y, center.z, facing, particleColor(style),
-                        style, particleSpeed(style), spreadScale);
+                        style, particleSpeed(style), i<coreCount?spreadScale:spreadScale*widerSpread);
         } else {
-            for (int i = 0; i < count; i++)
-                com.vandorlabs.VandorLabs.proxy.spawnThrusterParticle(world, pos,
-                        facing, particleColor(style), style, particleSpeed(style));
+            for (int i = 0; i < count; i++){
+                if(i<coreCount)com.vandorlabs.VandorLabs.proxy.spawnThrusterParticle(world,pos,facing,particleColor(style),style,particleSpeed(style));
+                else com.vandorlabs.VandorLabs.proxy.spawnThrusterParticle(world,pos.getX()+.5D,pos.getY()+.5D,pos.getZ()+.5D,facing,particleColor(style),style,particleSpeed(style),widerSpread);
+            }
         }
     }
 
@@ -319,8 +328,9 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);ChannelData.write(tag,channels);
-        new RedstoneData.Light(channel,channelSignal,manualOn,particleStreamSelected,
+        new RedstoneData.Light(channel,channelSignal,manualOn,isParticleStreamSelected(),
                 initialized).write(new NbtPrimitiveData(tag));
+        tag.setInteger("ParticleLevel",particleLevel);
         tag.setBoolean("PropulsionJoin", join);
         tag.setInteger("PropulsionSideTexture", sideTexture);
         return tag;
@@ -335,7 +345,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         channels=ChannelData.read(tag,channel);channel=channels.first();
         channelSignal=data.signal;
         manualOn=data.manualOn;
-        particleStreamSelected=data.particleStream;
+        particleLevel=tag.hasKey("ParticleLevel",3)?Math.max(0,Math.min(3,tag.getInteger("ParticleLevel"))):data.particleStream?1:0;
         initialized=data.initialized;
         join = !tag.hasKey("PropulsionJoin") || tag.getBoolean("PropulsionJoin");
         sideTexture = tag.hasKey("PropulsionSideTexture", 3)

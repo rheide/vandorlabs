@@ -59,7 +59,7 @@ public class GuiProgrammableInput extends GuiContainer {
         buttonList.add(layout.tab(90,0,2,"Controls"));
         buttonList.add(layout.tab(91,1,2,"Housing"));
         listX=layout.listX;listY=guiTop+54;
-        screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList));
+        screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
         for(int i=0;i<3;i++) {
             buttonList.add(layout.choice(1+i,i,3,42,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
             buttonList.add(layout.choice(10+i,i,3,76,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));

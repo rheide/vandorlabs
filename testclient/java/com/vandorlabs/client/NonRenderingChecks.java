@@ -47,6 +47,7 @@ public final class NonRenderingChecks {
         ChannelReconciliationChecks.run();
         ChannelListChecks.run();
         RedstoneScreenChecks.run();
+        PropulsionParticleChecks.run();
         TrapdoorAssemblyReuseChecks.run();
         HousingStateChecks.run();
         HousingModelChecks.run();

@@ -14,11 +14,14 @@ import net.minecraft.util.EnumFacing;
 public final class DiagonalScreenItemModel implements IBakedModel {
     private final IBakedModel delegate;
     private final List<BakedQuad> quads;
+    private final boolean redstone;
+    private DiagonalScreenItemModel controlsModel;
+    private ItemOverrideList overrides;
     public DiagonalScreenItemModel(IBakedModel delegate) {
         this(delegate,false);
     }
     public DiagonalScreenItemModel(IBakedModel delegate,boolean redstone) {
-        this.delegate=delegate;
+        this.delegate=delegate;this.redstone=redstone;
         TextureAtlasSprite wall=sprite("dark_wall_panel"),screen=redstone?atlas("minecraft:blocks/concrete_black"):sprite("engineering_screen_static");
         List<BakedQuad> built=new ArrayList<>();
         for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(false).quads) {
@@ -77,5 +80,16 @@ public final class DiagonalScreenItemModel implements IBakedModel {
     public boolean isBuiltInRenderer(){return false;}
     public TextureAtlasSprite getParticleTexture(){return delegate.getParticleTexture();}
     public ItemCameraTransforms getItemCameraTransforms(){return delegate.getItemCameraTransforms();}
-    public ItemOverrideList getOverrides(){return delegate.getOverrides();}
+    public ItemOverrideList getOverrides(){
+        if(redstone)return ItemOverrideList.NONE;
+        if(overrides==null)overrides=new ItemOverrideList(Collections.emptyList()){
+            @Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){
+                net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
+                if(tag!=null && tag.getCompoundTag("RedstonePrimary").getBoolean("Enabled")){
+                    if(controlsModel==null)controlsModel=new DiagonalScreenItemModel(delegate,true);return controlsModel;
+                }
+                return original;
+            }
+        };return overrides;
+    }
 }

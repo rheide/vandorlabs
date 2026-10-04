@@ -26,6 +26,14 @@ public final class ScreenSurface {
     // The renderer gives the image a depth bias instead of a geometric gap.
     private static final Quad DIAGONAL=new Quad(.5,15.5,4.25,4.25,14.85,14.85);
     private static final Quad DIAGONAL_INVERTED=new Quad(.5,15.5,1.15,14.85,11.75,4.25);
+    private static final java.util.Map<InputSurfaceLayout.Quad,Quad> INPUTS=new java.util.concurrent.ConcurrentHashMap<>();
+    public static Quad input(InputSurfaceLayout.Quad input){return INPUTS.computeIfAbsent(input,q->{
+        InputSurfaceLayout.Vertex a=q.vertices[0],b=q.vertices[1],c=q.vertices[2];
+        return new Quad(a.x,b.x,c.y,c.z,a.y,a.z);
+    });}
+    public static Quad halfDiagonal(boolean upper){return upper?HALF_DIAGONAL_UPPER:HALF_DIAGONAL;}
+    private static final Quad HALF_DIAGONAL=new Quad(.5,15.5,2.125,10.125,7.425,15.425);
+    private static final Quad HALF_DIAGONAL_UPPER=new Quad(.5,15.5,8.575,15.425,13.875,10.125);
     private ScreenSurface() { }
     public static Quad quad(Kind kind,boolean inverted) {
         if (kind==Kind.CONSOLE) return CONSOLE;

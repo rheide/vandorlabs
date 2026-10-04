@@ -1,9 +1,67 @@
 # Version 1.4 alpha
 
-Version 1.4 adds multi-channel controls and editable redstone screens, while
-reducing repeated rendering, collision and redstone work in builds containing
+Version 1.4 turns existing programmable screens, inputs and consoles into
+editable redstone control panels, adds multi-channel controls and selectable
+propulsion particle intensity, and
+reduces repeated rendering, collision and redstone work in builds containing
 many programmable blocks. Existing saved materials, geometry and
 configuration remain compatible.
+
+## Turn existing displays into redstone control panels
+
+**Choose `Redstone...` in an artwork picker to build a panel of labelled
+controls on the blocks you already use.** It appears alongside `Custom...` and
+opens the row editor; separate redstone blocks and crafting recipes are no
+longer needed.
+
+This works on **Programmable Screen**, **Programmable Diagonal Screen**,
+**Programmable Input**, **Programmable Console**, **Programmable Half-Input**,
+**Programmable Half Console** and **Programmable Diagonal Half Console**.
+A console's screen and input deck can have independent control panels.
+
+1. Shift-right-click in Creative mode, or use the Configurizer, to open the
+   block's dialog.
+2. Open the artwork picker for the surface you want to change and choose
+   `Redstone...`.
+3. Edit the header, add or remove up to eight rows, and give each row a short
+   label and comma-separated channels. Press Done to save.
+
+**Click anywhere on a row** to toggle every channel in its list. Green means
+**all** listed channels are powered. A partially powered row appears inactive;
+clicking it activates its complete channel bank. Empty channel lists remain
+inactive. Labels and headers are limited to the visible screen width, so new
+text is shown in full. Half-height surfaces omit the header on the block.
+
+Rows can overlap, and switches, levers and buttons can control the same
+channels. Physical inputs continue supplying power independently of a panel's
+latch state. Choosing ordinary artwork disables that surface's controls while
+retaining its saved row definitions for later use.
+
+Headers, rows, channel lists and latch states survive world saves. Pick-block
+copies the configuration and housing without copying live latch state. The
+Duplifier's **Redstone Screen Items** option copies the complete panel
+configuration, including both surfaces of a console. Older saved Duplifier
+masks enable the new option by default; it can still be disabled deliberately.
+Editing labels does not interrupt an active channel bank. Only loaded rows
+participate in the network, and unchanged highlights avoid redundant updates.
+
+Programmable Diagonal Screens also have precise wedge-shaped picking,
+collision slices and a housing-shaped selection outline. The empty half of
+the surrounding cube no longer obstructs movement or interaction. Their
+inventory model follows the same solid wedge as the placed block.
+
+The former **Programmable Viewscreen** is now named **Programmable Screen**.
+Its registry ID is unchanged, preserving existing blocks, items and recipes.
+
+## Propulsion particle intensity
+
+Propulsion dialogs now offer **Off**, **Light**, **Medium** and **Heavy**.
+Existing On settings become Light, preserving the original particles, count,
+positions and direction. Medium emits three times as many particles; Heavy
+emits six times as many. Both retain the original core stream and add particles
+across a wider area around its center. Connected assemblies keep one emitter
+at their shared center. Intensity survives saves, configured items, shape
+changes and Duplifier copying.
 
 ## Redstone channel lists
 
@@ -23,34 +81,6 @@ Existing single-channel worlds and configured items retain their settings.
 Save/load, picked items, Duplifier channel selection and joined assemblies
 preserve the full list. Channels still operate only in loaded chunks; they do
 not force chunks to load.
-
-## Redstone screens
-
-**Programmable Redstone Screen** and **Programmable Diagonal Redstone Screen**
-provide up to eight labelled controls on one block. Shift-right-click in
-Creative mode, or use the Configurizer, to open the dialog. Add or remove rows,
-edit the header or select a row to edit its label and comma-separated channels, then press Done.
-The Housing tab uses the existing material picker. Labels support up to
-24 characters, and headers up to 32. The editor limits both to the visible screen width; oversized labels from earlier saves remain editable.
-
-Right-click anywhere on a row to toggle its channel bank. Green means
-**every** listed channel is powered. An empty list or a partially powered list
-appears inactive; clicking a partially powered row activates all its channels.
-Rows can overlap, and ordinary switches, levers and buttons can control the
-same channels. Held buttons and other physical inputs continue to supply
-power independently of the screen's latch state.
-
-Rows and latch states survive world saves. Pick-block copies the header, labels, channel
-lists and housing without copying the live latch state. The Duplifier's
-**Redstone Screen Items** option copies the header and complete row definitions between either screen
-shape. Older saved Duplifier masks enable this new option by default; it can still be disabled deliberately. Editing labels does not interrupt an already active channel bank.
-Only loaded rows participate in the channel network. Row changes are
-event-driven; unchanged highlights do not send redundant status updates.
-
-Craft either redstone screen by combining its regular screen counterpart
-with one redstone dust. The former **Programmable Viewscreen** is now named
-**Programmable Screen**; its registry ID is unchanged, so existing blocks,
-items and recipes remain compatible.
 
 ## Diagonal walls
 

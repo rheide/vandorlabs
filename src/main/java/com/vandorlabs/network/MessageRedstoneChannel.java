@@ -30,7 +30,9 @@ public class MessageRedstoneChannel implements IMessage {
     private BlockPos pos;
     private int channel;
     private boolean updateParticles;
-    private boolean particles;
+    private int particleLevel;
+    public MessageRedstoneChannel withParticleLevel(int level){if(level<0 || level>3)throw new IllegalArgumentException("Particle level");particleLevel=level;return this;}
+    public int getParticleLevel(){return particleLevel;}
     private boolean updateJoin;
     private boolean join;
     private boolean updateSide;
@@ -60,7 +62,7 @@ public class MessageRedstoneChannel implements IMessage {
         this.pos = pos;
         this.channel = channel;
         this.updateParticles = updateParticles;
-        this.particles = particles;
+        this.particleLevel = particles?1:0;
         this.updateJoin = updateJoin;
         this.join = join;
         this.updateSide = updateSide;
@@ -72,7 +74,7 @@ public class MessageRedstoneChannel implements IMessage {
         pos = BlockPos.fromLong(buf.readLong());
         channel = buf.readInt();
         updateParticles = buf.readableBytes() > 0 && buf.readBoolean();
-        particles = buf.readableBytes() > 0 && buf.readBoolean();
+        particleLevel = buf.readableBytes() > 0 ? buf.readUnsignedByte() : 0;
         updateJoin = buf.readableBytes() > 0 && buf.readBoolean();
         join = buf.readableBytes() > 0 && buf.readBoolean();
         updateSide = buf.readableBytes() > 0 && buf.readBoolean();
@@ -80,13 +82,13 @@ public class MessageRedstoneChannel implements IMessage {
         updateShape = buf.readableBytes() > 0 && buf.readBoolean();
         shape = buf.readableBytes() >= 4 ? buf.readInt() : 0;
 
-        channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
+        channels=ChannelData.read(buf,channel);invalidChannels=channels==null || particleLevel>3;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         buf.writeInt(channel);
         buf.writeBoolean(updateParticles);
-        buf.writeBoolean(particles);
+        buf.writeByte(particleLevel);
         buf.writeBoolean(updateJoin);
         buf.writeBoolean(join);
         buf.writeBoolean(updateSide);
@@ -116,14 +118,14 @@ public class MessageRedstoneChannel implements IMessage {
                 if (block instanceof BlockConnectedPropulsionLight) {
                     ((BlockConnectedPropulsionLight) block).configureAssembly(player.world,
                             message.pos, message.getRedstoneChannels(), message.updateParticles,
-                            message.particles, message.updateJoin, message.join,
+                            message.particleLevel, message.updateJoin, message.join,
                             message.updateSide, message.sideTexture);
                 } else {
                     ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile)
-                                .setParticleStreamSelected(message.particles);
+                                .setParticleLevel(message.particleLevel);
                     if (message.updateSide && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile).setSideTexture(message.sideTexture);

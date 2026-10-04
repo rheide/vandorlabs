@@ -43,6 +43,12 @@ public final class InputSurfaceLayout {
             new Vertex(.25,7.75,14.70,0,0),new Vertex(15.75,7.75,14.70,1,0),
             new Vertex(15.75,1.25,7.70,1,1),new Vertex(.25,1.25,7.70,0,1));
     private static final Mounted[][][][] HALF_INPUTS=buildHalfInputs();
+    private static final Mounted[][][] CEILING_INPUTS=buildCeilingInputs();
+    private static Mounted[][][] buildCeilingInputs(){
+        Mounted[][][] result=new Mounted[2][2][3];
+        for(int full=0;full<2;full++)for(int small=0;small<2;small++)for(int slot=0;slot<3;slot++)result[full][small][slot]=createCeilingInput(full!=0,small!=0,slot);
+        return result;
+    }
     private InputSurfaceLayout() { }
 
     public static Mounted halfInput(boolean keyboard,boolean upper,int wallPosition,boolean small) {
@@ -84,6 +90,9 @@ public final class InputSurfaceLayout {
 
     /** Slot 0 is the local near edge, 1 the middle, and 2 the far edge. */
     public static Mounted ceilingInput(boolean full,boolean small,int position) {
+        return CEILING_INPUTS[full?1:0][small?1:0][Math.max(0,Math.min(2,position))];
+    }
+    private static Mounted createCeilingInput(boolean full,boolean small,int position){
         double scale=full?1:small?SMALL_SCALE:1;
         double x0=(16-16*scale)/2,x1=16-x0;
         double depth=full?16:8*scale;

@@ -26,6 +26,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
+    public static final int REDSTONE_SURFACE=-2;
+    private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
+    private RedstoneScreenContents[] controls=NO_CONTROLS;
+    public RedstoneScreenContents redstoneScreen(int slot){
+        if(slot<0 || slot>1)throw new IllegalArgumentException("surface slot");
+        if(controls==NO_CONTROLS)controls=new RedstoneScreenContents[2];
+        if(controls[slot]==null)controls[slot]=new RedstoneScreenContents(this,slot);
+        return controls[slot];
+    }
+    public boolean hasRedstoneScreen(int slot){return controls[slot]!=null && controls[slot].enabled();}
+    public NBTTagCompound redstoneConfiguration(){
+        NBTTagCompound tag=new NBTTagCompound();
+        for(int i=0;i<2;i++)tag.setTag(i==0?"Primary":"Secondary",redstoneScreen(i).configuration());
+        return tag;
+    }
+    public boolean applyRedstoneConfiguration(NBTTagCompound tag){
+        for(String key:new String[]{"Primary","Secondary"})if(!tag.hasKey(key,10) || !RedstoneScreenContents.validConfiguration(tag.getCompoundTag(key)))return false;
+        for(int i=0;i<2;i++)redstoneScreen(i).applyConfiguration(tag.getCompoundTag(i==0?"Primary":"Secondary"));return true;
+    }
     private ChannelList channels=ChannelList.EMPTY;
     @Override public ChannelList getRedstoneChannels(){return channels;}
 
@@ -140,8 +159,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
     private boolean smallInput = false;
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
+        if(choice==REDSTONE_SURFACE){redstoneScreen(slot).setEnabled(true);return;}
+        if(controls[slot]!=null)controls[slot].setEnabled(false);
         int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
         if(getSurfaceTexture(slot)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
@@ -288,9 +309,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         DeferredTileLoad.schedule(this, this::finishLoading);
     }
 
-    protected void finishLoading() { RedstoneChannels.register(this); }
-    @Override public void invalidate() { RedstoneChannels.unregister(this); super.invalidate(); }
-    @Override public void onChunkUnload() { RedstoneChannels.unregister(this); super.onChunkUnload(); }
+    protected void finishLoading() { RedstoneChannels.register(this);for(RedstoneScreenContents c:controls)if(c!=null)c.finishLoading(); }
+    @Override public void invalidate() { RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.invalidate(); super.invalidate(); }
+    @Override public void onChunkUnload() { RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.onChunkUnload(); super.onChunkUnload(); }
 
     public static boolean isValidInputPanel(String id) {
         if (id != null) {
@@ -453,6 +474,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
         compound.setInteger("DiagonalFill", diagonalFill);
         compound.setInteger("HousingTextureVersion", 1);
+        for(int i=0;i<2;i++)if(controls[i]!=null)compound.setTag(i==0?"RedstonePrimary":"RedstoneSecondary",controls[i].writeToNBT(new NBTTagCompound()));
         return compound;
     }
 
@@ -470,6 +492,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
+        for(int i=0;i<2;i++){
+            String key=i==0?"RedstonePrimary":"RedstoneSecondary";
+            if(compound.hasKey(key,10))redstoneScreen(i).readFromNBT(compound.getCompoundTag(key));
+            else if(controls[i]!=null)controls[i].readFromNBT(new NBTTagCompound());
+        }
+        if(controls!=NO_CONTROLS && world!=null && !world.isRemote)DeferredTileLoad.schedule(this,this::finishLoading);
         primarySurface=compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
         secondarySurface=compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
         ceilingMounted=compound.getBoolean("CeilingMounted");

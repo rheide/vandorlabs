@@ -70,6 +70,12 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
                 | (state.getValue(INVERTED) ? 4 : 0);
     }
 
+    @Override public net.minecraft.util.math.RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.Vec3d start,net.minecraft.util.math.Vec3d end){
+        return DiagonalScreenShape.of(state.getValue(FACING),state.getValue(INVERTED)).trace(pos,start,end);
+    }
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB entityBox,java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes,net.minecraft.entity.Entity entity,boolean actual){
+        for(net.minecraft.util.math.AxisAlignedBB box:DiagonalScreenShape.of(state.getValue(FACING),state.getValue(INVERTED)).collision)addCollisionBoxToList(pos,entityBox,boxes,box);
+    }
     @Override
     public boolean isOpaqueCube(IBlockState state) {
         return false;

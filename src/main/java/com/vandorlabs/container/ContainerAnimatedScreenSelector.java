@@ -13,10 +13,14 @@ import net.minecraft.item.ItemStack;
 public class ContainerAnimatedScreenSelector extends Container {
 
     private final TileEntityAnimatedScreenSelector tileEntity;
+    public final int redstoneSlot;
 
     public ContainerAnimatedScreenSelector(InventoryPlayer playerInventory,
             TileEntityAnimatedScreenSelector tileEntity) {
-        this.tileEntity = tileEntity;
+        this(playerInventory,tileEntity,-1);
+    }
+    public ContainerAnimatedScreenSelector(InventoryPlayer playerInventory,TileEntityAnimatedScreenSelector tileEntity,int redstoneSlot){
+        this.tileEntity = tileEntity;this.redstoneSlot=redstoneSlot;
     }
 
     @Override

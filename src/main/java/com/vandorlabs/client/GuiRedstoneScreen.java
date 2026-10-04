@@ -3,7 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.*;
 import com.vandorlabs.redstone.ChannelList;
-import com.vandorlabs.tiles.TileEntityRedstoneScreen;
+import com.vandorlabs.tiles.RedstoneScreenContents;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -14,7 +14,7 @@ import java.util.*;
 
 /** A bounded row list, with one label/channel editor and the existing housing picker. */
 public final class GuiRedstoneScreen extends GuiContainer {
-    private final TileEntityRedstoneScreen tile;
+    private final RedstoneScreenContents tile;
     private final List<String> labels=new ArrayList<>();
     private final List<ChannelList> channels=new ArrayList<>();
     private GuiTextField titleField,labelField,channelField;
@@ -22,17 +22,17 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private HousingTextureList housing;
     private int selected=-1,scroll,texture;
     private boolean materials;
-    public GuiRedstoneScreen(InventoryPlayer inventory,TileEntityRedstoneScreen tile){
-        super(new ContainerAnimatedScreenSelector(inventory,tile));this.tile=tile;title=tile.title();texture=tile.getHousingTexture();
-        for(TileEntityRedstoneScreen.Row row:tile.rows()){labels.add(row.label);channels.add(row.channels);}
+    public GuiRedstoneScreen(InventoryPlayer inventory,RedstoneScreenContents tile){
+        super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;title=tile.title();texture=tile.getHousingTexture();
+        for(RedstoneScreenContents.Row row:tile.rows()){labels.add(row.label);channels.add(row.channels);}
         if(!labels.isEmpty())selected=0;
     }
     public void initGui(){
         if(labelField!=null)store();
         xSize=Math.min(420,width-12);ySize=Math.min(240,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int cx=guiLeft+xSize-164;
-        titleField=new GuiTextField(2,fontRenderer,cx,guiTop+64,148,18);titleField.setMaxStringLength(TileEntityRedstoneScreen.MAX_TITLE);titleField.setText(title);
-        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+102,148,18);labelField.setMaxStringLength(TileEntityRedstoneScreen.MAX_LABEL);
+        titleField=new GuiTextField(2,fontRenderer,cx,guiTop+64,148,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
+        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+102,148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
         channelField=new GuiTextField(1,fontRenderer,cx,guiTop+140,148,18);ChannelFields.configure(channelField);
         housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-188,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
         buttonList.add(new GuiButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
@@ -42,12 +42,12 @@ public final class GuiRedstoneScreen extends GuiContainer {
         buttonList.add(new GuiButton(4,cx,guiTop+ySize-30,148,20,"Done"));load();refresh();
     }
     private boolean store(){
-        boolean headingValid=TileEntityRedstoneScreen.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
+        boolean headingValid=RedstoneScreenContents.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
         titleField.setTextColor(headingValid?0xE0E0E0:0xFF7777);
         if(!headingValid)return false;
         title=titleField.getText().trim();
         if(selected<0)return true;
-        ChannelList list=ChannelFields.parse(channelField);boolean valid=TileEntityRedstoneScreen.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),RedstoneScreenText.LABEL_WIDTH);
+        ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),RedstoneScreenText.LABEL_WIDTH);
         labelField.setTextColor(valid?0xE0E0E0:0xFF7777);
         if(!valid || list==null)return false;
         labels.set(selected,labelField.getText().trim());channels.set(selected,list);return true;
@@ -56,14 +56,14 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private void refresh(){
         titleField.setVisible(!materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
-        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<TileEntityRedstoneScreen.MAX_ROWS;}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}}
+        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<RedstoneScreenContents.MAX_ROWS;}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}}
     }
-    private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),title,labels,channels,texture));mc.player.closeScreen();}
+    private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
         if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
-        else if(b.id==2 && labels.size()<TileEntityRedstoneScreen.MAX_ROWS){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
+        else if(b.id==2 && labels.size()<RedstoneScreenContents.MAX_ROWS){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
         else if(b.id==4)send();
     }
     private int visibleRows(){return Math.max(1,(ySize-66)/20);}

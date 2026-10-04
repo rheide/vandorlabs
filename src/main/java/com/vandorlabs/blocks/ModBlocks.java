@@ -51,7 +51,6 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_PORTHOLE_BLOCK;
     public static Block PROGRAMMABLE_DIAGONAL_WALL;
     public static Block PROGRAMMABLE_DIAGONAL_SCREEN;
-    public static Block PROGRAMMABLE_REDSTONE_SCREEN,PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN;
     public static Block PROGRAMMABLE_INPUT;
     public static Block PROGRAMMABLE_HALF_CONSOLE;
     public static Block PROGRAMMABLE_FULL_INPUT;
@@ -199,8 +198,6 @@ public class ModBlocks {
                 BlockProgrammableWall.Shape.DIAGONAL));
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
         add(PROGRAMMABLE_DIAGONAL_SCREEN);
-        PROGRAMMABLE_REDSTONE_SCREEN=add(new BlockProgrammableRedstoneScreen());
-        PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN=add(new BlockProgrammableDiagonalRedstoneScreen());
         PROGRAMMABLE_INPUT = new BlockProgrammableInput();
         add(PROGRAMMABLE_INPUT);
         PROGRAMMABLE_HALF_CONSOLE = new BlockProgrammableHalfConsole();
@@ -704,9 +701,6 @@ public class ModBlocks {
         ModelResourceLocation diagonalScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_screen","inventory");
         if(event.getModelRegistry().getObject(diagonalScreenItem)!=null)
             event.getModelRegistry().putObject(diagonalScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(diagonalScreenItem)));
-        ModelResourceLocation redstoneScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_redstone_screen","inventory");
-        if(event.getModelRegistry().getObject(redstoneScreenItem)!=null)
-            event.getModelRegistry().putObject(redstoneScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(redstoneScreenItem),true));
         ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");
         if (event.getModelRegistry().getObject(stairItem)!=null)
             event.getModelRegistry().putObject(stairItem,new com.vandorlabs.client.ProgrammableStairsModel(event.getModelRegistry().getObject(stairItem)));

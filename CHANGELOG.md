@@ -2,10 +2,13 @@
 
 ## 1.4-alpha
 
-- Make complete redstone-screen rows clickable, add a saved editable header, and constrain edited text to the visible screen width. Copy headers and complete row definitions with the Duplifier, enabling screen copying on older saved tools while preserving subsequent exclusions. Match the diagonal redstone screen inventory icon to its solid housing.
+- Replace propulsion particle On/Off with Off/Light/Medium/Heavy. Keep existing On settings and emission unchanged as Light; Medium and Heavy add density and wider plumes around the original stream. Preserve direction, particle types, connected assembly centers, saved settings and copying.
+- Match diagonal screen picking and the selection outline to the solid wedge, and use cached collision slices so its empty space remains accessible.
+
+- Make complete redstone-screen rows clickable, add a saved editable header, and constrain edited text to the visible screen width. Copy headers and complete row definitions with the Duplifier, enabling screen copying on older saved tools while preserving subsequent exclusions. Match configured diagonal screen inventory icons to their solid housing.
 
 - Batch redstone-screen panel geometry, avoid unused animation work, and provide distinct row-control inventory icons. Keep text clear on all mounting directions, preserve power while editing row labels, and send row-status updates only when their visible highlight changes.
-- Add Programmable Redstone Screen and Programmable Diagonal Redstone Screen. Configure up to eight labelled controls with channel lists, toggle them directly in the world, and highlight a row only when every listed channel is powered. Support saved rows, configurable housings, picked-item settings and Duplifier copying.
+- Add `Redstone...` to the artwork pickers of existing programmable screens, inputs and consoles. Configure independent labelled channel controls on each surface, with full-row interaction, editable headers, saved definitions and Duplifier copying. Hide headers on half-height surfaces and remove the separate alpha redstone blocks and recipes.
 - Rename Programmable Viewscreen to Programmable Screen in the interface, preserving its registry ID and existing worlds.
 
 - Configure comma-separated redstone channel lists on switches, levers, buttons and channel-aware programmable blocks. Controls operate every listed channel; consumers respond when any listed channel is active. Preserve complete lists through save/load, picked items, Duplifier settings and joined assemblies, with automatic migration of existing single-channel settings.

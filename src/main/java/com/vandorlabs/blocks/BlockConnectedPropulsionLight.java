@@ -279,12 +279,16 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     }
     public void configureAssembly(World world,BlockPos pos,com.vandorlabs.redstone.ChannelList channel,
             boolean updateParticles,boolean particles,boolean updateJoin,boolean join,boolean updateSide,int sideTexture) {
+        configureAssembly(world,pos,channel,updateParticles,particles?1:0,updateJoin,join,updateSide,sideTexture);
+    }
+    public void configureAssembly(World world,BlockPos pos,com.vandorlabs.redstone.ChannelList channel,
+            boolean updateParticles,int particleLevel,boolean updateJoin,boolean join,boolean updateSide,int sideTexture){
         IBlockState state = world.getBlockState(pos);
         List<TileEntityRedstoneLight> tiles = assemblyTiles(world, pos, state);
         for (TileEntityRedstoneLight tile : tiles) tile.setRedstoneChannels(channel);
         if (updateParticles)
             for (TileEntityRedstoneLight tile : tiles)
-                tile.setParticleStreamSelected(particles, false);
+                tile.setParticleLevel(particleLevel, false);
         if (updateJoin)
             for (TileEntityRedstoneLight tile : tiles) tile.setJoin(join);
         if (updateSide)

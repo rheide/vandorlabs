@@ -39,7 +39,6 @@ public final class ProgrammableSettings {
     public static final String WALL_TEXTURE = "wall_texture";
     public static final String PRIMARY_TEXTURE = "primary_texture";
     public static final String PRIMARY_KIND = "primary_kind";
-    public static final String REDSTONE_TITLE="redstone_title";
     public static final String REDSTONE_ROWS="redstone_rows";
     public static final String CHANNEL = "redstone_channel";
     public static final String TRIGGER = "redstone_trigger";
@@ -98,9 +97,7 @@ public final class ProgrammableSettings {
     }
 
     private static boolean isDisplay(Block block) {
-        return !(block instanceof com.vandorlabs.blocks.BlockProgrammableRedstoneScreen)
-                && !(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalRedstoneScreen)
-                && !(block instanceof BlockProgrammableWall)
+        return !(block instanceof BlockProgrammableWall)
                 && !(block instanceof BlockProgrammableBlock)
                 && !((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs));
     }
@@ -133,10 +130,8 @@ public final class ProgrammableSettings {
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
         NBTTagCompound out = new NBTTagCompound();
-        if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen){
-            com.vandorlabs.tiles.TileEntityRedstoneScreen screen=(com.vandorlabs.tiles.TileEntityRedstoneScreen)tile;
-            out.setTag(REDSTONE_ROWS,screen.rowConfiguration());out.setString(REDSTONE_TITLE,screen.title());
-        }
+        if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block))
+            out.setTag(REDSTONE_ROWS,((TileEntityAnimatedScreenSelector)tile).redstoneConfiguration());
         if (tile instanceof RedstoneChannelMember) {
             ChannelList channels=((RedstoneChannelMember)tile).getRedstoneChannels();
             if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
@@ -213,7 +208,7 @@ public final class ProgrammableSettings {
             out.setInteger(WALL_TEXTURE, propulsion.getSideTexture());
             out.setBoolean(JOIN, propulsion.isJoin());
             out.setBoolean(ACTIVE, propulsion.getManualMode() != 0);
-            out.setBoolean(PARTICLES, propulsion.isParticleStreamSelected());
+            out.setInteger(PARTICLES,propulsion.getParticleLevel());
             if (!fixture.familyId().isEmpty()) out.setInteger(PROPULSION_SHAPE, fixture.shape());
         } else if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass) tile;
@@ -359,13 +354,13 @@ public final class ProgrammableSettings {
                 propulsion.setJoin(values.getBoolean(JOIN));
                 applicable = true;
             }
-            if (values.hasKey(ACTIVE, 1) || values.hasKey(PARTICLES, 1)) {
+            if (values.hasKey(ACTIVE, 1) || values.hasKey(PARTICLES, 1) || values.hasKey(PARTICLES,3)) {
                 ChannelList channel = propulsion.getRedstoneChannels();
                 propulsion.setRedstoneChannel(0);
                 boolean active = flag(values, ACTIVE, propulsion.getManualMode() != 0);
-                boolean particles = flag(values, PARTICLES,
-                        propulsion.isParticleStreamSelected());
-                propulsion.setManualMode(active ? particles ? 2 : 1 : 0, true);
+                int particles=values.hasKey(PARTICLES,3)?Math.max(0,Math.min(3,values.getInteger(PARTICLES))):values.hasKey(PARTICLES,1)?values.getBoolean(PARTICLES)?1:0:propulsion.getParticleLevel();
+                propulsion.setManualMode(active?particles>0?2:1:0,true);
+                propulsion.setParticleLevel(particles);
                 propulsion.setRedstoneChannels(channel);
                 applicable = true;
             }
@@ -579,8 +574,8 @@ public final class ProgrammableSettings {
                                 && DuplifierApplyOptions.connected(player.getHeldItemMainhand()));
             }
         }
-        if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen && values.hasKey(REDSTONE_ROWS,9))
-            applicable|=((com.vandorlabs.tiles.TileEntityRedstoneScreen)tile).applyRowConfiguration(values.hasKey(REDSTONE_TITLE,8)?values.getString(REDSTONE_TITLE):((com.vandorlabs.tiles.TileEntityRedstoneScreen)tile).title(),values.getTagList(REDSTONE_ROWS,10));
+        if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block) && values.hasKey(REDSTONE_ROWS,10))
+            applicable|=((TileEntityAnimatedScreenSelector)tile).applyRedstoneConfiguration(values.getCompoundTag(REDSTONE_ROWS));
         if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL)) {
             ChannelList before=((RedstoneChannelMember)tile).getRedstoneChannels();
             ((RedstoneChannelMember) tile).setRedstoneChannels(channels(values,(RedstoneChannelMember)tile));

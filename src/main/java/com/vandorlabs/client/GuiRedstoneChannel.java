@@ -20,7 +20,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     private final RedstoneChannelMember member;
     private GuiTextField channelField;
     private final boolean thruster;
-    private boolean particles;
+    private int particleLevel;
     private boolean connected;
     private boolean join;
     private GuiButton joinButton;
@@ -38,8 +38,7 @@ public class GuiRedstoneChannel extends GuiContainer {
                 && member.channelTile().getWorld() != null
                 && member.channelTile().getWorld().getBlockState(member.channelTile().getPos())
                         .getBlock() instanceof BlockPropulsionLight;
-        this.particles = thruster
-                && ((TileEntityRedstoneLight) member).isParticleStreamSelected();
+        this.particleLevel = thruster?((TileEntityRedstoneLight)member).getParticleLevel():0;
         BlockPropulsionLight block = thruster ? (BlockPropulsionLight) member.channelTile()
                 .getWorld().getBlockState(member.channelTile().getPos()).getBlock() : null;
         this.programmableThruster = block != null && !block.familyId().isEmpty();
@@ -88,8 +87,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         int value = channel();
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
-                        thruster, particles, connected, join, thruster, sideTexture,
-                        programmableThruster, shape).withChannels(ChannelFields.parse(channelField)));
+                        thruster, particleLevel>0, connected, join, thruster, sideTexture,
+                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
@@ -99,7 +98,7 @@ public class GuiRedstoneChannel extends GuiContainer {
             mc.player.closeScreen();
         }
         if (button.id == 2 && thruster) {
-            particles = !particles;
+            particleLevel=(particleLevel+1)%4;
             particleButton.displayString = particleLabel();
         }
         if (button.id == 3 && connected) {
@@ -114,7 +113,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
-    private String particleLabel() { return particles ? "Particles: On" : "Particles: Off"; }
+    private String particleLabel() { return "Particles: "+TileEntityRedstoneLight.PARTICLE_LEVELS[particleLevel]; }
     private String joinLabel() { return join ? "Join: On" : "Join: Off"; }
     private String shapeLabel() {
         return "Shape: " + (shape == 1 ? "Hexagon" : shape == 2 ? "Wedge" : "Block");

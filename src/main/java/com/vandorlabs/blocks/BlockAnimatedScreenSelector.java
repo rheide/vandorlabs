@@ -135,6 +135,7 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
             EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if(RedstoneScreenInteractions.activate(world,pos,state,player,hand))return true;
         if (hand == EnumHand.MAIN_HAND && player.isSneaking()
                 && player.capabilities.isCreativeMode && !world.isRemote
                 && world.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector) {
@@ -163,6 +164,8 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
         if (!(te instanceof TileEntityAnimatedScreenSelector)) {
             return 11;
         }
+        TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)te;
+        if(screen.hasRedstoneScreen(0) || screen.hasRedstoneScreen(1))return 11;
         // Brighter than the stock screens (7): keeps the wall-textured
         // housing readable in dark rooms next to the fullbright face.
         return ((TileEntityAnimatedScreenSelector) te).getEffectiveMode()
@@ -204,8 +207,9 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
             configuration.removeTag("x");
             configuration.removeTag("y");
             configuration.removeTag("z");
-            if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen)
-                configuration.setTag("RedstoneRows",((com.vandorlabs.tiles.TileEntityRedstoneScreen)tile).rowConfiguration());
+            TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
+            for(int slot=0;slot<2;slot++)if(configuration.hasKey(slot==0?"RedstonePrimary":"RedstoneSecondary",10))
+                configuration.setTag(slot==0?"RedstonePrimary":"RedstoneSecondary",screen.redstoneScreen(slot).configuration());
             stack.setTagInfo("BlockEntityTag", configuration);
         }
         return stack;
