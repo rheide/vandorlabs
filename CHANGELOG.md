@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Reuse bounded Static/Off screen texture identifiers and the existing loaded-neighbor lighting sampler, reducing render-loop allocation while preserving texture paths, resource-pack resolution and light values.
+
 - Reject offset-trapdoor collision scans in loaded sections whose live block palette contains no trapdoors. Avoid per-cell world reads for ordinary entity/particle queries; retain the original scan for possible owners and unsupported storage.
 
 - Release light and porthole group-cache world references and geometry on client-world unload, including when no later light or porthole is rendered.

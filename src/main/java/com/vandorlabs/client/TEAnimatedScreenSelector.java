@@ -70,8 +70,6 @@ public class TEAnimatedScreenSelector
         extends TileEntitySpecialRenderer<TileEntityAnimatedScreenSelector> {
 
     private static final String TEX_ROOT = "textures/blocks/";
-    private static final String OFF_PLAIN = "screen_off";
-    private static final String OFF_FRAMED = "sequence_border_off";
 
     /** Reconstructed animation texture, loaded once on first use. */
     private static class AnimData {
@@ -504,8 +502,7 @@ public class TEAnimatedScreenSelector
             // Off-texture follows the ACTIVE variant id, so it stays correct
             // even if the tile's framed flag ever skews from its screen id.
             boolean framed = ModBlocks.DISPLAY_FRAMED_IDS.contains(screenId);
-            texture = new ResourceLocation(VandorLabs.MODID,
-                    TEX_ROOT + (framed ? OFF_FRAMED : OFF_PLAIN) + ".png");
+            texture = ScreenTextureLocations.off(framed);
             vTop = 0.0F;
             vBottom = 1.0F;
         } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED) {
@@ -522,8 +519,7 @@ public class TEAnimatedScreenSelector
             vTop = (float)AnimationFrames.top(frame,data.frameCount);
             vBottom = (float)AnimationFrames.bottom(frame,data.frameCount);
         } else {
-            texture = new ResourceLocation(VandorLabs.MODID,
-                    TEX_ROOT + screenId + "_static.png");
+            texture = ScreenTextureLocations.stationary(screenId);
             vTop = 0.0F;
             vBottom = 1.0F;
         }
@@ -672,9 +668,7 @@ public class TEAnimatedScreenSelector
         double vTop = 0;
         double vBottom = 1;
         if (mode == TileEntityAnimatedScreenSelector.MODE_OFF) {
-            texture = new ResourceLocation(VandorLabs.MODID, TEX_ROOT
-                    + (ModBlocks.DISPLAY_FRAMED_IDS.contains(id)
-                            ? OFF_FRAMED : OFF_PLAIN) + ".png");
+            texture = ScreenTextureLocations.off(ModBlocks.DISPLAY_FRAMED_IDS.contains(id));
             setWorldLight(te);
         } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED) {
             AnimData data = animData(id);
@@ -685,7 +679,7 @@ public class TEAnimatedScreenSelector
             texture = data.texture;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         } else {
-            texture = new ResourceLocation(VandorLabs.MODID, TEX_ROOT + id + "_static.png");
+            texture = ScreenTextureLocations.stationary(id);
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         }
         Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
@@ -768,16 +762,7 @@ public class TEAnimatedScreenSelector
     }
 
     static int neighborLight(TileEntityAnimatedScreenSelector te) {
-        int sky = 0;
-        int block = 0;
-        for (EnumFacing side : EnumFacing.values()) {
-            net.minecraft.util.math.BlockPos neighbor = te.getPos().offset(side);
-            if (!te.getWorld().isBlockLoaded(neighbor)) continue;
-            int combined = te.getWorld().getCombinedLight(neighbor, 0);
-            sky = Math.max(sky, combined >>> 16);
-            block = Math.max(block, combined & 65535);
-        }
-        return (sky << 16) | block;
+        return com.vandorlabs.blocks.ProgrammableHousingState.neighborLight(te.getWorld(),te.getPos());
     }
 
     private static void renderWallBox(TextureAtlasSprite wall, double x0, double y0,

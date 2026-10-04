@@ -11,6 +11,8 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
+**1.4-alpha:** Performance improvements for programmable rendering, chunk meshes, collision and redstone, preserving existing block behaviour. See the [measurements and validation](docs/performance/1.4/README.md).
+
 **Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
 
 Texture choices share a [categorized picker with thumbnails and Custom block/door artwork](docs/unified-materials.md), including door, light and static screen artwork, plus Tech, Hull, Panels, Industrial, Trapdoors, Windows and Storage. New normal and diagonal trapdoors default to Armored Hatch. Add your own categories and PNGs with [filesystem textures](docs/filesystem-textures.md); first startup creates an Example folder and sample panel. Client and server texture folders may differ.

@@ -1,0 +1,3 @@
+algorithm,queries,median_ms,median_allocated_bytes
+released,4096,1.913182,753664
+shared_mutable,4096,1.902192,163840

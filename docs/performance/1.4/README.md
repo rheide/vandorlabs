@@ -354,6 +354,32 @@ exclude vanilla collision work and do not establish an overall particle/FPS gain
 `offset-collision-palettes.csv` includes all positive and negative cases. Both
 paths receive explicit warmup because a rejected section never warms the scan.
 
+## Static/Off screen identifiers and neighbor light sampling
+
+Static and Off screen modes now reuse immutable texture identifiers. The static
+identifier cache holds at most 256 names; the two Off identifiers are constants.
+Only the path is retained: texture binding and resource-pack resolution still use
+the live texture manager. Screen validation and framed-art selection are unchanged.
+The renderer also reuses the existing loaded-neighbor light sampler, which uses
+one mutable position instead of six positions and a copied direction array.
+
+Nine additional static fixtures cover Viewscreen, Diagonal Screen and Input in
+Static, plain Off and framed Off modes. All 67 image comparisons pass. Checks also
+cover identifier equality, reuse, eviction and 72 loaded-boundary light samples.
+
+For 64 Static screens, measured rendering allocation falls from 10,784 to 32 bytes
+for Viewscreen, 34,336 to 32 for Diagonal Screen and 72,736 to 4,128 for Input.
+Off-mode reductions vary from 47% to 77%. Input Static submission improves by
+about 6%; most other timing differences are within run variation. Complete
+before/after data is in `render-before-screen-identifiers.csv` and
+`render-after-screen-identifiers.csv`.
+
+The paired live-world neighbor-light benchmark alternates 4,096 queries against
+the released renderer loop. Median allocation falls from 753,664 to 163,840 bytes;
+CPU time is essentially unchanged at 1.913 versus 1.902 ms. In the full 64-Light
+render batch this removes 9,216 bytes. `neighbor-light.csv` records the paired
+measurement separately from draw submission.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
