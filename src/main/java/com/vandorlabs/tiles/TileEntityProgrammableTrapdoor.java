@@ -260,7 +260,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     }
     @Override public void setChannelSignal(boolean powered) {
         if(channelSignal==powered)return;channelSignal=powered;
-        if(world!=null && !world.isRemote)evaluatePower(false);
+        if(world!=null && !world.isRemote){markDirty();evaluatePower(false);}
     }
     public void localInputChanged() {
         if(world==null || world.isRemote)return;
@@ -270,12 +270,14 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         if(configuring || world==null || world.isRemote)return;
         if(cover && LandingGearCovers.needsOpen(this)){requestOpen(true);return;}
         java.util.List<TileEntityProgrammableTrapdoor> members=group();
-        boolean powered=false;
-        for(TileEntityProgrammableTrapdoor leaf:members)powered|=leaf.channelSignal || leaf.hasLocalRedstoneSignal();
+        boolean powered=channelSignal;
+        if(!powered)for(TileEntityProgrammableTrapdoor leaf:members)
+            if(leaf.channelSignal || leaf.hasLocalRedstoneSignal()){powered=true;break;}
         boolean changed=!powerKnown || lastPower!=powered;
-        powerKnown=true;lastPower=powered;
-        for(TileEntityProgrammableTrapdoor leaf:members){leaf.powerKnown=true;leaf.lastPower=powered;leaf.markDirty();}
-        markDirty();
+        if(changed){powerKnown=true;lastPower=powered;markDirty();}
+        for(TileEntityProgrammableTrapdoor leaf:members)if(!leaf.powerKnown || leaf.lastPower!=powered) {
+            leaf.powerKnown=true;leaf.lastPower=powered;leaf.markDirty();
+        }
         if(trigger!=SpaceDoorData.TRIGGER_DISABLED && (force || changed))
             requestOpen(trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?powered:!powered);
     }

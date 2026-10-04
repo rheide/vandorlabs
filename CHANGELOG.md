@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Avoid redundant chunk-dirty notifications for unchanged trapdoor group power. Preserve saved channel signals and group state, and stop physical input reads once the group is known powered.
+
 - Reuse bounded ray-candidate coordinate lists for offset trapdoor picking, preserving hit order and current loaded-world reads. Offset collision scans reuse a mutable query position.
 
 - Precompute fixed catalog texture names for square, unlit and storage surfaces, avoiding per-draw JSON traversal and string allocation while retaining live Custom material and atlas resolution.

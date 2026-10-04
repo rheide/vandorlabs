@@ -53,6 +53,7 @@ public final class NonRenderingChecks {
         TextureNameChecks.run();
         TrapdoorRayCandidateChecks.run();
         OffsetInteractionChecks.run();
+        TrapdoorPowerChecks.run();
     }
 
     private static void placement() {

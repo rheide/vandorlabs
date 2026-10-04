@@ -67,6 +67,14 @@ different source positions, fully unpowered groups and source removal. A source
 at the traversal origin reduces input queries from 64 to one; unpowered groups
 still query all 64 members.
 
+Trapdoor power settlement marks a member dirty only when its saved power state
+changes; changed channel signals are persisted separately even if the group's OR
+stays high. A powered local channel also proves the group's OR without physical
+queries. Across 256 unchanged events on 64 leaves, dirty calls fall from 16,640
+to zero. With the receiving leaf's channel powered, local-input reads fall from
+16,128 to zero. A 600-event oracle compares open states and full NBT under all
+three trigger modes, coalesced physical/channel changes and final power loss.
+
 ## Trapdoor assembly and temporary data
 
 Equal saved assembly lists become one immutable list after exact validation.
