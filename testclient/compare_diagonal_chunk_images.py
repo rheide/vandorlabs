@@ -8,7 +8,7 @@ from PIL import Image
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('run', type=Path)
 args = parser.parse_args()
-for variant in ('half', 'full', 'shallow', 'clipped'):
+for variant in ('half', 'full', 'shallow', 'clipped', 'boundary_half', 'boundary_full', 'boundary_shallow'):
     stem = 'benchmark-vandorlabs-programmable_diagonal_wall-chunk_wall_' + variant
     root = args.run / 'screenshots'
     reference = np.asarray(Image.open(root / (stem + '_reference.png')).convert('RGB'), dtype=np.int16)

@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Extend diagonal chunk rendering to section-boundary positions whose conservative geometry remains inside the section. Keep tile rendering for actual overhangs, with a shared routing rule for model and tile paths.
+
 - Keep Programmable Walls and Porthole Walls visible throughout the loaded render distance, matching diagonal walls instead of disappearing beyond the tile renderer's 64-block cutoff.
 
 - Merge compatible coplanar Diagonal Wall faces during chunk construction, preserving texture interpolation, normals, clipping and two-sided visibility. Simple walls use 20 quads instead of 44.
@@ -9,7 +11,7 @@
 - Fix corrupted triangles on chunk-rendered Diagonal Walls when using the vanilla block renderer. Use the standard baked-quad vertex layout and retain the existing surfaces, normals and lighting.
 - Validate the actual vanilla output buffer as well as the Forge rendering path.
 
-- Render interior Programmable Diagonal Walls through cached chunk geometry. Preserve existing surfaces, material coordinates, two-sided faces and uniform lighting. Keep the existing tile renderer at chunk-section boundaries and for portholes; see the [experimental diagonal rendering notes](docs/performance/1.4/diagonal-chunks.md).
+- Render static Programmable Diagonal Walls through cached chunk geometry. Preserve existing surfaces, material coordinates, two-sided faces and uniform lighting. Keep the existing tile renderer for section overhangs and portholes; see the [experimental diagonal rendering notes](docs/performance/1.4/diagonal-chunks.md).
 - Refresh nearby diagonal-wall chunk meshes when geometry settings arrive in a tile update packet.
 
 - Reuse bounded Static/Off screen texture identifiers and the existing loaded-neighbor lighting sampler, reducing render-loop allocation while preserving texture paths, resource-pack resolution and light values.

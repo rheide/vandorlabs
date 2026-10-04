@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
-**1.4-alpha:** Performance improvements for programmable rendering, chunk meshes, collision and redstone, preserving existing block behaviour. See the [measurements and validation](docs/performance/1.4/README.md) and the [experimental diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
+**1.4-alpha:** Performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [experimental diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
 
 **Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
 

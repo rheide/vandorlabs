@@ -26,7 +26,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override public boolean shouldRenderInPass(int pass) {
         net.minecraft.block.Block block = getBlockType();
-        if(world!=null && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos))return false;
+        if(world!=null && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab)) return false;

@@ -121,7 +121,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
 
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos) {
-        return DiagonalWallState.baked(state,pos)
+        return DiagonalWallState.baked(state,world,pos)
                 ?((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(
                         DiagonalWallState.PROPERTY,new DiagonalWallState(state,world,pos)):state;
     }

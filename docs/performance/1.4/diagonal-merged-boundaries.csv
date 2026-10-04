@@ -1,0 +1,15 @@
+block,variant,count,baked_vertices,tile_renderers,build_ms,submit_p50_ms,submit_p95_ms,complete_p50_ms,complete_p95_ms,allocated_bytes_p50
+vandorlabs:programmable_diagonal_wall,chunk_wall_half_reference,64,0,64,0.024616,0.440976,0.482313,0.978933,1.044916,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_half,64,5120,0,1.824545,0.091782,0.125154,0.516987,0.568995,32
+vandorlabs:programmable_diagonal_wall,chunk_wall_full_reference,64,0,64,0.011782,0.433732,0.669133,0.927095,1.204545,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_full,64,5120,0,1.781144,0.097713,0.152496,0.537116,0.599201,32
+vandorlabs:programmable_diagonal_wall,chunk_wall_shallow_reference,64,0,64,0.013054,0.423113,0.595365,0.885077,1.080543,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_shallow,64,5120,0,1.518633,0.099727,0.125164,0.473306,0.506669,32
+vandorlabs:programmable_diagonal_wall,chunk_wall_clipped_reference,64,640,64,0.897150,0.498644,0.558886,1.017525,1.220345,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_clipped,64,6784,0,3.031335,0.135143,0.167203,0.539760,0.593501,32
+vandorlabs:programmable_diagonal_wall,chunk_wall_boundary_half_reference,64,0,64,0.012774,0.414897,0.466303,0.894654,0.971849,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_boundary_half,64,5120,0,1.324640,0.099466,0.129192,0.505797,0.572111,32
+vandorlabs:programmable_diagonal_wall,chunk_wall_boundary_full_reference,64,0,64,0.011641,0.419966,0.455723,0.925453,0.986136,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_boundary_full,64,5120,0,1.387137,0.096601,0.133210,0.506118,0.550340,32
+vandorlabs:programmable_diagonal_wall,chunk_wall_boundary_shallow_reference,64,0,64,0.010791,0.429674,0.496881,0.906006,0.968884,15392
+vandorlabs:programmable_diagonal_wall,chunk_wall_boundary_shallow,64,4480,8,1.092676,0.137888,0.184265,0.532908,0.596888,1952

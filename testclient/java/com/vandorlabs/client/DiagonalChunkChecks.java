@@ -54,6 +54,7 @@ final class DiagonalChunkChecks {
                 require(extended.getPackedLightmapCoords(cache,pos.up())==world.getCombinedLight(pos,0),"neighbor sample changed uniform owner light");
                 require(!tile.shouldRenderInPass(0),"interior tile still renders");
                 List<BakedQuad> quads=DiagonalWallModel.bake(shape,wall,metal,false);
+                DiagonalBoundaryChecks.mesh(block,state,mode,quads);
                 List<BakedQuad> merged=DiagonalWallModel.bake(shape,wall,metal);
                 DiagonalMergeChecks.compare(quads,merged);
                 originalQuads+=quads.size();mergedQuads+=merged.size();
@@ -96,11 +97,7 @@ final class DiagonalChunkChecks {
                 }
                 cases++;
             }
-        for(int x:new int[]{-17,-16,-15,-1,0,1,14,15,16,17})for(int y:new int[]{79,80,81,94,95,96}) {
-            BlockPos edge=new BlockPos(x,y,8);IBlockState state=block.getDefaultState();
-            boolean expected=(x&15)>0 && (x&15)<15 && (y&15)>0 && (y&15)<15;
-            require(DiagonalWallState.baked(state,edge)==expected,"chunk-edge fallback differs");
-        }
+        DiagonalBoundaryChecks.routing(block);
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);
         net.minecraft.nbt.NBTTagCompound changed=tile.getUpdateTag();
         changed.setBoolean("DiagonalHalfHeight",!tile.isDiagonalHalfHeight());

@@ -127,7 +127,8 @@ final class ProgrammableRenderBenchmark {
                         "vandorlabs:programmable_input", "vandorlabs:programmable_viewscreen"))
                     for(String variant:Arrays.asList("screen_static", "screen_off", "screen_framed_off"))
                         measure(mc,csv,meshes,id,variant,64);
-                for(String variant:Arrays.asList("chunk_wall_half", "chunk_wall_full", "chunk_wall_shallow", "chunk_wall_clipped"))
+                for(String variant:Arrays.asList("chunk_wall_half", "chunk_wall_full", "chunk_wall_shallow", "chunk_wall_clipped",
+                        "chunk_wall_boundary_half", "chunk_wall_boundary_full", "chunk_wall_boundary_shallow"))
                 {
                     measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant+"_reference",64);
                     measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant,64);
@@ -162,6 +163,8 @@ final class ProgrammableRenderBenchmark {
         boolean diagonalReference=variant.startsWith("chunk_wall_") && variant.endsWith("_reference");
         String diagonalVariant=diagonalReference?variant.substring(0,variant.length()-10):variant;
         BlockPos origin=variant.startsWith("chunk_wall_")?new BlockPos(-15,81,-8):ORIGIN;
+        if(diagonalVariant.startsWith("chunk_wall_boundary_"))
+            origin=diagonalVariant.endsWith("shallow")?new BlockPos(-16,79,-16):new BlockPos(-15,79,-8);
         int side = count == 16 ? 4 : 8;
         int spacing = (variant.endsWith("_joined") && !variant.endsWith("unjoined"))
                 || variant.startsWith("chunk_wall_") || variant.equals("floor_8x8") || variant.equals("solid_4x4x4") ? 1 : 2;
