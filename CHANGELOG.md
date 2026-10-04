@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Release light and porthole group-cache world references and geometry on client-world unload, including when no later light or porthole is rendered.
+
 - Store housing mesh settings in compact immutable snapshots and create full Forge property maps only on demand. Preserve listed/unlisted transitions, validation errors and concurrent reads.
 
 - Reuse private per-thread corner and artwork-coordinate buffers during trapdoor rendering. Preserve independently owned geometry results for collision callers and isolate nested draws.

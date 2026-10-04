@@ -314,6 +314,17 @@ forcing map creation for unchanged shape resolution.
 the complete fixtures and controls; `housing-snapshots.csv` contains the paired
 snapshot-only measurement against release 1.3.
 
+## Client-world cache lifetime
+
+The last light and porthole group caches previously held a strong reference to
+their client world until another corresponding block was rendered. The existing
+client-world unload listener now releases both owner references and their group
+geometry. Unloading an unrelated world leaves active groups intact, and the
+next draw rebuilds a cleared group normally. A regression check reproduces the
+retained reference before the change and verifies all three behaviours afterward.
+This removes these renderer-owned retention paths; it does not claim a measured
+whole-client heap reduction.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to

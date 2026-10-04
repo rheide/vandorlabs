@@ -95,6 +95,18 @@ public class TEAnimatedScreenSelector
     private static long lightCacheTick = Long.MIN_VALUE;
     private static long lightCacheRevision = Long.MIN_VALUE;
 
+    /** Release the last rendered world even if no later light or porthole is drawn. */
+    static void unloadGroups(World world) {
+        if(lightCacheWorld==world) {
+            LIGHT_GROUPS.clear();lightCacheWorld=null;
+            lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
+        }
+        if(portholeCacheWorld==world) {
+            PORTHOLE_GROUPS.clear();portholeCacheWorld=null;
+            portholeCacheTick=Long.MIN_VALUE;portholeCacheRevision=Long.MIN_VALUE;
+        }
+    }
+
     static final class LightGroup {
         final int minAxis, minRow, columns, rows;
         final EnumFacing right, up;

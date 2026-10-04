@@ -128,7 +128,12 @@ public final class DiagonalWallMeshCache {
         @Override public void sendBlockBreakProgress(int id,BlockPos pos,int progress) { }
     }
     public static final class Events {
-        @SubscribeEvent public void worldUnloaded(WorldEvent.Unload event) { if(event.getWorld().isRemote)unload(event.getWorld()); }
+        @SubscribeEvent public void worldUnloaded(WorldEvent.Unload event) {
+            if(event.getWorld().isRemote) {
+                unload(event.getWorld());
+                TEAnimatedScreenSelector.unloadGroups(event.getWorld());
+            }
+        }
         @SubscribeEvent public void chunkLoaded(ChunkEvent.Load event) { changed(event); }
         @SubscribeEvent public void chunkUnloaded(ChunkEvent.Unload event) { changed(event); }
         private void changed(ChunkEvent event) {
