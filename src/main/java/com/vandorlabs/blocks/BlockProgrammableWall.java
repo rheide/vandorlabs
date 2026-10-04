@@ -66,7 +66,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     public static double flatEnd(IBlockState state, IBlockAccess world, BlockPos pos, boolean upper) {
         if (halfHeight(world,pos)) return Double.NaN;
-        if (world instanceof World && DiagonalPanelGeometry.coveredEnd((World)world,pos,state,upper))
+        if (DiagonalPanelGeometry.coveredEnd(world,pos,state,upper))
             return Double.NaN;
         EnumFacing facing=state.getValue(FACING);
         double expected=com.vandorlabs.render.DiagonalWallGeometry.near(geometry(world,pos),
@@ -115,7 +115,23 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override protected IProperty<EnumFacing> facingProperty() { return FACING; }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, INVERTED, DEPTH);
+        return new net.minecraftforge.common.property.ExtendedBlockState(this,
+                new IProperty<?>[]{FACING, INVERTED, DEPTH},
+                new net.minecraftforge.common.property.IUnlistedProperty<?>[]{DiagonalWallState.PROPERTY});
+    }
+
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos) {
+        return DiagonalWallState.baked(state,pos)
+                ?((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(
+                        DiagonalWallState.PROPERTY,new DiagonalWallState(state,world,pos)):state;
+    }
+
+    @Override public int getPackedLightmapCoords(IBlockState state,IBlockAccess world,BlockPos pos) {
+        if(state instanceof net.minecraftforge.common.property.IExtendedBlockState) {
+            DiagonalWallState snapshot=((net.minecraftforge.common.property.IExtendedBlockState)state).getValue(DiagonalWallState.PROPERTY);
+            if(snapshot!=null)return snapshot.light;
+        }
+        return super.getPackedLightmapCoords(state,world,pos);
     }
 
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
@@ -189,6 +205,11 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         return state.getValue(FACING).getHorizontalIndex()
                 | (isDiagonalShape() ? (state.getValue(INVERTED) ? 4 : 0)
                         : state.getValue(DEPTH) << 2);
+    }
+
+    @Override public net.minecraft.util.BlockRenderLayer getBlockLayer() {
+        // Match the old tile pass's alpha test and atlas mipmaps for cutout materials.
+        return shape==Shape.DIAGONAL?net.minecraft.util.BlockRenderLayer.CUTOUT_MIPPED:super.getBlockLayer();
     }
 
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }

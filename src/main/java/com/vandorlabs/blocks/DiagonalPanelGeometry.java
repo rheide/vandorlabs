@@ -26,10 +26,10 @@ public final class DiagonalPanelGeometry {
         return result;
     }
 
-    public static boolean coveredEnd(net.minecraft.world.World world,BlockPos pos,IBlockState state,boolean upper) {
+    public static boolean coveredEnd(net.minecraft.world.IBlockAccess world,BlockPos pos,IBlockState state,boolean upper) {
         int mode=BlockProgrammableWall.geometry(world,pos);
         for(BlockPos next:rowCandidates(pos,state,mode,upper)) {
-            if(!world.isBlockLoaded(next))continue;
+            if(world instanceof net.minecraft.world.World && !((net.minecraft.world.World)world).isBlockLoaded(next))continue;
             IBlockState other=world.getBlockState(next);
             if(other.getBlock()!=state.getBlock() || BlockProgrammableWall.geometry(world,next)!=mode
                     || BlockProgrammableWall.fill(world,pos)!=BlockProgrammableWall.fill(world,next))continue;

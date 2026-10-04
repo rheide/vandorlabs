@@ -26,6 +26,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override public boolean shouldRenderInPass(int pass) {
         net.minecraft.block.Block block = getBlockType();
+        if(world!=null && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab)) return false;
@@ -509,7 +510,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 && (!previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
                 || previousFill != diagonalFill))
-            world.markBlockRangeForRenderUpdate(pos,pos);
+        {
+            if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                    && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).getShape()
+                            == com.vandorlabs.blocks.BlockProgrammableWall.Shape.DIAGONAL)
+                world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
+            else world.markBlockRangeForRenderUpdate(pos,pos);
+        }
         portholeRevision++;
         if (world != null && !world.isRemote && oldChannel != redstoneChannel)
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));

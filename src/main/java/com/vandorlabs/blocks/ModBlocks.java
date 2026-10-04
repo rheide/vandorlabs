@@ -650,6 +650,11 @@ public class ModBlocks {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())
                     || "inventory".equals(location.getVariant())) continue;
             String path = location.getResourcePath();
+            if ("programmable_diagonal_wall".equals(path)) {
+                event.getModelRegistry().putObject(location,new com.vandorlabs.client.DiagonalWallModel(
+                        event.getModelRegistry().getObject(location)));
+                continue;
+            }
             if ("programmable_stairs".equals(path)) {
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.ProgrammableStairsModel(
                         event.getModelRegistry().getObject(location)));

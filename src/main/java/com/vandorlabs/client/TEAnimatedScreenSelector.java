@@ -931,6 +931,7 @@ public class TEAnimatedScreenSelector
 
     private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign, double halfOffset,
             double[] clip, double[] a, double[] b, double[] c, double[] d) {
+        if(buf instanceof DiagonalWallQuadCapture)((DiagonalWallQuadCapture)buf).texture(sprite);
         if (!Double.isNaN(halfOffset)) {
             // Bake the half-height reflection into positions before shader
             // tangent/normal generation, preserving outward face winding.
@@ -1113,7 +1114,7 @@ public class TEAnimatedScreenSelector
                 halfOffset,Double.NaN,Double.NaN,false,false,null);
     }
 
-    private static void renderDiagonalWall(BufferBuilder buf,
+    static void renderDiagonalWall(BufferBuilder buf,
             TextureAtlasSprite wall, TextureAtlasSprite metal, boolean inverted,
             BlockProgrammableWall.Corner corner, double span, int fill, double fillLow, double fillHigh,
             double halfOffset, double lowerEnd, double upperEnd, boolean hideLower, boolean hideUpper, double[] clip) {

@@ -63,6 +63,7 @@ public final class NonRenderingChecks {
         GroupCacheLifetimeChecks.run();
         TrapdoorSectionPresenceChecks.run();
         ScreenTextureLocationChecks.run();
+        DiagonalChunkChecks.run();
     }
 
     private static void placement() {
@@ -176,6 +177,7 @@ public final class NonRenderingChecks {
         boolean chunkLimit;
         long time;
         int updates,renderUpdates,dirty,lightChecks,stateReads;
+        BlockPos renderMin,renderMax;
         MemoryWorld(boolean remote) {
             super(null,new net.minecraft.world.storage.WorldInfo(new NBTTagCompound()),
                     new net.minecraft.world.WorldProviderSurface(),new net.minecraft.profiler.Profiler(),remote);
@@ -204,7 +206,7 @@ public final class NonRenderingChecks {
         }
         @Override public boolean isBlockModifiable(EntityPlayer player,BlockPos p){loaded(p);return true;}
         @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){loaded(p);updates++;super.notifyBlockUpdate(p,before,after,flags);}
-        @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){renderUpdates++;super.markBlockRangeForRenderUpdate(a,b);}
+        @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){renderUpdates++;renderMin=a.toImmutable();renderMax=b.toImmutable();super.markBlockRangeForRenderUpdate(a,b);}
         @Override public void markChunkDirty(BlockPos p,TileEntity tile){dirty++;}
         @Override public void updateComparatorOutputLevel(BlockPos p,Block block){}
         @Override public boolean checkLightFor(net.minecraft.world.EnumSkyBlock kind,BlockPos p){lightChecks++;return true;}
