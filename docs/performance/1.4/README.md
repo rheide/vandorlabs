@@ -129,6 +129,16 @@ Additional checks cover caller-mutated corner arrays, concurrent access and the
 cache limit. `benchmarkTrapdoorCollision` alternates the two algorithms with
 64 queries per measured batch and reports CPU time and thread allocation.
 
+## Material name lookup
+
+Catalog texture names are resolved once after bootstrap, including door halves,
+unlit light variants and storage top/side artwork. The checks compare 624 choices
+with the previous lookup rules and repeat with filesystem entries and replacement
+Custom-material providers. Numeric identities, retired-art fallback and missing
+peer textures are unchanged. Only strings are retained; atlas sprites and Custom
+material resolution remain live. `benchmarkTextureNames` measures name selection
+separately from atlas lookup and rendering.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -136,7 +146,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv

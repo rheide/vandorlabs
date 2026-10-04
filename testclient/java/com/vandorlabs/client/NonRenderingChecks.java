@@ -50,6 +50,7 @@ public final class NonRenderingChecks {
         HousingModelChecks.run();
         ScreenPowerReadChecks.run();
         TrapdoorCollisionChecks.run();
+        TextureNameChecks.run();
     }
 
     private static void placement() {

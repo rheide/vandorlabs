@@ -37,6 +37,7 @@ public final class FilesystemTextureChecks {
             FilesystemTextures.initialize(root);
             require(ScreenHousingTextures.visible(FilesystemTextures.identifier("Example/sample_panel.png"))
                     && ScreenHousingTextures.visible(FilesystemTextures.identifier("Example/owner_panel.png")),"populated Example category hidden");
+            TextureNameChecks.run();
             int blue=FilesystemTextures.identifier("Bridge/blue.png"),red=FilesystemTextures.identifier("Engineering/Panels/red.png");
             require(blue!=red && ScreenHousingTextures.validChoice(blue),"stable identifiers");
             require("Bridge".equals(ScreenHousingTextures.category(blue)),"category");

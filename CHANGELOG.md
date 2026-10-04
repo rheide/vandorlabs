@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Precompute fixed catalog texture names for square, unlit and storage surfaces, avoiding per-draw JSON traversal and string allocation while retaining live Custom material and atlas resolution.
+
 - Reuse exact diagonal trapdoor collision meshes in a bounded cache, avoiding repeated subdivision and allocating only intersecting boxes. Preserve collision bounds, box order and edge contacts.
 
 - Skip physical power scans when a screen's display mode is independent of power or its virtual channel is already powered. Joined lights stop reading inputs after the first powered source while still synchronizing the entire group.

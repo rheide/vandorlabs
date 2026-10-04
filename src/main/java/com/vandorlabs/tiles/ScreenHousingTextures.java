@@ -91,6 +91,7 @@ public final class ScreenHousingTextures {
     };
     public static final String[] IDS;
     private static final String[] TEXTURES;
+    private static final String[] SQUARE_TEXTURES, UNLIT_TEXTURES, STORAGE_TOP, STORAGE_SIDE;
     private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
     private static final com.google.gson.JsonObject MENU;
     public static final int LEGACY_COUNT=FINISHES.length;
@@ -122,6 +123,17 @@ public final class ScreenHousingTextures {
         if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");
         // Keep saved choice numbers while omitting retired artwork from the runtime JAR.
         for(int i=0;i<BUILTIN_COUNT;i++)if(!visible(i))TEXTURES[i]=TEXTURES[0];
+        SQUARE_TEXTURES=new String[IDS.length];UNLIT_TEXTURES=new String[IDS.length];
+        STORAGE_TOP=new String[IDS.length];STORAGE_SIDE=new String[IDS.length];
+        // The catalog is fixed after bootstrap. Retain names, never atlas sprites,
+        // so resource reloads and dynamic Custom artwork still resolve normally.
+        for(int i=0;i<IDS.length;i++) {
+            com.google.gson.JsonObject e=entry(i),metadata=menu(i);
+            SQUARE_TEXTURES[i]=e!=null && e.has("design") && visible(i)?TEXTURES[i]+"_half":TEXTURES[i];
+            if(visible(i) && metadata!=null && metadata.has("unlit"))UNLIT_TEXTURES[i]="vandorlabs:blocks/"+metadata.get("unlit").getAsString();
+            if(e!=null && e.has("top"))STORAGE_TOP[i]="vandorlabs:blocks/"+e.get("top").getAsString();
+            if(e!=null && e.has("side"))STORAGE_SIDE[i]="vandorlabs:blocks/"+e.get("side").getAsString();
+        }
     }
     public static com.google.gson.JsonObject entry(int choice){int index=localIndex(choice)-LEGACY_COUNT;return index>=0 && index<EXTRAS.size()?EXTRAS.get(index):null;}
     /** Menu metadata changes presentation without moving persisted numeric choices. */
@@ -135,17 +147,19 @@ public final class ScreenHousingTextures {
     public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
     /** Storage sets use their front as the ordinary shared material thumbnail. */
     public static String storageTexture(int choice, net.minecraft.util.EnumFacing localFace) {
-        com.google.gson.JsonObject e = entry(choice);
-        String key = localFace.getAxis() == net.minecraft.util.EnumFacing.Axis.Y ? "top" : "side";
-        return localFace == net.minecraft.util.EnumFacing.NORTH || e == null || !e.has(key)
-                ? texture(choice) : "vandorlabs:blocks/" + e.get(key).getAsString();
+        if(localFace==net.minecraft.util.EnumFacing.NORTH)return texture(choice);
+        String selected=(localFace.getAxis()==net.minecraft.util.EnumFacing.Axis.Y?STORAGE_TOP:STORAGE_SIDE)[localIndex(choice)];
+        return selected==null?texture(choice):selected;
     }
     public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
     public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
     /** Static Off artwork remains available as a material, but not in light menus. */
     public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && "Lights".equals(category(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
-    public static String texture(int choice,boolean lit){com.google.gson.JsonObject e=menu(choice);return !lit && visible(choice) && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():texture(choice);}
+    public static String texture(int choice,boolean lit){
+        String unlit=lit?null:UNLIT_TEXTURES[localIndex(choice)];
+        return unlit==null?texture(choice):unlit;
+    }
 
     public static final int INDUSTRIAL_BLOCK = 9;
 
@@ -170,7 +184,6 @@ public final class ScreenHousingTextures {
     }
     public static String texture(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
-        com.google.gson.JsonObject e=entry(choice);
-        return TEXTURES[localIndex(choice)]+(e!=null && e.has("design") && visible(choice)?"_half":"");
+        return SQUARE_TEXTURES[localIndex(choice)];
     }
 }
