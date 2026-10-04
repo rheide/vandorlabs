@@ -13,6 +13,8 @@ import java.util.*;
 /** Opt-in benchmark of an existing disposable save; never runs during ordinary play. */
 public final class WorldSceneBenchmark {
     private static final boolean ENABLED=Boolean.getBoolean("vandorlabs.worldBenchmark");
+    private static final boolean CHECK_RELOAD=Boolean.getBoolean("vandorlabs.worldBenchmarkReload");
+    private static boolean reloaded;
     private static final int SAMPLES=240;
     // Camera feet coordinates, yaw, pitch; all look toward the supplied structure.
     private static final double[][] CAMERAS={{36,77,100,90,8},{-8,77,100,270,8},{45,94,142,143.57,18}};
@@ -54,8 +56,13 @@ public final class WorldSceneBenchmark {
                 });
             }
             if(stage==4) {
-                if(++camera==CAMERAS.length){results.close();stage=5;System.out.println("[vandorlabs] world-benchmark PASS");mc.shutdown();return;}
-                place(mc);stage=2;
+                if(CHECK_RELOAD && !reloaded) {
+                    reloaded=true;mc.renderGlobal.loadRenderers();place(mc);stage=2;
+                } else {
+                    reloaded=false;
+                    if(++camera==CAMERAS.length){results.close();stage=5;System.out.println("[vandorlabs] world-benchmark PASS");mc.shutdown();return;}
+                    place(mc);stage=2;
+                }
             }
             if(stage==2 || stage==3) {
                 double[] c=CAMERAS[camera];mc.player.setLocationAndAngles(c[0],c[1],c[2],(float)c[3],(float)c[4]);
@@ -71,7 +78,7 @@ public final class WorldSceneBenchmark {
             if(player!=null){player.setGameType(GameType.SPECTATOR);player.connection.setPlayerLocation(c[0],c[1],c[2],(float)c[3],(float)c[4]);}
         });
         samples.clear();frames=0;settleStart=System.nanoTime();
-        System.out.println("[vandorlabs] world-benchmark settling "+NAMES[camera]);
+        System.out.println("[vandorlabs] world-benchmark settling "+cameraName());
     }
     public static void render(TickEvent.RenderTickEvent event) {
         if(!ENABLED || stage<2 || stage>3)return;
@@ -83,7 +90,7 @@ public final class WorldSceneBenchmark {
         GL11.glFinish();long completed=System.nanoTime();
         if(stage==2) {
             if(++frames>=90 && completed-settleStart>15_000_000_000L && mc.world.isAreaLoaded(new BlockPos(-16,60,48),new BlockPos(64,104,160),false)) {
-                inventory(mc);stage=3;System.out.println("[vandorlabs] world-benchmark measuring "+NAMES[camera]);
+                inventory(mc);stage=3;System.out.println("[vandorlabs] world-benchmark measuring "+cameraName());
             }
             if(completed-settleStart>180_000_000_000L)throw new IllegalStateException("Benchmark chunks did not settle");
             return;
@@ -92,10 +99,10 @@ public final class WorldSceneBenchmark {
         if(samples.size()<SAMPLES)return;
         double server=0;for(long t:mc.getIntegratedServer().tickTimeArray)server+=t/1E6;
         server/=mc.getIntegratedServer().tickTimeArray.length;
-        results.printf(Locale.ROOT,"%s,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.0f,%.6f%n",NAMES[camera],samples.size(),
+        results.printf(Locale.ROOT,"%s,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.0f,%.6f%n",cameraName(),samples.size(),
                 percentile(0,.5),percentile(0,.95),percentile(1,.5),percentile(1,.95),percentile(2,.5),percentile(3,.5),server);
         results.flush();
-        net.minecraft.util.ScreenShotHelper.saveScreenshot(output,"world-"+NAMES[camera]+".png",mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
+        net.minecraft.util.ScreenShotHelper.saveScreenshot(output,"world-"+cameraName()+".png",mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
         stage=4;
     }
     private static void inventory(Minecraft mc) {
@@ -115,5 +122,6 @@ public final class WorldSceneBenchmark {
         Arrays.sort(sorted);return sorted[(int)Math.floor((sorted.length-1)*p)];
     }
     private static long bytes(){return BEAN.isThreadAllocatedMemorySupported()?BEAN.getThreadAllocatedBytes(Thread.currentThread().getId()):0;}
+    private static String cameraName(){return NAMES[camera]+(reloaded?"_reloaded":"");}
     private WorldSceneBenchmark(){}
 }

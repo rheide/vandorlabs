@@ -20,6 +20,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   env LIBGL_ALWAYS_SOFTWARE=1 \
   "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-2G}" "${CAPTURE_JVM[@]}" \
   -Dvandorlabs.worldBenchmark="${VANDOR_LABS_WORLD_BENCHMARK:-false}" \
+  -Dvandorlabs.worldBenchmarkReload="${VANDOR_LABS_WORLD_RELOAD:-false}" \
   -Dvandorlabs.duplifierChecksOnly="${VANDOR_LABS_DUPLIFIER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.reproShotPrefix="${VANDOR_LABS_REPRO_SHOT_PREFIX:-}" \
   -Dvandorlabs.storageChecksOnly="${VANDOR_LABS_STORAGE_CHECKS_ONLY:-false}" \

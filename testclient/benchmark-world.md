@@ -29,6 +29,11 @@ Run clients sequentially and avoid concurrent builds during sampling. Confirm
 the screenshots frame the intended structure and compare the block-count CSVs
 before interpreting timings. Repeated runs are needed to assess variability.
 
+Set `VANDOR_LABS_WORLD_RELOAD=true` to repeat each camera after a renderer reload
+(the same rebuild used by F3+A). The second CSV row and screenshot have a
+`_reloaded` suffix. Compare the structure before and after rebuilding to detect
+stale geometry; moving entities, animation and clouds can change independently.
+
 The comparison baselines are `release_1.3` (`9c433a63`) and the original
 `1.4-alpha` tag (`2d18b157`), before diagonal chunk rendering. Current development
 keeps version `1.4-alpha`; identify newer results by commit and artifact hash.
