@@ -527,6 +527,7 @@ public class ReproLab {
         }
 
         switch (state) {
+            case 4000: ChannelListGuiChecks.tick(mc,outDir);break;
             case 0:
                 // Entered the world.
                 state = 1;
@@ -562,6 +563,7 @@ public class ReproLab {
                     beginDocumentationScene(mc);
                     break;
                 }
+                if(Boolean.getBoolean("vandorlabs.channelGuiChecksOnly")){mc.gameSettings.hideGUI=false;state=4000;break;}
                 if(Boolean.getBoolean("vandorlabs.dialogChecksOnly")) {
                     mc.gameSettings.hideGUI=false;state=11;holdTicks=GUI_SETTLE_TICKS;break;
                 }

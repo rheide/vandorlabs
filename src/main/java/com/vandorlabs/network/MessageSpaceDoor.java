@@ -1,5 +1,8 @@
 package com.vandorlabs.network;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.container.ContainerSpaceDoor;
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
 import com.vandorlabs.persistence.SpaceDoorData;
@@ -10,6 +13,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.simpleimpl.*;
 
 public class MessageSpaceDoor implements IMessage {
+    private ChannelList channels;
+    private boolean invalidChannels;
+    public MessageSpaceDoor withChannels(ChannelList channels) {
+        if(channels==null)throw new IllegalArgumentException("Invalid channel list");
+        this.channels=channels;this.channel=channels.first();invalidChannels=false;return this;
+    }
+    public ChannelList getRedstoneChannels() {
+        return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
+    }
+
     private BlockPos pos;
     private int design,detail,channel,slideDirection,trigger,depth,faceTexture=-1;
     private boolean framed,tileTexture;
@@ -34,6 +47,8 @@ public class MessageSpaceDoor implements IMessage {
         hinges=b.readBoolean();
         trigger=b.readInt();
         panel=b.readBoolean();faceTexture=b.readInt();tileTexture=b.readBoolean();
+
+        channels=ChannelData.read(b,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
@@ -43,6 +58,8 @@ public class MessageSpaceDoor implements IMessage {
         b.writeBoolean(hinges);
         b.writeInt(trigger);
         b.writeBoolean(panel);b.writeInt(faceTexture);b.writeBoolean(tileTexture);
+
+        ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
@@ -51,7 +68,7 @@ public class MessageSpaceDoor implements IMessage {
                 if (!TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
                         || !SpaceDoorData.validTrigger(m.trigger)
                         || m.faceTexture< -1 || (m.faceTexture!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.faceTexture))
-                        || m.depth<0 || m.depth>2 || m.channel<0 || m.pos==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
+                        || m.depth<0 || m.depth>2 || m.channel<0 || m.pos==null || m.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !player.world.isBlockLoaded(m.pos) || !(player.openContainer instanceof ContainerSpaceDoor)) return;
                 TileEntity raw=player.world.getTileEntity(m.pos);
                 ContainerSpaceDoor container=(ContainerSpaceDoor)player.openContainer;
@@ -67,12 +84,12 @@ public class MessageSpaceDoor implements IMessage {
                 tile.setFaceTexture(m.faceTexture);tile.setTileTexture(m.tileTexture);
                 tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                 tile.setPlacementDepth(m.depth);
-                tile.setRedstoneChannel(m.channel);
+                tile.setRedstoneChannels(m.getRedstoneChannels());
                 if (other!=null) {
                     other.setFaceTexture(m.faceTexture);other.setTileTexture(m.tileTexture);
                     other.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                     other.setPlacementDepth(m.depth);
-                    other.setRedstoneChannel(m.channel);
+                    other.setRedstoneChannels(m.getRedstoneChannels());
                 }
             });
             return null;

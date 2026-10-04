@@ -81,7 +81,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
             data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());tile.readFromNBT(data);
         } else tile.configure(ScreenHousingTextures.DEFAULT_TRAPDOOR,state.getValue(HALF)==DoorHalf.TOP?2:0,false,
                 com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON,0);
-        if(saved!=null)tile.configure(tile.getHousingTexture(),tile.getPosition(),tile.isSliding(),tile.getTrigger(),tile.getRedstoneChannel());
+        if(saved!=null)tile.configure(tile.getHousingTexture(),tile.getPosition(),tile.isSliding(),tile.getTrigger(),tile.getRedstoneChannels());
         if(saved!=null && saved.hasKey("TrapdoorCoverFacing",3))tile.setHingeFacing(EnumFacing.getHorizontal(saved.getInteger("TrapdoorCoverFacing")));
         if(world.isRemote){if(tile.isCover())world.setBlockState(pos,world.getBlockState(pos).withProperty(OPEN,true),2);return;}
         for(EnumFacing side:tile instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor?EnumFacing.values():EnumFacing.HORIZONTALS) {

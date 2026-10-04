@@ -1,5 +1,7 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.redstone.ChannelList;
+
 import com.vandorlabs.container.ContainerSpaceDoor;
 import com.vandorlabs.network.MessageSpaceDoor;
 import com.vandorlabs.network.PacketHandler;
@@ -49,12 +51,12 @@ public class GuiSpaceDoor extends GuiContainer {
         hinges=tile.hasHinges();
         panel=tile.hasPanel();
         trigger=tile.getTrigger();
-        lastValidChannel=tile.getRedstoneChannel();
+        lastValidChannels=tile.getRedstoneChannels();lastValidChannel=lastValidChannels.first();
         scrollIndex=Math.max(0,Math.min(maxScroll(),design-LIST_ROWS/2));
         xSize=420; ySize=240;
     }
     @Override public void initGui() {
-        String channelText=channelField==null?Integer.toString(lastValidChannel):channelField.getText();
+        String channelText=channelField==null?lastValidChannels.toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         listLeft=layout.listX;listRight=listLeft+layout.listWidth;listTop=guiTop+38;
@@ -68,15 +70,10 @@ public class GuiSpaceDoor extends GuiContainer {
         buttonList.add(layout.choice(17,1,2,130,panel?"Panel: On":"Panel: Off"));
         buttonList.add(layout.control(18,150,layoutLabel()));
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+185,154,18);
-        channelField.setMaxStringLength(10);channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));channelField.setText(channelText);
+        ChannelFields.configure(channelField);channelField.setText(channelText);
         done=layout.done(1);buttonList.add(done);updateChannelValidity();
     }
-    private int channel() {
-        try {
-            long value=Long.parseLong(channelField.getText());
-            return value>Integer.MAX_VALUE?-1:(int)value;
-        } catch (NumberFormatException e) { return -1; }
-    }
+    private int channel() {return ChannelFields.first(channelField);}
     private void updateHingeButton() {
         hingeButton.enabled=!motion.sliding;
         hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
@@ -94,11 +91,12 @@ public class GuiSpaceDoor extends GuiContainer {
         done.enabled=channel()>=0;
         channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);
     }
+    private ChannelList lastValidChannels;
     private void sendUpdate() {
-        if (channel()>=0) lastValidChannel=channel();
+        if (channel()>=0) {lastValidChannels=ChannelFields.parse(channelField);lastValidChannel=lastValidChannels.first();}
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture));
+                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
@@ -181,7 +179,7 @@ public class GuiSpaceDoor extends GuiContainer {
         fontRenderer.drawString("Programmable Door",12,8,0xFFFFFF);
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
 
-        fontRenderer.drawString("Channel (0 = none)",layout.controlsX-guiLeft,174,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,174,0xDAE8F0);
         if (channel()<0) fontRenderer.drawString("Invalid channel",12,ySize-18,0xFF7777);
 
     }

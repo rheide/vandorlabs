@@ -153,6 +153,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);
         tag.setInteger("SpaceDoorChannel",getRedstoneChannel());
+        com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());
         return tag;
     }
     public void applyItemSettings(NBTTagCompound tag) {
@@ -161,7 +162,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         configure(data.design,data.detail,data.framed,data.direction,data.middle,data.sliding,data.hinges,data.trigger,data.panel);
-        setRedstoneChannel(Math.max(0,tag.getInteger("SpaceDoorChannel")));
+        setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(tag,tag.getInteger("SpaceDoorChannel")));
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);

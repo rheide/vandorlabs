@@ -36,7 +36,7 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(message.getSelectedScreen())) {
                 return;
             }
-            if (message.getRedstoneChannel() < 0) return;
+            if (message.getRedstoneChannel() < 0 || message.getRedstoneChannels()==null) return;
             long before=te.getSettingsRevision();
             te.setSelectedScreen(message.getSelectedScreen());
             te.setRedstoneEnabled(message.isRedstoneEnabled());
@@ -45,7 +45,7 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             te.setAnimationSpeedIndex(message.getAnimationSpeedIndex());
             te.setInputPanel(message.getInputPanel());
             te.setSecondaryInputPanel(message.getSecondaryInputPanel());
-            te.setRedstoneChannel(message.getRedstoneChannel());
+            te.setRedstoneChannels(message.getRedstoneChannels());
             te.setHousingTexture(message.getHousingTexture());
             if (player.world.getBlockState(message.getPos()).getBlock()
                     == ModBlocks.PROGRAMMABLE_INPUT) {

@@ -7,6 +7,8 @@ import com.vandorlabs.blocks.BlockPropulsionLight;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.persistence.SpaceDoorData;
 import com.vandorlabs.redstone.RedstoneChannelMember;
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityProgrammableChair;
 import com.vandorlabs.tiles.TileEntityProgrammableGlass;
@@ -109,6 +111,11 @@ public final class ProgrammableSettings {
         return tag.hasKey(key, 3) ? tag.getInteger(key) : fallback;
     }
 
+    private static ChannelList channels(NBTTagCompound tag,RedstoneChannelMember member) {
+        if(tag.hasKey(CHANNEL,11))return ChannelData.read(tag,CHANNEL,member.getRedstoneChannels());
+        return tag.hasKey(CHANNEL,3)?ChannelList.of(Math.max(0,tag.getInteger(CHANNEL))):member.getRedstoneChannels();
+    }
+
     private static boolean flag(NBTTagCompound tag, String key, boolean fallback) {
         return tag.hasKey(key, 1) ? tag.getBoolean(key) : fallback;
     }
@@ -122,8 +129,11 @@ public final class ProgrammableSettings {
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
         NBTTagCompound out = new NBTTagCompound();
-        if (tile instanceof RedstoneChannelMember)
-            out.setInteger(CHANNEL, ((RedstoneChannelMember) tile).getRedstoneChannel());
+        if (tile instanceof RedstoneChannelMember) {
+            ChannelList channels=((RedstoneChannelMember)tile).getRedstoneChannels();
+            if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
+            else out.setIntArray(CHANNEL,channels.toArray());
+        }
         if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
@@ -302,7 +312,7 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
             applicable=values.hasKey(TRAPDOOR_COVER_FACING,3) || values.hasKey(TRAPDOOR_TILE_TEXTURE,1) || values.hasKey(TRAPDOOR_COVER,1) || values.hasKey(WALL_TEXTURE,3) || (diagonal?values.hasKey(DIAGONAL_GEOMETRY,10):values.hasKey(TRAPDOOR_POSITION,3))
-                    || values.hasKey(DOOR_SLIDING,1) || values.hasKey(TRIGGER,3) || values.hasKey(CHANNEL,3);
+                    || values.hasKey(DOOR_SLIDING,1) || values.hasKey(TRIGGER,3) || values.hasKey(CHANNEL);
             if(applicable) {
                 java.util.List<com.vandorlabs.tiles.TileEntityProgrammableTrapdoor> leaves=world==null
                         ?java.util.Collections.singletonList(hatch):hatch.group();
@@ -319,7 +329,7 @@ public final class ProgrammableSettings {
                     leaf.configure(
                         number(values,WALL_TEXTURE,leaf.getHousingTexture()),diagonal?(values.hasKey(DIAGONAL_GEOMETRY,10)?Math.max(0,Math.min(2,values.getCompoundTag(DIAGONAL_GEOMETRY).getInteger("mode"))):leaf.getPosition()):number(values,TRAPDOOR_POSITION,leaf.getPosition()),
                         flag(values,DOOR_SLIDING,leaf.isSliding()),number(values,TRIGGER,leaf.getTrigger()),
-                        number(values,CHANNEL,leaf.getRedstoneChannel()));
+                        channels(values,leaf));
                 }
                 });
             }
@@ -342,13 +352,13 @@ public final class ProgrammableSettings {
                 applicable = true;
             }
             if (values.hasKey(ACTIVE, 1) || values.hasKey(PARTICLES, 1)) {
-                int channel = propulsion.getRedstoneChannel();
+                ChannelList channel = propulsion.getRedstoneChannels();
                 propulsion.setRedstoneChannel(0);
                 boolean active = flag(values, ACTIVE, propulsion.getManualMode() != 0);
                 boolean particles = flag(values, PARTICLES,
                         propulsion.isParticleStreamSelected());
                 propulsion.setManualMode(active ? particles ? 2 : 1 : 0, true);
-                propulsion.setRedstoneChannel(channel);
+                propulsion.setRedstoneChannels(channel);
                 applicable = true;
             }
         } else if (tile instanceof TileEntityProgrammableLight) {
@@ -364,7 +374,7 @@ public final class ProgrammableSettings {
             if(values.hasKey(SLAB_TILE_SIDES,1))light.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES));
             light.configure(primary, number(values, LIGHT_LEVEL, light.getLightLevel()),
                     flag(values, JOIN, light.isJoin()),
-                    number(values, CHANNEL, light.getRedstoneChannel()),
+                    channels(values,light),
                     number(values, WALL_TEXTURE, light.getHousingTexture()), trigger);
             if (values.hasKey(ACTIVE, 1)) light.setOn(values.getBoolean(ACTIVE));
             applicable = values.hasKey(JOIN) || values.hasKey(CHANNEL)
@@ -377,7 +387,7 @@ public final class ProgrammableSettings {
                     || values.hasKey(CHANNEL)) {
                 trigger.configure(number(values, WALL_TEXTURE, trigger.getHousingTexture()),
                         number(values, TRIGGER_ON_TEXTURE, trigger.getOnTexture()),
-                        number(values, CHANNEL, trigger.getRedstoneChannel()));
+                        channels(values,trigger));
                 applicable = true;
             }
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
@@ -523,7 +533,7 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
             if(values.hasKey(GEAR_SIZE)||values.hasKey(GEAR_LENGTH)||values.hasKey(GEAR_MODE)) {
                 int size=number(values,GEAR_SIZE,gear.getSize()),length=number(values,GEAR_LENGTH,gear.getExtensionPixels()),mode=number(values,GEAR_MODE,gear.getMode());
-                if(world!=null) applicable=gear.configure(mode,number(values,CHANNEL,gear.getRedstoneChannel()),length,size);
+                if(world!=null) applicable=gear.configure(mode,channels(values,gear),length,size);
                 else if(size>=0&&size<=2&&length>=0&&length<=64&&length%8==0&&mode>=0&&mode<=2) {
                     NBTTagCompound tag=gear.writeToNBT(new NBTTagCompound());
                     tag.setInteger("GearSize",size);tag.setInteger("ExtensionPixels",length);tag.setInteger("RedstoneMode",mode);
@@ -561,11 +571,11 @@ public final class ProgrammableSettings {
                                 && DuplifierApplyOptions.connected(player.getHeldItemMainhand()));
             }
         }
-        if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL, 3)) {
-            int before=((RedstoneChannelMember)tile).getRedstoneChannel();
-            ((RedstoneChannelMember) tile).setRedstoneChannel(values.getInteger(CHANNEL));
+        if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL)) {
+            ChannelList before=((RedstoneChannelMember)tile).getRedstoneChannels();
+            ((RedstoneChannelMember) tile).setRedstoneChannels(channels(values,(RedstoneChannelMember)tile));
             if (world != null && tile instanceof TileEntityAnimatedScreenSelector
-                    && before!=((RedstoneChannelMember)tile).getRedstoneChannel()) {
+                    && !before.equals(((RedstoneChannelMember)tile).getRedstoneChannels())) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
             }

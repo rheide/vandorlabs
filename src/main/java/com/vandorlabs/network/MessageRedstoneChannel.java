@@ -1,5 +1,8 @@
 package com.vandorlabs.network;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.container.ContainerRedstoneChannel;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.blocks.BlockPropulsionLight;
@@ -14,6 +17,16 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageRedstoneChannel implements IMessage {
+    private ChannelList channels;
+    private boolean invalidChannels;
+    public MessageRedstoneChannel withChannels(ChannelList channels) {
+        if(channels==null)throw new IllegalArgumentException("Invalid channel list");
+        this.channels=channels;this.channel=channels.first();invalidChannels=false;return this;
+    }
+    public ChannelList getRedstoneChannels() {
+        return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
+    }
+
     private BlockPos pos;
     private int channel;
     private boolean updateParticles;
@@ -66,6 +79,8 @@ public class MessageRedstoneChannel implements IMessage {
         sideTexture = buf.readableBytes() >= 4 ? buf.readInt() : 0;
         updateShape = buf.readableBytes() > 0 && buf.readBoolean();
         shape = buf.readableBytes() >= 4 ? buf.readInt() : 0;
+
+        channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -78,13 +93,15 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeInt(sideTexture);
         buf.writeBoolean(updateShape);
         buf.writeInt(shape);
+
+        ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
 
     public static class Handler implements IMessageHandler<MessageRedstoneChannel, IMessage> {
         @Override public IMessage onMessage(MessageRedstoneChannel message, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (message.pos == null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)
+                if (message.pos == null || message.getRedstoneChannels()==null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)
                         || (message.updateSide && (message.sideTexture < 0
                         || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.sideTexture)))
                         || (message.updateShape && (message.shape < 0 || message.shape > 2
@@ -98,11 +115,11 @@ public class MessageRedstoneChannel implements IMessage {
                         .getBlock();
                 if (block instanceof BlockConnectedPropulsionLight) {
                     ((BlockConnectedPropulsionLight) block).configureAssembly(player.world,
-                            message.pos, message.channel, message.updateParticles,
+                            message.pos, message.getRedstoneChannels(), message.updateParticles,
                             message.particles, message.updateJoin, message.join,
                             message.updateSide, message.sideTexture);
                 } else {
-                    ((RedstoneChannelMember) tile).setRedstoneChannel(message.channel);
+                    ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile)

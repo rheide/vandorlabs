@@ -24,6 +24,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -Dvandorlabs.duplifierChecksOnly="${VANDOR_LABS_DUPLIFIER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.reproShotPrefix="${VANDOR_LABS_REPRO_SHOT_PREFIX:-}" \
   -Dvandorlabs.storageChecksOnly="${VANDOR_LABS_STORAGE_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.channelGuiChecksOnly="${VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY:-false}" \
   -Dvandorlabs.dialogChecksOnly="${VANDOR_LABS_DIALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.documentationDoorGif="${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" \
   -Dvandorlabs.documentationAnimations="${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" \

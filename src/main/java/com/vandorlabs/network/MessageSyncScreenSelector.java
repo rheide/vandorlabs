@@ -1,10 +1,23 @@
 package com.vandorlabs.network;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class MessageSyncScreenSelector implements IMessage {
+    private ChannelList channels;
+    private boolean invalidChannels;
+    public MessageSyncScreenSelector withChannels(ChannelList channels) {
+        if(channels==null)throw new IllegalArgumentException("Invalid channel list");
+        this.channels=channels;this.redstoneChannel=channels.first();invalidChannels=false;return this;
+    }
+    public ChannelList getRedstoneChannels() {
+        return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,redstoneChannel));
+    }
+
 
     private BlockPos pos;
     private String selectedScreen;
@@ -77,6 +90,8 @@ public class MessageSyncScreenSelector implements IMessage {
         smallInput = buf.readableBytes() > 0 && buf.readBoolean();
         redstoneChannel = buf.readableBytes() >= 4 ? buf.readInt() : 0;
         housingTexture = buf.readableBytes() >= 4 ? buf.readInt() : 0;
+
+        channels=ChannelData.read(buf,redstoneChannel);invalidChannels=channels==null;
     }
 
     @Override
@@ -92,6 +107,8 @@ public class MessageSyncScreenSelector implements IMessage {
         buf.writeBoolean(smallInput);
         buf.writeInt(redstoneChannel);
         buf.writeInt(housingTexture);
+
+        ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,redstoneChannel)));
     }
 
     private static String readString(ByteBuf buf) {

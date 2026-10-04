@@ -159,6 +159,7 @@ public class BlockVandorSwitch extends BlockVandor {
         if (tile!=null && tile.getRedstoneChannel()!=0) {
             NBTTagCompound settings=new NBTTagCompound();
             settings.setInteger("Channel",tile.getRedstoneChannel());
+            com.vandorlabs.redstone.ChannelData.write(settings,tile.getRedstoneChannels());
             stack.setTagInfo("RedstoneChannelSettings",settings);
         }
         return stack;
@@ -172,7 +173,7 @@ public class BlockVandorSwitch extends BlockVandor {
         if (!world.isRemote && tile!=null)
             tile.setMountRotation(placementRotation(state.getValue(FACING),placer));
         if (!world.isRemote && settings!=null && tile!=null)
-            tile.setRedstoneChannel(Math.max(0,settings.getInteger("Channel")));
+            tile.setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
     }
 
     @Override

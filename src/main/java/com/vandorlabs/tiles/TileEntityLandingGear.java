@@ -46,14 +46,17 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     }
     public boolean configure(int nextMode,int nextChannel,int pixels){return configure(nextMode,nextChannel,pixels,size);}
     public boolean configure(int nextMode,int nextChannel,int pixels,int nextSize){
-        if(nextSize<0||nextSize>=BlockTelescopicLandingGear.SIZES.length||!isRoot()||nextMode<0||nextMode>2||nextChannel<0||pixels<0||pixels>64||pixels%8!=0)return false;
+        return nextChannel>=0 && configure(nextMode,ChannelList.of(nextChannel),pixels,nextSize);
+    }
+    public boolean configure(int nextMode,ChannelList nextChannel,int pixels,int nextSize){
+        if(nextSize<0||nextSize>=BlockTelescopicLandingGear.SIZES.length||!isRoot()||nextMode<0||nextMode>2||nextChannel==null||pixels<0||pixels>64||pixels%8!=0)return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
         boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
         if((extended||nextSize>=3) && !block.reserve(world,pos,
                 extended?Math.max(progress,pixels/16F):progress,nextSize))return false;
         restoringSignal=false;
-        boolean automationChanged=mode!=nextMode||channel!=nextChannel;
-        mode=nextMode;extensionPixels=pixels;size=nextSize;setRedstoneChannel(nextChannel);
+        boolean automationChanged=mode!=nextMode||!channels.equals(nextChannel);
+        mode=nextMode;extensionPixels=pixels;size=nextSize;setRedstoneChannels(nextChannel);
         if(!world.isRemote)block.releaseBelow(world,pos,
                 nextSize>=3||extended?(int)Math.ceil(Math.max(progress,extended?pixels/16F:0)):0);
         evaluateSignal(automationChanged);LandingGearCovers.refresh(world,pos);markDirty();sync();return true;

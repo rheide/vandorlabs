@@ -53,8 +53,8 @@ public final class GuiProgrammableLight extends GuiContainer {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+177,154,18);
-        channelField.setMaxStringLength(10);channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(tile.getRedstoneChannel()));
+        ChannelFields.configure(channelField);
+        channelField.setText(tile.getRedstoneChannels().toString());
         java.util.function.IntPredicate include=choice->!ScreenHousingTextures.isLightOff(choice) && (HousingTextureList.generalTexture(choice) || "Lights".equals(ScreenHousingTextures.category(choice)));
         faceList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,selected,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{selected=value;tile.setFaceTexture(value);send();});
@@ -80,22 +80,15 @@ public final class GuiProgrammableLight extends GuiContainer {
                 : trigger == 2 ? "Trigger: Redstone OFF" : "Trigger: Disabled";
     }
 
-    private int channel() {
-        try {
-            long value = Long.parseLong(channelField.getText());
-            return value <= Integer.MAX_VALUE ? (int) value : -1;
-        } catch (NumberFormatException ignored) {
-            return -1;
-        }
-    }
+    private int channel() {return ChannelFields.first(channelField);}
 
     private void send() {
         int channel = channel();
         if (channel < 0) return;
         tile.setSmallInput(small);tile.setSlabTileSides(tileSides);
-        tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, channel, housing, trigger);
+        tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, ChannelFields.parse(channelField), housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
-                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides));
+                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void setLevelFromMouse(int mouseX) {
@@ -166,6 +159,7 @@ public final class GuiProgrammableLight extends GuiContainer {
             send();
         }
         if (button.id == 100) {
+            if(channel()<0)return;
             send();
             mc.player.closeScreen();
         }
@@ -173,6 +167,7 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
+            if(channel()<0)return;
             send();
             mc.player.closeScreen();
             return;
@@ -205,7 +200,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         drawRect(sliderX,guiTop+142,sliderX+SLIDER_W,guiTop+148,0xFF555560);
         int thumb=sliderX+Math.round(SLIDER_W*level/15F);
         drawRect(thumb-3,guiTop+138,thumb+3,guiTop+152,0xFFB8D7E8);
-        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
         super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

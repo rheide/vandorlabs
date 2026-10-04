@@ -193,8 +193,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         java.util.Collections.addAll(buttonList,modeOffButton,modeStaticButton,modeAnimatedButton,slowButton,normalButton,fastButton,frameButton,redstoneButton);
         buttonList.add(layout.control(32,142,sidesLabel()));
         channelField=new GuiTextField(40,fontRenderer,layout.controlsX,guiTop+177,154,18);
-        channelField.setMaxStringLength(10);channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(te.getRedstoneChannel()));
+        ChannelFields.configure(channelField);
+        channelField.setText(te.getRedstoneChannels().toString());
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?92:91))b.enabled=b.id-90!=textureTab;}
@@ -216,9 +216,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     }
 
     private void sendUpdate() {
+        if(channel()<0)return;
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(pos,
                 activeId(), redstoneEnabled, displayMode, framed, speedIndex,
-                inputPanel, inputPanel, false, channel(), housingTexture));
+                inputPanel, inputPanel, false, channel(), housingTexture).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
@@ -229,10 +230,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         te.setSurfaceTexture(slot,-1);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,-1));refreshButtons();sendUpdate();
     }
 
-    private int channel() {
-        try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
-        catch (NumberFormatException e) { return -1; }
-    }
+    private int channel() {return ChannelFields.first(channelField);}
 
     @Override
     protected void actionPerformed(GuiButton button) {
@@ -268,7 +266,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 speedIndex = 2;
                 break;
             case 20:
-                if (channel() >= 0) sendUpdate();
+                if(channel()<0)return;
+                sendUpdate();
                 mc.player.closeScreen();
                 return;
             default:
@@ -385,7 +384,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         else housingList.draw(fontRenderer,mouseX,mouseY);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
         super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

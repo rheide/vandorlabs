@@ -13,12 +13,16 @@ public final class TileEntityProgrammableTrigger extends TileEntityAnimatedScree
     }
 
     public void configure(int off, int on, int channel) {
+        if(channel<0)return;
+        configure(off,on,com.vandorlabs.redstone.ChannelList.of(channel));
+    }
+    public void configure(int off,int on,com.vandorlabs.redstone.ChannelList channels) {
         if (off < 0 || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(off)
                 || on < 0 || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(on)
-                || channel < 0) return;
+                || channels == null) return;
         setHousingTexture(off);
         onTexture = on;
-        setRedstoneChannel(channel);
+        setRedstoneChannels(channels);
         markDirty();
         if (world != null && pos != null) {
             IBlockState state = world.getBlockState(pos);

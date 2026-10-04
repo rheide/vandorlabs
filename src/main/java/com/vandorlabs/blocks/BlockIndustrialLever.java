@@ -83,6 +83,7 @@ public class BlockIndustrialLever extends BlockHorizontal {
                 && ((TileEntityRedstoneChannel)raw).getRedstoneChannel()!=0) {
             NBTTagCompound settings=new NBTTagCompound();
             settings.setInteger("Channel",((TileEntityRedstoneChannel)raw).getRedstoneChannel());
+            com.vandorlabs.redstone.ChannelData.write(settings,((TileEntityRedstoneChannel)raw).getRedstoneChannels());
             stack.setTagInfo("RedstoneChannelSettings",settings);
         }
         return stack;
@@ -94,7 +95,7 @@ public class BlockIndustrialLever extends BlockHorizontal {
         NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");
         TileEntity raw=world.getTileEntity(pos);
         if (!world.isRemote && settings!=null && raw instanceof TileEntityRedstoneChannel)
-            ((TileEntityRedstoneChannel)raw).setRedstoneChannel(Math.max(0,settings.getInteger("Channel")));
+            ((TileEntityRedstoneChannel)raw).setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
     }
 
     @Override

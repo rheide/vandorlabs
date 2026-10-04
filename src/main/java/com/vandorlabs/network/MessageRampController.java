@@ -1,5 +1,8 @@
 package com.vandorlabs.network;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.container.ContainerRampController;
 import com.vandorlabs.tiles.TileEntityRampController;
 import io.netty.buffer.ByteBuf;
@@ -11,6 +14,16 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageRampController implements IMessage {
+    private ChannelList channels;
+    private boolean invalidChannels;
+    public MessageRampController withChannels(ChannelList channels) {
+        if(channels==null)throw new IllegalArgumentException("Invalid channel list");
+        this.channels=channels;this.channel=channels.first();invalidChannels=false;return this;
+    }
+    public ChannelList getRedstoneChannels() {
+        return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
+    }
+
     private BlockPos pos;
     private int treadPixels,startOffset,drop,segments,direction,channel,travelAxis,speed;
     private int startHalfSteps,endHalfSteps;
@@ -79,6 +92,8 @@ public class MessageRampController implements IMessage {
         matchTextures=!buf.isReadable()||buf.readBoolean();
         startHalfSteps=buf.readableBytes()>=4?buf.readInt():startOffset*2;
         endHalfSteps=buf.readableBytes()>=4?buf.readInt():(top?-drop:drop)*2;
+
+        channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong()); buf.writeInt(drop); buf.writeInt(segments);
@@ -87,12 +102,14 @@ public class MessageRampController implements IMessage {
         buf.writeInt(channel); buf.writeInt(startOffset); buf.writeInt(treadPixels);
         buf.writeInt(travelAxis); buf.writeBoolean(extendSegments); buf.writeInt(speed); buf.writeBoolean(matchTextures);
         buf.writeInt(startHalfSteps); buf.writeInt(endHalfSteps);
+
+        ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if (message.pos==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
+                if (message.pos==null || message.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !player.world.isBlockLoaded(message.pos)) return;
                 TileEntity raw=player.world.getTileEntity(message.pos);
                 if (!(raw instanceof TileEntityRampController) || !(player.openContainer instanceof ContainerRampController)) return;
@@ -101,7 +118,7 @@ public class MessageRampController implements IMessage {
                 if (message.direction<0 || message.direction>3 || message.channel<0) return;
                 te.configureHalfOffsets(player,message.startHalfSteps,message.endHalfSteps,message.treadPixels,message.powerOn,message.slow,message.elevator,
                         net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures);
-                te.setRedstoneChannel(message.channel);
+                te.setRedstoneChannels(message.getRedstoneChannels());
                 player.connection.sendPacket(te.getUpdatePacket());
             });
             return null;

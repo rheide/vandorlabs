@@ -146,7 +146,7 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
     private ItemStack configured(TileEntityLandingGear tile){
         ItemStack stack=new ItemStack(this);
         if(tile!=null){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();
-            tag.setInteger("GearSize",tile.getSize());tag.setInteger("ExtensionPixels",tile.getExtensionPixels());tag.setInteger("RedstoneMode",tile.getMode());tag.setInteger("RedstoneChannel",tile.getRedstoneChannel());stack.setTagInfo("BlockEntityTag",tag);}
+            tag.setInteger("GearSize",tile.getSize());tag.setInteger("ExtensionPixels",tile.getExtensionPixels());tag.setInteger("RedstoneMode",tile.getMode());tag.setInteger("RedstoneChannel",tile.getRedstoneChannel());com.vandorlabs.redstone.ChannelData.write(tag,tile.getRedstoneChannels());stack.setTagInfo("BlockEntityTag",tag);}
         return stack;
     }
     public ItemStack getPickBlock(IBlockState s,RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){return configured(root(world,pos));}

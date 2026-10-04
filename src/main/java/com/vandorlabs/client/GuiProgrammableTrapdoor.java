@@ -1,5 +1,7 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.redstone.ChannelList;
+
 import com.vandorlabs.container.ContainerProgrammableTrapdoor;
 import com.vandorlabs.network.*;
 import com.vandorlabs.persistence.SpaceDoorData;
@@ -16,6 +18,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     private final TileEntityProgrammableTrapdoor tile;
     private HousingTextureList textures;
     private int position,trigger,channel,tallWidth,doorDetail;
+    private ChannelList channelList;
     private net.minecraft.util.EnumFacing facing;
     private boolean sliding,slideIntoWall,slideOverSurface,inverted,cover,tileTexture;
     private boolean diagonal(){return tile instanceof TileEntityProgrammableDiagonalTrapdoor;}
@@ -23,7 +26,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     private GuiButton done;
     public GuiProgrammableTrapdoor(TileEntityProgrammableTrapdoor tile) {
         super(new ContainerProgrammableTrapdoor(tile));this.tile=tile;
-        cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channel=tile.getRedstoneChannel();
+        cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channelList=tile.getRedstoneChannels();channel=channelList.first();
         doorDetail=HousingTextureList.doorDetail(tile.getHousingTexture());
         tileTexture=tile.isTileTexture();tallWidth=position==0?0:1;facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING);
         inverted=diagonal() && ((TileEntityProgrammableDiagonalTrapdoor)tile).isInverted();
@@ -31,7 +34,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     }
     private int controlsX, channelLabelY;
     @Override public void initGui() {
-        String channelText=channelField==null?Integer.toString(channel):channelField.getText();
+        String channelText=channelField==null?channelList.toString():channelField.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;
         super.initGui();
@@ -53,7 +56,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         buttonList.add(new GuiButton(3,controlsX,y,controlsWidth,20,triggerLabel()));y+=22;
         channelLabelY=y;
         channelField=new GuiTextField(0,fontRenderer,controlsX,y+11,controlsWidth,18);
-        channelField.setMaxStringLength(10);channelField.setValidator(s->s.isEmpty() || s.matches("[0-9]{1,10}"));
+        ChannelFields.configure(channelField);
         channelField.setText(channelText);
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
     }
@@ -64,12 +67,12 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     private String heightLabel(){return "Height: "+(position==2?"Half":"Full");}
     private String facingLabel(){return "Hinge: "+facing.getName();}
     private String triggerLabel(){return trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?"Redstone: On":trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Redstone: Off":"Redstone: Disabled";}
-    private int parsedChannel(){try{return Integer.parseInt(channelField.getText());}catch(NumberFormatException e){return -1;}}
+    private int parsedChannel(){return ChannelFields.first(channelField);}
     private void send() {
-        if(parsedChannel()>=0)channel=parsedChannel();
+        if(parsedChannel()>=0){channelList=ChannelFields.parse(channelField);channel=channelList.first();}
         int selected=textures.selected();
-        tile.configureGroup(selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface);
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface));
+        tile.configureGroup(selected,position,sliding,trigger,channelList,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface);
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
@@ -116,7 +119,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString(diagonal()?"Programmable Diagonal Trapdoor":"Programmable Trapdoor",12,8,0xFFFFFF);
         fontRenderer.drawString("Block texture",12,27,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);channelField.drawTextBox();}
 }

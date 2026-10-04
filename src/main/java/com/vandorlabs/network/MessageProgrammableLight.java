@@ -1,5 +1,8 @@
 package com.vandorlabs.network;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityProgrammableLight;
@@ -13,6 +16,16 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 /** Applies the artwork and brightness chosen in the light menu. */
 public final class MessageProgrammableLight implements IMessage {
+    private ChannelList channels;
+    private boolean invalidChannels;
+    public MessageProgrammableLight withChannels(ChannelList channels) {
+        if(channels==null)throw new IllegalArgumentException("Invalid channel list");
+        this.channels=channels;this.channel=channels.first();invalidChannels=false;return this;
+    }
+    public ChannelList getRedstoneChannels() {
+        return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
+    }
+
     private BlockPos pos;
     private int texture;
     private int level;
@@ -57,6 +70,8 @@ public final class MessageProgrammableLight implements IMessage {
         housing = buf.readInt();
         trigger = buf.readInt();
         small=buf.readBoolean();tileSides=buf.readBoolean();
+
+        channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -67,13 +82,15 @@ public final class MessageProgrammableLight implements IMessage {
         buf.writeInt(housing);
         buf.writeInt(trigger);
         buf.writeBoolean(small);buf.writeBoolean(tileSides);
+
+        ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableLight, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableLight msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.pos == null || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(msg.trigger)
+                if (msg.pos == null || msg.getRedstoneChannels()==null || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(msg.trigger)
                         || msg.texture < 0
                         || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.texture)
                         || msg.housing < 0
@@ -94,7 +111,7 @@ public final class MessageProgrammableLight implements IMessage {
                 ((TileEntityProgrammableLight)tile).setSlabTileSides(msg.tileSides);
                 ((TileEntityProgrammableLight)tile).setFaceTexture(msg.texture);
                 ((TileEntityProgrammableLight) tile).configure(
-                        ((TileEntityProgrammableLight)tile).getTexture(), msg.level, msg.join, msg.channel, msg.housing, msg.trigger);
+                        ((TileEntityProgrammableLight)tile).getTexture(), msg.level, msg.join, msg.getRedstoneChannels(), msg.housing, msg.trigger);
             });
             return null;
         }

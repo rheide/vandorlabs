@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
-**1.4-alpha:** Performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [experimental diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
+**1.4-alpha:** Comma-separated redstone channel lists, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [experimental diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
 
 **Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
 
@@ -117,15 +117,15 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   virtual redstone signal without loading chunks. Configure channels in the
   programmable screen and ramp-controller dialogs; in creative mode,
   sneak-right-click a door, switch, lever, programmable light, porthole,
-  engine or hover fixture to set its channel. The Configurizer opens the same
-  menus in survival. Channel `0` leaves
-  a block unlinked.
-  Levers and Rocker Switches on the same nonzero channel mirror each other's
-  ON state; push buttons remain momentary inputs. These controls transmit
+  engine or hover fixture to set its channels. The Configurizer opens the same
+  menus in survival. Enter a comma-separated list such as `12, 25, 40`;
+  `0` or an empty field leaves a block unlinked.
+  Levers and Rocker Switches toggle all listed channels; controls with the
+  same list mirror each other's ON state. Push buttons remain momentary inputs. These controls transmit
   their local state, while doors, screens,
-  controllers and lights react when any loaded member on their channel has a
-  local redstone signal. Creative pick-block on a switch or lever copies its
-  channel to the new item; placing that item restores the channel without
+  controllers and lights react when any of their listed channels has a
+  local redstone signal from a loaded member. Creative pick-block on a switch or lever copies its
+  channel list to the new item; placing that item restores the list without
   copying the ON state. Unlinked lights retain their normal right-click
   toggle; linked lights use their authored lit/unlit variants to follow
   redstone power. Thrusters remember whether their active state uses a particle

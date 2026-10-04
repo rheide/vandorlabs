@@ -29,7 +29,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.PRIMARY_TEXTURE, "Primary Texture", 0),
             option(ProgrammableSettings.WALL_TEXTURE, "Wall Texture", 0),
             option(ProgrammableSettings.JOIN, "Join", 0),
-            option(ProgrammableSettings.CHANNEL, "Redstone Channel", 0),
+            option(ProgrammableSettings.CHANNEL, "Redstone Channels", 0),
             option(ProgrammableSettings.TRIGGER, "Redstone Trigger", 0),
             option(ProgrammableSettings.ACTIVE, "Active State", 0),
             option(ProgrammableSettings.PARTICLES, "Particle Stream", 0),

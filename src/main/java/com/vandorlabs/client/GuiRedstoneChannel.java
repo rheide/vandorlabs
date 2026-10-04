@@ -57,9 +57,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         buttonList.clear();
         Keyboard.enableRepeatEvents(true);
         channelField = new GuiTextField(0, fontRenderer, thruster?layout.controlsX:guiLeft+116, guiTop + 38, thruster?154:106, 18);
-        channelField.setMaxStringLength(10);
-        channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(member.getRedstoneChannel()));
+        ChannelFields.configure(channelField);
+
+        channelField.setText(member.getRedstoneChannels().toString());
         channelField.setFocused(true);
         if (thruster) housingList = new HousingTextureList(layout.listX,guiTop+38,layout.listWidth,sideTexture).visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{sideTexture=value;submit();});
         if (thruster) {
@@ -82,25 +82,19 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
-    protected int channel() {
-        try {
-            long value = Long.parseLong(channelField.getText());
-            return value > Integer.MAX_VALUE ? -1 : (int) value;
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
+    protected int channel() {return ChannelFields.first(channelField);}
 
     protected void submit() {
         int value = channel();
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
                         thruster, particles, connected, join, thruster, sideTexture,
-                        programmableThruster, shape));
+                        programmableThruster, shape).withChannels(ChannelFields.parse(channelField)));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id == 1) {
+            if(channel()<0)return;
             submit();
             mc.player.closeScreen();
         }
@@ -128,6 +122,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
+            if(channel()<0)return;
             submit();
             mc.player.closeScreen();
             return;
@@ -169,8 +164,8 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         GlStateManager.disableLighting();
-        fontRenderer.drawString(thruster?"Programmable Thruster":"Redstone Channel",12,8,0xFFFFFF);
-        fontRenderer.drawString("Channel (0 = none)",thruster?layout.controlsX-guiLeft:14,thruster?27:43,0xDAE8F0);
+        fontRenderer.drawString(thruster?"Programmable Thruster":"Redstone Channels",12,8,0xFFFFFF);
+        fontRenderer.drawString(thruster?"Channels (0 = none)":"Channels",thruster?layout.controlsX-guiLeft:14,thruster?27:43,0xDAE8F0);
         if(thruster)fontRenderer.drawString("Wall texture",12,27,0xDAE8F0);
     }
 

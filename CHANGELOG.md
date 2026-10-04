@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Configure comma-separated redstone channel lists on switches, levers, buttons and channel-aware programmable blocks. Controls operate every listed channel; consumers respond when any listed channel is active. Preserve complete lists through save/load, picked items, Duplifier settings and joined assemblies, with automatic migration of existing single-channel settings.
+
 - Extend diagonal chunk rendering to section-boundary positions whose conservative geometry remains inside the section. Keep tile rendering for actual overhangs, with a shared routing rule for model and tile paths.
 
 - Keep Programmable Walls and Porthole Walls visible throughout the loaded render distance, matching diagonal walls instead of disappearing beyond the tile renderer's 64-block cutoff.

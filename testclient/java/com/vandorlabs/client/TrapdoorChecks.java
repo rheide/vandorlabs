@@ -59,7 +59,7 @@ final class TrapdoorChecks {
         new com.vandorlabs.network.MessageProgrammableTrapdoor(pos,0,2,true,0,0,false,false,true,EnumFacing.NORTH,false,true).toBytes(bytes);
         com.vandorlabs.network.MessageProgrammableTrapdoor decoded=new com.vandorlabs.network.MessageProgrammableTrapdoor();decoded.fromBytes(bytes);
         io.netty.buffer.ByteBuf result=io.netty.buffer.Unpooled.buffer();decoded.toBytes(result);
-        require(result.getBoolean(result.writerIndex()-1),"surface slide packet loses setting");bytes.release();result.release();
+        require(net.minecraftforge.fml.relauncher.ReflectionHelper.<Boolean,com.vandorlabs.network.MessageProgrammableTrapdoor>getPrivateValue(com.vandorlabs.network.MessageProgrammableTrapdoor.class,decoded,"slideOverSurface"),"surface slide packet loses setting");bytes.release();result.release();
         System.out.println("PASS: surface sliding clearance, selection, legacy defaults, persistence, copy and packet");
     }
 

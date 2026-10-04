@@ -44,7 +44,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     public boolean isJoin() { return join; }
 
     public void configure(int selectedTexture, int selectedLevel) {
-        configure(selectedTexture, selectedLevel, join, getRedstoneChannel());
+        configure(selectedTexture, selectedLevel, join, getRedstoneChannels(),getHousingTexture(),trigger);
     }
 
     public void configure(int selectedTexture, int selectedLevel, boolean selectedJoin,
@@ -61,19 +61,23 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
 
     public void configure(int selectedTexture, int selectedLevel, boolean selectedJoin,
             int selectedChannel, int selectedHousing, int selectedTrigger) {
+        configure(selectedTexture,selectedLevel,selectedJoin,com.vandorlabs.redstone.ChannelList.of(Math.max(0,selectedChannel)),selectedHousing,selectedTrigger);
+    }
+    public void configure(int selectedTexture,int selectedLevel,boolean selectedJoin,
+            com.vandorlabs.redstone.ChannelList selectedChannel,int selectedHousing,int selectedTrigger) {
         if (!SpaceDoorData.validTrigger(selectedTrigger)) return;
         int nextTexture = ProgrammableLightTextures.clamp(selectedTexture);
         int nextLevel = Math.max(0, Math.min(15, selectedLevel));
         int nextHousing = ScreenHousingTextures.clamp(selectedHousing);
         if (texture == nextTexture && lightLevel == nextLevel && join == selectedJoin
-                && getRedstoneChannel() == selectedChannel
+                && getRedstoneChannels().equals(selectedChannel)
                 && getHousingTexture() == nextHousing && trigger == selectedTrigger) return;
         texture = nextTexture;
         lightLevel = nextLevel;
         join = selectedJoin;
         trigger = selectedTrigger;
         setHousingTexture(nextHousing);
-        if (getRedstoneChannel() != selectedChannel) setRedstoneChannel(selectedChannel);
+        if (!getRedstoneChannels().equals(selectedChannel)) setRedstoneChannels(selectedChannel);
         else changed();
     }
 

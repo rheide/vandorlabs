@@ -76,7 +76,7 @@ final class TrapdoorAssemblies {
             leaf.setOpeningSide(reversed);leaf.assemblyHinge=reversed?1+distance-1/16D:-distance+1/16D;
             leaf.assemblyTravel=(highSide?width-split:split)-1/16D;
         }
-        for(TileEntityProgrammableDiagonalTrapdoor leaf:cells.values()){leaf.setRedstoneChannel(reference.channel);leaf.sync();}
+        for(TileEntityProgrammableDiagonalTrapdoor leaf:cells.values()){leaf.setRedstoneChannels(reference.getRedstoneChannels());leaf.sync();}
         root.requestOpen(open);root.evaluatePower(true);return true;
     }
     private static boolean discover(TileEntityProgrammableTrapdoor root,EntityPlayer player,ItemStack stack,BlockPos u,BlockPos v,boolean stagger) {
@@ -126,7 +126,7 @@ final class TrapdoorAssemblies {
                 leaf.assemblyHinge=-distance+com.vandorlabs.render.TrapdoorGeometry.OPEN_HINGE;
             }
         }
-        for(TileEntityProgrammableTrapdoor leaf:cells.values()){leaf.setRedstoneChannel(reference.channel);leaf.sync();}
+        for(TileEntityProgrammableTrapdoor leaf:cells.values()){leaf.setRedstoneChannels(reference.getRedstoneChannels());leaf.sync();}
         root.requestOpen(open);root.evaluatePower(true);return true;
     }
 }

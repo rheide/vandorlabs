@@ -56,10 +56,10 @@ public class GuiRampController extends GuiContainer {
         treadField.setText(Integer.toString(controller.treadPixels));
         buttonList.add(new GuiButton(14,guiLeft+260,guiTop+126,20,20,"-"));
         buttonList.add(new GuiButton(15,guiLeft+282,guiTop+126,20,20,"+"));
-        channelField=new GuiTextField(8,fontRenderer,guiLeft+244,guiTop+184,54,18);
-        channelField.setMaxStringLength(10);
-        channelField.setText(Integer.toString(controller.getRedstoneChannel()));
-        channelField.setValidator(text -> text.isEmpty() || text.matches("[0-9]{1,10}"));
+        channelField=new GuiTextField(8,fontRenderer,guiLeft+200,guiTop+184,98,18);
+        ChannelFields.configure(channelField);
+        channelField.setText(controller.getRedstoneChannels().toString());
+
         buttonList.add(new GuiButton(1,guiLeft+14,guiTop+78,142,20,""));
         buttonList.add(new GuiButton(3,guiLeft+14,guiTop+102,142,20,""));
         buttonList.add(new GuiButton(6,guiLeft+164,guiTop+78,142,20,""));
@@ -118,13 +118,10 @@ public class GuiRampController extends GuiContainer {
                 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
             lastStartHalf=start;lastEndHalf=end;
             PacketHandler.INSTANCE.sendToServer(MessageRampController.halfOffsets(controller.getPos(),start,end,
-                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures));
+                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withChannels(ChannelFields.parse(channelField)));
         }
     }
-    private int channel() {
-        try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
-        catch (NumberFormatException e) { return -1; }
-    }
+    private int channel() {return ChannelFields.first(channelField);}
     @Override public void updateScreen() {
         super.updateScreen(); treadField.updateCursorCounter(); channelField.updateCursorCounter();
         if (lastUpdate!=controller.clientUpdates) {
@@ -169,7 +166,7 @@ public class GuiRampController extends GuiContainer {
                 "Positive = right; negative = left. Footprint: 8x16.",14,153,0xADBECA);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
                 14,166,292,controller.error?0xFF9988:0xE5C76B);
-        fontRenderer.drawString("Channel (0 = none)",144,188,0xDAE8F0);
+        fontRenderer.drawString("Channels",144,188,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

@@ -71,9 +71,9 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         buttonList.add(layout.control(0,120,""));
         buttonList.add(layout.control(32,142,sidesLabel()));
         channelField=new GuiTextField(40,fontRenderer,cx,guiTop+177,154,18);
-        channelField.setMaxStringLength(10);
-        channelField.setValidator(text->text.isEmpty() || text.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(te.getRedstoneChannel()));
+        ChannelFields.configure(channelField);
+
+        channelField.setText(te.getRedstoneChannels().toString());
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housingTexture)
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();
@@ -108,10 +108,11 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     }
 
     private void sendUpdate() {
+        if(channel()<0)return;
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(te.getPos(),
                 te.getSelectedScreen(), redstoneEnabled, displayMode,
                 te.isFramed(), speedIndex, bottomPanel, topPanel, false, channel(),
-                housingTexture));
+                housingTexture).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
@@ -121,10 +122,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if(nativeId!=null)sendUpdate();
     }
 
-    private int channel() {
-        try { long value=Long.parseLong(channelField.getText()); return value<=Integer.MAX_VALUE?(int)value:-1; }
-        catch (NumberFormatException e) { return -1; }
-    }
+    private int channel() {return ChannelFields.first(channelField);}
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
@@ -164,7 +162,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     @Override
     protected void actionPerformed(GuiButton button) {
         if(button.id>=90 && button.id<=92){textureTab=button.id-90;refreshTabs();return;}
-        if (button.id == 20) { if (channel()>=0) sendUpdate(); mc.player.closeScreen(); return; }
+        if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
@@ -224,7 +222,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         else housingList.draw(fontRenderer,mouseX,mouseY);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
         super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

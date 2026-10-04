@@ -77,7 +77,7 @@ public class BlockRampController extends BlockVandorDirectional {
                         settings.getInteger("TravelAxis"),
                         settings.getBoolean("ExtendSegments"), settings.getInteger("Speed"),
                         !settings.hasKey("MatchTextures") || settings.getBoolean("MatchTextures"));
-                ramp.setRedstoneChannel(settings.getInteger("Channel"));
+                ramp.setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
             } else ramp.updatePower();
         }
     }
@@ -101,6 +101,7 @@ public class BlockRampController extends BlockVandorDirectional {
             settings.setInteger("Speed", ramp.speed);
             settings.setBoolean("MatchTextures", ramp.matchTextures);
             settings.setInteger("Channel", ramp.getRedstoneChannel());
+            com.vandorlabs.redstone.ChannelData.write(settings,ramp.getRedstoneChannels());
             stack.setTagInfo("RampSettings", settings);
         }
         return stack;

@@ -361,7 +361,7 @@ final class DiagonalTrapdoorChecks {
         io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();
         com.vandorlabs.network.MessageProgrammableTrapdoor packet=new com.vandorlabs.network.MessageProgrammableTrapdoor(new BlockPos(1,2,3),0,2,true,0,0,false,false,true,EnumFacing.NORTH,true);
         packet.toBytes(bytes);com.vandorlabs.network.MessageProgrammableTrapdoor decoded=new com.vandorlabs.network.MessageProgrammableTrapdoor();decoded.fromBytes(bytes);
-        io.netty.buffer.ByteBuf roundTrip=io.netty.buffer.Unpooled.buffer();decoded.toBytes(roundTrip);require(roundTrip.getBoolean(roundTrip.writerIndex()-2),"packet lost into-wall style");bytes.release();roundTrip.release();
+        io.netty.buffer.ByteBuf roundTrip=io.netty.buffer.Unpooled.buffer();decoded.toBytes(roundTrip);require(net.minecraftforge.fml.relauncher.ReflectionHelper.<Boolean,com.vandorlabs.network.MessageProgrammableTrapdoor>getPrivateValue(com.vandorlabs.network.MessageProgrammableTrapdoor.class,decoded,"slideIntoWall"),"packet lost into-wall style");bytes.release();roundTrip.release();
         System.out.println("PASS: both diagonal sliding styles, all poses, saved items, joining, group edits, copying and packet round trip");
     }
     private static void boundaries() {

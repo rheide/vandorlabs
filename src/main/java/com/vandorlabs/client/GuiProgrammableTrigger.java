@@ -44,24 +44,19 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         onList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,on).visibleRows(layout.rows(true)).custom(value->{on=value;send();});
         buttonList.add(layout.tab(90,0,2,"Redstone Off"));buttonList.add(layout.tab(91,1,2,"Redstone On"));
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+42,154,18);
-        channelField.setMaxStringLength(10);channelField.setValidator(value->value.isEmpty() || value.matches("[0-9]{1,10}"));
-        channelField.setText(Integer.toString(tile.getRedstoneChannel()));buttonList.add(layout.done(100));refreshTabs();
+        ChannelFields.configure(channelField);
+        channelField.setText(tile.getRedstoneChannels().toString());buttonList.add(layout.done(100));refreshTabs();
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
 
-    private int channel() {
-        try {
-            long value = Long.parseLong(channelField.getText());
-            return value <= Integer.MAX_VALUE ? (int) value : -1;
-        } catch (NumberFormatException ignored) { return -1; }
-    }
+    private int channel() {return ChannelFields.first(channelField);}
 
     private void send() {
         int value = channel();
         if (value < 0) return;
         tile.configure(off, on, value);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrigger(
-                tile.getPos(), off, on, value));
+                tile.getPos(), off, on, value).withChannels(ChannelFields.parse(channelField)));
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
@@ -99,11 +94,12 @@ public final class GuiProgrammableTrigger extends GuiContainer {
 
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==90 || button.id==91){textureTab=button.id-90;refreshTabs();return;}
-        if (button.id == 100) { send(); mc.player.closeScreen(); }
+        if (button.id == 100 && channel()>=0) { send(); mc.player.closeScreen(); }
     }
 
     @Override protected void keyTyped(char typed, int key) throws IOException {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
+            if(channel()<0)return;
             send(); mc.player.closeScreen(); return;
         }
         if (channelField.textboxKeyTyped(typed, key)) send();
@@ -130,7 +126,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         fontRenderer.drawString("Programmable Trigger Block", guiLeft + 12,
                 guiTop + 8, 0xFFFFFFFF);
         if(textureTab==0)offList.draw(fontRenderer,mouseX,mouseY);else onList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString("Channel (0 = none)",layout.controlsX,guiTop+30,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+30,0xDAE8F0);
         super.drawScreen(mouseX, mouseY, partial);
         channelField.drawTextBox();
     }

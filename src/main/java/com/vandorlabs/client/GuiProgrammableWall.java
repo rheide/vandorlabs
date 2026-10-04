@@ -195,7 +195,7 @@ public class GuiProgrammableWall extends GuiContainer {
                 tile.getSelectedScreen(), tile.isRedstoneEnabled(), tile.getDisplayMode(),
                 tile.isFramed(), tile.getAnimationSpeedIndex(), tile.getInputPanel(),
                 tile.getSecondaryInputPanel(), tile.isSmallInput(),
-                tile.getRedstoneChannel(), choice));
+                tile.getRedstoneChannel(), choice).withChannels(tile.getRedstoneChannels()));
     }
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)

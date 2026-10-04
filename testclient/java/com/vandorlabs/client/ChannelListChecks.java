@@ -16,8 +16,61 @@ final class ChannelListChecks {
         int[] maximum=new int[ChannelList.MAX_CHANNELS];for(int i=0;i<maximum.length;i++)maximum[i]=Integer.MAX_VALUE-i;
         ChannelList full=ChannelList.of(maximum);require(full.equals(ChannelList.parse(full.toString())),"maximum canonical list cannot be reopened");
         int[] copy=full.toArray();copy[0]=0;require(!full.contains(0),"channel list is mutable");
-        persistence();orSignals();latches();
+        persistence();packets();copying();orSignals();latches();
         System.out.println("PASS: channel-list parsing, legacy/list NBT, independent latch banks, multi-source OR, edits and unloads");
+    }
+    private static void packets() {
+        BlockPos pos=new BlockPos(1,80,1);
+        net.minecraftforge.fml.common.network.simpleimpl.IMessage[] messages={
+            new com.vandorlabs.network.MessageRedstoneChannel(pos,0),
+            new com.vandorlabs.network.MessageSyncScreenSelector(pos,"engineering_screen",false,0,false,0,TileEntityAnimatedScreenSelector.INPUT_PANELS[0]),
+            new com.vandorlabs.network.MessageSpaceDoor(pos,0,0,false,0,0,0,false,true,0,false),
+            new com.vandorlabs.network.MessageRampController(pos,1,2,false,true,false,false,net.minecraft.util.EnumFacing.NORTH),
+            new com.vandorlabs.network.MessageLandingGear(pos,1,0,16),
+            new com.vandorlabs.network.MessageProgrammableTrapdoor(pos,0,0,false,0,0),
+            new com.vandorlabs.network.MessageProgrammableLight(pos,0,15,false,0),
+            new com.vandorlabs.network.MessageProgrammableTrigger(pos,0,0,0)
+        };
+        try {
+            for(net.minecraftforge.fml.common.network.simpleimpl.IMessage message:messages) {
+                Class<?> type=message.getClass();java.lang.reflect.Method getter=type.getMethod("getRedstoneChannels");
+                type.getMethod("withChannels",ChannelList.class).invoke(message,ChannelList.of(41,42));
+                io.netty.buffer.ByteBuf encoded=io.netty.buffer.Unpooled.buffer();message.toBytes(encoded);
+                int legacyLength=encoded.writerIndex()-9;
+                for(int mode=0;mode<4;mode++) {
+                    net.minecraftforge.fml.common.network.simpleimpl.IMessage decoded=(net.minecraftforge.fml.common.network.simpleimpl.IMessage)type.newInstance();
+                    io.netty.buffer.ByteBuf input=encoded.copy(0,mode==0?encoded.writerIndex():legacyLength);
+                    if(mode==2)input.writeByte(65);
+                    if(mode==3){input.writeByte(1);input.writeInt(-1);}
+                    decoded.fromBytes(input);Object actual=getter.invoke(decoded);input.release();
+                    require(mode>=2?actual==null:(mode==0?ChannelList.of(41,42):ChannelList.of(41)).equals(actual),"packet list/legacy/rejection differs: "+type+" mode="+mode);
+                }
+                encoded.release();
+            }
+        }catch(ReflectiveOperationException e){throw new AssertionError(e);}
+        System.out.println("PASS: eight channel packet families retain scalar compatibility and reject invalid list extensions");
+    }
+    private static void copying() {
+        NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+        BlockPos from=new BlockPos(0,100,0),to=from.east(3);
+        world.setBlockState(from,com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        world.setBlockState(to,com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        TileEntityAnimatedScreenSelector source=(TileEntityAnimatedScreenSelector)world.getTileEntity(from);
+        TileEntityAnimatedScreenSelector target=(TileEntityAnimatedScreenSelector)world.getTileEntity(to);
+        source.setRedstoneChannels(ChannelList.of(3,7,11));target.setRedstoneChannels(ChannelList.of(5,9));
+        NBTTagCompound capture=com.vandorlabs.items.ProgrammableSettings.capture(world,from);
+        long mask=com.vandorlabs.items.DuplifierApplyOptions.ALL;
+        for(int i=0;i<com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length;i++)if(com.vandorlabs.items.ProgrammableSettings.CHANNEL.equals(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS[i].key))mask&=~(1L<<i);
+        com.vandorlabs.items.ProgrammableSettings.apply(world,to,com.vandorlabs.items.DuplifierApplyOptions.selected(capture,mask));
+        require(target.getRedstoneChannels().equals(ChannelList.of(5,9)),"excluded channel option replaced list");
+        com.vandorlabs.items.ProgrammableSettings.apply(world,to,capture);
+        require(target.getRedstoneChannels().equals(source.getRedstoneChannels()),"Duplifier lost additional channels");
+        TileEntitySpaceDoor door=new TileEntitySpaceDoor();door.setRedstoneChannels(ChannelList.of(3,7,11));
+        TileEntitySpaceDoor restored=new TileEntitySpaceDoor();restored.applyItemSettings(door.itemSettings());
+        require(restored.getRedstoneChannels().equals(door.getRedstoneChannels()),"configured door item lost list");
+        TileEntityProgrammableTrapdoor hatch=new TileEntityProgrammableTrapdoor();hatch.setRedstoneChannels(ChannelList.of(3,7,11));
+        TileEntityProgrammableTrapdoor copy=new TileEntityProgrammableTrapdoor();copy.readFromNBT(hatch.itemSettings());
+        require(copy.getRedstoneChannels().equals(hatch.getRedstoneChannels()),"configured trapdoor item lost list");
     }
     private static void persistence() {
         Class<?>[] types={TileEntityAnimatedScreenSelector.class,TileEntityRampController.class,
