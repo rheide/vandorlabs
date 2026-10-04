@@ -1,4 +1,6 @@
-package com.vandorlabs.tiles;
+package com.vandorlabs.client;
+
+import com.vandorlabs.tiles.*;
 
 import com.vandorlabs.blocks.BlockProgrammableTrapdoor;
 import net.minecraft.tileentity.TileEntity;
@@ -8,10 +10,10 @@ import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.*;
 
-/** Offset leaves retain their owning block for interaction, without occupying the shaft cell. */
-public final class OffsetTrapdoorInteractions {
-    public static final OffsetTrapdoorInteractions INSTANCE=new OffsetTrapdoorInteractions();
-    private OffsetTrapdoorInteractions() { }
+/** Frozen 1.3 world-query path for tracing and offset collision equivalence. */
+public final class ReferenceOffsetTrapdoorInteractions {
+    public static final ReferenceOffsetTrapdoorInteractions INSTANCE=new ReferenceOffsetTrapdoorInteractions();
+    private ReferenceOffsetTrapdoorInteractions() { }
 
     private static TileEntityProgrammableTrapdoor leaf(World world,BlockPos pos) {
         if(!world.isBlockLoaded(pos) || !(world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor))return null;
@@ -22,8 +24,25 @@ public final class OffsetTrapdoorInteractions {
         return leaf.getWorld().getBlockState(leaf.getPos()).getBoundingBox(leaf.getWorld(),leaf.getPos()).offset(leaf.getPos());
     }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {
+        Set<BlockPos> owners=new HashSet<>();
+        int[] cell={MathHelper.floor(start.x),MathHelper.floor(start.y),MathHelper.floor(start.z)};
+        int[] last={MathHelper.floor(end.x),MathHelper.floor(end.y),MathHelper.floor(end.z)};
+        double[] origin={start.x,start.y,start.z},delta={end.x-start.x,end.y-start.y,end.z-start.z},next=new double[3],step=new double[3];
+        for(int axis=0;axis<3;axis++) {
+            next[axis]=delta[axis]==0?Double.POSITIVE_INFINITY:((delta[axis]>0?cell[axis]+1:cell[axis])-origin[axis])/delta[axis];
+            step[axis]=delta[axis]==0?Double.POSITIVE_INFINITY:Math.abs(1/delta[axis]);
+        }
+        int limit=Math.abs(cell[0]-last[0])+Math.abs(cell[1]-last[1])+Math.abs(cell[2]-last[2])+3;
+        for(int i=0;i<limit;i++) {
+            // Lifted diagonal leaves can cross both horizontal cell boundaries.
+            for(int dy=-1;dy<=1;dy++)for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++)
+                owners.add(new BlockPos(cell[0]+dx,cell[1]+dy,cell[2]+dz));
+            if(Arrays.equals(cell,last))break;
+            int axis=next[0]<=next[1] && next[0]<=next[2]?0:next[1]<=next[2]?1:2;
+            cell[axis]+=delta[axis]>0?1:-1;next[axis]+=step[axis];
+        }
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
-        for(BlockPos pos:TrapdoorRayCandidates.positions(start,end)) {
+        for(BlockPos pos:owners) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null)continue;
             RayTraceResult hit=leaf instanceof TileEntityProgrammableDiagonalTrapdoor
                     ? world.getBlockState(pos).collisionRayTrace(world,pos,start,end)
@@ -38,7 +57,7 @@ public final class OffsetTrapdoorInteractions {
         addCollisions(event.getWorld(),event.getAabb(),event.getCollisionBoxesList());
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
-        for(BlockPos pos:BlockPos.getAllInBoxMutable(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
+        for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null || !leaf.isCover() && !leaf.isSlideOverSurface())continue;
             AxisAlignedBB box=bounds(leaf);
             if(box.intersects(query) && !boxes.contains(box))boxes.add(box);

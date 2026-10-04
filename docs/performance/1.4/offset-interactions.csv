@@ -1,0 +1,5 @@
+operation,algorithm,queries,median_ms,median_allocated_bytes
+trace,reference,256,2.633711,5855232
+trace,current,256,0.164027,106496
+collision,reference,256,0.224721,647168
+collision,current,256,0.139511,20480

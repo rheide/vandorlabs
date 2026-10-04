@@ -51,6 +51,8 @@ public final class NonRenderingChecks {
         ScreenPowerReadChecks.run();
         TrapdoorCollisionChecks.run();
         TextureNameChecks.run();
+        TrapdoorRayCandidateChecks.run();
+        OffsetInteractionChecks.run();
     }
 
     private static void placement() {
@@ -178,7 +180,7 @@ public final class NonRenderingChecks {
         @Override public BlockPos getSpawnPoint(){return new BlockPos(0,64,0);}
         @Override protected net.minecraft.world.chunk.IChunkProvider createChunkProvider(){return null;}
         @Override protected boolean isChunkLoaded(int x,int z,boolean empty){return !chunkLimit || x==0&&z==0;}
-        private void loaded(BlockPos p){require(isBlockLoaded(p),"read unloaded chunk "+p);}
+        private void loaded(BlockPos p){if(!isBlockLoaded(p))throw new IllegalStateException("read unloaded chunk "+p);}
         @Override public IBlockState getBlockState(BlockPos p){stateReads++;loaded(p);return states.getOrDefault(p,Blocks.AIR.getDefaultState());}
         @Override public void removeTileEntity(BlockPos p){TileEntity tile=tiles.remove(p);if(tile!=null)tile.invalidate();}
         @Override public void playEvent(net.minecraft.entity.player.EntityPlayer player,int event,BlockPos p,int data){}

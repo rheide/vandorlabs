@@ -32,7 +32,8 @@ validation, draw calls and the GPU.
 These paired measurements show 21–43% lower CPU cost and 98–99% less allocation
 in texture emission. They do not establish an FPS improvement.
 
-The full live suite passed on release 1.3 and the first optimized build, including
+The full live suite passed on release 1.3, the first optimized build, and the
+housing/power optimization build, including
 rendering, GUI/network, joining/redstone, placement, inventory and copy contracts.
 The first live before/after benchmark pair passed all 56 static image comparisons: at least
 99.99% of pixels are within 3/255 per channel. Across the 64-leaf trapdoor cases,
@@ -129,6 +130,18 @@ Additional checks cover caller-mutated corner arrays, concurrent access and the
 cache limit. `benchmarkTrapdoorCollision` alternates the two algorithms with
 64 queries per measured batch and reports CPU time and thread allocation.
 
+| Collision batch | 1.3 median (ms) | Cached median (ms) | 1.3 allocation (bytes) | Cached allocation (bytes) |
+| --- | ---: | ---: | ---: | ---: |
+| Closed, all boxes retained | 0.388 | 0.062 | 573,440 | 69,120 |
+| Rotated open, all boxes retained | 3.808 | 0.124 | 14,155,776 | 1,052,160 |
+| Rotated open, partial overlap | 3.832 | 0.071 | 14,155,776 | 441,856 |
+| Sliding open, all boxes retained | 0.303 | 0.040 | 507,904 | 69,120 |
+
+These are warmed mesh-query measurements, excluding world/group lookup and corner
+construction. Cold queries build the mesh before filtering; cache eviction can
+therefore reduce the benefit. Complete measurements, including misses, are in
+`collision.csv`.
+
 ## Material name lookup
 
 Catalog texture names are resolved once after bootstrap, including door halves,
@@ -139,6 +152,34 @@ peer textures are unchanged. Only strings are retained; atlas sprites and Custom
 material resolution remain live. `benchmarkTextureNames` measures name selection
 separately from atlas lookup and rendering.
 
+Across 14,880 mixed square/unlit/storage lookups, the paired median falls from
+2.578 ms and 5,785,472 allocated bytes to 0.080 ms and zero allocation. This
+measures name selection only, not the total cost of rendering a block.
+
+The later live benchmark also passes all 58 static image comparisons. Per 64
+instances, Diagonal Wall allocation falls from 35,360 to 17,952 bytes, Wall from
+42,528 to 25,120, and Light from 57,888 to 23,584. Their small timing differences
+are mostly within run variation; the allocation reductions are consistent. Door
+submission cost remains largely unchanged. `render-after-later.csv` contains this
+run, retaining the vanilla controls.
+
+## Offset picking and collision queries
+
+The traversed grid-cell path selects an immutable list of candidate coordinates.
+Its iteration order exactly matches the previous HashSet, preserving precedence
+for equally distant hits. The cache retains at most 32,768 candidate positions
+and no worlds, tile entities or hit results. Every query still tests current
+loaded blocks. Offset collision scanning also reuses a mutable position without
+retaining it in returned bounds.
+
+Checks compare 1,590 exact candidate lists and 1,600 full world-query results,
+including chunk boundaries and removal between repeated rays. In the in-memory
+empty-world benchmark, 256 warmed picking queries fall from 2.634 to 0.164 ms
+and 5,855,232 to 106,496 allocated bytes. The corresponding offset collision
+batch falls from 0.225 to 0.140 ms and 647,168 to 20,480 bytes. The synthetic world
+isolates query overhead; real-world block lookup and actual leaf intersection
+costs remain. `offset-interactions.csv` preserves these paired measurements.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -146,7 +187,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv
