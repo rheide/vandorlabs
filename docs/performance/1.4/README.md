@@ -113,6 +113,22 @@ median rebuild time and 47–67% lower allocation across their fixtures. The sma
 Stairs timing difference is within ordinary variation; its allocation reduction
 is measurable. Complete results, including controls, are in the mesh-build CSVs.
 
+## Diagonal trapdoor collision
+
+Collision queries previously reconstructed 16 slices, or 256 slices for an open
+rotating panel, each with temporary corner and bounds arrays. The rigid corner
+coordinates now select a reusable local collision mesh. The cache holds at most
+128 meshes, copies its corner keys and contains no world or tile references.
+Every query still uses the leaf's current geometry and owning position.
+
+A cached union rejects misses before scanning individual boxes. Only intersecting
+world-space boxes are allocated. The non-rendering checks compare 6,048 complete
+collision lists against the 1.3 algorithm, including box ordering, all shapes,
+facings and movements, grouped travel, large coordinates and strict edge contacts.
+Additional checks cover caller-mutated corner arrays, concurrent access and the
+cache limit. `benchmarkTrapdoorCollision` alternates the two algorithms with
+64 queries per measured batch and reports CPU time and thread allocation.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -120,7 +136,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv

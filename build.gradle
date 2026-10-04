@@ -54,6 +54,16 @@ task benchmarkHousingState(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task benchmarkTrapdoorCollision(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare diagonal trapdoor collision CPU cost and allocation against 1.3'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorCollisionBenchmark'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
 task benchmarkTrapdoorMesh(type: JavaExec) {
     group = 'verification'
     description = 'Compare trapdoor texture clipping CPU cost and allocations against 1.3'

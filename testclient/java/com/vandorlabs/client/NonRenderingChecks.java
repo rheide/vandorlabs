@@ -49,6 +49,7 @@ public final class NonRenderingChecks {
         HousingStateChecks.run();
         HousingModelChecks.run();
         ScreenPowerReadChecks.run();
+        TrapdoorCollisionChecks.run();
     }
 
     private static void placement() {

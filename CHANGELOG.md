@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Reuse exact diagonal trapdoor collision meshes in a bounded cache, avoiding repeated subdivision and allocating only intersecting boxes. Preserve collision bounds, box order and edge contacts.
+
 - Skip physical power scans when a screen's display mode is independent of power or its virtual channel is already powered. Joined lights stop reading inputs after the first powered source while still synchronizing the entire group.
 
 - Reduce Block, Slab, Storage and Stairs chunk-mesh allocation with single-pass extended states, reused neighbor positions and bounded caches of common housing face lists. Preserve exact quads, face overrides, storage artwork and Forge property behavior. See the [performance measurements](docs/performance/1.4/README.md).

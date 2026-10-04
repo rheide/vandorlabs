@@ -75,19 +75,9 @@ public final class BlockProgrammableDiagonalTrapdoor extends BlockProgrammableTr
         TileEntity raw=world.getTileEntity(pos);TileEntityProgrammableDiagonalTrapdoor tile=raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null;
         double[][] v=corners(state,tile,state.getValue(OPEN)?1:0);
         int across=state.getValue(OPEN) && (tile==null || !tile.isSliding())?16:1;
-        for(int slice=0;slice<16;slice++)for(int column=0;column<across;column++) {
-            // Split the long sloping edge; opened rotating panels still use the same rigid mesh.
-            int axis=tile!=null && tile.getPosition()==2?4:2;double[][] cell=new double[8][3];
-            for(int i=0;i<8;i++)for(int a=0;a<3;a++)cell[i][a]=v[i&~axis][a]+(v[i|axis][a]-v[i&~axis][a])*(slice+((i&axis)==0?0:1))/16D;
-            if(across>1) {
-                double[][] split=new double[8][3];
-                for(int i=0;i<8;i++)for(int a=0;a<3;a++)split[i][a]=cell[i&~1][a]+(cell[i|1][a]-cell[i&~1][a])*(column+((i&1)==0?0:1))/across;
-                cell=split;
-            }
-            double[] b=DiagonalTrapdoorGeometry.bounds(cell);
-            addCollisionBoxToList(pos,entityBox,boxes,new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]));
-        }
+        DiagonalTrapdoorCollision.add(v,tile!=null && tile.getPosition()==2?4:2,across,pos,entityBox,boxes);
     }
+
     private static Vec3d vector(double[] v){return new Vec3d(v[0],v[1],v[2]);}
     @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end) {
         TileEntity raw=world.getTileEntity(pos);double[][] v=corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0);
