@@ -36,19 +36,19 @@ final class RedstoneScreenRenderer {
         rect(buffer,0,0,128,128,0,0xFF0A141D);rect(buffer,3,3,125,20,.01,0xFF23465A);
         for(int i=0;i<tile.rows().size();i++){
             TileEntityRedstoneScreen.Row row=tile.rows().get(i);int y=RedstoneScreenInteractions.ROW_TOP+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            rect(buffer,6,y,122,y+10,.01,row.active()?0xFF174C3B:0xFF1C2B37);
+            rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,row.active()?0xFF174C3B:0xFF1C2B37);
             rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
         }
         Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
-        text(font,"REDSTONE CONTROL",8,8,0xC8EEFF);
+        text(font,font.trimStringToWidth(tile.title(),RedstoneScreenText.TITLE_WIDTH),8,8,0xC8EEFF);
         if(tile.rows().isEmpty()){
             text(font,"No controls",8,40,0xB8C8D0);
             text(font,"Configure to add",8,54,0x748C9C);
         }
         for(int i=0;i<tile.rows().size();i++){
             TileEntityRedstoneScreen.Row row=tile.rows().get(i);int y=RedstoneScreenInteractions.ROW_TOP+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            text(font,font.getStringWidth(row.label)<=86?row.label:font.trimStringToWidth(row.label,86),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
+            text(font,font.getStringWidth(row.label)<=RedstoneScreenText.LABEL_WIDTH?row.label:font.trimStringToWidth(row.label,RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
             text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();

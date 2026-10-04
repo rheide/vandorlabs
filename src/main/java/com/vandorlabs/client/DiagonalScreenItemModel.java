@@ -15,8 +15,11 @@ public final class DiagonalScreenItemModel implements IBakedModel {
     private final IBakedModel delegate;
     private final List<BakedQuad> quads;
     public DiagonalScreenItemModel(IBakedModel delegate) {
+        this(delegate,false);
+    }
+    public DiagonalScreenItemModel(IBakedModel delegate,boolean redstone) {
         this.delegate=delegate;
-        TextureAtlasSprite wall=sprite("dark_wall_panel"),screen=sprite("engineering_screen_static");
+        TextureAtlasSprite wall=sprite("dark_wall_panel"),screen=redstone?atlas("minecraft:blocks/concrete_black"):sprite("engineering_screen_static");
         List<BakedQuad> built=new ArrayList<>();
         for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(false).quads) {
             double[][] points=new double[4][5];
@@ -34,8 +37,26 @@ public final class DiagonalScreenItemModel implements IBakedModel {
             // Small normal offset gives the item image the same depth separation as the TESR.
             points[i]=new double[]{v.x,v.y+.01,v.z-.01,i==0||i==3?16:0,i<2?0:16};
         }
-        built.add(quad(points,screen));quads=Collections.unmodifiableList(built);
+        built.add(quad(points,screen));
+        if(redstone){
+            built.add(panel(s,3,3,125,20,.03,"concrete_cyan"));
+            for(int row=0;row<3;row++){
+                int y=24+row*12;
+                built.add(panel(s,8,y+3,70-row*10,y+7,.04,"concrete_light_blue"));
+                built.add(panel(s,98,y,120,y+10,.04,row==0?"concrete_lime":"concrete_cyan"));
+            }
+        }
+        quads=Collections.unmodifiableList(built);
     }
+    private static BakedQuad panel(ScreenSurface.Quad q,int left,int top,int right,int bottom,double offset,String texture){
+        double[][] points=new double[4][5];int[] xs={right,left,left,right},ys={top,top,bottom,bottom};
+        for(int i=0;i<4;i++)points[i]=new double[]{q.topRight.x+(q.topLeft.x-q.topRight.x)*xs[i]/128,
+                q.topRight.y+(q.bottomRight.y-q.topRight.y)*ys[i]/128+q.ny*offset,
+                q.topRight.z+(q.bottomRight.z-q.topRight.z)*ys[i]/128+q.nz*offset,
+                i==0||i==3?0:16,i<2?0:16};
+        return quad(points,atlas("minecraft:blocks/"+texture));
+    }
+    private static TextureAtlasSprite atlas(String name){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(name);}
     private static TextureAtlasSprite sprite(String name){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/"+name);}
     private static BakedQuad quad(double[][] points,TextureAtlasSprite sprite) {
         int[] data=new int[28];

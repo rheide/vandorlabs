@@ -63,16 +63,21 @@ final class RedstoneScreenRuntimeChecks {
             if(stage==7 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
                 GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
                 gui.actionPerformed(new GuiButton(2,0,0,"Add"));
-                field(gui,"labelField").setText("Ramp bank");field(gui,"channelField").setText("14903, 14904");
+                field(gui,"titleField").setText("Bridge controls");field(gui,"labelField").setText("Ramp bank");field(gui,"channelField").setText("14903, 14904");
                 gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(8);return;
             }
             if(stage==8 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->{
-                TileEntityRedstoneScreen tile=tile(mc);require(tile.rows().size()==4 && tile.rows().get(3).label.equals("Ramp bank") && tile.rows().get(3).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
+                TileEntityRedstoneScreen tile=tile(mc);require(tile.title().equals("Bridge controls") && tile.rows().size()==4 && tile.rows().get(3).label.equals("Ramp bank") && tile.rows().get(3).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
                 TileEntityRedstoneScreen copy=new TileEntityRedstoneScreen();copy.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.rows().size()==4 && copy.rows().get(3).channels.equals(tile.rows().get(3).channels),"saved rows lost");
             });next(9);return;}
             if(stage==9){open(mc);next(10);return;}
             if(stage==10 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
                 capture(mc,output,"dialog");GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
+                require(field(gui,"titleField").getText().equals("Bridge controls"),"reopened header lost");
+                field(gui,"labelField").setText("WWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
+                require(mc.currentScreen==gui,"overwide label saved");field(gui,"labelField").setText("Doors");
+                field(gui,"titleField").setText("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
+                require(mc.currentScreen==gui,"overwide header saved");field(gui,"titleField").setText("Bridge controls");
                 gui.actionPerformed(new GuiButton(3,0,0,"Remove"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(11);return;
             }
             if(stage==11 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().size()==3 && tile(mc).rows().get(0).label.equals("Lights"),"GUI row removal failed"));next(12);return;}
@@ -85,7 +90,7 @@ final class RedstoneScreenRuntimeChecks {
     private static GuiTextField field(GuiRedstoneScreen gui,String name)throws ReflectiveOperationException{Field f=GuiRedstoneScreen.class.getDeclaredField(name);f.setAccessible(true);return (GuiTextField)f.get(gui);}
     private static void open(Minecraft mc){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_REDSTONE_SCREEN,p.world,POS.getX(),POS.getY(),POS.getZ());});}
     private static void aim(EntityPlayerMP owner,IBlockState state,int row){
-        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state);double u=109/128D,v=(24+row*12+5)/128D;
+        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state);double u=(row==0?30:109)/128D,v=(24+row*12+5)/128D;
         Vec3d localHit=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v);
         EnumFacing facing=RedstoneScreenInteractions.facing(state);
         hit=worldPoint(localHit,facing);

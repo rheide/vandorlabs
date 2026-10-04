@@ -7,17 +7,28 @@ import java.util.*;
 
 /** Event-driven row controls. Each row is an independent member of its channel bank. */
 public final class TileEntityRedstoneScreen extends TileEntityAnimatedScreenSelector {
-    public static final int MAX_ROWS=8,MAX_LABEL=24;
+    public static final int MAX_ROWS=8,MAX_LABEL=24,MAX_TITLE=32;
+    public static final String DEFAULT_TITLE="REDSTONE CONTROL";
+    private String title=DEFAULT_TITLE;
+    public String title(){return title;}
+    public static boolean validTitle(String title){return validText(title,MAX_TITLE);}
+    private static boolean validText(String text,int limit){
+        if(text==null || text.length()>limit)return false;
+        for(int i=0;i<text.length();i++)if(Character.isISOControl(text.charAt(i)) || text.charAt(i)=='\u00a7')return false;
+        return true;
+    }
     private List<Row> rows=new ArrayList<>();
     private List<Row> registered=new ArrayList<>();
     private List<Row> view=Collections.unmodifiableList(rows);
     public List<Row> rows(){return view;}
     public static boolean validLabel(String label){
-        if(label==null || label.trim().isEmpty() || label.length()>MAX_LABEL)return false;
-        for(int i=0;i<label.length();i++)if(Character.isISOControl(label.charAt(i)) || label.charAt(i)=='\u00a7')return false;
-        return true;
+        return validText(label,MAX_LABEL) && !label.trim().isEmpty();
     }
     public boolean configureRows(List<String> labels,List<ChannelList> channels,int housing) {
+        return configure(title,labels,channels,housing);
+    }
+    public boolean configure(String title,List<String> labels,List<ChannelList> channels,int housing) {
+        if(!validTitle(title))return false;
         if(labels.size()>MAX_ROWS || labels.size()!=channels.size() || !ScreenHousingTextures.validChoice(housing))return false;
         for(int i=0;i<labels.size();i++)if(!validLabel(labels.get(i)) || channels.get(i)==null)return false;
         List<Row> next=new ArrayList<>();
@@ -26,7 +37,7 @@ public final class TileEntityRedstoneScreen extends TileEntityAnimatedScreenSele
             if(i<rows.size())row.latched=rows.get(i).latched.intersect(row.channels);
             next.add(row);
         }
-        rows=next;view=Collections.unmodifiableList(rows);setHousingTexture(housing);refreshRows();changed();return true;
+        this.title=title.trim();rows=next;view=Collections.unmodifiableList(rows);setHousingTexture(housing);refreshRows();changed();return true;
     }
     public NBTTagList rowConfiguration(){
         NBTTagList list=new NBTTagList();
@@ -34,10 +45,13 @@ public final class TileEntityRedstoneScreen extends TileEntityAnimatedScreenSele
         return list;
     }
     public boolean applyRowConfiguration(NBTTagList list){
+        return applyRowConfiguration(title,list);
+    }
+    public boolean applyRowConfiguration(String title,NBTTagList list){
         if(list.tagCount()>MAX_ROWS)return false;
         List<String> labels=new ArrayList<>();List<ChannelList> channels=new ArrayList<>();
         for(int i=0;i<list.tagCount();i++){NBTTagCompound entry=list.getCompoundTagAt(i);labels.add(entry.getString("Label"));channels.add(ChannelData.read(entry,0));}
-        return configureRows(labels,channels,getHousingTexture());
+        return configure(title,labels,channels,getHousingTexture());
     }
     public void toggleRow(int index) {
         if(world==null || world.isRemote || index<0 || index>=rows.size())return;
@@ -69,10 +83,10 @@ public final class TileEntityRedstoneScreen extends TileEntityAnimatedScreenSele
         super.writeToNBT(tag);NBTTagList list=new NBTTagList();
         for(Row row:rows){NBTTagCompound entry=new NBTTagCompound();entry.setString("Label",row.label);ChannelData.write(entry,row.channels);
             entry.setIntArray("LatchedChannels",row.latched.toArray());entry.setBoolean("Active",row.active);list.appendTag(entry);}
-        tag.setTag("RedstoneRows",list);return tag;
+        tag.setString("RedstoneTitle",title);tag.setTag("RedstoneRows",list);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
-        super.readFromNBT(tag);List<Row> next=new ArrayList<>();NBTTagList list=tag.getTagList("RedstoneRows",10);
+        super.readFromNBT(tag);title=tag.hasKey("RedstoneTitle",8) && validTitle(tag.getString("RedstoneTitle"))?tag.getString("RedstoneTitle"):DEFAULT_TITLE;List<Row> next=new ArrayList<>();NBTTagList list=tag.getTagList("RedstoneRows",10);
         for(int i=0;i<Math.min(MAX_ROWS,list.tagCount());i++){
             NBTTagCompound entry=list.getCompoundTagAt(i);String label=entry.getString("Label");if(!validLabel(label))continue;
             Row row=new Row(label,ChannelData.read(entry,0));

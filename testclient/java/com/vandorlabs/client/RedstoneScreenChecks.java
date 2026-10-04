@@ -35,14 +35,30 @@ final class RedstoneScreenChecks {
         require(!screen.configureRows(Arrays.asList("Bad\nlabel"),Arrays.asList(ChannelList.of(1)),0),"control label accepted");
         screen.toggleRow(0);screen.configureRows(Collections.emptyList(),Collections.emptyList(),0);
         require(!RedstoneChannels.allPowered(world,ChannelList.of(41)),"removed row retained a power source");
-        screen.configureRows(Arrays.asList("Saved"),Arrays.asList(ChannelList.of(41)),0);screen.toggleRow(0);screen.onChunkUnload();
+        screen.configure("Bridge",Arrays.asList("Saved","Auxiliary"),Arrays.asList(ChannelList.of(41,43),ChannelList.of(45,46)),0);screen.toggleRow(0);screen.onChunkUnload();
         require(!RedstoneChannels.allPowered(world,ChannelList.of(41)),"unloaded screen retained a power source");
         BlockPos target=pos.east(3);world.setBlockState(target,ModBlocks.PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN.getDefaultState(),2);
         TileEntityRedstoneScreen copy=(TileEntityRedstoneScreen)world.getTileEntity(target);
         require(com.vandorlabs.items.ProgrammableSettings.apply(world,target,com.vandorlabs.items.ProgrammableSettings.capture(world,pos)),"Duplifier rows not applicable");
-        require(copy.rows().size()==1 && copy.rows().get(0).label.equals("Saved") && copy.rows().get(0).channels.equals(ChannelList.of(41)),"Duplifier lost screen row configuration");
-        updates();projection();packets();
+        require(copy.title().equals("Bridge") && copy.rows().size()==2 && copy.rows().get(0).label.equals("Saved") && copy.rows().get(0).channels.equals(ChannelList.of(41,43)) && copy.rows().get(1).channels.equals(ChannelList.of(45,46)),"Duplifier lost screen row configuration");
+        copyMasks(world,pos,target);updates();projection();packets();
         System.out.println("PASS: redstone-screen row toggles, ALL highlight, independent overlap, NBT, removal/unload and all 14 mounting projections");
+    }
+    private static void copyMasks(NonRenderingChecks.MemoryWorld world,BlockPos source,BlockPos target){
+        net.minecraft.item.ItemStack tool=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
+        long rowBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
+        net.minecraft.nbt.NBTTagCompound root=new net.minecraft.nbt.NBTTagCompound();root.setLong(com.vandorlabs.items.DuplifierApplyOptions.TAG,0);tool.setTagCompound(root);
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==rowBit,"old mask did not enable only new screen option");
+        require(com.vandorlabs.items.ItemDuplifier.copyFrom(world,source,tool)!=null,"actual tool did not capture screen");
+        require(com.vandorlabs.items.ItemDuplifier.applyTo(world,target,tool,null),"actual tool did not apply old-mask screen");
+        TileEntityRedstoneScreen tile=(TileEntityRedstoneScreen)world.getTileEntity(target);
+        require(tile.title().equals("Bridge") && tile.rowConfiguration().equals(((TileEntityRedstoneScreen)world.getTileEntity(source)).rowConfiguration()),"actual tool lost title or rows");
+        com.vandorlabs.items.DuplifierApplyOptions.setMask(tool,com.vandorlabs.items.DuplifierApplyOptions.ALL & ~rowBit);
+        require((com.vandorlabs.items.DuplifierApplyOptions.mask(tool)&rowBit)==0,"deliberate screen exclusion lost");
+        net.minecraft.nbt.NBTTagCompound filtered=com.vandorlabs.items.DuplifierApplyOptions.selected(com.vandorlabs.items.ProgrammableSettings.capture(world,source),com.vandorlabs.items.DuplifierApplyOptions.mask(tool));
+        require(!filtered.hasKey(com.vandorlabs.items.ProgrammableSettings.REDSTONE_ROWS) && !filtered.hasKey(com.vandorlabs.items.ProgrammableSettings.REDSTONE_TITLE),"screen exclusion retained title or rows");
+        TileEntityRedstoneScreen restored=new TileEntityRedstoneScreen();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(restored.title().equals("Bridge"),"title lost in NBT");
+        require(!tile.configure("Bad\nheader",Collections.emptyList(),Collections.emptyList(),0) && tile.title().equals("Bridge"),"invalid header accepted or changed configuration");
     }
     private static void updates(){
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(0,100,0);
@@ -80,12 +96,12 @@ final class RedstoneScreenChecks {
             if(!diagonal && inverted || diagonal && facing.getAxis()==EnumFacing.Axis.Y)continue;
             IBlockState state=diagonal?ModBlocks.PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN.getDefaultState().withProperty(BlockProgrammableDiagonalScreen.FACING,facing).withProperty(BlockProgrammableDiagonalScreen.INVERTED,inverted):ModBlocks.PROGRAMMABLE_REDSTONE_SCREEN.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing);
             ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state);
-            for(int row=0;row<8;row++)for(int test=0;test<4;test++){
-                double u=test==1?50:109,v=24+12*row+(test==2?11:5);
+            for(int row=0;row<8;row++)for(int test=0;test<6;test++){
+                double u=test==1?50:test==4?5:test==5?123:109,v=24+12*row+(test==2?11:5);
                 Vec3d center=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u/128,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v/128,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v/128);
                 Vec3d start=world(center.addVector(0,q.ny*16,q.nz*16),facing),end=world(center.addVector(0,-q.ny*16,-q.nz*16),facing);
                 int actual=RedstoneScreenInteractions.hitRow(state,test==3?end:start,test==3?start:end,8);
-                require(actual==(test==0?row:-1),"row hit projection differs: "+facing+" diagonal="+diagonal+" inverted="+inverted+" test="+test+" row="+row);
+                require(actual==(test<2?row:-1),"row hit projection differs: "+facing+" diagonal="+diagonal+" inverted="+inverted+" test="+test+" row="+row);
             }
         }
     }

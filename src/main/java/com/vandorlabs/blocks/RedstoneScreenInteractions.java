@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 
 /** Uses the same display plane and pixel layout as the row renderer. */
 public final class RedstoneScreenInteractions {
-    public static final int ROW_TOP=24,ROW_HEIGHT=12,BUTTON_LEFT=98,BUTTON_RIGHT=120;
+    public static final int ROW_TOP=24,ROW_HEIGHT=12,ROW_LEFT=6,ROW_RIGHT=122,BUTTON_LEFT=98,BUTTON_RIGHT=120;
     private RedstoneScreenInteractions(){}
     public static boolean activate(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand){
         if(hand!=EnumHand.MAIN_HAND)return false;
@@ -57,6 +57,6 @@ public final class RedstoneScreenInteractions {
         double u=(q.topRight.x-hit.x)/(q.topRight.x-q.topLeft.x)*128;
         double v=(q.topRight.y-hit.y)/(q.topRight.y-q.bottomRight.y)*128;
         int row=(int)Math.floor((v-ROW_TOP)/ROW_HEIGHT);
-        return u>=BUTTON_LEFT && u<=BUTTON_RIGHT && row>=0 && row<count && v-ROW_TOP-row*ROW_HEIGHT<10?row:-1;
+        return u>=ROW_LEFT && u<=ROW_RIGHT && row>=0 && row<count && v-ROW_TOP-row*ROW_HEIGHT<10?row:-1;
     }
 }

@@ -704,6 +704,9 @@ public class ModBlocks {
         ModelResourceLocation diagonalScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_screen","inventory");
         if(event.getModelRegistry().getObject(diagonalScreenItem)!=null)
             event.getModelRegistry().putObject(diagonalScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(diagonalScreenItem)));
+        ModelResourceLocation redstoneScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_redstone_screen","inventory");
+        if(event.getModelRegistry().getObject(redstoneScreenItem)!=null)
+            event.getModelRegistry().putObject(redstoneScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(redstoneScreenItem),true));
         ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");
         if (event.getModelRegistry().getObject(stairItem)!=null)
             event.getModelRegistry().putObject(stairItem,new com.vandorlabs.client.ProgrammableStairsModel(event.getModelRegistry().getObject(stairItem)));

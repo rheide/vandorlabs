@@ -164,6 +164,10 @@ final class ItemRuntimeChecks {
             if(y==1 && z==1)volume++;
         }
         require(volume>0,"diagonal screen item missing full-height solid rear");
+        net.minecraft.client.renderer.block.model.IBakedModel redstone=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(ModBlocks.PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN),mc.world,player);
+        require(redstone instanceof DiagonalScreenItemModel && redstone.getQuads(null,null,0).size()==wedge.size()+7,"redstone diagonal item missing solid wedge or controls");
+        for(int i=0;i<com.vandorlabs.render.ScreenHousingMesh.diagonal(false).quads.length;i++)
+            require(java.util.Arrays.equals(wedge.get(i).getVertexData(),redstone.getQuads(null,null,0).get(i).getVertexData()),"redstone diagonal housing differs from placed wedge");
         System.out.println("[vandorlabs][reprolab] diagonal-screen-item-runtime PASS shared solid wedge and display face");
 
         for (String family : new String[]{"rocket_thruster","ion_drive",

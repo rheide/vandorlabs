@@ -29,21 +29,21 @@ not force chunks to load.
 **Programmable Redstone Screen** and **Programmable Diagonal Redstone Screen**
 provide up to eight labelled controls on one block. Shift-right-click in
 Creative mode, or use the Configurizer, to open the dialog. Add or remove rows,
-select a row to edit its label and comma-separated channels, then press Done.
+edit the header or select a row to edit its label and comma-separated channels, then press Done.
 The Housing tab uses the existing material picker. Labels support up to
-24 characters; long labels are shortened visually to fit the in-world screen.
+24 characters, and headers up to 32. The editor limits both to the visible screen width; oversized labels from earlier saves remain editable.
 
-Right-click a row's ON/OFF button to toggle its channel bank. Green means
+Right-click anywhere on a row to toggle its channel bank. Green means
 **every** listed channel is powered. An empty list or a partially powered list
 appears inactive; clicking a partially powered row activates all its channels.
 Rows can overlap, and ordinary switches, levers and buttons can control the
 same channels. Held buttons and other physical inputs continue to supply
 power independently of the screen's latch state.
 
-Rows and latch states survive world saves. Pick-block copies labels, channel
+Rows and latch states survive world saves. Pick-block copies the header, labels, channel
 lists and housing without copying the live latch state. The Duplifier's
-**Redstone Screen Items** option copies row definitions between either screen
-shape. Editing labels does not interrupt an already active channel bank.
+**Redstone Screen Items** option copies the header and complete row definitions between either screen
+shape. Older saved Duplifier masks enable this new option by default; it can still be disabled deliberately. Editing labels does not interrupt an already active channel bank.
 Only loaded rows participate in the channel network. Row changes are
 event-driven; unchanged highlights do not send redundant status updates.
 

@@ -6,6 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 /** Per-item choices for which copied settings may be applied. */
 public final class DuplifierApplyOptions {
     public static final String TAG = "DuplifierApplyMask";
+    private static final String COUNT_TAG = "DuplifierApplyOptionCount";
     public static final String CONNECTED_TAG = "DuplifierConnected";
     public static final String[] PAGES = {"Common", "Displays", "Blocks", "Doors", "Ramps"};
 
@@ -104,13 +105,20 @@ public final class DuplifierApplyOptions {
 
     public static long mask(ItemStack tool) {
         NBTTagCompound root = tool.getTagCompound();
-        return root == null || !root.hasKey(TAG, 4) ? ALL : root.getLong(TAG) & ALL;
+        if (root == null || !root.hasKey(TAG, 4)) return ALL;
+        // Older tools predate the screen-row option. New options start enabled,
+        // while the saved choices for every existing property remain intact.
+        int known = root.hasKey(COUNT_TAG, 3) ? root.getInteger(COUNT_TAG) : OPTIONS.length - 1;
+        known = Math.max(0, Math.min(OPTIONS.length, known));
+        long knownBits = (1L << known) - 1L;
+        return (root.getLong(TAG) | (ALL & ~knownBits)) & ALL;
     }
 
     public static void setMask(ItemStack tool, long value) {
         NBTTagCompound root = tool.getTagCompound();
         if (root == null) root = new NBTTagCompound();
         root.setLong(TAG, value & ALL);
+        root.setInteger(COUNT_TAG, OPTIONS.length);
         tool.setTagCompound(root);
     }
 
@@ -123,6 +131,7 @@ public final class DuplifierApplyOptions {
         NBTTagCompound selected = captured.copy();
         for (int i = 0; i < OPTIONS.length; i++)
             if (!enabled(mask, i)) selected.removeTag(OPTIONS[i].key);
+        if (!selected.hasKey(ProgrammableSettings.REDSTONE_ROWS)) selected.removeTag(ProgrammableSettings.REDSTONE_TITLE);
         if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
         if (!selected.hasKey(ProgrammableSettings.PRIMARY_TEXTURE))
