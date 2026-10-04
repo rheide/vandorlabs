@@ -3,6 +3,11 @@
 Reference: release 1.3 production code with the expanded trapdoor benchmark
 fixtures in `8b666cd6`. Measurements use the standard texture pack.
 
+The [existing-world comparison](existing-world.md) measures release 1.3, the
+first 1.4 alpha and the latest diagonal chunk renderer in the same supplied
+structure. It includes render-thread CPU/allocation, companion mods and checks
+before/after reloading the renderer.
+
 ## Measured allocation changes
 
 The 64-instance fixtures show the following warmed per-batch allocation. Chunk
