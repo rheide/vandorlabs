@@ -1,13 +1,15 @@
-package com.vandorlabs.render;
+package com.vandorlabs.client;
+
+import com.vandorlabs.render.*;
 
 /** One rigid 3px leaf shared by rendering, collision and selection. */
-public final class TrapdoorGeometry {
+public final class ReferenceFlatTrapdoorGeometry {
     public static final int BOTTOM=0, MIDDLE=1, TOP=2;
     public static final double THICKNESS=3/16D;
     public static final double EDGE_CLEARANCE=1/1024D;
     public static final double OPEN_HINGE=1/16D;
     public static final double COVER_OVERHANG=1/16D;
-    private TrapdoorGeometry() { }
+    private ReferenceFlatTrapdoorGeometry() { }
     public static double low(int position) {
         return position==TOP?1-THICKNESS-EDGE_CLEARANCE:position==MIDDLE?6.5/16D:EDGE_CLEARANCE;
     }
@@ -16,17 +18,12 @@ public final class TrapdoorGeometry {
         return corners(position,sliding,quarterTurns,pose,OPEN_HINGE,15/16D);
     }
     public static double[][] corners(int position,boolean sliding,int quarterTurns,double pose,double hinge,double travel) {
-        double[][] out=new double[8][];
-        writeCorners(position,sliding,quarterTurns,pose,hinge,travel,out);
-        return out;
-    }
-    /** Fill eight caller-owned rows, allocating missing rows; no array is retained. */
-    public static void writeCorners(int position,boolean sliding,int quarterTurns,double pose,double hinge,double travel,double[][] out) {
         double low=low(position), high=low+THICKNESS;
         double p=Math.max(0,Math.min(1,pose));
         double angle=(position==TOP?-1:1)*p*Math.PI/2;
         double pivot=position==TOP?high:low;
         double cos=Math.cos(angle),sin=Math.sin(angle);
+        double[][] out=new double[8][];
         for(int i=0;i<8;i++) {
             double x=(i&1)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE,y=(i&2)==0?low:high,z=(i&4)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE;
             if(sliding) z-=p*travel;
@@ -43,21 +40,17 @@ public final class TrapdoorGeometry {
                         -(OPEN_HINGE-EDGE_CLEARANCE)*(1-cos);
             }
             for(int turn=0;turn<(quarterTurns&3);turn++) {double old=x;x=1-z;z=old;}
-            if(out[i]==null)out[i]=new double[]{x,y,z};
-            else {out[i][0]=x;out[i][1]=y;out[i][2]=z;}
+            out[i]=new double[]{x,y,z};
         }
+        return out;
     }
     /** Lift above a neighbouring full-block surface, then retract across it. */
     public static double[][] surfaceCorners(int position,int quarterTurns,double pose,double hinge,double travel) {
-        double[][] out=new double[8][];
-        writeSurfaceCorners(position,quarterTurns,pose,hinge,travel,out);
-        return out;
-    }
-    public static void writeSurfaceCorners(int position,int quarterTurns,double pose,double hinge,double travel,double[][] vertices) {
         double p=Math.max(0,Math.min(1,pose));
-        writeCorners(position,true,quarterTurns,Math.max(0,(p-.25)/.75),hinge,travel,vertices);
+        double[][] vertices=corners(position,true,quarterTurns,Math.max(0,(p-.25)/.75),hinge,travel);
         double lift=(1+EDGE_CLEARANCE-low(position))*Math.min(1,p*4);
         for(double[] vertex:vertices)vertex[1]+=lift;
+        return vertices;
     }
 
     /** An adjacent mount owns the cover while its closed leaf spans the neighboring cell. */
@@ -68,12 +61,7 @@ public final class TrapdoorGeometry {
         return coverCorners(position,sliding,quarterTurns,pose,COVER_OVERHANG);
     }
     public static double[][] coverCorners(int position,boolean sliding,int quarterTurns,double pose,double overhang) {
-        double[][] out=new double[8][];
-        writeCoverCorners(position,sliding,quarterTurns,pose,overhang,out);
-        return out;
-    }
-    public static void writeCoverCorners(int position,boolean sliding,int quarterTurns,double pose,double overhang,double[][] vertices) {
-        writeCorners(position,true,0,0,OPEN_HINGE,15/16D,vertices);
+        double[][] vertices=corners(position,true,0,0);
         double p=Math.max(0,Math.min(1,pose)),pivot=low(position)+(position==TOP?THICKNESS:0);
         double angle=(position==TOP?1:-1)*p*Math.PI/2,cos=Math.cos(angle),sin=Math.sin(angle),hinge=EDGE_CLEARANCE;
         double extension=sliding?-overhang:overhang;
@@ -85,6 +73,7 @@ public final class TrapdoorGeometry {
             else {double dy=point[1]-pivot,dz=point[2]-hinge;point[1]=pivot+dy*cos+dz*sin;point[2]=hinge+dz*cos-dy*sin;}
             for(int turn=0;turn<(quarterTurns&3);turn++){double x=point[0];point[0]=1-point[2];point[2]=x;}
         }
+        return vertices;
     }
     public static double[] bounds(int position,boolean sliding,int quarterTurns,double pose) {
         double[] b={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,

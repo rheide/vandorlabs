@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Reuse private per-thread corner and artwork-coordinate buffers during trapdoor rendering. Preserve independently owned geometry results for collision callers and isolate nested draws.
+
 - Use scalar face intersection for diagonal trapdoor picking, preserving exact hit coordinates, edge tolerance and nearest-face precedence.
 
 - Resolve saved ramp materials once per slice and reuse its face emitter, reducing repeated source-tag decoding and per-face temporary objects without changing UVs or lighting.

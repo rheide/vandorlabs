@@ -46,7 +46,15 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         if(cover==value)return;
         cover=value;sync();if(world!=null&&!world.isRemote)evaluatePower(true);
     }
-    public double[][] corners(net.minecraft.block.state.IBlockState state,double pose){int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));return cover?com.vandorlabs.render.TrapdoorGeometry.coverCorners(position,sliding,turns,pose,coverOverhang()):sliding && slideOverSurface?com.vandorlabs.render.TrapdoorGeometry.surfaceCorners(position,turns,pose,motionHinge(),motionTravel()):com.vandorlabs.render.TrapdoorGeometry.corners(position,sliding,turns,pose,motionHinge(),motionTravel());}
+    public double[][] corners(net.minecraft.block.state.IBlockState state,double pose) {
+        double[][] out=new double[8][];writeCorners(state,pose,out);return out;
+    }
+    public void writeCorners(net.minecraft.block.state.IBlockState state,double pose,double[][] out) {
+        int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));
+        if(cover)com.vandorlabs.render.TrapdoorGeometry.writeCoverCorners(position,sliding,turns,pose,coverOverhang(),out);
+        else if(sliding && slideOverSurface)com.vandorlabs.render.TrapdoorGeometry.writeSurfaceCorners(position,turns,pose,motionHinge(),motionTravel(),out);
+        else com.vandorlabs.render.TrapdoorGeometry.writeCorners(position,sliding,turns,pose,motionHinge(),motionTravel(),out);
+    }
     /** Opposing covers meet at the two-cell opening's seam without overshooting it. */
     public double coverOverhang() {
         if(cover && world!=null) {

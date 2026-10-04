@@ -33,7 +33,7 @@ These paired measurements show 21–43% lower CPU cost and 98–99% less allocat
 in texture emission. They do not establish an FPS improvement.
 
 The full live suite passed on release 1.3, the first optimized build, and the
-housing/power and property-lookup optimization builds, including
+housing/power, property-lookup and door/ramp optimization builds, including
 rendering, GUI/network, joining/redstone, placement, inventory and copy contracts.
 The first live before/after benchmark pair passed all 56 static image comparisons: at least
 99.99% of pixels are within 3/255 per channel. Across the 64-leaf trapdoor cases,
@@ -265,6 +265,32 @@ of the released temporary vectors in this isolated test. The result establishes
 an intersection CPU improvement, not reduced world-query cost or total frame time.
 `diagonal-rays.csv` contains the measurement.
 
+## Trapdoor render working storage
+
+Each rendering thread reuses three numeric arrays for the moving leaf, closed
+leaf and material coordinates. Nested draws borrow separate storage, and failure
+releases the borrowed slot. No tile, world or atlas references are retained.
+The public geometry APIs still return independently owned results; the mesh
+layout cache continues copying its keys before retaining them.
+
+There are 33,280 exact corner/UV comparisons against the previous formulas,
+including cover/surface movement, group layouts, all facings and all three
+diagonal shapes. Checks also cover nested draws and cleanup after exceptions.
+All 58 static live benchmark images pass comparison.
+
+Per 64 leaves, rendering allocates 70,656 fewer bytes than the preceding door-plan
+build. Ordinary open trapdoors drop from 92,704 to 22,048 bytes; diagonal custom
+artwork drops from 124,960 to 54,304. Most submission medians improve by a few
+percent, with the full range from -11% to +4% across these small measurements.
+`render-after-working-storage.csv` retains every fixture and vanilla control.
+
+The isolated 4,096-leaf corner benchmark removes 1,507,328 bytes of temporary
+allocation when storage is reused. Flat corner generation falls from 0.685 to
+0.223 ms and diagonal generation from 0.274 to 0.255 ms. Independently owned
+results retain the original allocation and are within about 1% of the reference
+timings in the quiet paired run. `trapdoor-coordinates.csv` includes all three
+paths; these measurements exclude world lookup, texture emission and GL work.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -272,7 +298,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup benchmarkRampWork benchmarkDiagonalRays --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup benchmarkRampWork benchmarkDiagonalRays benchmarkTrapdoorCoordinates --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv

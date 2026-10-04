@@ -1,0 +1,7 @@
+family,algorithm,leaves,median_ms,median_allocated_bytes
+flat,reference,4096,0.684812,1507328
+flat,owned_result,4096,0.676787,1507328
+flat,reused,4096,0.222747,0
+diagonal,reference,4096,0.273893,1507328
+diagonal,owned_result,4096,0.276839,1507328
+diagonal,reused,4096,0.254657,0

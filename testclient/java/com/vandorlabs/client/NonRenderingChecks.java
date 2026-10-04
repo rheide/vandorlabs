@@ -59,6 +59,7 @@ public final class NonRenderingChecks {
         DoorQuadPlanChecks.run();
         RampMaterialChecks.run();
         DiagonalRayTraceChecks.run();
+        TrapdoorScratchChecks.run();
     }
 
     private static void placement() {

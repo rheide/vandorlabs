@@ -94,6 +94,16 @@ task benchmarkPropertyLookup(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task benchmarkTrapdoorCoordinates(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare trapdoor corner generation and reusable render storage against 1.3'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorCoordinateBenchmark'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
 task benchmarkDiagonalRays(type: JavaExec) {
     group = 'verification'
     description = 'Compare diagonal trapdoor face picking cost against 1.3'

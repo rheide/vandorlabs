@@ -41,20 +41,36 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     }
     /** Broad artwork and native metal door leaf edges share the exact collision mesh. */
     static void drawConfiguredLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
-        boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
-        java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();
-        double[][] vertices=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose,group):tile.corners(state,pose);
-        int first=tall?2:0,end=first+2;
-        boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
-        TrapdoorSurfaceMesh.draw(buffer,sprite,vertices,materialCoordinates(tile,state,group),light,tile.getHousingTexture(),first,end,tile.isTileTexture(),tile.isTileTexture() && door);
-        TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
-        double[][] edgeUv=tall?TALL_EDGES:diagonal?SHALLOW_EDGES:FLAT_EDGES;
-        for(int face=0;face<6;face++)if(face<first || face>=end)drawMesh(buffer,edge,vertices,edgeUv,light,face,face+1);
+        try(TrapdoorRenderScratch scratch=TrapdoorRenderScratch.acquire()) {
+            boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
+            java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();
+            writeCorners(tile,state,pose,group,scratch.moving);
+            int first=tall?2:0,end=first+2;
+            boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
+            materialCoordinates(tile,state,group,scratch.closed,scratch.uv);
+            TrapdoorSurfaceMesh.draw(buffer,sprite,scratch.moving,scratch.uv,light,tile.getHousingTexture(),first,end,tile.isTileTexture(),tile.isTileTexture() && door);
+            TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+            double[][] edgeUv=tall?TALL_EDGES:diagonal?SHALLOW_EDGES:FLAT_EDGES;
+            for(int face=0;face<6;face++)if(face<first || face>=end)drawMesh(buffer,edge,scratch.moving,edgeUv,light,face,face+1);
+        }
     }
+    private static void writeCorners(TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,
+            java.util.List<TileEntityProgrammableTrapdoor> group,double[][] out) {
+        if(tile instanceof TileEntityProgrammableDiagonalTrapdoor)
+            com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.writeCorners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose,group,out);
+        else if(tile.getClass()==TileEntityProgrammableTrapdoor.class)tile.writeCorners(state,pose,out);
+        else {
+            // Preserve a third-party tile's existing corners override.
+            double[][] source=tile.corners(state,pose);
+            for(int i=0;i<8;i++)System.arraycopy(source[i],0,out[i],0,3);
+        }
+    }
+
     static double[][] materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state) {
-        return materialCoordinates(tile,state,tile.group());
+        double[][] uv=new double[8][3];
+        materialCoordinates(tile,state,tile.group(),new double[8][3],uv);return uv;
     }
-    private static double[][] materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state,java.util.List<TileEntityProgrammableTrapdoor> group) {
+    static void materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state,java.util.List<TileEntityProgrammableTrapdoor> group,double[][] closed,double[][] uv) {
         boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor;
         boolean tall=diagonal && tile.getPosition()!=2;
         net.minecraft.util.EnumFacing facing=state.getValue(BlockProgrammableTrapdoor.FACING);
@@ -66,24 +82,21 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             double v=tall?leaf.getPos().getY():widthX?leaf.getPos().getZ():leaf.getPos().getX();
             minU=Math.min(minU,u);maxU=Math.max(maxU,u+1);minV=Math.min(minV,v);maxV=Math.max(maxV,v+1);
         }
-        double[][] closed=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,0)
-                :tile.corners(state,0);
+        writeCorners(tile,state,0,java.util.Collections.emptyList(),closed);
         // Opposing-cover lookup and bounds are invariant across the eight corners.
         if(tile.isCover()) {
             net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);double offset=tile.coverOffset();
             minU=(widthX?target.getX():target.getZ())+offset*(widthX?facing.getFrontOffsetX():facing.getFrontOffsetZ());maxU=minU+1;
             minV=(widthX?target.getZ():target.getX())+offset*(widthX?facing.getFrontOffsetZ():facing.getFrontOffsetX());maxV=minV+1;
         }
-        double[][] uv=new double[8][];
         for(int i=0;i<8;i++) {
             double u=(widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2]);
             double v=tall?tile.getPos().getY()+closed[i][1]:widthX?tile.getPos().getZ()+closed[i][2]:tile.getPos().getX()+closed[i][0];
             double mappedU=u-minU,mappedV=tall?maxV-v:v-minV;
             if(tile.isTileTexture()){if(door){mappedV/=2;if(maxV-minV<1.5)mappedV+=.5;}}
             else{mappedU/=maxU-minU;mappedV/=maxV-minV;if(door && maxV-minV<1.5)mappedV=.5+.5*mappedV;}
-            uv[i]=new double[]{mappedU,tall?mappedV:(i&2)==0?0:1,tall?(i&4)==0?0:1:mappedV};
+            uv[i][0]=mappedU;uv[i][1]=tall?mappedV:(i&2)==0?0:1;uv[i][2]=tall?(i&4)==0?0:1:mappedV;
         }
-        return uv;
     }
     /** Buffer-only entry point also verifies actual submitted geometry without GL. */
     static void drawLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int position,boolean sliding,int turns,double pose,int light) {
