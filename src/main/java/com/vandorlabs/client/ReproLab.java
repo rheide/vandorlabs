@@ -478,6 +478,7 @@ public class ReproLab {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
+        if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
         if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
             documentationCapture.render(Minecraft.getMinecraft());
@@ -490,6 +491,7 @@ public class ReproLab {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
+        if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.tick(mc,outDir);return;}
         // Xvfb has no window manager, so the client window never reports
         // focus.  Without this, vanilla reopens the pause menu every tick.
         mc.gameSettings.pauseOnLostFocus = false;
