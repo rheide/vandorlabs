@@ -32,7 +32,9 @@ validation, draw calls and the GPU.
 These paired measurements show 21–43% lower CPU cost and 98–99% less allocation
 in texture emission. They do not establish an FPS improvement.
 
-The first live before/after pair passed all 56 static image comparisons: at least
+The full live suite passed on release 1.3 and the first optimized build, including
+rendering, GUI/network, joining/redstone, placement, inventory and copy contracts.
+The first live before/after benchmark pair passed all 56 static image comparisons: at least
 99.99% of pixels are within 3/255 per channel. Across the 64-leaf trapdoor cases,
 render-thread allocation fell by 64–67%. Representative submission medians were
 0.279 → 0.235 ms for flat Fit, 0.329 → 0.248 ms for flat custom-door artwork, and
