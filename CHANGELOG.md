@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Store housing mesh settings in compact immutable snapshots and create full Forge property maps only on demand. Preserve listed/unlisted transitions, validation errors and concurrent reads.
+
 - Reuse private per-thread corner and artwork-coordinate buffers during trapdoor rendering. Preserve independently owned geometry results for collision callers and isolate nested draws.
 
 - Use scalar face intersection for diagonal trapdoor picking, preserving exact hit coordinates, edge tolerance and nearest-face precedence.

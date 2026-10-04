@@ -291,6 +291,29 @@ results retain the original allocation and are within about 1% of the reference
 timings in the quiet paired run. `trapdoor-coordinates.csv` includes all three
 paths; these measurements exclude world lookup, texture emission and GL work.
 
+## Compact housing snapshots
+
+Ordinary chunk-mesh reads now use final fields for the four or six housing
+settings. Full Forge maps are created on demand for integrations and property
+transitions. Maps publish safely to concurrent readers. Unknown unlisted
+properties retain the existing general snapshot path, and repeated listed
+updates preserve Forge's state identity and clean-state behaviour.
+
+The contract suite covers direct/map reads, repeated listed transitions,
+unchanged update identity, canonical states, validation errors, external nullable
+properties and concurrent map publication. All 58 static live images pass.
+Snapshot-only allocation falls from 303,104 to 65,536 bytes per 512 samples
+compared with the preceding single-pass implementation.
+
+In the complete 64-block rebuild benchmark, Block and Slab allocate about 28 KB
+less per batch; Storage saves about 27 KB. Block rebuild medians improve by
+6–12%, Storage by 6%. Slab times vary from 1% lower to 6% higher, so the consistent
+finding there is reduced allocation. The stair transition refinement also avoids
+forcing map creation for unchanged shape resolution.
+`mesh-build-after-compact-states.csv` and `render-after-compact-states.csv` retain
+the complete fixtures and controls; `housing-snapshots.csv` contains the paired
+snapshot-only measurement against release 1.3.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to

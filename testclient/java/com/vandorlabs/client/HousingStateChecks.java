@@ -29,6 +29,7 @@ final class HousingStateChecks {
                         .withProperty(ProgrammableHousingState.TILE_SIDES,tile.isSlabTileSides()?1:0);
                 if(actual.getUnlistedNames().contains(ProgrammableHousingState.VISIBLE))reference=(IExtendedBlockState)
                         ReferenceHousingState.extend(state,world,pos,block instanceof BlockProgrammableSlab);
+                require(block.getExtendedState(actual,world,pos)==actual,"unchanged sampled state lost identity");
                 direct(reference,actual);
                 same(reference,actual);
                 require(actual.getClean()==state,"extended state lost canonical clean state");
@@ -38,10 +39,11 @@ final class HousingStateChecks {
                 for(Optional<?> value:((IExtendedBlockState)state).getUnlistedProperties().values())require(!value.isPresent(),"mutated shared clean state");
                 cases++;
             }
+            concurrentReads(block,world,pos);
             externalProperties(block,world,pos);
             world.clear();
         }
-        System.out.println("PASS: "+cases+" housing snapshots match Forge properties, listed transitions, clean states and immutable defaults");
+        System.out.println("PASS: "+cases+" housing snapshots match Forge direct/map reads, transitions, clean states, external properties and concurrent publication");
     }
     private static void direct(IExtendedBlockState expected,IExtendedBlockState actual) {
         // These reads happen before asking for the complete unlisted map.
@@ -79,6 +81,32 @@ final class HousingStateChecks {
         net.minecraftforge.common.property.IUnlistedProperty<Integer> missing=ProgrammableHousingState.integer("missing");
         sameFailure(()->source.getValue(missing),()->actual.getValue(missing));
     }
+    private static void concurrentReads(Block block,NonRenderingChecks.MemoryWorld world,BlockPos pos) {
+        IExtendedBlockState expected=(IExtendedBlockState)block.getExtendedState(block.getDefaultState(),world,pos);
+        Map<?,?> values=expected.getUnlistedProperties();
+        IExtendedBlockState shared=(IExtendedBlockState)block.getExtendedState(block.getDefaultState(),world,pos);
+        java.util.concurrent.CountDownLatch start=new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicReference<Throwable> failure=new java.util.concurrent.atomic.AtomicReference<>();
+        java.util.concurrent.atomic.AtomicReference<Object> published=new java.util.concurrent.atomic.AtomicReference<>();
+        Thread[] readers=new Thread[8];
+        for(int i=0;i<readers.length;i++) {
+            readers[i]=new Thread(()->{
+                try {
+                    start.await();
+                    for(int j=0;j<100;j++) {
+                        for(net.minecraftforge.common.property.IUnlistedProperty<?> property:expected.getUnlistedNames())
+                            require(Objects.equals(expected.getValue(property),shared.getValue(property)),"concurrent direct read changed");
+                        Object map=shared.getUnlistedProperties();published.compareAndSet(null,map);
+                        require(map==published.get() && values.equals(map),"concurrent map publication differs");
+                    }
+                } catch(Throwable error){failure.compareAndSet(null,error);}
+            },"housing-state-check");readers[i].start();
+        }
+        start.countDown();
+        try{for(Thread reader:readers)reader.join();}
+        catch(InterruptedException error){Thread.currentThread().interrupt();throw new AssertionError(error);}
+        if(failure.get()!=null)throw new AssertionError("concurrent housing state read",failure.get());
+    }
     private static void sameFailure(Runnable expected,Runnable actual) {
         RuntimeException before=failure(expected),after=failure(actual);
         require(before!=null && after!=null && before.getClass()==after.getClass()
@@ -88,8 +116,18 @@ final class HousingStateChecks {
         try{action.run();return null;}catch(RuntimeException expected){return expected;}
     }
     private static <T extends Comparable<T>> void transitions(IProperty<T> property,IExtendedBlockState expected,IExtendedBlockState actual) {
-        for(T value:property.getAllowedValues())same((IExtendedBlockState)expected.withProperty(property,value),
-                (IExtendedBlockState)actual.withProperty(property,value));
+        for(T value:property.getAllowedValues()) {
+            IExtendedBlockState before=(IExtendedBlockState)expected.withProperty(property,value);
+            IExtendedBlockState after=(IExtendedBlockState)actual.withProperty(property,value);
+            same(before,after);
+            require((before==expected)==(after==actual),"listed update changed Forge identity behavior");
+            for(T again:property.getAllowedValues()) {
+                IExtendedBlockState nextBefore=(IExtendedBlockState)before.withProperty(property,again);
+                IExtendedBlockState nextAfter=(IExtendedBlockState)after.withProperty(property,again);
+                same(nextBefore,nextAfter);
+                require((nextBefore==before)==(nextAfter==after),"repeated listed update changed Forge identity behavior");
+            }
+        }
     }
     private static void same(IExtendedBlockState expected,IExtendedBlockState actual) {
         require(expected.getBlock()==actual.getBlock() && expected.getProperties().equals(actual.getProperties()),"listed properties changed");

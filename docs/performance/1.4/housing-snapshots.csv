@@ -1,0 +1,5 @@
+family,algorithm,snapshots,median_ms,median_allocated_bytes
+block,reference,512,0.324909,1585152
+block,current,512,0.048351,65536
+slab,reference,512,0.952022,1585152
+slab,current,512,0.045125,65536
