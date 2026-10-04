@@ -44,6 +44,7 @@ public final class NonRenderingChecks {
         CommonRenderChecks.run();
         TrapdoorTextureChecks.run();
         TrapdoorMeshParityChecks.run();
+        ChannelReconciliationChecks.run();
     }
 
     private static void placement() {
