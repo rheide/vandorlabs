@@ -100,6 +100,10 @@ final class ProgrammableRenderBenchmark {
                         for (String trapdoorVariant : Arrays.asList("trapdoor_open", "trapdoor_sliding",
                                 "trapdoor_fit", "trapdoor_custom", "trapdoor_shallow"))
                             measure(mc,csv,meshes,id,trapdoorVariant,64);
+                    if (Arrays.asList("vandorlabs:programmable_viewscreen", "vandorlabs:programmable_diagonal_screen",
+                            "vandorlabs:programmable_input").contains(id))
+                        for (String screenVariant : Arrays.asList("screen_static", "screen_off", "screen_framed_off"))
+                            measure(mc,csv,meshes,id,screenVariant,64);
                     if (id.equals("vandorlabs:programmable_diagonal_wall"))
                         for (String wallVariant : Arrays.asList("wall_filled", "wall_shallow", "wall_clipped"))
                             measure(mc,csv,meshes,id,wallVariant,64);
@@ -203,6 +207,19 @@ final class ProgrammableRenderBenchmark {
                     extraPositions.add(upper);
                 }
                 TileEntity tile = mc.world.getTileEntity(pos);
+                if (tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("screen_")) {
+                    TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
+                    boolean framed=variant.equals("screen_framed_off");
+                    String selected=null;
+                    for(String candidate:com.vandorlabs.blocks.ModBlocks.DISPLAY_SCREEN_IDS)
+                        if(com.vandorlabs.blocks.ModBlocks.DISPLAY_FRAMED_IDS.contains(candidate)==framed) {
+                            selected=candidate;break;
+                        }
+                    if(selected==null)throw new IllegalStateException("missing screen fixture artwork");
+                    screen.setSelectedScreen(selected);
+                    screen.setDisplayMode(variant.equals("screen_static")
+                            ?TileEntityAnimatedScreenSelector.MODE_STATIC:TileEntityAnimatedScreenSelector.MODE_OFF);
+                }
                 if (tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor) {
                     com.vandorlabs.tiles.TileEntitySpaceDoor door =
                             (com.vandorlabs.tiles.TileEntitySpaceDoor)tile;

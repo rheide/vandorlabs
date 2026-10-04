@@ -17,7 +17,9 @@ def main():
               'programmable_trapdoor-',
               'programmable_diagonal_trapdoor-')
     def relevant(path):
-        return any(name in path.name for name in families)
+        return any(name in path.name for name in families) or any(
+            path.name.endswith('-'+mode+'.png') for mode in
+            ('screen_static', 'screen_off', 'screen_framed_off'))
     before_names={p.name for p in (args.before/'screenshots').glob('*.png') if relevant(p)}
     after_names={p.name for p in (args.after/'screenshots').glob('*.png') if relevant(p)}
     if before_names!=after_names:
