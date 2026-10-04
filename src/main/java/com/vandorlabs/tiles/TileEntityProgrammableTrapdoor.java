@@ -21,7 +21,8 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     public boolean isTileTexture(){return tileTexture;}
     public void setTileTexture(boolean value){tileTexture=value;sync();}
     protected BlockPos partner,squareOrigin;
-    protected java.util.List<BlockPos> assembly=new java.util.ArrayList<>();
+    // Immutable membership can be shared by loaded leaves after exact validation.
+    protected java.util.List<BlockPos> assembly=java.util.Collections.emptyList();
     protected double assemblyHinge=1/16D,assemblyTravel=15/16D;
     public double motionHinge(){return assembly.isEmpty()?com.vandorlabs.render.TrapdoorGeometry.OPEN_HINGE:assemblyHinge;}
     public double motionTravel(){return assembly.isEmpty()?15/16D:assemblyTravel;}
@@ -116,6 +117,9 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
                 if(!(raw instanceof TileEntityProgrammableTrapdoor)){result.clear();break;}
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
                 if(!assembly.equals(leaf.assembly) || !groupCompatible(leaf)){result.clear();break;}
+                // Equal saved lists become one immutable instance. Subsequent
+                // renders still validate loaded tiles, but not N squared positions.
+                leaf.assembly=assembly;
                 result.add(leaf);
             }
             if(result.size()==assembly.size())return result;
@@ -181,13 +185,13 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         squareOrigin=null;
     }
     protected void clearAssembly() {
-        java.util.List<BlockPos> old=new java.util.ArrayList<>(assembly);assembly.clear();
+        java.util.List<BlockPos> old=assembly;assembly=java.util.Collections.emptyList();
         if(world==null)return;
         for(BlockPos cell:old)if(world.isBlockLoaded(cell)) {
             TileEntity raw=world.getTileEntity(cell);
             if(raw instanceof TileEntityProgrammableTrapdoor) {
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
-                if(leaf.assembly.equals(old)){leaf.assembly.clear();leaf.sync();}
+                if(leaf.assembly.equals(old)){leaf.assembly=java.util.Collections.emptyList();leaf.sync();}
             }
         }
     }
@@ -195,7 +199,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     public void repairLinks() {
         if(world==null || world.isRemote)return;
         if(partner!=null && world.isBlockLoaded(partner) && mate()==null){partner=null;sync();}
-        for(BlockPos cell:new java.util.ArrayList<>(assembly))if(world.isBlockLoaded(cell)) {
+        for(BlockPos cell:assembly)if(world.isBlockLoaded(cell)) {
             TileEntity raw=world.getTileEntity(cell);
             if(!(raw instanceof TileEntityProgrammableTrapdoor) || !assembly.equals(((TileEntityProgrammableTrapdoor)raw).assembly)) {clearAssembly();break;}
         }
@@ -331,8 +335,9 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         powerKnown=tag.getBoolean("TrapdoorPowerKnown");lastPower=tag.getBoolean("TrapdoorLastPower");
         partner=tag.hasKey("TrapdoorPartner",4)?BlockPos.fromLong(tag.getLong("TrapdoorPartner")):null;
         squareOrigin=tag.hasKey("TrapdoorSquare",4)?BlockPos.fromLong(tag.getLong("TrapdoorSquare")):null;
-        assembly=new java.util.ArrayList<>();net.minecraft.nbt.NBTTagList members=tag.getTagList("TrapdoorAssembly",4);
-        if(members.tagCount()<=64)for(int i=0;i<members.tagCount();i++)assembly.add(BlockPos.fromLong(((net.minecraft.nbt.NBTTagLong)members.get(i)).getLong()));
+        java.util.List<BlockPos> savedAssembly=new java.util.ArrayList<>();net.minecraft.nbt.NBTTagList members=tag.getTagList("TrapdoorAssembly",4);
+        if(members.tagCount()<=64)for(int i=0;i<members.tagCount();i++)savedAssembly.add(BlockPos.fromLong(((net.minecraft.nbt.NBTTagLong)members.get(i)).getLong()));
+        assembly=java.util.Collections.unmodifiableList(savedAssembly);
         assemblyHinge=Math.max(-8,Math.min(8,tag.getDouble("TrapdoorHinge")));
         assemblyTravel=Math.max(15/16D,Math.min(8,tag.getDouble("TrapdoorTravel")));
         if(world!=null && !world.isRemote && old!=channel)

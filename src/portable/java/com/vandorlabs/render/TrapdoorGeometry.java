@@ -21,7 +21,7 @@ public final class TrapdoorGeometry {
         double angle=(position==TOP?-1:1)*p*Math.PI/2;
         double pivot=position==TOP?high:low;
         double cos=Math.cos(angle),sin=Math.sin(angle);
-        double[][] out=new double[8][3];
+        double[][] out=new double[8][];
         for(int i=0;i<8;i++) {
             double x=(i&1)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE,y=(i&2)==0?low:high,z=(i&4)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE;
             if(sliding) z-=p*travel;

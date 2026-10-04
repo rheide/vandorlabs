@@ -34,15 +34,19 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     /** Joined tall sliders clear the same outside face before separating sideways. */
     public int slideLiftDirection() {
         if(!sliding || position==2)return 1;
-        List<TileEntityProgrammableTrapdoor> leaves=group();
-        if(leaves.size()<2)return 1;
+        return slideLiftDirection(group());
+    }
+    public int slideLiftDirection(List<TileEntityProgrammableTrapdoor> leaves) {
+        if(!sliding || position==2 || leaves.size()<2)return 1;
         return facing()==outsideFacing(leaves)?-1:1;
     }
     /** Keep every rotating row outside the surface, including reversed coplanar rows. */
     public boolean rotationReverse() {
         if(sliding || position==2)return reverse;
-        List<TileEntityProgrammableTrapdoor> leaves=group();
-        if(leaves.size()<2)return reverse;
+        return rotationReverse(group());
+    }
+    public boolean rotationReverse(List<TileEntityProgrammableTrapdoor> leaves) {
+        if(sliding || position==2 || leaves.size()<2)return reverse;
         boolean opposite=facing()==outsideFacing(leaves).getOpposite();
         return reverse ^ (isInverted()!=opposite);
     }

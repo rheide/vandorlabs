@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4-alpha
+
+- Reduce loaded redstone channel work by revalidating a known powered source before searching other members. Preserve immediate OR propagation and coalesced input handling.
+- Share immutable trapdoor assembly membership after validation, reuse each draw's group snapshot, and avoid redundant corner/edge allocations and opposing-cover lookups.
+- Reuse trapdoor texture-clipping layouts across frames and moving poses. Keep lighting and resource-pack texture coordinates live, with bounded cache storage and unchanged leaf geometry, artwork, and controls.
+
 ## 1.3
 
 See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated programmable block improvements](docs/gallery/task-improvements.md), and [filesystem texture setup](docs/filesystem-textures.md).

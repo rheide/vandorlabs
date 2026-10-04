@@ -58,8 +58,13 @@ public final class BlockProgrammableDiagonalTrapdoor extends BlockProgrammableTr
         return getDefaultState().withProperty(FACING,facing).withProperty(HALF,inverted?DoorHalf.TOP:DoorHalf.BOTTOM);
     }
     public static double[][] corners(IBlockState state,TileEntityProgrammableDiagonalTrapdoor tile,double pose) {
+        return corners(state,tile,pose,tile==null || tile.getPosition()==2 || pose==0
+                ?java.util.Collections.emptyList():tile.group());
+    }
+    /** Share one loaded membership snapshot across the moving mesh and artwork layout. */
+    public static double[][] corners(IBlockState state,TileEntityProgrammableDiagonalTrapdoor tile,double pose,List<TileEntityProgrammableTrapdoor> group) {
         return DiagonalTrapdoorGeometry.corners(tile==null?0:tile.getPosition(),state.getValue(HALF)==DoorHalf.TOP,
-                quarterTurns(state.getValue(FACING)),tile!=null && tile.isSliding(),tile!=null && tile.rotationReverse(),pose,tile==null?1/16D:tile.motionHinge(),tile==null?15/16D:tile.motionTravel(),tile==null?1:tile.slideLiftDirection(),tile!=null && tile.isSlideIntoWall());
+                quarterTurns(state.getValue(FACING)),tile!=null && tile.isSliding(),tile!=null && tile.rotationReverse(group),pose,tile==null?1/16D:tile.motionHinge(),tile==null?15/16D:tile.motionTravel(),tile==null?1:tile.slideLiftDirection(group),tile!=null && tile.isSlideIntoWall());
     }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);double[] b=DiagonalTrapdoorGeometry.bounds(corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0));

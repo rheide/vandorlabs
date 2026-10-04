@@ -21,7 +21,7 @@ public final class DiagonalTrapdoorGeometry {
         double pivotY=mode==2?base+1/16D:0,pivotZ=mode==2?0:base+1/16D;
         double px=hinge,angle=(reverse?-1:1)*(mode!=2 && inverted?-1:1)*p*Math.PI/2;
         double cos=Math.cos(angle),sin=Math.sin(angle);
-        double[][] out=new double[8][3];
+        double[][] out=new double[8][];
         for(int i=0;i<8;i++) {
             double x=(i&1)==0?TrapdoorGeometry.EDGE_CLEARANCE:1-TrapdoorGeometry.EDGE_CLEARANCE;
             double y=mode==2?base+slope*((i&4)==0?0:1)+((i&2)==0?0:2/16D):((i&2)==0?0:1);

@@ -15,6 +15,14 @@ import java.util.*;
 public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<TileEntityProgrammableTrapdoor> {
     private static final VisualClock CLOCK=new VisualClock();
     private static final Map<TileEntityProgrammableTrapdoor,DoorAnimation> ANIMATIONS=new WeakHashMap<>();
+    private static final double[][] FLAT_EDGES=edgeCoordinates(false,false);
+    private static final double[][] TALL_EDGES=edgeCoordinates(true,true);
+    private static final double[][] SHALLOW_EDGES=edgeCoordinates(true,false);
+    private static double[][] edgeCoordinates(boolean diagonal,boolean tall) {
+        double[][] result=new double[8][];
+        for(int i=0;i<8;i++)result[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:tall?1:diagonal?2/16D:TrapdoorGeometry.THICKNESS,(i&4)==0?0:tall?2/16D:1};
+        return result;
+    }
     @Override public void render(TileEntityProgrammableTrapdoor tile,double x,double y,double z,float partial,int stage,float alpha) {
         if(tile.getWorld()==null)return;
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
@@ -34,17 +42,19 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     /** Broad artwork and native metal door leaf edges share the exact collision mesh. */
     static void drawConfiguredLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
         boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
-        double[][] vertices=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose):tile.corners(state,pose);
+        java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();
+        double[][] vertices=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose,group):tile.corners(state,pose);
         int first=tall?2:0,end=first+2;
         boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
-        TrapdoorSurfaceMesh.draw(buffer,sprite,vertices,materialCoordinates(tile,state),light,tile.getHousingTexture(),first,end,tile.isTileTexture(),tile.isTileTexture() && door);
+        TrapdoorSurfaceMesh.draw(buffer,sprite,vertices,materialCoordinates(tile,state,group),light,tile.getHousingTexture(),first,end,tile.isTileTexture(),tile.isTileTexture() && door);
         TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
-        double[][] edgeUv=new double[8][3];
-        for(int i=0;i<8;i++)edgeUv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:tall?1:diagonal?2/16D:TrapdoorGeometry.THICKNESS,(i&4)==0?0:tall?2/16D:1};
+        double[][] edgeUv=tall?TALL_EDGES:diagonal?SHALLOW_EDGES:FLAT_EDGES;
         for(int face=0;face<6;face++)if(face<first || face>=end)drawMesh(buffer,edge,vertices,edgeUv,light,face,face+1);
     }
     static double[][] materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state) {
-        java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();
+        return materialCoordinates(tile,state,tile.group());
+    }
+    private static double[][] materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state,java.util.List<TileEntityProgrammableTrapdoor> group) {
         boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor;
         boolean tall=diagonal && tile.getPosition()!=2;
         net.minecraft.util.EnumFacing facing=state.getValue(BlockProgrammableTrapdoor.FACING);
@@ -58,12 +68,16 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         }
         double[][] closed=diagonal?com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,0)
                 :tile.corners(state,0);
-        double[][] uv=new double[8][3];
+        // Opposing-cover lookup and bounds are invariant across the eight corners.
+        if(tile.isCover()) {
+            net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);double offset=tile.coverOffset();
+            minU=(widthX?target.getX():target.getZ())+offset*(widthX?facing.getFrontOffsetX():facing.getFrontOffsetZ());maxU=minU+1;
+            minV=(widthX?target.getZ():target.getX())+offset*(widthX?facing.getFrontOffsetZ():facing.getFrontOffsetX());maxV=minV+1;
+        }
+        double[][] uv=new double[8][];
         for(int i=0;i<8;i++) {
             double u=(widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2]);
             double v=tall?tile.getPos().getY()+closed[i][1]:widthX?tile.getPos().getZ()+closed[i][2]:tile.getPos().getX()+closed[i][0];
-            // Offset covers live in the neighboring cell, independent of their owning tile.
-            if(tile.isCover()){net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);minU=(widthX?target.getX():target.getZ())+tile.coverOffset()*(widthX?facing.getFrontOffsetX():facing.getFrontOffsetZ());maxU=minU+1;minV=(widthX?target.getZ():target.getX())+tile.coverOffset()*(widthX?facing.getFrontOffsetZ():facing.getFrontOffsetX());maxV=minV+1;}
             double mappedU=u-minU,mappedV=tall?maxV-v:v-minV;
             if(tile.isTileTexture()){if(door){mappedV/=2;if(maxV-minV<1.5)mappedV+=.5;}}
             else{mappedU/=maxU-minU;mappedV/=maxV-minV;if(door && maxV-minV<1.5)mappedV=.5+.5*mappedV;}
@@ -78,7 +92,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     static void drawLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int position,boolean sliding,int turns,double pose,int light,double hinge,double travel) {
         double[][] vertices=TrapdoorGeometry.corners(position,sliding,turns,pose,hinge,travel);
         double[][] original=TrapdoorGeometry.corners(position,true,0,0);
-        double[][] uv=new double[8][3];
+        double[][] uv=new double[8][];
         for(int i=0;i<8;i++)uv[i]=new double[]{original[i][0],original[i][1]-TrapdoorGeometry.low(position),original[i][2]};
         drawMesh(buffer,sprite,vertices,uv,light);
     }
@@ -87,7 +101,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     }
     static void drawDiagonalLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,int mode,boolean inverted,int turns,boolean sliding,boolean reverse,double pose,int light,double hinge,double travel) {
         double[][] vertices=com.vandorlabs.render.DiagonalTrapdoorGeometry.corners(mode,inverted,turns,sliding,reverse,pose,hinge,travel);
-        double[][] uv=new double[8][3];
+        double[][] uv=new double[8][];
         for(int i=0;i<8;i++)uv[i]=new double[]{(i&1)==0?0:1,(i&2)==0?0:mode==2?2/16D:1,(i&4)==0?0:mode==2?1:2/16D};
         drawMesh(buffer,sprite,vertices,uv,light);
     }

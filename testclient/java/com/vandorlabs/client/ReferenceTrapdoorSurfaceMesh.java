@@ -9,6 +9,9 @@ import java.util.*;
 final class ReferenceTrapdoorSurfaceMesh {
     static void draw(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] uv,int light,int choice,int first,int end,boolean tiled,boolean mirror) {
         boolean customDoor=com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice) && CustomBlockTextures.isDoor(choice);
+        draw(buffer,customDoor?CustomBlockTextures.sprite(choice,true):sprite,customDoor?CustomBlockTextures.sprite(choice,false):sprite,vertices,uv,light,first,end,tiled,mirror,customDoor);
+    }
+    static void draw(BufferBuilder buffer,TextureAtlasSprite upper,TextureAtlasSprite lower,double[][] vertices,double[][] uv,int light,int first,int end,boolean tiled,boolean mirror,boolean customDoor) {
         for(int face=first;face<end;face++) {
             List<double[]> polygon=new ArrayList<>();
             for(int index:TrapdoorGeometry.FACES[face])polygon.add(new double[]{vertices[index][0],vertices[index][1],vertices[index][2],uv[index][0],face<2?uv[index][2]:uv[index][1]});
@@ -24,7 +27,7 @@ final class ReferenceTrapdoorSurfaceMesh {
                 double low=v+(customDoor?half*.5:0),high=v+(customDoor?(half+1)*.5:1);
                 List<double[]> clipped=clip(clip(clip(clip(polygon,3,u,true),3,u+1,false),4,low,true),4,high,false);
                 if(clipped.size()<3)continue;
-                TextureAtlasSprite part=customDoor?CustomBlockTextures.sprite(choice,half==0):sprite;
+                TextureAtlasSprite part=half==0?upper:lower;
                 for(int j=1;j+1<clipped.size();j++) {
                     double[] p0=clipped.get(0),p1=clipped.get(j),p2=clipped.get(j+1);
                     double cx=(p1[1]-p0[1])*(p2[2]-p0[2])-(p1[2]-p0[2])*(p2[1]-p0[1]);

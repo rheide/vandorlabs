@@ -59,7 +59,7 @@ final class TrapdoorAssemblies {
             for(TileEntityProgrammableDiagonalTrapdoor leaf:cells.values())if(!leaf.assembly.isEmpty())leaf.clearAssembly();
             return false;
         }
-        List<BlockPos> members=new ArrayList<>(cells.keySet());Collections.sort(members);
+        List<BlockPos> members=new ArrayList<>(cells.keySet());Collections.sort(members);members=Collections.unmodifiableList(members);
         boolean linked=true;for(TileEntityProgrammableDiagonalTrapdoor leaf:cells.values())linked &= members.equals(leaf.assembly);
         if(linked)return true;
         TileEntityProgrammableDiagonalTrapdoor reference=cells.get(members.get(0));
@@ -70,7 +70,7 @@ final class TrapdoorAssemblies {
         for(BlockPos at:members) {
             TileEntityProgrammableDiagonalTrapdoor leaf=cells.get(at);int col=com.vandorlabs.blocks.PanelPlane.axis(at,across)-minCol;
             boolean highSide=col>=split;int distance=highSide?width-1-col:col;
-            leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=new ArrayList<>(members);
+            leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=members;
             leaf.sliding=reference.sliding;leaf.slideIntoWall=reference.slideIntoWall;leaf.slideOverSurface=reference.slideOverSurface;leaf.trigger=reference.trigger;
             boolean reversed=leaf.facing().rotateY()==across?highSide:!highSide;
             leaf.setOpeningSide(reversed);leaf.assemblyHinge=reversed?1+distance-1/16D:-distance+1/16D;
@@ -106,13 +106,14 @@ final class TrapdoorAssemblies {
         if(!stagger && width<=2 && height<=2)return false;
         List<BlockPos> members=new ArrayList<>();
         for(int row=minY;row<=maxY;row++)for(int col=minX;col<=maxX;col++)members.add(cells.get(new BlockPos(col,row,0)).getPos().toImmutable());
+        members=Collections.unmodifiableList(members);
         TileEntityProgrammableTrapdoor reference=cells.get(new BlockPos(minX,minY,0));
         boolean open=root.getWorld().getBlockState(reference.getPos()).getValue(BlockProgrammableTrapdoor.OPEN);
         int split=(width+1)/2;
         for(Map.Entry<BlockPos,TileEntityProgrammableTrapdoor> entry:cells.entrySet()) {
             TileEntityProgrammableTrapdoor leaf=entry.getValue();int col=entry.getKey().getX()-minX;
             boolean high=col>=split;int distance=high?width-1-col:col;
-            leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=new ArrayList<>(members);
+            leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=members;
             leaf.sliding=reference.sliding;leaf.slideIntoWall=reference.slideIntoWall;leaf.slideOverSurface=reference.slideOverSurface;leaf.trigger=reference.trigger;
             leaf.assemblyTravel=(high?width-split:split)-1/16D;
             if(leaf instanceof TileEntityProgrammableDiagonalTrapdoor) {
