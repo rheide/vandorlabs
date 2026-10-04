@@ -74,22 +74,24 @@ public final class NonRenderingChecks {
         configured.setFaceTextures(new FaceTextures(true,new int[]{1,2,3,4,5,6}));
         NBTTagCompound data=configured.writeToNBT(new NBTTagCompound());
         data.setInteger("x",-999); data.setInteger("y",-999); data.setInteger("z",-999);
-        for(Block block:new Block[]{ModBlocks.PROGRAMMABLE_BLOCK,ModBlocks.PROGRAMMABLE_SLAB,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL}) {
+        for(Block block:new Block[]{ModBlocks.PROGRAMMABLE_BLOCK,ModBlocks.PROGRAMMABLE_SLAB,
+                ModBlocks.PROGRAMMABLE_WALL,ModBlocks.PROGRAMMABLE_PORTHOLE_WALL,
+                ModBlocks.PROGRAMMABLE_DIAGONAL_WALL}) {
             ItemBlock item=new ItemBlock(block);
             ItemStack stack=new ItemStack(item);stack.setTagInfo("BlockEntityTag",data.copy());
             require(item.placeBlockAt(stack,null,client,pos,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState()),"placement failed");
             TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)client.getTileEntity(pos);
             require(tile.getHousingTexture()==4 && tile.getFaceTextures().equals(configured.getFaceTextures()),"default finish before server reply");
             require(tile.getPos().equals(pos),"item overwrote destination coordinates");
-            if(block==ModBlocks.PROGRAMMABLE_DIAGONAL_WALL)
-                require(tile.getMaxRenderDistanceSquared()>256D*256D,"diagonal distance cutoff");
+            if(block instanceof com.vandorlabs.blocks.BlockProgrammableWall)
+                require(tile.getMaxRenderDistanceSquared()>256D*256D,"wall distance cutoff");
             else require(tile.getMaxRenderDistanceSquared()==4096,"unrelated tile cutoff changed");
             NBTTagCompound correction=tile.getUpdateTag();correction.setInteger("housingTexture",2);
             tile.onDataPacket(null,new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,correction));
             require(tile.getHousingTexture()==2,"server correction lost");
             client.clear();
         }
-        System.out.println("PASS: immediate client placement settings, server correction and diagonal distance policy");
+        System.out.println("PASS: immediate client placement settings, server correction and wall distance policy");
     }
 
     private static void contiguous() {

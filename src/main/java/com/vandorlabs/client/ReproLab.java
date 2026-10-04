@@ -1936,15 +1936,15 @@ public class ReproLab {
             boolean moved=tile instanceof com.vandorlabs.tiles.TileEntityControlledRamp;
             boolean wheel=tile instanceof com.vandorlabs.tiles.TileEntityLandingGear
                     && p.equals(new BlockPos(GALLERY_X-6,GALLERY_Y+5,-18));
-            boolean diagonal=tile instanceof TileEntityAnimatedScreenSelector
-                    && mc.world.getBlockState(p).getBlock()==ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
-            if(!moved && !wheel && !diagonal)continue;
+            boolean wall=tile instanceof TileEntityAnimatedScreenSelector
+                    && mc.world.getBlockState(p).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall;
+            if(!moved && !wheel && !wall)continue;
             double distance=tile.getDistanceSq(mc.player.posX,mc.player.posY,mc.player.posZ);
             if(distance<=4096 || distance>=tile.getMaxRenderDistanceSquared())
                 throw new IllegalStateException("world geometry still uses short tile cutoff: "+tile.getClass());
-            if(moved)ramps++;if(wheel)gear++;if(diagonal)walls++;
+            if(moved)ramps++;if(wheel)gear++;if(wall)walls++;
         }
-        if(gear!=1 || ramps==0 || walls!=4)throw new IllegalStateException("distant geometry fixture not synchronized: gear="+gear+" ramps="+ramps+" walls="+walls);
+        if(gear!=1 || ramps==0 || walls!=12)throw new IllegalStateException("distant geometry fixture not synchronized: gear="+gear+" ramps="+ramps+" walls="+walls);
         System.out.println("[vandorlabs][reprolab] distant-geometry-runtime PASS gear="+gear+" rampCells="+ramps+" walls="+walls+" at more than 64 blocks");
     }
 
@@ -1965,6 +1965,9 @@ public class ReproLab {
     }
 
     private static void buildGalleryStage(World world, String shot) {
+        // Ramp cells are created by their server controller. A client-side clear
+        // after chunk arrival would erase them without generating new packets.
+        if(world.isRemote && shot.equals("gallery_distant_geometry"))return;
         world.getGameRules().setOrCreateGameRule("doMobSpawning", "false");
         // Documentation lives in its own empty chunk so the ordinary compact
         // regression fixtures never appear behind the catalog.
@@ -2014,6 +2017,8 @@ public class ReproLab {
             for(int row=0;row<4;row++) {
                 BlockPos wall=new BlockPos(GALLERY_X,GALLERY_Y+row,-18);
                 world.setBlockState(wall,ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState(),3);
+                world.setBlockState(wall.east(2),ModBlocks.PROGRAMMABLE_WALL.getDefaultState(),3);
+                world.setBlockState(wall.west(2),ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState(),3);
             }
         } else if (shot.equals("gallery_storage_sets")) {
             StorageRuntimeChecks.build(world,GALLERY_X,GALLERY_Y);

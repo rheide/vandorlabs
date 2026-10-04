@@ -114,10 +114,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public double getMaxRenderDistanceSquared() {
         // These walls are world geometry. Loaded chunks and the normal render
         // frustum bound their visibility, rather than the 64-block tile cutoff.
-        if (world != null && world.getBlockState(pos).getBlock()
-                instanceof com.vandorlabs.blocks.BlockProgrammableWall
-                && ((com.vandorlabs.blocks.BlockProgrammableWall) world.getBlockState(pos).getBlock())
-                        .isDiagonalShape()) return Double.MAX_VALUE;
+        if (world != null && getBlockType()
+                instanceof com.vandorlabs.blocks.BlockProgrammableWall) return Double.MAX_VALUE;
         return super.getMaxRenderDistanceSquared();
     }
 
