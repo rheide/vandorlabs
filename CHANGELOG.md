@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Skip physical power scans when a screen's display mode is independent of power or its virtual channel is already powered. Joined lights stop reading inputs after the first powered source while still synchronizing the entire group.
+
 - Reduce Block, Slab, Storage and Stairs chunk-mesh allocation with single-pass extended states, reused neighbor positions and bounded caches of common housing face lists. Preserve exact quads, face overrides, storage artwork and Forge property behavior. See the [performance measurements](docs/performance/1.4/README.md).
 
 - Reduce loaded redstone channel work by revalidating a known powered source before searching other members. Preserve immediate OR propagation and coalesced input handling.

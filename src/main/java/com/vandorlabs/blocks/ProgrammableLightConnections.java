@@ -85,8 +85,12 @@ public final class ProgrammableLightConnections {
                     world.getBlockState(seed), false);
             visited.addAll(group);
             boolean powered = false;
-            for (BlockPos member : group)
-                powered |= ((TileEntityProgrammableLight) world.getTileEntity(member)).hasDirectTriggerPower();
+            for (BlockPos member : group) {
+                if (((TileEntityProgrammableLight) world.getTileEntity(member)).hasDirectTriggerPower()) {
+                    powered = true;
+                    break;
+                }
+            }
             for (BlockPos member : group)
                 ((TileEntityProgrammableLight) world.getTileEntity(member)).setJoinedTriggerPower(powered);
         }

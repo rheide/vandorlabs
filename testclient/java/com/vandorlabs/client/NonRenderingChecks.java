@@ -48,6 +48,7 @@ public final class NonRenderingChecks {
         TrapdoorAssemblyReuseChecks.run();
         HousingStateChecks.run();
         HousingModelChecks.run();
+        ScreenPowerReadChecks.run();
     }
 
     private static void placement() {
@@ -160,7 +161,7 @@ public final class NonRenderingChecks {
         final Map<BlockPos,TileEntity> tiles=new HashMap<>();
         boolean chunkLimit;
         long time;
-        int updates,renderUpdates,dirty,lightChecks;
+        int updates,renderUpdates,dirty,lightChecks,stateReads;
         MemoryWorld(boolean remote) {
             super(null,new net.minecraft.world.storage.WorldInfo(new NBTTagCompound()),
                     new net.minecraft.world.WorldProviderSurface(),new net.minecraft.profiler.Profiler(),remote);
@@ -176,7 +177,7 @@ public final class NonRenderingChecks {
         @Override protected net.minecraft.world.chunk.IChunkProvider createChunkProvider(){return null;}
         @Override protected boolean isChunkLoaded(int x,int z,boolean empty){return !chunkLimit || x==0&&z==0;}
         private void loaded(BlockPos p){require(isBlockLoaded(p),"read unloaded chunk "+p);}
-        @Override public IBlockState getBlockState(BlockPos p){loaded(p);return states.getOrDefault(p,Blocks.AIR.getDefaultState());}
+        @Override public IBlockState getBlockState(BlockPos p){stateReads++;loaded(p);return states.getOrDefault(p,Blocks.AIR.getDefaultState());}
         @Override public void removeTileEntity(BlockPos p){TileEntity tile=tiles.remove(p);if(tile!=null)tile.invalidate();}
         @Override public void playEvent(net.minecraft.entity.player.EntityPlayer player,int event,BlockPos p,int data){}
         @Override public TileEntity getTileEntity(BlockPos p){loaded(p);return tiles.get(p);}

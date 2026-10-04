@@ -7,16 +7,17 @@ import net.minecraft.world.World;
 
 /** Vanilla weak/strong power rules without loading adjacent chunks to read them. */
 public final class LoadedRedstonePower {
+    private static final EnumFacing[] SIDES = EnumFacing.values();
     private LoadedRedstonePower() { }
 
     public static boolean isPowered(World world, BlockPos pos) {
         if (world == null || pos == null || !world.isBlockLoaded(pos)) return false;
-        for (EnumFacing side : EnumFacing.values()) {
+        for (EnumFacing side : SIDES) {
             BlockPos neighbor = pos.offset(side);
             if (!world.isBlockLoaded(neighbor)) continue;
             IBlockState state = world.getBlockState(neighbor);
             if (state.getBlock().shouldCheckWeakPower(state, world, neighbor, side)) {
-                for (EnumFacing strongSide : EnumFacing.values()) {
+                for (EnumFacing strongSide : SIDES) {
                     BlockPos source = neighbor.offset(strongSide);
                     if (world.isBlockLoaded(source)
                             && world.getBlockState(source).getStrongPower(world, source, strongSide) > 0)

@@ -54,6 +54,18 @@ power queries to 256. A separate full-OR oracle covers 2,000 randomized sequence
 with multiple input changes before an event, removal/rejoining and separate
 worlds. Finding that a channel is unpowered still requires checking all members.
 
+Ungated Static/Animated screens no longer query physical power during display
+selection. A powered channel also satisfies trigger/display queries immediately;
+the channel's own local-input probe remains physical-only. Off still wakes to
+Animated when powered, including with the gate disabled. A complete mode/gate/
+local/channel matrix reduces irrelevant neighbor-state reads from 72 to zero.
+
+Joined light groups stop their input search at the first powered member, then
+propagate the result to every member as before. The 64-light check exercises
+different source positions, fully unpowered groups and source removal. A source
+at the traversal origin reduces input queries from 64 to one; unpowered groups
+still query all 64 members.
+
 ## Trapdoor assembly and temporary data
 
 Equal saved assembly lists become one immutable list after exact validation.

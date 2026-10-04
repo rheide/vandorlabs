@@ -404,12 +404,16 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
      * animated, mirroring the sequenced displays' wake-only behavior.
      */
     public int getEffectiveMode() {
-        boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
-        return ScreenBehavior.effectiveMode(displayMode,redstoneEnabled,powered);
+        // Ungated Static/Animated do not depend on power. Off deliberately does:
+        // it wakes to Animated even when the redstone gate is disabled.
+        int mode = ScreenBehavior.clampMode(displayMode);
+        if (!redstoneEnabled && mode != MODE_OFF) return mode;
+        boolean powered = channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
+        return ScreenBehavior.effectiveMode(mode,redstoneEnabled,powered);
     }
 
     protected boolean isTriggerPowered() {
-        return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
+        return channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }
 
     public boolean isUsableByPlayer(EntityPlayer player) {
