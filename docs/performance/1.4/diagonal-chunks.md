@@ -34,6 +34,11 @@ last word with lighting. No rendering configuration change is required.
 The regression suite passes all 576 cases through the actual vanilla flat
 renderer and checks the resulting positions, UVs, colors and lightmap values.
 The original preview fails this check before the fix.
+The corrected layout also passed the 39-capture focused live gallery with
+`forgeLightPipelineEnabled=false`, exercising actual vanilla chunk rendering
+and the shared gameplay/GUI checks. With the Forge lighting pipeline restored,
+all four paired tile-versus-chunk image comparisons passed as well: at least
+99.9992% of pixels were within 3/255 per channel.
 
 ## Validation and measurement
 
