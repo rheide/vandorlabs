@@ -455,6 +455,7 @@ public class ReproLab {
     private int state = 0; // 0 menu, 1 wait, 2 build, 3 shots, 4-7 GUIs, 8 hotbar, 9 done
     private int tick = 0;
     private int holdTicks = 0;
+    private static long renderedFrames, cameraChangedAtFrame;
     private int shotIndex = 0;
     private boolean distantReady;
     private boolean worldSpawned = false;
@@ -475,6 +476,7 @@ public class ReproLab {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
+        if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
         if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
             documentationCapture.render(Minecraft.getMinecraft());
     }
@@ -591,6 +593,9 @@ public class ReproLab {
                 if (--holdTicks > 0) {
                     break;
                 }
+                // Catch-up ticks can exhaust the delay without drawing a frame.
+                // Never save the previous camera's framebuffer under this shot's name.
+                if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
                 if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1 && !distantReady) {
                     saveNamed(mc,"distant_geometry_near");
@@ -2614,6 +2619,7 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        cameraChangedAtFrame=renderedFrames;
         EntityPlayer p = mc.player;
         EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()
                 .getPlayerByUsername(p.getName());
