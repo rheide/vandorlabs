@@ -94,6 +94,16 @@ task benchmarkPropertyLookup(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task benchmarkDiagonalRays(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare diagonal trapdoor face picking cost against 1.3'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalRayBenchmark'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
 task benchmarkRampWork(type: JavaExec) {
     group = 'verification'
     description = 'Compare ramp vertex and saved-material CPU work against 1.3'

@@ -251,6 +251,20 @@ The complete renderer still allocates one consumer per cell and performs world
 lookup, motion geometry and GL submission; these measurements isolate the changed
 work. `ramp-work.csv` contains both measurements.
 
+## Diagonal trapdoor picking
+
+Face intersection now uses scalar arithmetic with the released operation order,
+edge tolerance and first-face tie rule. Across 51,840 rays, hit coordinates,
+selected sides and misses match the previous implementation exactly. Cases cover
+closed and moving meshes, all three shapes and four facings, slide/rotation,
+zero-length rays, vertices and coordinates near the world boundary.
+
+In a paired 4,096-ray benchmark, median intersection time falls from 0.466 to
+0.334 ms. Both versions allocate 345,600 bytes: the JVM already eliminates most
+of the released temporary vectors in this isolated test. The result establishes
+an intersection CPU improvement, not reduced world-query cost or total frame time.
+`diagonal-rays.csv` contains the measurement.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -258,7 +272,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup benchmarkRampWork --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup benchmarkRampWork benchmarkDiagonalRays --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv

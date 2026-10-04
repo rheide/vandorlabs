@@ -78,18 +78,8 @@ public final class BlockProgrammableDiagonalTrapdoor extends BlockProgrammableTr
         DiagonalTrapdoorCollision.add(v,tile!=null && tile.getPosition()==2?4:2,across,pos,entityBox,boxes);
     }
 
-    private static Vec3d vector(double[] v){return new Vec3d(v[0],v[1],v[2]);}
     @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end) {
         TileEntity raw=world.getTileEntity(pos);double[][] v=corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0);
-        Vec3d origin=start.subtract(new Vec3d(pos)),direction=end.subtract(start);double nearest=Double.POSITIVE_INFINITY;EnumFacing hitFace=null;
-        for(int[] face:TrapdoorGeometry.FACES) {
-            Vec3d a=vector(v[face[0]]),u=vector(v[face[1]]).subtract(a),w=vector(v[face[3]]).subtract(a),n=u.crossProduct(w);
-            double denominator=n.dotProduct(direction);if(Math.abs(denominator)<1e-9)continue;
-            double t=n.dotProduct(a.subtract(origin))/denominator;if(t<0 || t>1 || t>=nearest)continue;
-            Vec3d hit=origin.add(direction.scale(t)).subtract(a);double uu=u.dotProduct(u),ww=w.dotProduct(w),uw=u.dotProduct(w),hu=hit.dotProduct(u),hw=hit.dotProduct(w),det=uu*ww-uw*uw;
-            double s=(hu*ww-hw*uw)/det,r=(hw*uu-hu*uw)/det;
-            if(s>=-1e-8 && s<=1+1e-8 && r>=-1e-8 && r<=1+1e-8){nearest=t;hitFace=EnumFacing.getFacingFromVector((float)n.x,(float)n.y,(float)n.z);}
-        }
-        return hitFace==null?null:new RayTraceResult(start.add(direction.scale(nearest)),hitFace,pos);
+        return DiagonalTrapdoorRayTrace.trace(v,pos,start,end);
     }
 }

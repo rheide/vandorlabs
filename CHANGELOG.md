@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Use scalar face intersection for diagonal trapdoor picking, preserving exact hit coordinates, edge tolerance and nearest-face precedence.
+
 - Resolve saved ramp materials once per slice and reuse its face emitter, reducing repeated source-tag decoding and per-face temporary objects without changing UVs or lighting.
 
 - Prepare immutable door quad groups once per resource bake, avoiding per-frame list assembly while preserving Forge lighting transitions, item transforms and custom-renderer fallbacks.

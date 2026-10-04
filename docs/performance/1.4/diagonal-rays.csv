@@ -1,0 +1,3 @@
+algorithm,rays,median_ms,median_allocated_bytes
+reference,4096,0.465902,345600
+scalar,4096,0.333585,345600
