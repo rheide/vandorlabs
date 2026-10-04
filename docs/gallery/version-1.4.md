@@ -23,6 +23,33 @@ Save/load, picked items, Duplifier channel selection and joined assemblies
 preserve the full list. Channels still operate only in loaded chunks; they do
 not force chunks to load.
 
+## Redstone screens
+
+**Programmable Redstone Screen** and **Programmable Diagonal Redstone Screen**
+provide up to eight labelled controls on one block. Shift-right-click in
+Creative mode, or use the Configurizer, to open the dialog. Add or remove rows,
+select a row to edit its label and comma-separated channels, then press Done.
+The Housing tab uses the existing material picker. Labels support up to
+24 characters; long labels are shortened visually to fit the in-world screen.
+
+Right-click a row's ON/OFF button to toggle its channel bank. Green means
+**every** listed channel is powered. An empty list or a partially powered list
+appears inactive; clicking a partially powered row activates all its channels.
+Rows can overlap, and ordinary switches, levers and buttons can control the
+same channels. Held buttons and other physical inputs continue to supply
+power independently of the screen's latch state.
+
+Rows and latch states survive world saves. Pick-block copies labels, channel
+lists and housing without copying the live latch state. The Duplifier's
+**Redstone Screen Items** option copies row definitions between either screen
+shape. Editing labels does not interrupt an already active channel bank.
+Only loaded rows participate in the channel network.
+
+Craft either redstone screen by combining its regular screen counterpart
+with one redstone dust. The former **Programmable Viewscreen** is now named
+**Programmable Screen**; its registry ID is unchanged, so existing blocks,
+items and recipes remain compatible.
+
 ## Diagonal walls
 
 Static Programmable Diagonal Walls use Minecraft's chunk geometry when their

@@ -204,6 +204,8 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
             configuration.removeTag("x");
             configuration.removeTag("y");
             configuration.removeTag("z");
+            if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen)
+                configuration.setTag("RedstoneRows",((com.vandorlabs.tiles.TileEntityRedstoneScreen)tile).rowConfiguration());
             stack.setTagInfo("BlockEntityTag", configuration);
         }
         return stack;

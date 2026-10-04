@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
 
+    public static final int GUI_REDSTONE_SCREEN=11;
     public static final int GUI_ANIMATED_SCREEN_SELECTOR = 0;
     public static final int GUI_RAMP_CONTROLLER = 1;
     public static final int GUI_REDSTONE_CHANNEL = 2;
@@ -52,6 +53,10 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_REDSTONE_SCREEN && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen)return new ContainerAnimatedScreenSelector(player.inventory,(TileEntityAnimatedScreenSelector)tile);
+        }
         if (ID == GUI_PROGRAMMABLE_STORAGE) {
             TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage
@@ -118,6 +123,10 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_REDSTONE_SCREEN && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){
+            TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen)return new com.vandorlabs.client.GuiRedstoneScreen(player.inventory,(com.vandorlabs.tiles.TileEntityRedstoneScreen)tile);
+        }
         if (ID == GUI_PROGRAMMABLE_STORAGE) {
             TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
             if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage

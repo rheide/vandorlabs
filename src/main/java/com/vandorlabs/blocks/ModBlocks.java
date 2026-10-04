@@ -51,6 +51,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_PORTHOLE_BLOCK;
     public static Block PROGRAMMABLE_DIAGONAL_WALL;
     public static Block PROGRAMMABLE_DIAGONAL_SCREEN;
+    public static Block PROGRAMMABLE_REDSTONE_SCREEN,PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN;
     public static Block PROGRAMMABLE_INPUT;
     public static Block PROGRAMMABLE_HALF_CONSOLE;
     public static Block PROGRAMMABLE_FULL_INPUT;
@@ -198,6 +199,8 @@ public class ModBlocks {
                 BlockProgrammableWall.Shape.DIAGONAL));
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
         add(PROGRAMMABLE_DIAGONAL_SCREEN);
+        PROGRAMMABLE_REDSTONE_SCREEN=add(new BlockProgrammableRedstoneScreen());
+        PROGRAMMABLE_DIAGONAL_REDSTONE_SCREEN=add(new BlockProgrammableDiagonalRedstoneScreen());
         PROGRAMMABLE_INPUT = new BlockProgrammableInput();
         add(PROGRAMMABLE_INPUT);
         PROGRAMMABLE_HALF_CONSOLE = new BlockProgrammableHalfConsole();

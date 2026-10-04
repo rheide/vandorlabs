@@ -3523,5 +3523,19 @@
     "item": true,
     "class": "BlockProgrammableStorage",
     "programmable_only": true
+  },
+  {
+    "id": "programmable_redstone_screen",
+    "type": "redstone_screen",
+    "class": "BlockProgrammableRedstoneScreen",
+    "item": true,
+    "programmable_only": true
+  },
+  {
+    "id": "programmable_diagonal_redstone_screen",
+    "type": "redstone_screen",
+    "class": "BlockProgrammableDiagonalRedstoneScreen",
+    "item": true,
+    "programmable_only": true
   }
 ]

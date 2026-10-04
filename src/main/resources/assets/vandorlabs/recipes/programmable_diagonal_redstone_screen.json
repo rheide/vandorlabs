@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:programmable_diagonal_screen"
+    },
+    {
+      "item": "minecraft:redstone"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:programmable_diagonal_redstone_screen",
+    "count": 1
+  }
+}

@@ -46,6 +46,7 @@ public final class NonRenderingChecks {
         TrapdoorMeshParityChecks.run();
         ChannelReconciliationChecks.run();
         ChannelListChecks.run();
+        RedstoneScreenChecks.run();
         TrapdoorAssemblyReuseChecks.run();
         HousingStateChecks.run();
         HousingModelChecks.run();

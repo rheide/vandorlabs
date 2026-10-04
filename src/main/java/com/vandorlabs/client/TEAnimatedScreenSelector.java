@@ -566,6 +566,10 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
         }
+        if(te instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen){
+            RedstoneScreenRenderer.draw((com.vandorlabs.tiles.TileEntityRedstoneScreen)te,state);
+            GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
+        }
         float uMin=0,uMax=1;
         bindTexture(texture);
         if(te.getSurfaceTexture(0)>=0){double[] uv=bindSurface(te,0);vTop=(float)uv[0];vBottom=(float)uv[1];uMin=(float)uv[2];uMax=(float)uv[3];}

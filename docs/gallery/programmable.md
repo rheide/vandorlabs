@@ -9,9 +9,9 @@ In Creative mode, shift-right-click a block to open its configuration. Lists scr
 
 ## Viewscreen and inclined console
 
-| Programmable Viewscreen | Programmable Console |
+| Programmable Screen | Programmable Console |
 | --- | --- |
-| ![Close-up of Programmable Viewscreen](../images/gallery/programmable/viewscreen.png) | ![Close-up of Programmable Console](../images/gallery/programmable/console.png) |
+| ![Close-up of Programmable Screen](../images/gallery/programmable/viewscreen.png) | ![Close-up of Programmable Console](../images/gallery/programmable/console.png) |
 
 The Viewscreen shows the selected screen across its forward face. It can use registered still, animated, or multi-block artwork. The Console presents a sloped screen and a separately selected keyboard or control surface.
 

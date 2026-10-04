@@ -39,6 +39,7 @@ public final class ProgrammableSettings {
     public static final String WALL_TEXTURE = "wall_texture";
     public static final String PRIMARY_TEXTURE = "primary_texture";
     public static final String PRIMARY_KIND = "primary_kind";
+    public static final String REDSTONE_ROWS="redstone_rows";
     public static final String CHANNEL = "redstone_channel";
     public static final String TRIGGER = "redstone_trigger";
     public static final String JOIN = "join";
@@ -96,7 +97,9 @@ public final class ProgrammableSettings {
     }
 
     private static boolean isDisplay(Block block) {
-        return !(block instanceof BlockProgrammableWall)
+        return !(block instanceof com.vandorlabs.blocks.BlockProgrammableRedstoneScreen)
+                && !(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalRedstoneScreen)
+                && !(block instanceof BlockProgrammableWall)
                 && !(block instanceof BlockProgrammableBlock)
                 && !((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs));
     }
@@ -129,6 +132,7 @@ public final class ProgrammableSettings {
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
         NBTTagCompound out = new NBTTagCompound();
+        if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen)out.setTag(REDSTONE_ROWS,((com.vandorlabs.tiles.TileEntityRedstoneScreen)tile).rowConfiguration());
         if (tile instanceof RedstoneChannelMember) {
             ChannelList channels=((RedstoneChannelMember)tile).getRedstoneChannels();
             if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
@@ -571,6 +575,8 @@ public final class ProgrammableSettings {
                                 && DuplifierApplyOptions.connected(player.getHeldItemMainhand()));
             }
         }
+        if(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneScreen && values.hasKey(REDSTONE_ROWS,9))
+            applicable|=((com.vandorlabs.tiles.TileEntityRedstoneScreen)tile).applyRowConfiguration(values.getTagList(REDSTONE_ROWS,10));
         if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL)) {
             ChannelList before=((RedstoneChannelMember)tile).getRedstoneChannels();
             ((RedstoneChannelMember) tile).setRedstoneChannels(channels(values,(RedstoneChannelMember)tile));

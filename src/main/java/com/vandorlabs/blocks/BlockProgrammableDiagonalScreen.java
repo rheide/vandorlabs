@@ -23,7 +23,11 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
     public static final PropertyBool INVERTED = PropertyBool.create("inverted");
 
     public BlockProgrammableDiagonalScreen() {
-        super(NAME);
+        this(NAME);
+    }
+
+    protected BlockProgrammableDiagonalScreen(String name) {
+        super(name);
         setDefaultState(this.blockState.getBaseState()
                 .withProperty(FACING, EnumFacing.NORTH)
                 .withProperty(INVERTED, false));
