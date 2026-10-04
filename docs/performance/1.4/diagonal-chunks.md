@@ -24,9 +24,11 @@ height, fill and neighboring geometry against the tile surface emitter. They
 check positions, UVs, normals, reversed faces, section-boundary routing,
 uniform lighting and neighboring render invalidation.
 
-A live focused gallery exercises actual chunk rendering for half-height walls,
-fills and inside/outside corners alongside the shared gameplay and GUI checks.
-Hardware shader acceptance remains pending.
+The Java 8 standard build, non-rendering suite and focused live gallery passed.
+The gallery produced 39 fresh captures, including actual chunk rendering for
+half-height walls, fills and inside/outside corners, and completed its shared
+gameplay and GUI checks. Full-gallery pixel analyzers were not rerun for this
+preview. Hardware shader acceptance remains pending.
 
 The live benchmark renders the old tile path and new chunk path in the same
 client run, under the same lightmap. Four 64-wall fixtures cover half width,
@@ -43,6 +45,26 @@ Run the relevant gallery and numerical checks with Java 8:
 ./gradlew testNonRendering --no-daemon
 bash testclient/test_viewscreen.sh --focus gallery_v12
 ```
+
+The paired image comparisons passed for all four fixtures: at least 99.9992%
+of pixels were within 3/255 per channel. The full measurements, including
+vanilla controls, are in [diagonal-chunks.csv](diagonal-chunks.csv).
+
+| 64-wall fixture | Tile submission median (ms) | Chunk submission median (ms) | Reduction |
+| --- | ---: | ---: | ---: |
+| Half width | 0.414 | 0.200 | 51.6% |
+| Full width | 0.399 | 0.195 | 51.1% |
+| Shallow | 0.404 | 0.191 | 52.6% |
+| Clipped | 0.483 | 0.224 | 53.7% |
+
+Per-frame allocation fell from 15,392 to 32 bytes in each fixture, and the
+number of submitted tile renderers fell from 64 to zero. This is additional
+to the earlier 1.4 alpha changes, which reduced diagonal tile submission
+allocation from 35,360 to 15,392 bytes in the original 64-wall fixture.
+
+The new initial mesh build took 3.2–5.3 ms for these 64-wall fixtures. The
+reference build column excludes tile mesh construction and therefore is not
+a like-for-like measure of total geometry-building cost.
 
 Chunk geometry shifts work to chunk rebuilds and adds reversed faces to preserve
 the old renderer's disabled back-face culling. This increases stored vertex

@@ -128,7 +128,10 @@ final class ProgrammableRenderBenchmark {
                     for(String variant:Arrays.asList("screen_static", "screen_off", "screen_framed_off"))
                         measure(mc,csv,meshes,id,variant,64);
                 for(String variant:Arrays.asList("chunk_wall_half", "chunk_wall_full", "chunk_wall_shallow", "chunk_wall_clipped"))
+                {
+                    measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant+"_reference",64);
                     measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant,64);
+                }
                 DoorRenderModels.checkPreparedDrawStates();
                 OffsetCollisionRuntimeBenchmark.run(mc,output);
                 NeighborLightRuntimeBenchmark.run(mc,output);
@@ -156,6 +159,8 @@ final class ProgrammableRenderBenchmark {
         List<BlockPos> positions = new ArrayList<>();
         List<TileEntity> tiles = new ArrayList<>();
         List<BlockPos> extraPositions = new ArrayList<>();
+        boolean diagonalReference=variant.startsWith("chunk_wall_") && variant.endsWith("_reference");
+        String diagonalVariant=diagonalReference?variant.substring(0,variant.length()-10):variant;
         BlockPos origin=variant.startsWith("chunk_wall_")?new BlockPos(-15,81,-8):ORIGIN;
         int side = count == 16 ? 4 : 8;
         int spacing = (variant.endsWith("_joined") && !variant.endsWith("unjoined"))
@@ -258,8 +263,8 @@ final class ProgrammableRenderBenchmark {
                 }
                 if(tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("chunk_wall_")) {
                     ((TileEntityAnimatedScreenSelector)tile).setDiagonalGeometry(
-                            variant.endsWith("shallow")?2:variant.endsWith("half")?0:1,0);
-                    if(variant.endsWith("clipped")) {
+                            diagonalVariant.endsWith("shallow")?2:diagonalVariant.endsWith("half")?0:1,0);
+                    if(diagonalVariant.endsWith("clipped")) {
                         BlockPos obstacle=pos.north();mc.world.setBlockState(obstacle,net.minecraft.init.Blocks.STONE.getDefaultState(),2);
                         extraPositions.add(obstacle);
                     }
@@ -296,7 +301,7 @@ final class ProgrammableRenderBenchmark {
                 buffer.setTranslation(-origin.getX(), -origin.getY(), -origin.getZ());
                 for (BlockPos pos : positions) {
                     IBlockState state = mc.world.getBlockState(pos);
-                    if (state.getRenderType() == EnumBlockRenderType.MODEL && block.canRenderInLayer(state, layer))
+                    if ((!diagonalReference || state.getBlock()!=block) && state.getRenderType() == EnumBlockRenderType.MODEL && state.getBlock().canRenderInLayer(state, layer))
                         mc.getBlockRendererDispatcher().renderBlock(state, pos, mc.world, buffer);
                 }
                 int countInLayer = buffer.getVertexCount();
@@ -333,7 +338,7 @@ final class ProgrammableRenderBenchmark {
                 drawBaked(baked);
                 TileEntityRendererDispatcher.instance.preDrawBatch();
                 for (TileEntity tile : tiles) {
-                    if (!tile.shouldRenderInPass(0)) continue;
+                    if (!diagonalReference && !tile.shouldRenderInPass(0)) continue;
                     GlStateManager.color(1F, 1F, 1F, 1F);
                     BlockPos pos = tile.getPos();
                     TileEntityRendererDispatcher.instance.render(tile, pos.getX()-origin.getX(),
@@ -358,7 +363,7 @@ final class ProgrammableRenderBenchmark {
             Arrays.sort(complete);
             Arrays.sort(allocated);
             int renderedTiles = 0;
-            for (TileEntity tile : tiles) if (tile.shouldRenderInPass(0)) renderedTiles++;
+            for (TileEntity tile : tiles) if (diagonalReference || tile.shouldRenderInPass(0)) renderedTiles++;
             csv.printf(Locale.ROOT, "%s,%s,%d,%d,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%d%n",
                     id, variant, count, vertices, renderedTiles, build,
                     submit[15], submit[29], complete[15], complete[29], allocated[15]);
