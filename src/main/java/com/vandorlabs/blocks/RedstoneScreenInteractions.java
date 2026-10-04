@@ -45,6 +45,7 @@ public final class RedstoneScreenInteractions {
             || block instanceof BlockDiagonalHalfConsole || block instanceof BlockProgrammableHalfConsole
             || block instanceof BlockProgrammableConsole && slot==1;
     }
+    public static int displayHeight(net.minecraft.block.Block block,int slot){return half(block,slot)?64:128;}
     public static int rowTop(net.minecraft.block.Block block,int slot){return half(block,slot)?8:ROW_TOP;}
     public static ScreenSurface.Quad surface(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot){
         net.minecraft.block.Block block=state.getBlock();
@@ -90,7 +91,7 @@ public final class RedstoneScreenInteractions {
         Vec3d hit=a.add(d.scale(t));
         double u=(q.topRight.x-hit.x)/(q.topRight.x-q.topLeft.x)*128;
         double dy=q.bottomRight.y-q.topRight.y,dz=q.bottomRight.z-q.topRight.z;
-        double v=((hit.y-q.topRight.y)*dy+(hit.z-q.topRight.z)*dz)/(dy*dy+dz*dz)*128;
+        double v=((hit.y-q.topRight.y)*dy+(hit.z-q.topRight.z)*dz)/(dy*dy+dz*dz)*displayHeight(state.getBlock(),slot);
         int top=rowTop(state.getBlock(),slot),row=(int)Math.floor((v-top)/ROW_HEIGHT);
         return u>=ROW_LEFT && u<=ROW_RIGHT && row>=0 && row<count && v-top-row*ROW_HEIGHT<10?row:-1;
     }

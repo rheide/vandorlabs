@@ -19,33 +19,36 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private final List<ChannelList> channels=new ArrayList<>();
     private GuiTextField titleField,labelField,channelField;
     private String title;
+    private final boolean header;
+    private int rowListTop;
     private HousingTextureList housing;
     private int selected=-1,scroll,texture;
     private boolean materials;
     public GuiRedstoneScreen(InventoryPlayer inventory,RedstoneScreenContents tile){
-        super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;title=tile.title();texture=tile.getHousingTexture();
-        for(RedstoneScreenContents.Row row:tile.rows()){labels.add(row.label);channels.add(row.channels);}
+        super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;header=!com.vandorlabs.blocks.RedstoneScreenInteractions.half(tile.getBlockType(),tile.slot());title=tile.title();texture=tile.getHousingTexture();
+        for(int i=0;i<Math.min(tile.rows().size(),tile.maxRows());i++){RedstoneScreenContents.Row row=tile.rows().get(i);labels.add(row.label);channels.add(row.channels);}
         if(!labels.isEmpty())selected=0;
     }
     public void initGui(){
         if(labelField!=null)store();
         xSize=Math.min(420,width-12);ySize=Math.min(240,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int cx=guiLeft+xSize-164;
-        titleField=new GuiTextField(2,fontRenderer,cx,guiTop+64,148,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
-        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+102,148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
-        channelField=new GuiTextField(1,fontRenderer,cx,guiTop+140,148,18);ChannelFields.configure(channelField);
+        rowListTop=header?82:54;
+        titleField=new GuiTextField(2,fontRenderer,guiLeft+78,guiTop+50,xSize-90,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
+        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+(header?102:64),148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
+        channelField=new GuiTextField(1,fontRenderer,cx,guiTop+(header?140:106),148,18);ChannelFields.configure(channelField);
         housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-188,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
         buttonList.add(new GuiButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
         buttonList.add(new GuiButton(1,guiLeft+92,guiTop+28,90,20,"Housing"));
-        buttonList.add(new GuiButton(2,cx,guiTop+178,70,20,"Add"));
-        buttonList.add(new GuiButton(3,cx+76,guiTop+178,72,20,"Remove"));
+        buttonList.add(new GuiButton(2,cx,guiTop+(header?178:144),70,20,"Add"));
+        buttonList.add(new GuiButton(3,cx+76,guiTop+(header?178:144),72,20,"Remove"));
         buttonList.add(new GuiButton(4,cx,guiTop+ySize-30,148,20,"Done"));load();refresh();
     }
     private boolean store(){
-        boolean headingValid=RedstoneScreenContents.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
+        boolean headingValid=!header || RedstoneScreenContents.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
         titleField.setTextColor(headingValid?0xE0E0E0:0xFF7777);
         if(!headingValid)return false;
-        title=titleField.getText().trim();
+        if(header)title=titleField.getText().trim();
         if(selected<0)return true;
         ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),RedstoneScreenText.LABEL_WIDTH);
         labelField.setTextColor(valid?0xE0E0E0:0xFF7777);
@@ -54,25 +57,25 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }
     private void load(){labelField.setText(selected<0?"":labels.get(selected));channelField.setText(selected<0?"0":channels.get(selected).toString());}
     private void refresh(){
-        titleField.setVisible(!materials);
+        titleField.setVisible(header && !materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
-        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<RedstoneScreenContents.MAX_ROWS;}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}}
+        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<tile.maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}}
     }
     private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
         if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
-        else if(b.id==2 && labels.size()<RedstoneScreenContents.MAX_ROWS){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
+        else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
         else if(b.id==4)send();
     }
-    private int visibleRows(){return Math.max(1,(ySize-66)/20);}
+    private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
     protected void mouseClicked(int x,int y,int button)throws IOException{
         super.mouseClicked(x,y,button);
         if(materials){if(housing.click(x,y,button))texture=housing.selected();return;}
         titleField.mouseClicked(x,y,button);labelField.mouseClicked(x,y,button);channelField.mouseClicked(x,y,button);
-        if(x>=guiLeft+12 && x<guiLeft+xSize-180 && y>=guiTop+54 && y<guiTop+54+visibleRows()*20){
-            int next=scroll+(y-guiTop-54)/20;if(next<labels.size() && store()){selected=next;load();refresh();}
+        if(x>=guiLeft+12 && x<guiLeft+xSize-180 && y>=guiTop+rowListTop && y<guiTop+rowListTop+visibleRows()*20){
+            int next=scroll+(y-guiTop-rowListTop)/20;if(next<labels.size() && store()){selected=next;load();refresh();}
         }
     }
     protected void mouseReleased(int x,int y,int button){housing.release();super.mouseReleased(x,y,button);}
@@ -104,14 +107,14 @@ public final class GuiRedstoneScreen extends GuiContainer {
         fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.getBlockType().getUnlocalizedName()+".name"),guiLeft+12,guiTop+10,0xFFFFFF);
         if(materials){housing.draw(fontRenderer,x,y);net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();return;}
         for(int i=0;i<visibleRows() && scroll+i<labels.size();i++){
-            int row=scroll+i,yy=guiTop+54+i*20;drawRect(guiLeft+12,yy,guiLeft+xSize-180,yy+18,row==selected?0xFF365C70:0xFF22313E);
+            int row=scroll+i,yy=guiTop+rowListTop+i*20;drawRect(guiLeft+12,yy,guiLeft+xSize-180,yy+18,row==selected?0xFF365C70:0xFF22313E);
             fontRenderer.drawString(fontRenderer.trimStringToWidth(labels.get(row),xSize-204),guiLeft+18,yy+5,0xE0ECF5);
         }
         int cx=guiLeft+xSize-164;
-        fontRenderer.drawString("Header",cx,guiTop+52,0xDAE8F0);titleField.drawTextBox();
+        if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+55,0xDAE8F0);titleField.drawTextBox();drawRect(guiLeft+12,guiTop+76,guiLeft+xSize-12,guiTop+77,0xFF365366);}
         fontRenderer.drawString("Text is limited to screen width.",guiLeft+12,guiTop+ySize-14,0xADBECA);
-        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+90,0xDAE8F0);fontRenderer.drawString("Channels (0 = none)",cx,guiTop+128,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
-        else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+102,148,0xADBECA);
+        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+(header?90:52),0xDAE8F0);fontRenderer.drawString("Channels (0 = none)",cx,guiTop+(header?128:94),0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
+        else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+(header?102:64),148,0xADBECA);
         net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();
     }
 }

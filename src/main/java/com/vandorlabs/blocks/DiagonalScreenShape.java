@@ -22,7 +22,7 @@ public final class DiagonalScreenShape {
         List<Triangle> faces=new ArrayList<>();Map<String,List<Edge>> edges=new LinkedHashMap<>();
         for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(upper).quads){
             Vec3d[] points=new Vec3d[4];for(int i=0;i<4;i++){ScreenHousingMesh.Vertex v=face.vertices[i];points[i]=world(v.x/16,v.y/16,v.z/16,facing);}
-            faces.add(new Triangle(points[0],points[1],points[2]));faces.add(new Triangle(points[0],points[2],points[3]));
+            faces.add(new Triangle(points[0],points[1],points[2],facing,upper));faces.add(new Triangle(points[0],points[2],points[3],facing,upper));
             Vec3d normal=points[1].subtract(points[0]).crossProduct(points[2].subtract(points[0])).normalize();
             for(int i=0;i<4;i++){Vec3d a=points[i],b=points[(i+1)%4];String ka=key(a),kb=key(b),key=ka.compareTo(kb)<0?ka+":"+kb:kb+":"+ka;edges.computeIfAbsent(key,k->new ArrayList<>()).add(new Edge(a,b,normal));}
         }
@@ -39,13 +39,22 @@ public final class DiagonalScreenShape {
         Vec3d a=start.subtract(new Vec3d(pos)),delta=end.subtract(start);double closest=Double.POSITIVE_INFINITY;Triangle selected=null;
         for(Triangle triangle:triangles){double t=triangle.hit(a,delta);if(t<closest){closest=t;selected=triangle;}}
         if(selected==null)return null;
-        double sign=selected.normal.dotProduct(delta)>0?-1:1;
-        EnumFacing side=EnumFacing.getFacingFromVector((float)(selected.normal.x*sign),(float)(selected.normal.y*sign),(float)(selected.normal.z*sign));
+        EnumFacing side=EnumFacing.getFacingFromVector((float)selected.normal.x,(float)selected.normal.y,(float)selected.normal.z);
         return new RayTraceResult(start.add(delta.scale(closest)),side,pos);
     }
     private static final class Triangle {
         final Vec3d a,e1,e2,normal;
-        Triangle(Vec3d a,Vec3d b,Vec3d c){this.a=a;e1=b.subtract(a);e2=c.subtract(a);normal=e1.crossProduct(e2);}
+        Triangle(Vec3d a,Vec3d b,Vec3d c,EnumFacing facing,boolean upper){
+            this.a=a;e1=b.subtract(a);e2=c.subtract(a);Vec3d n=e1.crossProduct(e2).normalize();
+            Vec3d center=a.add(b).add(c).scale(1D/3);
+            // The housing has small concave end caps and mixed legacy windings.
+            // Probe the actual profile once when baking to orient every face,
+            // including rays that leave the housing from inside it.
+            Vec3d probe=RedstoneScreenInteractions.local(center.add(n.scale(.00001)),facing).scale(1D/16);
+            double height=probe.z<1D/16?1D/16:probe.z>=15D/16?1:probe.z;
+            boolean inside=probe.x>=0 && probe.x<=1 && probe.y>=0 && probe.y<=1 && probe.z>=0 && probe.z<=1 && (upper?probe.y>=1-height:probe.y<=height);
+            normal=inside?n.scale(-1):n;
+        }
         double hit(Vec3d start,Vec3d d){
             double px=d.y*e2.z-d.z*e2.y,py=d.z*e2.x-d.x*e2.z,pz=d.x*e2.y-d.y*e2.x;
             double det=e1.x*px+e1.y*py+e1.z*pz;if(Math.abs(det)<1e-10)return Double.POSITIVE_INFINITY;

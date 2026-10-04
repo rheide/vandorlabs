@@ -21,5 +21,5 @@ cp "build/libs/vandorlabs-$VERSION.jar" "$SCREEN_GAME_DIR/mods/"
 VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY=true VANDOR_LABS_TEST_GAME_DIR="$SCREEN_GAME_DIR" VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 600 testclient/run.sh > "$RUN_OUT/client.log" 2>&1
 rg -q 'redstone-screen-runtime PASS shape=27' "$RUN_OUT/client.log"
 rg -q 'integrated-screen-duplifier-runtime PASS' "$RUN_OUT/client.log"
-rg -q 'propulsion-particle-gui-runtime PASS' "$RUN_OUT/client.log"
+if [ "${VANDOR_LABS_REDSTONE_SCREEN_FOCUSED:-false}" != true ]; then rg -q 'propulsion-particle-gui-runtime PASS' "$RUN_OUT/client.log"; fi
 echo "Live redstone-screen artifacts: $RUN_OUT"

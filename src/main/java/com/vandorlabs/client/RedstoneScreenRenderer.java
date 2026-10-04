@@ -13,15 +13,17 @@ import org.lwjgl.BufferUtils;
 /** Text and buttons share an affine 128-pixel display plane with hit testing. */
 final class RedstoneScreenRenderer {
     private static final java.util.Map<ScreenSurface.Quad,FloatBuffer> MATRICES=new java.util.IdentityHashMap<>();
-    private static FloatBuffer matrix(ScreenSurface.Quad q){
+    private static FloatBuffer matrix(ScreenSurface.Quad q,int height){
         FloatBuffer b=BufferUtils.createFloatBuffer(16);
         b.put(new float[]{(float)(q.topLeft.x-q.topRight.x)/128,0,0,0,
-            0,(float)(q.bottomRight.y-q.topRight.y)/128,(float)(q.bottomRight.z-q.topRight.z)/128,0,
+            0,(float)(q.bottomRight.y-q.topRight.y)/height,(float)(q.bottomRight.z-q.topRight.z)/height,0,
             0,q.ny,q.nz,0,(float)q.topRight.x,(float)q.topRight.y+q.ny*.02F,(float)q.topRight.z+q.nz*.02F,1});b.flip();return b;
     }
     static void draw(RedstoneScreenContents tile,IBlockState state){
         ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile.tile(),tile.slot());
-        FloatBuffer transform=MATRICES.computeIfAbsent(q,RedstoneScreenRenderer::matrix);
+        int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),tile.slot()),count=Math.min(tile.rows().size(),tile.maxRows());
+        FloatBuffer transform=MATRICES.get(q);
+        if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
         int top=RedstoneScreenInteractions.rowTop(state.getBlock(),tile.slot());
         boolean header=!RedstoneScreenInteractions.half(state.getBlock(),tile.slot());
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
@@ -32,8 +34,8 @@ final class RedstoneScreenRenderer {
         GlStateManager.disableTexture2D();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION_COLOR);
-        rect(buffer,0,0,128,128,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
-        for(int i=0;i<tile.rows().size();i++){
+        rect(buffer,0,0,128,height,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
+        for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,row.active()?0xFF174C3B:0xFF1C2B37);
             rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
@@ -45,7 +47,7 @@ final class RedstoneScreenRenderer {
             text(font,"No controls",8,40,0xB8C8D0);
             text(font,"Configure to add",8,54,0x748C9C);
         }
-        for(int i=0;i<tile.rows().size();i++){
+        for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             text(font,font.getStringWidth(row.label)<=RedstoneScreenText.LABEL_WIDTH?row.label:font.trimStringToWidth(row.label,RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
             text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);

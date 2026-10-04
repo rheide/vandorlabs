@@ -74,21 +74,26 @@ final class RedstoneScreenRuntimeChecks {
                 gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(8);return;
             }
             if(stage==8 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->{
-                RedstoneScreenContents tile=tile(mc);require(tile.title().equals("Bridge controls") && tile.rows().size()==4 && tile.rows().get(3).label.equals("Ramp bank") && tile.rows().get(3).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
+                RedstoneScreenContents tile=tile(mc);require(tile.title().equals(expectedTitle()) && tile.rows().size()==4 && tile.rows().get(3).label.equals("Ramp bank") && tile.rows().get(3).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
                 RedstoneScreenContents copy=new RedstoneScreenContents(new TileEntityAnimatedScreenSelector(),slot());copy.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.rows().size()==4 && copy.rows().get(3).channels.equals(tile.rows().get(3).channels),"saved rows lost");
             });next(9);return;}
             if(stage==9){open(mc);next(10);return;}
             if(stage==10 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
                 capture(mc,output,"dialog");GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
-                require(field(gui,"titleField").getText().equals("Bridge controls"),"reopened header lost");
+                require(field(gui,"titleField").getText().equals(expectedTitle()),"reopened header lost");
                 field(gui,"labelField").setText("WWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
                 require(mc.currentScreen==gui,"overwide label saved");field(gui,"labelField").setText("Doors");
-                field(gui,"titleField").setText("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
-                require(mc.currentScreen==gui,"overwide header saved");field(gui,"titleField").setText("Bridge controls");
+                require(field(gui,"titleField").getVisible()==!RedstoneScreenInteractions.half(fixtureState().getBlock(),slot()),"half-height header field visibility differs");
+                if(!RedstoneScreenInteractions.half(fixtureState().getBlock(),slot())){
+                    field(gui,"titleField").setText("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
+                    require(mc.currentScreen==gui,"overwide header saved");field(gui,"titleField").setText("Bridge controls");
+                }
                 gui.actionPerformed(new GuiButton(3,0,0,"Remove"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(11);return;
             }
             if(stage==11 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().size()==3 && tile(mc).rows().get(0).label.equals("Lights"),"GUI row removal failed"));next(12);return;}
-            if(stage==12){System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);shape++;next(shape<28?0:99);}
+            if(stage==12){System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){
+                int[] fixtures={0,17,21,22,23,25,26,27};int index=0;while(index<fixtures.length && fixtures[index]!=shape)index++;shape=index+1<fixtures.length?fixtures[index+1]:28;
+            }else shape++;next(shape<28?0:99);}
         }catch(Exception e){throw new IllegalStateException("redstone-screen live check shape="+shape+" stage="+stage,e);}
     }
     private static void next(int value){stage=value;ticks=0;}
@@ -97,7 +102,7 @@ final class RedstoneScreenRuntimeChecks {
     private static GuiTextField field(GuiRedstoneScreen gui,String name)throws ReflectiveOperationException{Field f=GuiRedstoneScreen.class.getDeclaredField(name);f.setAccessible(true);return (GuiTextField)f.get(gui);}
     private static void open(Minecraft mc){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,slot()==0?GuiHandler.GUI_REDSTONE_SCREEN:GuiHandler.GUI_REDSTONE_SCREEN_SECONDARY,p.world,POS.getX(),POS.getY(),POS.getZ());});}
     private static void aim(EntityPlayerMP owner,IBlockState state,int row){
-        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,((TileEntityAnimatedScreenSelector)owner.world.getTileEntity(POS)),slot());double u=(row==0?30:109)/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),slot())+row*12+5)/128D;
+        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,((TileEntityAnimatedScreenSelector)owner.world.getTileEntity(POS)),slot());double u=(row==0?30:109)/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),slot())+row*12+5)/(double)RedstoneScreenInteractions.displayHeight(state.getBlock(),slot());
         Vec3d localHit=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v);
         EnumFacing facing=RedstoneScreenInteractions.facing(state);
         hit=worldPoint(localHit,facing);
@@ -118,6 +123,7 @@ final class RedstoneScreenRuntimeChecks {
         f=HousingTextureList.class.getDeclaredField("y");f.setAccessible(true);int y=f.getInt(list)+(index-scroll)*HousingTextureList.ROW_HEIGHT+10;
         if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).mouseClicked(x,y,0);else if(gui instanceof GuiProgrammableInput)((GuiProgrammableInput)gui).mouseClicked(x,y,0);else ((GuiProgrammableHalfConsole)gui).mouseClicked(x,y,0);
     }
+    private static String expectedTitle(){return RedstoneScreenInteractions.half(fixtureState().getBlock(),slot())?RedstoneScreenContents.DEFAULT_TITLE:"Bridge controls";}
     private static int slot(){return shape==25 || shape==27?1:0;}
     private static IBlockState fixtureState(){
         if(shape>=14){

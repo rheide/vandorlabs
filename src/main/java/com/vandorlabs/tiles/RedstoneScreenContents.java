@@ -34,6 +34,8 @@ public final class RedstoneScreenContents {
     private List<Row> registered=new ArrayList<>();
     private List<Row> view=Collections.unmodifiableList(rows);
     public List<Row> rows(){return view;}
+    public int maxRows(){return com.vandorlabs.blocks.RedstoneScreenInteractions.half(owner.getBlockType(),slot)?4:MAX_ROWS;}
+    private void limitRows(){if(rows.size()>maxRows()){rows=new ArrayList<>(rows.subList(0,maxRows()));view=Collections.unmodifiableList(rows);markDirty();}}
     public static boolean validLabel(String label){
         return validText(label,MAX_LABEL) && !label.trim().isEmpty();
     }
@@ -45,7 +47,7 @@ public final class RedstoneScreenContents {
     }
     private boolean configure(String title,List<String> labels,List<ChannelList> channels,int housing,boolean enable){
         if(!validTitle(title))return false;
-        if(labels.size()>MAX_ROWS || labels.size()!=channels.size() || !ScreenHousingTextures.validChoice(housing))return false;
+        if(labels.size()>maxRows() || labels.size()!=channels.size() || !ScreenHousingTextures.validChoice(housing))return false;
         for(int i=0;i<labels.size();i++)if(!validLabel(labels.get(i)) || channels.get(i)==null)return false;
         List<Row> next=new ArrayList<>();
         for(int i=0;i<labels.size();i++) {
@@ -79,7 +81,7 @@ public final class RedstoneScreenContents {
     public boolean applyConfiguration(NBTTagCompound tag){
         if(!validConfiguration(tag))return false;
         NBTTagList list=tag.getTagList("Rows",10);List<String> labels=new ArrayList<>();List<ChannelList> channels=new ArrayList<>();
-        for(int i=0;i<list.tagCount();i++){NBTTagCompound row=list.getCompoundTagAt(i);labels.add(row.getString("Label"));channels.add(ChannelData.read(row,0));}
+        for(int i=0;i<Math.min(maxRows(),list.tagCount());i++){NBTTagCompound row=list.getCompoundTagAt(i);labels.add(row.getString("Label"));channels.add(ChannelData.read(row,0));}
         return configure(tag.getString("Title"),labels,channels,getHousingTexture(),tag.getBoolean("Enabled") && com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(owner.getBlockType(),slot));
     }
     public void toggleRow(int index) {
@@ -87,7 +89,7 @@ public final class RedstoneScreenContents {
         Row row=rows.get(index);if(row.channels.isEmpty())return;
         RedstoneChannels.latchChanged(row,!RedstoneChannels.allPowered(owner.getWorld(),row.channels));
     }
-    public void finishLoading(){if(enabled)refreshRows();else unregisterRows();}
+    public void finishLoading(){limitRows();if(enabled)refreshRows();else unregisterRows();}
     private void refreshRows(){
         if(owner.getWorld()==null || owner.getWorld().isRemote || !enabled)return;
         // Register replacements before removing old members so an unchanged bank
@@ -121,7 +123,7 @@ public final class RedstoneScreenContents {
             Row row=new Row(label,ChannelData.read(entry,0));
             row.latched=ChannelData.read(entry,"LatchedChannels",ChannelList.EMPTY).intersect(row.channels);row.active=entry.getBoolean("Active");next.add(row);
         }
-        rows=next;view=Collections.unmodifiableList(rows);
+        rows=next;view=Collections.unmodifiableList(rows);if(owner.getWorld()!=null)limitRows();
     }
     public final class Row implements RedstoneChannelLatch {
         public final String label;

@@ -28,7 +28,7 @@ final class ScreenCopyAndParticleRuntimeChecks {
             if(++ticks>400)throw new IllegalStateException("copy/particle timeout stage="+stage);
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
             if(stage==0){pending=mc.getIntegratedServer().addScheduledTask(()->{
-                EntityPlayerMP p=owner(mc);p.closeScreen();p.world.setBlockState(SOURCE,ModBlocks.PROGRAMMABLE_CONSOLE.getDefaultState(),3);p.world.setBlockState(TARGET,ModBlocks.PROGRAMMABLE_HALF_CONSOLE.getDefaultState(),3);
+                EntityPlayerMP p=owner(mc);p.closeScreen();p.world.setBlockState(SOURCE,ModBlocks.PROGRAMMABLE_CONSOLE.getDefaultState(),3);p.world.setBlockState(TARGET,ModBlocks.PROGRAMMABLE_CONSOLE.getDefaultState(),3);
                 List<String> labels=new ArrayList<>();List<ChannelList> channels=new ArrayList<>();for(int i=0;i<8;i++){labels.add("Row "+(i+1));channels.add(ChannelList.of(20001+i,20021+i));}
                 TileEntityAnimatedScreenSelector source=screen(p,SOURCE);source.redstoneScreen(0).configure("Bridge",labels,channels,0);source.redstoneScreen(1).configure("Deck",Arrays.asList("Deck lights"),Arrays.asList(ChannelList.of(20101,20102)),0);
                 ItemStack tool=new ItemStack(ModItems.DUPLIFIER);NBTTagCompound tag=new NBTTagCompound();tag.setLong(DuplifierApplyOptions.TAG,0);tool.setTagCompound(tag);p.inventory.setInventorySlotContents(0,tool);held(p,0);aimScreen(p,SOURCE);
@@ -44,6 +44,7 @@ final class ScreenCopyAndParticleRuntimeChecks {
                 ItemStack picked=((BlockAnimatedScreenSelector)p.world.getBlockState(TARGET).getBlock()).createConfiguredDrop(target);
                 NBTTagCompound saved=picked.getSubCompound("BlockEntityTag");require(saved.getCompoundTag("RedstonePrimary").getString("Title").equals("Bridge") && !saved.getCompoundTag("RedstonePrimary").getTagList("Rows",10).getCompoundTagAt(0).hasKey("LatchedChannels"),"picked screen lost header or retained live latch");
             });next(5);return;}
+            if(stage==5 && Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){System.out.println("[vandorlabs][reprolab] integrated-screen-duplifier-runtime PASS both surfaces, eight rows and old-mask tool");mc.shutdown();next(99);return;}
             if(stage==5){System.out.println("[vandorlabs][reprolab] integrated-screen-duplifier-runtime PASS both surfaces, eight rows and old-mask tool");pending=mc.getIntegratedServer().addScheduledTask(()->{
                 EntityPlayerMP p=owner(mc);net.minecraft.block.Block block=net.minecraft.block.Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster"));p.world.setBlockState(SOURCE,block.getDefaultState().withProperty(BlockPropulsionLight.FACING,EnumFacing.NORTH),3);
                 TileEntityRedstoneLight tile=(TileEntityRedstoneLight)p.world.getTileEntity(SOURCE);tile.setManualMode(1,true);held(p,8);p.connection.setPlayerLocation(SOURCE.getX()+.5,SOURCE.getY()+.5-p.getEyeHeight(),SOURCE.getZ()-2.5,0,0);
@@ -61,7 +62,7 @@ final class ScreenCopyAndParticleRuntimeChecks {
     private static void sneak(Minecraft mc,boolean on){mc.player.setSneaking(on);mc.player.connection.sendPacket(new CPacketEntityAction(mc.player,on?CPacketEntityAction.Action.START_SNEAKING:CPacketEntityAction.Action.STOP_SNEAKING));}
     private static void aimScreen(EntityPlayerMP p,BlockPos pos){
         TileEntityAnimatedScreenSelector tile=screen(p,pos);net.minecraft.block.state.IBlockState state=p.world.getBlockState(pos);ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,0);
-        double u=30/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),0)+5)/128D;
+        double u=30/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),0)+5)/(double)RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
         Vec3d hit=new Vec3d(pos.getX()+(q.topRight.x+(q.topLeft.x-q.topRight.x)*u)/16,pos.getY()+(q.topRight.y+(q.bottomRight.y-q.topRight.y)*v)/16,pos.getZ()+(q.topRight.z+(q.bottomRight.z-q.topRight.z)*v)/16);
         Vec3d eye=hit.addVector(0,q.ny*2,q.nz*2),look=hit.subtract(eye);
         p.connection.setPlayerLocation(eye.x,eye.y-p.getEyeHeight(),eye.z,(float)Math.toDegrees(Math.atan2(-look.x,look.z)),(float)-Math.toDegrees(Math.atan2(look.y,Math.sqrt(look.x*look.x+look.z*look.z))));

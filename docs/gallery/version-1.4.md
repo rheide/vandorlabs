@@ -23,14 +23,16 @@ A console's screen and input deck can have independent control panels.
    block's dialog.
 2. Open the artwork picker for the surface you want to change and choose
    `Redstone...`.
-3. Edit the header, add or remove up to eight rows, and give each row a short
+3. Edit the header, add or remove rows, and give each row a short
    label and comma-separated channels. Press Done to save.
 
 **Click anywhere on a row** to toggle every channel in its list. Green means
 **all** listed channels are powered. A partially powered row appears inactive;
 clicking it activates its complete channel bank. Empty channel lists remain
 inactive. Labels and headers are limited to the visible screen width, so new
-text is shown in full. Half-height surfaces omit the header on the block.
+text is shown in full. Full-height panels support eight rows. Half-height
+surfaces support four rows at the same text proportions and omit the header
+both on the block and in the editor.
 
 Rows can overlap, and switches, levers and buttons can control the same
 channels. Physical inputs continue supplying power independently of a panel's
@@ -40,7 +42,8 @@ retaining its saved row definitions for later use.
 Headers, rows, channel lists and latch states survive world saves. Pick-block
 copies the configuration and housing without copying live latch state. The
 Duplifier's **Redstone Screen Items** option copies the complete panel
-configuration, including both surfaces of a console. Older saved Duplifier
+configuration, including both surfaces of a console. Copying to a half-height
+surface retains the first four rows. Older saved Duplifier
 masks enable the new option by default; it can still be disabled deliberately.
 Editing labels does not interrupt an active channel bank. Only loaded rows
 participate in the network, and unchanged highlights avoid redundant updates.

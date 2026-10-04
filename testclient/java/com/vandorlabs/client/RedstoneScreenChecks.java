@@ -112,8 +112,8 @@ final class RedstoneScreenChecks {
                 world.setBlockState(pos,state,2);TileEntityAnimatedScreenSelector owner=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);owner.setSmallInput(small!=0);owner.setCeilingMounted(ceiling>=0);if(ceiling>=0)owner.setCeilingPosition(ceiling);
                 for(int slot=0;slot<2;slot++)if(RedstoneScreenInteractions.supportsSlot(block,slot)){
                     ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,owner,slot);int top=RedstoneScreenInteractions.rowTop(block,slot);
-                    for(int row=0;row<8;row++){
-                        double u=30/128D,v=(top+row*12+5)/128D;Vec3d center=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v);
+                    for(int row=0;row<(RedstoneScreenInteractions.half(block,slot)?4:8);row++){
+                        double u=30/128D,v=(top+row*12+5)/(double)RedstoneScreenInteractions.displayHeight(block,slot);Vec3d center=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v);
                         EnumFacing face=RedstoneScreenInteractions.facing(state);Vec3d start=world(center.addVector(0,q.ny*16,q.nz*16),face),end=world(center.addVector(0,-q.ny*16,-q.nz*16),face);
                         require(RedstoneScreenInteractions.hitRow(state,owner,slot,start,end,8)==row,"integrated row plane disagrees: "+block+" "+state+" slot="+slot);
                     }
@@ -127,6 +127,10 @@ final class RedstoneScreenChecks {
         owner.setSurfaceTexture(0,-1);require(!RedstoneChannels.allPowered(world,ChannelList.of(51)) && RedstoneChannels.allPowered(world,ChannelList.of(52)),"switching artwork retained hidden sources or disabled the other surface");
         owner.setSurfaceTexture(0,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);require(owner.redstoneScreen(0).rows().get(0).label.equals("Door"),"switching artwork discarded saved rows");
         TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(owner.writeToNBT(new NBTTagCompound()));require(restored.hasRedstoneScreen(0) && restored.hasRedstoneScreen(1) && restored.redstoneScreen(1).title().equals("Deck"),"independent surfaces lost in NBT");
+        BlockPos halfTarget=pos.east(3);world.setBlockState(halfTarget,ModBlocks.PROGRAMMABLE_INPUT.getDefaultState(),2);TileEntityAnimatedScreenSelector half=(TileEntityAnimatedScreenSelector)world.getTileEntity(halfTarget);
+        java.util.List<String> eight=new java.util.ArrayList<>();java.util.List<ChannelList> banks=new java.util.ArrayList<>();for(int i=0;i<8;i++){eight.add("Item "+i);banks.add(ChannelList.of(61+i));}
+        require(!half.redstoneScreen(0).configure("Hidden",eight,banks,0),"half-height editor accepted eight rows");
+        owner.redstoneScreen(0).configure("Bridge",eight,banks,0);require(half.applyRedstoneConfiguration(owner.redstoneConfiguration()) && half.redstoneScreen(0).rows().size()==4,"copy into half-height panel did not retain its first four rows");
         owner.onChunkUnload();require(!RedstoneChannels.allPowered(world,ChannelList.of(51,52)),"integrated surfaces retained unloaded power");
     }
     private static void diagonalSelection(){
@@ -136,6 +140,8 @@ final class RedstoneScreenChecks {
             require(shape.trace(BlockPos.ORIGIN,DiagonalScreenShape.world(-.25,solid,.8,facing),DiagonalScreenShape.world(1.25,solid,.8,facing))!=null,"solid diagonal housing missed picking");
             RayTraceResult slope=shape.trace(BlockPos.ORIGIN,DiagonalScreenShape.world(.5,upper?.2:.8,.2,facing),DiagonalScreenShape.world(.5,upper?.8:.2,.8,facing));
             require(slope!=null && slope.hitVec.squareDistanceTo(new Vec3d(.5,.5,.5))<1e-12,"diagonal pick did not intersect rendered slope");
+            Vec3d inside=DiagonalScreenShape.world(.5,solid,.8,facing),outside=DiagonalScreenShape.world(-.25,solid,.8,facing),direction=outside.subtract(inside);
+            RayTraceResult exit=shape.trace(BlockPos.ORIGIN,inside,outside);require(exit!=null && exit.sideHit==EnumFacing.getFacingFromVector((float)direction.x,(float)direction.y,(float)direction.z),"inside ray reported an inward housing side");
             AxisAlignedBB pocket=PanelPlacement.rotateFromNorth(new AxisAlignedBB(.2,upper?.1:.7,.05,.8,upper?.3:.9,.15),facing);
             for(AxisAlignedBB box:shape.collision)require(!box.intersects(pocket),"empty diagonal space has cube collision");
         }
