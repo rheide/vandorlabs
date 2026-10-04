@@ -5,7 +5,6 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Full solid cube whose six faces share one selectable finish. */
@@ -20,7 +19,7 @@ public class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
     }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new ExtendedBlockState(this, new IProperty<?>[]{FACING},
+        return new HousingBlockState(this, new IProperty<?>[]{FACING},
                 new IUnlistedProperty<?>[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH, ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES, ProgrammableHousingState.VISIBLE,
                         ProgrammableHousingState.LIGHT});

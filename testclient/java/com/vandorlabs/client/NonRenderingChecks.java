@@ -46,6 +46,8 @@ public final class NonRenderingChecks {
         TrapdoorMeshParityChecks.run();
         ChannelReconciliationChecks.run();
         TrapdoorAssemblyReuseChecks.run();
+        HousingStateChecks.run();
+        HousingModelChecks.run();
     }
 
     private static void placement() {
@@ -165,6 +167,7 @@ public final class NonRenderingChecks {
         }
         void clear(){states.clear();tiles.clear();}
         @Override public long getTotalWorldTime(){return time;}
+        @Override public int getCombinedLight(BlockPos p,int minimum){return ((p.getX()&15)<<20)|(Math.max(minimum,p.getZ()&15)<<4);}
         @Override public void scheduleUpdate(BlockPos p,Block block,int delay){}
         @Override public void notifyNeighborsOfStateChange(BlockPos p,Block block,boolean observers){}
         @Override public <T extends net.minecraft.entity.Entity> List<T> getEntitiesWithinAABB(Class<? extends T> type,

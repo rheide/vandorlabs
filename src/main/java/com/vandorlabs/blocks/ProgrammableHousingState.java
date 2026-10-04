@@ -27,6 +27,8 @@ public final class ProgrammableHousingState {
                 public String valueToString(com.vandorlabs.tiles.FaceTextures value) { return value.toString(); }
             };
 
+    private static final EnumFacing[] DIRECTIONS=EnumFacing.values();
+
     private ProgrammableHousingState() { }
 
     public static IUnlistedProperty<Integer> integer(String name) {
@@ -47,8 +49,9 @@ public final class ProgrammableHousingState {
         int tileSides = tile != null && tile.isSlabTileSides() ? 1 : 0;
         int visible = 63;
         BlockSlab.EnumBlockHalf half = slab ? state.getValue(BlockProgrammableSlab.HALF) : null;
-        for (EnumFacing side : EnumFacing.values()) {
-            BlockPos next = pos.offset(side);
+        BlockPos.MutableBlockPos next=new BlockPos.MutableBlockPos();
+        for (EnumFacing side : DIRECTIONS) {
+            next.setPos(pos.getX()+side.getFrontOffsetX(),pos.getY()+side.getFrontOffsetY(),pos.getZ()+side.getFrontOffsetZ());
             if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
             IBlockState neighbor = world.getBlockState(next);
             boolean hide = neighbor.isOpaqueCube() && neighbor.isFullCube();
@@ -64,11 +67,9 @@ public final class ProgrammableHousingState {
             }
             if (hide) visible &= ~(1 << side.getIndex());
         }
-        return ((IExtendedBlockState)state).withProperty(FINISH, finish)
-                .withProperty(SIDE_FINISH,tile==null?-1:tile.getSideTexture())
-                .withProperty(FACES, tile == null ? com.vandorlabs.tiles.FaceTextures.DEFAULT : tile.getFaceTextures())
-                .withProperty(TILE_SIDES, tileSides).withProperty(VISIBLE, visible)
-                .withProperty(LIGHT, neighborLight(world, pos));
+        return HousingBlockState.sample((IExtendedBlockState)state,finish,tile==null?-1:tile.getSideTexture(),
+                tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures(),
+                tileSides,visible,neighborLight(world,pos));
     }
 
     public static int light(IBlockState state, IBlockAccess world, BlockPos pos) {
@@ -81,8 +82,9 @@ public final class ProgrammableHousingState {
 
     public static int neighborLight(IBlockAccess world, BlockPos pos) {
         int sky = 0, block = 0;
-        for (EnumFacing side : EnumFacing.values()) {
-            BlockPos next = pos.offset(side);
+        BlockPos.MutableBlockPos next=new BlockPos.MutableBlockPos();
+        for (EnumFacing side : DIRECTIONS) {
+            next.setPos(pos.getX()+side.getFrontOffsetX(),pos.getY()+side.getFrontOffsetY(),pos.getZ()+side.getFrontOffsetZ());
             if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
             int combined = world.getCombinedLight(next, 0);
             sky = Math.max(sky, combined >>> 16);

@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Reduce Block, Slab, Storage and Stairs chunk-mesh allocation with single-pass extended states, reused neighbor positions and bounded caches of common housing face lists. Preserve exact quads, face overrides, storage artwork and Forge property behavior. See the [performance measurements](docs/performance/1.4/README.md).
+
 - Reduce loaded redstone channel work by revalidating a known powered source before searching other members. Preserve immediate OR propagation and coalesced input handling.
 - Share immutable trapdoor assembly membership after validation, reuse each draw's group snapshot, and avoid redundant corner/edge allocations and opposing-cover lookups.
 - Reuse trapdoor texture-clipping layouts across frames and moving poses. Keep lighting and resource-pack texture coordinates live, with bounded cache storage and unchanged leaf geometry, artwork, and controls.

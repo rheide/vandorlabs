@@ -12,7 +12,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Half-height programmable block with vanilla-style top and bottom placement. */
@@ -41,7 +40,7 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
     }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new ExtendedBlockState(this, new IProperty<?>[]{FACING, HALF},
+        return new HousingBlockState(this, new IProperty<?>[]{FACING, HALF},
                 new IUnlistedProperty<?>[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH, ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES, ProgrammableHousingState.VISIBLE,
                         ProgrammableHousingState.LIGHT});

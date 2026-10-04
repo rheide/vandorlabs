@@ -29,7 +29,7 @@ public final class BlockProgrammableStairs extends BlockStairs {
         setHardness(5);setResistance(10);setHarvestLevel("pickaxe",1);
     }
     @Override protected BlockStateContainer createBlockState() {
-        return new ExtendedBlockState(this,new IProperty[]{FACING,HALF,SHAPE},
+        return new HousingBlockState(this,new IProperty[]{FACING,HALF,SHAPE},
                 new IUnlistedProperty[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH,ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES});
     }
@@ -38,10 +38,9 @@ public final class BlockProgrammableStairs extends BlockStairs {
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
-        return ((IExtendedBlockState)state).withProperty(ProgrammableHousingState.FINISH,tile==null?0:tile.getHousingTexture())
-                .withProperty(ProgrammableHousingState.SIDE_FINISH,tile==null?-1:tile.getSideTexture())
-                .withProperty(ProgrammableHousingState.FACES,tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures())
-                .withProperty(ProgrammableHousingState.TILE_SIDES,tile!=null&&tile.isSlabTileSides()?1:0);
+        return HousingBlockState.sample((IExtendedBlockState)state,tile==null?0:tile.getHousingTexture(),
+                tile==null?-1:tile.getSideTexture(),tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures(),
+                tile!=null&&tile.isSlabTileSides()?1:0,63,0);
     }
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,

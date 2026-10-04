@@ -67,6 +67,40 @@ and material layout. Closed material coordinates do not resolve the group's
 opening direction. Fixed edge UV arrays are reused, corner arrays are allocated
 once, and opposing-cover bounds are sampled once per layout.
 
+## Block, Slab, Storage and Stairs chunk meshes
+
+Housing state construction fills Forge's unlisted-property map in one pass,
+preserving its listed-property transitions and canonical clean state. Neighbor
+sampling reuses local mutable positions. Ordinary single-material Block/Slab/
+Storage models also retain bounded immutable face lists; mixed overrides still
+select each face independently. All model state remains safe for concurrent
+chunk-building workers.
+
+The checks compare 256 state configurations with Forge's original sequential
+builder, and compare 12,288 model cases byte-for-byte with the 1.3 implementation.
+Coverage includes every visibility mask, facing, slab half, tiling setting,
+explicit/inherited storage art and mixed face overrides, plus concurrent reads
+and cache bounds. Live Storage inventory/material/settings checks also pass. All 58 static benchmark images match within the existing
+99.99% / 3-per-channel threshold, including Storage and Stairs.
+
+Warm chunk-build measurements use 15 warmups and 31 measured samples, with eight
+fixture rebuilds per sample. Values below are per 64-block fixture. This measures
+chunk rebuild CPU work rather than steady drawing of the already-built chunk.
+
+| Fixture | Before (ms) | After (ms) | Before allocation (bytes) | After allocation (bytes) |
+| --- | ---: | ---: | ---: | ---: |
+| Block, separated | 0.276 | 0.246 | 359,072 | 172,704 |
+| Block, 8×8 floor | 0.179 | 0.143 | 287,392 | 108,192 |
+| Block, 4×4×4 solid | 0.146 | 0.113 | 265,376 | 87,648 |
+| Slab, separated | 0.296 | 0.256 | 366,624 | 180,256 |
+| Storage, separated | 0.286 | 0.244 | 369,184 | 173,600 |
+| Stairs, separated | 0.782 | 0.755 | 354,848 | 301,088 |
+
+Vanilla control allocations are unchanged. Block/Slab/Storage show 11–23% lower
+median rebuild time and 47–67% lower allocation across their fixtures. The small
+Stairs timing difference is within ordinary variation; its allocation reduction
+is measurable. Complete results, including controls, are in the mesh-build CSVs.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -74,7 +108,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv
