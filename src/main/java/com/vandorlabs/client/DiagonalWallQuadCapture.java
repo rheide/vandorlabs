@@ -13,11 +13,12 @@ import java.util.List;
 /** Captures the existing pixel-space emitter without GL calls or shared mutable buffers. */
 final class DiagonalWallQuadCapture extends BufferBuilder {
     private final List<BakedQuad> quads=new ArrayList<>();
+    private final DiagonalQuadMerger merger;
     private final double[][] points=new double[4][8];
     private final int turns;
     private int vertex;
     private TextureAtlasSprite sprite;
-    DiagonalWallQuadCapture(EnumFacing facing){super(16);turns=((int)(180-facing.getHorizontalAngle())/90)&3;}
+    DiagonalWallQuadCapture(EnumFacing facing,boolean merge){super(16);turns=((int)(180-facing.getHorizontalAngle())/90)&3;merger=merge?new DiagonalQuadMerger():null;}
     void texture(TextureAtlasSprite sprite){this.sprite=sprite;}
     @Override public BufferBuilder pos(double x,double y,double z) {
         double a=x/16,c=z/16;
@@ -36,11 +37,16 @@ final class DiagonalWallQuadCapture extends BufferBuilder {
     }
     @Override public void endVertex() {
         if(++vertex==4) {
-            add(false);add(true); // The old tile renderer explicitly disables back-face culling.
+            if(merger==null){add(points,sprite,false);add(points,sprite,true);}
+            else {
+                double[][] copy=new double[4][];
+                for(int i=0;i<4;i++)copy[i]=points[i].clone();
+                merger.add(new DiagonalQuadMerger.Face(sprite,copy));
+            }
             vertex=0;
         }
     }
-    private void add(boolean reverse) {
+    private void add(double[][] points,TextureAtlasSprite sprite,boolean reverse) {
         // Baked models use the standard ITEM layout: position, color, UV and normal.
         // The vanilla block renderer copies this packed array directly into BLOCK
         // buffers and replaces its last word with lighting. A TESR layout with
@@ -62,5 +68,11 @@ final class DiagonalWallQuadCapture extends BufferBuilder {
         BakedQuad quad=builder.build();quad.getVertexData(); // Eager packing before publication to any renderer.
         quads.add(quad);
     }
-    List<BakedQuad> finish(){if(vertex!=0)throw new IllegalStateException("Incomplete diagonal quad");return Collections.unmodifiableList(quads);}
+    List<BakedQuad> finish(){
+        if(vertex!=0)throw new IllegalStateException("Incomplete diagonal quad");
+        if(merger!=null)for(DiagonalQuadMerger.Face face:merger.faces()) {
+            add(face.points,face.sprite,false);add(face.points,face.sprite,true);
+        }
+        return Collections.unmodifiableList(quads);
+    }
 }

@@ -21,12 +21,13 @@ final class DiagonalChunkChecks {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
         BlockProgrammableWall block=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
         require(block.getBlockLayer()==net.minecraft.util.BlockRenderLayer.CUTOUT_MIPPED,"diagonal material alpha test was lost");
-        BlockPos pos=new BlockPos(8,88,8);int cases=0;
+        BlockProgrammableWall flat=new BlockProgrammableWall("diagonal_merge_flat_fixture",BlockProgrammableWall.Shape.PLAIN);
+        BlockPos pos=new BlockPos(8,88,8);int cases=0,originalQuads=0,mergedQuads=0;
         TextureAtlasSprite wall=sprite("wall",0),metal=sprite("metal",32);
         IBlockAccess cache=(IBlockAccess)java.lang.reflect.Proxy.newProxyInstance(IBlockAccess.class.getClassLoader(),new Class<?>[]{IBlockAccess.class},
                 (proxy,method,args)->method.invoke(world,args));
         for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})
-            for(int mode=0;mode<3;mode++)for(int fill=0;fill<4;fill++)for(int neighbor=0;neighbor<6;neighbor++) {
+            for(int mode=0;mode<3;mode++)for(int fill=0;fill<4;fill++)for(int neighbor=0;neighbor<10;neighbor++) {
                 world.clear();IBlockState state=block.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing)
                         .withProperty(BlockProgrammableWall.INVERTED,inverted);
                 world.setBlockState(pos,state,2);
@@ -34,17 +35,30 @@ final class DiagonalChunkChecks {
                 tile.setDiagonalGeometry(mode,fill);
                 if(neighbor==1)world.setBlockState(pos.offset(facing),Blocks.STONE.getDefaultState(),2);
                 if(neighbor==2)world.setBlockState(pos.up(),Blocks.STONE.getDefaultState(),2);
-                if(neighbor>=3) {
+                if(neighbor>=3 && neighbor<=5) {
                     BlockPos next=neighbor==3?pos.offset(facing):neighbor==4?pos.up():pos.offset(facing.getOpposite());
                     world.setBlockState(next,neighbor==3?state.withProperty(BlockProgrammableWall.FACING,facing.rotateY()):state,2);
                     ((TileEntityAnimatedScreenSelector)world.getTileEntity(next)).setDiagonalGeometry(mode,fill);
                 }
+                if(neighbor==6 || neighbor==7)world.setBlockState(neighbor==6?pos.down():pos.up(),
+                        flat.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing),2);
+                if(neighbor==8)for(EnumFacing side:new EnumFacing[]{facing,facing.getOpposite()}) {
+                    BlockPos next=pos.offset(side);
+                    world.setBlockState(next,state.withProperty(BlockProgrammableWall.FACING,facing.rotateY()),2);
+                    ((TileEntityAnimatedScreenSelector)world.getTileEntity(next)).setDiagonalGeometry(mode,fill);
+                }
+                if(neighbor==9)world.setBlockState(pos.offset(facing.rotateY()),Blocks.STONE.getDefaultState(),2);
                 DiagonalWallState shape=new DiagonalWallState(state,cache,pos);
                 IBlockState extended=block.getExtendedState(state,cache,pos);
                 require(extended instanceof IExtendedBlockState,"missing extended state");
                 require(extended.getPackedLightmapCoords(cache,pos.up())==world.getCombinedLight(pos,0),"neighbor sample changed uniform owner light");
                 require(!tile.shouldRenderInPass(0),"interior tile still renders");
-                List<BakedQuad> quads=DiagonalWallModel.bake(shape,wall,metal);
+                List<BakedQuad> quads=DiagonalWallModel.bake(shape,wall,metal,false);
+                List<BakedQuad> merged=DiagonalWallModel.bake(shape,wall,metal);
+                DiagonalMergeChecks.compare(quads,merged);
+                originalQuads+=quads.size();mergedQuads+=merged.size();
+                if(neighbor==0 && fill==0)require(merged.size()==20,"simple wall did not reduce to twenty two-sided quads");
+                checkVanillaBuffer(cache,extended,pos,merged);
                 checkVanillaBuffer(cache,extended,pos,quads);
                 BufferBuilder reference=new BufferBuilder(65536);VertexFormat format=BlockSurfaceFormat.get();
                 reference.begin(7,format);TEAnimatedScreenSelector.drawConfiguredDiagonalWall(reference,tile,state,wall,metal);
@@ -93,6 +107,7 @@ final class DiagonalChunkChecks {
         tile.onDataPacket(null,new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,changed));
         require(pos.add(-1,-1,-1).equals(world.renderMin) && pos.add(1,1,1).equals(world.renderMax),
                 "packet geometry change did not invalidate neighboring chunks");
+        System.out.println("PASS: merged diagonal quads "+originalQuads+" -> "+mergedQuads+"; bidirectional surface, UV, normal and area checks");
         System.out.println("PASS: "+cases+" diagonal chunk snapshots match TESR positions, UVs, normals and two-sided faces; vanilla packed output, uniform light and chunk-edge fallback preserved");
     }
     /** Exercise the raw-copy renderer used when Forge's light pipeline is disabled. */

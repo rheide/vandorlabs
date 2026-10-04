@@ -45,7 +45,7 @@ public final class DiagonalMeshSurvey {
                         }
                     }
                     if(neighbor==9)world.setBlockState(pos.offset(facing.rotateY()),net.minecraft.init.Blocks.STONE.getDefaultState(),2);
-                    List<BakedQuad> mesh=DiagonalWallModel.bake(new DiagonalWallState(state,world,pos),wall,metal);
+                    List<BakedQuad> mesh=DiagonalWallModel.bake(new DiagonalWallState(state,world,pos),wall,metal,false);
                     JsonObject row=new JsonObject();row.addProperty("facing",facing.getName());row.addProperty("inverted",inverted);
                     row.addProperty("mode",mode);row.addProperty("fill",fill);row.addProperty("neighbor",neighbor);
                     JsonArray quads=new JsonArray();

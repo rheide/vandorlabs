@@ -24,7 +24,10 @@ public final class DiagonalWallModel implements IBakedModel {
         return bake(shape,wall,metal);
     }
     static List<BakedQuad> bake(DiagonalWallState shape,TextureAtlasSprite wall,TextureAtlasSprite metal) {
-        DiagonalWallQuadCapture capture=new DiagonalWallQuadCapture(shape.facing);
+        return bake(shape,wall,metal,true);
+    }
+    static List<BakedQuad> bake(DiagonalWallState shape,TextureAtlasSprite wall,TextureAtlasSprite metal,boolean merge) {
+        DiagonalWallQuadCapture capture=new DiagonalWallQuadCapture(shape.facing,merge);
         TEAnimatedScreenSelector.renderDiagonalWall(capture,wall,metal,shape.inverted,shape.corner,
                 shape.span,shape.fill,shape.halfHeight?(shape.inverted?-8:0):0,
                 shape.halfHeight?(shape.inverted?8:16):16,

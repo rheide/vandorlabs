@@ -107,5 +107,21 @@ Hardware shader appearance and real-world frame-time improvements require
 player testing before expanding this preview to boundary walls or other blocks.
 
 For measured topology and containment opportunities, see the
-[mesh and boundary investigation](diagonal-survey/README.md). Its merge
-candidates and broader boundary routing are not yet part of the renderer.
+[mesh and boundary investigation](diagonal-survey/README.md). The production merger now combines compatible faces; broader boundary routing
+is still being developed.
+
+## Coplanar mesh merging
+
+Compatible faces are merged before quad packing during chunk construction.
+Materials, normal values, shared edges, planarity and a common affine UV mapping
+must agree. The union must remain a convex quadrilateral with unchanged area.
+UV clamps, non-affine mapping and geometric bends remain split; each retained
+surface still has an explicit reversed face.
+
+The 960-case geometry suite passes with 45,440 original two-sided quads reduced
+to 22,528 merged quads (50.4% fewer). Simple unfilled walls use 20 rather than
+44 quads. Independent triangle sampling checks surface coverage, interpolated
+UVs and normals in both directions; area and exact back-face attributes are
+checked separately. Both original and merged meshes also pass through the
+vanilla block renderer's packed-buffer checks. These counts do not establish
+a hardware frame-time improvement.

@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Merge compatible coplanar Diagonal Wall faces during chunk construction, preserving texture interpolation, normals, clipping and two-sided visibility. Simple walls use 20 quads instead of 44.
+
 - Fix corrupted triangles on chunk-rendered Diagonal Walls when using the vanilla block renderer. Use the standard baked-quad vertex layout and retain the existing surfaces, normals and lighting.
 - Validate the actual vanilla output buffer as well as the Forge rendering path.
 
