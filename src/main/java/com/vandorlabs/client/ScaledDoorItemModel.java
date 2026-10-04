@@ -26,6 +26,7 @@ public final class ScaledDoorItemModel implements IBakedModel {
     private final IBakedModel original;
 
     public ScaledDoorItemModel(IBakedModel original) { this.original = original; }
+    boolean stableQuads(){return DoorQuadPlan.stableQuads(original);}
 
     @Override public List<BakedQuad> getQuads(IBlockState state, EnumFacing side,
             long rand) { return original.getQuads(state, side, rand); }

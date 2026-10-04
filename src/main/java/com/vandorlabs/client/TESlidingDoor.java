@@ -18,7 +18,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -176,11 +175,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003F);
             GlStateManager.depthMask(false);
-            renderer.renderItem(glass.stack, glass.model);
+            DoorItemRenderer.baked(renderer,glass,glass.model);
             GlStateManager.depthMask(true);
             GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
             GlStateManager.disableBlend();
-        } else renderer.renderItem(leaf.stack, ItemCameraTransforms.TransformType.NONE);
+        } else DoorItemRenderer.opaque(renderer,leaf);
         GlStateManager.enableLighting();
         GlStateManager.popMatrix();
     }
@@ -210,7 +209,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 GlStateManager.disableLighting();
                 DoorRenderModels.Entry selected=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1));
                 renderSelectedDoorFace(tile,light,selected.selected());
-                GlStateManager.translate(.5,.5,.5);renderer.renderItem(selected.stack,selected.selected());
+                GlStateManager.translate(.5,.5,.5);DoorItemRenderer.baked(renderer,selected,selected.selected());
                 GlStateManager.enableLighting();GlStateManager.popMatrix();continue;
             }
             GlStateManager.translate(.5,.5,.5);
@@ -225,11 +224,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                         GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
                 GlStateManager.depthMask(false);
-                renderer.renderItem(item.stack,item.model);
+                DoorItemRenderer.baked(renderer,item,item.model);
                 GlStateManager.depthMask(true);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 GlStateManager.disableBlend();
-            } else renderer.renderItem(item.stack,ItemCameraTransforms.TransformType.NONE);
+            } else DoorItemRenderer.opaque(renderer,item);
             GlStateManager.enableLighting();
             GlStateManager.popMatrix();
         }

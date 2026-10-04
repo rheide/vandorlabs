@@ -33,7 +33,7 @@ These paired measurements show 21–43% lower CPU cost and 98–99% less allocat
 in texture emission. They do not establish an FPS improvement.
 
 The full live suite passed on release 1.3, the first optimized build, and the
-housing/power optimization build, including
+housing/power and property-lookup optimization builds, including
 rendering, GUI/network, joining/redstone, placement, inventory and copy contracts.
 The first live before/after benchmark pair passed all 56 static image comparisons: at least
 99.99% of pixels are within 3/255 per channel. Across the 64-leaf trapdoor cases,
@@ -209,6 +209,28 @@ depending on geometry. For example, the default door drops from 161,312 to
 door submission times improve by 3–10%; retain the vanilla controls and earlier
 runs when interpreting CPU variation. `property-lookup.csv` and
 `render-after-properties.csv` contain the measurements.
+
+## Door draw preparation
+
+Stable JSON/OBJ door models now retain Forge's consecutive diffuse-light groups
+inside the existing bounded, resource-reload-cleared model cache. The original
+RenderItem quad emitter, transforms, tint lookup and draw order remain active.
+OptiFine, custom renderers, unknown model/quad implementations and quads carrying
+light data use the original dispatch. Item overrides still resolve on each
+ordinary door draw; a different model identity also uses the original path.
+
+The live benchmark exercises all 20 cached models through the prepared path.
+All 58 static images pass comparison, and 160 original/prepared draws return
+identical checked GL state, including lightmap, colour, transforms, blend factors
+and texture filters. A separate 512-pattern check compares quad identity/order
+and Forge's shade-state transitions.
+
+Across 64-door batches, allocation drops by 80–95% compared with the preceding
+property-lookup build: default doors fall from 117,792 to 23,584 bytes, glass doors
+from 239,648 to 12,320, and selected-material doors from 110,624 to 16,928. CPU
+submission medians differ by about -4% to +2%; draw-call cost remains and these
+small timing changes should not be interpreted as an FPS gain.
+`render-after-door-plans.csv` includes all fixtures and vanilla controls.
 
 ## Reproduction
 

@@ -31,11 +31,19 @@ public final class DoorRenderModels {
     }
 
     public static void clear() { MODELS.clear(); SelectedDoorFaceCache.clear(); }
+    static void checkPreparedDrawStates(){DoorDrawRuntimeChecks.run(new java.util.ArrayList<>(MODELS.values()));}
 
     static final class Entry {
         final ItemStack stack;
         final IBakedModel model;
         private SelectedDoorGeometry selected;
+        private DoorQuadPlan plan,selectedPlan;
+        private boolean planChecked,selectedPlanChecked;
+        DoorQuadPlan plan(IBakedModel current) {
+            if(current==model){if(!planChecked){plan=DoorQuadPlan.prepare(current);planChecked=true;}return plan;}
+            if(current==selected){if(!selectedPlanChecked){selectedPlan=DoorQuadPlan.prepare(current);selectedPlanChecked=true;}return selectedPlan;}
+            return null;
+        }
         SelectedDoorGeometry selected(){if(selected==null)selected=new SelectedDoorGeometry(model);return selected;}
         Entry(ItemStack stack, IBakedModel model) { this.stack = stack; this.model = model; }
     }

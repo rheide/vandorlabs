@@ -121,6 +121,7 @@ final class ProgrammableRenderBenchmark {
                         measure(mc, csv, meshes, id, "round_unjoined", 64);
                     }
                 }
+                DoorRenderModels.checkPreparedDrawStates();
             } finally {
                 mc.entityRenderer.disableLightmap();
                 GlStateManager.popMatrix();
