@@ -33,7 +33,7 @@ These paired measurements show 21–43% lower CPU cost and 98–99% less allocat
 in texture emission. They do not establish an FPS improvement.
 
 The full live suite passed on release 1.3, the first optimized build, and the
-housing/power, property-lookup and door/ramp optimization builds, including
+housing/power, property-lookup, door/ramp and compact-state optimization builds, including
 rendering, GUI/network, joining/redstone, placement, inventory and copy contracts.
 The first live before/after benchmark pair passed all 56 static image comparisons: at least
 99.99% of pixels are within 3/255 per channel. Across the 64-leaf trapdoor cases,
@@ -324,6 +324,35 @@ next draw rebuilds a cleared group normally. A regression check reproduces the
 retained reference before the change and verifies all three behaviours afterward.
 This removes these renderer-owned retention paths; it does not claim a measured
 whole-client heap reduction.
+
+## Collision queries in sections without trapdoors
+
+Flight Recorder samples pointed to the global offset-trapdoor collision hook
+running during ordinary particle movement. It now reads the live palettes of
+only the loaded sections overlapping the existing owner-search bounds. A palette
+with no Programmable Trapdoor states proves that the section cannot contribute
+an offset leaf. There is no world index or retained negative result: placement,
+packet palette replacement, tile loading and chunk reload need no invalidation.
+
+Palette slots are inspected through cached field accessors in standard storage.
+Custom worlds/chunks/storage, unknown palettes, global registry palettes and
+unavailable accessors conservatively use the original scan. Null palette entries
+do not hide later entries. Unused trapdoor entries may remain after removal,
+producing a safe extra scan. No chunk-loading API is called.
+
+Checks cover palette growth, null slots, insertion/removal before tile lifecycle
+work, loaded chunk/height boundaries and custom-provider fallbacks. The live
+client/server benchmark verifies exact collision bounds, order and duplicate
+suppression before measuring. All 58 static rendering images also pass.
+
+For 256 queries against a stone-only section, the warmed hook falls from 0.326 to
+0.013 ms on the server and 0.273 to 0.005 ms on the client, removing 20,480 bytes
+of allocation in each batch. Cover and removed-owner cases retain their original
+allocation and ordinary scan; measured timing differences are about -1% to +3%.
+The paired reference is the preceding 1.4 mutable-position scan. These timings
+exclude vanilla collision work and do not establish an overall particle/FPS gain.
+`offset-collision-palettes.csv` includes all positive and negative cases. Both
+paths receive explicit warmup because a rejected section never warms the scan.
 
 ## Reproduction
 

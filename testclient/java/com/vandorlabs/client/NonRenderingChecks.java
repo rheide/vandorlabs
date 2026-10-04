@@ -61,6 +61,7 @@ public final class NonRenderingChecks {
         DiagonalRayTraceChecks.run();
         TrapdoorScratchChecks.run();
         GroupCacheLifetimeChecks.run();
+        TrapdoorSectionPresenceChecks.run();
     }
 
     private static void placement() {

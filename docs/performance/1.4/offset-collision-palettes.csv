@@ -1,0 +1,13 @@
+world,fixture,algorithm,queries,median_ms,median_allocated_bytes
+server,stone_palette,prior_scan,256,0.325540,20480
+server,stone_palette,palette,256,0.013405,0
+server,cover,prior_scan,256,0.605193,169984
+server,cover,palette,256,0.621914,169984
+server,removed,prior_scan,256,0.527327,20480
+server,removed,palette,256,0.531856,20480
+client,stone_palette,prior_scan,256,0.273442,20480
+client,stone_palette,palette,256,0.004889,0
+client,cover,prior_scan,256,0.552575,169984
+client,cover,palette,256,0.549448,169984
+client,removed,prior_scan,256,0.440795,20480
+client,removed,palette,256,0.455362,20480

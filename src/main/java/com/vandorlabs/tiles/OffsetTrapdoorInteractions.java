@@ -38,6 +38,12 @@ public final class OffsetTrapdoorInteractions {
         addCollisions(event.getWorld(),event.getAabb(),event.getCollisionBoxesList());
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
+        int x0=MathHelper.floor(query.minX-2),y0=MathHelper.floor(query.minY-1),z0=MathHelper.floor(query.minZ-2);
+        int x1=MathHelper.floor(query.maxX+2),y1=MathHelper.floor(query.maxY+1),z1=MathHelper.floor(query.maxZ+2);
+        if(!TrapdoorSectionPresence.mayContain(world,x0,y0,z0,x1,y1,z1))return;
+        scanCollisions(world,query,boxes);
+    }
+    private static void scanCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
         for(BlockPos pos:BlockPos.getAllInBoxMutable(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null || !leaf.isCover() && !leaf.isSlideOverSurface())continue;
             AxisAlignedBB box=bounds(leaf);

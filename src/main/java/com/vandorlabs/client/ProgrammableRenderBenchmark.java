@@ -122,6 +122,7 @@ final class ProgrammableRenderBenchmark {
                     }
                 }
                 DoorRenderModels.checkPreparedDrawStates();
+                OffsetCollisionRuntimeBenchmark.run(mc,output);
             } finally {
                 mc.entityRenderer.disableLightmap();
                 GlStateManager.popMatrix();
