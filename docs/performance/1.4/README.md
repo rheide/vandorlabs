@@ -188,6 +188,28 @@ batch falls from 0.225 to 0.140 ms and 647,168 to 20,480 bytes. The synthetic wo
 isolates query overhead; real-world block lookup and actual leaf intersection
 costs remain. `offset-interactions.csv` preserves these paired measurements.
 
+## Blockstate property reads
+
+Flight Recorder allocation samples identified `PropertyEnum.hashCode` rebuilding
+the hash of its immutable value-name map during property reads. Mod-owned enum
+and facing properties now compute the same hash once. Programmable trapdoors
+retain the original vanilla property objects and use direct reads from canonical
+states; equivalent external properties still use Forge's normal lookup path.
+
+Compatibility checks cover symmetric equality/hash agreement, serialized names,
+allowed values, external equivalent-property reads, metadata round trips and
+canonical state transitions. All 58 static live benchmark images still match.
+In the isolated lookup benchmark, 65,536 enum reads fall from 1.767 to 0.414 ms;
+98,304 trapdoor reads fall from 3.001 to 0.192 ms. Both remove the measured
+2,621,440 bytes of temporary allocation. These timings exclude other block work.
+
+In the live 64-door fixtures, allocation falls by a further 38–61 KB per batch,
+depending on geometry. For example, the default door drops from 161,312 to
+117,792 bytes, and paired doors from 177,184 to 115,744. This stage's median
+door submission times improve by 3–10%; retain the vanilla controls and earlier
+runs when interpreting CPU variation. `property-lookup.csv` and
+`render-after-properties.csv` contain the measurements.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -195,7 +217,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv

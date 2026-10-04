@@ -17,7 +17,7 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 /** Half-height programmable block with vanilla-style top and bottom placement. */
 public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
     public static final PropertyEnum<BlockSlab.EnumBlockHalf> HALF =
-            PropertyEnum.create("half", BlockSlab.EnumBlockHalf.class);
+            CachedProperties.enumeration("half", BlockSlab.EnumBlockHalf.class);
     private static final AxisAlignedBB BOTTOM =
             new AxisAlignedBB(0, 0, 0, 1, .5, 1);
     private static final AxisAlignedBB TOP =

@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Cache immutable enum-property hashes and directly read canonical trapdoor properties, avoiding repeated map hashing in rendering, collision and state queries. Preserve vanilla property equality, metadata and transitions.
+
 - Avoid redundant chunk-dirty notifications for unchanged trapdoor group power. Preserve saved channel signals and group state, and stop physical input reads once the group is known powered.
 
 - Reuse bounded ray-candidate coordinate lists for offset trapdoor picking, preserving hit order and current loaded-world reads. Offset collision scans reuse a mutable query position.

@@ -84,6 +84,16 @@ task benchmarkOffsetInteractions(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task benchmarkPropertyLookup(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare immutable enum-property lookup cost against vanilla property hashes'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropertyLookupBenchmark'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
 task benchmarkTrapdoorMesh(type: JavaExec) {
     group = 'verification'
     description = 'Compare trapdoor texture clipping CPU cost and allocations against 1.3'

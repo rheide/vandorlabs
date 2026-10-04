@@ -25,6 +25,7 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
         setUnlocalizedName("vandorlabs."+name);setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
         setHardness(3);setResistance(10);setSoundType(SoundType.METAL);useNeighborBrightness=true;
     }
+    @Override protected BlockStateContainer createBlockState(){return new TrapdoorBlockState(this);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityProgrammableTrapdoor();}
     @Override public EnumBlockRenderType getRenderType(IBlockState state){return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;}

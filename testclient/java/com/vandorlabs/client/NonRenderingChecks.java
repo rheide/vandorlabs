@@ -54,6 +54,8 @@ public final class NonRenderingChecks {
         TrapdoorRayCandidateChecks.run();
         OffsetInteractionChecks.run();
         TrapdoorPowerChecks.run();
+        PropertyHashChecks.run();
+        TrapdoorStateChecks.run();
     }
 
     private static void placement() {

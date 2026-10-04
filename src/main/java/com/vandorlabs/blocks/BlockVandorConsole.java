@@ -14,8 +14,8 @@ import net.minecraft.world.World;
 
 public class BlockVandorConsole extends BlockVandor {
 
-    public static final PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
-    public static final PropertyEnum<Vertical> VERTICAL = PropertyEnum.create("vertical", Vertical.class);
+    public static final PropertyDirection FACING = CachedProperties.direction("facing", EnumFacing.Plane.HORIZONTAL);
+    public static final PropertyEnum<Vertical> VERTICAL = CachedProperties.enumeration("vertical", Vertical.class);
 
     public BlockVandorConsole(String name) {
         super(name);

@@ -31,7 +31,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockVandorSwitch extends BlockVandor {
 
-    public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, java.util.Arrays.asList(EnumFacing.values()));
+    public static final PropertyEnum<EnumFacing> FACING = CachedProperties.enumeration("facing", EnumFacing.class, java.util.Arrays.asList(EnumFacing.values()));
     public static final PropertyBool ON = PropertyBool.create("on");
     public static final PropertyInteger ROTATION = PropertyInteger.create("rotation",0,3);
 

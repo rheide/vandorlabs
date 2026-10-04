@@ -24,7 +24,7 @@ import net.minecraft.world.World;
 public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
 
     public static final String NAME = "programmable_half_input";
-    public static final PropertyDirection FACING = PropertyDirection.create(
+    public static final PropertyDirection FACING = CachedProperties.direction(
             "facing", EnumFacing.Plane.HORIZONTAL);
     public static final PropertyBool KEYBOARD = PropertyBool.create("keyboard");
     public static final PropertyBool UPPER = PropertyBool.create("upper");

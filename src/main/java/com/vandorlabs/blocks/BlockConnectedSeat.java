@@ -16,7 +16,7 @@ public final class BlockConnectedSeat extends BlockVandorDirectional {
         SINGLE, LEFT, MIDDLE, RIGHT;
         public String getName() { return name().toLowerCase(java.util.Locale.ROOT); }
     }
-    public static final PropertyEnum<Part> PART = PropertyEnum.create("part", Part.class);
+    public static final PropertyEnum<Part> PART = CachedProperties.enumeration("part", Part.class);
     public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> HEIGHT=ProgrammableHousingState.integer("seat_height");
     private final double height;
     public static com.vandorlabs.tiles.TileEntityConnectedSeat settings(IBlockAccess world,BlockPos pos) {

@@ -20,7 +20,7 @@ import net.minecraft.world.World;
 
 /** Minecraft 1.12.2 / Forge; MCP names. One block per table module. */
 public final class BlockIndustrialTable extends BlockVandor {
-    public static final PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
+    public static final PropertyDirection FACING = CachedProperties.direction("facing", EnumFacing.Plane.HORIZONTAL);
     // TRUE means connected: that side's strut is hidden.
     public static final PropertyBool LEFT = PropertyBool.create("left");
     public static final PropertyBool RIGHT = PropertyBool.create("right");

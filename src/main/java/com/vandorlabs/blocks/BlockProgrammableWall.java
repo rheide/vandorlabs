@@ -23,7 +23,7 @@ import java.util.List;
 public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     public enum Shape { PLAIN, PORTHOLE, DIAGONAL, DIAGONAL_PORTHOLE }
 
-    public static final PropertyDirection FACING = PropertyDirection.create(
+    public static final PropertyDirection FACING = CachedProperties.direction(
             "facing", EnumFacing.Plane.HORIZONTAL);
     public static final PropertyBool INVERTED = PropertyBool.create("inverted");
     public static final PropertyInteger DEPTH = PropertyInteger.create("depth", 0, 2);

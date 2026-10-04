@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 
 public class BlockVandorDirectional extends BlockVandor {
 
-    public static final PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
+    public static final PropertyDirection FACING = CachedProperties.direction("facing", EnumFacing.Plane.HORIZONTAL);
 
     public BlockVandorDirectional(String name) {
         this(name, 0.0F);

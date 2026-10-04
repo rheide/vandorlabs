@@ -32,7 +32,7 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Six-direction engine/hover fixture with a channel-aware illuminated state. */
 public class BlockPropulsionLight extends BlockVandor {
-    public static final PropertyDirection FACING = PropertyDirection.create("facing");
+    public static final PropertyDirection FACING = CachedProperties.direction("facing");
     public static final PropertyBool POWERED = PropertyBool.create("powered");
     /** Derived client render state; persisted by the tile entity, not metadata. */
     public static final PropertyBool PARTICLES = PropertyBool.create("particles");

@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 /** A half-height programmable light with vanilla slab placement. */
 public final class BlockProgrammableLightSlab extends BlockProgrammableLight {
     public static final PropertyEnum<BlockSlab.EnumBlockHalf> HALF =
-            PropertyEnum.create("half",BlockSlab.EnumBlockHalf.class);
+            CachedProperties.enumeration("half",BlockSlab.EnumBlockHalf.class);
     public BlockProgrammableLightSlab(){
         super("programmable_light_slab");
         setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH)

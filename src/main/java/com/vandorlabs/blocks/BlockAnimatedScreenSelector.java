@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 public class BlockAnimatedScreenSelector extends BlockContainer {
 
     public static final String NAME = "programmable_viewscreen";
-    public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create(
+    public static final PropertyEnum<EnumFacing> FACING = CachedProperties.enumeration(
             "facing", EnumFacing.class, java.util.Arrays.asList(EnumFacing.values()));
 
     public BlockAnimatedScreenSelector() {

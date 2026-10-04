@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector {
 
     public static final String NAME = "programmable_diagonal_screen";
-    public static final PropertyDirection FACING = PropertyDirection.create(
+    public static final PropertyDirection FACING = CachedProperties.direction(
             "facing", EnumFacing.Plane.HORIZONTAL);
     public static final PropertyBool INVERTED = PropertyBool.create("inverted");
 

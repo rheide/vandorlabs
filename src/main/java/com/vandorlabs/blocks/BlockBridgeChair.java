@@ -48,7 +48,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             return values()[Math.max(0, Math.min(values().length - 1, index))];
         }
     }
-    public static final PropertyEnum<Style> STYLE = PropertyEnum.create("style", Style.class);
+    public static final PropertyEnum<Style> STYLE = CachedProperties.enumeration("style", Style.class);
     public enum Height implements IStringSerializable {
         LOW("low"), MIDDLE("middle"), HIGH("high");
         private final String id;
@@ -58,7 +58,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             return values()[Math.max(0, Math.min(2, index))];
         }
     }
-    public static final PropertyEnum<Height> HEIGHT = PropertyEnum.create("height", Height.class);
+    public static final PropertyEnum<Height> HEIGHT = CachedProperties.enumeration("height", Height.class);
 
     public BlockBridgeChair() {
         super("programmable_chair");

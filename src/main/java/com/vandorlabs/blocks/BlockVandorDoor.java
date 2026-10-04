@@ -34,9 +34,9 @@ import java.util.Random;
 
 public class BlockVandorDoor extends BlockVandorDirectional {
 
-    public static final PropertyEnum<BlockDoor.EnumDoorHalf> HALF = PropertyEnum.create("half", BlockDoor.EnumDoorHalf.class);
+    public static final PropertyEnum<BlockDoor.EnumDoorHalf> HALF = CachedProperties.enumeration("half", BlockDoor.EnumDoorHalf.class);
     public static final PropertyBool OPEN = PropertyBool.create("open");
-    public static final PropertyEnum<BlockDoor.EnumHingePosition> HINGE = PropertyEnum.create("hinge", BlockDoor.EnumHingePosition.class);
+    public static final PropertyEnum<BlockDoor.EnumHingePosition> HINGE = CachedProperties.enumeration("hinge", BlockDoor.EnumHingePosition.class);
     /** Last seen redstone power (upper-half meta bit). Lets neighbor updates
      * react to power EDGES only, so placing a block next to a hand-opened
      * door never slams it shut. */

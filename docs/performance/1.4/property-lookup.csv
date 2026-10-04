@@ -1,0 +1,5 @@
+family,algorithm,reads,median_ms,median_allocated_bytes
+enum_hash,reference,65536,1.767449,2621440
+enum_hash,cached_hash,65536,0.413865,0
+trapdoor_state,reference,98304,3.000657,2621440
+trapdoor_state,direct,98304,0.192310,0
