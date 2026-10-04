@@ -2,6 +2,8 @@
 
 ## 1.4-alpha
 
+- Resolve saved ramp materials once per slice and reuse its face emitter, reducing repeated source-tag decoding and per-face temporary objects without changing UVs or lighting.
+
 - Prepare immutable door quad groups once per resource bake, avoiding per-frame list assembly while preserving Forge lighting transitions, item transforms and custom-renderer fallbacks.
 
 - Cache immutable enum-property hashes and directly read canonical trapdoor properties, avoiding repeated map hashing in rendering, collision and state queries. Preserve vanilla property equality, metadata and transitions.

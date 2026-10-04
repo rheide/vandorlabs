@@ -148,29 +148,45 @@ public class TileEntityControlledRamp extends TileEntity {
     public double sideTextureV(RampGeometry.Box box,double localY,double partial) {
         if (extendSegments) return 1-localY;
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
-        RampGeometry.Box portable=new RampGeometry.Box(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);
-        int step=RampGeometry.segmentAtPixels(direction(face),portable,treadPixels,elevator);
+        int step=RampGeometry.segmentAtPixels(direction(face),box,treadPixels,elevator);
         double offset=travelAxis==RampGeometry.VERTICAL && !extendSegments
                 ?ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),pose(partial),elevator,speed==0):0;
         return ControllerPlatform.sideTextureV(pos.getY(),localY,sourceY,offset);
     }
     private static RampGeometry.Direction direction(EnumFacing face) {
-        return RampGeometry.Direction.valueOf(face.getName().toUpperCase(java.util.Locale.ROOT));
+        return RampGeometry.Direction.valueOf(face.name());
     }
     public boolean belongsTo(BlockPos owner) { return controller.equals(owner); }
     public int sourceHousing(RampGeometry.Box box,double partial,EnumFacing face) {
-        if (sourceTileTags.isEmpty()) return -1;
+        return sourceMaterial(box,partial).texture(face);
+    }
+
+    /** Resolve saved source data once for the six faces of this slice. */
+    public SourceMaterial sourceMaterial(RampGeometry.Box box,double partial) {
+        if (sourceTileTags.isEmpty()) return SourceMaterial.NONE;
         BlockPos origin=originFor(box,partial);
         NBTTagCompound saved=sourceTileTags.get(origin);
         if (saved==null) saved=sourceTileTags.values().iterator().next();
-        if (!saved.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE)) return -1;
-        int main=ScreenHousingTextures.clamp(saved.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
+        if (!saved.hasKey(SaveSchema.Screen.HOUSING_TEXTURE)) return SourceMaterial.NONE;
+        int main=ScreenHousingTextures.clamp(saved.getInteger(SaveSchema.Screen.HOUSING_TEXTURE));
         FaceTextures faces=new FaceTextures(saved.getBoolean("FaceTexturesEnabled"),saved.getIntArray("FaceTextures"));
         EnumFacing facing=source.getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
-        EnumFacing local=face;
-        int rotation=((int)(180-facing.getHorizontalAngle())/90)&3;
-        if (local.getAxis()!=EnumFacing.Axis.Y) for (int i=0;i<rotation;i++) local=local.rotateY();
-        return faces.texture(local.getIndex(),main);
+        return new SourceMaterial(main,faces,((int)(180-facing.getHorizontalAngle())/90)&3);
+    }
+
+    /** A per-draw snapshot, never retained across edits to the saved source tags. */
+    public static final class SourceMaterial {
+        private static final SourceMaterial NONE=new SourceMaterial(-1,FaceTextures.DEFAULT,0);
+        private final int main,rotation;
+        private final FaceTextures faces;
+        private SourceMaterial(int main,FaceTextures faces,int rotation) {
+            this.main=main;this.faces=faces;this.rotation=rotation;
+        }
+        public int texture(EnumFacing face) {
+            EnumFacing local=face;
+            if (local.getAxis()!=EnumFacing.Axis.Y) for (int i=0;i<rotation;i++) local=local.rotateY();
+            return faces.texture(local.getIndex(),main);
+        }
     }
 
     private BlockPos originFor(RampGeometry.Box box,double partial) {

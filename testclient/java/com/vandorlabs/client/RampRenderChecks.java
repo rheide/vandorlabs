@@ -16,14 +16,22 @@ final class RampRenderChecks {
         float oldX=OpenGlHelper.lastBrightnessX,oldY=OpenGlHelper.lastBrightnessY;
         try {
             OpenGlHelper.lastBrightnessX=80;OpenGlHelper.lastBrightnessY=192;
+            BufferBuilder buffer=new BufferBuilder(4096);
+            TEControlledRamp.FaceEmitter emitter=new TEControlledRamp.FaceEmitter(buffer);
             for(double thickness:new double[]{.001,.125,.5,1})for(EnumFacing face:EnumFacing.values())
                 for(int tint:new int[]{0xFFFFFF,0x7BAF53}) {
                     RampGeometry.Box box=new RampGeometry.Box(.1,-.5,.2,.9,-.5+thickness,.95);
-                    BufferBuilder buffer=new BufferBuilder(4096);VertexFormat format=BlockSurfaceFormat.get();
+                    VertexFormat format=BlockSurfaceFormat.get();
                     buffer.begin(7,format);
-                    TEControlledRamp.emitFace(buffer,box,face,sprite,.17,.83,.23,.11,tint);
+                    emitter.emit(box,face,sprite,.17,.83,.23,.11,tint);
                     buffer.finishDrawing();require(buffer.getVertexCount()==4,"face disappeared");
                     ByteBuffer data=buffer.getByteBuffer();
+                    BufferBuilder reference=new BufferBuilder(4096);reference.begin(7,format);
+                    ReferenceRampEmitter.emitFace(reference,box,face,sprite,.17,.83,.23,.11,tint);
+                    reference.finishDrawing();
+                    ByteBuffer expectedBytes=reference.getByteBuffer();
+                    for(int byteIndex=0;byteIndex<4*format.getNextOffset();byteIndex++)
+                        require(data.get(byteIndex)==expectedBytes.get(byteIndex),"released vertex bytes changed");
                     float shade=face==EnumFacing.UP?1:face==EnumFacing.DOWN?.5F:face.getAxis()==EnumFacing.Axis.X?.6F:.8F;
                     for(int i=0;i<4;i++) {
                         int offset=i*format.getNextOffset(),color=offset+format.getColorOffset();

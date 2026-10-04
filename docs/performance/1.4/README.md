@@ -232,6 +232,25 @@ submission medians differ by about -4% to +2%; draw-call cost remains and these
 small timing changes should not be interpreted as an FPS gain.
 `render-after-door-plans.csv` includes all fixtures and vanilla controls.
 
+## Moving ramp slices
+
+Each slice resolves its saved source material and orientation once for six faces.
+The snapshot is local to that draw, so later source-tag edits remain visible.
+A single vertex consumer serves the cell's faces, with face enum mappings prepared
+once and unchanged position/colour/UV/lightmap/normal attribute order.
+
+Packed vertex bytes match the released emitter across all directions, thin and
+full-height slices, and tinted faces. Another 5,682 comparisons cover saved
+material selection, origin fallback, malformed overrides and immediate tag edits.
+The live controller contracts pass 39,626 assertions on the optimized renderer.
+
+In paired CPU tests over 1,024 slices, saved-material selection falls from
+0.842 to 0.190 ms and 589,824 to 122,880 allocated bytes. Vertex emission falls
+from 1.120 to 0.746 ms and 770,048 to zero bytes inside the reused-consumer loop.
+The complete renderer still allocates one consumer per cell and performs world
+lookup, motion geometry and GL submission; these measurements isolate the changed
+work. `ramp-work.csv` contains both measurements.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -239,7 +258,7 @@ avoid CPU contention. `VANDOR_LABS_COMPAT_MODS` selects the directory containing
 the three compatibility test mods required by the live suite.
 
 ```bash
-./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup --no-daemon
+./gradlew build testNonRendering benchmarkTrapdoorMesh benchmarkHousingState benchmarkTrapdoorCollision benchmarkTextureNames benchmarkOffsetInteractions benchmarkPropertyLookup benchmarkRampWork --no-daemon
 bash testclient/test_viewscreen.sh --full
 bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv

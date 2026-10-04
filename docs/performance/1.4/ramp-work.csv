@@ -1,0 +1,5 @@
+family,algorithm,slices,median_ms,median_allocated_bytes
+saved_material,reference,1024,0.842297,589824
+saved_material,slice,1024,0.190316,122880
+vertices,reference,1024,1.119886,770048
+vertices,slice,1024,0.746367,0
