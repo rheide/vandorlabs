@@ -1,6 +1,9 @@
 # Experimental diagonal wall chunk rendering
 
-Version `1.4-alpha.1` moves static Programmable Diagonal Wall surfaces into
+The current `1.4-alpha` build corrects the first chunk-rendering preview, whose vertex layout produced
+corrupted triangles through the vanilla block renderer.
+
+The preview moves static Programmable Diagonal Wall surfaces into
 Minecraft's chunk buffers. Interior walls no longer submit their tile mesh every
 frame. Their geometry is rebuilt when the chunk mesh becomes dirty, using an
 immutable snapshot of the wall settings, neighboring geometry and light value.
@@ -16,6 +19,21 @@ material UVs, packed normals, uniform owner lighting and two-sided surfaces.
 The cutout layer preserves texture alpha testing and atlas mipmaps. Geometry
 update packets invalidate neighboring meshes as well as the changed wall.
 Collision, selection, saved settings and server behavior are unchanged.
+
+## Vanilla renderer compatibility
+
+The first preview used a tile-renderer vertex layout containing both a lightmap
+and normals. Forge's lighting pipeline converts that layout, but the vanilla
+block renderer copies the packed vertex array directly into its block buffer.
+The extra word per vertex therefore corrupted positions, material coordinates
+and colors. Walls using the boundary fallback were unaffected.
+
+The corrected renderer uses Minecraft's standard baked-model ITEM layout. Forge
+can read its normals, and vanilla can copy its packed vertices and replace the
+last word with lighting. No rendering configuration change is required.
+The regression suite passes all 576 cases through the actual vanilla flat
+renderer and checks the resulting positions, UVs, colors and lightmap values.
+The original preview fails this check before the fix.
 
 ## Validation and measurement
 
@@ -46,8 +64,8 @@ Run the relevant gallery and numerical checks with Java 8:
 bash testclient/test_viewscreen.sh --focus gallery_v12
 ```
 
-The paired image comparisons passed for all four fixtures: at least 99.9992%
-of pixels were within 3/255 per channel. The full measurements, including
+The original Forge-pipeline paired image comparisons passed for all four fixtures: at least 99.9992%
+of pixels were within 3/255 per channel. These timings describe the original preview with Forge's lighting pipeline enabled. The full measurements, including
 vanilla controls, are in [diagonal-chunks.csv](diagonal-chunks.csv).
 
 | 64-wall fixture | Tile submission median (ms) | Chunk submission median (ms) | Reduction |

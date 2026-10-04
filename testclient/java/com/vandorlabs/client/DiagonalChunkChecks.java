@@ -45,6 +45,7 @@ final class DiagonalChunkChecks {
                 require(extended.getPackedLightmapCoords(cache,pos.up())==world.getCombinedLight(pos,0),"neighbor sample changed uniform owner light");
                 require(!tile.shouldRenderInPass(0),"interior tile still renders");
                 List<BakedQuad> quads=DiagonalWallModel.bake(shape,wall,metal);
+                checkVanillaBuffer(cache,extended,pos,quads);
                 BufferBuilder reference=new BufferBuilder(65536);VertexFormat format=BlockSurfaceFormat.get();
                 reference.begin(7,format);TEAnimatedScreenSelector.drawConfiguredDiagonalWall(reference,tile,state,wall,metal);
                 int vertices=reference.getVertexCount();reference.finishDrawing();
@@ -57,10 +58,11 @@ final class DiagonalChunkChecks {
                     float[] actual=new float[4];LightUtil.unpack(quads.get(q).getVertexData(),actual,quads.get(q).getFormat(),v,0);
                     near(actual[0],turns==1?z:turns==2?1-x:turns==3?1-z:x,"X");near(actual[1],y,"Y");
                     near(actual[2],turns==1?1-x:turns==2?1-z:turns==3?x:z,"Z");
-                    for(int e=0;e<format.getElementCount();e++) {
-                        LightUtil.unpack(quads.get(q).getVertexData(),actual,format,v,e);
-                        switch(format.getElement(e).getUsage()) {
-                            case UV:if(format.getElement(e).getIndex()==0) {
+                    VertexFormat bakedFormat=quads.get(q).getFormat();
+                    for(int e=0;e<bakedFormat.getElementCount();e++) {
+                        LightUtil.unpack(quads.get(q).getVertexData(),actual,bakedFormat,v,e);
+                        switch(bakedFormat.getElement(e).getUsage()) {
+                            case UV:if(bakedFormat.getElement(e).getIndex()==0) {
                                 near(actual[0],data.getFloat(offset+format.getUvOffsetById(0)),"U");
                                 near(actual[1],data.getFloat(offset+format.getUvOffsetById(0)+4),"V");
                             }break;
@@ -71,10 +73,10 @@ final class DiagonalChunkChecks {
                             default:break;
                         }
                     }
-                    for(int e=0;e<format.getElementCount();e++) {
+                    for(int e=0;e<bakedFormat.getElementCount();e++) {
                         float[] back=new float[4],front=new float[4];
-                        LightUtil.unpack(quads.get(q).getVertexData(),front,format,v,e);
-                        LightUtil.unpack(quads.get(q+1).getVertexData(),back,format,(4-v)&3,e);
+                        LightUtil.unpack(quads.get(q).getVertexData(),front,bakedFormat,v,e);
+                        LightUtil.unpack(quads.get(q+1).getVertexData(),back,bakedFormat,(4-v)&3,e);
                         require(java.util.Arrays.equals(front,back),"back face changed attributes");
                     }
                 }
@@ -91,11 +93,40 @@ final class DiagonalChunkChecks {
         tile.onDataPacket(null,new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,changed));
         require(pos.add(-1,-1,-1).equals(world.renderMin) && pos.add(1,1,1).equals(world.renderMax),
                 "packet geometry change did not invalidate neighboring chunks");
-        System.out.println("PASS: "+cases+" diagonal chunk snapshots match TESR positions, UVs, normals and two-sided faces; uniform light and chunk-edge fallback preserved");
+        System.out.println("PASS: "+cases+" diagonal chunk snapshots match TESR positions, UVs, normals and two-sided faces; vanilla packed output, uniform light and chunk-edge fallback preserved");
+    }
+    /** Exercise the raw-copy renderer used when Forge's light pipeline is disabled. */
+    private static void checkVanillaBuffer(IBlockAccess world,IBlockState state,BlockPos pos,List<BakedQuad> quads) {
+        net.minecraft.client.renderer.block.model.IBakedModel model=
+                (net.minecraft.client.renderer.block.model.IBakedModel)java.lang.reflect.Proxy.newProxyInstance(
+                        DiagonalChunkChecks.class.getClassLoader(),
+                        new Class<?>[]{net.minecraft.client.renderer.block.model.IBakedModel.class},
+                        (proxy,method,args)-> {
+                            if(method.getName().equals("getQuads"))return args[1]==null?quads:java.util.Collections.emptyList();
+                            throw new AssertionError("Unexpected model call: "+method.getName());
+                        });
+        VertexFormat format=net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK;
+        BufferBuilder buffer=new BufferBuilder(65536);buffer.begin(7,format);
+        new net.minecraft.client.renderer.BlockModelRenderer(new net.minecraft.client.renderer.color.BlockColors())
+                .renderModelFlat(world,model,state,pos,buffer,false,0);
+        require(buffer.getVertexCount()==quads.size()*4,"vanilla vertex count differs");
+        buffer.finishDrawing();java.nio.ByteBuffer data=buffer.getByteBuffer();
+        for(int q=0;q<quads.size();q++)for(int v=0;v<4;v++) {
+            int offset=(q*4+v)*format.getNextOffset();float[] point=new float[4];
+            BakedQuad quad=quads.get(q);LightUtil.unpack(quad.getVertexData(),point,quad.getFormat(),v,0);
+            near(data.getFloat(offset),point[0]+pos.getX(),"vanilla X");
+            near(data.getFloat(offset+4),point[1]+pos.getY(),"vanilla Y");
+            near(data.getFloat(offset+8),point[2]+pos.getZ(),"vanilla Z");
+            require(data.getInt(offset+format.getColorOffset())==-1,"vanilla color corrupted");
+            require(data.getInt(offset+format.getUvOffsetById(1))==state.getPackedLightmapCoords(world,pos),"vanilla lighting corrupted");
+            LightUtil.unpack(quad.getVertexData(),point,quad.getFormat(),v,2);
+            near(data.getFloat(offset+format.getUvOffsetById(0)),point[0],"vanilla U");
+            near(data.getFloat(offset+format.getUvOffsetById(0)+4),point[1],"vanilla V");
+        }
     }
     private static TextureAtlasSprite sprite(String name,int x) {
         TextureAtlasSprite sprite=new TextureAtlasSprite(name){};sprite.setIconWidth(16);sprite.setIconHeight(16);sprite.initSprite(64,64,x,0,false);return sprite;
     }
-    private static void near(double a,double b,String name){if(Math.abs(a-b)>1E-6)throw new AssertionError(name+": "+a+" != "+b);}
+    private static void near(double a,double b,String name){if(!Double.isFinite(a) || !Double.isFinite(b) || Math.abs(a-b)>1E-6)throw new AssertionError(name+": "+a+" != "+b);}
     private static void require(boolean condition,String message){if(!condition)throw new AssertionError(message);}
 }

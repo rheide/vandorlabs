@@ -1,11 +1,12 @@
 # Changelog
 
-## 1.4-alpha.1
+## 1.4-alpha
+
+- Fix corrupted triangles on chunk-rendered Diagonal Walls when using the vanilla block renderer. Use the standard baked-quad vertex layout and retain the existing surfaces, normals and lighting.
+- Validate the actual vanilla output buffer as well as the Forge rendering path.
 
 - Render interior Programmable Diagonal Walls through cached chunk geometry. Preserve existing surfaces, material coordinates, two-sided faces and uniform lighting. Keep the existing tile renderer at chunk-section boundaries and for portholes; see the [experimental diagonal rendering notes](docs/performance/1.4/diagonal-chunks.md).
 - Refresh nearby diagonal-wall chunk meshes when geometry settings arrive in a tile update packet.
-
-## 1.4-alpha
 
 - Reuse bounded Static/Off screen texture identifiers and the existing loaded-neighbor lighting sampler, reducing render-loop allocation while preserving texture paths, resource-pack resolution and light values.
 

@@ -41,7 +41,11 @@ final class DiagonalWallQuadCapture extends BufferBuilder {
         }
     }
     private void add(boolean reverse) {
-        VertexFormat format=BlockSurfaceFormat.get();
+        // Baked models use the standard ITEM layout: position, color, UV and normal.
+        // The vanilla block renderer copies this packed array directly into BLOCK
+        // buffers and replaces its last word with lighting. A TESR layout with
+        // both lightmap and normal is wider and corrupts that raw-copy path.
+        VertexFormat format=net.minecraft.client.renderer.vertex.DefaultVertexFormats.ITEM;
         UnpackedBakedQuad.Builder builder=new UnpackedBakedQuad.Builder(format);
         builder.setTexture(sprite);builder.setApplyDiffuseLighting(false);
         builder.setQuadOrientation(EnumFacing.getFacingFromVector((float)points[0][5],(float)points[0][6],(float)points[0][7]));
