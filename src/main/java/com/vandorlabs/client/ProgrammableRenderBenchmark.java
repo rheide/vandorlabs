@@ -127,6 +127,8 @@ final class ProgrammableRenderBenchmark {
                         "vandorlabs:programmable_input", "vandorlabs:programmable_viewscreen"))
                     for(String variant:Arrays.asList("screen_static", "screen_off", "screen_framed_off"))
                         measure(mc,csv,meshes,id,variant,64);
+                for(String variant:Arrays.asList("chunk_wall_half", "chunk_wall_full", "chunk_wall_shallow", "chunk_wall_clipped"))
+                    measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant,64);
                 DoorRenderModels.checkPreparedDrawStates();
                 OffsetCollisionRuntimeBenchmark.run(mc,output);
                 NeighborLightRuntimeBenchmark.run(mc,output);
@@ -154,18 +156,19 @@ final class ProgrammableRenderBenchmark {
         List<BlockPos> positions = new ArrayList<>();
         List<TileEntity> tiles = new ArrayList<>();
         List<BlockPos> extraPositions = new ArrayList<>();
+        BlockPos origin=variant.startsWith("chunk_wall_")?new BlockPos(-15,81,-8):ORIGIN;
         int side = count == 16 ? 4 : 8;
         int spacing = (variant.endsWith("_joined") && !variant.endsWith("unjoined"))
-                || variant.equals("floor_8x8") || variant.equals("solid_4x4x4") ? 1 : 2;
+                || variant.startsWith("chunk_wall_") || variant.equals("floor_8x8") || variant.equals("solid_4x4x4") ? 1 : 2;
         List<net.minecraft.client.renderer.vertex.VertexBuffer> baked = new ArrayList<>();
         try {
             for (int i = 0; i < count; i++) {
                 BlockPos pos = variant.equals("solid_4x4x4")
-                        ? ORIGIN.add(i % 4, (i / 16) % 4, (i / 4) % 4)
-                        : variant.equals("floor_8x8") ? ORIGIN.add(i % 8, 0, i / 8)
+                        ? origin.add(i % 4, (i / 16) % 4, (i / 4) % 4)
+                        : variant.equals("floor_8x8") ? origin.add(i % 8, 0, i / 8)
                         : variant.equals("door_paired")
-                                ? ORIGIN.add((i % 8 / 2) * 3 + i % 2, (i / 8) * 2, 0)
-                        : ORIGIN.add((i % side) * spacing, (i / side) * spacing, 0);
+                                ? origin.add((i % 8 / 2) * 3 + i % 2, (i / 8) * 2, 0)
+                        : origin.add((i % side) * spacing, (i / side) * spacing, 0);
                 if (!mc.world.isBlockLoaded(pos)) throw new IllegalStateException("fixture chunk not loaded");
                 positions.add(pos);
                 IBlockState fixture = block.getDefaultState();
@@ -253,6 +256,14 @@ final class ProgrammableRenderBenchmark {
                         mc.world.setBlockState(pos,mc.world.getBlockState(pos)
                                 .withProperty(com.vandorlabs.blocks.BlockProgrammableTrapdoor.OPEN,true),2);
                 }
+                if(tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("chunk_wall_")) {
+                    ((TileEntityAnimatedScreenSelector)tile).setDiagonalGeometry(
+                            variant.endsWith("shallow")?2:variant.endsWith("half")?0:1,0);
+                    if(variant.endsWith("clipped")) {
+                        BlockPos obstacle=pos.north();mc.world.setBlockState(obstacle,net.minecraft.init.Blocks.STONE.getDefaultState(),2);
+                        extraPositions.add(obstacle);
+                    }
+                }
                 if (tile instanceof TileEntityAnimatedScreenSelector && variant.startsWith("wall_")) {
                     ((TileEntityAnimatedScreenSelector)tile).setDiagonalGeometry(
                             variant.equals("wall_shallow") ? 2 : 1,variant.equals("wall_filled") ? 3 : 0);
@@ -282,7 +293,7 @@ final class ProgrammableRenderBenchmark {
                 ForgeHooksClient.setRenderLayer(layer);
                 BufferBuilder buffer = Tessellator.getInstance().getBuffer();
                 buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-                buffer.setTranslation(-ORIGIN.getX(), -ORIGIN.getY(), -ORIGIN.getZ());
+                buffer.setTranslation(-origin.getX(), -origin.getY(), -origin.getZ());
                 for (BlockPos pos : positions) {
                     IBlockState state = mc.world.getBlockState(pos);
                     if (state.getRenderType() == EnumBlockRenderType.MODEL && block.canRenderInLayer(state, layer))
@@ -325,8 +336,8 @@ final class ProgrammableRenderBenchmark {
                     if (!tile.shouldRenderInPass(0)) continue;
                     GlStateManager.color(1F, 1F, 1F, 1F);
                     BlockPos pos = tile.getPos();
-                    TileEntityRendererDispatcher.instance.render(tile, pos.getX()-ORIGIN.getX(),
-                            pos.getY()-ORIGIN.getY(), pos.getZ()-ORIGIN.getZ(), .5F);
+                    TileEntityRendererDispatcher.instance.render(tile, pos.getX()-origin.getX(),
+                            pos.getY()-origin.getY(), pos.getZ()-origin.getZ(), .5F);
                 }
                 TileEntityRendererDispatcher.instance.drawBatch(0);
                 long submitted = System.nanoTime();
