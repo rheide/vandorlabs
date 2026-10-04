@@ -5,4 +5,6 @@ public interface RedstoneChannelLatch extends RedstoneChannelMember {
     boolean isChannelLatch();
     boolean latchOn();
     void applyLinkedLatch(boolean on);
+    default ChannelList latchedChannels(){return latchOn()?getRedstoneChannels():ChannelList.EMPTY;}
+    default void applyLinkedChannels(ChannelList active){applyLinkedLatch(!active.isEmpty());}
 }

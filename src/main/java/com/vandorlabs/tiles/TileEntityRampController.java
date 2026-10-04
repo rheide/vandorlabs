@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
 import com.vandorlabs.blocks.BlockRampController;
@@ -38,6 +41,9 @@ import java.util.LinkedHashMap;
 
 /** Event-driven controller. Only active animation schedules subsequent block ticks. */
 public class TileEntityRampController extends TileEntity implements RedstoneChannelMember {
+    private ChannelList channels=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
     public int startOffset,treadPixels=8;
     private int startHalfSteps, endHalfSteps=-6;
     public int startHalfSteps() { return startHalfSteps; }
@@ -77,11 +83,11 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         channelSignal = powered;
         if (world != null && !world.isRemote) evaluateSignal(false);
     }
-    @Override public void setRedstoneChannel(int value) {
-        int next = Math.max(0, value);
-        if (next == redstoneChannel) return;
-        int old = redstoneChannel;
-        redstoneChannel = next;
+    @Override public void setRedstoneChannel(int value) {setRedstoneChannels(ChannelList.of(Math.max(0,value)));}
+    @Override public void setRedstoneChannels(ChannelList next) {
+        if (channels.equals(next)) return;
+        ChannelList old = channels;
+        channels=next;redstoneChannel=next.first();
         markDirty();
         RedstoneChannels.channelChanged(this, old);
         if (world != null && !world.isRemote) evaluateSignal(true);
@@ -670,7 +676,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         } finally { changing=false; markDirty(); }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);ChannelData.write(tag,channels);
         new RampControllerData(SaveSchema.Ramp.CONTROLLER_VERSION,drop,segments,status,
                 top,activateOnPower,slow,elevator,error,open,moving,startPose,startTick,
                 lastStepTick,duration,length,minAlong,facing.getHorizontalIndex(),
@@ -702,6 +708,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
+        ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
         super.readFromNBT(tag);
         RampControllerData data=RampControllerData.read(new NbtPrimitiveData(tag));
@@ -714,6 +721,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         configuredFacing=data.hasDirection?EnumFacing.getHorizontal(data.direction):null;
         low=data.low; high=data.high; latched=data.latched; signalKnown=data.signalKnown;
         recoveryPending=data.recoveryPending; redstoneChannel=data.redstoneChannel;
+        channels=ChannelData.read(tag,redstoneChannel);redstoneChannel=channels.first();
         channelSignal=data.channelSignal;
         treadPixels=data.treadPixels; segments=ControllerPlatform.treadCount(treadPixels);
         startOffset=data.travelAxis==RampGeometry.LEFT?-data.startOffset:data.startOffset;
@@ -734,7 +742,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         startOffset=startHalfSteps/2; drop=(Math.abs(endHalfSteps)+1)/2; top=endHalfSteps<0;
         travelAxis=data.travelAxis==RampGeometry.LEFT?RampGeometry.RIGHT:data.travelAxis;
         extendSegments=data.extendSegments; matchTextures=data.matchTextures; speed=data.speed; slow=speed==2;
-        if (world!=null && !world.isRemote && oldChannel!=redstoneChannel)
+        if (world!=null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this,oldChannel));
         original=tag.hasKey(SaveSchema.Ramp.ORIGINAL_STATE)
                 ?LegacyBlockStates.decode(tag.getString(SaveSchema.Ramp.ORIGINAL_STATE)):null;

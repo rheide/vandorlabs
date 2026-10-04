@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.blocks.BlockIndustrialLever;
 import com.vandorlabs.blocks.BlockVandorSwitch;
 import com.vandorlabs.redstone.RedstoneChannelMember;
@@ -16,6 +19,10 @@ import net.minecraft.tileentity.TileEntity;
 
 /** Channel, local latch, and flat-mount orientation for switches and levers. */
 public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelLatch {
+    private ChannelList channels=ChannelList.EMPTY;
+    private ChannelList latched=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
     private int channel;
     private boolean localOn;
     private boolean initialized;
@@ -39,10 +46,13 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     @Override public int getRedstoneChannel() { return channel; }
 
     @Override public void setRedstoneChannel(int value) {
-        int next = Math.max(0, value);
-        if (next == channel) return;
-        int old = channel;
-        channel = next;
+        setRedstoneChannels(ChannelList.of(Math.max(0,value)));
+    }
+    @Override public void setRedstoneChannels(ChannelList next) {
+        if (channels.equals(next)) return;
+        ChannelList old = channels;
+        latched=localOn?next:latched.intersect(next);
+        channels=next;channel=next.first();
         markDirty();
         RedstoneChannels.channelChanged(this, old);
         sync();
@@ -50,6 +60,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     public boolean isLocalOn() { return localOn; }
     @Override public boolean latchOn() { return localOn; }
+    @Override public ChannelList latchedChannels(){return latched;}
     @Override public boolean isChannelLatch() {
         if (world==null) return false;
         net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
@@ -59,9 +70,15 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
 
     @Override public void applyLinkedLatch(boolean on) {
+        applyLinkedChannels(on?channels:ChannelList.EMPTY);
+    }
+    @Override public void applyLinkedChannels(ChannelList active) {
         if (world==null || world.isRemote || !isChannelLatch()) return;
+        ChannelList next=active.intersect(channels);
+        boolean changed=!latched.equals(next);latched=next;
+        boolean on=!channels.isEmpty() && latched.containsAll(channels);
         IBlockState state=world.getBlockState(pos);
-        if (localOn!=on || !initialized) {
+        if (localOn!=on || !initialized || changed) {
             localOn=on;
             initialized=true;
             markDirty();
@@ -74,8 +91,9 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
 
     public void setLocalOn(boolean value) {
-        if (localOn == value && initialized) return;
+        if (localOn == value && initialized && (value || latched.isEmpty())) return;
         localOn = value;
+        latched=value?channels:ChannelList.EMPTY;
         initialized = true;
         markDirty();
         if (isChannelLatch() && channel>0) RedstoneChannels.latchChanged(this,value);
@@ -84,6 +102,9 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
 
     @Override public boolean hasLocalRedstoneSignal() { return localOn; }
+    @Override public boolean hasLocalRedstoneSignal(int channel) {
+        return isChannelLatch()?latched.contains(channel):localOn;
+    }
 
     /** Receivers consume aggregate power; linked latches mirror through applyLinkedLatch. */
     @Override public void setChannelSignal(boolean powered) { }
@@ -100,6 +121,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() instanceof BlockVandorSwitch) localOn = state.getValue(BlockVandorSwitch.ON);
             if (state.getBlock() instanceof BlockIndustrialLever) localOn = state.getValue(BlockIndustrialLever.POWERED);
+            latched=localOn?channels:ChannelList.EMPTY;
             initialized = true;
             markDirty();
         }
@@ -117,23 +139,27 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);ChannelData.write(tag,channels);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
+        tag.setIntArray("LatchedChannels",latched.toArray());
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
+        ChannelList previousChannels=channels;
         int oldChannel = channel;
         int oldRotation = mountRotation;
         super.readFromNBT(tag);
         RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
         channel=data.channel;
+        channels=ChannelData.read(tag,channel);channel=channels.first();
         localOn=data.localOn;
+        latched=ChannelData.read(tag,"LatchedChannels",localOn?channels:ChannelList.EMPTY).intersect(channels);
         initialized=data.initialized;
         mountRotation=data.mountRotation;
         if (world!=null && world.isRemote && oldRotation!=mountRotation)
             world.markBlockRangeForRenderUpdate(pos,pos);
-        if (world != null && !world.isRemote && oldChannel != channel)
+        if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 

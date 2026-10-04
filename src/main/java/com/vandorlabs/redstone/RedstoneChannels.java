@@ -42,7 +42,7 @@ public final class RedstoneChannels {
 
     public static void register(RedstoneChannelMember member) {
         TileEntity tile = member.channelTile();
-        if (tile.getWorld() == null || tile.getWorld().isRemote || member.getRedstoneChannel() <= 0) return;
+        if (tile.getWorld() == null || tile.getWorld().isRemote || member.getRedstoneChannels().isEmpty()) return;
         network(tile.getWorld()).register(member);
     }
 
@@ -57,127 +57,156 @@ public final class RedstoneChannels {
         TileEntity tile = member.channelTile();
         if (tile.getWorld() == null || tile.getWorld().isRemote) return;
         Network network = network(tile.getWorld());
-        network.remove(member, oldChannel);
         network.register(member);
+    }
+
+    public static void channelChanged(RedstoneChannelMember member,ChannelList previous) {
+        channelChanged(member,previous.first());
     }
 
     public static void inputChanged(RedstoneChannelMember member) {
         TileEntity tile = member.channelTile();
-        if (tile.getWorld() == null || tile.getWorld().isRemote || member.getRedstoneChannel() <= 0) return;
+        if (tile.getWorld() == null || tile.getWorld().isRemote || member.getRedstoneChannels().isEmpty()) return;
         network(tile.getWorld()).inputChanged(member);
     }
 
     public static void latchChanged(RedstoneChannelLatch source,boolean on) {
         TileEntity tile=source.channelTile();
-        if (tile.getWorld()==null || tile.getWorld().isRemote || source.getRedstoneChannel()<=0) return;
+        if (tile.getWorld()==null || tile.getWorld().isRemote || source.getRedstoneChannels().isEmpty()) return;
         network(tile.getWorld()).latchChanged(source,on);
     }
 
+    /** Read existing loaded-channel state without loading a chunk or creating a registry. */
+    public static boolean allPowered(World world,ChannelList channels) {
+        Network network=existingNetwork(world);
+        if(network==null || channels.isEmpty())return false;
+        for(int i=0;i<channels.size();i++)if(!network.powerSources.containsKey(channels.get(i)))return false;
+        return true;
+    }
+
     private static final class Network {
-        private final Map<Integer, Set<RedstoneChannelMember>> members = new java.util.HashMap<>();
-        private final Map<Integer, RedstoneChannelMember> powerSources = new java.util.HashMap<>();
-        private final Map<Integer, Boolean> latchStates = new java.util.HashMap<>();
+        private final Map<Integer, Set<RedstoneChannelMember>> members=new java.util.HashMap<>();
+        private final Map<RedstoneChannelMember,ChannelList> subscriptions=new IdentityHashMap<>();
+        private final Map<Integer,RedstoneChannelMember> powerSources=new java.util.HashMap<>();
+        private final Map<Integer,Boolean> latchStates=new java.util.HashMap<>();
 
         void register(RedstoneChannelMember member) {
-            int channel = member.getRedstoneChannel();
-            if (channel <= 0) {
-                member.setChannelSignal(false);
-                return;
+            ChannelList next=member.getRedstoneChannels(),previous=subscriptions.get(member);
+            if(next.equals(previous))return;
+            Set<Integer> changed=new java.util.LinkedHashSet<>();
+            if(previous!=null)for(int i=0;i<previous.size();i++) {
+                int channel=previous.get(i);changed.add(channel);
+                Set<RedstoneChannelMember> set=members.get(channel);
+                if(set!=null)set.remove(member);
             }
-            Set<RedstoneChannelMember> set = members.get(channel);
-            if (set == null) {
-                set = Collections.newSetFromMap(new IdentityHashMap<RedstoneChannelMember, Boolean>());
-                members.put(channel, set);
+            if(next.isEmpty())subscriptions.remove(member);else subscriptions.put(member,next);
+            boolean latch=isLatch(member);
+            ChannelList initial=latch?((RedstoneChannelLatch)member).latchedChannels():ChannelList.EMPTY;
+            for(int i=0;i<next.size();i++) {
+                int channel=next.get(i);changed.add(channel);
+                members.computeIfAbsent(channel,unused->identitySet()).add(member);
+                if(latch && !latchStates.containsKey(channel))latchStates.put(channel,initial.contains(channel));
             }
-            if (!set.add(member)) return;
-            if (member instanceof RedstoneChannelLatch
-                    && ((RedstoneChannelLatch)member).isChannelLatch()) {
-                RedstoneChannelLatch latch=(RedstoneChannelLatch)member;
-                Boolean shared=latchStates.get(channel);
-                if (shared==null) latchStates.put(channel,latch.latchOn());
-                else latch.applyLinkedLatch(shared);
-            }
-            boolean before = powerSources.containsKey(channel);
-            boolean after = reconcile(channel, set);
-            if (before != after) notifyChannel(channel, after);
-            else member.setChannelSignal(after);
+            settle(changed,true,member);
         }
 
         void unregister(RedstoneChannelMember member) {
-            remove(member, member.getRedstoneChannel());
-        }
-
-        void remove(RedstoneChannelMember member, int channel) {
-            Set<RedstoneChannelMember> set = members.get(channel);
-            if (set != null && set.remove(member)) {
-                boolean before = powerSources.containsKey(channel);
-                if (set.isEmpty()) {
-                    members.remove(channel);
-                    powerSources.remove(channel);
-                    latchStates.remove(channel);
-                } else {
-                    boolean hasLatch=false;
-                    for (RedstoneChannelMember remaining:set)
-                        if (remaining instanceof RedstoneChannelLatch
-                                && ((RedstoneChannelLatch)remaining).isChannelLatch()) {
-                            hasLatch=true; break;
-                        }
-                    if (!hasLatch) latchStates.remove(channel);
-                    boolean after = reconcile(channel, set);
-                    if (before != after) notifyChannel(channel, after);
-                }
+            ChannelList previous=subscriptions.remove(member);
+            if(previous==null)return;
+            Set<Integer> changed=channels(previous);
+            for(int channel:changed) {
+                Set<RedstoneChannelMember> set=members.get(channel);
+                if(set!=null)set.remove(member);
             }
-            member.setChannelSignal(false);
+            settle(changed,true,member);
         }
 
         void inputChanged(RedstoneChannelMember member) {
-            int channel = member.getRedstoneChannel();
-            Set<RedstoneChannelMember> set = members.get(channel);
-            if (set == null || !set.contains(member)) return;
-            boolean before = powerSources.containsKey(channel);
-            boolean after = reconcile(channel, set);
-            if (before != after) notifyChannel(channel, after);
+            ChannelList channels=subscriptions.get(member);
+            if(channels==null)return;
+            Set<RedstoneChannelMember> notify=null;
+            for(int i=0;i<channels.size();i++) {
+                int channel=channels.get(i);Set<RedstoneChannelMember> set=members.get(channel);
+                if(set==null)continue;
+                boolean before=powerSources.containsKey(channel);
+                if(before!=reconcile(channel,set)) {
+                    if(notify==null)notify=identitySet();
+                    notify.addAll(set);
+                }
+            }
+            if(notify!=null) {
+                Set<RedstoneChannelMember> ready=notify;
+                SignalUpdateBatch.apply(()->{
+                    for(RedstoneChannelMember target:ready)target.setChannelSignal(anyPowered(subscriptions.get(target)));
+                });
+            }
         }
 
         void latchChanged(RedstoneChannelLatch source,boolean on) {
-            int channel=source.getRedstoneChannel();
-            Set<RedstoneChannelMember> set=members.get(channel);
-            if (set==null || !set.contains(source)) return;
-            boolean before=powerSources.containsKey(channel);
-            latchStates.put(channel,on);
-            for (RedstoneChannelMember member:new ArrayList<>(set))
-                if (member!=source && member instanceof RedstoneChannelLatch
-                        && ((RedstoneChannelLatch)member).isChannelLatch())
-                    ((RedstoneChannelLatch)member).applyLinkedLatch(on);
-            boolean after=reconcile(channel,set);
-            if (before!=after) notifyChannel(channel,after);
+            ChannelList channels=subscriptions.get(source);
+            if(channels==null)return;
+            for(int i=0;i<channels.size();i++)latchStates.put(channels.get(i),on);
+            settle(channels(channels),true,null);
         }
 
-        /**
-         * Revalidate a known live source before searching the other loaded members.
-         * A currently powered source proves the channel OR without counting every
-         * contributor. When it stops, search the current snapshot from scratch:
-         * coalesced/reordered neighbor events must never leave a stale count high.
-         */
-        private boolean reconcile(int channel, Set<RedstoneChannelMember> set) {
-            RedstoneChannelMember previous=powerSources.get(channel);
-            if(previous!=null && set.contains(previous) && previous.hasLocalRedstoneSignal())return true;
-            for (RedstoneChannelMember member : new ArrayList<>(set)) {
-                if (member!=previous && member.hasLocalRedstoneSignal()) {
-                    powerSources.put(channel,member);
-                    return true;
+        private void settle(Set<Integer> changed,boolean syncLatches,RedstoneChannelMember addedOrRemoved) {
+            SignalUpdateBatch.apply(()-> {
+                if(syncLatches) {
+                    Set<RedstoneChannelMember> latches=identitySet();
+                    for(int channel:changed) {
+                        Set<RedstoneChannelMember> set=members.get(channel);boolean hasLatch=false;
+                        if(set!=null)for(RedstoneChannelMember member:new ArrayList<>(set))if(isLatch(member)) {
+                            hasLatch=true;latches.add(member);
+                        }
+                        if(!hasLatch)latchStates.remove(channel);
+                    }
+                    // Mirror the complete list once, avoiding intermediate physical handle states.
+                    for(RedstoneChannelMember member:latches) {
+                        ChannelList channels=subscriptions.get(member);
+                        if(channels==null)continue;
+                        int[] active=new int[channels.size()];int count=0;
+                        for(int i=0;i<channels.size();i++)if(Boolean.TRUE.equals(latchStates.get(channels.get(i))))active[count++]=channels.get(i);
+                        ((RedstoneChannelLatch)member).applyLinkedChannels(ChannelList.of(java.util.Arrays.copyOf(active,count)));
+                    }
                 }
-            }
-            powerSources.remove(channel);
+                Set<RedstoneChannelMember> notify=identitySet();
+                if(addedOrRemoved!=null)notify.add(addedOrRemoved);
+                // Settle every affected channel before computing any consumer's OR.
+                for(int channel:changed) {
+                    boolean before=powerSources.containsKey(channel);
+                    Set<RedstoneChannelMember> set=members.get(channel);
+                    if(set==null || set.isEmpty()) {
+                        members.remove(channel);powerSources.remove(channel);latchStates.remove(channel);
+                    } else if(before!=reconcile(channel,set))notify.addAll(set);
+                }
+                for(RedstoneChannelMember member:notify)member.setChannelSignal(anyPowered(subscriptions.get(member)));
+            });
+        }
+
+        private boolean anyPowered(ChannelList channels) {
+            if(channels!=null)for(int i=0;i<channels.size();i++)if(powerSources.containsKey(channels.get(i)))return true;
             return false;
         }
 
-        private void notifyChannel(int channel, boolean powered) {
-            Set<RedstoneChannelMember> set = members.get(channel);
-            if (set == null) return;
-            SignalUpdateBatch.apply(() -> {
-                for (RedstoneChannelMember member : new ArrayList<>(set)) member.setChannelSignal(powered);
-            });
+        /** A known live source proves the OR without scanning other members. */
+        private boolean reconcile(int channel,Set<RedstoneChannelMember> set) {
+            RedstoneChannelMember previous=powerSources.get(channel);
+            if(previous!=null && set.contains(previous) && previous.hasLocalRedstoneSignal(channel))return true;
+            for(RedstoneChannelMember member:new ArrayList<>(set))if(member!=previous && member.hasLocalRedstoneSignal(channel)) {
+                powerSources.put(channel,member);return true;
+            }
+            powerSources.remove(channel);return false;
+        }
+        private static boolean isLatch(RedstoneChannelMember member) {
+            return member instanceof RedstoneChannelLatch && ((RedstoneChannelLatch)member).isChannelLatch();
+        }
+        private static Set<RedstoneChannelMember> identitySet() {
+            return Collections.newSetFromMap(new IdentityHashMap<RedstoneChannelMember,Boolean>());
+        }
+        private static Set<Integer> channels(ChannelList list) {
+            Set<Integer> channels=new java.util.LinkedHashSet<>();
+            for(int i=0;i<list.size();i++)channels.add(list.get(i));
+            return channels;
         }
     }
 }

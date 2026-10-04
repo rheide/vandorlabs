@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
 import com.vandorlabs.persistence.NbtPrimitiveData;
@@ -23,6 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
+    private ChannelList channels=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
 
     @Override public boolean shouldRenderInPass(int pass) {
         net.minecraft.block.Block block = getBlockType();
@@ -268,11 +274,11 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
         }
     }
-    @Override public void setRedstoneChannel(int value) {
-        int next = Math.max(0, value);
-        if (next == redstoneChannel) return;
-        int old = redstoneChannel;
-        redstoneChannel = next;
+    @Override public void setRedstoneChannel(int value) {setRedstoneChannels(ChannelList.of(Math.max(0,value)));}
+    @Override public void setRedstoneChannels(ChannelList next) {
+        if (channels.equals(next)) return;
+        ChannelList old = channels;
+        channels=next;redstoneChannel=next.first();
         settingsChanged();
         RedstoneChannels.channelChanged(this, old);
     }
@@ -427,7 +433,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        super.writeToNBT(compound);
+        super.writeToNBT(compound);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -452,6 +458,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public void readFromNBT(NBTTagCompound compound) {
+        ChannelList previousChannels=channels;
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
         int previousSide=sideTexture;
@@ -483,6 +490,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         wallPosition = data.wallPosition;
         smallInput = data.smallInput;
         redstoneChannel = data.redstoneChannel;
+        channels=ChannelData.read(compound,redstoneChannel);redstoneChannel=channels.first();
         channelSignal = data.channelSignal;
         int savedHousing = data.housingTexture;
         if (!compound.hasKey("HousingTextureVersion", 3)) {
@@ -516,7 +524,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             else world.markBlockRangeForRenderUpdate(pos,pos);
         }
         portholeRevision++;
-        if (world != null && !world.isRemote && oldChannel != redstoneChannel)
+        if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 

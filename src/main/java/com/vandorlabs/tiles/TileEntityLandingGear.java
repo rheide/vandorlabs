@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.blocks.BlockTelescopicLandingGear;
 import com.vandorlabs.redstone.*;
 import net.minecraft.block.state.IBlockState;
@@ -13,6 +16,9 @@ import net.minecraft.world.World;
 
 /** Progress is extension distance in blocks. Lower cells only store their owner. */
 public final class TileEntityLandingGear extends TileEntity implements ITickable, RedstoneChannelMember {
+    private ChannelList channels=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
     /** World geometry follows loaded terrain visibility, like diagonal walls. */
     @Override public double getMaxRenderDistanceSquared() { return Double.MAX_VALUE; }
 
@@ -77,8 +83,12 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public TileEntity channelTile(){return this;}
     public int getRedstoneChannel(){return channel;}
     public void setRedstoneChannel(int value){
-        int old=channel;channel=Math.max(0,value);
-        if(old!=channel){channelSignal=false;RedstoneChannels.channelChanged(this,old);markDirty();sync();}
+        setRedstoneChannels(ChannelList.of(Math.max(0,value)));
+    }
+    @Override public void setRedstoneChannels(ChannelList next){
+        if(channels.equals(next))return;
+        ChannelList old=channels;channels=next;channel=next.first();
+        channelSignal=false;RedstoneChannels.channelChanged(this,old);markDirty();sync();
     }
     public boolean hasLocalRedstoneSignal(){return isRoot()&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);}
     public void setChannelSignal(boolean value){if(channelSignal!=value){channelSignal=value;evaluateSignal(false);}}
@@ -96,21 +106,24 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
     public void onChunkUnload(){detached=true;RedstoneChannels.unregister(this);super.onChunkUnload();}
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
+        super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
         tag.setInteger("GearSize",size);tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
         if(hasOwner){tag.setBoolean("GearHasOwner",true);tag.setInteger("GearOwnerDistance",ownerDistance);
             tag.setInteger("GearOwnerX",ownerX);tag.setInteger("GearOwnerZ",ownerZ);}return tag;
     }
     public void readFromNBT(NBTTagCompound tag){
+        ChannelList previousChannels=channels;
         super.readFromNBT(tag);float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
         extensionPixels=tag.hasKey("ExtensionPixels")?Math.round(Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels")))/8F)*8:16;
         size=Math.max(0,Math.min(BlockTelescopicLandingGear.SIZES.length-1,tag.getInteger("GearSize")));
         mode=tag.hasKey("RedstoneMode")?Math.max(0,Math.min(2,tag.getInteger("RedstoneMode"))):1;
-        channel=Math.max(0,tag.getInteger("RedstoneChannel"));lastSignal=tag.getBoolean("LastSignal");
+        channel=Math.max(0,tag.getInteger("RedstoneChannel"));channels=ChannelData.read(tag,channel);channel=channels.first();lastSignal=tag.getBoolean("LastSignal");
         ownerDistance=Math.max(0,Math.min(5,tag.getInteger("GearOwnerDistance")));
         ownerX=Math.max(-1,Math.min(1,tag.getInteger("GearOwnerX")));
         ownerZ=Math.max(-1,Math.min(1,tag.getInteger("GearOwnerZ")));
         hasOwner=tag.getBoolean("GearHasOwner")||ownerDistance>0;
+        if(world!=null && !world.isRemote && !previousChannels.equals(channels))
+            DeferredTileLoad.schedule(this,()->RedstoneChannels.channelChanged(this,previousChannels));
     }
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}

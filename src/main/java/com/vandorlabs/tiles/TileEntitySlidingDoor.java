@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannels;
@@ -21,6 +24,9 @@ import net.minecraft.util.math.BlockPos;
  * renderer and the client tick driver; this tile intentionally does not tick.
  */
 public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannelMember {
+    private ChannelList channels=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
     private int channel;
     private boolean channelSignal;
 
@@ -33,11 +39,11 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
     @Override public int getRedstoneChannel() { return channel; }
     public boolean isChannelSignalPowered() { return channelSignal; }
 
-    @Override public void setRedstoneChannel(int value) {
-        int next = Math.max(0, value);
-        if (next == channel) return;
-        int old = channel;
-        channel = next;
+    @Override public void setRedstoneChannel(int value) {setRedstoneChannels(ChannelList.of(Math.max(0,value)));}
+    @Override public void setRedstoneChannels(ChannelList next) {
+        if (channels.equals(next)) return;
+        ChannelList old = channels;
+        channels=next;channel=next.first();
         markDirty();
         RedstoneChannels.channelChanged(this, old);
         sync();
@@ -89,18 +95,20 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);ChannelData.write(tag,channels);
         new RedstoneData.Member(channel,channelSignal).write(new NbtPrimitiveData(tag));
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
+        ChannelList previousChannels=channels;
         int oldChannel = channel;
         super.readFromNBT(tag);
         RedstoneData.Member data=RedstoneData.Member.read(new NbtPrimitiveData(tag));
         channel=data.channel;
+        channels=ChannelData.read(tag,channel);channel=channels.first();
         channelSignal=data.signal;
-        if (world != null && !world.isRemote && oldChannel != channel)
+        if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 

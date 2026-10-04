@@ -90,8 +90,11 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     }
 
     @Override public void setRedstoneChannel(int value) {
-        if (getRedstoneChannel() == Math.max(0, value)) return;
-        super.setRedstoneChannel(value);
+        setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(Math.max(0,value)));
+    }
+    @Override public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList next) {
+        if (getRedstoneChannels().equals(next)) return;
+        super.setRedstoneChannels(next);
         changed();
     }
 

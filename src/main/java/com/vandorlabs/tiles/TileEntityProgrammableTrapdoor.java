@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.blocks.BlockProgrammableTrapdoor;
 import com.vandorlabs.persistence.SpaceDoorData;
 import com.vandorlabs.redstone.*;
@@ -15,6 +18,9 @@ import net.minecraft.world.World;
 
 /** Settings and pair links; event-driven power, no idle tile ticks. */
 public class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
+    private ChannelList channels=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
     protected int texture=ScreenHousingTextures.DEFAULT_TRAPDOOR,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
     protected boolean sliding,slideIntoWall,slideOverSurface,channelSignal,powerKnown,lastPower,configuring;
     private boolean tileTexture=true;
@@ -262,8 +268,11 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         if(world!=null && !world.isRemote)evaluatePower(true);
     }
     @Override public void setRedstoneChannel(int value) {
-        int next=Math.max(0,value);if(channel==next)return;
-        int old=channel;channel=next;markDirty();RedstoneChannels.channelChanged(this,old);sync();
+        setRedstoneChannels(ChannelList.of(Math.max(0,value)));
+    }
+    @Override public void setRedstoneChannels(ChannelList next) {
+        if(channels.equals(next))return;
+        ChannelList old=channels;channels=next;channel=next.first();markDirty();RedstoneChannels.channelChanged(this,old);sync();
         if(world!=null && !world.isRemote)evaluatePower(true);
     }
     @Override public void setChannelSignal(boolean powered) {
@@ -317,10 +326,10 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         tag.setInteger("housingTexture",texture);tag.setInteger("TrapdoorPosition",position);
         if(canOffsetClosedLeaf())tag.setInteger("TrapdoorCoverFacing",coverFacing().getHorizontalIndex());
         tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setBoolean("TrapdoorSlideIntoWall",slideIntoWall);tag.setBoolean("TrapdoorSlideOverSurface",slideOverSurface);tag.setInteger("TrapdoorTrigger",trigger);
-        tag.setInteger("RedstoneChannel",channel);return tag;
+        tag.setInteger("RedstoneChannel",channel);ChannelData.write(tag,channels);return tag;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);tag.merge(itemSettings());
+        super.writeToNBT(tag);ChannelData.write(tag,channels);tag.merge(itemSettings());
         tag.setInteger("TrapdoorSchema",1);tag.setBoolean("ChannelSignal",channelSignal);
         tag.setBoolean("TrapdoorPowerKnown",powerKnown);tag.setBoolean("TrapdoorLastPower",lastPower);
         if(partner!=null)tag.setLong("TrapdoorPartner",partner.toLong());
@@ -330,6 +339,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         tag.setTag("TrapdoorAssembly",members);tag.setDouble("TrapdoorHinge",assemblyHinge);tag.setDouble("TrapdoorTravel",assemblyTravel);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
+        ChannelList previousChannels=channels;
         int old=channel;super.readFromNBT(tag);
         texture=tag.hasKey("housingTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("housingTexture")):ScreenHousingTextures.DEFAULT_TRAPDOOR;
         position=Math.max(0,Math.min(2,tag.getInteger("TrapdoorPosition")));
@@ -341,7 +351,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         slideOverSurface=!(this instanceof TileEntityProgrammableDiagonalTrapdoor) && tag.getBoolean("TrapdoorSlideOverSurface");
         int saved=tag.hasKey("TrapdoorTrigger",3)?tag.getInteger("TrapdoorTrigger"):SpaceDoorData.TRIGGER_REDSTONE_ON;
         trigger=SpaceDoorData.validTrigger(saved)?saved:SpaceDoorData.TRIGGER_REDSTONE_ON;
-        channel=Math.max(0,tag.getInteger("RedstoneChannel"));channelSignal=tag.getBoolean("ChannelSignal");
+        channel=Math.max(0,tag.getInteger("RedstoneChannel"));channels=ChannelData.read(tag,channel);channel=channels.first();channelSignal=tag.getBoolean("ChannelSignal");
         powerKnown=tag.getBoolean("TrapdoorPowerKnown");lastPower=tag.getBoolean("TrapdoorLastPower");
         partner=tag.hasKey("TrapdoorPartner",4)?BlockPos.fromLong(tag.getLong("TrapdoorPartner")):null;
         squareOrigin=tag.hasKey("TrapdoorSquare",4)?BlockPos.fromLong(tag.getLong("TrapdoorSquare")):null;
@@ -350,7 +360,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         assembly=java.util.Collections.unmodifiableList(savedAssembly);
         assemblyHinge=Math.max(-8,Math.min(8,tag.getDouble("TrapdoorHinge")));
         assemblyTravel=Math.max(15/16D,Math.min(8,tag.getDouble("TrapdoorTravel")));
-        if(world!=null && !world.isRemote && old!=channel)
+        if(world!=null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this,()->RedstoneChannels.channelChanged(this,old));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }

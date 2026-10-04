@@ -1,5 +1,8 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelData;
+
 import com.vandorlabs.blocks.BlockLamp;
 import com.vandorlabs.blocks.BlockLampOff;
 import com.vandorlabs.blocks.BlockPropulsionLight;
@@ -21,6 +24,9 @@ import net.minecraft.world.EnumSkyBlock;
 
 /** Persistent channel and operating state for lamps and propulsion fixtures. */
 public class TileEntityRedstoneLight extends TileEntity implements RedstoneChannelMember, ITickable {
+    private ChannelList channels=ChannelList.EMPTY;
+    @Override public ChannelList getRedstoneChannels(){return channels;}
+
     private int channel;
     private boolean channelSignal;
     private boolean manualOn;
@@ -91,12 +97,12 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         sync();
     }
 
-    @Override public void setRedstoneChannel(int value) {
+    @Override public void setRedstoneChannel(int value) {setRedstoneChannels(ChannelList.of(Math.max(0,value)));}
+    @Override public void setRedstoneChannels(ChannelList next) {
         initializeManualState();
-        int next = Math.max(0, value);
-        if (next == channel) return;
-        int old = channel;
-        channel = next;
+        if (channels.equals(next)) return;
+        ChannelList old = channels;
+        channels=next;channel=next.first();
         markDirty();
         RedstoneChannels.channelChanged(this, old);
         updateVisualState();
@@ -312,7 +318,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);ChannelData.write(tag,channels);
         new RedstoneData.Light(channel,channelSignal,manualOn,particleStreamSelected,
                 initialized).write(new NbtPrimitiveData(tag));
         tag.setBoolean("PropulsionJoin", join);
@@ -321,10 +327,12 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
+        ChannelList previousChannels=channels;
         int oldChannel = channel;
         super.readFromNBT(tag);
         RedstoneData.Light data=RedstoneData.Light.read(new NbtPrimitiveData(tag));
         channel=data.channel;
+        channels=ChannelData.read(tag,channel);channel=channels.first();
         channelSignal=data.signal;
         manualOn=data.manualOn;
         particleStreamSelected=data.particleStream;
@@ -333,7 +341,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         sideTexture = tag.hasKey("PropulsionSideTexture", 3)
                 ? ScreenHousingTextures.clamp(tag.getInteger("PropulsionSideTexture"))
                 : ScreenHousingTextures.INDUSTRIAL_BLOCK;
-        if (world != null && !world.isRemote && oldChannel != channel)
+        if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }
 
