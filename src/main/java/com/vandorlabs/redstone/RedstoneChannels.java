@@ -75,7 +75,7 @@ public final class RedstoneChannels {
 
     private static final class Network {
         private final Map<Integer, Set<RedstoneChannelMember>> members = new java.util.HashMap<>();
-        private final Map<Integer, Integer> poweredMembers = new java.util.HashMap<>();
+        private final Map<Integer, RedstoneChannelMember> powerSources = new java.util.HashMap<>();
         private final Map<Integer, Boolean> latchStates = new java.util.HashMap<>();
 
         void register(RedstoneChannelMember member) {
@@ -97,10 +97,10 @@ public final class RedstoneChannels {
                 if (shared==null) latchStates.put(channel,latch.latchOn());
                 else latch.applyLinkedLatch(shared);
             }
-            int before = poweredMembers.containsKey(channel) ? poweredMembers.get(channel) : 0;
-            int after = reconcile(channel, set);
-            if ((before > 0) != (after > 0)) notifyChannel(channel, after > 0);
-            else member.setChannelSignal(after > 0);
+            boolean before = powerSources.containsKey(channel);
+            boolean after = reconcile(channel, set);
+            if (before != after) notifyChannel(channel, after);
+            else member.setChannelSignal(after);
         }
 
         void unregister(RedstoneChannelMember member) {
@@ -110,10 +110,10 @@ public final class RedstoneChannels {
         void remove(RedstoneChannelMember member, int channel) {
             Set<RedstoneChannelMember> set = members.get(channel);
             if (set != null && set.remove(member)) {
-                int before = poweredMembers.containsKey(channel) ? poweredMembers.get(channel) : 0;
+                boolean before = powerSources.containsKey(channel);
                 if (set.isEmpty()) {
                     members.remove(channel);
-                    poweredMembers.remove(channel);
+                    powerSources.remove(channel);
                     latchStates.remove(channel);
                 } else {
                     boolean hasLatch=false;
@@ -123,8 +123,8 @@ public final class RedstoneChannels {
                             hasLatch=true; break;
                         }
                     if (!hasLatch) latchStates.remove(channel);
-                    int after = reconcile(channel, set);
-                    if ((before > 0) != (after > 0)) notifyChannel(channel, after > 0);
+                    boolean after = reconcile(channel, set);
+                    if (before != after) notifyChannel(channel, after);
                 }
             }
             member.setChannelSignal(false);
@@ -134,38 +134,42 @@ public final class RedstoneChannels {
             int channel = member.getRedstoneChannel();
             Set<RedstoneChannelMember> set = members.get(channel);
             if (set == null || !set.contains(member)) return;
-            int before = poweredMembers.containsKey(channel) ? poweredMembers.get(channel) : 0;
-            int after = reconcile(channel, set);
-            if ((before > 0) != (after > 0)) notifyChannel(channel, after > 0);
+            boolean before = powerSources.containsKey(channel);
+            boolean after = reconcile(channel, set);
+            if (before != after) notifyChannel(channel, after);
         }
 
         void latchChanged(RedstoneChannelLatch source,boolean on) {
             int channel=source.getRedstoneChannel();
             Set<RedstoneChannelMember> set=members.get(channel);
             if (set==null || !set.contains(source)) return;
-            int before=poweredMembers.containsKey(channel)?poweredMembers.get(channel):0;
+            boolean before=powerSources.containsKey(channel);
             latchStates.put(channel,on);
             for (RedstoneChannelMember member:new ArrayList<>(set))
                 if (member!=source && member instanceof RedstoneChannelLatch
                         && ((RedstoneChannelLatch)member).isChannelLatch())
                     ((RedstoneChannelLatch)member).applyLinkedLatch(on);
-            int after=reconcile(channel,set);
-            if ((before>0)!=(after>0)) notifyChannel(channel,after>0);
+            boolean after=reconcile(channel,set);
+            if (before!=after) notifyChannel(channel,after);
         }
 
         /**
-         * Re-read every loaded member when an input edge arrives. Minecraft can
-         * coalesce or reorder neighbor notifications, so adjusting a cached
-         * count one member at a time can leave an old contributor behind and
-         * latch a channel high. This work is event driven; there is no tick scan.
+         * Revalidate a known live source before searching the other loaded members.
+         * A currently powered source proves the channel OR without counting every
+         * contributor. When it stops, search the current snapshot from scratch:
+         * coalesced/reordered neighbor events must never leave a stale count high.
          */
-        private int reconcile(int channel, Set<RedstoneChannelMember> set) {
-            int powered = 0;
+        private boolean reconcile(int channel, Set<RedstoneChannelMember> set) {
+            RedstoneChannelMember previous=powerSources.get(channel);
+            if(previous!=null && set.contains(previous) && previous.hasLocalRedstoneSignal())return true;
             for (RedstoneChannelMember member : new ArrayList<>(set)) {
-                if (member.hasLocalRedstoneSignal()) powered++;
+                if (member!=previous && member.hasLocalRedstoneSignal()) {
+                    powerSources.put(channel,member);
+                    return true;
+                }
             }
-            poweredMembers.put(channel, powered);
-            return powered;
+            powerSources.remove(channel);
+            return false;
         }
 
         private void notifyChannel(int channel, boolean powered) {

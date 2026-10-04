@@ -36,6 +36,7 @@ final class ChannelReconciliationChecks {
         for(Member member:members)member.reads=0;
         for(int repeat=0;repeat<256;repeat++)RedstoneChannels.inputChanged(members.get(repeat%members.size()));
         int reads=0;for(Member member:members)reads+=member.reads;
+        require(reads==256,"steady channel events rescanned all members");
         System.out.println("Channel steady powered input reads: "+reads+" for 256 events across 64 members");
         NonRenderingChecks.MemoryWorld otherWorld=new NonRenderingChecks.MemoryWorld(false);
         Member isolated=new Member(otherWorld,0);RedstoneChannels.register(isolated);
