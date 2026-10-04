@@ -29,6 +29,7 @@ final class HousingStateChecks {
                         .withProperty(ProgrammableHousingState.TILE_SIDES,tile.isSlabTileSides()?1:0);
                 if(actual.getUnlistedNames().contains(ProgrammableHousingState.VISIBLE))reference=(IExtendedBlockState)
                         ReferenceHousingState.extend(state,world,pos,block instanceof BlockProgrammableSlab);
+                direct(reference,actual);
                 same(reference,actual);
                 require(actual.getClean()==state,"extended state lost canonical clean state");
                 for(IProperty<?> property:state.getPropertyKeys())transitions(property,reference,actual);
@@ -37,9 +38,54 @@ final class HousingStateChecks {
                 for(Optional<?> value:((IExtendedBlockState)state).getUnlistedProperties().values())require(!value.isPresent(),"mutated shared clean state");
                 cases++;
             }
+            externalProperties(block,world,pos);
             world.clear();
         }
         System.out.println("PASS: "+cases+" housing snapshots match Forge properties, listed transitions, clean states and immutable defaults");
+    }
+    private static void direct(IExtendedBlockState expected,IExtendedBlockState actual) {
+        // These reads happen before asking for the complete unlisted map.
+        for(net.minecraftforge.common.property.IUnlistedProperty<?> property:expected.getUnlistedNames()) {
+            require(Objects.equals(expected.getValue(property),actual.getValue(property)),"direct unlisted read differs");
+            noOp(property,actual);
+        }
+        require(actual.getUnlistedNames().equals(expected.getUnlistedNames()),"unlisted names differ");
+        net.minecraftforge.common.property.IUnlistedProperty<Integer> missing=ProgrammableHousingState.integer("absent_check");
+        sameFailure(()->expected.getValue(missing),()->actual.getValue(missing));
+        sameFailure(()->expected.withProperty(missing,4),()->actual.withProperty(missing,4));
+        sameFailure(()->expected.withProperty(ProgrammableHousingState.FINISH,null),()->actual.withProperty(ProgrammableHousingState.FINISH,null));
+    }
+    private static <V> void noOp(net.minecraftforge.common.property.IUnlistedProperty<V> property,IExtendedBlockState state) {
+        require(state.withProperty(property,state.getValue(property))==state,"no-op unlisted update changed identity");
+    }
+    private static void externalProperties(Block block,NonRenderingChecks.MemoryWorld world,BlockPos pos) {
+        IBlockState canonical=block.getDefaultState();
+        java.util.List<net.minecraftforge.common.property.IUnlistedProperty<?>> keys=new ArrayList<>(((IExtendedBlockState)canonical).getUnlistedNames());
+        net.minecraftforge.common.property.IUnlistedProperty<String> extra=new net.minecraftforge.common.property.IUnlistedProperty<String>() {
+            public String getName(){return "external_check";}
+            public boolean isValid(String value){return true;}
+            public Class<String> getType(){return String.class;}
+            public String valueToString(String value){return value;}
+        };
+        keys.add(extra);
+        net.minecraftforge.common.property.ExtendedBlockState container=new net.minecraftforge.common.property.ExtendedBlockState(block,
+                canonical.getPropertyKeys().toArray(new IProperty<?>[0]),keys.toArray(new net.minecraftforge.common.property.IUnlistedProperty<?>[0]));
+        IExtendedBlockState source=((IExtendedBlockState)container.getBaseState()).withProperty(extra,"preserved");
+        world.setBlockState(pos,source,2);
+        IExtendedBlockState actual=(IExtendedBlockState)block.getExtendedState(source,world,pos);
+        require("preserved".equals(actual.getValue(extra)),"external unlisted value was discarded");
+        require("changed".equals(actual.withProperty(extra,"changed").getValue(extra)),"external property transition failed");
+        require(actual.withProperty(extra,null).getValue(extra)==null,"external nullable property transition failed");
+        net.minecraftforge.common.property.IUnlistedProperty<Integer> missing=ProgrammableHousingState.integer("missing");
+        sameFailure(()->source.getValue(missing),()->actual.getValue(missing));
+    }
+    private static void sameFailure(Runnable expected,Runnable actual) {
+        RuntimeException before=failure(expected),after=failure(actual);
+        require(before!=null && after!=null && before.getClass()==after.getClass()
+                && Objects.equals(before.getMessage(),after.getMessage()),"Forge exception behavior changed");
+    }
+    private static RuntimeException failure(Runnable action) {
+        try{action.run();return null;}catch(RuntimeException expected){return expected;}
     }
     private static <T extends Comparable<T>> void transitions(IProperty<T> property,IExtendedBlockState expected,IExtendedBlockState actual) {
         for(T value:property.getAllowedValues())same((IExtendedBlockState)expected.withProperty(property,value),
