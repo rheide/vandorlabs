@@ -1,0 +1,19 @@
+allprojects {
+    afterEvaluate {
+        task compileDiagonalMeshSurvey(type: JavaCompile) {
+            dependsOn compileNonRenderingChecks
+            source = project.files(project.file('docs/performance/1.4/diagonal-survey/DiagonalMeshSurvey.java'))
+            classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+            destinationDir = file("$buildDir/diagonal-mesh-survey/classes")
+            sourceCompatibility = '1.8'
+            targetCompatibility = '1.8'
+        }
+        task diagonalMeshSurvey(type: JavaExec) {
+            dependsOn compileDiagonalMeshSurvey
+            classpath = compileDiagonalMeshSurvey.classpath + files(compileDiagonalMeshSurvey.destinationDir)
+            main = 'com.vandorlabs.client.DiagonalMeshSurvey'
+            workingDir = file("$buildDir/diagonal-mesh-survey")
+            doFirst { workingDir.mkdirs() }
+        }
+    }
+}

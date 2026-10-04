@@ -105,3 +105,7 @@ section boundaries, and view them from both sides and at a distance.
 
 Hardware shader appearance and real-world frame-time improvements require
 player testing before expanding this preview to boundary walls or other blocks.
+
+For measured topology and containment opportunities, see the
+[mesh and boundary investigation](diagonal-survey/README.md). Its merge
+candidates and broader boundary routing are not yet part of the renderer.
