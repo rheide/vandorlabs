@@ -3,6 +3,29 @@
 Reference: release 1.3 production code with the expanded trapdoor benchmark
 fixtures in `8b666cd6`. Measurements use the standard texture pack.
 
+## Measured allocation changes
+
+The 64-instance fixtures show the following warmed per-batch allocation. Chunk
+rebuilds and per-frame tile submission are different workloads and are listed
+separately. These reductions do not by themselves establish an FPS improvement.
+
+| Workload | Release 1.3 (bytes) | 1.4 alpha (bytes) | Reduction |
+| --- | ---: | ---: | ---: |
+| Block chunk rebuild | 359,072 | 141,472 | 61% |
+| Slab chunk rebuild | 366,624 | 141,344 | 61% |
+| Storage chunk rebuild | 369,184 | 143,392 | 61% |
+| Light submission | 57,888 | 14,368 | 75% |
+| Wall submission | 42,528 | 20,000 | 53% |
+| Diagonal Wall submission | 35,360 | 15,392 | 56% |
+| Door submission | 161,312 | 23,584 | 85% |
+| Trapdoor submission | 298,528 | 24,096 | 92% |
+| Diagonal Trapdoor submission | 313,888 | 24,096 | 92% |
+
+The source measurements are `mesh-build-before.csv`,
+`mesh-build-after-compact-states.csv`, `render-before.csv` and
+`render-after-screen-identifiers.csv`. Detailed paired CPU measurements,
+algorithm boundaries and compatibility fallbacks follow below.
+
 ## Trapdoor texture clipping
 
 A rigid leaf's texture clipping depends on its material coordinates and layout,
@@ -33,7 +56,8 @@ These paired measurements show 21–43% lower CPU cost and 98–99% less allocat
 in texture emission. They do not establish an FPS improvement.
 
 The full live suite passed on release 1.3, the first optimized build, and the
-housing/power, property-lookup, door/ramp and compact-state optimization builds, including
+housing/power, property-lookup, door/ramp and compact-state optimization builds,
+and the final alpha production code, including
 rendering, GUI/network, joining/redstone, placement, inventory and copy contracts.
 The first live before/after benchmark pair passed all 56 static image comparisons: at least
 99.99% of pixels are within 3/255 per channel. Across the 64-leaf trapdoor cases,
@@ -364,7 +388,7 @@ The renderer also reuses the existing loaded-neighbor light sampler, which uses
 one mutable position instead of six positions and a copied direction array.
 
 Nine additional static fixtures cover Viewscreen, Diagonal Screen and Input in
-Static, plain Off and framed Off modes. All 67 image comparisons pass. Checks also
+Static, plain Off and framed Off modes. All 68 image comparisons pass, including ordinary Wall. Checks also
 cover identifier equality, reuse, eviction and 72 loaded-boundary light samples.
 
 For 64 Static screens, measured rendering allocation falls from 10,784 to 32 bytes
@@ -380,6 +404,26 @@ CPU time is essentially unchanged at 1.913 versus 1.902 ms. In the full 64-Light
 render batch this removes 9,216 bytes. `neighbor-light.csv` records the paired
 measurement separately from draw submission.
 
+## Final live validation
+
+The final production code passes the complete live client suite, including
+rendering, GUI/network, persistence, redstone, placement, inventory, WorldEdit
+and Better Builder's Wands contracts. The final benchmark also passes its paired
+client/server collision and door draw-state checks.
+
+With the original fixture order preserved, all 59 original static images match
+the 1.3 reference directly. All nine additional screen fixtures match their
+pre-optimization captures. Each comparison requires at least 99.99% of pixels
+within 3/255 per channel. Four timing-dependent moving door fixtures remain
+excluded from static pixel comparison; the full live motion suite covers them.
+`render-final.csv` records the final ordered benchmark.
+
+## Packaged compatibility
+
+All 11,288 packaged asset payloads are byte-identical to the 1.3 reference JAR.
+The standard artifact and mod metadata report `1.4-alpha`, and mod class files
+target Java 8. Existing artwork and resource identifiers are preserved.
+
 ## Reproduction
 
 Use Java 8 for every Gradle command. Run the rendering clients sequentially to
@@ -393,6 +437,11 @@ bash testclient/benchmark_programmable.sh
 python3 testclient/compare_programmable_benchmarks.py BEFORE.csv AFTER.csv
 python3 testclient/compare_programmable_images.py BEFORE_RUN AFTER_RUN
 ```
+
+Additional screen fixtures run after the original fixture sequence so their
+Off-mode lighting cannot affect the release comparison. The image checker is
+strict about fixture sets by default; `--allow-added` compares every old fixture
+while reporting additional fixtures that need a separate before/after baseline.
 
 The live rendering benchmark uses Mesa software rendering. Its submission and
 completion times are synthetic batch measurements, not hardware GPU or shader

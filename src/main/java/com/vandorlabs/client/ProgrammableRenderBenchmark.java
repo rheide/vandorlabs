@@ -100,10 +100,6 @@ final class ProgrammableRenderBenchmark {
                         for (String trapdoorVariant : Arrays.asList("trapdoor_open", "trapdoor_sliding",
                                 "trapdoor_fit", "trapdoor_custom", "trapdoor_shallow"))
                             measure(mc,csv,meshes,id,trapdoorVariant,64);
-                    if (Arrays.asList("vandorlabs:programmable_viewscreen", "vandorlabs:programmable_diagonal_screen",
-                            "vandorlabs:programmable_input").contains(id))
-                        for (String screenVariant : Arrays.asList("screen_static", "screen_off", "screen_framed_off"))
-                            measure(mc,csv,meshes,id,screenVariant,64);
                     if (id.equals("vandorlabs:programmable_diagonal_wall"))
                         for (String wallVariant : Arrays.asList("wall_filled", "wall_shallow", "wall_clipped"))
                             measure(mc,csv,meshes,id,wallVariant,64);
@@ -125,6 +121,12 @@ final class ProgrammableRenderBenchmark {
                         measure(mc, csv, meshes, id, "round_unjoined", 64);
                     }
                 }
+                // Off-mode fixtures change world/GL lighting. Append new cases so
+                // they cannot alter the original release-comparison sequence.
+                for(String id:Arrays.asList("vandorlabs:programmable_diagonal_screen",
+                        "vandorlabs:programmable_input", "vandorlabs:programmable_viewscreen"))
+                    for(String variant:Arrays.asList("screen_static", "screen_off", "screen_framed_off"))
+                        measure(mc,csv,meshes,id,variant,64);
                 DoorRenderModels.checkPreparedDrawStates();
                 OffsetCollisionRuntimeBenchmark.run(mc,output);
                 NeighborLightRuntimeBenchmark.run(mc,output);

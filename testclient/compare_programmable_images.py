@@ -10,10 +10,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('before', type=Path)
     parser.add_argument('after', type=Path)
+    parser.add_argument('--allow-added', action='store_true', help='Compare every old fixture while allowing additional new fixtures')
     args = parser.parse_args()
     families=('programmable_block-', 'programmable_trigger_block-', 'programmable_slab-',
               'programmable_light-', 'programmable_porthole_', 'programmable_door-',
-              'programmable_diagonal_wall-', 'programmable_storage-', 'programmable_stairs-',
+              'programmable_wall-', 'programmable_diagonal_wall-', 'programmable_storage-', 'programmable_stairs-',
               'programmable_trapdoor-',
               'programmable_diagonal_trapdoor-')
     def relevant(path):
@@ -22,7 +23,7 @@ def main():
             ('screen_static', 'screen_off', 'screen_framed_off'))
     before_names={p.name for p in (args.before/'screenshots').glob('*.png') if relevant(p)}
     after_names={p.name for p in (args.after/'screenshots').glob('*.png') if relevant(p)}
-    if before_names!=after_names:
+    if before_names!=after_names and not (args.allow_added and before_names < after_names):
         raise SystemExit('Static fixture image sets differ')
     count = 0
     failures = []
@@ -50,6 +51,8 @@ def main():
     if failures:
         raise SystemExit('\n'.join(failures))
     print(f'PASS: {count} static benchmark images; at least 99.99% of pixels within 3/255 per channel')
+    if args.allow_added and after_names-before_names:
+        print(f'{len(after_names-before_names)} added fixtures require their own before/after comparison')
 
 
 if __name__ == '__main__':
