@@ -425,9 +425,11 @@ excluded from static pixel comparison; the full live motion suite covers them.
 
 ## Packaged compatibility
 
-All 11,288 packaged asset payloads are byte-identical to the 1.3 reference JAR.
-The standard artifact and mod metadata report `1.4-alpha`, and mod class files
-target Java 8. Existing artwork and resource identifiers are preserved.
+The performance-only baseline retained all 11,288 packaged asset payloads
+byte-for-byte from the 1.3 reference JAR. The release also includes the redstone
+control artwork and interface labels described in the [1.4 highlights](../../gallery/version-1.4.md).
+The standard artifact and mod metadata report `1.4`, and mod class files target
+Java 8. Existing artwork and resource identifiers are preserved.
 
 ## Reproduction
 

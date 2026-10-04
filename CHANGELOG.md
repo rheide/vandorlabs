@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4-alpha
+## 1.4
 
 - Replace propulsion particle On/Off with Off/Light/Medium/Heavy. Keep existing On settings and emission unchanged as Light; Medium and Heavy add density and wider plumes around the original stream. Preserve direction, particle types, connected assembly centers, saved settings and copying.
 - Match diagonal screen picking and the selection outline to the solid wedge, and use cached collision slices so its empty space remains accessible.
@@ -22,7 +22,7 @@
 - Fix corrupted triangles on chunk-rendered Diagonal Walls when using the vanilla block renderer. Use the standard baked-quad vertex layout and retain the existing surfaces, normals and lighting.
 - Validate the actual vanilla output buffer as well as the Forge rendering path.
 
-- Render static Programmable Diagonal Walls through cached chunk geometry. Preserve existing surfaces, material coordinates, two-sided faces and uniform lighting. Keep the existing tile renderer for section overhangs and portholes; see the [experimental diagonal rendering notes](docs/performance/1.4/diagonal-chunks.md).
+- Render static Programmable Diagonal Walls through cached chunk geometry. Preserve existing surfaces, material coordinates, two-sided faces and uniform lighting. Keep the existing tile renderer for section overhangs and portholes; see the [diagonal rendering notes](docs/performance/1.4/diagonal-chunks.md).
 - Refresh nearby diagonal-wall chunk meshes when geometry settings arrive in a tile update packet.
 
 - Reuse bounded Static/Off screen texture identifiers and the existing loaded-neighbor lighting sampler, reducing render-loop allocation while preserving texture paths, resource-pack resolution and light values.

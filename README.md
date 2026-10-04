@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
-**1.4-alpha:** Turn existing programmable screens, inputs and consoles into editable redstone control panels through the `Redstone...` artwork choice. Add comma-separated redstone channel lists and Off/Light/Medium/Heavy propulsion particles, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [experimental diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
+**1.4:** Turn existing programmable screens, inputs and consoles into editable redstone control panels through the `Redstone...` artwork choice. Add comma-separated redstone channel lists and Off/Light/Medium/Heavy propulsion particles, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
 
 **Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
 
@@ -145,7 +145,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.4-alpha.jar`.
+`build/libs/vandorlabs-1.4.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 

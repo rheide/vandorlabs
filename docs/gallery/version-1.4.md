@@ -1,4 +1,4 @@
-# Version 1.4 alpha
+# Version 1.4
 
 Version 1.4 turns existing programmable screens, inputs and consoles into
 editable redstone control panels, adds multi-channel controls and selectable

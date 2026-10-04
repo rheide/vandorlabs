@@ -4,7 +4,7 @@ These images come from a real Forge 1.12.2 client in the repeatable ReproLab
 world. The close-ups show individual shapes, controls, and states. Open an image
 at full size to inspect its texture and model.
 
-- [New in 1.4 alpha](version-1.4.md)
+- [New in 1.4](version-1.4.md)
 - [New in 1.3](version-1.3.md)
 - [Animated motion guides](../animated-documentation.md)
 - [New in 1.2](version-1.2.md)

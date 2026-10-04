@@ -36,4 +36,4 @@ stale geometry; moving entities, animation and clouds can change independently.
 
 The comparison baselines are `release_1.3` (`9c433a63`) and the original
 `1.4-alpha` tag (`2d18b157`), before diagonal chunk rendering. Current development
-keeps version `1.4-alpha`; identify newer results by commit and artifact hash.
+uses version `1.4`; identify newer results by commit and artifact hash.

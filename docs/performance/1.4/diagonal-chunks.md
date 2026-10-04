@@ -1,9 +1,9 @@
-# Experimental diagonal wall chunk rendering
+# Diagonal wall chunk rendering
 
-The current `1.4-alpha` build corrects the first chunk-rendering preview, whose vertex layout produced
+The `1.4` release corrects the first chunk-rendering preview, whose vertex layout produced
 corrupted triangles through the vanilla block renderer.
 
-The preview moves static Programmable Diagonal Wall surfaces into
+The renderer moves static Programmable Diagonal Wall surfaces into
 Minecraft's chunk buffers. Interior walls no longer submit their tile mesh every
 frame. Their geometry is rebuilt when the chunk mesh becomes dirty, using an
 immutable snapshot of the wall settings, neighboring geometry and light value.
