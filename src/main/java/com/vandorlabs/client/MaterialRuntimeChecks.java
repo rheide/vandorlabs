@@ -43,8 +43,8 @@ final class MaterialRuntimeChecks {
         require(picked.hasTagCompound(), "creative pick lost glass settings");
         player.world.setBlockState(copy, glass.getDefaultState(), 3);
         glass.onBlockPlacedBy(player.world, copy, player.world.getBlockState(copy), player, picked);
-        require(player.world.getBlockState(copy).getValue(BlockProgrammableGlass.SIZE)==2,
-                "creative copy lost size");
+        require(player.world.getBlockState(copy).getValue(BlockProgrammableGlass.SIZE)==1,
+                "creative copy did not migrate legacy High size to Large");
         TileEntityProgrammableGlass copied = (TileEntityProgrammableGlass)
                 player.world.getTileEntity(copy);
         require(copied.getShade()==2, "creative copy lost shade");

@@ -1058,7 +1058,7 @@ public class ReproLab {
                 BlockPos configuredGlass=CONSOLE.add(3,0,3);
                 World glassWorld=mc.getIntegratedServer().getWorld(0);
                 if (glassWorld.getBlockState(configuredGlass).getValue(
-                        com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)!=2
+                        com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)!=0
                         || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)
                         glassWorld.getTileEntity(configuredGlass)).getShade()!=1
                         || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)

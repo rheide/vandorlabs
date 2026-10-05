@@ -18,20 +18,20 @@ final class CustomMaterialRuntimeChecks {
             require(!sprite.getIconName().equals("missingno") && sprite.getIconWidth()>0,"imported texture missing from atlas: "+ScreenHousingTextures.IDS[i]);
             categories.add(ScreenHousingTextures.category(i));imported++;
         }
-        require(imported==33 && categories.equals(new java.util.HashSet<>(java.util.Arrays.asList("Tech","Hull","Trapdoors","Windows"))),"imported category/texture coverage");
+        require(imported==41 && categories.equals(new java.util.HashSet<>(java.util.Arrays.asList("Tech","Hull","Trapdoors","Windows"))),"imported category/texture coverage");
         checkMenu(mc);
         int hatchNames=0;
         for(int i=ScreenHousingTextures.LEGACY_COUNT;i<ScreenHousingTextures.BUILTIN_COUNT;i++)
             if("Trapdoors".equals(ScreenHousingTextures.category(i))) {
-                require(ScreenHousingTextures.label(i)!=null && ScreenHousingTextures.label(i).length()<=20,"hatch label still too long");hatchNames++;
+                require(ScreenHousingTextures.label(i)!=null && ScreenHousingTextures.label(i).replaceFirst(" (Small|Large)$","").length()<=20,"hatch label still too long");hatchNames++;
             }
-        require(hatchNames==8 && "Armored Hatch".equals(ScreenHousingTextures.label(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"short hatch labels/default");
-        System.out.println("[vandorlabs][reprolab] short-trapdoor-labels PASS eight stable choices");
+        require(hatchNames==16 && "Armored Hatch Large".equals(ScreenHousingTextures.label(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"short hatch labels/default");
+        System.out.println("[vandorlabs][reprolab] short-trapdoor-labels PASS eight designs, two artwork sizes");
         for(net.minecraft.block.Block hatch:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_TRAPDOOR,ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR}) {
             net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(hatch),mc.world,player);
             require(model.getParticleTexture().getIconName().equals(ScreenHousingTextures.fullTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"plain hatch item uses old default artwork");
         }
-        System.out.println("[vandorlabs][reprolab] imported-materials-runtime PASS (33 retained textures, four categories, both default hatch icons)");
+        System.out.println("[vandorlabs][reprolab] imported-materials-runtime PASS (41 retained textures, four categories, both default hatch icons)");
         ItemStack stone=new ItemStack(Blocks.STONE),door=new ItemStack(Items.OAK_DOOR);
         int stoneId=CustomBlockMaterials.choice(stone),doorId=CustomBlockMaterials.choice(door);
         require(CustomBlockMaterials.block(door)==Blocks.OAK_DOOR,"vanilla door item mapping");
@@ -108,7 +108,9 @@ final class CustomMaterialRuntimeChecks {
                 for(int style=0;style<6;style++)if(entries.containsKey(ScreenHousingTextures.lightIndex(style)))on++;
                 int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
                 require(entries.containsKey(64) && entries.containsKey(amber),"hex light choices missing");
-                require(on==6 && off==8,"light picker paired artwork coverage");
+                for(String artwork:new String[]{"bussard_classic","bussard_modern","deflector_amber","deflector_blue","nacelle_a","nacelle_d","nacelle_defiant","nacelle_intrepid"})
+                    require(entries.containsKey(ScreenHousingTextures.screenIndex("lights/"+artwork+"_on")),"new light missing from picker: "+artwork);
+                require(on==6 && off==16,"light picker paired artwork coverage");
             }
             System.out.println("[vandorlabs][reprolab] light-picker-runtime PASS rows="+expected);
         } catch(ReflectiveOperationException e){throw new RuntimeException(e);}
@@ -119,6 +121,15 @@ final class CustomMaterialRuntimeChecks {
         int retired=0;
         String fallback=ScreenHousingTextures.texture(0);
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(!ScreenHousingTextures.visible(choice)) {
+            com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+            if(entry!=null && entry.has("alias")) {
+                int target=ScreenHousingTextures.clamp(choice);
+                require(target!=choice && ScreenHousingTextures.visible(target),"legacy High alias target");
+                require(ScreenHousingTextures.texture(choice).equals(ScreenHousingTextures.texture(target)),"legacy High square artwork");
+                require(ScreenHousingTextures.fullTexture(choice).equals(ScreenHousingTextures.fullTexture(target)),"legacy High face artwork");
+                require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice))!=mc.getTextureMapBlocks().getMissingSprite(),"legacy High target not stitched");
+                continue;
+            }
             retired++;
             require(ScreenHousingTextures.clamp(choice)==choice,"retired saved choice number changed");
             require(ScreenHousingTextures.texture(choice).equals(fallback)

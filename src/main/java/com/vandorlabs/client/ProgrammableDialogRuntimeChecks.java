@@ -115,9 +115,11 @@ final class ProgrammableDialogRuntimeChecks {
                 require(!item.label.matches(".* (Small|Medium|Large)$"),"door size remains in design label");
             }
         }
-        require(designs.size()==15,"door picker missing designs");
+        boolean large=designs.stream().anyMatch(design->design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN);
+        int expected=large?com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length:com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN;
+        require(designs.size()==expected,"door picker missing designs");
         for(int detail=0;detail<2;detail++) {
-            HousingTextureList sized=HousingTextureList.forDoors(detail,0,0,100,list.selected());
+            HousingTextureList sized=HousingTextureList.forDoors(detail,0,0,100,list.selected(),large);
             java.util.Set<Integer> sizedDesigns=new java.util.HashSet<>();
             for(Object option:((java.util.Map<?,?>)options.get(sized)).values()) {
                 HousingTextureList.Option item=(HousingTextureList.Option)option;
@@ -129,7 +131,7 @@ final class ProgrammableDialogRuntimeChecks {
                     require(com.vandorlabs.tiles.ScreenHousingTextures.entry(next).get("design").getAsInt()==entry.get("design").getAsInt(),"size change replaced door design");
                 }
             }
-            require(sizedDesigns.size()==15,"sized door picker missing designs");
+            require(sizedDesigns.size()==expected,"sized door picker missing designs");
         }
     }
     private static void checkList(HousingTextureList list,List<GuiButton> buttons)throws ReflectiveOperationException {

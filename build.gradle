@@ -44,6 +44,17 @@ task testNonRendering(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task testFilesystemTextureNames(type: JavaExec) {
+    group = 'verification'
+    description = 'Check filesystem artwork through catalog positions and stable saved identifiers'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TextureNameChecks'
+    workingDir = file("$buildDir/filesystem-texture-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testFilesystemTextureNames
+
 task benchmarkHousingState(type: JavaExec) {
     group = 'verification'
     description = 'Compare programmable chunk-state CPU cost and allocations against 1.3'

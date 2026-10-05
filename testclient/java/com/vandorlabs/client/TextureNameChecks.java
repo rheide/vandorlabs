@@ -10,17 +10,29 @@ import java.util.List;
 
 /** Catalog name equivalence without caching dynamic Custom material resolution. */
 final class TextureNameChecks {
-    private static final JsonObject MENU=menu();
+    private static JsonObject MENU;
     private static JsonObject menu() {
         try {
             java.lang.reflect.Field field=ScreenHousingTextures.class.getDeclaredField("MENU");field.setAccessible(true);
             return (JsonObject)field.get(null);
         } catch(ReflectiveOperationException failure){throw new AssertionError(failure);}
     }
+    public static void main(String[] args) {
+        FilesystemTextures.initialize(java.nio.file.Paths.get("filesystem-textures"));
+        run();
+    }
     static void run() {
+        MENU=menu();
         List<Integer> choices=new ArrayList<>();
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             choices.add(i);choices.add(ScreenHousingTextures.choiceAt(i));
+            JsonObject entry=ScreenHousingTextures.entry(i);
+            if(entry!=null && entry.has("file")) {
+                String expected="vandorlabs:blocks/unified/"+entry.get("id").getAsString();
+                int stable=ScreenHousingTextures.choiceAt(i);
+                require(expected.equals(ScreenHousingTextures.texture(i)),"filesystem catalog-position artwork");
+                require(expected.equals(ScreenHousingTextures.fullTexture(stable)),"filesystem stable-choice artwork");
+            }
         }
         for(int choice:new int[]{-1,Integer.MAX_VALUE,CustomBlockMaterials.ID_BASE,FilesystemTextures.identifier("absent.png")})choices.add(choice);
         CommonProxy saved=VandorLabs.proxy;
@@ -39,7 +51,7 @@ final class TextureNameChecks {
     // Released name selection, using the same immutable catalog inputs.
     static String reference(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && VandorLabs.proxy!=null)return VandorLabs.proxy.customTexture(choice);
-        choice=ScreenHousingTextures.clamp(choice);
+        choice=ScreenHousingTextures.clamp(ScreenHousingTextures.choiceAt(ScreenHousingTextures.localIndex(choice)));
         JsonObject e=ScreenHousingTextures.entry(choice);
         return ScreenHousingTextures.fullTexture(choice)+(e!=null && e.has("design") && !"Double Doors".equals(ScreenHousingTextures.category(choice)) && ScreenHousingTextures.visible(choice)?"_half":"");
     }
@@ -50,7 +62,8 @@ final class TextureNameChecks {
         return !lit && ScreenHousingTextures.visible(choice) && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():reference(choice);
     }
     static String referenceStorage(int choice,EnumFacing face) {
-        choice=ScreenHousingTextures.clamp(choice);
+        if(CustomBlockMaterials.isCustom(choice))return reference(choice);
+        choice=ScreenHousingTextures.clamp(ScreenHousingTextures.choiceAt(ScreenHousingTextures.localIndex(choice)));
         JsonObject e=ScreenHousingTextures.entry(choice);String key=face.getAxis()==EnumFacing.Axis.Y?"top":"side";
         return face==EnumFacing.NORTH || e==null || !e.has(key)?reference(choice):"vandorlabs:blocks/"+e.get(key).getAsString();
     }

@@ -2,6 +2,8 @@
 
 ## 1.5
 
+- Preserve filesystem texture artwork in atlas/model lookups after legacy door-tier migration, including configured item previews. Update live checks for two artwork tiers and imported hatch variants.
+
 - Give Framed and Redstone Input separate full-width rows in the half-height screen/input dialog, with spacing for the size, wall-texture and channel controls.
 
 - Reduce door and Programmable Glass artwork to Small/Large: former Medium becomes Large, and former Large selections migrate to it without changing designs or physical door sizes. Glass panes now share one reflected pattern across resolutions.

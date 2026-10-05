@@ -288,8 +288,8 @@ final class SpaceDoorRuntimeChecks {
                 IBlockState actual=world.getBlockState(p).getActualState(world,p);
                 check(actual.getValue(com.vandorlabs.blocks.BlockGlassWall.LEFT)==(i==0),"mixed glass left seam");
                 check(actual.getValue(com.vandorlabs.blocks.BlockGlassWall.RIGHT)==(i==2),"mixed glass right seam");
-                check(actual.getValue(com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)==i,
-                        "glass detail selection");
+                check(actual.getValue(com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)==Math.min(i,1),
+                        "glass detail selection / legacy High migration");
             }
             for (int i=0;i<3;i++) world.setBlockToAir(source.offset(along,i));
         }
