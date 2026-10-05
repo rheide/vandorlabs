@@ -227,7 +227,7 @@ for tier in ('low','medium','high'):
         pane=load(ASSETS/'models/block/detailed_doors'/tier/(base+'glass.json'))['elements']
         assert len(pane)==2 and any(e['from'][0]<8<e['to'][0] and e['from'][1]<16<e['to'][1] for e in pane)
         handles=[e for e in opaque['elements'] if any(f['texture']=='#handle' for f in e['faces'].values())]
-        assert len(handles)==6 and all(e['from'][0]>x1-2 for e in handles for x1 in [max(r['to'][0] for r in rim)])
+        assert len(handles)==2 and all(e['from'][0]>x1-2 for e in handles for x1 in [max(r['to'][0] for r in rim)])
         for e in rim+pane+handles:
             dx,dy,dz=[b-a for a,b in zip(e['from'],e['to'])]
             for side,face in e['faces'].items():

@@ -31,14 +31,11 @@ def tiled_box(bounds, texture):
     return result
 
 def handles(x, z0, z1):
-    """A contrasting vertical pull on both faces, attached to the moving rim."""
+    """One shallow rectangular handle per face, with the same visible footprint."""
     result=[]
     for front in (True,False):
-        za,zb=(z0-.9,z0) if front else (z1,z1+.9)
-        for y in (13,19):
-            result+=tiled_box((x-.4,y,za,x+.4,y+.6,zb),'handle')
-        za,zb=(z0-1.15,z0-.65) if front else (z1+.65,z1+1.15)
-        result+=tiled_box((x-.3,13,za,x+.3,19.6,zb),'handle')
+        za,zb=(z0-.15,z0) if front else (z1,z1+.15)
+        result+=tiled_box((x-.4,13,za,x+.4,19.6,zb),'handle')
     return result
 
 for level in ['low','medium','high']:

@@ -13,7 +13,8 @@ for tier in ['low','medium','high']:
     for hinges in ([True] if sliding else [False,True]):
      base='space_'+('reactor_service' if family=='reactor' else family)+('_sliding' if sliding else '_rotating')+('_door_' if design<5 else '_')+('framed' if framed else 'bare')
      suffix='' if sliding or hinges else '_no_hinges'
-     model={'ambientocclusion':False,'textures':{},'elements':[],'display':{'gui':{'rotation':[15,205,0],'scale':[.9,.9,.9]},'firstperson_righthand':{'scale':[.75,.75,.75]},'thirdperson_righthand':{'scale':[.75,.75,.75]}}}
+     # Leave slot padding after GUI rotation; unrotated 16x16 bounds are insufficient.
+     model={'ambientocclusion':False,'textures':{},'elements':[],'display':{'gui':{'rotation':[15,205,0],'scale':[.65,.65,.65]},'firstperson_righthand':{'scale':[.75,.75,.75]},'thirdperson_righthand':{'scale':[.75,.75,.75]}}}
      for hand in ['left','right']:
       for part in ['fixed','leaf']:
        source=assets/'models/block/detailed_doors'/tier/(base+'_paired_'+hand+'_'+part+suffix+'.json');source=json.loads(source.read_text())
