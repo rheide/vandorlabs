@@ -7,7 +7,7 @@
 - Guard collision clipping against disjoint boxes so opened large doors leave a traversable passage in every orientation and movement mode.
 - Add White Glass doors: pale moving leaf rails around a large glass opening, with simple shallow rectangular handles on both faces. Crop/repeat the rail and pane textures at consistent proportions; keep the stationary frame independently optional.
 - Keep large-door inventory icons inside their slots with padding after GUI rotation.
-- Add Bussard Classic/Modern, Deflector Amber/Blue and Nacelle A/D/Defiant/Intrepid light artwork with matching On/Off textures. Preserve existing texture indices.
+- Add Bussard Classic/Modern, Deflector Amber/Blue and Nacelle 1–4 light artwork with matching On/Off textures. Preserve existing texture indices.
 - Submit redstone-screen backgrounds as textured surfaces with normals and explicit lightmaps for shader compatibility. Add Up/Down row controls that move labels and complete channel lists together.
 - Add Linear, Curve In and Curve Out spatial interpolation for Ramp and Filled Ramp modes. Keep endpoint heights, use the same profile for rendering/collision/rider motion, and preserve Linear for older saves. Include interpolation in configuration copying.
 

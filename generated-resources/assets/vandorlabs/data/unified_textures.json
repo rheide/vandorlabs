@@ -1788,53 +1788,53 @@
   },
   {
     "id": "light_nacelle_a",
-    "label": "Nacelle A On",
+    "label": "Nacelle 1 On",
     "category": "Lights",
     "source": "nacelle_a_on",
     "unlit": "nacelle_a_off"
   },
   {
     "id": "light_nacelle_a_off",
-    "label": "Nacelle A Off",
+    "label": "Nacelle 1 Off",
     "category": "Lights",
     "source": "nacelle_a_off"
   },
   {
     "id": "light_nacelle_d",
-    "label": "Nacelle D On",
+    "label": "Nacelle 2 On",
     "category": "Lights",
     "source": "nacelle_d_on",
     "unlit": "nacelle_d_off"
   },
   {
     "id": "light_nacelle_d_off",
-    "label": "Nacelle D Off",
+    "label": "Nacelle 2 Off",
     "category": "Lights",
     "source": "nacelle_d_off"
   },
   {
     "id": "light_nacelle_defiant",
-    "label": "Nacelle Defiant On",
+    "label": "Nacelle 3 On",
     "category": "Lights",
     "source": "nacelle_defiant_on",
     "unlit": "nacelle_defiant_off"
   },
   {
     "id": "light_nacelle_defiant_off",
-    "label": "Nacelle Defiant Off",
+    "label": "Nacelle 3 Off",
     "category": "Lights",
     "source": "nacelle_defiant_off"
   },
   {
     "id": "light_nacelle_intrepid",
-    "label": "Nacelle Intrepid On",
+    "label": "Nacelle 4 On",
     "category": "Lights",
     "source": "nacelle_intrepid_on",
     "unlit": "nacelle_intrepid_off"
   },
   {
     "id": "light_nacelle_intrepid_off",
-    "label": "Nacelle Intrepid Off",
+    "label": "Nacelle 4 Off",
     "category": "Lights",
     "source": "nacelle_intrepid_off"
   },

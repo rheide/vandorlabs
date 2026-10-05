@@ -55,7 +55,7 @@ boxes inside the passage.
 ## Lights, screens and ramps
 
 - **Programmable Light:** Bussard Classic, Bussard Modern, Deflector Amber,
-  Deflector Blue, Nacelle A, Nacelle D, Nacelle Defiant and Nacelle Intrepid,
+  Deflector Blue and Nacelle 1–4,
   each with matching On/Off artwork. Existing saved selections retain their indices.
 - **Redstone Screen:** Up/Down moves the selected label and its complete channel
   list together. Background panels now use textured vertices with normals and
