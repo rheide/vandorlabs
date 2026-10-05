@@ -39,6 +39,21 @@ for offset,name in enumerate('plain_cargo stepped_freight observation_leaf reinf
         entry=dict(id='door_'+name+'_'+tier,label=name.replace('_',' ').title()+' '+['Small','Medium','Large'][detail],category='Doors' if offset<4 else 'Double Doors',source='cargo_doors/'+tier+'/'+name,design=17+offset,detail=detail)
         if offset<4:entry['rectangular']=True
         entries.append(entry)
+# Preserve numeric choices while replacing the old high-resolution door tier.
+for entry in entries:
+    if 'design' in entry:
+        if entry['detail']==1:entry['label']=entry['label'].removesuffix(' Medium')+' Large'
+        elif entry['detail']==2:
+            entry.update(hidden=True,alias=entry['id'].removesuffix('_high')+'_medium')
+            entry['source']=entry['source'].replace('/high/','/medium/')
+    if entry['category']=='Trapdoors':
+        entry.update(textureFamily=entry['id'],detail=1)
+        entry['label']+=' Large'
+for original in list(entries):
+    if original.get('textureFamily'):
+        small=dict(original,id=original['id']+'_small',source=original['source']+'_small',detail=0)
+        small['label']=original['label'].removesuffix(' Large')+' Small'
+        entries.append(small)
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

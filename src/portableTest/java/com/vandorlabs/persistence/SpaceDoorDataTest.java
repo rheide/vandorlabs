@@ -12,7 +12,7 @@ public final class SpaceDoorDataTest {
                 MemoryPrimitiveData tag=new MemoryPrimitiveData();
                 new SpaceDoorData(design,detail,framed,direction,middle,sliding,hinges).write(tag);
                 SpaceDoorData copy=SpaceDoorData.read(tag);
-                check(copy.design==design && copy.detail==detail && copy.framed==framed
+                check(copy.design==design && copy.detail==Math.min(detail,1) && copy.framed==framed
                         && copy.direction==direction && copy.middle==middle && copy.sliding==sliding && copy.hinges==hinges,"settings round trip");
                 double travel=SpaceDoorData.verticalTravel(framed,direction);
                 check(direction==0?travel==0:direction==1?travel>0:travel<0,"slide direction sign");

@@ -221,13 +221,13 @@ final class TrapdoorChecks {
                 require(block.getStateFromMeta(block.getMetaFromState(state)).equals(state),"metadata round trip");
             }
             NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityProgrammableTrapdoor restored=new TileEntityProgrammableTrapdoor();restored.readFromNBT(saved);
-            require(restored.getHousingTexture()==finish && restored.getPosition()==position && restored.isSliding()==slide,"settings save round trip");
+            require(restored.getHousingTexture()==ScreenHousingTextures.clamp(finish) && restored.getPosition()==position && restored.isSliding()==slide,"settings save round trip");
             ItemStack pick=block.configuredDrop(tile);
             require(!pick.isEmpty() && !pick.getSubCompound("BlockEntityTag").hasKey("TrapdoorPartner"),"drop includes pair state");
             NonRenderingChecks.MemoryWorld client=new NonRenderingChecks.MemoryWorld(true);
             require(item.placeBlockAt(pick,null,client,p,EnumFacing.UP,.5F,.5F,.5F,block.getDefaultState()),"client placement failed");
             TileEntityProgrammableTrapdoor predicted=(TileEntityProgrammableTrapdoor)client.getTileEntity(p);
-            require(predicted.getHousingTexture()==finish && predicted.getPosition()==position && predicted.isSliding()==slide,"placement texture flicker or settings lost");
+            require(predicted.getHousingTexture()==ScreenHousingTextures.clamp(finish) && predicted.getPosition()==position && predicted.isSliding()==slide,"placement texture flicker or settings lost");
             require(client.getBlockState(p).getValue(BlockTrapDoor.HALF)==(position==2?BlockTrapDoor.DoorHalf.TOP:BlockTrapDoor.DoorHalf.BOTTOM),"placement HALF differs from configured position");
         }
         for(boolean sliding:new boolean[]{false,true})for(boolean next:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS) {

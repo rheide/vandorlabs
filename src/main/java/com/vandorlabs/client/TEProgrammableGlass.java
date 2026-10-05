@@ -15,7 +15,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     private static final double PANE_FAR = 9D / 16D;
     private static final java.util.Map<String,ResourceLocation> GLASS = new java.util.HashMap<>();
     static {
-        for (String detail:new String[]{"low","medium","high"}) GLASS.put(detail,new ResourceLocation(
+        for (String detail:new String[]{"low","medium"}) GLASS.put(detail,new ResourceLocation(
                 "vandorlabs", "textures/blocks/space_doors/"+detail+"/glass_tile.png"));
     }
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
@@ -24,7 +24,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
         int size = tile.getSize();
-        bindTexture(GLASS.get(new String[]{"low", "medium", "high"}[size]));
+        bindTexture(GLASS.get(com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[size]));
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();

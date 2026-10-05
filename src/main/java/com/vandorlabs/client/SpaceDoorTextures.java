@@ -17,7 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public final class SpaceDoorTextures {
     @SubscribeEvent
     public void stitch(TextureStitchEvent.Pre event) {
-        for (String level : new String[]{"","low/","medium/","high/"}) {
+        for (String level : new String[]{"low/","medium/"}) {
         for (String name : new String[] {"airlock", "observation", "observation_metal",
                 "observation_glass", "standard", "security", "reactor", "door_viewport", "door_laboratory",
                 "door_cargo","door_ventilation","door_viewport_metal","door_viewport_glass",
@@ -28,7 +28,7 @@ public final class SpaceDoorTextures {
                     "vandorlabs:blocks/space_doors/" + level + name));
         }
         }
-        for(String tier:new String[]{"low","medium","high"})
+        for(String tier:new String[]{"low","medium"})
             for(String name:new String[]{"plain_cargo","stepped_freight","observation_leaf","reinforced_leaf"})
                 event.getMap().setTextureEntry(new RectangularSprite("vandorlabs:blocks/cargo_doors/"+tier+"/"+name));
     }

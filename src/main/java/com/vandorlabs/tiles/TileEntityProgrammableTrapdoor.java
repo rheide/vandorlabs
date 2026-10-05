@@ -274,7 +274,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     }
     public void configure(int texture,int position,boolean sliding,int trigger,ChannelList channel) {
         if(!valid(texture,position,trigger,channel))return;
-        this.texture=texture;this.position=position;this.sliding=sliding;this.trigger=trigger;
+        this.texture=ScreenHousingTextures.clamp(texture);this.position=position;this.sliding=sliding;this.trigger=trigger;
         setRedstoneChannels(channel);sync();
         if(world!=null && !world.isRemote)evaluatePower(true);
     }

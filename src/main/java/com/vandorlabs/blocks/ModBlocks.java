@@ -767,7 +767,7 @@ public class ModBlocks {
                     }
         }
         for (boolean sliding:new boolean[]{false,true}) {
-        for (int d=0;d<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;d++) for (int l=0;l<details.length;l++)
+        for (int d=0;d<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;d++) for (int l=0;l<3;l++)
             for (boolean framed:new boolean[]{false,true}) for (boolean paired:new boolean[]{false,true})
                 for (boolean right:new boolean[]{false,true}) for (int part=0;part<3;part++) {
                     if (part==2 && !com.vandorlabs.tiles.TileEntitySpaceDoor.hasGlassDesign(d)) continue;
@@ -776,9 +776,9 @@ public class ModBlocks {
                             +(part==0?"fixed":part==1?"leaf":"glass");
                     int meta=com.vandorlabs.tiles.TileEntitySpaceDoor.metadata(d,l,framed,paired,right,part,sliding);
                     ModelLoader.setCustomModelResourceLocation(item,meta,new ModelResourceLocation(
-                            VandorLabs.MODID+":detailed_doors/"+details[l]+"/"+name,"inventory"));
+                            VandorLabs.MODID+":detailed_doors/"+details[Math.min(l,1)]+"/"+name,"inventory"));
                     if (!sliding) ModelLoader.setCustomModelResourceLocation(item,meta+2160,new ModelResourceLocation(
-                            VandorLabs.MODID+":detailed_doors/"+details[l]+"/"+name+(part==2?"":"_no_hinges"),"inventory"));
+                            VandorLabs.MODID+":detailed_doors/"+details[Math.min(l,1)]+"/"+name+(part==2?"":"_no_hinges"),"inventory"));
                 }
         }
     }

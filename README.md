@@ -201,7 +201,9 @@ Use these dimensions for new or replacement art:
 | Full-height screens and viewscreens | 128x128 | A `_static.png` and its `_animated.anim` must have identical width and height. |
 | Half-height console screens and control faces | 128x64 | Keep the authored 2:1 aspect ratio; do not stretch them to square. |
 | Console-control inventory previews | 128x128 | These are the matching `_item.png` files. |
-| Programmable Door face atlases | 128x256, 256x512, or 512x1024 | Low, medium, and high texture tiers; preserve native frame, hinge, and glass atlas proportions. |
+| Programmable Door face atlases | 128x256 or 256x512 | Small and Large artwork tiers; preserve native frame, hinge, and glass atlas proportions. |
+| Imported hatch artwork | 128x128 or 256x256 | Small and Large artwork tiers. |
+| Programmable Glass panes/frames | 256x256 or 512x512 | Small and Large use matching reflection patterns. |
 | Connected glass-wall tiles | 64x64 | The generated 6px edge/corner slices preserve their model proportions. |
 
 New authored texture dimensions should normally be powers of two. Preserve the native
@@ -300,8 +302,8 @@ Leaf** to Doors, using mirrored left-hand artwork. Large doors also offer a
 **Double Doors** category: Warehouse Shutter, Slotted Bay, Cross Braced Bay and
 Split View Bay. Each square image spans both moving leaves. **Cross Braced Bay**
 is the default for newly placed large doors; saved selections are preserved.
-All eight designs have Small/Medium/Large artwork. Complete bay textures are
-256×256, 512×512 and 1024×1024 respectively.
+All twelve cargo designs have Small/Large artwork. Complete bay textures are
+256×256 and 512×512 respectively.
 
 Large doors additionally offer **Offset Cargo, Twin Observation, Armored Biparting
 and Service Freight** in Double Doors. Their deliberately different left/right
@@ -309,3 +311,10 @@ artwork is retained. Select **Sliding X** on a Large Programmable Door to split
 the square face along both diagonals: four triangular panels slide left, right,
 up and down from the center. Artwork, glazing and replacement materials follow
 the panels; the optional jamb and control panel stay fixed.
+
+
+Door and Programmable Glass artwork now use **Small/Large**; former Medium is
+Large, and old Large selections migrate to it. Physical door sizes are unchanged.
+The shared Screens/Controls pickers show one design row, with Bare/Framed as an
+independent variant toggle. See [1.5 asset sizes and migration](docs/performance/1.5-assets.md)
+for texture dimensions, generated model compaction and validation.

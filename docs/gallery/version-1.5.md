@@ -59,8 +59,8 @@ Large doors animate over **12 ticks (0.6 seconds)**; regular doors retain
 centered **1.125 blocks above the base**, matching the regular door. Its visible
 geometry, collision and click region move together.
 
-Original door leaf artwork uses **128×256** pixels for Small, **256×512** for
-Medium and **512×1024** for Large. These are artwork resolutions, independent of
+Original door leaf artwork uses **128×256** pixels for Small and **256×512** for
+Large. These are artwork resolutions, independent of
 the physical opening size. White Glass's border uses the existing 16×16 Light
 Alloy texture; Dark Glass uses the 64×64 Door Interior (Dark) texture. Both crop
 or repeat those materials instead of stretching them over the leaf.
@@ -84,11 +84,11 @@ Leaf** to Doors, using mirrored left-hand artwork. Large doors also offer a
 **Double Doors** category: Warehouse Shutter, Slotted Bay, Cross Braced Bay and
 Split View Bay. Each square image spans both moving leaves. **Cross Braced Bay**
 is the default for newly placed large doors; saved selections are preserved.
-All eight designs have Small/Medium/Large artwork. Complete bay textures are
-256×256, 512×512 and 1024×1024 respectively.
+All twelve cargo designs have Small/Large artwork. Complete bay textures are
+256×256 and 512×512 respectively.
 
 The Double Doors category also includes **Offset Cargo, Twin Observation, Armored
-Biparting and Service Freight**, with complete square artwork at all three
+Biparting and Service Freight**, with complete square artwork at both artwork
 resolutions. Their asymmetric halves are sampled separately, never mirrored.
 
 ## Sliding X for large doors
@@ -112,3 +112,36 @@ Non-rendering checks cover closed coverage, interpolated UVs, diagonal edge caps
 four movement directions, every facing, shared-buffer/fallback transform agreement,
 persistence, size/category filtering and open passage collision. Hardware appearance
 and shader compatibility of this new mode still need visual acceptance.
+
+## Smaller artwork tiers and texture selection
+
+Door artwork now offers **Small** and **Large**. Large uses the former Medium
+resolution; former Large choices load as the new Large tier, retaining their
+designs and all door settings. Physical 2×2 and 3×3 doors remain available.
+Imported hatch artwork offers 128×128 Small and 256×256 Large in the trapdoor
+pickers. Standard inventory texture images are 128×128; model icon padding is
+retained.
+
+Programmable Glass likewise offers Small and Large, using 256×256 and 512×512
+pane/frame textures. The old high-resolution pane contained a different,
+coarser-looking reflection pattern; the renderer's resolution lookup was not
+reversed. Both retained pane sizes now use the former Medium pattern, with
+Small resized from that master. Former Large block metadata and saved settings
+load as the new Large tier, preserving tint and connected edges.
+
+The shared **Screens** and **Controls** lists show one row for each paired
+design, such as **Extra Door Controller**. **Bare/Framed** changes the artwork and
+thumbnail while keeping that row selected. Existing saved variants and native
+animations remain supported. Standalone designs without a matching variant do
+not offer the toggle.
+
+Custom Malisis door artwork is read from its optional component icon provider,
+including separate upper/lower faces, instead of its missing baked-model
+placeholder. Malisis remains optional. Ordinary door sampling skips missing
+sprites and uses the existing fallback if no usable artwork is available.
+Provider compatibility was checked against Malisis Doors 7.3.0/Core 6.5.1;
+actual in-game appearance remains unverified.
+
+The standard JAR also shares repeated generated model geometry through parent
+templates. See [asset sizes and model compaction](../performance/1.5-assets.md)
+for the measured savings and validation scope.

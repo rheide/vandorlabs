@@ -53,7 +53,7 @@
   },
   {
     "id": "door_observation_medium",
-    "label": "Observation Medium",
+    "label": "Observation Large",
     "category": "Doors",
     "source": "space_doors/medium/observation",
     "rectangular": true,
@@ -65,11 +65,13 @@
     "id": "door_observation_high",
     "label": "Observation Large",
     "category": "Doors",
-    "source": "space_doors/high/observation",
+    "source": "space_doors/medium/observation",
     "rectangular": true,
     "crop": true,
     "design": 0,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_observation_medium"
   },
   {
     "id": "door_airlock_low",
@@ -83,7 +85,7 @@
   },
   {
     "id": "door_airlock_medium",
-    "label": "Airlock Medium",
+    "label": "Airlock Large",
     "category": "Doors",
     "source": "space_doors/medium/airlock",
     "rectangular": true,
@@ -95,11 +97,13 @@
     "id": "door_airlock_high",
     "label": "Airlock Large",
     "category": "Doors",
-    "source": "space_doors/high/airlock",
+    "source": "space_doors/medium/airlock",
     "rectangular": true,
     "crop": true,
     "design": 1,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_airlock_medium"
   },
   {
     "id": "door_standard_low",
@@ -113,7 +117,7 @@
   },
   {
     "id": "door_standard_medium",
-    "label": "Standard Medium",
+    "label": "Standard Large",
     "category": "Doors",
     "source": "space_doors/medium/standard",
     "rectangular": true,
@@ -125,11 +129,13 @@
     "id": "door_standard_high",
     "label": "Standard Large",
     "category": "Doors",
-    "source": "space_doors/high/standard",
+    "source": "space_doors/medium/standard",
     "rectangular": true,
     "crop": true,
     "design": 2,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_standard_medium"
   },
   {
     "id": "door_security_low",
@@ -143,7 +149,7 @@
   },
   {
     "id": "door_security_medium",
-    "label": "Security Medium",
+    "label": "Security Large",
     "category": "Doors",
     "source": "space_doors/medium/security",
     "rectangular": true,
@@ -155,11 +161,13 @@
     "id": "door_security_high",
     "label": "Security Large",
     "category": "Doors",
-    "source": "space_doors/high/security",
+    "source": "space_doors/medium/security",
     "rectangular": true,
     "crop": true,
     "design": 3,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_security_medium"
   },
   {
     "id": "door_reactor_low",
@@ -173,7 +181,7 @@
   },
   {
     "id": "door_reactor_medium",
-    "label": "Reactor Medium",
+    "label": "Reactor Large",
     "category": "Doors",
     "source": "space_doors/medium/reactor",
     "rectangular": true,
@@ -185,11 +193,13 @@
     "id": "door_reactor_high",
     "label": "Reactor Large",
     "category": "Doors",
-    "source": "space_doors/high/reactor",
+    "source": "space_doors/medium/reactor",
     "rectangular": true,
     "crop": true,
     "design": 4,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_reactor_medium"
   },
   {
     "id": "door_door_viewport_low",
@@ -203,7 +213,7 @@
   },
   {
     "id": "door_door_viewport_medium",
-    "label": "Viewport Medium",
+    "label": "Viewport Large",
     "category": "Doors",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
@@ -215,11 +225,13 @@
     "id": "door_door_viewport_high",
     "label": "Viewport Large",
     "category": "Doors",
-    "source": "space_doors/high/door_viewport",
+    "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
     "design": 5,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_door_viewport_medium"
   },
   {
     "id": "door_door_laboratory_low",
@@ -233,7 +245,7 @@
   },
   {
     "id": "door_door_laboratory_medium",
-    "label": "Laboratory Medium",
+    "label": "Laboratory Large",
     "category": "Doors",
     "source": "space_doors/medium/door_laboratory",
     "rectangular": true,
@@ -245,11 +257,13 @@
     "id": "door_door_laboratory_high",
     "label": "Laboratory Large",
     "category": "Doors",
-    "source": "space_doors/high/door_laboratory",
+    "source": "space_doors/medium/door_laboratory",
     "rectangular": true,
     "crop": true,
     "design": 6,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_door_laboratory_medium"
   },
   {
     "id": "door_door_cargo_low",
@@ -263,7 +277,7 @@
   },
   {
     "id": "door_door_cargo_medium",
-    "label": "Cargo Medium",
+    "label": "Cargo Large",
     "category": "Doors",
     "source": "space_doors/medium/door_cargo",
     "rectangular": true,
@@ -275,11 +289,13 @@
     "id": "door_door_cargo_high",
     "label": "Cargo Large",
     "category": "Doors",
-    "source": "space_doors/high/door_cargo",
+    "source": "space_doors/medium/door_cargo",
     "rectangular": true,
     "crop": true,
     "design": 7,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_door_cargo_medium"
   },
   {
     "id": "door_door_ventilation_low",
@@ -293,7 +309,7 @@
   },
   {
     "id": "door_door_ventilation_medium",
-    "label": "Ventilation Medium",
+    "label": "Ventilation Large",
     "category": "Doors",
     "source": "space_doors/medium/door_ventilation",
     "rectangular": true,
@@ -305,11 +321,13 @@
     "id": "door_door_ventilation_high",
     "label": "Ventilation Large",
     "category": "Doors",
-    "source": "space_doors/high/door_ventilation",
+    "source": "space_doors/medium/door_ventilation",
     "rectangular": true,
     "crop": true,
     "design": 8,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_door_ventilation_medium"
   },
   {
     "id": "door_lift_cargo_lift_low",
@@ -323,7 +341,7 @@
   },
   {
     "id": "door_lift_cargo_lift_medium",
-    "label": "Cargo Lift Medium",
+    "label": "Cargo Lift Large",
     "category": "Doors",
     "source": "space_doors/medium/lift_cargo_lift",
     "rectangular": true,
@@ -335,11 +353,13 @@
     "id": "door_lift_cargo_lift_high",
     "label": "Cargo Lift Large",
     "category": "Doors",
-    "source": "space_doors/high/lift_cargo_lift",
+    "source": "space_doors/medium/lift_cargo_lift",
     "rectangular": true,
     "crop": true,
     "design": 9,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_lift_cargo_lift_medium"
   },
   {
     "id": "door_lift_blast_shield_low",
@@ -353,7 +373,7 @@
   },
   {
     "id": "door_lift_blast_shield_medium",
-    "label": "Blast Shield Medium",
+    "label": "Blast Shield Large",
     "category": "Doors",
     "source": "space_doors/medium/lift_blast_shield",
     "rectangular": true,
@@ -365,11 +385,13 @@
     "id": "door_lift_blast_shield_high",
     "label": "Blast Shield Large",
     "category": "Doors",
-    "source": "space_doors/high/lift_blast_shield",
+    "source": "space_doors/medium/lift_blast_shield",
     "rectangular": true,
     "crop": true,
     "design": 10,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_lift_blast_shield_medium"
   },
   {
     "id": "door_lift_glazed_hangar_low",
@@ -383,7 +405,7 @@
   },
   {
     "id": "door_lift_glazed_hangar_medium",
-    "label": "Glazed Hangar Medium",
+    "label": "Glazed Hangar Large",
     "category": "Doors",
     "source": "space_doors/medium/lift_glazed_hangar",
     "rectangular": true,
@@ -395,11 +417,13 @@
     "id": "door_lift_glazed_hangar_high",
     "label": "Glazed Hangar Large",
     "category": "Doors",
-    "source": "space_doors/high/lift_glazed_hangar",
+    "source": "space_doors/medium/lift_glazed_hangar",
     "rectangular": true,
     "crop": true,
     "design": 11,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_lift_glazed_hangar_medium"
   },
   {
     "id": "door_lift_quarantine_seal_low",
@@ -413,7 +437,7 @@
   },
   {
     "id": "door_lift_quarantine_seal_medium",
-    "label": "Quarantine Seal Medium",
+    "label": "Quarantine Seal Large",
     "category": "Doors",
     "source": "space_doors/medium/lift_quarantine_seal",
     "rectangular": true,
@@ -425,11 +449,13 @@
     "id": "door_lift_quarantine_seal_high",
     "label": "Quarantine Seal Large",
     "category": "Doors",
-    "source": "space_doors/high/lift_quarantine_seal",
+    "source": "space_doors/medium/lift_quarantine_seal",
     "rectangular": true,
     "crop": true,
     "design": 12,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_lift_quarantine_seal_medium"
   },
   {
     "id": "door_lift_reactor_barrier_low",
@@ -443,7 +469,7 @@
   },
   {
     "id": "door_lift_reactor_barrier_medium",
-    "label": "Reactor Barrier Medium",
+    "label": "Reactor Barrier Large",
     "category": "Doors",
     "source": "space_doors/medium/lift_reactor_barrier",
     "rectangular": true,
@@ -455,11 +481,13 @@
     "id": "door_lift_reactor_barrier_high",
     "label": "Reactor Barrier Large",
     "category": "Doors",
-    "source": "space_doors/high/lift_reactor_barrier",
+    "source": "space_doors/medium/lift_reactor_barrier",
     "rectangular": true,
     "crop": true,
     "design": 13,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_lift_reactor_barrier_medium"
   },
   {
     "id": "door_lift_modular_shutter_low",
@@ -473,7 +501,7 @@
   },
   {
     "id": "door_lift_modular_shutter_medium",
-    "label": "Modular Shutter Medium",
+    "label": "Modular Shutter Large",
     "category": "Doors",
     "source": "space_doors/medium/lift_modular_shutter",
     "rectangular": true,
@@ -485,11 +513,13 @@
     "id": "door_lift_modular_shutter_high",
     "label": "Modular Shutter Large",
     "category": "Doors",
-    "source": "space_doors/high/lift_modular_shutter",
+    "source": "space_doors/medium/lift_modular_shutter",
     "rectangular": true,
     "crop": true,
     "design": 14,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_lift_modular_shutter_medium"
   },
   {
     "id": "screen_analysis_bare_gas_giant_static",
@@ -1545,51 +1575,67 @@
   },
   {
     "id": "imported_trapdoors_cyan_lit_armored_sci_fi_hatch_4",
-    "label": "Armored Hatch",
+    "label": "Armored Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4"
+    "source": "imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4",
+    "textureFamily": "imported_trapdoors_cyan_lit_armored_sci_fi_hatch_4",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_cyan_lit_gunmetal_slit_hatch_6",
-    "label": "Slit Hatch",
+    "label": "Slit Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/cyan_lit_gunmetal_slit_hatch_6"
+    "source": "imported/trapdoors/cyan_lit_gunmetal_slit_hatch_6",
+    "textureFamily": "imported_trapdoors_cyan_lit_gunmetal_slit_hatch_6",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_cyan_lit_gunmetal_utility_hatch_1",
-    "label": "Utility Hatch",
+    "label": "Utility Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/cyan_lit_gunmetal_utility_hatch_1"
+    "source": "imported/trapdoors/cyan_lit_gunmetal_utility_hatch_1",
+    "textureFamily": "imported_trapdoors_cyan_lit_gunmetal_utility_hatch_1",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_cyan_lit_gunmetal_window_hatch_8",
-    "label": "Viewport Hatch",
+    "label": "Viewport Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/cyan_lit_gunmetal_window_hatch_8"
+    "source": "imported/trapdoors/cyan_lit_gunmetal_window_hatch_8",
+    "textureFamily": "imported_trapdoors_cyan_lit_gunmetal_window_hatch_8",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_cyan_lit_industrial_sci_fi_hatch_5",
-    "label": "Industrial Hatch",
+    "label": "Industrial Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/cyan_lit_industrial_sci_fi_hatch_5"
+    "source": "imported/trapdoors/cyan_lit_industrial_sci_fi_hatch_5",
+    "textureFamily": "imported_trapdoors_cyan_lit_industrial_sci_fi_hatch_5",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_gunmetal_service_hatch_with_cyan_lights_3",
-    "label": "Service Hatch",
+    "label": "Service Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/gunmetal_service_hatch_with_cyan_lights_3"
+    "source": "imported/trapdoors/gunmetal_service_hatch_with_cyan_lights_3",
+    "textureFamily": "imported_trapdoors_gunmetal_service_hatch_with_cyan_lights_3",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_gunmetal_twin_window_sci_fi_hatch_7",
-    "label": "Twin-Window Hatch",
+    "label": "Twin-Window Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/gunmetal_twin_window_sci_fi_hatch_7"
+    "source": "imported/trapdoors/gunmetal_twin_window_sci_fi_hatch_7",
+    "textureFamily": "imported_trapdoors_gunmetal_twin_window_sci_fi_hatch_7",
+    "detail": 1
   },
   {
     "id": "imported_trapdoors_reinforced_cyan_x_hatch_2",
-    "label": "Reinforced Hatch",
+    "label": "Reinforced Hatch Large",
     "category": "Trapdoors",
-    "source": "imported/trapdoors/reinforced_cyan_x_hatch_2"
+    "source": "imported/trapdoors/reinforced_cyan_x_hatch_2",
+    "textureFamily": "imported_trapdoors_reinforced_cyan_x_hatch_2",
+    "detail": 1
   },
   {
     "id": "imported_windows_window_armored_slit",
@@ -1850,7 +1896,7 @@
   },
   {
     "id": "door_white_glass_medium",
-    "label": "White Glass Medium",
+    "label": "White Glass Large",
     "category": "Doors",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
@@ -1862,11 +1908,13 @@
     "id": "door_white_glass_high",
     "label": "White Glass Large",
     "category": "Doors",
-    "source": "space_doors/high/door_viewport",
+    "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
     "design": 15,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_white_glass_medium"
   },
   {
     "id": "door_dark_glass_low",
@@ -1880,7 +1928,7 @@
   },
   {
     "id": "door_dark_glass_medium",
-    "label": "Dark Glass Medium",
+    "label": "Dark Glass Large",
     "category": "Doors",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
@@ -1892,11 +1940,13 @@
     "id": "door_dark_glass_high",
     "label": "Dark Glass Large",
     "category": "Doors",
-    "source": "space_doors/high/door_viewport",
+    "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
     "design": 16,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_dark_glass_medium"
   },
   {
     "id": "door_plain_cargo_low",
@@ -1909,7 +1959,7 @@
   },
   {
     "id": "door_plain_cargo_medium",
-    "label": "Plain Cargo Medium",
+    "label": "Plain Cargo Large",
     "category": "Doors",
     "source": "cargo_doors/medium/plain_cargo",
     "design": 17,
@@ -1920,10 +1970,12 @@
     "id": "door_plain_cargo_high",
     "label": "Plain Cargo Large",
     "category": "Doors",
-    "source": "cargo_doors/high/plain_cargo",
+    "source": "cargo_doors/medium/plain_cargo",
     "design": 17,
     "detail": 2,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "door_plain_cargo_medium"
   },
   {
     "id": "door_stepped_freight_low",
@@ -1936,7 +1988,7 @@
   },
   {
     "id": "door_stepped_freight_medium",
-    "label": "Stepped Freight Medium",
+    "label": "Stepped Freight Large",
     "category": "Doors",
     "source": "cargo_doors/medium/stepped_freight",
     "design": 18,
@@ -1947,10 +1999,12 @@
     "id": "door_stepped_freight_high",
     "label": "Stepped Freight Large",
     "category": "Doors",
-    "source": "cargo_doors/high/stepped_freight",
+    "source": "cargo_doors/medium/stepped_freight",
     "design": 18,
     "detail": 2,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "door_stepped_freight_medium"
   },
   {
     "id": "door_observation_leaf_low",
@@ -1963,7 +2017,7 @@
   },
   {
     "id": "door_observation_leaf_medium",
-    "label": "Observation Leaf Medium",
+    "label": "Observation Leaf Large",
     "category": "Doors",
     "source": "cargo_doors/medium/observation_leaf",
     "design": 19,
@@ -1974,10 +2028,12 @@
     "id": "door_observation_leaf_high",
     "label": "Observation Leaf Large",
     "category": "Doors",
-    "source": "cargo_doors/high/observation_leaf",
+    "source": "cargo_doors/medium/observation_leaf",
     "design": 19,
     "detail": 2,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "door_observation_leaf_medium"
   },
   {
     "id": "door_reinforced_leaf_low",
@@ -1990,7 +2046,7 @@
   },
   {
     "id": "door_reinforced_leaf_medium",
-    "label": "Reinforced Leaf Medium",
+    "label": "Reinforced Leaf Large",
     "category": "Doors",
     "source": "cargo_doors/medium/reinforced_leaf",
     "design": 20,
@@ -2001,10 +2057,12 @@
     "id": "door_reinforced_leaf_high",
     "label": "Reinforced Leaf Large",
     "category": "Doors",
-    "source": "cargo_doors/high/reinforced_leaf",
+    "source": "cargo_doors/medium/reinforced_leaf",
     "design": 20,
     "detail": 2,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "door_reinforced_leaf_medium"
   },
   {
     "id": "door_warehouse_shutter_low",
@@ -2016,7 +2074,7 @@
   },
   {
     "id": "door_warehouse_shutter_medium",
-    "label": "Warehouse Shutter Medium",
+    "label": "Warehouse Shutter Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/warehouse_shutter",
     "design": 21,
@@ -2026,9 +2084,11 @@
     "id": "door_warehouse_shutter_high",
     "label": "Warehouse Shutter Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/warehouse_shutter",
+    "source": "cargo_doors/medium/warehouse_shutter",
     "design": 21,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_warehouse_shutter_medium"
   },
   {
     "id": "door_slotted_bay_low",
@@ -2040,7 +2100,7 @@
   },
   {
     "id": "door_slotted_bay_medium",
-    "label": "Slotted Bay Medium",
+    "label": "Slotted Bay Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/slotted_bay",
     "design": 22,
@@ -2050,9 +2110,11 @@
     "id": "door_slotted_bay_high",
     "label": "Slotted Bay Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/slotted_bay",
+    "source": "cargo_doors/medium/slotted_bay",
     "design": 22,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_slotted_bay_medium"
   },
   {
     "id": "door_cross_braced_bay_low",
@@ -2064,7 +2126,7 @@
   },
   {
     "id": "door_cross_braced_bay_medium",
-    "label": "Cross Braced Bay Medium",
+    "label": "Cross Braced Bay Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/cross_braced_bay",
     "design": 23,
@@ -2074,9 +2136,11 @@
     "id": "door_cross_braced_bay_high",
     "label": "Cross Braced Bay Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/cross_braced_bay",
+    "source": "cargo_doors/medium/cross_braced_bay",
     "design": 23,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_cross_braced_bay_medium"
   },
   {
     "id": "door_split_view_bay_low",
@@ -2088,7 +2152,7 @@
   },
   {
     "id": "door_split_view_bay_medium",
-    "label": "Split View Bay Medium",
+    "label": "Split View Bay Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/split_view_bay",
     "design": 24,
@@ -2098,9 +2162,11 @@
     "id": "door_split_view_bay_high",
     "label": "Split View Bay Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/split_view_bay",
+    "source": "cargo_doors/medium/split_view_bay",
     "design": 24,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_split_view_bay_medium"
   },
   {
     "id": "door_offset_cargo_low",
@@ -2112,7 +2178,7 @@
   },
   {
     "id": "door_offset_cargo_medium",
-    "label": "Offset Cargo Medium",
+    "label": "Offset Cargo Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/offset_cargo",
     "design": 25,
@@ -2122,9 +2188,11 @@
     "id": "door_offset_cargo_high",
     "label": "Offset Cargo Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/offset_cargo",
+    "source": "cargo_doors/medium/offset_cargo",
     "design": 25,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_offset_cargo_medium"
   },
   {
     "id": "door_twin_observation_low",
@@ -2136,7 +2204,7 @@
   },
   {
     "id": "door_twin_observation_medium",
-    "label": "Twin Observation Medium",
+    "label": "Twin Observation Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/twin_observation",
     "design": 26,
@@ -2146,9 +2214,11 @@
     "id": "door_twin_observation_high",
     "label": "Twin Observation Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/twin_observation",
+    "source": "cargo_doors/medium/twin_observation",
     "design": 26,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_twin_observation_medium"
   },
   {
     "id": "door_armored_biparting_low",
@@ -2160,7 +2230,7 @@
   },
   {
     "id": "door_armored_biparting_medium",
-    "label": "Armored Biparting Medium",
+    "label": "Armored Biparting Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/armored_biparting",
     "design": 27,
@@ -2170,9 +2240,11 @@
     "id": "door_armored_biparting_high",
     "label": "Armored Biparting Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/armored_biparting",
+    "source": "cargo_doors/medium/armored_biparting",
     "design": 27,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_armored_biparting_medium"
   },
   {
     "id": "door_service_freight_low",
@@ -2184,7 +2256,7 @@
   },
   {
     "id": "door_service_freight_medium",
-    "label": "Service Freight Medium",
+    "label": "Service Freight Large",
     "category": "Double Doors",
     "source": "cargo_doors/medium/service_freight",
     "design": 28,
@@ -2194,8 +2266,74 @@
     "id": "door_service_freight_high",
     "label": "Service Freight Large",
     "category": "Double Doors",
-    "source": "cargo_doors/high/service_freight",
+    "source": "cargo_doors/medium/service_freight",
     "design": 28,
-    "detail": 2
+    "detail": 2,
+    "hidden": true,
+    "alias": "door_service_freight_medium"
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_armored_sci_fi_hatch_4_small",
+    "label": "Armored Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4_small",
+    "textureFamily": "imported_trapdoors_cyan_lit_armored_sci_fi_hatch_4",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_gunmetal_slit_hatch_6_small",
+    "label": "Slit Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_gunmetal_slit_hatch_6_small",
+    "textureFamily": "imported_trapdoors_cyan_lit_gunmetal_slit_hatch_6",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_gunmetal_utility_hatch_1_small",
+    "label": "Utility Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_gunmetal_utility_hatch_1_small",
+    "textureFamily": "imported_trapdoors_cyan_lit_gunmetal_utility_hatch_1",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_gunmetal_window_hatch_8_small",
+    "label": "Viewport Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_gunmetal_window_hatch_8_small",
+    "textureFamily": "imported_trapdoors_cyan_lit_gunmetal_window_hatch_8",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_cyan_lit_industrial_sci_fi_hatch_5_small",
+    "label": "Industrial Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/cyan_lit_industrial_sci_fi_hatch_5_small",
+    "textureFamily": "imported_trapdoors_cyan_lit_industrial_sci_fi_hatch_5",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_gunmetal_service_hatch_with_cyan_lights_3_small",
+    "label": "Service Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/gunmetal_service_hatch_with_cyan_lights_3_small",
+    "textureFamily": "imported_trapdoors_gunmetal_service_hatch_with_cyan_lights_3",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_gunmetal_twin_window_sci_fi_hatch_7_small",
+    "label": "Twin-Window Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/gunmetal_twin_window_sci_fi_hatch_7_small",
+    "textureFamily": "imported_trapdoors_gunmetal_twin_window_sci_fi_hatch_7",
+    "detail": 0
+  },
+  {
+    "id": "imported_trapdoors_reinforced_cyan_x_hatch_2_small",
+    "label": "Reinforced Hatch Small",
+    "category": "Trapdoors",
+    "source": "imported/trapdoors/reinforced_cyan_x_hatch_2_small",
+    "textureFamily": "imported_trapdoors_reinforced_cyan_x_hatch_2",
+    "detail": 0
   }
 ]

@@ -8,9 +8,9 @@ ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'generated-resources/assets/vandorlabs'
 load=lambda p:json.loads(p.read_text())
 current=load(ASSETS/'data/unified_textures.json')
-assert hashlib.sha256(json.dumps(current[:254],sort_keys=True).encode()).hexdigest()=='e6348fcfa58a74e38276ad8167bec4a7caf57de6d03cc504bff66a907b2b8ed6','Saved texture IDs changed'
+assert hashlib.sha256(json.dumps([e['id'] for e in current[:290]]).encode()).hexdigest()=='2c2caff44689f15494ffdbe3ac28ac494cff9bf7695b7a1d3674b0b55003adcd','Saved texture IDs changed'
 count=0
-for tier,height in [('low',256),('medium',512),('high',1024)]:
+for tier,height in [('low',256),('medium',512)]:
  for index,family in enumerate(FAMILIES):
   image=Image.open(ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/cargo_doors'/tier/(family+'.png'))
   assert image.size==(height//2 if index<4 else height,height)
@@ -37,4 +37,4 @@ for tier,height in [('low',256),('medium',512),('high',1024)]:
        projected=.65*(math.cos(math.radians(205))*x+math.sin(math.radians(205))*z)
        assert abs(projected)<7,'Hotbar icon lost its horizontal padding'
      count+=1
-print('PASS: 36 native PNGs, alpha holes, stable catalog prefix, split/mirrored UVs and',count,'padded cargo icons')
+print('PASS: 24 native PNGs, alpha holes, stable catalog prefix, split/mirrored UVs and',count,'padded cargo icons')

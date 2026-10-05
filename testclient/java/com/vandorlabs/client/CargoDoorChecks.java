@@ -22,7 +22,7 @@ final class CargoDoorChecks {
         require(restored.getDesign()==23,"default survives NBT");
         saved.setInteger("SpaceDesign",16);restored.readFromNBT(saved);
         require(restored.getDesign()==16,"saved artwork preserved");
-        for(int detail=0;detail<3;detail++) {
+        for(int detail=0;detail<2;detail++) {
             Map<?,?> small=options(HousingTextureList.forDoors(detail,0,0,100,0));
             Map<?,?> big=options(HousingTextureList.forDoors(detail,0,0,100,0,true));
             for(int design=0;design<29;design++) {
@@ -31,7 +31,7 @@ final class CargoDoorChecks {
                 require(ScreenHousingTextures.entry(choice).get("detail").getAsInt()==detail,"lookup preserves size");
                 require(big.containsKey(choice),"large menu missing artwork");
                 require(small.containsKey(choice)==(design<21),"double artwork restricted to large doors");
-                require(HousingTextureList.doorSizeChoice(choice,(detail+1)%3)==ScreenHousingTextures.doorIndex(design,(detail+1)%3),"size switch");
+                require(HousingTextureList.doorSizeChoice(choice,(detail+1)%2)==ScreenHousingTextures.doorIndex(design,(detail+1)%2),"size switch");
                 if(design>=21) {
                     require(!HousingTextureList.generalTexture(choice),"double artwork leaked to other blocks");
                     require(ScreenHousingTextures.texture(choice).equals(ScreenHousingTextures.fullTexture(choice)),"square art cropped to half thumbnail");
@@ -40,7 +40,7 @@ final class CargoDoorChecks {
                 large.configure(design,detail,true);require(large.getDesign()==design,"large artwork rejected");
             }
         }
-        System.out.println("PASS: 29 door designs, three size lookups, large-only double category, defaults and NBT preservation (no GL)");
+        System.out.println("PASS: 29 door designs, two size lookups plus legacy aliases, large-only double category, defaults and NBT preservation (no GL)");
     }
     private static Map<?,?> options(HousingTextureList list) {
         try {java.lang.reflect.Field f=HousingTextureList.class.getDeclaredField("options");f.setAccessible(true);return (Map<?,?>)f.get(list);}

@@ -10,7 +10,7 @@ FAMILIES='plain_cargo stepped_freight observation_leaf reinforced_leaf warehouse
 def generate(source,center_source):
     assets=ROOT/'generated-resources/assets/vandorlabs'
     geometry=json.loads((ROOT/'docs/space-door-pack/hinge/geometry.json').read_text())
-    for tier,height in [('low',256),('medium',512),('high',1024)]:
+    for tier,height in [('low',256),('medium',512)]:
         for index,family in enumerate(FAMILIES):
             square=index>=4
             folder=('single-'+str(height)+'x'+str(height)) if square else ('mirrorable-'+str(height//2)+'x'+str(height))

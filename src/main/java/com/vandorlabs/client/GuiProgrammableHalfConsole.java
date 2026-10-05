@@ -68,6 +68,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             buttonList.add(layout.choice(1+i,i,3,42,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
             buttonList.add(layout.choice(10+i,i,3,76,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
         }
+        buttonList.add(layout.control(4,98,""));
         buttonList.add(layout.control(0,120,""));
         buttonList.add(layout.control(32,142,sidesLabel()));
         channelField=new GuiTextField(40,fontRenderer,cx,guiTop+177,154,18);
@@ -83,6 +84,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
         for (GuiButton button : buttonList) {
+            if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}
             if (button.id == 0) {
                 button.displayString = I18n.format("gui.vandorlabs.selector.redstone") + ": "
                         + I18n.format(redstoneEnabled
@@ -116,6 +118,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
+        refreshButtons();
         String nativeId=picker.selected();int choice=nativeId==null?picker.choice():-1;
         if(nativeId!=null){if(slot==0)bottomPanel=nativeId;else topPanel=nativeId;}
         te.setSurfaceTexture(slot,choice);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,choice));
@@ -161,8 +164,9 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(button.id>=90 && button.id<=92){textureTab=button.id-90;refreshTabs();return;}
+        if(button.id>=90 && button.id<=92){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
+        if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;if(!picker.hasPair())return;picker.setFramed(!picker.framed());chooseArtwork(picker,textureTab==1?1:0);return;}
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;

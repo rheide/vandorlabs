@@ -1,7 +1,7 @@
 {
   "parent": "block/block",
   "textures": {
-    "particle": "vandorlabs:blocks/detailed_doors/engineering"
+    "particle": "vandorlabs:blocks/dark_wall_panel"
   },
   "elements": []
 }

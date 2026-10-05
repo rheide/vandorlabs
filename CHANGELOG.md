@@ -2,7 +2,13 @@
 
 ## 1.5
 
-- Add four cargo leaf designs to Doors and eight complete bay designs to the large-only Double Doors category, each with three artwork resolutions. Newly placed large doors default to Cross Braced Bay; existing saved selections retain their IDs.
+- Reduce door and Programmable Glass artwork to Small/Large: former Medium becomes Large, and former Large selections migrate to it without changing designs or physical door sizes. Glass panes now share one reflected pattern across resolutions.
+- Resize imported trapdoor artwork to 128×128 Small and 256×256 Large, with a separate size selector. Standard inventory texture images are 128×128.
+- Show one design row per Screens/Controls artwork pair. Bare/Framed changes its variant and thumbnail while preserving the selected row, animation and saved texture IDs.
+- Resolve Custom Malisis door faces through their optional icon components, including upper/lower artwork, instead of sampling a missing baked-model placeholder. Skip missing face sprites when sampling ordinary doors.
+- Remove obsolete High-tier runtime assets, redirect legacy references and share repeated JSON model geometry through parent templates. Validate packaged models against original geometry and texture bindings.
+
+- Add four cargo leaf designs to Doors and eight complete bay designs to the large-only Double Doors category, each with Small/Large artwork resolutions. Newly placed large doors default to Cross Braced Bay; existing saved selections retain their IDs.
 - Add large-only Sliding X: four triangular panels retract left/right/up/down from the center, retaining native and replacement artwork, glazing, fixed frames/panels, persistence and copying. Cache split meshes and assembly collision geometry; retain compatible opaque batching.
 - Batch compatible opaque Programmable Doors using cached geometry, CPU motion transforms and Forge's shared tile-renderer buffer. Preserve glass/custom-face and OptiFine rendering through the existing path, and support CodeChickenLib's vanilla item-renderer delegate.
 - Add Large Programmable Door: one indivisible 3×3 opening with two 1.5×3 leaves and the regular door's appearance, movement, control-panel, placement-depth and redstone options. Any cell addresses the anchor; only the anchor renders. Placement validates all nine loaded cells before writing, and removal clears the assembly.

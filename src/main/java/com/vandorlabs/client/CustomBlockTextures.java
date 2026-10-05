@@ -23,12 +23,15 @@ public final class CustomBlockTextures {
         Minecraft mc=Minecraft.getMinecraft();IBlockState state=state(choice);
         if(state==null)return mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         if(state.getBlock() instanceof BlockDoor && state.getProperties().containsKey(BlockDoor.HALF))state=state.withProperty(BlockDoor.HALF,upper?BlockDoor.EnumDoorHalf.UPPER:BlockDoor.EnumDoorHalf.LOWER);
+        TextureAtlasSprite component=ComponentBlockTextures.sprite(state,upper);
+        if(usable(component))return component;
         IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);
         if(state.getBlock() instanceof BlockDoor)for(EnumFacing face:new EnumFacing[]{EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST}) {
-            List<BakedQuad> quads=model.getQuads(state,face,0);if(!quads.isEmpty())return quads.get(0).getSprite();
+            List<BakedQuad> quads=model.getQuads(state,face,0);for(BakedQuad quad:quads)if(usable(quad.getSprite()))return quad.getSprite();
         }
-        if(state.getBlock() instanceof BlockDoor)for(BakedQuad quad:model.getQuads(state,null,0))if(quad.getFace().getAxis()!=EnumFacing.Axis.Y)return quad.getSprite();
-        TextureAtlasSprite result=model.getParticleTexture();return "missingno".equals(result.getIconName())?mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/dark_wall_panel"):result;
+        if(state.getBlock() instanceof BlockDoor)for(BakedQuad quad:model.getQuads(state,null,0))if(quad.getFace().getAxis()!=EnumFacing.Axis.Y && usable(quad.getSprite()))return quad.getSprite();
+        TextureAtlasSprite result=model.getParticleTexture();return !usable(result)?mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/dark_wall_panel"):result;
     }
+    static boolean usable(TextureAtlasSprite sprite){return sprite!=null && !"missingno".equals(sprite.getIconName()) && !"minecraft:missingno".equals(sprite.getIconName());}
     public static String texture(int choice){return sprite(choice,false).getIconName();}
 }

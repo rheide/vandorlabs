@@ -19,7 +19,7 @@ final class HousingTextureList {
     private final Map<String,List<Option>> groups=new HashMap<>();
     private final boolean nativeOptions;
     static final class Option {
-        final int choice; final String label,category,texture;
+        final int choice; final String label,category; String texture;
         Option(int choice,String label,String category,String texture){this.choice=choice;this.label=label;this.category=category;this.texture=texture;}
     }
     private final int x,y,width;
@@ -41,15 +41,19 @@ final class HousingTextureList {
         this(x,y,width,selected,count,nativeEntries,include,ScreenHousingTextures::category);
     }
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include,java.util.function.IntFunction<String> category) {
+        this(x,y,width,selected,count,nativeEntries,include,category,HousingTextureList::name);
+    }
+    HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include,java.util.function.IntFunction<String> category,java.util.function.IntFunction<String> label) {
         this.x=x;this.y=y;this.width=width;this.count=Math.max(2,count*12/ROW_HEIGHT);
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
-        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,name(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
+        else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,label.apply(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
         categories.addAll(groups.keySet());categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
         for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
         setSelected(selected);
     }
+    void thumbnail(int choice,String texture){Option option=options.get(choice);if(option!=null)option.texture=texture;}
     static boolean generalTexture(int choice) {
         String category=ScreenHousingTextures.category(choice);
         return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
@@ -68,17 +72,21 @@ final class HousingTextureList {
     static HousingTextureList forDoors(int detail,int x,int y,int width,int selected,boolean large) {
         return new HousingTextureList(x,y,width,selected,8,null,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
-            return generalTexture(choice) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
+            return (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
                     && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
+        },ScreenHousingTextures::category,choice->{
+            com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+            return entry!=null && entry.has("textureFamily")?name(choice).replaceFirst(" (Small|Large)$",""):name(choice);
         });
     }
     static int doorDetail(int choice) {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
-        return entry!=null && entry.has("detail")?entry.get("detail").getAsInt():0;
+        return entry!=null && entry.has("detail")?Math.min(entry.get("detail").getAsInt(),1):0;
     }
     static int doorSizeChoice(int choice,int detail) {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
-        return entry!=null && entry.has("design")?ScreenHousingTextures.doorIndex(entry.get("design").getAsInt(),detail):choice;
+        return entry!=null && entry.has("design")?ScreenHousingTextures.doorIndex(entry.get("design").getAsInt(),detail)
+                :entry!=null && entry.has("textureFamily")?ScreenHousingTextures.sizedTextureIndex(entry.get("textureFamily").getAsString(),detail):choice;
     }
     HousingTextureList visibleRows(int rows) {
         count=Math.max(2,rows);

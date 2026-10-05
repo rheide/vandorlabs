@@ -19,7 +19,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraft.world.IBlockAccess;
 
-/** One connected wall block with three detail sizes and a fixed metal frame. */
+/** One connected wall block with two detail sizes, legacy metadata support and a fixed metal frame. */
 public final class BlockProgrammableGlass extends BlockGlassWall {
     public static final PropertyInteger SIZE = PropertyInteger.create("size", 0, 2);
 
@@ -43,7 +43,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         int size = meta < 6 ? (meta >> 1) & 3 : 1;
         int depth = meta >= 6 && meta < 10 ? (meta - 4) / 2 : 0;
         return getDefaultState().withProperty(ROTATED, (meta & 1) != 0)
-                .withProperty(SIZE, size < 3 ? size : 1)
+                .withProperty(SIZE, size < 3 ? Math.min(size,1) : 1)
                 .withProperty(DEPTH, depth);
     }
     @Override public IBlockState getActualState(IBlockState state,
@@ -52,7 +52,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         TileEntity tile = world.getTileEntity(pos);
         return tile instanceof TileEntityProgrammableGlass
                 ? actual.withProperty(SIZE, ((TileEntityProgrammableGlass) tile).getSize())
-                : actual;
+                : actual.withProperty(SIZE,Math.min(actual.getValue(SIZE),1));
     }
     @Override protected boolean joinsAt(IBlockAccess world, BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);

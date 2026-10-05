@@ -39,6 +39,7 @@ final class TextureNameChecks {
     // Released name selection, using the same immutable catalog inputs.
     static String reference(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && VandorLabs.proxy!=null)return VandorLabs.proxy.customTexture(choice);
+        choice=ScreenHousingTextures.clamp(choice);
         JsonObject e=ScreenHousingTextures.entry(choice);
         return ScreenHousingTextures.fullTexture(choice)+(e!=null && e.has("design") && !"Double Doors".equals(ScreenHousingTextures.category(choice)) && ScreenHousingTextures.visible(choice)?"_half":"");
     }
@@ -49,6 +50,7 @@ final class TextureNameChecks {
         return !lit && ScreenHousingTextures.visible(choice) && e!=null && e.has("unlit")?"vandorlabs:blocks/"+e.get("unlit").getAsString():reference(choice);
     }
     static String referenceStorage(int choice,EnumFacing face) {
+        choice=ScreenHousingTextures.clamp(choice);
         JsonObject e=ScreenHousingTextures.entry(choice);String key=face.getAxis()==EnumFacing.Axis.Y?"top":"side";
         return face==EnumFacing.NORTH || e==null || !e.has(key)?reference(choice):"vandorlabs:blocks/"+e.get(key).getAsString();
     }

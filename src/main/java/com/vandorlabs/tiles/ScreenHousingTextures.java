@@ -91,6 +91,7 @@ public final class ScreenHousingTextures {
     };
     public static final String[] IDS;
     private static final String[] TEXTURES;
+    private static final java.util.Map<Integer,Integer> REDIRECTS=new java.util.HashMap<>();
     private static final String[] SQUARE_TEXTURES, UNLIT_TEXTURES, STORAGE_TOP, STORAGE_SIDE;
     private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
     private static final com.google.gson.JsonObject MENU;
@@ -117,6 +118,15 @@ public final class ScreenHousingTextures {
             IDS[index]=entry.get("id").getAsString();
             if(entry.has("key"))FILE_CHOICES.put(entry.get("key").getAsInt(),index);
             TEXTURES[index]="vandorlabs:blocks/"+(entry.has("rectangular")?"unified/"+IDS[index]:entry.get("source").getAsString());
+        }
+        for(int i=0;i<EXTRAS.size();i++) {
+            com.google.gson.JsonObject e=EXTRAS.get(i);
+            if(e.has("alias")) {
+                String alias=e.get("alias").getAsString();int target=-1;
+                for(int j=0;j<IDS.length;j++)if(alias.equals(IDS[j])){target=j;break;}
+                if(target<0)throw new IllegalStateException("Missing texture alias: "+alias);
+                REDIRECTS.put(LEGACY_COUNT+i,target);
+            }
         }
         DEFAULT_STORAGE=screenIndex("storage/cabinet_front");
         DEFAULT_TRAPDOOR=screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4");
@@ -148,22 +158,30 @@ public final class ScreenHousingTextures {
     /** Storage sets use their front as the ordinary shared material thumbnail. */
     public static String storageTexture(int choice, net.minecraft.util.EnumFacing localFace) {
         if(localFace==net.minecraft.util.EnumFacing.NORTH)return texture(choice);
-        String selected=(localFace.getAxis()==net.minecraft.util.EnumFacing.Axis.Y?STORAGE_TOP:STORAGE_SIDE)[localIndex(choice)];
+        String selected=(localFace.getAxis()==net.minecraft.util.EnumFacing.Axis.Y?STORAGE_TOP:STORAGE_SIDE)[localIndex(clamp(choice))];
         return selected==null?texture(choice):selected;
     }
     public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
     public static int doorIndex(int design,int detail){
+        detail=Math.max(0,Math.min(detail,1));
         for(int i=0;i<EXTRAS.size();i++) {
             com.google.gson.JsonObject e=EXTRAS.get(i);
             if(e.has("design") && e.get("design").getAsInt()==design && e.get("detail").getAsInt()==detail)return LEGACY_COUNT+i;
         }
         return LEGACY_COUNT+6+2*3+1;
     }
+    public static int sizedTextureIndex(String family,int detail) {
+        for(int i=0;i<EXTRAS.size();i++) {
+            com.google.gson.JsonObject e=EXTRAS.get(i);
+            if(e.has("textureFamily") && family.equals(e.get("textureFamily").getAsString()) && e.get("detail").getAsInt()==Math.min(detail,1))return LEGACY_COUNT+i;
+        }
+        return 0;
+    }
     /** Static Off artwork remains available as a material, but not in light menus. */
     public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && "Lights".equals(category(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
     public static String texture(int choice,boolean lit){
-        String unlit=lit?null:UNLIT_TEXTURES[localIndex(choice)];
+        String unlit=lit?null:UNLIT_TEXTURES[localIndex(clamp(choice))];
         return unlit==null?texture(choice):unlit;
     }
 
@@ -176,7 +194,7 @@ public final class ScreenHousingTextures {
     public static int localIndex(int choice){return CustomBlockMaterials.isCustom(choice)?0:choice>=FilesystemTextures.ID_BASE?FILE_CHOICES.getOrDefault(choice,0):choice>=0 && choice<IDS.length?choice:0;}
 
     public static int clamp(int choice) {
-        return validChoice(choice) ? choice : 0;
+        return validChoice(choice) ? REDIRECTS.getOrDefault(choice,choice) : 0;
     }
 
     public static int cycle(int choice, int direction) {
@@ -186,10 +204,10 @@ public final class ScreenHousingTextures {
     /** Full artwork for door leaves and thumbnails; ordinary blocks use one square half. */
     public static String fullTexture(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
-        return TEXTURES[localIndex(choice)];
+        return TEXTURES[localIndex(clamp(choice))];
     }
     public static String texture(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);
-        return SQUARE_TEXTURES[localIndex(choice)];
+        return SQUARE_TEXTURES[localIndex(clamp(choice))];
     }
 }

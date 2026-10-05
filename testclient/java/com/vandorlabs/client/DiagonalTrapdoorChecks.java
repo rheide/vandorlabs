@@ -126,7 +126,7 @@ final class DiagonalTrapdoorChecks {
         }
         for(int mode=0;mode<3;mode++)for(int texture=0;texture<ScreenHousingTextures.IDS.length;texture++) {
             NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);TileEntityProgrammableDiagonalTrapdoor tile=place(world,p,mode,EnumFacing.NORTH,true,true,texture);
-            require(tile.getPosition()==mode && tile.getHousingTexture()==texture && tile.isSliding() && tile.isInverted(),"configured client placement lost settings");
+            require(tile.getPosition()==mode && tile.getHousingTexture()==ScreenHousingTextures.clamp(texture) && tile.isSliding() && tile.isInverted(),"configured client placement lost settings");
             ItemStack drop=block.configuredDrop(tile);require(!drop.getSubCompound("BlockEntityTag").hasKey("DiagonalReverse"),"item retained opening side");
         }
     }

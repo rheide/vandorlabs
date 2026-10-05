@@ -30,7 +30,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         }
     }
     public void setSize(int size) {
-        if (size < 0 || size > 2 || size == this.size) return;
+        if (size < 0 || size > 2) return;
+        size=Math.min(size,1);
+        if(size==this.size)return;
         this.size = size;
         markDirty();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
@@ -55,14 +57,14 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         restored = true;
         shade = Math.max(0, Math.min(2, tag.getInteger("GlassShade")));
         legacySize = !tag.hasKey("GlassSize");
-        size = legacySize ? 1 : Math.max(0, Math.min(2, tag.getInteger("GlassSize")));
+        size = legacySize ? 1 : Math.max(0, Math.min(1, tag.getInteger("GlassSize")));
         join = !tag.hasKey("GlassJoin") || tag.getBoolean("GlassJoin");
     }
     @Override public void onLoad() {
         super.onLoad();
         if ((!restored || legacySize) && world != null) {
-            size = world.getBlockState(pos).getValue(
-                    com.vandorlabs.blocks.BlockProgrammableGlass.SIZE);
+            size = Math.min(1,world.getBlockState(pos).getValue(
+                    com.vandorlabs.blocks.BlockProgrammableGlass.SIZE));
             legacySize = false;
         }
     }

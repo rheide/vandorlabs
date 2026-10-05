@@ -69,7 +69,7 @@ final class ProgrammableDialogRuntimeChecks {
                     require(sizeButton!=null,"missing door size button");
                     for(int step=1;step<=3;step++) {
                         click(gui,sizeButton.x+sizeButton.width/2,sizeButton.y+sizeButton.height/2);
-                        require(detail.getInt(gui)==(initial+step)%3,"door size button failed");
+                        require(detail.getInt(gui)==(initial+step)%2,"door size button failed");
                         for(Field f:gui.getClass().getDeclaredFields()){f.setAccessible(true);Object value=f.get(gui);if(value instanceof HousingTextureList)checkDoorDesigns((HousingTextureList)value);}
                     }
                 }
@@ -116,7 +116,7 @@ final class ProgrammableDialogRuntimeChecks {
             }
         }
         require(designs.size()==15,"door picker missing designs");
-        for(int detail=0;detail<3;detail++) {
+        for(int detail=0;detail<2;detail++) {
             HousingTextureList sized=HousingTextureList.forDoors(detail,0,0,100,list.selected());
             java.util.Set<Integer> sizedDesigns=new java.util.HashSet<>();
             for(Object option:((java.util.Map<?,?>)options.get(sized)).values()) {
@@ -125,7 +125,7 @@ final class ProgrammableDialogRuntimeChecks {
                 if(entry!=null && entry.has("design")) {
                     require(entry.get("detail").getAsInt()==detail,"wrong door size in picker");
                     require(sizedDesigns.add(entry.get("design").getAsInt()),"duplicate sized door design");
-                    int next=HousingTextureList.doorSizeChoice(item.choice,(detail+1)%3);
+                    int next=HousingTextureList.doorSizeChoice(item.choice,(detail+1)%2);
                     require(com.vandorlabs.tiles.ScreenHousingTextures.entry(next).get("design").getAsInt()==entry.get("design").getAsInt(),"size change replaced door design");
                 }
             }

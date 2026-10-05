@@ -68,7 +68,8 @@ public class GuiProgrammableInput extends GuiContainer {
             buttonList.add(layout.choice(30,0,2,98,I18n.format("gui.vandorlabs.input.small")));
             buttonList.add(layout.choice(31,1,2,98,I18n.format("gui.vandorlabs.selector.normal")));
         }
-        buttonList.add(layout.control(0,120,""));
+        buttonList.add(layout.choice(4,0,2,120,""));
+        buttonList.add(layout.choice(0,1,2,120,""));
         buttonList.add(layout.control(32,142,sidesLabel()));
         channelField=new GuiTextField(40,fontRenderer,cx,guiTop+177,154,18);
         ChannelFields.configure(channelField);
@@ -83,6 +84,7 @@ public class GuiProgrammableInput extends GuiContainer {
     private String sidesLabel(){return "Wall texture: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
         for (GuiButton button : buttonList) {
+            if(button.id==4){button.displayString=(screenList.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab==0 && screenList.hasPair();}
             if (button.id == 0) {
                 button.displayString = I18n.format("gui.vandorlabs.selector.redstone") + ": "
                         + I18n.format(redstoneEnabled
@@ -127,6 +129,7 @@ public class GuiProgrammableInput extends GuiContainer {
     }
 
     private void chooseArtwork(ScreenTextureList picker) {
+        refreshButtons();
         String nativeId=picker.selected();int choice=nativeId==null?picker.choice():-1;
         if(nativeId!=null)selected=nativeId;
         te.setSurfaceTexture(0,choice);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),0,choice));
@@ -183,8 +186,9 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(button.id>=90 && button.id<=91){textureTab=button.id-90;refreshTabs();return;}
+        if(button.id>=90 && button.id<=91){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
+        if(button.id==4){if(!screenList.hasPair())return;screenList.setFramed(!screenList.framed());chooseArtwork(screenList);return;}
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
         if (button.id == 0) redstoneEnabled = !redstoneEnabled;
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;

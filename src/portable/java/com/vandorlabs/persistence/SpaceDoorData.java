@@ -24,7 +24,7 @@ public final class SpaceDoorData {
     }
     public SpaceDoorData(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
         this.design=design>=0 && design<29?design:2;
-        this.detail=detail>=0 && detail<3?detail:1;
+        this.detail=detail>=0 && detail<3?Math.min(detail,1):1;
         this.framed=framed;
         this.direction=direction>=0 && direction<4?direction:0;
         this.middle=middle;

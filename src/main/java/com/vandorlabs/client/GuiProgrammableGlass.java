@@ -12,7 +12,7 @@ import java.io.IOException;
 
 /** Live controls for size and translucent glass tint. */
 public final class GuiProgrammableGlass extends GuiContainer {
-    private static final String[] SIZES={"Small", "Medium", "Large"};
+    private static final String[] SIZES={"Small", "Large"};
     private static final String[] SHADES={"Clear", "Cyan", "Dark Grey"};
     private final TileEntityProgrammableGlass tile;
     private int size,shade;
@@ -42,7 +42,7 @@ public final class GuiProgrammableGlass extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id==2) { mc.player.closeScreen(); return; }
-        if (button.id==0) size=(size+1)%3;
+        if (button.id==0) size=(size+1)%2;
         if (button.id==1) shade=(shade+1)%3;
         if (button.id==3) join=!join;
         updateLabels();

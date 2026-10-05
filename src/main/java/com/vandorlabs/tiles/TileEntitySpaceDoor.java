@@ -15,7 +15,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
             "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight"};
     public static final int FIRST_DOUBLE_DESIGN=21, DEFAULT_LARGE_DESIGN=23;
-    public static final String[] DETAILS={"low","medium","high"};
+    public static final String[] DETAILS={"low","medium"};
     private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
     private static final java.util.concurrent.atomic.AtomicReferenceArray<BlockSpaceDoor>
             RESOLVED_MODELS = new java.util.concurrent.atomic.AtomicReferenceArray<>(4);
@@ -69,7 +69,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         }
     }
     public boolean acceptsDesign(int design) { return design<FIRST_DOUBLE_DESIGN || this instanceof TileEntityLargeProgrammableDoor; }
-    public static boolean valid(int design,int detail) { return design>=0 && design<DESIGNS.length && detail>=0 && detail<DETAILS.length; }
+    public static boolean valid(int design,int detail) { return design>=0 && design<DESIGNS.length && detail>=0 && detail<3; }
 
     public BlockSpaceDoor model(boolean sliding) {
         int key = (sliding ? 2 : 0) | (framed ? 1 : 0);
@@ -124,7 +124,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
         if (!valid(design,detail) || !acceptsDesign(design) || direction==3 && !(this instanceof TileEntityLargeProgrammableDoor) || !validSlideDirection(direction)
                 || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
-        this.design=design; this.detail=detail; this.framed=framed;
+        this.design=design; this.detail=Math.min(detail,1); this.framed=framed;
         this.slideDirection=direction;
         if (this.middle != middle) placementDepth = middle ? 0 : 1;
         this.middle=middle; this.sliding=sliding; this.migrateLegacyMotion=false;

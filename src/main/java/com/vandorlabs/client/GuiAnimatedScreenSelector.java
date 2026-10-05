@@ -207,9 +207,9 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
         modeStaticButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_STATIC;
         modeAnimatedButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_ANIMATED;
-        frameButton.displayString = (framed ? "[x] " : "[ ] ")
+        frameButton.displayString = ((console && textureTab==1?inputList.framed():framed) ? "[x] " : "[ ] ")
                 + I18n.format("gui.vandorlabs.selector.framed");
-        frameButton.enabled = selectedOption != null && selectedOption.hasPair();
+        frameButton.enabled = console && textureTab==1?inputList.hasPair():textureTab==0 && selectedOption != null && selectedOption.hasPair();
         slowButton.enabled = speedIndex != 0;
         normalButton.enabled = speedIndex != 1;
         fastButton.enabled = speedIndex != 2;
@@ -234,7 +234,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(button.id>=90 && button.id<=(console?92:91)){textureTab=button.id-90;refreshTabs();return;}
+        if(button.id>=90 && button.id<=(console?92:91)){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.isSurfaceTileSides()));return;}
         switch (button.id) {
             case 0:
@@ -250,11 +250,16 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 displayMode = TileEntityAnimatedScreenSelector.MODE_ANIMATED;
                 break;
             case 4:
+                if(console && textureTab==1){
+                    if(!inputList.hasPair())return;
+                    inputList.setFramed(!inputList.framed());inputPanel=inputList.selected();
+                    break;
+                }
                 if (selectedOption == null || !selectedOption.hasPair()) {
                     return;
                 }
                 framed = !framed;
-                screenList.restore(com.vandorlabs.tiles.ScreenHousingTextures.screenIndex(activeId()+"_static"));
+                screenList.setFramed(framed);
                 break;
             case 10:
                 speedIndex = 0;

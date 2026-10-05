@@ -60,7 +60,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         channelField.setText(channelText);
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
     }
-    private String doorSizeLabel(){return "Door size: "+new String[]{"Small","Medium","Large"}[doorDetail];}
+    private String doorSizeLabel(){return "Texture size: "+new String[]{"Small","Large"}[doorDetail];}
     private String motionLabel(){return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
     private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
     private String layoutLabel(){return "Texture: "+(tileTexture?"Tile / mirror":"Fit");}
@@ -77,7 +77,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
         if(button.id==9) {
-            doorDetail=(doorDetail+1)%3;
+            doorDetail=(doorDetail+1)%2;
             textures.setSelected(HousingTextureList.doorSizeChoice(textures.selected(),doorDetail));
             send();initGui();return;
         }
