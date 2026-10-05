@@ -15,6 +15,7 @@ public final class DoorAnimation {
         }
         this.duration = duration;
     }
+    public double duration() { return duration; }
 
     public double sample(boolean open, double now) {
         if (!initialized) {

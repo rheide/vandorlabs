@@ -16,6 +16,7 @@ import java.util.UUID;
 /** Actual placement/copy/role code in a world that throws on unloaded reads. */
 final class LargeDoorChecks {
     static void run() {
+        timingAndPanel();
         BlockDetailedDoor paired=new BlockDetailedDoor("large_check_model",BlockVandorDoor.DoorMotion.SLIDING,true,true,false,1,15,7,90,-90,-16,16);
         BlockLargeProgrammableDoor block=new BlockLargeProgrammableDoor("large_programmable_door",paired);
         ForgeRegistries.BLOCKS.register(block);
@@ -82,6 +83,25 @@ final class LargeDoorChecks {
             require(item.onItemUse(player,world,boundary.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.FAIL && stack.getCount()==2,"unloaded footprint");
         }
         System.out.println("PASS: Large Door four-facing placement, "+cells+" cell roles/NBT, one renderer, 192 open/closed passage configurations, shared picking, atomic removal/obstruction/edit denial and unloaded chunk guards");
+    }
+    private static void timingAndPanel(){
+        double regularTicks=TESlidingDoor.animationTicks(new TileEntitySpaceDoor());
+        double largeTicks=TESlidingDoor.animationTicks(new TileEntityLargeProgrammableDoor());
+        require(regularTicks==9 && largeTicks==12,"animation durations");
+        com.vandorlabs.animation.DoorAnimation regular=new com.vandorlabs.animation.DoorAnimation(regularTicks),large=new com.vandorlabs.animation.DoorAnimation(largeTicks);
+        regular.sample(false,0);large.sample(false,0);regular.sample(true,0);large.sample(true,0);
+        require(regular.sample(true,9)==1 && large.sample(true,9)<1,"large animation not slower");
+        require(large.sample(true,12)==1,"large opening endpoint");large.sample(false,12);
+        require(large.sample(false,24)==0,"large closing endpoint");
+        for(boolean slide:new boolean[]{false,true})for(boolean far:new boolean[]{false,true})for(int facing=0;facing<4;facing++){
+            java.util.List<com.vandorlabs.render.LargeDoorGeometry.Box> geometry=com.vandorlabs.render.LargeDoorGeometry.boxes(true,slide,0,false,0,facing,true,far);
+            com.vandorlabs.render.LargeDoorGeometry.Box panel=geometry.get(geometry.size()-1);
+            require(Math.abs((panel.y0+panel.y1)/2-1.125)<1e-9,"panel center differs from regular door");
+            double z=(com.vandorlabs.render.SpaceDoorControlPanel.z0(slide,far)+com.vandorlabs.render.SpaceDoorControlPanel.z1(slide,far))/32;
+            require(com.vandorlabs.render.SpaceDoorControlPanel.containsScaled(z,1.125,slide,far,1.5),"lowered panel not clickable");
+            require(!com.vandorlabs.render.SpaceDoorControlPanel.containsScaled(z,1.6875,slide,far,1.5),"old high click area retained");
+        }
+        System.out.println("PASS: large-door animation 12 versus 9 ticks; panel center/click region at regular-door height in all facings and depth sides");
     }
     private static java.util.List<AxisAlignedBB> collisions(BlockLargeProgrammableDoor block,NonRenderingChecks.MemoryWorld world,BlockPos anchor,EnumFacing front,AxisAlignedBB body){
         java.util.List<AxisAlignedBB> result=new java.util.ArrayList<>();

@@ -28,7 +28,8 @@ public final class LargeDoorGeometry {
         }
         if(panel){
             double x0=sliding?3-1.5/16:0,x1=sliding?3:1.5/16;
-            add(result,x0,SpaceDoorControlPanel.Y0*1.5/16,SpaceDoorControlPanel.z0(sliding,farEdge)/16,x1,SpaceDoorControlPanel.Y1*1.5/16,SpaceDoorControlPanel.z1(sliding,farEdge)/16,depth,facing,0,0,0,0,0);
+            double yOffset=SpaceDoorControlPanel.verticalOffset(1.5);
+            add(result,x0,SpaceDoorControlPanel.Y0*1.5/16+yOffset,SpaceDoorControlPanel.z0(sliding,farEdge)/16,x1,SpaceDoorControlPanel.Y1*1.5/16+yOffset,SpaceDoorControlPanel.z1(sliding,farEdge)/16,depth,facing,0,0,0,0,0);
         }
         return result;
     }

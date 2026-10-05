@@ -13,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 /** Appearance belongs to the placed door, not a separate registered block. */
 public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
-            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass"};
+            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass"};
     public static final String[] DETAILS={"low","medium","high"};
     private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
     private static final java.util.concurrent.atomic.AtomicReferenceArray<BlockSpaceDoor>
@@ -192,7 +192,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if (!world.isRemote) markDirty();
     }
     @Override public void onLoad() { super.onLoad(); migrateLegacyMotion(); }
-    public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15; }
+    public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16; }
     public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)

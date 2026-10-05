@@ -4,8 +4,10 @@
 
 - Batch compatible opaque Programmable Doors using cached geometry, CPU motion transforms and Forge's shared tile-renderer buffer. Preserve glass/custom-face and OptiFine rendering through the existing path, and support CodeChickenLib's vanilla item-renderer delegate.
 - Add Large Programmable Door: one indivisible 3×3 opening with two 1.5×3 leaves and the regular door's appearance, movement, control-panel, placement-depth and redstone options. Any cell addresses the anchor; only the anchor renders. Placement validates all nine loaded cells before writing, and removal clears the assembly.
+- Animate large doors over 12 ticks rather than 9, and lower their optional control panels to the regular door's center height, including collision and click regions.
 - Guard collision clipping against disjoint boxes so opened large doors leave a traversable passage in every orientation and movement mode.
 - Add White Glass doors: pale moving leaf rails around a large glass opening, with simple shallow rectangular handles on both faces. Crop/repeat the rail and pane textures at consistent proportions; keep the stationary frame independently optional.
+- Thicken the moving borders of glass-rim doors and add Dark Glass using the Door Interior (Dark) material with contrasting light handles.
 - Keep large-door inventory icons inside their slots with padding after GUI rotation.
 - Add Bussard Classic/Modern, Deflector Amber/Blue and Nacelle 1–4 light artwork with matching On/Off textures. Preserve existing texture indices.
 - Submit redstone-screen backgrounds as textured surfaces with normals and explicit lightmaps for shader compatibility. Add Up/Down row controls that move labels and complete channel lists together.

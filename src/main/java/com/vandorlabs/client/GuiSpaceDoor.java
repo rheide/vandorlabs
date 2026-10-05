@@ -35,11 +35,11 @@ public class GuiSpaceDoor extends GuiContainer {
     private int previewX,previewY;
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
-            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass"};
+            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass","Dark Glass"};
     private static final String[] SIZES={"Size: Small","Size: Medium","Size: Large"};
     private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
             "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
-            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass"};
+            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass","dark_glass"};
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));

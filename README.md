@@ -64,8 +64,10 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   Place against the bottom-center position on three solid supports. Both 1.5×3 leaves
   share settings and operation; breaking any of the nine cells removes the door.
   Craft from two Programmable Doors and seven Programmable Matter Ingots.
-  Both door sizes offer **White Glass**, a pale moving leaf rim around a large glass opening,
-  with pull handles on both sides and consistently proportioned, repeating materials.
+  Both door sizes offer **White Glass** and **Dark Glass**, with thicker moving leaf rims
+  around a large glass opening, simple handles on both sides and repeating materials.
+  Dark Glass uses **Door Interior (Dark)**. Large doors animate more slowly and keep
+  their optional control panel at the regular door's center height.
 - **Programmable Trapdoor**: categorized block/door artwork with Fit/Tile and mirrored door panels, rotating or sideways sliding,
   and Bottom, Middle, or Top placement. Movement also offers Rotate into next block and Slide into next block for individual mounts; configured next-block items start open when placed. Hinge direction can be selected for all individual movements; joined groups keep their outer hinges. Adjacent pairs and complete 2×2 squares
   open together toward opposite sides, manually or through local/virtual redstone.

@@ -4,6 +4,12 @@ package com.vandorlabs.render;
 public final class SpaceDoorControlPanel {
     public enum Side { LEFT, RIGHT, NONE }
     public static final double Y0=16.5, Y1=19.5;
+    /** Keep the pad's center at regular-door height when the door is enlarged. */
+    public static double verticalOffset(double scale) { return (1-scale)*(Y0+Y1)/32; }
+    /** Local coordinates in blocks, matching the scaled renderer and its vertical offset. */
+    public static boolean containsScaled(double localZ,double localY,boolean sliding,boolean farEdge,double scale) {
+        return contains(localZ*16,(localY-verticalOffset(scale))*16/scale,sliding,farEdge);
+    }
     private SpaceDoorControlPanel() { }
     public static Side side(boolean hingeOnVisualLeft,boolean sliding,boolean paired,
             boolean neighborLeft,boolean neighborRight) {

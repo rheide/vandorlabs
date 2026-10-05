@@ -26,7 +26,7 @@ final class OpaqueDoorBatchChecks {
                     matrix.translate(new Vector3f(2,3,4));matrix.translate(new Vector3f(.5F,0,.5F));
                     float facingAngle=face==EnumFacing.WEST?-90:face==EnumFacing.NORTH?180:face==EnumFacing.EAST?90:0;
                     matrix.rotate((float)Math.toRadians(facingAngle),new Vector3f(0,1,0));
-                    matrix.translate(new Vector3f(-.5F,0,-.5F));matrix.translate(new Vector3f(leaf,0,depth));
+                    matrix.translate(new Vector3f(-.5F,0,-.5F));matrix.translate(new Vector3f(leaf,panel?(float)com.vandorlabs.render.SpaceDoorControlPanel.verticalOffset(scale):0,depth));
                     matrix.translate(new Vector3f(slide,vertical,0));matrix.translate(new Vector3f(px,0,pz));
                     matrix.rotate((float)Math.toRadians(angle),new Vector3f(0,1,0));
                     matrix.translate(new Vector3f(-px,0,-pz));matrix.scale(new Vector3f(scale,scale,1));

@@ -30,6 +30,9 @@ for name in ['bussard_classic','bussard_modern','deflector_amber','deflector_blu
     entries.append(dict(id='light_'+name+'_off',label=label+' Off',category='Lights',source=name+'_off'))
 for detail,tier in enumerate(['low','medium','high']):
     entries.append(dict(id='door_white_glass_'+tier,label='White Glass '+['Small','Medium','Large'][detail],category='Doors',source='space_doors/'+tier+'/door_viewport',rectangular=True,crop=True,design=15,detail=detail))
+# Append the dark variant after existing choices so saved indices remain stable.
+for detail,tier in enumerate(['low','medium','high']):
+    entries.append(dict(id='door_dark_glass_'+tier,label='Dark Glass '+['Small','Medium','Large'][detail],category='Doors',source='space_doors/'+tier+'/door_viewport',rectangular=True,crop=True,design=16,detail=detail))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

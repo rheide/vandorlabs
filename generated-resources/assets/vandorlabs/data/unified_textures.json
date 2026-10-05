@@ -1867,5 +1867,35 @@
     "crop": true,
     "design": 15,
     "detail": 2
+  },
+  {
+    "id": "door_dark_glass_low",
+    "label": "Dark Glass Small",
+    "category": "Doors",
+    "source": "space_doors/low/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 16,
+    "detail": 0
+  },
+  {
+    "id": "door_dark_glass_medium",
+    "label": "Dark Glass Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 16,
+    "detail": 1
+  },
+  {
+    "id": "door_dark_glass_high",
+    "label": "Dark Glass Large",
+    "category": "Doors",
+    "source": "space_doors/high/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 16,
+    "detail": 2
   }
 ]

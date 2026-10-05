@@ -121,6 +121,7 @@ public final class OpaqueDoorBatch {
             for(int i=0;i<source.length;i+=7){
                 double px=Float.intBitsToFloat(source[i]),py=Float.intBitsToFloat(source[i+1]),pz=Float.intBitsToFloat(source[i+2]);
                 px*=size;py*=size;
+                if(panel)py+=SpaceDoorControlPanel.verticalOffset(size);
                 double dx=px-pivotX,dz=pz-pivotZ;
                 px=cos*dx+sin*dz+pivotX+shiftX+leafOffset;pz=-sin*dx+cos*dz+pivotZ+depth;py+=shiftY;
                 double worldX,worldZ;

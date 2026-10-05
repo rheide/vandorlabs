@@ -177,11 +177,12 @@ final class HousingTextureList {
                 font.drawStringWithShadow(font.trimStringToWidth((expanded.contains(category)?"- ":"+ ")+category,width-6),x+3,yy+7,0xFFABCFE8);
             } else {
                 com.google.gson.JsonObject metadata=nativeOptions?null:ScreenHousingTextures.entry(ScreenHousingTextures.choiceAt(choice));
-                if(metadata!=null && metadata.has("design") && metadata.get("design").getAsInt()==15){
-                    Gui.drawRect(x+6,yy+3,x+17,yy+19,0xFFE3E7E9);
-                    Gui.drawRect(x+8,yy+5,x+15,yy+17,0xFF7996A1);
+                if(metadata!=null && metadata.has("design") && (metadata.get("design").getAsInt()==15 || metadata.get("design").getAsInt()==16)){
+                    boolean dark=metadata.get("design").getAsInt()==16;
+                    Gui.drawRect(x+6,yy+3,x+17,yy+19,dark?0xFF353C42:0xFFE3E7E9);
+                    Gui.drawRect(x+8,yy+6,x+15,yy+16,0xFF7996A1);
                     Gui.drawRect(x+9,yy+6,x+10,yy+15,0xFFC3D8E0);
-                    Gui.drawRect(x+15,yy+10,x+17,yy+15,0xFF59616A);
+                    Gui.drawRect(x+15,yy+10,x+17,yy+15,dark?0xFFB9C1C6:0xFF59616A);
                 }else drawThumbnail(mc.getTextureMapBlocks().getAtlasSprite(options.get(choice).texture),yy);
                 font.drawStringWithShadow(font.trimStringToWidth(options.get(choice).label,width-26),x+23,yy+7,choice==selected?0xFFFFE08A:0xFFD8D8D8);
             }

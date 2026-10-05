@@ -40,13 +40,16 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
     }
 
     private static final float ANIM_TICKS = 9.0F;
+    static float animationTicks(TileEntitySlidingDoor tile) {
+        return tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?12.0F:ANIM_TICKS;
+    }
     private static final int ANIMS_CAP = 1024;
     private static final Map<World, LinkedHashMap<net.minecraft.util.math.BlockPos, DoorAnimation>>
             ANIMS_BY_WORLD = new WeakHashMap<>();
 
     /** Eased open pose driven by the live blockstate: needs no ticking. */
     private static float animPose(World world, net.minecraft.util.math.BlockPos key,
-            boolean open, double now) {
+            boolean open, double now,float duration) {
         LinkedHashMap<net.minecraft.util.math.BlockPos, DoorAnimation> animations =
                 ANIMS_BY_WORLD.get(world);
         if (animations == null) {
@@ -54,8 +57,8 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             ANIMS_BY_WORLD.put(world, animations);
         }
         DoorAnimation a = animations.get(key);
-        if (a == null) {
-            a = new DoorAnimation(ANIM_TICKS);
+        if (a == null || a.duration()!=duration) {
+            a = new DoorAnimation(duration);
             animations.put(key, a);
             if (animations.size() > ANIMS_CAP) {
                 // Access-ordered map: evict the genuinely least-recently used
@@ -72,7 +75,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         IBlockState state=raw.getWorld().getBlockState(raw.getPos());
         if (!(state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)) return;
         state=state.getBlock().getActualState(state,raw.getWorld(),raw.getPos());
-        float progress=animPose(raw.getWorld(),raw.getPos(),state.getValue(BlockVandorDoor.OPEN),visualTime());
+        float progress=animPose(raw.getWorld(),raw.getPos(),state.getValue(BlockVandorDoor.OPEN),visualTime(),animationTicks(raw));
         OpaqueDoorBatch.draw((com.vandorlabs.tiles.TileEntitySpaceDoor)raw,state,progress,x,y,z,buffer);
     }
 
@@ -96,7 +99,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 && state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor) {
             if (!upper) {
                 float progress=animPose(te.getWorld(),te.getPos(),state.getValue(BlockVandorDoor.OPEN),
-                        visualTime());
+                        visualTime(),animationTicks(te));
                 renderSpaceDoor((com.vandorlabs.tiles.TileEntitySpaceDoor)te,state,facing,progress,x,y,z);
             }
             return;
@@ -106,7 +109,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 net.minecraft.util.math.BlockPos doorKey = te.getPos();
                 float p = animPose(te.getWorld(), doorKey,
                         state.getValue(BlockVandorDoor.OPEN),
-                        visualTime());
+                        visualTime(),animationTicks(te));
                 BlockDetailedDoor placedDoor = (BlockDetailedDoor) state.getBlock();
                 BlockDetailedDoor visualDoor = placedDoor;
                 if (visualDoor instanceof BlockConnectingDetailedDoor) {
@@ -283,7 +286,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         GlStateManager.pushMatrix();
         GlStateManager.translate(x,y,z);
         orientDetailedDoor(facing);
-        GlStateManager.translate(0,0,tile.positionOffset());
+        GlStateManager.translate(0,SpaceDoorControlPanel.verticalOffset(size),tile.positionOffset());
         GlStateManager.scale(size/16,size/16,1D/16);
         GlStateManager.disableLighting();
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);

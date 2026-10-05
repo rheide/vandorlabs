@@ -52,7 +52,7 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
             EnumFacing front=world.getBlockState(tile.getPos()).getValue(FACING);
             EnumFacing panelFace=tile.isSliding()?front.rotateY():front.rotateYCCW();
             double normal=front==EnumFacing.SOUTH?pos.getZ()+z-tile.getPos().getZ():front==EnumFacing.NORTH?1-(pos.getZ()+z-tile.getPos().getZ()):front==EnumFacing.EAST?pos.getX()+x-tile.getPos().getX():1-(pos.getX()+x-tile.getPos().getX());
-            panelHit=face==panelFace && com.vandorlabs.render.SpaceDoorControlPanel.contains((normal-tile.positionOffset())*16,(pos.getY()+y-tile.getPos().getY())*16/1.5,tile.isSliding(),tile.getPlacementDepth()==2);
+            panelHit=face==panelFace && com.vandorlabs.render.SpaceDoorControlPanel.containsScaled(normal-tile.positionOffset(),pos.getY()+y-tile.getPos().getY(),tile.isSliding(),tile.getPlacementDepth()==2,1.5);
         }
         if(player.isSneaking() || player.capabilities.isCreativeMode && panelHit){
             if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,player.capabilities.isCreativeMode?com.vandorlabs.GuiHandler.GUI_SPACE_DOOR:com.vandorlabs.GuiHandler.GUI_REDSTONE_CHANNEL,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());

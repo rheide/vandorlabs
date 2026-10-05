@@ -21,12 +21,12 @@ assert len(doors)==60
 from import_space_doors import FAMILIES, GLASS_FAMILIES, texture_name
 tile=(ROOT/'src/main/java/com/vandorlabs/tiles/TileEntitySpaceDoor.java').read_text()
 designs=re.findall(r'"([a-z_]+)"',re.search(r'DESIGNS=\{(.*?)\};',tile,re.S).group(1))
-assert tuple(designs[:-1])==FAMILIES and designs[-1]=="white_glass"
+assert tuple(designs[:-2])==FAMILIES and designs[-2:]==["white_glass","dark_glass"]
 gui=(ROOT/'src/main/java/com/vandorlabs/client/GuiSpaceDoor.java').read_text()
 assert len(re.findall(r'"[^"]+"',re.search(r'LABELS=\{(.*?)\};',gui,re.S).group(1)))==len(designs)
 sprites=(ROOT/'src/main/java/com/vandorlabs/client/SpaceDoorTextures.java').read_text()
 glass_indices={int(i) for i in re.findall(r'design==(\d+)',re.search(r'hasGlassDesign\(int design\) \{(.*?)\}',tile).group(1))}
-assert {designs[i] for i in glass_indices}==set(GLASS_FAMILIES)|{"white_glass"}
+assert {designs[i] for i in glass_indices}==set(GLASS_FAMILIES)|{"white_glass","dark_glass"}
 for family in FAMILIES:
     for suffix in ('','_metal','_glass') if family in GLASS_FAMILIES else ('',):
         assert '"'+texture_name(family+suffix)+'"' in sprites
@@ -217,22 +217,23 @@ for archive in sys.argv[1:]:
 print('Space doors PASS: centered 2px rectangular leaves in 4px frames, solid jamb faces, shortened hinges, sealed seams, native UVs, all 91 swing angles and three model tiers')
 
 # The new leaf has a true glass opening, not an opaque full slab behind a pane.
-for tier in ('low','medium','high'):
-    for motion in ('rotating','sliding'):
-        base='space_white_glass_'+motion+'_framed_paired_left_'
-        opaque=load(ASSETS/'models/block/detailed_doors'/tier/(base+'leaf.json'))
-        rim=[e for e in opaque['elements'] if any(f['texture']=='#white' for f in e['faces'].values())]
-        assert len(rim)==6 and opaque['textures']['white']=='vandorlabs:blocks/light_alloy_hull'
-        assert all(not (e['from'][0]<8<e['to'][0] and e['from'][1]<16<e['to'][1]) for e in rim)
-        pane=load(ASSETS/'models/block/detailed_doors'/tier/(base+'glass.json'))['elements']
-        assert len(pane)==2 and any(e['from'][0]<8<e['to'][0] and e['from'][1]<16<e['to'][1] for e in pane)
-        handles=[e for e in opaque['elements'] if any(f['texture']=='#handle' for f in e['faces'].values())]
-        assert len(handles)==2 and all(e['from'][0]>x1-2 for e in handles for x1 in [max(r['to'][0] for r in rim)])
-        for e in rim+pane+handles:
-            dx,dy,dz=[b-a for a,b in zip(e['from'],e['to'])]
-            for side,face in e['faces'].items():
-                u0,v0,u1,v1=face['uv']
-                expected=(dx,dy) if side in ('north','south') else (dz,dy) if side in ('east','west') else (dx,dz)
-                assert all(abs(actual-want)<1e-6 for actual,want in zip((abs(u1-u0),abs(v1-v0)),expected))
-                assert all(0<=v<=16 for v in face['uv'])
-print('White Glass PASS: tiled pale leaf rails and glazing, two-sided pull handles, constant UV density, both motions and all artwork tiers')
+for family,material in [('white_glass','light_alloy_hull'),('dark_glass','programmable_glass/door_side')]:
+    for tier in ('low','medium','high'):
+        for motion in ('rotating','sliding'):
+            base='space_'+family+'_'+motion+'_framed_paired_left_'
+            opaque=load(ASSETS/'models/block/detailed_doors'/tier/(base+'leaf.json'))
+            rim=[e for e in opaque['elements'] if any(f['texture']=='#white' for f in e['faces'].values())]
+            assert len(rim)==6 and opaque['textures']['white']=='vandorlabs:blocks/'+material
+            assert all(not (e['from'][0]<8<e['to'][0] and e['from'][1]<16<e['to'][1]) for e in rim)
+            pane=load(ASSETS/'models/block/detailed_doors'/tier/(base+'glass.json'))['elements']
+            assert len(pane)==2 and any(e['from'][0]<8<e['to'][0] and e['from'][1]<16<e['to'][1] for e in pane)
+            handles=[e for e in opaque['elements'] if any(f['texture']=='#handle' for f in e['faces'].values())]
+            assert len(handles)==2 and all(e['from'][0]>x1-2 for e in handles for x1 in [max(r['to'][0] for r in rim)])
+            for e in rim+pane+handles:
+                dx,dy,dz=[b-a for a,b in zip(e['from'],e['to'])]
+                for side,face in e['faces'].items():
+                    u0,v0,u1,v1=face['uv']
+                    expected=(dx,dy) if side in ('north','south') else (dz,dy) if side in ('east','west') else (dx,dz)
+                    assert all(abs(actual-want)<1e-6 for actual,want in zip((abs(u1-u0),abs(v1-v0)),expected))
+                    assert all(0<=v<=16 for v in face['uv'])
+print('Glass-rim doors PASS: white/dark materials, thicker tiled rails, separate glazing, simple handles, proportional UVs, both motions and all tiers')

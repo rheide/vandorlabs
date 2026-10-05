@@ -46,11 +46,24 @@ unloaded or protected cells without leaving a partial door.
 
 Craft one from **two Programmable Doors and seven Programmable Matter Ingots**.
 
-The **White Glass** design is available for both door sizes. Its moving white
-rails surround a large glass opening, with pull handles on both faces. Materials
+The **White Glass** and **Dark Glass** designs are available for both door sizes.
+Their thicker moving rails surround a large glass opening, with simple rectangular
+handles on both faces. Dark Glass uses **Door Interior (Dark)** from Materials,
+with contrasting light handles. Materials
 are cropped or repeated at consistent proportions. The stationary frame remains
 independently optional. Open large doors no longer produce phantom collision
 boxes inside the passage.
+
+Large doors animate over **12 ticks (0.6 seconds)**; regular doors retain
+**9 ticks (0.45 seconds)**. The large door's optional control panel is lower,
+centered **1.125 blocks above the base**, matching the regular door. Its visible
+geometry, collision and click region move together.
+
+Original door leaf artwork uses **128×256** pixels for Small, **256×512** for
+Medium and **512×1024** for Large. These are artwork resolutions, independent of
+the physical opening size. White Glass's border uses the existing 16×16 Light
+Alloy texture; Dark Glass uses the 64×64 Door Interior (Dark) texture. Both crop
+or repeat those materials instead of stretching them over the leaf.
 
 ## Lights, screens and ramps
 
