@@ -35,11 +35,11 @@ public class GuiSpaceDoor extends GuiContainer {
     private int previewX,previewY;
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
-            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass","Dark Glass"};
+            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass","Dark Glass","Plain Cargo","Stepped Freight","Observation Leaf","Reinforced Leaf","Warehouse Shutter","Slotted Bay","Cross Braced Bay","Split View Bay"};
     private static final String[] SIZES={"Size: Small","Size: Medium","Size: Large"};
     private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
             "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
-            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass","dark_glass"};
+            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay"};
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
@@ -60,7 +60,7 @@ public class GuiSpaceDoor extends GuiContainer {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         listLeft=layout.listX;listRight=listLeft+layout.listWidth;listTop=guiTop+38;
-        textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture)
+        textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.control(11,50,SIZES[detail]));
@@ -118,7 +118,7 @@ public class GuiSpaceDoor extends GuiContainer {
     private int maxScroll() { return Math.max(0,LABELS.length-LIST_ROWS); }
     private void clampScroll() { scrollIndex=Math.max(0,Math.min(maxScroll(),scrollIndex)); }
     private void select(int index) {
-        if (index>=0 && index<LABELS.length && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
+        if (index>=0 && index<LABELS.length && tile.acceptsDesign(index) && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
     }
     private void dragScrollbarTo(int y) {
         scrollIndex=Math.round((float)(y-listTop)/LIST_H*maxScroll()); clampScroll();

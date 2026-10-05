@@ -1,0 +1,153 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "leaf": "vandorlabs:blocks/cargo_doors/medium/warehouse_shutter",
+    "frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "edge": "vandorlabs:blocks/dark_wall_panel",
+    "leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "glass": "vandorlabs:blocks/space_doors/observation_glass",
+    "pane": "vandorlabs:blocks/space_doors/glass_tile",
+    "particle": "vandorlabs:blocks/cargo_doors/medium/warehouse_shutter"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        1,
+        12.24
+      ],
+      "to": [
+        15,
+        16,
+        14.24
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#leaf",
+          "uv": [
+            15.5,
+            8.0,
+            8.5,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#leaf",
+          "uv": [
+            8.5,
+            8.0,
+            15.5,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "down": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        16,
+        12.24
+      ],
+      "to": [
+        15,
+        31,
+        14.24
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#leaf",
+          "uv": [
+            15.5,
+            0.5,
+            8.5,
+            8.0
+          ]
+        },
+        "south": {
+          "texture": "#leaf",
+          "uv": [
+            8.5,
+            0.5,
+            15.5,
+            8.0
+          ]
+        },
+        "east": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "up": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "down": {
+          "texture": "#edge",
+          "uv": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    }
+  ]
+}

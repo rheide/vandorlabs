@@ -7,6 +7,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 
 /** Nine cells address one configuration and one renderer, without loading neighbors. */
 public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
+    public TileEntityLargeProgrammableDoor(){configure(DEFAULT_LARGE_DESIGN,1,true,0,false,true);}
     private int column,row;
     private boolean assigned;
     public void assign(BlockPos anchor){column=Math.abs(pos.getX()-anchor.getX())+Math.abs(pos.getZ()-anchor.getZ());row=pos.getY()-anchor.getY();assigned=true;markDirty();}

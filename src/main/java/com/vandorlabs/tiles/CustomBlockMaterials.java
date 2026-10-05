@@ -29,7 +29,16 @@ public final class CustomBlockMaterials {
             }
             if(tag!=null)for(String key:new String[]{"DoorFaceTexture","PropulsionSideTexture","housingTexture"})
                 if(tag.hasKey(key,3) && tag.getInteger(key)>=0)return ScreenHousingTextures.clamp(tag.getInteger(key));
-            if(block instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor){com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag==null?new net.minecraft.nbt.NBTTagCompound():tag));return ScreenHousingTextures.doorIndex(data.design,data.detail);}
+            if(block instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor){
+                net.minecraft.nbt.NBTTagCompound settings=stack.getSubCompound("SpaceDoorSettings");
+                if(settings==null)settings=tag==null?new net.minecraft.nbt.NBTTagCompound():tag.copy();
+                if(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor && !settings.hasKey("SpaceDesign")) {
+                    settings=settings.copy();settings.setInteger("SpaceDesign",TileEntitySpaceDoor.DEFAULT_LARGE_DESIGN);
+                }
+                if(settings.hasKey("DoorFaceTexture",3) && settings.getInteger("DoorFaceTexture")>=0)return ScreenHousingTextures.clamp(settings.getInteger("DoorFaceTexture"));
+                com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(new com.vandorlabs.persistence.NbtPrimitiveData(settings));
+                return ScreenHousingTextures.doorIndex(data.design,data.detail);
+            }
             if(block instanceof com.vandorlabs.blocks.BlockAnimatedScreenSelector || block instanceof com.vandorlabs.blocks.BlockProgrammableTrapdoor)return 0;
         }
         return identifier(block,stack.getItem() instanceof ItemDoor?0:stack.getMetadata() & 15);

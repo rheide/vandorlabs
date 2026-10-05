@@ -1,0 +1,14 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "leaf": "vandorlabs:blocks/cargo_doors/medium/plain_cargo",
+    "frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "edge": "vandorlabs:blocks/dark_wall_panel",
+    "leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "glass": "vandorlabs:blocks/space_doors/observation_glass",
+    "pane": "vandorlabs:blocks/space_doors/glass_tile",
+    "particle": "vandorlabs:blocks/cargo_doors/medium/plain_cargo"
+  },
+  "elements": []
+}

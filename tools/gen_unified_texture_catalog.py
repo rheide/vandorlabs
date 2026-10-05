@@ -33,6 +33,12 @@ for detail,tier in enumerate(['low','medium','high']):
 # Append the dark variant after existing choices so saved indices remain stable.
 for detail,tier in enumerate(['low','medium','high']):
     entries.append(dict(id='door_dark_glass_'+tier,label='Dark Glass '+['Small','Medium','Large'][detail],category='Doors',source='space_doors/'+tier+'/door_viewport',rectangular=True,crop=True,design=16,detail=detail))
+# Cargo leaf artwork and complete square bay compositions, appended for save compatibility.
+for offset,name in enumerate('plain_cargo stepped_freight observation_leaf reinforced_leaf warehouse_shutter slotted_bay cross_braced_bay split_view_bay'.split()):
+    for detail,tier in enumerate(['low','medium','high']):
+        entry=dict(id='door_'+name+'_'+tier,label=name.replace('_',' ').title()+' '+['Small','Medium','Large'][detail],category='Doors' if offset<4 else 'Double Doors',source='cargo_doors/'+tier+'/'+name,design=17+offset,detail=detail)
+        if offset<4:entry['rectangular']=True
+        entries.append(entry)
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

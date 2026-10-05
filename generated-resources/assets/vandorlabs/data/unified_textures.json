@@ -1897,5 +1897,209 @@
     "crop": true,
     "design": 16,
     "detail": 2
+  },
+  {
+    "id": "door_plain_cargo_low",
+    "label": "Plain Cargo Small",
+    "category": "Doors",
+    "source": "cargo_doors/low/plain_cargo",
+    "design": 17,
+    "detail": 0,
+    "rectangular": true
+  },
+  {
+    "id": "door_plain_cargo_medium",
+    "label": "Plain Cargo Medium",
+    "category": "Doors",
+    "source": "cargo_doors/medium/plain_cargo",
+    "design": 17,
+    "detail": 1,
+    "rectangular": true
+  },
+  {
+    "id": "door_plain_cargo_high",
+    "label": "Plain Cargo Large",
+    "category": "Doors",
+    "source": "cargo_doors/high/plain_cargo",
+    "design": 17,
+    "detail": 2,
+    "rectangular": true
+  },
+  {
+    "id": "door_stepped_freight_low",
+    "label": "Stepped Freight Small",
+    "category": "Doors",
+    "source": "cargo_doors/low/stepped_freight",
+    "design": 18,
+    "detail": 0,
+    "rectangular": true
+  },
+  {
+    "id": "door_stepped_freight_medium",
+    "label": "Stepped Freight Medium",
+    "category": "Doors",
+    "source": "cargo_doors/medium/stepped_freight",
+    "design": 18,
+    "detail": 1,
+    "rectangular": true
+  },
+  {
+    "id": "door_stepped_freight_high",
+    "label": "Stepped Freight Large",
+    "category": "Doors",
+    "source": "cargo_doors/high/stepped_freight",
+    "design": 18,
+    "detail": 2,
+    "rectangular": true
+  },
+  {
+    "id": "door_observation_leaf_low",
+    "label": "Observation Leaf Small",
+    "category": "Doors",
+    "source": "cargo_doors/low/observation_leaf",
+    "design": 19,
+    "detail": 0,
+    "rectangular": true
+  },
+  {
+    "id": "door_observation_leaf_medium",
+    "label": "Observation Leaf Medium",
+    "category": "Doors",
+    "source": "cargo_doors/medium/observation_leaf",
+    "design": 19,
+    "detail": 1,
+    "rectangular": true
+  },
+  {
+    "id": "door_observation_leaf_high",
+    "label": "Observation Leaf Large",
+    "category": "Doors",
+    "source": "cargo_doors/high/observation_leaf",
+    "design": 19,
+    "detail": 2,
+    "rectangular": true
+  },
+  {
+    "id": "door_reinforced_leaf_low",
+    "label": "Reinforced Leaf Small",
+    "category": "Doors",
+    "source": "cargo_doors/low/reinforced_leaf",
+    "design": 20,
+    "detail": 0,
+    "rectangular": true
+  },
+  {
+    "id": "door_reinforced_leaf_medium",
+    "label": "Reinforced Leaf Medium",
+    "category": "Doors",
+    "source": "cargo_doors/medium/reinforced_leaf",
+    "design": 20,
+    "detail": 1,
+    "rectangular": true
+  },
+  {
+    "id": "door_reinforced_leaf_high",
+    "label": "Reinforced Leaf Large",
+    "category": "Doors",
+    "source": "cargo_doors/high/reinforced_leaf",
+    "design": 20,
+    "detail": 2,
+    "rectangular": true
+  },
+  {
+    "id": "door_warehouse_shutter_low",
+    "label": "Warehouse Shutter Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/warehouse_shutter",
+    "design": 21,
+    "detail": 0
+  },
+  {
+    "id": "door_warehouse_shutter_medium",
+    "label": "Warehouse Shutter Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/warehouse_shutter",
+    "design": 21,
+    "detail": 1
+  },
+  {
+    "id": "door_warehouse_shutter_high",
+    "label": "Warehouse Shutter Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/warehouse_shutter",
+    "design": 21,
+    "detail": 2
+  },
+  {
+    "id": "door_slotted_bay_low",
+    "label": "Slotted Bay Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/slotted_bay",
+    "design": 22,
+    "detail": 0
+  },
+  {
+    "id": "door_slotted_bay_medium",
+    "label": "Slotted Bay Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/slotted_bay",
+    "design": 22,
+    "detail": 1
+  },
+  {
+    "id": "door_slotted_bay_high",
+    "label": "Slotted Bay Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/slotted_bay",
+    "design": 22,
+    "detail": 2
+  },
+  {
+    "id": "door_cross_braced_bay_low",
+    "label": "Cross Braced Bay Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/cross_braced_bay",
+    "design": 23,
+    "detail": 0
+  },
+  {
+    "id": "door_cross_braced_bay_medium",
+    "label": "Cross Braced Bay Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/cross_braced_bay",
+    "design": 23,
+    "detail": 1
+  },
+  {
+    "id": "door_cross_braced_bay_high",
+    "label": "Cross Braced Bay Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/cross_braced_bay",
+    "design": 23,
+    "detail": 2
+  },
+  {
+    "id": "door_split_view_bay_low",
+    "label": "Split View Bay Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/split_view_bay",
+    "design": 24,
+    "detail": 0
+  },
+  {
+    "id": "door_split_view_bay_medium",
+    "label": "Split View Bay Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/split_view_bay",
+    "design": 24,
+    "detail": 1
+  },
+  {
+    "id": "door_split_view_bay_high",
+    "label": "Split View Bay Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/split_view_bay",
+    "design": 24,
+    "detail": 2
   }
 ]

@@ -21,7 +21,7 @@ public final class UnifiedTextureSprites {
             if(e!=null && e.has("top"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),false,false));
             else if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
             else event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i)));
-            if(e!=null && e.has("design"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),true,false,true));
+            if(e!=null && e.has("design") && !"Double Doors".equals(e.get("category").getAsString()))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),true,false,true));
             if(e!=null && e.has("top")) {
                 event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/"+e.get("top").getAsString(),e.get("top").getAsString(),false,false));
                 event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/"+e.get("side").getAsString(),e.get("side").getAsString(),false,false));

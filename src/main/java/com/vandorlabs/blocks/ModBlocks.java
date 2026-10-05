@@ -611,6 +611,10 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     private static ModelResourceLocation doorItemModel(net.minecraft.item.ItemStack stack) {
         net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("SpaceDoorSettings");
+        if(tag==null && stack.getItem() instanceof com.vandorlabs.items.ItemLargeProgrammableDoor){
+            tag=new net.minecraft.nbt.NBTTagCompound();
+            tag.setInteger("SpaceDesign",com.vandorlabs.tiles.TileEntitySpaceDoor.DEFAULT_LARGE_DESIGN);
+        }
         com.vandorlabs.persistence.SpaceDoorData data =
                 com.vandorlabs.persistence.SpaceDoorData.read(
                         new com.vandorlabs.persistence.NbtPrimitiveData(

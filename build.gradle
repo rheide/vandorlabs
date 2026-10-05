@@ -246,6 +246,11 @@ task testSpaceDoors(type: Exec) {
     commandLine 'python3', 'tools/test_space_doors.py'
 }
 check.dependsOn testSpaceDoors
+task testCargoDoors(type: Exec) {
+    workingDir projectDir
+    commandLine 'python3', 'tools/test_cargo_doors.py'
+}
+check.dependsOn testCargoDoors
 task testSpaceDoorData(type: JavaExec) {
     dependsOn compilePortableTests
     classpath = files("$buildDir/portable-tests")

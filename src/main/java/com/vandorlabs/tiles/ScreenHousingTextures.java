@@ -129,7 +129,7 @@ public final class ScreenHousingTextures {
         // so resource reloads and dynamic Custom artwork still resolve normally.
         for(int i=0;i<IDS.length;i++) {
             com.google.gson.JsonObject e=entry(i),metadata=menu(i);
-            SQUARE_TEXTURES[i]=e!=null && e.has("design") && visible(i)?TEXTURES[i]+"_half":TEXTURES[i];
+            SQUARE_TEXTURES[i]=e!=null && e.has("design") && !"Double Doors".equals(e.get("category").getAsString()) && visible(i)?TEXTURES[i]+"_half":TEXTURES[i];
             if(visible(i) && metadata!=null && metadata.has("unlit"))UNLIT_TEXTURES[i]="vandorlabs:blocks/"+metadata.get("unlit").getAsString();
             if(e!=null && e.has("top"))STORAGE_TOP[i]="vandorlabs:blocks/"+e.get("top").getAsString();
             if(e!=null && e.has("side"))STORAGE_SIDE[i]="vandorlabs:blocks/"+e.get("side").getAsString();
@@ -152,7 +152,13 @@ public final class ScreenHousingTextures {
         return selected==null?texture(choice):selected;
     }
     public static boolean isDoor(int choice){if(CustomBlockMaterials.isCustom(choice))return com.vandorlabs.VandorLabs.proxy!=null && com.vandorlabs.VandorLabs.proxy.customDoor(choice);com.google.gson.JsonObject e=entry(choice);return e!=null && e.has("design");}
-    public static int doorIndex(int design,int detail){return LEGACY_COUNT+6+design*3+detail;}
+    public static int doorIndex(int design,int detail){
+        for(int i=0;i<EXTRAS.size();i++) {
+            com.google.gson.JsonObject e=EXTRAS.get(i);
+            if(e.has("design") && e.get("design").getAsInt()==design && e.get("detail").getAsInt()==detail)return LEGACY_COUNT+i;
+        }
+        return LEGACY_COUNT+6+2*3+1;
+    }
     /** Static Off artwork remains available as a material, but not in light menus. */
     public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && "Lights".equals(category(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}

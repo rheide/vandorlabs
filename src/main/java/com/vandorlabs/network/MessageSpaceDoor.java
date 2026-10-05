@@ -74,6 +74,7 @@ public class MessageSpaceDoor implements IMessage {
                 ContainerSpaceDoor container=(ContainerSpaceDoor)player.openContainer;
                 if (!(raw instanceof TileEntitySpaceDoor) || container.member!=raw || !container.canInteractWith(player)) return;
                 TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;
+                if(!tile.acceptsDesign(m.design))return;
                 BlockPos mate=tile.mate();
                 TileEntitySpaceDoor other=null;
                 if (mate!=null) {

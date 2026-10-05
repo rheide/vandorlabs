@@ -52,7 +52,7 @@ final class HousingTextureList {
     }
     static boolean generalTexture(int choice) {
         String category=ScreenHousingTextures.category(choice);
-        return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors");
+        return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
     }
     static HousingTextureList forCategory(String category,int x,int y,int width,int selected) {
         return forCategory(category,x,y,width,selected,8);
@@ -63,9 +63,12 @@ final class HousingTextureList {
     }
     /** One row per door design, using the size selected beside the list. */
     static HousingTextureList forDoors(int detail,int x,int y,int width,int selected) {
+        return forDoors(detail,x,y,width,selected,false);
+    }
+    static HousingTextureList forDoors(int detail,int x,int y,int width,int selected,boolean large) {
         return new HousingTextureList(x,y,width,selected,8,null,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
-            return generalTexture(choice) || "Doors".equals(ScreenHousingTextures.category(choice))
+            return generalTexture(choice) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
                     && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
         });
     }
@@ -142,7 +145,7 @@ final class HousingTextureList {
         choice=ScreenHousingTextures.localIndex(choice);
         String label=ScreenHousingTextures.label(choice);
         if(label!=null && "Lights".equals(ScreenHousingTextures.category(choice)))label=label.replaceFirst(" On$","");
-        if(label!=null && "Doors".equals(ScreenHousingTextures.category(choice)))label=label.replaceFirst(" (Small|Medium|Large)$","");
+        if(label!=null && ScreenHousingTextures.isDoor(choice))label=label.replaceFirst(" (Small|Medium|Large)$","");
         return label!=null?label:I18n.format("tile.vandorlabs."+ScreenHousingTextures.IDS[choice]+".name");
     }
     private void drawThumbnail(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,int yy) {

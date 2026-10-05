@@ -28,6 +28,9 @@ public final class SpaceDoorTextures {
                     "vandorlabs:blocks/space_doors/" + level + name));
         }
         }
+        for(String tier:new String[]{"low","medium","high"})
+            for(String name:new String[]{"plain_cargo","stepped_freight","observation_leaf","reinforced_leaf"})
+                event.getMap().setTextureEntry(new RectangularSprite("vandorlabs:blocks/cargo_doors/"+tier+"/"+name));
     }
 
     static void checkFrameCleanup(IResourceManager manager) {

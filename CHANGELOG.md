@@ -2,6 +2,8 @@
 
 ## 1.5
 
+- Add four cargo leaf designs to Doors and four complete bay designs to the large-only Double Doors category, each with three artwork resolutions. Newly placed large doors default to Cross Braced Bay; existing saved selections retain their IDs.
+
 - Batch compatible opaque Programmable Doors using cached geometry, CPU motion transforms and Forge's shared tile-renderer buffer. Preserve glass/custom-face and OptiFine rendering through the existing path, and support CodeChickenLib's vanilla item-renderer delegate.
 - Add Large Programmable Door: one indivisible 3×3 opening with two 1.5×3 leaves and the regular door's appearance, movement, control-panel, placement-depth and redstone options. Any cell addresses the anchor; only the anchor renders. Placement validates all nine loaded cells before writing, and removal clears the assembly.
 - Animate large doors over 12 ticks rather than 9, and lower their optional control panels to the regular door's center height, including collision and click regions.

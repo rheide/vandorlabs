@@ -21,7 +21,7 @@ assert len(doors)==60
 from import_space_doors import FAMILIES, GLASS_FAMILIES, texture_name
 tile=(ROOT/'src/main/java/com/vandorlabs/tiles/TileEntitySpaceDoor.java').read_text()
 designs=re.findall(r'"([a-z_]+)"',re.search(r'DESIGNS=\{(.*?)\};',tile,re.S).group(1))
-assert tuple(designs[:-2])==FAMILIES and designs[-2:]==["white_glass","dark_glass"]
+assert tuple(designs[:15])==FAMILIES and designs[15:17]==["white_glass","dark_glass"]
 gui=(ROOT/'src/main/java/com/vandorlabs/client/GuiSpaceDoor.java').read_text()
 assert len(re.findall(r'"[^"]+"',re.search(r'LABELS=\{(.*?)\};',gui,re.S).group(1)))==len(designs)
 sprites=(ROOT/'src/main/java/com/vandorlabs/client/SpaceDoorTextures.java').read_text()

@@ -40,7 +40,7 @@ final class TextureNameChecks {
     static String reference(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && VandorLabs.proxy!=null)return VandorLabs.proxy.customTexture(choice);
         JsonObject e=ScreenHousingTextures.entry(choice);
-        return ScreenHousingTextures.fullTexture(choice)+(e!=null && e.has("design") && ScreenHousingTextures.visible(choice)?"_half":"");
+        return ScreenHousingTextures.fullTexture(choice)+(e!=null && e.has("design") && !"Double Doors".equals(ScreenHousingTextures.category(choice)) && ScreenHousingTextures.visible(choice)?"_half":"");
     }
     static String referenceLit(int choice,boolean lit) {
         int index=ScreenHousingTextures.localIndex(choice);

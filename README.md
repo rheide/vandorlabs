@@ -294,3 +294,11 @@ Earlier releases published under CC0 remain available under that irrevocable
 dedication.
 
 See the [1.3 highlights](docs/gallery/version-1.3.md) for new blocks and animated motion examples.
+
+Cargo artwork adds **Plain Cargo, Stepped Freight, Observation Leaf and Reinforced
+Leaf** to Doors, using mirrored left-hand artwork. Large doors also offer a
+**Double Doors** category: Warehouse Shutter, Slotted Bay, Cross Braced Bay and
+Split View Bay. Each square image spans both moving leaves. **Cross Braced Bay**
+is the default for newly placed large doors; saved selections are preserved.
+All eight designs have Small/Medium/Large artwork. Complete bay textures are
+256×256, 512×512 and 1024×1024 respectively.

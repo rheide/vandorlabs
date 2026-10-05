@@ -78,3 +78,11 @@ or repeat those materials instead of stretching them over the leaf.
   Endpoint heights stay fixed, and tread size controls the curve's step detail.
   Collision, rendering and rider motion use the same profile. Older saves remain
   Linear, and the Duplifier can copy interpolation independently.
+
+Cargo artwork adds **Plain Cargo, Stepped Freight, Observation Leaf and Reinforced
+Leaf** to Doors, using mirrored left-hand artwork. Large doors also offer a
+**Double Doors** category: Warehouse Shutter, Slotted Bay, Cross Braced Bay and
+Split View Bay. Each square image spans both moving leaves. **Cross Braced Bay**
+is the default for newly placed large doors; saved selections are preserved.
+All eight designs have Small/Medium/Large artwork. Complete bay textures are
+256×256, 512×512 and 1024×1024 respectively.
