@@ -12,6 +12,10 @@ public final class ProgrammableTarget {
 
     public static BlockPos settingsPos(World world, BlockPos clicked) {
         IBlockState state = world.getBlockState(clicked);
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor){
+            com.vandorlabs.tiles.TileEntityLargeProgrammableDoor root=((com.vandorlabs.blocks.BlockLargeProgrammableDoor)state.getBlock()).root(world,clicked);
+            return root==null?clicked:root.getPos();
+        }
         if (state.getBlock() instanceof BlockVandorDoor
                 && state.getValue(BlockVandorDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER)
             return clicked.down();

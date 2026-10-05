@@ -61,7 +61,8 @@ public class ClientProxy extends CommonProxy {
         if (programmableDoor != null) {
             net.minecraft.client.Minecraft.getMinecraft().getItemColors().registerItemColorHandler(
                     (stack, tintIndex) -> tintIndex == 0 ? 0xA8A8A8 : 0xFFFFFF,
-                    net.minecraft.item.Item.getItemFromBlock(programmableDoor));
+                    net.minecraft.item.Item.getItemFromBlock(programmableDoor),
+                    net.minecraft.item.Item.getItemFromBlock(net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs","large_programmable_door"))));
         }
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class,
                 RenderChairSeat::new);

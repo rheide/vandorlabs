@@ -23,6 +23,12 @@ for name in ['porthole','light_column_wall','slatted_lamp','window_lamp','lightb
     entries.append(dict(id='light_'+name+'_off',label=name.replace('_wall','').replace('_',' ').title()+' Off',category='Lights',source=name+'_off'))
 # Imported categories follow every existing choice, preserving saved indices.
 entries.extend(json.loads((root/'texture-packs/additional/catalog.json').read_text()))
+# New choices are appended after the complete old catalog to preserve saved indices.
+for name in ['bussard_classic','bussard_modern','deflector_amber','deflector_blue','nacelle_a','nacelle_d','nacelle_defiant','nacelle_intrepid']:
+    entries.append(dict(id='light_'+name,label=name.replace('_',' ').title()+' On',category='Lights',source=name+'_on',unlit=name+'_off'))
+    entries.append(dict(id='light_'+name+'_off',label=name.replace('_',' ').title()+' Off',category='Lights',source=name+'_off'))
+for detail,tier in enumerate(['low','medium','high']):
+    entries.append(dict(id='door_white_glass_'+tier,label='White Glass '+['Small','Medium','Large'][detail],category='Doors',source='space_doors/'+tier+'/door_viewport',rectangular=True,crop=True,design=15,detail=detail))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

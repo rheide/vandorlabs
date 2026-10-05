@@ -42,6 +42,8 @@ public final class GuiRedstoneScreen extends GuiContainer {
         buttonList.add(new GuiButton(1,guiLeft+92,guiTop+28,90,20,"Housing"));
         buttonList.add(new GuiButton(2,cx,guiTop+(header?178:144),70,20,"Add"));
         buttonList.add(new GuiButton(3,cx+76,guiTop+(header?178:144),72,20,"Remove"));
+        buttonList.add(new GuiButton(5,cx,guiTop+(header?160:126),70,16,"Up"));
+        buttonList.add(new GuiButton(6,cx+76,guiTop+(header?160:126),72,16,"Down"));
         buttonList.add(new GuiButton(4,cx,guiTop+ySize-30,148,20,"Done"));load();refresh();
     }
     private boolean store(){
@@ -59,7 +61,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private void refresh(){
         titleField.setVisible(header && !materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
-        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<tile.maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}}
+        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<tile.maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
     }
     private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
@@ -67,7 +69,20 @@ public final class GuiRedstoneScreen extends GuiContainer {
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
         else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
+        else if(b.id==5 || b.id==6){
+            int next=moveRow(labels,channels,selected,b.id==5?-1:1);
+            if(next!=selected){
+                selected=next;scroll=Math.max(Math.min(scroll,selected),selected-visibleRows()+1);
+                load();refresh();
+            }
+        }
         else if(b.id==4)send();
+    }
+    static int moveRow(List<String> labels,List<ChannelList> channels,int selected,int delta){
+        int next=selected+delta;
+        if(labels.size()!=channels.size() || selected<0 || selected>=labels.size()
+                || Math.abs(delta)!=1 || next<0 || next>=labels.size())return selected;
+        Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;
     }
     private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
     protected void mouseClicked(int x,int y,int button)throws IOException{

@@ -50,6 +50,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public int endHalfSteps() { return endHalfSteps; }
     public double startOffsetValue() { return startHalfSteps/2D; }
     public double endOffsetValue() { return endHalfSteps/2D; }
+    public int interpolation;
     public boolean matchTextures=true;
     // Keep the legacy magnitude/sign fields for old saves and integrations.
     public int endOffset() { return top?-drop:drop; }
@@ -180,6 +181,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public boolean configureHalfOffsets(EntityPlayer player,int startHalf,int endHalf,int pixels,
             boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
             boolean extend,int selectedSpeed,boolean matchTextures,boolean connectedCopy) {
+        return configureHalfOffsets(player,startHalf,endHalf,pixels,powerOn,slower,lift,direction,
+                travel,extend,selectedSpeed,matchTextures,connectedCopy,interpolation);
+    }
+    public boolean configureHalfOffsets(EntityPlayer player,int startHalf,int endHalf,int pixels,
+            boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
+            boolean extend,int selectedSpeed,boolean matchTextures,boolean connectedCopy,int interpolation) {
+        if(interpolation<0 || interpolation>2) return fail("Choose a valid interpolation style");
         boolean copyAllowed = connectedCopy && player != null && world.isBlockLoaded(pos)
                 && world.getTileEntity(pos)==this
                 && player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.DUPLIFIER
@@ -212,7 +220,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         activateOnPower=powerOn; slow=slower; elevator=lift;
         travelAxis=travel; extendSegments=extend; elevator=lift;
         speed=selectedSpeed; slow=speed==2;
-        this.matchTextures=matchTextures;
+        this.matchTextures=matchTextures;this.interpolation=interpolation;
         configuredFacing=direction;
         owner=player.getUniqueID();
         sync();
@@ -358,7 +366,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         te.row=p.getX()*facing.getFrontOffsetX()+p.getZ()*facing.getFrontOffsetZ()-minAlong;
         te.treadPixels=treadPixels; te.startOffset=startOffset;
         te.setHalfOffsets(startHalfSteps,endHalfSteps);
-        te.length=length; te.drop=drop; te.segments=segments; te.top=top; te.elevator=elevator;
+        te.interpolation=interpolation; te.length=length; te.drop=drop; te.segments=segments; te.top=top; te.elevator=elevator;
         te.low=low; te.high=high; te.travelAxis=travelAxis; te.extendSegments=extendSegments;
         te.speed=speed;
         te.origins.clear();
@@ -390,7 +398,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private RampGeometry.Box treadBox(BlockPos source,int row,int step,double from,double to) {
         return RampGeometry.movingTread(rampDirection(facing),source.getX(),source.getY(),source.getZ(),
                 low,high,row,length,startOffsetValue(),endOffsetValue(),treadPixels,step,from,to,elevator,
-                travelAxis,extendSegments,speed==0);
+                travelAxis,extendSegments,speed==0,interpolation);
     }
 
     private boolean intersects(BlockPos source,BlockPos target,double from,double to) {
@@ -548,8 +556,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         source.getZ()+local.minZ,source.getX()+local.maxX,local.maxY,
                         source.getZ()+local.maxZ);
                 if (!body.shrink(1e-7).intersects(tread)) continue;
-                double before=source.getY()+high+(fromOriginal?0:ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),previous,elevator,speed==0));
-                double after=source.getY()+high+(toOriginal?0:ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),current,elevator,speed==0));
+                double before=source.getY()+high+(fromOriginal?0:ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),previous,elevator,speed==0,interpolation));
+                double after=source.getY()+high+(toOriginal?0:ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),current,elevator,speed==0,interpolation));
                 double feet=entity.getEntityBoundingBox().minY;
                 double tolerance=entity instanceof EntityPlayer?.5:.15;
                 double target=RampGeometry.riderTarget(before,after,feet,tolerance);
@@ -587,8 +595,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         for (BlockPos source:sources) {
             int row=source.getX()*facing.getFrontOffsetX()+source.getZ()*facing.getFrontOffsetZ()-minAlong;
             for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
-                double before=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),previous,elevator,speed==0);
-                double after=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),current,elevator,speed==0);
+                double before=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),previous,elevator,speed==0,interpolation);
+                double after=ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),current,elevator,speed==0,interpolation);
                 RampGeometry.Box box=treadBox(source,row,step,previous,previous);
                 AxisAlignedBB tread=new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);
                 for (Entity entity:world.getEntitiesWithinAABB(Entity.class,tread.grow(0,.2,0))) {
@@ -676,7 +684,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         } finally { changing=false; markDirty(); }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);ChannelData.write(tag,channels);
+        super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);ChannelData.write(tag,channels);
         new RampControllerData(SaveSchema.Ramp.CONTROLLER_VERSION,drop,segments,status,
                 top,activateOnPower,slow,elevator,error,open,moving,startPose,startTick,
                 lastStepTick,duration,length,minAlong,facing.getHorizontalIndex(),
@@ -710,7 +718,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     @Override public void readFromNBT(NBTTagCompound tag) {
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
-        super.readFromNBT(tag);
+        super.readFromNBT(tag);interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
         RampControllerData data=RampControllerData.read(new NbtPrimitiveData(tag));
         legacy=data.savedVersion<2; drop=data.drop; segments=data.segments;
         top=data.top; activateOnPower=data.activateOnPower; slow=data.slow;

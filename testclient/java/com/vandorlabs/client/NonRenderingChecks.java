@@ -60,7 +60,10 @@ public final class NonRenderingChecks {
         PropertyHashChecks.run();
         TrapdoorStateChecks.run();
         DoorQuadPlanChecks.run();
+        OpaqueDoorBatchChecks.run();
+        LargeDoorChecks.run();
         RampMaterialChecks.run();
+        RampInterpolationChecks.run();
         DiagonalRayTraceChecks.run();
         TrapdoorScratchChecks.run();
         GroupCacheLifetimeChecks.run();

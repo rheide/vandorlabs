@@ -27,6 +27,24 @@ public final class ControllerPlatformTest {
         return result;
     }
     public static void main(String[] args) {
+        for(int style=0;style<3;style++){
+            double previous=-1;
+            for(int step=0;step<=100;step++){
+                double t=step/100D,value=ControllerPlatform.profile(t,style);
+                check(value>=previous && value>=0 && value<=1,"monotonic bounded spatial profile");previous=value;
+            }
+            close(ControllerPlatform.profile(0,style),0,"fixed hinge endpoint");
+            close(ControllerPlatform.profile(1,style),1,"fixed far endpoint");
+            for(int sign:new int[]{-1,1})for(boolean filled:new boolean[]{false,true}){
+                RampGeometry.Box box=RampGeometry.movingTread(RampGeometry.Direction.SOUTH,0,40,0,0,1,1,3,0,sign*4,8,0,1,1,false,RampGeometry.VERTICAL,filled,false,style);
+                double expected=ControllerPlatform.offsetPixels(1,0,3,8,0,sign*4,1,false,false,style);
+                close(box.maxY,41+Math.max(filled?0:expected,expected),"profile matches filled/tread collision");
+                close(box.minY,40+Math.min(filled?0:expected,expected),"profile bounds negative travel");
+            }
+            close(ControllerPlatform.offsetPixels(1,0,3,8,0,4,1,true,false,style),4,"lift ignores spatial curve");
+        }
+        close(ControllerPlatform.profile(.5,1),.25,"concave profile midpoint");
+        close(ControllerPlatform.profile(.5,2),.75,"convex profile midpoint");
         com.vandorlabs.animation.VisualClock clock=new com.vandorlabs.animation.VisualClock();
         com.vandorlabs.animation.DoorAnimation visual=new com.vandorlabs.animation.DoorAnimation(9);
         visual.sample(false,clock.sample(0,false));

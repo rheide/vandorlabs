@@ -87,7 +87,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.DOOR_TILE_TEXTURE, "Door Face Layout", 3),
             option(ProgrammableSettings.TRAPDOOR_TILE_TEXTURE, "Trapdoor Face Layout", 3),
             option(ProgrammableSettings.TRAPDOOR_COVER_FACING, "Trapdoor Hinge Direction", 3),
-            option(ProgrammableSettings.REDSTONE_ROWS,"Redstone Screen Items",1)
+            option(ProgrammableSettings.REDSTONE_ROWS,"Redstone Screen Items",1),
+            option(ProgrammableSettings.RAMP_INTERPOLATION,"Ramp Interpolation",4)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;
@@ -106,9 +107,9 @@ public final class DuplifierApplyOptions {
     public static long mask(ItemStack tool) {
         NBTTagCompound root = tool.getTagCompound();
         if (root == null || !root.hasKey(TAG, 4)) return ALL;
-        // Older tools predate the screen-row option. New options start enabled,
+        // Older tools predate the screen-row and interpolation options. New options start enabled,
         // while the saved choices for every existing property remain intact.
-        int known = root.hasKey(COUNT_TAG, 3) ? root.getInteger(COUNT_TAG) : OPTIONS.length - 1;
+        int known = root.hasKey(COUNT_TAG, 3) ? root.getInteger(COUNT_TAG) : OPTIONS.length - 2;
         known = Math.max(0, Math.min(OPTIONS.length, known));
         long knownBits = (1L << known) - 1L;
         return (root.getLong(TAG) | (ALL & ~knownBits)) & ALL;

@@ -1801,6 +1801,7 @@ public class ReproLab {
         try {
             mc.getIntegratedServer().addScheduledTask(() -> {
                 DoorRuntimeChecks.run(world, serverPlayer);
+                LargeDoorRuntimeChecks.run(world,serverPlayer);
                 DisplayTableRuntimeChecks.run(world, serverPlayer);
                 ChairRuntimeChecks.run(world, serverPlayer);
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);

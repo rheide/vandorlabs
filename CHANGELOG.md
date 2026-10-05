@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5
+
+- Batch compatible opaque Programmable Doors using cached geometry, CPU motion transforms and Forge's shared tile-renderer buffer. Preserve glass/custom-face and OptiFine rendering through the existing path, and support CodeChickenLib's vanilla item-renderer delegate.
+- Add Large Programmable Door: one indivisible 3×3 opening with two 1.5×3 leaves and the regular door's appearance, movement, control-panel, placement-depth and redstone options. Any cell addresses the anchor; only the anchor renders. Placement validates all nine loaded cells before writing, and removal clears the assembly.
+- Guard collision clipping against disjoint boxes so opened large doors leave a traversable passage in every orientation and movement mode.
+- Add White Glass doors: pale moving leaf rails around a large glass opening, with pull handles on both faces. Crop/repeat the rail and pane textures at consistent proportions; keep the stationary frame independently optional.
+- Add Bussard Classic/Modern, Deflector Amber/Blue and Nacelle A/D/Defiant/Intrepid light artwork with matching On/Off textures. Preserve existing texture indices.
+- Submit redstone-screen backgrounds as textured surfaces with normals and explicit lightmaps for shader compatibility. Add Up/Down row controls that move labels and complete channel lists together.
+- Add Linear, Curve In and Curve Out spatial interpolation for Ramp and Filled Ramp modes. Keep endpoint heights, use the same profile for rendering/collision/rider motion, and preserve Linear for older saves. Include interpolation in configuration copying.
+
 ## 1.4
 
 - Replace propulsion particle On/Off with Off/Light/Medium/Heavy. Keep existing On settings and emission unchanged as Light; Medium and Heavy add density and wider plumes around the original stream. Preserve direction, particle types, connected assembly centers, saved settings and copying.

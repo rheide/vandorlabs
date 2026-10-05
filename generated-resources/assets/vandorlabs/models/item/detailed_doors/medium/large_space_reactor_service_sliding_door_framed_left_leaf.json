@@ -1,0 +1,948 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "left_fixed_leaf": "vandorlabs:blocks/space_doors/medium/reactor",
+    "left_fixed_frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "left_fixed_edge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "left_fixed_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "left_fixed_hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "left_fixed_glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
+    "left_fixed_pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
+    "left_fixed_particle": "vandorlabs:blocks/space_doors/medium/reactor",
+    "left_fixed_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "left_leaf_leaf": "vandorlabs:blocks/space_doors/medium/reactor",
+    "left_leaf_frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "left_leaf_edge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "left_leaf_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "left_leaf_hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "left_leaf_glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
+    "left_leaf_pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
+    "left_leaf_particle": "vandorlabs:blocks/space_doors/medium/reactor",
+    "left_leaf_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "right_fixed_leaf": "vandorlabs:blocks/space_doors/medium/reactor",
+    "right_fixed_frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "right_fixed_edge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "right_fixed_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "right_fixed_hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "right_fixed_glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
+    "right_fixed_pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
+    "right_fixed_particle": "vandorlabs:blocks/space_doors/medium/reactor",
+    "right_fixed_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "right_leaf_leaf": "vandorlabs:blocks/space_doors/medium/reactor",
+    "right_leaf_frame": "vandorlabs:blocks/space_doors/medium/double_frame_metal",
+    "right_leaf_edge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "right_leaf_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "right_leaf_hinge": "vandorlabs:blocks/space_doors/medium/hinge",
+    "right_leaf_glass": "vandorlabs:blocks/space_doors/medium/observation_glass",
+    "right_leaf_pane": "vandorlabs:blocks/space_doors/medium/glass_tile",
+    "right_leaf_particle": "vandorlabs:blocks/space_doors/medium/reactor",
+    "right_leaf_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "particle": "vandorlabs:blocks/space_doors/medium/reactor"
+  },
+  "elements": [
+    {
+      "from": [
+        0.0,
+        15.5,
+        2.0
+      ],
+      "to": [
+        0.5,
+        16.0,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0.5,
+            0,
+            0,
+            0.5
+          ]
+        },
+        "south": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ]
+        },
+        "east": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        0.5,
+        15.5,
+        2.0
+      ],
+      "to": [
+        8.0,
+        16.0,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            8.0,
+            0,
+            0.5,
+            0.5
+          ]
+        },
+        "south": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0.5,
+            0,
+            8.0,
+            0.5
+          ]
+        },
+        "east": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            1,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            1,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "to": [
+        0.5,
+        0.5,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0.5,
+            15.5,
+            0,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0,
+            15.5,
+            0.5,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        0.5,
+        0.0,
+        2.0
+      ],
+      "to": [
+        8.0,
+        0.5,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            8.0,
+            15.5,
+            0.5,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0.5,
+            15.5,
+            8.0,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            1,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            1,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        0.0,
+        0.5,
+        2.0
+      ],
+      "to": [
+        0.5,
+        15.5,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0.5,
+            0.5,
+            0,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#left_fixed_frame",
+          "uv": [
+            0,
+            0.5,
+            0.5,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            0.5,
+            10,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            6,
+            0.5,
+            10,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        0.5,
+        0.5,
+        2.3333333333333335
+      ],
+      "to": [
+        8.0,
+        15.5,
+        3.0
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_leaf_leaf",
+          "uv": [
+            16,
+            0.5,
+            1,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#left_leaf_leaf",
+          "uv": [
+            1,
+            0.5,
+            16,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            7,
+            0.5,
+            9,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            7,
+            0.5,
+            9,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            1,
+            7,
+            16,
+            9
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            1,
+            7,
+            16,
+            9
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        15.5,
+        15.5,
+        2.0
+      ],
+      "to": [
+        16.0,
+        16.0,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0,
+            0,
+            0.5,
+            0.5
+          ]
+        },
+        "south": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0.5,
+            0,
+            0,
+            0.5
+          ]
+        },
+        "east": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            15,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            15,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        8.0,
+        15.5,
+        2.0
+      ],
+      "to": [
+        15.5,
+        16.0,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0.5,
+            0,
+            8.0,
+            0.5
+          ]
+        },
+        "south": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            8.0,
+            0,
+            0.5,
+            0.5
+          ]
+        },
+        "east": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            15.5,
+            10,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            15,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            15,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        15.5,
+        0.0,
+        2.0
+      ],
+      "to": [
+        16.0,
+        0.5,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0,
+            15.5,
+            0.5,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0.5,
+            15.5,
+            0,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            15,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            15,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        8.0,
+        0.0,
+        2.0
+      ],
+      "to": [
+        15.5,
+        0.5,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0.5,
+            15.5,
+            8.0,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            8.0,
+            15.5,
+            0.5,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            0.0,
+            10,
+            0.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            15,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            0,
+            6,
+            15,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        15.5,
+        0.5,
+        2.0
+      ],
+      "to": [
+        16.0,
+        15.5,
+        3.3333333333333335
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0,
+            0.5,
+            0.5,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#right_fixed_frame",
+          "uv": [
+            0.5,
+            0.5,
+            0,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            0.5,
+            10,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            6,
+            0.5,
+            10,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            15,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_fixed_door_inner",
+          "uv": [
+            15,
+            6,
+            16,
+            10
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        8.0,
+        0.5,
+        2.3333333333333335
+      ],
+      "to": [
+        15.5,
+        15.5,
+        3.0
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_leaf_leaf",
+          "uv": [
+            1,
+            0.5,
+            16,
+            15.5
+          ]
+        },
+        "south": {
+          "texture": "#right_leaf_leaf",
+          "uv": [
+            16,
+            0.5,
+            1,
+            15.5
+          ]
+        },
+        "east": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            7,
+            0.5,
+            9,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            7,
+            0.5,
+            9,
+            15.5
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            0,
+            7,
+            15,
+            9
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            0,
+            7,
+            15,
+            9
+          ],
+          "tintindex": 0
+        }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        15,
+        205,
+        0
+      ],
+      "scale": [
+        0.9,
+        0.9,
+        0.9
+      ]
+    },
+    "firstperson_righthand": {
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    },
+    "thirdperson_righthand": {
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    }
+  }
+}

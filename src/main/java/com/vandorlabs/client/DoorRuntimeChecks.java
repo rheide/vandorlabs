@@ -38,6 +38,7 @@ final class DoorRuntimeChecks {
         List<BlockVandorDoor> allDoors = allDoors();
         require(allDoors.size() >= 12, "expected at least 12 registered door families");
         for (BlockVandorDoor door : allDoors) {
+
             checkMetadata(door);
             checkStateParity(world, origin, door);
             if (door instanceof BlockDetailedDoor) {
@@ -73,7 +74,7 @@ final class DoorRuntimeChecks {
     private static List<BlockVandorDoor> allDoors() {
         List<BlockVandorDoor> doors = new ArrayList<>();
         for (Block block : Block.REGISTRY) {
-            if (block instanceof BlockVandorDoor) {
+            if (block instanceof BlockVandorDoor && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor)) {
                 doors.add((BlockVandorDoor) block);
             }
         }

@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["III", "IDI", "IDI"],
+  "key": {
+    "I": {"item": "vandorlabs:programmable_matter_ingot"},
+    "D": {"item": "vandorlabs:programmable_door"}
+  },
+  "result": {"item": "vandorlabs:large_programmable_door", "count": 1}
+}

@@ -20715,3 +20715,5 @@ block:id=%programmable_storage,state=facing:north,patch0=0:v12_blocks_storage_ca
 block:id=%programmable_storage,state=facing:east,patch0=0:v12_blocks_storage_cabinet_side,patch1=0:v12_blocks_storage_cabinet_top,patch2=0:v12_blocks_storage_cabinet_front,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_storage,state=facing:south,patch0=0:v12_blocks_storage_cabinet_side,patch1=0:v12_blocks_storage_cabinet_top,patch2=0:v12_blocks_storage_cabinet_front,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_storage,state=facing:west,patch0=0:v12_blocks_storage_cabinet_side,patch1=0:v12_blocks_storage_cabinet_top,patch2=0:v12_blocks_storage_cabinet_front,transparency=TRANSPARENT,stdrot=true
+
+block:id=%large_programmable_door,state=*,patch0=0:space_standard,transparency=TRANSPARENT

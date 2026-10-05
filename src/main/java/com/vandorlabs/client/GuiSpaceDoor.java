@@ -35,11 +35,11 @@ public class GuiSpaceDoor extends GuiContainer {
     private int previewX,previewY;
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
-            "Quarantine Seal","Reactor Barrier","Modular Shutter"};
+            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass"};
     private static final String[] SIZES={"Size: Small","Size: Medium","Size: Large"};
     private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
             "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
-            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter"};
+            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass"};
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
@@ -176,7 +176,7 @@ public class GuiSpaceDoor extends GuiContainer {
         textureList.draw(fontRenderer,mouseX,mouseY);
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
-        fontRenderer.drawString("Programmable Door",12,8,0xFFFFFF);
+        fontRenderer.drawString(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?"Large Programmable Door":"Programmable Door",12,8,0xFFFFFF);
         fontRenderer.drawString("Door type",12,28,0xDAE8F0);
 
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,174,0xDAE8F0);

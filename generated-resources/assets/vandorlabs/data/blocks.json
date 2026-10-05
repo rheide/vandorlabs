@@ -3523,5 +3523,13 @@
     "item": true,
     "class": "BlockProgrammableStorage",
     "programmable_only": true
+  },
+  {
+    "id": "large_programmable_door",
+    "type": "space_door",
+    "class": "BlockLargeProgrammableDoor",
+    "item": true,
+    "sliding": false,
+    "paired_model": "space_standard_rotating_door_framed_paired"
   }
 ]

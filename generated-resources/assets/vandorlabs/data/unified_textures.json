@@ -1733,5 +1733,139 @@
     "category": "Lights",
     "source": "lights/amber_hex_on",
     "unlit": "textures2_t3_r2_c2"
+  },
+  {
+    "id": "light_bussard_classic",
+    "label": "Bussard Classic On",
+    "category": "Lights",
+    "source": "bussard_classic_on",
+    "unlit": "bussard_classic_off"
+  },
+  {
+    "id": "light_bussard_classic_off",
+    "label": "Bussard Classic Off",
+    "category": "Lights",
+    "source": "bussard_classic_off"
+  },
+  {
+    "id": "light_bussard_modern",
+    "label": "Bussard Modern On",
+    "category": "Lights",
+    "source": "bussard_modern_on",
+    "unlit": "bussard_modern_off"
+  },
+  {
+    "id": "light_bussard_modern_off",
+    "label": "Bussard Modern Off",
+    "category": "Lights",
+    "source": "bussard_modern_off"
+  },
+  {
+    "id": "light_deflector_amber",
+    "label": "Deflector Amber On",
+    "category": "Lights",
+    "source": "deflector_amber_on",
+    "unlit": "deflector_amber_off"
+  },
+  {
+    "id": "light_deflector_amber_off",
+    "label": "Deflector Amber Off",
+    "category": "Lights",
+    "source": "deflector_amber_off"
+  },
+  {
+    "id": "light_deflector_blue",
+    "label": "Deflector Blue On",
+    "category": "Lights",
+    "source": "deflector_blue_on",
+    "unlit": "deflector_blue_off"
+  },
+  {
+    "id": "light_deflector_blue_off",
+    "label": "Deflector Blue Off",
+    "category": "Lights",
+    "source": "deflector_blue_off"
+  },
+  {
+    "id": "light_nacelle_a",
+    "label": "Nacelle A On",
+    "category": "Lights",
+    "source": "nacelle_a_on",
+    "unlit": "nacelle_a_off"
+  },
+  {
+    "id": "light_nacelle_a_off",
+    "label": "Nacelle A Off",
+    "category": "Lights",
+    "source": "nacelle_a_off"
+  },
+  {
+    "id": "light_nacelle_d",
+    "label": "Nacelle D On",
+    "category": "Lights",
+    "source": "nacelle_d_on",
+    "unlit": "nacelle_d_off"
+  },
+  {
+    "id": "light_nacelle_d_off",
+    "label": "Nacelle D Off",
+    "category": "Lights",
+    "source": "nacelle_d_off"
+  },
+  {
+    "id": "light_nacelle_defiant",
+    "label": "Nacelle Defiant On",
+    "category": "Lights",
+    "source": "nacelle_defiant_on",
+    "unlit": "nacelle_defiant_off"
+  },
+  {
+    "id": "light_nacelle_defiant_off",
+    "label": "Nacelle Defiant Off",
+    "category": "Lights",
+    "source": "nacelle_defiant_off"
+  },
+  {
+    "id": "light_nacelle_intrepid",
+    "label": "Nacelle Intrepid On",
+    "category": "Lights",
+    "source": "nacelle_intrepid_on",
+    "unlit": "nacelle_intrepid_off"
+  },
+  {
+    "id": "light_nacelle_intrepid_off",
+    "label": "Nacelle Intrepid Off",
+    "category": "Lights",
+    "source": "nacelle_intrepid_off"
+  },
+  {
+    "id": "door_white_glass_low",
+    "label": "White Glass Small",
+    "category": "Doors",
+    "source": "space_doors/low/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 15,
+    "detail": 0
+  },
+  {
+    "id": "door_white_glass_medium",
+    "label": "White Glass Medium",
+    "category": "Doors",
+    "source": "space_doors/medium/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 15,
+    "detail": 1
+  },
+  {
+    "id": "door_white_glass_high",
+    "label": "White Glass Large",
+    "category": "Doors",
+    "source": "space_doors/high/door_viewport",
+    "rectangular": true,
+    "crop": true,
+    "design": 15,
+    "detail": 2
   }
 ]

@@ -44,6 +44,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public int sourceY,row,length=1,drop=3,segments=2,duration=60;
     public int travelAxis=RampGeometry.VERTICAL;
     public int speed=1;
+    public int interpolation;
     public boolean extendSegments;
     public final List<BlockPos> origins=new ArrayList<>();
     public final Map<BlockPos,NBTTagCompound> sourceTileTags=new LinkedHashMap<>();
@@ -77,14 +78,14 @@ public class TileEntityControlledRamp extends TileEntity {
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
         if (origins.isEmpty() && travelAxis==RampGeometry.VERTICAL && !extendSegments)
             return RampGeometry.boxesPixels(direction(face),pos.getY(),sourceY,low,high,
-                    row,length,startOffsetValue(),endOffsetValue(),treadPixels,pose(partial),elevator);
+                    row,length,startOffsetValue(),endOffsetValue(),treadPixels,pose(partial),elevator,speed==0,interpolation);
         for (BlockPos origin:origins) {
             int originRow=origin.getX()*face.getFrontOffsetX()+origin.getZ()*face.getFrontOffsetZ()
                     -(pos.getX()*face.getFrontOffsetX()+pos.getZ()*face.getFrontOffsetZ()-row);
             for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
                 RampGeometry.Box whole=RampGeometry.movingTread(direction(face),origin.getX(),origin.getY(),origin.getZ(),
                         low,high,originRow,length,startOffsetValue(),endOffsetValue(),treadPixels,step,pose(partial),pose(partial),
-                        elevator,travelAxis,extendSegments,speed==0);
+                        elevator,travelAxis,extendSegments,speed==0,interpolation);
                 RampGeometry.Box clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
                 if (clipped!=null) boxes.add(clipped);
             }
@@ -125,7 +126,7 @@ public class TileEntityControlledRamp extends TileEntity {
             for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
                 RampGeometry.Box whole=RampGeometry.movingTread(direction(face),origin.getX(),origin.getY(),origin.getZ(),
                         low,high,originRow,length,startOffsetValue(),endOffsetValue(),treadPixels,step,pose,pose,
-                        elevator,travelAxis,false,speed==0);
+                        elevator,travelAxis,false,speed==0,interpolation);
                 RampGeometry.Box clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
                 if (clipped==null || Math.abs(clipped.minX-box.minX)>1e-7
                         || Math.abs(clipped.maxX-box.maxX)>1e-7
@@ -134,7 +135,7 @@ public class TileEntityControlledRamp extends TileEntity {
                         || Math.abs(clipped.minZ-box.minZ)>1e-7
                         || Math.abs(clipped.maxZ-box.maxZ)>1e-7) continue;
                 double offset=ControllerPlatform.offsetPixels(originRow,step,length,treadPixels,
-                        startOffsetValue(),endOffsetValue(),pose,elevator,speed==0);
+                        startOffsetValue(),endOffsetValue(),pose,elevator,speed==0,interpolation);
                 return new double[]{pos.getX()-origin.getX()-side.getFrontOffsetX()*offset,
                         pos.getZ()-origin.getZ()-side.getFrontOffsetZ()*offset};
             }
@@ -150,7 +151,7 @@ public class TileEntityControlledRamp extends TileEntity {
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
         int step=RampGeometry.segmentAtPixels(direction(face),box,treadPixels,elevator);
         double offset=travelAxis==RampGeometry.VERTICAL && !extendSegments
-                ?ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),pose(partial),elevator,speed==0):0;
+                ?ControllerPlatform.offsetPixels(row,step,length,treadPixels,startOffsetValue(),endOffsetValue(),pose(partial),elevator,speed==0,interpolation):0;
         return ControllerPlatform.sideTextureV(pos.getY(),localY,sourceY,offset);
     }
     private static RampGeometry.Direction direction(EnumFacing face) {
@@ -242,7 +243,7 @@ public class TileEntityControlledRamp extends TileEntity {
     @Override public void invalidate() { ControllerRecovery.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() { ControllerRecovery.unregister(this); super.onChunkUnload(); }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
         new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
                 elevator,open,moving,startPose,startTick,startOffset,endOffset(),treadPixels).write(new NbtPrimitiveData(tag));
         tag.setInteger(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,startHalfSteps);
@@ -297,7 +298,7 @@ public class TileEntityControlledRamp extends TileEntity {
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+        super.readFromNBT(tag);interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
         controller=tag.hasKey(SaveSchema.Ramp.CONTROLLER_X)
                 ?new BlockPos(tag.getInteger(SaveSchema.Ramp.CONTROLLER_X),
                         tag.getInteger(SaveSchema.Ramp.CONTROLLER_Y),

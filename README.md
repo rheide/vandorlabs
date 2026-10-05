@@ -11,6 +11,8 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
+**1.5:** Add permanently double 3×3 doors, White Glass leaves with handles, eight light designs, screen row ordering and curved ramp profiles. Compatible opaque doors share Forge's renderer buffer. See the [1.5 highlights and measured door comparison](docs/gallery/version-1.5.md).
+
 **1.4:** Turn existing programmable screens, inputs and consoles into editable redstone control panels through the `Redstone...` artwork choice. Add comma-separated redstone channel lists and Off/Light/Medium/Heavy propulsion particles, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
 
 **Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
@@ -58,6 +60,12 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   frame, hinge, and control-panel options. Adjacent doors pair automatically.
   Select manual operation or redstone on/off triggering, including virtual channels.
   Craft one from six Programmable Matter Ingots in two columns of three.
+- **Large Programmable Door**: the same door settings in a permanently double 3×3 opening.
+  Place against the bottom-center position on three solid supports. Both 1.5×3 leaves
+  share settings and operation; breaking any of the nine cells removes the door.
+  Craft from two Programmable Doors and seven Programmable Matter Ingots.
+  Both door sizes offer **White Glass**, a pale moving leaf rim around a large glass opening,
+  with pull handles on both sides and consistently proportioned, repeating materials.
 - **Programmable Trapdoor**: categorized block/door artwork with Fit/Tile and mirrored door panels, rotating or sideways sliding,
   and Bottom, Middle, or Top placement. Movement also offers Rotate into next block and Slide into next block for individual mounts; configured next-block items start open when placed. Hinge direction can be selected for all individual movements; joined groups keep their outer hinges. Adjacent pairs and complete 2×2 squares
   open together toward opposite sides, manually or through local/virtual redstone.
@@ -104,6 +112,9 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   platform, and setting edits reset it automatically. Uses the supplied HD-2 art.
   Footprints are capped at 8 wide × 16 long; each offset ranges from -16 to +16 blocks.
   Ramp direction is independent of the controller's platform-selection arrow.
+  Ramp and Filled Ramp offer **Linear**, **Curve In** (gentler near the hinge) and
+  **Curve Out** (steeper near the hinge). The first and last tread heights stay fixed;
+  the selected tread size still controls how finely the curve is stepped.
   **Match textures** is optional and defaults On; Immersive Engineering slabs are supported.
   See [placement, geometry and tests](docs/landing-ramps.md).
 - **Hull materials**: Dark Gunmetal, Light Alloy, and Midnight Satin finishes

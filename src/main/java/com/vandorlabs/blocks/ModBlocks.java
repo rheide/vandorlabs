@@ -246,6 +246,7 @@ public class ModBlocks {
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
             case "BlockConnectedSeat": return new BlockConnectedSeat(id);
             case "BlockLandingGear": return new BlockTelescopicLandingGear(id);
+            case "BlockLargeProgrammableDoor": return new BlockLargeProgrammableDoor(id,(BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
             case "BlockConfigurableSpaceDoor":
                 return new BlockConfigurableSpaceDoor(id,e.get("sliding").getAsBoolean(),
                         (BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
@@ -408,6 +409,7 @@ public class ModBlocks {
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
                         : block == PROGRAMMABLE_TRAPDOOR ? new com.vandorlabs.items.ItemProgrammableTrapdoor((BlockProgrammableTrapdoor)block)
                         : block == PROGRAMMABLE_DIAGONAL_TRAPDOOR ? new com.vandorlabs.items.ItemDiagonalTrapdoor((BlockProgrammableDiagonalTrapdoor)block)
+                        : block instanceof BlockLargeProgrammableDoor ? new com.vandorlabs.items.ItemLargeProgrammableDoor((BlockLargeProgrammableDoor)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
                         ? new ItemDiagonalWall((BlockProgrammableWall) block) : new ItemBlock(block);
@@ -616,6 +618,7 @@ public class ModBlocks {
         String model = com.vandorlabs.tiles.TileEntitySpaceDoor.modelId(
                 data.design, data.sliding, data.framed) + "_left_leaf"
                 + (!data.sliding && !data.hinges ? "_no_hinges" : "");
+        if(stack.getItem() instanceof com.vandorlabs.items.ItemLargeProgrammableDoor)model="large_"+model;
         return new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
                 + com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[data.detail]
                 + "/" + model, "inventory");
@@ -750,6 +753,15 @@ public class ModBlocks {
     private static void registerSpaceDoorModels(BlockConfigurableSpaceDoor block,Item item) {
         ModelLoader.setCustomStateMapper(block,new StateMap.Builder().ignore(BlockVandorDoor.POWERED).build());
         String[] details=com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS;
+        if(block instanceof BlockLargeProgrammableDoor){
+            for(int design=0;design<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;design++)
+                for(String detail:details)for(boolean sliding:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true})
+                    for(boolean hinges:new boolean[]{false,true}){
+                        if(sliding && !hinges)continue;
+                        String model="large_"+com.vandorlabs.tiles.TileEntitySpaceDoor.modelId(design,sliding,framed)+"_left_leaf"+(!sliding && !hinges?"_no_hinges":"");
+                        ModelLoader.registerItemVariants(item,new ResourceLocation(VandorLabs.MODID+":detailed_doors/"+detail+"/"+model));
+                    }
+        }
         for (boolean sliding:new boolean[]{false,true}) {
         for (int d=0;d<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;d++) for (int l=0;l<details.length;l++)
             for (boolean framed:new boolean[]{false,true}) for (boolean paired:new boolean[]{false,true})

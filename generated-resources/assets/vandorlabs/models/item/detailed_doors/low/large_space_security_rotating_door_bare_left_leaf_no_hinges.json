@@ -1,0 +1,218 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "left_fixed_leaf": "vandorlabs:blocks/space_doors/low/security",
+    "left_fixed_frame": "vandorlabs:blocks/space_doors/low/double_frame_metal",
+    "left_fixed_edge": "vandorlabs:blocks/space_doors/low/hinge",
+    "left_fixed_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "left_fixed_hinge": "vandorlabs:blocks/space_doors/low/hinge",
+    "left_fixed_glass": "vandorlabs:blocks/space_doors/low/observation_glass",
+    "left_fixed_pane": "vandorlabs:blocks/space_doors/low/glass_tile",
+    "left_fixed_particle": "vandorlabs:blocks/space_doors/low/security",
+    "left_fixed_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "left_leaf_leaf": "vandorlabs:blocks/space_doors/low/security",
+    "left_leaf_frame": "vandorlabs:blocks/space_doors/low/double_frame_metal",
+    "left_leaf_edge": "vandorlabs:blocks/space_doors/low/hinge",
+    "left_leaf_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "left_leaf_hinge": "vandorlabs:blocks/space_doors/low/hinge",
+    "left_leaf_glass": "vandorlabs:blocks/space_doors/low/observation_glass",
+    "left_leaf_pane": "vandorlabs:blocks/space_doors/low/glass_tile",
+    "left_leaf_particle": "vandorlabs:blocks/space_doors/low/security",
+    "left_leaf_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "right_fixed_leaf": "vandorlabs:blocks/space_doors/low/security",
+    "right_fixed_frame": "vandorlabs:blocks/space_doors/low/double_frame_metal",
+    "right_fixed_edge": "vandorlabs:blocks/space_doors/low/hinge",
+    "right_fixed_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "right_fixed_hinge": "vandorlabs:blocks/space_doors/low/hinge",
+    "right_fixed_glass": "vandorlabs:blocks/space_doors/low/observation_glass",
+    "right_fixed_pane": "vandorlabs:blocks/space_doors/low/glass_tile",
+    "right_fixed_particle": "vandorlabs:blocks/space_doors/low/security",
+    "right_fixed_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "right_leaf_leaf": "vandorlabs:blocks/space_doors/low/security",
+    "right_leaf_frame": "vandorlabs:blocks/space_doors/low/double_frame_metal",
+    "right_leaf_edge": "vandorlabs:blocks/space_doors/low/hinge",
+    "right_leaf_leaf_side": "vandorlabs:blocks/dark_wall_panel",
+    "right_leaf_hinge": "vandorlabs:blocks/space_doors/low/hinge",
+    "right_leaf_glass": "vandorlabs:blocks/space_doors/low/observation_glass",
+    "right_leaf_pane": "vandorlabs:blocks/space_doors/low/glass_tile",
+    "right_leaf_particle": "vandorlabs:blocks/space_doors/low/security",
+    "right_leaf_door_inner": "vandorlabs:blocks/programmable_glass/metal_side",
+    "particle": "vandorlabs:blocks/space_doors/low/security"
+  },
+  "elements": [
+    {
+      "from": [
+        0.0,
+        0.0,
+        4.08
+      ],
+      "to": [
+        8.0,
+        16.0,
+        4.746666666666667
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#left_leaf_leaf",
+          "uv": [
+            16,
+            0.0,
+            0,
+            16.0
+          ]
+        },
+        "south": {
+          "texture": "#left_leaf_leaf",
+          "uv": [
+            0,
+            0.0,
+            16,
+            16.0
+          ]
+        },
+        "east": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            12.24,
+            0.0,
+            14.24,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            12.24,
+            0.0,
+            14.24,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            0,
+            12.24,
+            16,
+            14.24
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#left_leaf_door_inner",
+          "uv": [
+            0,
+            12.24,
+            16,
+            14.24
+          ],
+          "tintindex": 0
+        }
+      }
+    },
+    {
+      "from": [
+        8.0,
+        0.0,
+        4.08
+      ],
+      "to": [
+        16.0,
+        16.0,
+        4.746666666666667
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#right_leaf_leaf",
+          "uv": [
+            0,
+            0.0,
+            16,
+            16.0
+          ]
+        },
+        "south": {
+          "texture": "#right_leaf_leaf",
+          "uv": [
+            16,
+            0.0,
+            0,
+            16.0
+          ]
+        },
+        "east": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            12.24,
+            0.0,
+            14.24,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            12.24,
+            0.0,
+            14.24,
+            16.0
+          ],
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            0,
+            12.24,
+            16,
+            14.24
+          ],
+          "tintindex": 0
+        },
+        "down": {
+          "texture": "#right_leaf_door_inner",
+          "uv": [
+            0,
+            12.24,
+            16,
+            14.24
+          ],
+          "tintindex": 0
+        }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        15,
+        205,
+        0
+      ],
+      "scale": [
+        0.9,
+        0.9,
+        0.9
+      ]
+    },
+    "firstperson_righthand": {
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    },
+    "thirdperson_righthand": {
+      "scale": [
+        0.75,
+        0.75,
+        0.75
+      ]
+    }
+  }
+}

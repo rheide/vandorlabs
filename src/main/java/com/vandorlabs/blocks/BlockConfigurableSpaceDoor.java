@@ -91,6 +91,9 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         TileEntity raw=world.getTileEntity(lower);
         if (raw instanceof TileEntitySpaceDoor && !((TileEntitySpaceDoor)raw).hasPanel())
             return SpaceDoorControlPanel.Side.NONE;
+        if(raw instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
+            return SpaceDoorControlPanel.side(actual.getValue(HINGE)==BlockDoor.EnumHingePosition.RIGHT,
+                    ((TileEntitySpaceDoor)raw).isSliding(),true,false,false);
         EnumFacing front=actual.getValue(FACING);
         boolean sliding=raw instanceof TileEntitySpaceDoor && ((TileEntitySpaceDoor)raw).isSliding();
         return SpaceDoorControlPanel.side(actual.getValue(HINGE)==BlockDoor.EnumHingePosition.RIGHT,

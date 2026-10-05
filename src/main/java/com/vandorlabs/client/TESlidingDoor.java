@@ -66,6 +66,16 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         return (float) a.sample(open, now);
     }
 
+    @Override public void renderTileEntityFast(TileEntitySlidingDoor raw,double x,double y,double z,
+            float partialTicks,int destroyStage,float alpha,BufferBuilder buffer) {
+        if (!(raw instanceof com.vandorlabs.tiles.TileEntitySpaceDoor) || raw.getWorld()==null) return;
+        IBlockState state=raw.getWorld().getBlockState(raw.getPos());
+        if (!(state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)) return;
+        state=state.getBlock().getActualState(state,raw.getWorld(),raw.getPos());
+        float progress=animPose(raw.getWorld(),raw.getPos(),state.getValue(BlockVandorDoor.OPEN),visualTime());
+        OpaqueDoorBatch.draw((com.vandorlabs.tiles.TileEntitySpaceDoor)raw,state,progress,x,y,z,buffer);
+    }
+
     @Override
     public void render(TileEntitySlidingDoor te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         if (te.getWorld() == null) {
@@ -186,6 +196,18 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void renderSpaceDoor(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z) {
+        if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){
+            GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
+            for(int hand=0;hand<2;hand++)
+                renderSpaceDoorLeaf(tile,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH)
+                        .withProperty(BlockVandorDoor.HINGE,hand==0?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT),
+                        EnumFacing.SOUTH,progress,hand*1.5,0,0,1.5);
+            GlStateManager.popMatrix();return;
+        }
+        renderSpaceDoorLeaf(tile,state,facing,progress,x,y,z,1);
+    }
+    private static void renderSpaceDoorLeaf(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
+            EnumFacing facing,float progress,double x,double y,double z,double size) {
         boolean sliding=tile.isSliding();
         BlockDetailedDoor motion=tile.model(sliding).getVisualModel(state);
         boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);
@@ -202,9 +224,16 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             GlStateManager.translate(0,0,tile.positionOffset());
             if (part!=0) {
                 if (sliding && tile.getSlideDirection()!=0)
-                    GlStateManager.translate(0,tile.verticalTravel()*progress,0);
-                else moveDetailedDoorLeaf(motion,right,progress);
+                    GlStateManager.translate(0,tile.verticalTravel()*progress*size,0);
+                else {
+                    DoorLeafTransform pose=DoorLeafTransform.calculate(sliding,motion.getSlide(right),motion.getPivot(right),motion.getPivotZ(),motion.getAngle(right),progress);
+                    GlStateManager.translate(pose.translateX*size,0,0);
+                    GlStateManager.translate(pose.pivotX*size,0,pose.pivotZ);
+                    GlStateManager.rotate((float)pose.angleDegrees,0,1,0);
+                    GlStateManager.translate(-pose.pivotX*size,0,-pose.pivotZ);
+                }
             }
+            GlStateManager.scale(size,size,1);
             if(part==1 && tile.getFaceTexture()>=0) {
                 GlStateManager.disableLighting();
                 DoorRenderModels.Entry selected=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1));
@@ -236,7 +265,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             SpaceDoorControlPanel.Side side=com.vandorlabs.blocks.BlockConfigurableSpaceDoor
                     .panelSide(tile.getWorld(),tile.getPos(),state);
             if (side!=SpaceDoorControlPanel.Side.NONE)
-                renderSpaceDoorControlPanel(tile,facing,side,x,y,z);
+                renderSpaceDoorControlPanel(tile,facing,side,x,y,z,size);
         }
     }
 
@@ -250,37 +279,44 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
     }
 
     private static void renderSpaceDoorControlPanel(com.vandorlabs.tiles.TileEntitySpaceDoor tile,
-            EnumFacing facing,SpaceDoorControlPanel.Side side,double x,double y,double z) {
+            EnumFacing facing,SpaceDoorControlPanel.Side side,double x,double y,double z,double size) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(x,y,z);
         orientDetailedDoor(facing);
         GlStateManager.translate(0,0,tile.positionOffset());
-        GlStateManager.scale(1F/16,1F/16,1F/16);
+        GlStateManager.scale(size/16,size/16,1D/16);
         GlStateManager.disableLighting();
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        BufferBuilder buf=Tessellator.getInstance().getBuffer();
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+        panelGeometry(buf,tile.isSliding(),tile.getPlacementDepth()==2,side);
+        Tessellator.getInstance().draw();
+        GlStateManager.enableLighting();
+        GlStateManager.popMatrix();
+    }
+
+    /** Atlas geometry only; also used by the GL-free shared opaque batch. */
+    static void panelGeometry(BufferBuilder buf,boolean sliding,boolean farEdge,SpaceDoorControlPanel.Side side) {
         TextureAtlasSprite buttons=Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/control_buttons");
         TextureAtlasSprite wall=Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
         float x0=(float)SpaceDoorControlPanel.x0(side),x1=(float)SpaceDoorControlPanel.x1(side);
         float y0=(float)SpaceDoorControlPanel.Y0,y1=(float)SpaceDoorControlPanel.Y1;
-        boolean farEdge=tile.getPlacementDepth()==2;
-        float z0=(float)SpaceDoorControlPanel.z0(tile.isSliding(),farEdge),
-                z1=(float)SpaceDoorControlPanel.z1(tile.isSliding(),farEdge);
+        float z0=(float)SpaceDoorControlPanel.z0(sliding,farEdge),
+                z1=(float)SpaceDoorControlPanel.z1(sliding,farEdge);
         float u0=buttons.getInterpolatedU(0),u1=buttons.getInterpolatedU(16);
         float v0=buttons.getInterpolatedV(0),v1=buttons.getInterpolatedV(16);
         // Match the Programmable Console's deck-side housing: U follows
         // depth and V follows the local height, using the native atlas pixels.
         // Keep UVs in the original sprite even when the far-edge pad's local
         // model coordinates extend beyond 16 before the placement offset.
-        double textureZ0=SpaceDoorControlPanel.z0(tile.isSliding()),
-                textureZ1=SpaceDoorControlPanel.z1(tile.isSliding());
+        double textureZ0=SpaceDoorControlPanel.z0(sliding),
+                textureZ1=SpaceDoorControlPanel.z1(sliding);
         float sideU0=wall.getInterpolatedU(textureZ0),sideU1=wall.getInterpolatedU(textureZ1);
         float sideV0=wall.getInterpolatedV(32-y1),sideV1=wall.getInterpolatedV(32-y0);
         float topV0=wall.getInterpolatedV(textureZ0),topV1=wall.getInterpolatedV(textureZ1);
         float wallX0=wall.getInterpolatedU(x0),wallX1=wall.getInterpolatedU(x1);
-        BufferBuilder buf=Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         if (side==SpaceDoorControlPanel.Side.LEFT) {
             quad(buf,x1,y1,z1,x1,y0,z1,x1,y0,z0,x1,y1,z0,
                     u0,v0,u0,v1,u1,v1,u1,v0);
@@ -300,9 +336,6 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 wallX0,sideV0,wallX0,sideV1,wallX1,sideV1,wallX1,sideV0);
         quad(buf,x1,y1,z0,x1,y0,z0,x0,y0,z0,x0,y1,z0,
                 wallX1,sideV0,wallX1,sideV1,wallX0,sideV1,wallX0,sideV0);
-        Tessellator.getInstance().draw();
-        GlStateManager.enableLighting();
-        GlStateManager.popMatrix();
     }
 
     private static void orientDetailedDoor(EnumFacing facing) {

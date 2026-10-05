@@ -47,11 +47,13 @@ for name in ('programmable_block','programmable_light',
 models.extend([
     'customblock:id=%programmable_slab,state=*,class=com.vandorlabs.dynmap.ProgrammableSlabRenderer',
     'customblock:id=%programmable_door,state=*,class=com.vandorlabs.dynmap.ProgrammableDoorRenderer',
+    'customblock:id=%large_programmable_door,state=*,class=com.vandorlabs.dynmap.LargeProgrammableDoorRenderer',
     'customblock:id=%controlled_ramp,state=*,class=com.vandorlabs.dynmap.ControlledRampRenderer',
 ])
 blocks.extend([
     'block:id=%programmable_slab,state=*,patch0=0:v12_blocks_dark_wall_panel,transparency=SEMITRANSPARENT',
     'block:id=%programmable_door,state=*,patch0=0:space_standard,transparency=TRANSPARENT',
+    'block:id=%large_programmable_door,state=*,patch0=0:space_standard,transparency=TRANSPARENT',
 ])
 finishes=[value for value in __import__('re').findall(
     r'new Finish\("[^"]+", "([^"]+)"\)',

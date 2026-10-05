@@ -40,14 +40,30 @@ final class RedstoneScreenChecks {
         RedstoneScreenContents copy=((TileEntityAnimatedScreenSelector)world.getTileEntity(target)).redstoneScreen(0);
         require(com.vandorlabs.items.ProgrammableSettings.apply(world,target,com.vandorlabs.items.ProgrammableSettings.capture(world,pos)),"Duplifier rows not applicable");
         require(copy.title().equals("Bridge") && copy.rows().size()==2 && copy.rows().get(0).label.equals("Saved") && copy.rows().get(0).channels.equals(ChannelList.of(41,43)) && copy.rows().get(1).channels.equals(ChannelList.of(45,46)),"Duplifier lost screen row configuration");
-        copyMasks(world,pos,target);updates();projection();integratedSurfaces();diagonalSelection();packets();
+        copyMasks(world,pos,target);rowOrdering();updates();projection();integratedSurfaces();diagonalSelection();packets();
         System.out.println("PASS: redstone-screen row toggles, ALL highlight, independent overlap, NBT, removal/unload and all 14 mounting projections");
+    }
+    private static void rowOrdering(){
+        List<String> labels=new ArrayList<>(Arrays.asList("Doors edited","Lights","Auxiliary"));
+        List<ChannelList> channels=new ArrayList<>(Arrays.asList(ChannelList.of(41,43),ChannelList.of(45),ChannelList.EMPTY));
+        int selected=GuiRedstoneScreen.moveRow(labels,channels,0,-1);
+        require(selected==0 && labels.get(0).equals("Doors edited"),"top boundary moved");
+        selected=GuiRedstoneScreen.moveRow(labels,channels,selected,1);
+        require(selected==1 && labels.get(1).equals("Doors edited") && channels.get(1).equals(ChannelList.of(41,43)),"down separated label/channels");
+        selected=GuiRedstoneScreen.moveRow(labels,channels,selected,1);
+        require(selected==2 && GuiRedstoneScreen.moveRow(labels,channels,selected,1)==2,"bottom boundary moved");
+        selected=GuiRedstoneScreen.moveRow(labels,channels,selected,-1);
+        require(selected==1 && labels.equals(Arrays.asList("Lights","Doors edited","Auxiliary")) && channels.get(1).equals(ChannelList.of(41,43)),"up changed row contents");
     }
     private static void copyMasks(NonRenderingChecks.MemoryWorld world,BlockPos source,BlockPos target){
         net.minecraft.item.ItemStack tool=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
-        long rowBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
+        long rowBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-2);
+        long interpolationBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
         net.minecraft.nbt.NBTTagCompound root=new net.minecraft.nbt.NBTTagCompound();root.setLong(com.vandorlabs.items.DuplifierApplyOptions.TAG,0);tool.setTagCompound(root);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==rowBit,"old mask did not enable only new screen option");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(rowBit|interpolationBit),"legacy mask did not enable new options");
+        root.setInteger("DuplifierApplyOptionCount",com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==interpolationBit,"counted screen-era mask changed existing choices");
+        root.removeTag("DuplifierApplyOptionCount");
         require(com.vandorlabs.items.ItemDuplifier.copyFrom(world,source,tool)!=null,"actual tool did not capture screen");
         require(com.vandorlabs.items.ItemDuplifier.applyTo(world,target,tool,null),"actual tool did not apply old-mask screen");
         RedstoneScreenContents tile=((TileEntityAnimatedScreenSelector)world.getTileEntity(target)).redstoneScreen(0);

@@ -30,7 +30,7 @@ public final class DoorRenderModels {
         return entry;
     }
 
-    public static void clear() { MODELS.clear(); SelectedDoorFaceCache.clear(); }
+    public static void clear() { MODELS.clear(); SelectedDoorFaceCache.clear(); OpaqueDoorBatch.clear(); }
     static void checkPreparedDrawStates(){DoorDrawRuntimeChecks.run(new java.util.ArrayList<>(MODELS.values()));}
 
     static final class Entry {
@@ -39,6 +39,12 @@ public final class DoorRenderModels {
         private SelectedDoorGeometry selected;
         private DoorQuadPlan plan,selectedPlan;
         private boolean planChecked,selectedPlanChecked;
+        private OpaqueDoorBatch.Mesh batchMesh;
+        private boolean batchChecked;
+        OpaqueDoorBatch.Mesh batchMesh() {
+            if (!batchChecked) { batchMesh=OpaqueDoorBatch.prepare(this); batchChecked=true; }
+            return batchMesh;
+        }
         DoorQuadPlan plan(IBakedModel current) {
             if(current==model){if(!planChecked){plan=DoorQuadPlan.prepare(current);planChecked=true;}return plan;}
             if(current==selected){if(!selectedPlanChecked){selectedPlan=DoorQuadPlan.prepare(current);selectedPlanChecked=true;}return selectedPlan;}

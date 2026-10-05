@@ -19,19 +19,19 @@ public class GuiRampController extends GuiContainer {
     private GuiTextField channelField;
     private GuiTextField treadField;
     private boolean powerOn,elevator,extendSegments,matchTextures;
-    private int travelAxis,speed;
+    private int travelAxis,speed,interpolation;
     private int lastUpdate;
     private net.minecraft.util.EnumFacing direction;
     public GuiRampController(TileEntityRampController controller) {
         super(new ContainerRampController(controller));
         this.controller=controller;
         powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;
-        speed=controller.speed; elevator=controller.elevator;
+        interpolation=controller.interpolation;speed=controller.speed; elevator=controller.elevator;
         travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
         lastUpdate=controller.clientUpdates;
         direction=controller.rampDirection();
         lastStartHalf=controller.startHalfSteps(); lastEndHalf=controller.endHalfSteps();
-        xSize=320; ySize=232;
+        xSize=320; ySize=256;
     }
     @Override public void initGui() {
         super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
@@ -56,7 +56,7 @@ public class GuiRampController extends GuiContainer {
         treadField.setText(Integer.toString(controller.treadPixels));
         buttonList.add(new GuiButton(14,guiLeft+260,guiTop+126,20,20,"-"));
         buttonList.add(new GuiButton(15,guiLeft+282,guiTop+126,20,20,"+"));
-        channelField=new GuiTextField(8,fontRenderer,guiLeft+200,guiTop+184,98,18);
+        channelField=new GuiTextField(8,fontRenderer,guiLeft+200,guiTop+208,98,18);
         ChannelFields.configure(channelField);
         channelField.setText(controller.getRedstoneChannels().toString());
 
@@ -65,8 +65,9 @@ public class GuiRampController extends GuiContainer {
         buttonList.add(new GuiButton(6,guiLeft+164,guiTop+78,142,20,""));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+126,142,20,""));
         buttonList.add(new GuiButton(17,guiLeft+164,guiTop+102,142,20,""));
-        buttonList.add(new GuiButton(18,guiLeft+14,guiTop+183,122,20,""));
-        buttonList.add(new GuiButton(7,guiLeft+14,guiTop+208,292,20,"Done"));
+        buttonList.add(new GuiButton(19,guiLeft+14,guiTop+151,292,20,""));
+        buttonList.add(new GuiButton(18,guiLeft+14,guiTop+207,122,20,""));
+        buttonList.add(new GuiButton(7,guiLeft+14,guiTop+232,292,20,"Done"));
         refresh();
     }
     private void refresh() {
@@ -80,6 +81,7 @@ public class GuiRampController extends GuiContainer {
             if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
             if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
             if (b.id==18) b.displayString="Match textures: "+(matchTextures?"On":"Off");
+            if(b.id==19){b.enabled=!elevator;b.displayString="Interpolation: "+new String[]{"Linear","Curve In","Curve Out"}[interpolation];}
             if (b.id==17) b.displayString="Travel: "+(travelAxis==0?"up / down":"left / right");
         }
     }
@@ -93,6 +95,7 @@ public class GuiRampController extends GuiContainer {
         if (button.id==3) powerOn=!powerOn;
         if (button.id==4) speed=(speed+1)%3;
         if (button.id==6) direction=direction.rotateY();
+        if(button.id==19) interpolation=(interpolation+1)%3;
         if (button.id==18) matchTextures=!matchTextures;
         if (button.id==17) travelAxis=travelAxis==0?2:0;
         if (button.id==7) mc.player.closeScreen();
@@ -118,7 +121,7 @@ public class GuiRampController extends GuiContainer {
                 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
             lastStartHalf=start;lastEndHalf=end;
             PacketHandler.INSTANCE.sendToServer(MessageRampController.halfOffsets(controller.getPos(),start,end,
-                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withChannels(ChannelFields.parse(channelField)));
+                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withInterpolation(interpolation).withChannels(ChannelFields.parse(channelField)));
         }
     }
     private int channel() {return ChannelFields.first(channelField);}
@@ -129,7 +132,7 @@ public class GuiRampController extends GuiContainer {
             if (controller.error) {
                 // A rejected reset retains old server settings; do not display unsaved toggles.
                 powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;
-                speed=controller.speed; elevator=controller.elevator;
+                interpolation=controller.interpolation;speed=controller.speed; elevator=controller.elevator;
                 travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
                 direction=controller.rampDirection();
                 lastStartHalf=controller.startHalfSteps();lastEndHalf=controller.endHalfSteps();
@@ -163,10 +166,10 @@ public class GuiRampController extends GuiContainer {
         fontRenderer.drawString("Programmable Ramp",14,10,0xFFFFFF);
         fontRenderer.drawString("Tread px",164,132,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawString(travelAxis==0?"Positive = up; negative = down. Footprint: 8x16.":
-                "Positive = right; negative = left. Footprint: 8x16.",14,153,0xADBECA);
+                "Positive = right; negative = left. Footprint: 8x16.",14,175,0xADBECA);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
-                14,166,292,controller.error?0xFF9988:0xE5C76B);
-        fontRenderer.drawString("Channels",144,188,0xDAE8F0);
+                14,188,292,controller.error?0xFF9988:0xE5C76B);
+        fontRenderer.drawString("Channels",144,212,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

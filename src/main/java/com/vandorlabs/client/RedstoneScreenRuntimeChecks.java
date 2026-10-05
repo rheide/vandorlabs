@@ -71,11 +71,14 @@ final class RedstoneScreenRuntimeChecks {
                 GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
                 gui.actionPerformed(new GuiButton(2,0,0,"Add"));
                 field(gui,"titleField").setText("Bridge controls");field(gui,"labelField").setText("Ramp bank");field(gui,"channelField").setText("14903, 14904");
+                gui.actionPerformed(new GuiButton(5,0,0,"Up"));
+                require(field(gui,"labelField").getText().equals("Ramp bank") && field(gui,"channelField").getText().equals("14903, 14904"),"moving row keeps editor and channel bank");
+                gui.actionPerformed(new GuiButton(6,0,0,"Down"));gui.actionPerformed(new GuiButton(5,0,0,"Up"));
                 gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(8);return;
             }
             if(stage==8 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->{
-                RedstoneScreenContents tile=tile(mc);require(tile.title().equals(expectedTitle()) && tile.rows().size()==4 && tile.rows().get(3).label.equals("Ramp bank") && tile.rows().get(3).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
-                RedstoneScreenContents copy=new RedstoneScreenContents(new TileEntityAnimatedScreenSelector(),slot());copy.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.rows().size()==4 && copy.rows().get(3).channels.equals(tile.rows().get(3).channels),"saved rows lost");
+                RedstoneScreenContents tile=tile(mc);require(tile.title().equals(expectedTitle()) && tile.rows().size()==4 && tile.rows().get(2).label.equals("Ramp bank") && tile.rows().get(2).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
+                RedstoneScreenContents copy=new RedstoneScreenContents(new TileEntityAnimatedScreenSelector(),slot());copy.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.rows().size()==4 && copy.rows().get(2).channels.equals(tile.rows().get(2).channels),"saved rows lost");
             });next(9);return;}
             if(stage==9){open(mc);next(10);return;}
             if(stage==10 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){

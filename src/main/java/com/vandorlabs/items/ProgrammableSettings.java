@@ -81,6 +81,7 @@ public final class ProgrammableSettings {
     public static final String RAMP_START_HALF = "ramp_start_half";
     public static final String RAMP_END_HALF = "ramp_end_half";
     public static final String RAMP_TREAD_PIXELS = "ramp_tread_pixels";
+    public static final String RAMP_INTERPOLATION="ramp_interpolation";
     public static final String RAMP_SPEED = "ramp_speed";
     public static final String RAMP_LIFT = "ramp_lift";
     public static final String RAMP_EXTEND = "ramp_extend";
@@ -250,6 +251,7 @@ public final class ProgrammableSettings {
             out.setInteger(RAMP_END_HALF, ramp.endHalfSteps());
             out.setInteger(RAMP_TREAD_PIXELS, ramp.treadPixels);
             out.setInteger(RAMP_SPEED, ramp.speed);
+            out.setInteger(RAMP_INTERPOLATION,ramp.interpolation);
             out.setBoolean(RAMP_LIFT, ramp.elevator);
             out.setBoolean(RAMP_EXTEND, ramp.extendSegments);
             out.setInteger(RAMP_DIRECTION, ramp.rampDirection().getIndex());
@@ -263,7 +265,7 @@ public final class ProgrammableSettings {
     public static net.minecraft.item.ItemStack applyToItem(net.minecraft.item.ItemStack input, NBTTagCompound values) {
         if (!(input.getItem() instanceof net.minecraft.item.ItemBlock)) return net.minecraft.item.ItemStack.EMPTY;
         Block block = ((net.minecraft.item.ItemBlock)input.getItem()).getBlock();
-        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_"))
+        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor))
             return net.minecraft.item.ItemStack.EMPTY;
         TileEntity tile = block.createTileEntity(null, block.getStateFromMeta(input.getMetadata()));
         if (tile == null) return net.minecraft.item.ItemStack.EMPTY;
@@ -547,7 +549,7 @@ public final class ProgrammableSettings {
             TileEntityRampController ramp = (TileEntityRampController) tile;
             if (values.hasKey(RAMP_START) || values.hasKey(RAMP_END)
                     || values.hasKey(RAMP_START_HALF) || values.hasKey(RAMP_END_HALF)
-                    || values.hasKey(RAMP_TREAD_PIXELS) || values.hasKey(RAMP_SPEED)
+                    || values.hasKey(RAMP_INTERPOLATION) || values.hasKey(RAMP_TREAD_PIXELS) || values.hasKey(RAMP_SPEED)
                     || values.hasKey(RAMP_LIFT) || values.hasKey(RAMP_EXTEND)
                     || values.hasKey(RAMP_DIRECTION) || values.hasKey(RAMP_TRAVEL) || values.hasKey(RAMP_MATCH_TEXTURES)
                     || (values.hasKey(TRIGGER, 3)
@@ -571,7 +573,8 @@ public final class ProgrammableSettings {
                         number(values, RAMP_SPEED, ramp.speed),
                         flag(values, RAMP_MATCH_TEXTURES, ramp.matchTextures),
                         player.getHeldItemMainhand().getItem() == ModItems.DUPLIFIER
-                                && DuplifierApplyOptions.connected(player.getHeldItemMainhand()));
+                                && DuplifierApplyOptions.connected(player.getHeldItemMainhand()),
+                        number(values,RAMP_INTERPOLATION,ramp.interpolation));
             }
         }
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block) && values.hasKey(REDSTONE_ROWS,10))

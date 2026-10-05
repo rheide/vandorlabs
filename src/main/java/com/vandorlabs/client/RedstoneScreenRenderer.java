@@ -31,9 +31,11 @@ final class RedstoneScreenRenderer {
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
         // Submit every solid panel together, before the font pass. Small depth
         // layers prevent coplanar text/background flicker at oblique angles.
-        GlStateManager.disableTexture2D();
+        GlStateManager.enableTexture2D();
+        Minecraft.getMinecraft().getTextureManager().bindTexture(
+                new net.minecraft.util.ResourceLocation("vandorlabs","textures/blocks/screen_white.png"));
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
-        buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION_COLOR);
+        buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         rect(buffer,0,0,128,height,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
@@ -56,8 +58,8 @@ final class RedstoneScreenRenderer {
     }
     private static void rect(BufferBuilder b,int left,int top,int right,int bottom,double z,int color){
         int r=color>>16&255,g=color>>8&255,blue=color&255,a=color>>>24;
-        b.pos(left,bottom,z).color(r,g,blue,a).endVertex();b.pos(right,bottom,z).color(r,g,blue,a).endVertex();
-        b.pos(right,top,z).color(r,g,blue,a).endVertex();b.pos(left,top,z).color(r,g,blue,a).endVertex();
+        b.pos(left,bottom,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();b.pos(right,bottom,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();
+        b.pos(right,top,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();b.pos(left,top,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();
     }
     private static void text(FontRenderer font,String value,int x,int y,int color){
         GlStateManager.pushMatrix();GlStateManager.translate(0,0,.04F);

@@ -13,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 /** Appearance belongs to the placed door, not a separate registered block. */
 public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
-            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter"};
+            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass"};
     public static final String[] DETAILS={"low","medium","high"};
     private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
     private static final java.util.concurrent.atomic.AtomicReferenceArray<BlockSpaceDoor>
@@ -83,7 +83,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         return prefix + (design < 5 ? "_door_" : "_") + (framed ? "framed" : "bare");
     }
     public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part) {
-        return 1+((design*3+detail)*2+(framed?1:0))*12+(paired?6:0)+part*2+(right?1:0);
+        return (design<15?1+design*72:4321+(design-15)*72)+((detail)*2+(framed?1:0))*12+(paired?6:0)+part*2+(right?1:0);
     }
     public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part,boolean sliding) {
         return metadata(design,detail,framed,paired,right,part)+(sliding?1080:0);
@@ -192,8 +192,13 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if (!world.isRemote) markDirty();
     }
     @Override public void onLoad() { super.onLoad(); migrateLegacyMotion(); }
-    public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11; }
+    public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15; }
     public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
+    @Override
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    public boolean hasFastRenderer() {
+        return com.vandorlabs.client.OpaqueDoorBatch.available(this);
+    }
     @Override public boolean shouldRenderInPass(int pass) {
         return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }

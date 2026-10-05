@@ -94,11 +94,20 @@ public final class ControllerPlatform {
     }
     public static double offsetPixels(int row,int step,int length,int pixels,double start,double end,
             double pose,boolean elevator,boolean fast) {
+        return offsetPixels(row,step,length,pixels,start,end,pose,elevator,fast,0);
+    }
+    /** Spatial profile, independent of the animation's time easing. */
+    public static double profile(double position,int interpolation) {
+        double t=Math.max(0,Math.min(1,position));
+        return interpolation==1?t*t:interpolation==2?1-(1-t)*(1-t):t;
+    }
+    public static double offsetPixels(int row,int step,int length,int pixels,double start,double end,
+            double pose,boolean elevator,boolean fast,int interpolation) {
         double p=Math.max(0,Math.min(1,pose));
         double height=start+(end-start)*(fast?p:p*p*(3-2*p));
         double last=length-1+treadStart(treadCount(pixels)-1,pixels);
         // A one-block ramp with one full-block tread has no separate hinge tread.
-        return elevator || last==0?height:height*(row+treadStart(step,pixels))/last;
+        return elevator || last==0?height:height*profile((row+treadStart(step,pixels))/last,interpolation);
     }
     public static int duration(int length,int height,boolean slow) {
         return duration(length,height,slow?2:1);

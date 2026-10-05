@@ -40,6 +40,7 @@ def main():
             ("programmable_trapdoor", "ProgrammableTrapdoorRenderer"),
             ("programmable_diagonal_trapdoor", "ProgrammableDiagonalTrapdoorRenderer"),
             ("programmable_door", "ProgrammableDoorRenderer"),
+            ("large_programmable_door", "LargeProgrammableDoorRenderer"),
             ("controlled_ramp", "ControlledRampRenderer")):
         if (name, "*") not in custom or not re.search(
                 r"^customblock:id=%%%s,state=\*,class=com\.vandorlabs\.dynmap\.%s$" %

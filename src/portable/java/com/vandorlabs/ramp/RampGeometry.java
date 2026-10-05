@@ -29,11 +29,17 @@ public final class RampGeometry {
     public static Box movingTread(Direction face,int sourceX,int sourceY,int sourceZ,
             double low,double high,int row,int length,double start,double end,int pixels,
             int step,double from,double to,boolean elevator,int travel,boolean extend,boolean fast) {
+        return movingTread(face,sourceX,sourceY,sourceZ,low,high,row,length,start,end,pixels,
+                step,from,to,elevator,travel,extend,fast,0);
+    }
+    public static Box movingTread(Direction face,int sourceX,int sourceY,int sourceZ,
+            double low,double high,int row,int length,double start,double end,int pixels,
+            int step,double from,double to,boolean elevator,int travel,boolean extend,boolean fast,int interpolation) {
         Box footprint=footprintPixels(face,step,elevator?16:pixels,low,high);
-        double a=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,from,elevator,fast);
-        double b=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,to,elevator,fast);
+        double a=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,from,elevator,fast,interpolation);
+        double b=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,to,elevator,fast,interpolation);
         if (extend) {
-            double initial=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,0,elevator,fast);
+            double initial=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,0,elevator,fast,interpolation);
             double lower=Math.min(initial,Math.min(a,b));
             b=Math.max(initial,Math.max(a,b));
             a=lower;
@@ -85,9 +91,13 @@ public final class RampGeometry {
 
     public static List<Box> boxesPixels(Direction face,int cellY,int sourceY,double low,double high,
             int row,int length,double start,double end,int pixels,double pose,boolean elevator) {
+        return boxesPixels(face,cellY,sourceY,low,high,row,length,start,end,pixels,pose,elevator,false,0);
+    }
+    public static List<Box> boxesPixels(Direction face,int cellY,int sourceY,double low,double high,
+            int row,int length,double start,double end,int pixels,double pose,boolean elevator,boolean fast,int interpolation) {
         List<Box> result=new ArrayList<>();
         for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(pixels));step++) {
-            double offset=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,pose,elevator);
+            double offset=ControllerPlatform.offsetPixels(row,step,length,pixels,start,end,pose,elevator,fast,interpolation);
             double y0=Math.max(0,sourceY+low+offset-cellY),y1=Math.min(1,sourceY+high+offset-cellY);
             if (y1-y0>=1e-8) result.add(footprintPixels(face,step,elevator?16:pixels,y0,y1));
         }
