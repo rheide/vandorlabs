@@ -7,18 +7,18 @@ compatible opaque Programmable Doors to reduce repeated renderer submissions.
 ## Door performance compared with other mods
 
 **Vandor's measured door baseline takes substantially less render-thread CPU
-time than Furniture Mod's sliding doors.** Controlled fixtures of 64 complete
+time than MrCrayfish’s Furniture Mod’s sliding doors.** Controlled fixtures of 64 complete
 doors, with shaders disabled, produced these median costs:
 
 | Door | Render-thread CPU | Java draw submissions |
 | --- | ---: | ---: |
-| Furniture Mod modern sliding door | 3.443 ms | 128 |
+| MrCrayfish’s Furniture Mod modern sliding door | 3.443 ms | 128 |
 | Malisis iron door | 0.597 ms | 1 |
 | Vandor Labs 1.4 default Programmable Door | 0.605 ms | 192 |
 | Vandor Labs 1.4 sliding Programmable Door | 0.370 ms | 128 |
 
 The default Vandor fixture used about **5.7 times less CPU time** than the
-Furniture fixture; its sliding fixture used about **9.3 times less**. Default
+MrCrayfish’s Furniture Mod fixture; its sliding fixture used about **9.3 times less**. Default
 Vandor doors were comparable to Malisis iron doors in CPU work, while sliding
 Vandor doors took about **38% less**. Glass and detailed artwork have different
 costs, so these comparisons apply to the specified fixtures.
