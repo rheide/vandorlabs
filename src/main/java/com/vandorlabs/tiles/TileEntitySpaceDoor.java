@@ -13,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 /** Appearance belongs to the placed door, not a separate registered block. */
 public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
-            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay"};
+            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight"};
     public static final int FIRST_DOUBLE_DESIGN=21, DEFAULT_LARGE_DESIGN=23;
     public static final String[] DETAILS={"low","medium","high"};
     private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
@@ -48,7 +48,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public boolean isFramed() { return framed; }
     public boolean isSliding() { migrateLegacyMotion(); return sliding; }
     public int getSlideDirection() { return slideDirection; }
-    public static boolean validSlideDirection(int value) { return value>=0 && value<=2; }
+    public static boolean validSlideDirection(int value) { return value>=0 && value<=3; }
+    public boolean isXSplit(){return this instanceof TileEntityLargeProgrammableDoor && isSliding() && slideDirection==3;}
     public double verticalTravel() {
         return com.vandorlabs.persistence.SpaceDoorData.verticalTravel(framed,slideDirection);
     }
@@ -121,7 +122,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         configure(design,detail,framed,direction,middle,sliding,hinges,trigger,panel);
     }
     public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
-        if (!valid(design,detail) || !acceptsDesign(design) || !validSlideDirection(direction)
+        if (!valid(design,detail) || !acceptsDesign(design) || direction==3 && !(this instanceof TileEntityLargeProgrammableDoor) || !validSlideDirection(direction)
                 || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
         this.design=design; this.detail=detail; this.framed=framed;
         this.slideDirection=direction;

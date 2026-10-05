@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """Native dimensions, transparent cutouts, whole-bay UV seams and inventory padding."""
-import json, math, subprocess
+import json, math, hashlib
 from pathlib import Path
 from PIL import Image
 from import_cargo_doors import FAMILIES
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'generated-resources/assets/vandorlabs'
 load=lambda p:json.loads(p.read_text())
-old=json.loads(subprocess.check_output(['git','show','3a6731a7:generated-resources/assets/vandorlabs/data/unified_textures.json'],cwd=ROOT))
 current=load(ASSETS/'data/unified_textures.json')
-assert current[:len(old)]==old,'Saved texture IDs changed'
+assert hashlib.sha256(json.dumps(current[:254],sort_keys=True).encode()).hexdigest()=='e6348fcfa58a74e38276ad8167bec4a7caf57de6d03cc504bff66a907b2b8ed6','Saved texture IDs changed'
 count=0
 for tier,height in [('low',256),('medium',512),('high',1024)]:
  for index,family in enumerate(FAMILIES):
   image=Image.open(ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/cargo_doors'/tier/(family+'.png'))
   assert image.size==(height//2 if index<4 else height,height)
   alpha=set(image.convert('RGBA').getchannel('A').getdata());assert alpha<= {0,255}
-  assert (0 in alpha)==(index in (2,5,7))
+  assert (0 in alpha)==(index in (2,5,7,9,11))
   for sliding in [False,True]:
    for framed in [False,True]:
     base='space_'+family+('_sliding_' if sliding else '_rotating_')+('framed' if framed else 'bare')
@@ -38,4 +37,4 @@ for tier,height in [('low',256),('medium',512),('high',1024)]:
        projected=.65*(math.cos(math.radians(205))*x+math.sin(math.radians(205))*z)
        assert abs(projected)<7,'Hotbar icon lost its horizontal padding'
      count+=1
-print('PASS: 24 native PNGs, alpha holes, stable catalog prefix, split/mirrored UVs and',count,'padded cargo icons')
+print('PASS: 36 native PNGs, alpha holes, stable catalog prefix, split/mirrored UVs and',count,'padded cargo icons')

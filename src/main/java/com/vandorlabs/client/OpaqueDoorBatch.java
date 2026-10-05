@@ -103,7 +103,11 @@ public final class OpaqueDoorBatch {
         }
         buffer.setTranslation(0,0,0);
         mesh(tile,state,paired,right,0).draw(buffer,facing,x,y,z,tile.positionOffset(),light,0,0,0,0,0,size,leafOffset);
-        mesh(tile,state,paired,right,1).draw(buffer,facing,x,y,z,tile.positionOffset(),light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
+        if(tile.isXSplit()) {
+            StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,1);
+            for(int panel=0;panel<4;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,tile.positionOffset(),light,
+                    size*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress),size*com.vandorlabs.render.XDoorPanel.shiftY(panel,progress),0,0,0,size,leafOffset);
+        } else mesh(tile,state,paired,right,1).draw(buffer,facing,x,y,z,tile.positionOffset(),light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
         SpaceDoorControlPanel.Side side=BlockConfigurableSpaceDoor.panelSide(tile.getWorld(),tile.getPos(),state);
         if(side!=SpaceDoorControlPanel.Side.NONE)
             panel(tile,side).draw(buffer,facing,x,y,z,tile.positionOffset(),light,0,0,0,0,0,size,leafOffset);

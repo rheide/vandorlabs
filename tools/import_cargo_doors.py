@@ -5,9 +5,9 @@ import argparse, copy, importlib.util, json, shutil
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('doors',ROOT/'tools/import_space_doors.py')
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
-FAMILIES='plain_cargo stepped_freight observation_leaf reinforced_leaf warehouse_shutter slotted_bay cross_braced_bay split_view_bay'.split()
+FAMILIES='plain_cargo stepped_freight observation_leaf reinforced_leaf warehouse_shutter slotted_bay cross_braced_bay split_view_bay offset_cargo twin_observation armored_biparting service_freight'.split()
 
-def generate(source):
+def generate(source,center_source):
     assets=ROOT/'generated-resources/assets/vandorlabs'
     geometry=json.loads((ROOT/'docs/space-door-pack/hinge/geometry.json').read_text())
     for tier,height in [('low',256),('medium',512),('high',1024)]:
@@ -15,8 +15,10 @@ def generate(source):
             square=index>=4
             folder=('single-'+str(height)+'x'+str(height)) if square else ('mirrorable-'+str(height//2)+'x'+str(height))
             filename=f'{index+1:02}_{family}'+('' if square else '_left')+'.png'
+            input_file=source/f'height-{height}'/folder/filename
+            if index>=8:input_file=center_source/f'{height}x{height}'/(f'{index-7:02}_{family}.png')
             dest=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/cargo_doors'/tier/(family+'.png')
-            dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source/f'height-{height}'/folder/filename,dest)
+            dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(input_file,dest)
             for sliding in [False,True]:
                 for framed in [False,True]:
                     for paired in [False,True]:
@@ -46,4 +48,4 @@ def generate(source):
                                     path=assets/'models/block/detailed_doors'/tier/(name+'.json');path.write_text(json.dumps(model,indent=2)+'\n')
                                     path=assets/'models/item/detailed_doors'/tier/(name+'.json');path.write_text(json.dumps({'parent':'vandorlabs:block/detailed_doors/'+tier+'/'+name},indent=2)+'\n')
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('source',type=Path);generate(parser.parse_args().source)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('source',type=Path);parser.add_argument('center_source',type=Path);args=parser.parse_args();generate(args.source,args.center_source)

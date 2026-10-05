@@ -302,3 +302,10 @@ Split View Bay. Each square image spans both moving leaves. **Cross Braced Bay**
 is the default for newly placed large doors; saved selections are preserved.
 All eight designs have Small/Medium/Large artwork. Complete bay textures are
 256×256, 512×512 and 1024×1024 respectively.
+
+Large doors additionally offer **Offset Cargo, Twin Observation, Armored Biparting
+and Service Freight** in Double Doors. Their deliberately different left/right
+artwork is retained. Select **Sliding X** on a Large Programmable Door to split
+the square face along both diagonals: four triangular panels slide left, right,
+up and down from the center. Artwork, glazing and replacement materials follow
+the panels; the optional jamb and control panel stay fixed.

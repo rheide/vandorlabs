@@ -63,6 +63,7 @@ public final class NonRenderingChecks {
         OpaqueDoorBatchChecks.run();
         LargeDoorChecks.run();
         CargoDoorChecks.run();
+        XDoorChecks.run();
         RampMaterialChecks.run();
         RampInterpolationChecks.run();
         DiagonalRayTraceChecks.run();

@@ -86,3 +86,29 @@ Split View Bay. Each square image spans both moving leaves. **Cross Braced Bay**
 is the default for newly placed large doors; saved selections are preserved.
 All eight designs have Small/Medium/Large artwork. Complete bay textures are
 256×256, 512×512 and 1024×1024 respectively.
+
+The Double Doors category also includes **Offset Cargo, Twin Observation, Armored
+Biparting and Service Freight**, with complete square artwork at all three
+resolutions. Their asymmetric halves are sampled separately, never mirrored.
+
+## Sliding X for large doors
+
+Choose **Sliding X** with the movement button to open a large door along an X
+meeting at its center. The face divides into four triangular panels; each slides
+1.5 blocks outward, to the left, right, top or bottom. The panels retract outside
+the full opening. The fixed frame and optional control panel stay in place.
+This option is available only on Large Programmable Doors and preserves the
+existing 12-tick animation, trigger, redstone, depth, artwork and copying options.
+
+Clipped geometry retains its original UVs, including the complete bay compositions
+and their transparent cutouts. White/Dark Glass panes and Fit/Tile replacement
+materials use the same cuts and motion. Prepared panels are cached until a
+resource reload; compatible opaque panels still share Forge's rendering buffer.
+Large-door collision boxes are reused across all nine cells. Open triangular
+collision/selection surfaces use narrow conservative strips along their diagonals;
+the strips clear the passage completely.
+
+Non-rendering checks cover closed coverage, interpolated UVs, diagonal edge caps,
+four movement directions, every facing, shared-buffer/fallback transform agreement,
+persistence, size/category filtering and open passage collision. Hardware appearance
+and shader compatibility of this new mode still need visual acceptance.

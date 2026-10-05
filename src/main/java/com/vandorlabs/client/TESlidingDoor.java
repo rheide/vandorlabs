@@ -221,6 +221,10 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         for (int part=glass?2:0;part<=(glass?2:1);part++) {
+            if(tile.isXSplit() && part!=0) {
+                renderXPanels(tile,state,facing,progress,x,y,z,size,right,part,light,glass);
+                continue;
+            }
             GlStateManager.pushMatrix();
             GlStateManager.translate(x,y,z);
             orientDetailedDoor(facing);
@@ -270,6 +274,30 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             if (side!=SpaceDoorControlPanel.Side.NONE)
                 renderSpaceDoorControlPanel(tile,facing,side,x,y,z,size);
         }
+    }
+
+    private static void renderXPanels(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
+            EnumFacing facing,float progress,double x,double y,double z,double size,boolean right,int part,int light,boolean glass) {
+        StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,part);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);
+        GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,glass?.003F:.1F);
+        if(glass) {
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
+            GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
+        }
+        for(int panel=0;panel<4;panel++) {
+            GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
+            GlStateManager.translate(size*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress),
+                    size*com.vandorlabs.render.XDoorPanel.shiftY(panel,progress),tile.positionOffset());
+            GlStateManager.scale(size,size,1);
+            BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            panels[panel].draw(buffer,light>>>16,light&65535);Tessellator.getInstance().draw();GlStateManager.popMatrix();
+        }
+        if(glass){GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();}
+        GlStateManager.enableLighting();
     }
 
     private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,SelectedDoorGeometry geometry) {

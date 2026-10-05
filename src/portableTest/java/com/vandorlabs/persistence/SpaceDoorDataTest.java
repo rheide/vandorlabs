@@ -5,7 +5,7 @@ public final class SpaceDoorDataTest {
         if (!value) throw new AssertionError(message);
     }
     public static void main(String[] args) {
-        for (int design=0;design<25;design++) for (int detail=0;detail<3;detail++)
+        for (int design=0;design<29;design++) for (int detail=0;detail<3;detail++)
             for (boolean framed:new boolean[]{false,true}) for (int direction=0;direction<3;direction++)
                 for (boolean middle:new boolean[]{false,true}) for (boolean sliding:new boolean[]{false,true})
                     for (boolean hinges:new boolean[]{false,true}) {
@@ -43,7 +43,7 @@ public final class SpaceDoorDataTest {
         check(new SpaceDoorData(16,1,true,0).design==16,"dark glass design survives codec");
         SpaceDoorData bad=new SpaceDoorData(-1,9,false,90);
         check(bad.design==2 && bad.detail==1 && bad.direction==0,"invalid settings fallback");
-        check(new SpaceDoorData(25,1,true,0).design==2,"unknown design fallback");
+        check(new SpaceDoorData(29,1,true,0).design==2,"unknown design fallback");
         for (boolean sliding:new boolean[]{false,true}) for (boolean framed:new boolean[]{false,true})
                 for (boolean hinges:new boolean[]{false,true}) {
             double low=sliding?(framed?6:7):(hinges?10.49:framed?11.24:12.24);
@@ -56,13 +56,14 @@ public final class SpaceDoorDataTest {
                     "middle door model moved");
         }
         com.vandorlabs.render.SpaceDoorMotion motion=com.vandorlabs.render.SpaceDoorMotion.ROTATING;
-        for (int i=0;i<4;i++) {
-            check(motion.sliding==(i>0) && motion.direction==Math.max(0,i-1),"four motion choices");
+        for (int i=0;i<5;i++) {
+            check(motion.sliding==(i>0) && motion.direction==Math.max(0,i-1),"five motion choices");
             check(com.vandorlabs.render.SpaceDoorMotion.fromSettings(motion.sliding,motion.direction)==motion,
                     "dialog motion matches saved settings");
             motion=motion.next();
         }
+        check(new SpaceDoorData(23,1,true,3,false,true).direction==3,"X motion persistence");
         check(motion==com.vandorlabs.render.SpaceDoorMotion.ROTATING,"motion selector wraps");
-        System.out.println("Space door settings PASS: 3600 configurations, persistence, hinges, motion, vertical travel and bounds");
+        System.out.println("Space door settings PASS: 4176 configurations, persistence, hinges, motion, vertical travel and bounds");
     }
 }

@@ -17,7 +17,8 @@ public final class LargeDoorGeometry {
         List<Box> result=new ArrayList<>();double jamb=1.5/16,z0=sliding?6/16.0:11.24/16,z1=z0+4/16.0;
         if(frame){add(result,0,0,z0,jamb,3,z1,depth,facing,0,0,0,0,0);add(result,3-jamb,0,z0,3,3,z1,depth,facing,0,0,0,0,0);add(result,jamb,0,z0,3-jamb,jamb,z1,depth,facing,0,0,0,0,0);add(result,jamb,3-jamb,z0,3-jamb,3,z1,depth,facing,0,0,0,0,0);}
         double low=frame?jamb:0,high=frame?3-jamb:3;
-        for(int hand=0;hand<2;hand++){
+        if(sliding && direction==3)addXPanels(result,low,high,open,depth,facing);
+        else for(int hand=0;hand<2;hand++){
             boolean right=hand==1;double x0=right?1.5:(frame?jamb:0),x1=right?(frame?3-jamb:3):1.5;
             double leafZ=sliding?7/16.0:12.24/16;
             double pivotX=right?3-jamb:jamb,pivotZ=11.24/16;
@@ -32,6 +33,28 @@ public final class LargeDoorGeometry {
             add(result,x0,SpaceDoorControlPanel.Y0*1.5/16+yOffset,SpaceDoorControlPanel.z0(sliding,farEdge)/16,x1,SpaceDoorControlPanel.Y1*1.5/16+yOffset,SpaceDoorControlPanel.z1(sliding,farEdge)/16,depth,facing,0,0,0,0,0);
         }
         return result;
+    }
+    private static void addXPanels(List<Box> out,double low,double high,boolean open,double depth,int facing) {
+        if(!open){add(out,low,low,7/16.0,high,high,9/16.0,depth,facing,0,0,0,0,0);return;}
+        // Narrow strips conservatively cover the diagonal faces for vanilla AABB collision.
+        // The exact tip is outside the aperture at full travel, so no strip seals the passage.
+        for(int panel=0;panel<4;panel++)for(int strip=0;strip<64;strip++) {
+            double a=low+(high-low)*strip/64,b=low+(high-low)*(strip+1)/64;
+            List<float[]> rectangle=new ArrayList<>();
+            if(panel<2) {
+                rectangle.add(new float[]{(float)(low/1.5),(float)(a/1.5)});rectangle.add(new float[]{(float)(high/1.5),(float)(a/1.5)});
+                rectangle.add(new float[]{(float)(high/1.5),(float)(b/1.5)});rectangle.add(new float[]{(float)(low/1.5),(float)(b/1.5)});
+            }else {
+                rectangle.add(new float[]{(float)(a/1.5),(float)(low/1.5)});rectangle.add(new float[]{(float)(b/1.5),(float)(low/1.5)});
+                rectangle.add(new float[]{(float)(b/1.5),(float)(high/1.5)});rectangle.add(new float[]{(float)(a/1.5),(float)(high/1.5)});
+            }
+            List<float[]> clipped=XDoorPanel.clip(rectangle,0,panel);if(clipped.size()<3)continue;
+            double x0=Double.POSITIVE_INFINITY,y0=x0,x1=Double.NEGATIVE_INFINITY,y1=x1;
+            for(float[] v:clipped){x0=Math.min(x0,v[0]*1.5);x1=Math.max(x1,v[0]*1.5);y0=Math.min(y0,v[1]*1.5);y1=Math.max(y1,v[1]*1.5);}
+            if(x1-x0<1e-7 || y1-y0<1e-7)continue;
+            double sx=1.5*XDoorPanel.shiftX(panel,1),sy=1.5*XDoorPanel.shiftY(panel,1);
+            add(out,x0,y0+sy,7/16.0,x1,y1+sy,9/16.0,depth,facing,sx,0,0,0,0);
+        }
     }
     private static void add(List<Box> out,double x0,double y0,double z0,double x1,double y1,double z1,double depth,int facing,double shift,double px,double pz,double angle,double unused){
         double minX=Double.POSITIVE_INFINITY,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxZ=maxX;

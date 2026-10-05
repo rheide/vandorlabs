@@ -5,7 +5,7 @@ import json,copy
 root=Path(__file__).resolve().parents[1]
 assets=root/'generated-resources/assets/vandorlabs'
 # Model filenames are an asset contract shared with TileEntitySpaceDoor.modelId.
-families=['observation','airlock','standard','security','reactor','viewport','laboratory','cargo','ventilation','cargo_lift','blast_shield','glazed_hangar','quarantine_seal','reactor_barrier','modular_shutter','white_glass','dark_glass','plain_cargo','stepped_freight','observation_leaf','reinforced_leaf','warehouse_shutter','slotted_bay','cross_braced_bay','split_view_bay']
+families=['observation','airlock','standard','security','reactor','viewport','laboratory','cargo','ventilation','cargo_lift','blast_shield','glazed_hangar','quarantine_seal','reactor_barrier','modular_shutter','white_glass','dark_glass','plain_cargo','stepped_freight','observation_leaf','reinforced_leaf','warehouse_shutter','slotted_bay','cross_braced_bay','split_view_bay','offset_cargo','twin_observation','armored_biparting','service_freight']
 for tier in ['low','medium','high']:
  for design,family in enumerate(families):
   for sliding in [False,True]:

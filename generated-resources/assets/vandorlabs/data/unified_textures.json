@@ -2101,5 +2101,101 @@
     "source": "cargo_doors/high/split_view_bay",
     "design": 24,
     "detail": 2
+  },
+  {
+    "id": "door_offset_cargo_low",
+    "label": "Offset Cargo Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/offset_cargo",
+    "design": 25,
+    "detail": 0
+  },
+  {
+    "id": "door_offset_cargo_medium",
+    "label": "Offset Cargo Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/offset_cargo",
+    "design": 25,
+    "detail": 1
+  },
+  {
+    "id": "door_offset_cargo_high",
+    "label": "Offset Cargo Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/offset_cargo",
+    "design": 25,
+    "detail": 2
+  },
+  {
+    "id": "door_twin_observation_low",
+    "label": "Twin Observation Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/twin_observation",
+    "design": 26,
+    "detail": 0
+  },
+  {
+    "id": "door_twin_observation_medium",
+    "label": "Twin Observation Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/twin_observation",
+    "design": 26,
+    "detail": 1
+  },
+  {
+    "id": "door_twin_observation_high",
+    "label": "Twin Observation Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/twin_observation",
+    "design": 26,
+    "detail": 2
+  },
+  {
+    "id": "door_armored_biparting_low",
+    "label": "Armored Biparting Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/armored_biparting",
+    "design": 27,
+    "detail": 0
+  },
+  {
+    "id": "door_armored_biparting_medium",
+    "label": "Armored Biparting Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/armored_biparting",
+    "design": 27,
+    "detail": 1
+  },
+  {
+    "id": "door_armored_biparting_high",
+    "label": "Armored Biparting Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/armored_biparting",
+    "design": 27,
+    "detail": 2
+  },
+  {
+    "id": "door_service_freight_low",
+    "label": "Service Freight Small",
+    "category": "Double Doors",
+    "source": "cargo_doors/low/service_freight",
+    "design": 28,
+    "detail": 0
+  },
+  {
+    "id": "door_service_freight_medium",
+    "label": "Service Freight Medium",
+    "category": "Double Doors",
+    "source": "cargo_doors/medium/service_freight",
+    "design": 28,
+    "detail": 1
+  },
+  {
+    "id": "door_service_freight_high",
+    "label": "Service Freight Large",
+    "category": "Double Doors",
+    "source": "cargo_doors/high/service_freight",
+    "design": 28,
+    "detail": 2
   }
 ]

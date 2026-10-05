@@ -104,10 +104,7 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     public List<AxisAlignedBB> geometry(IBlockAccess world,BlockPos pos){
         TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null)return Collections.emptyList();
         IBlockState state=world.getBlockState(tile.getPos());EnumFacing face=state.getValue(FACING);
-        List<AxisAlignedBB> result=new ArrayList<>();
-        for(com.vandorlabs.render.LargeDoorGeometry.Box b:com.vandorlabs.render.LargeDoorGeometry.boxes(tile.isFramed(),tile.isSliding(),tile.getSlideDirection(),state.getValue(OPEN),tile.positionOffset(),face.getHorizontalIndex(),tile.hasPanel(),tile.getPlacementDepth()==2))
-            result.add(new AxisAlignedBB(b.x0,b.y0,b.z0,b.x1,b.y1,b.z1).offset(tile.getPos()));
-        return result;
+        return tile.collisionGeometry(face,state.getValue(OPEN));
     }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){List<AxisAlignedBB> boxes=geometry(world,pos);AxisAlignedBB cell=new AxisAlignedBB(pos),union=null;for(AxisAlignedBB box:boxes){if(!box.intersects(cell))continue;AxisAlignedBB clipped=box.intersect(cell);union=union==null?clipped:union.union(clipped);}return union==null?FULL_BLOCK_AABB:union.offset(-pos.getX(),-pos.getY(),-pos.getZ());}
     @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return NULL_AABB;}

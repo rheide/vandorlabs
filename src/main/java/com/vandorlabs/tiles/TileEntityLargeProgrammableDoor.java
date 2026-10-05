@@ -7,7 +7,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 
 /** Nine cells address one configuration and one renderer, without loading neighbors. */
 public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
-    public TileEntityLargeProgrammableDoor(){configure(DEFAULT_LARGE_DESIGN,1,true,0,false,true);}
+    public TileEntityLargeProgrammableDoor(){configure(DEFAULT_LARGE_DESIGN,1,true);}
     private int column,row;
     private boolean assigned;
     public void assign(BlockPos anchor){column=Math.abs(pos.getX()-anchor.getX())+Math.abs(pos.getZ()-anchor.getZ());row=pos.getY()-anchor.getY();assigned=true;markDirty();}
@@ -34,6 +34,20 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
             if(!world.isBlockLoaded(cell) || !player.canPlayerEdit(cell,net.minecraft.util.EnumFacing.UP,player.getHeldItemMainhand()) || !world.isBlockModifiable(player,cell))return false;
         }
         return true;
+    }
+    private int collisionKey=-1;
+    private BlockPos collisionPos;
+    private java.util.List<AxisAlignedBB> collisionBoxes;
+    /** Reuse immutable transformed boxes across the assembly's nine cell queries. */
+    public java.util.List<AxisAlignedBB> collisionGeometry(net.minecraft.util.EnumFacing face,boolean open) {
+        boolean sliding=isSliding();
+        int key=(isFramed()?1:0)|(sliding?2:0)|(getSlideDirection()<<2)|(open?16:0)
+                |(getPlacementDepth()<<5)|(hasHinges()?128:0)|(hasPanel()?256:0)|(face.getHorizontalIndex()<<9);
+        if(collisionBoxes!=null && collisionKey==key && pos.equals(collisionPos))return collisionBoxes;
+        java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
+        for(com.vandorlabs.render.LargeDoorGeometry.Box b:com.vandorlabs.render.LargeDoorGeometry.boxes(isFramed(),sliding,getSlideDirection(),open,positionOffset(),face.getHorizontalIndex(),hasPanel(),getPlacementDepth()==2))
+            boxes.add(new AxisAlignedBB(b.x0,b.y0,b.z0,b.x1,b.y1,b.z1).offset(pos));
+        collisionKey=key;collisionPos=pos.toImmutable();collisionBoxes=java.util.Collections.unmodifiableList(boxes);return collisionBoxes;
     }
     @Override public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.add(-4,-3,-4),pos.add(5,7,5));}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("LargeDoorAssigned",assigned);tag.setInteger("LargeDoorColumn",column);tag.setInteger("LargeDoorRow",row);return tag;}

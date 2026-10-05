@@ -30,7 +30,7 @@ public final class DoorRenderModels {
         return entry;
     }
 
-    public static void clear() { MODELS.clear(); SelectedDoorFaceCache.clear(); OpaqueDoorBatch.clear(); }
+    public static void clear() { MODELS.clear(); SelectedDoorFaceCache.clear(); XDoorMeshes.clear(); OpaqueDoorBatch.clear(); }
     static void checkPreparedDrawStates(){DoorDrawRuntimeChecks.run(new java.util.ArrayList<>(MODELS.values()));}
 
     static final class Entry {
