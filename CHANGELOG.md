@@ -2,6 +2,8 @@
 
 ## 1.5
 
+- Give Framed and Redstone Input separate full-width rows in the half-height screen/input dialog, with spacing for the size, wall-texture and channel controls.
+
 - Reduce door and Programmable Glass artwork to Small/Large: former Medium becomes Large, and former Large selections migrate to it without changing designs or physical door sizes. Glass panes now share one reflected pattern across resolutions.
 - Resize imported trapdoor artwork to 128×128 Small and 256×256 Large, with a separate size selector. Standard inventory texture images are 128×128.
 - Show one design row per Screens/Controls artwork pair. Bare/Framed changes its variant and thumbnail while preserving the selected row, animation and saved texture IDs.

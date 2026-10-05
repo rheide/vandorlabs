@@ -61,17 +61,17 @@ public class GuiProgrammableInput extends GuiContainer {
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
         for(int i=0;i<3;i++) {
-            buttonList.add(layout.choice(1+i,i,3,42,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
-            buttonList.add(layout.choice(10+i,i,3,76,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
+            buttonList.add(layout.choice(1+i,i,3,38,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
+            buttonList.add(layout.choice(10+i,i,3,68,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
         }
         if(!(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole)) {
-            buttonList.add(layout.choice(30,0,2,98,I18n.format("gui.vandorlabs.input.small")));
-            buttonList.add(layout.choice(31,1,2,98,I18n.format("gui.vandorlabs.selector.normal")));
+            buttonList.add(layout.choice(30,0,2,88,I18n.format("gui.vandorlabs.input.small")));
+            buttonList.add(layout.choice(31,1,2,88,I18n.format("gui.vandorlabs.selector.normal")));
         }
-        buttonList.add(layout.choice(4,0,2,120,""));
-        buttonList.add(layout.choice(0,1,2,120,""));
-        buttonList.add(layout.control(32,142,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+177,154,18);
+        buttonList.add(layout.control(4,108,""));
+        buttonList.add(layout.control(0,130,""));
+        buttonList.add(layout.control(32,152,sidesLabel()));
+        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+185,154,18);
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
@@ -216,9 +216,9 @@ public class GuiProgrammableInput extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(textureTab==0)screenList.draw(fontRenderer,mouseX,mouseY);
         else housingList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+26,0xDAE8F0);
+        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+58,0xDAE8F0);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+174,0xDAE8F0);
         super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

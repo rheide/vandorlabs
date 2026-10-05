@@ -132,7 +132,8 @@ load as the new Large tier, preserving tint and connected edges.
 The shared **Screens** and **Controls** lists show one row for each paired
 design, such as **Extra Door Controller**. **Bare/Framed** changes the artwork and
 thumbnail while keeping that row selected. Existing saved variants and native
-animations remain supported. Standalone designs without a matching variant do
+animations remain supported. Half-height screen/input dialogs place Framed and
+Redstone Input on separate full-width rows. Standalone designs without a matching variant do
 not offer the toggle.
 
 Custom Malisis door artwork is read from its optional component icon provider,
