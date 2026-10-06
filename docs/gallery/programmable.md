@@ -52,3 +52,12 @@ The wall texture menu changes the material around a screen; it does not replace 
 ![Programmable Block finish selector](../images/gallery/programmable/block-config.png)
 
 See [building finishes](building.md) for examples of hull, padding, and pipe textures.
+
+## Signal-level screen controls
+
+The **Redstone...** artwork supports slider rows alongside on/off toggles. Set a
+row's channel list, Slider mode, and minimum/maximum levels. Up to eight bordered
+segments select the nearest value across that range; short ranges use fewer
+segments. Slider rows reserve a narrow label area so the progress bar occupies
+most of the line. See the [signal-level guide](version-1.6.md#slider-rows-on-screens-and-inputs)
+for setup, saving and copying behavior.

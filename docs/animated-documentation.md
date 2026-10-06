@@ -1,12 +1,12 @@
 # Animated documentation
 
-The door, trapdoor and Programmable Ramp guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
+The door, trapdoor and Programmable Ramp guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The [version 1.6 guide](gallery/version-1.6.md) adds channel-linked control demonstrations: a Thruster Lever drives a Rocket Thruster, and a Wall Slider drives a Programmable Light. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
 
 ![Observation door opening and closing](images/gallery/doors/observation-rotating.gif)
 
-The recorder changes normal server-side block states or redstone inputs and captures the real renderer and animation clocks. It holds each endpoint, buffers cropped framebuffer images during motion, and writes PNGs after the cycle. A fixed camera, noon lighting and hidden HUD keep clips readable. The capture client uses G1 garbage collection and a small view distance to avoid long collection/render stalls in the software renderer; these are documentation launch settings, with no changes to gameplay animation speed.
+The recorder changes normal server-side block states or redstone inputs and captures the real renderer and animation clocks. It holds each endpoint, buffers cropped framebuffer images during motion, and writes PNGs after the cycle. A fixed camera and hidden HUD keep clips readable. Motion scenes use noon lighting; signal demonstrations use nighttime lighting with a fixed fill light to show changes in emitted light. The capture client uses G1 garbage collection and a small view distance to avoid long collection/render stalls in the software renderer; these are documentation launch settings, with no changes to gameplay animation speed.
 
-The encoder uses a shared 256-color palette and a regular 50 ms output timeline, selecting the nearest real captured pose. It does not interpolate geometry or alter motion speed. GIFs loop continuously; palette colors have less precision than the original screenshots. Viewers that render GIF animations show movement; print/PDF exports may show a still.
+The encoder uses a shared 256-color palette and a regular 50 ms output timeline for motion clips and 100 ms for signal demonstrations, selecting the nearest real captured pose. It does not interpolate geometry or alter motion speed. GIFs loop continuously; palette colors have less precision than the original screenshots. Viewers that render GIF animations show movement; print/PDF exports may show a still.
 
 ## Reproduce
 
@@ -18,6 +18,9 @@ bash testclient/capture_animations.sh
 
 # One motion or a comma-separated subset
 bash testclient/capture_animations.sh --filter door-rotating,ramp-lift
+
+# Signal-level control demonstrations
+bash testclient/capture_animations.sh --filter signal-thruster-lever,signal-wall-slider
 
 # Compatibility shortcut for the original door example
 bash testclient/capture_door_gif.sh
@@ -33,7 +36,7 @@ python3 testclient/encode_animations.py testclient/door-animation.RUN
 python3 testclient/encode_animations.py testclient/door-animation.RUN/door-rotating
 ```
 
-Each clip must contain synchronized closed/open/closed states, visible intermediate geometry in both transitions, a returned endpoint and a motion footprint inside the crop. The encoder checks dimensions, frame count, exact loop duration and loop settings, and writes timing/size results plus a decoded contact sheet for review. Doors and trapdoors have 2.6-second cycles; ramps have 4.6-second cycles. See [capture validation](animation-validation.md) for the current results.
+Each clip must contain synchronized closed/open/closed states, visible intermediate geometry in both transitions, a returned endpoint and a motion footprint inside the crop. The encoder checks dimensions, frame count, exact loop duration and loop settings, and writes timing/size results plus a decoded contact sheet for review. Doors and trapdoors have 2.6-second cycles; ramps have 4.6-second cycles. Signal demonstrations have six-second cycles, with real control clicks selecting 0, 5, 10, 15 and then 0; recorded consumer levels and particle thresholds are checked at each setting. See [capture validation](animation-validation.md) for the current results.
 
 ## Motion index
 
@@ -41,12 +44,15 @@ Each clip must contain synchronized closed/open/closed states, visible intermedi
 - [Programmable Trapdoor](gallery/programmable-trapdoor.md): three in-block motions, two next-block motions and opposing mounts.
 - [Programmable Diagonal Trapdoor](gallery/programmable-diagonal-trapdoor.md): three motions, all three shapes, rectangular/staggered/partial groups and joined slope orientations.
 - [Programmable Ramp](gallery/ramp-controller.md): four modes and four slope/tread examples.
+- [Version 1.6 signal levels](gallery/version-1.6.md): linked levers, sliders, thrusters and lights.
 - [Version 1.3 highlights](gallery/version-1.3.md): selected animations with the new features.
 
 The complete capture set:
 
 | Scene | GIF |
 | --- | --- |
+| signal-thruster-lever | [Open clip](images/gallery/controls/signal-thruster-lever.gif) |
+| signal-wall-slider | [Open clip](images/gallery/lights/signal-wall-slider.gif) |
 | door-rotating | [Open clip](images/gallery/doors/observation-rotating.gif) |
 | door-sideways | [Open clip](images/gallery/doors/observation-sideways.gif) |
 | door-up | [Open clip](images/gallery/doors/observation-up.gif) |
