@@ -12,6 +12,8 @@
 
 - Correct Wall Slider attachment on every wall and align flat-mounted handles with the panel markings, including rotated floor and ceiling mounts. Remove Simple variants and Thruster Control Blocks; simplify the remaining IDs to `thruster_lever` and `wall_slider`.
 
+- Add detailed Airliner and Fighter Throttles with the same four signal detents, low/high limits, physical/channel output, configuration copying, six mounting faces and padded inventory icons.
+
 ## 1.5
 
 - Preserve filesystem texture artwork in atlas/model lookups after legacy door-tier migration, including configured item previews. Update live checks for two artwork tiers and imported hatch variants.

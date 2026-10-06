@@ -19,8 +19,8 @@ import javax.imageio.ImageIO;
 
 /** Opt-in real dialog -> network -> server -> reopened dialog regression. */
 final class ChannelListGuiChecks {
-    private static final int[] IDS={2,5,0,0,9,1,3,8,2,2,2};
-    private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit","submit","submit"};
+    private static final int[] IDS={2,5,0,0,9,1,3,8,2,2,2,2,2};
+    private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit","submit","submit","submit","submit"};
     private static final ChannelList EXPECTED=ChannelList.of(14861,14862,14863);
     private static final BlockPos POS=new BlockPos(8,80,8);
     private static int index,stage,ticks;
@@ -156,12 +156,12 @@ final class ChannelListGuiChecks {
                 visualStep++;
                 if(visualStep==4){
                     visualStep=0;
-                    if(visualIndex==1 && mount.getAxis()==net.minecraft.util.EnumFacing.Axis.Y && visualRotation<3)visualRotation++;
+                    if(visualIndex>0 && mount.getAxis()==net.minecraft.util.EnumFacing.Axis.Y && visualRotation<3)visualRotation++;
                     else{visualRotation=0;visualMount++;}
                     if(visualIndex==0 && visualMount==1)visualMount=4;
                     if(visualMount==VISUAL_MOUNTS.length){visualMount=0;visualIndex++;}
                 }
-                if(visualIndex==SignalControlRuntimeChecks.IDS.length){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS two icons, actual item placement and 60 mounted poses");mc.shutdown();}else stage=10;
+                if(visualIndex==SignalControlRuntimeChecks.IDS.length){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS four icons, actual item placement and 156 mounted poses");mc.shutdown();}else stage=10;
                 ticks=0;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}

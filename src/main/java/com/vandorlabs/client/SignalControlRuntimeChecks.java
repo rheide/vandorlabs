@@ -14,13 +14,13 @@ import net.minecraft.world.World;
 
 /** Real mounted controls, numeric latches, persistence, configuration copy and support removal. */
 public final class SignalControlRuntimeChecks {
-    public static final String[] IDS={"thruster_lever","wall_slider"};
+    public static final String[] IDS={"thruster_lever","wall_slider","airliner_throttle","fighter_throttle"};
     public static void run(World world){
         if(Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs",IDS[0])))checkRetiredControls();
         BlockPos pos=new BlockPos(3,105,3);
         for(int index=0;index<IDS.length;index++){
             Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",IDS[index]));
-            if(!(block instanceof BlockSignalControl))block=new BlockSignalControl(IDS[index],index==0?"thruster_lever":"wall_slider",32);
+            if(!(block instanceof BlockSignalControl))block=new BlockSignalControl(IDS[index],IDS[index],32);
             for(EnumFacing mount:EnumFacing.values()){
                 world.setBlockState(pos.offset(mount.getOpposite()),Blocks.STONE.getDefaultState(),2);
                 require(block.canPlaceBlockOnSide(world,pos,mount),"supported mounting "+IDS[index]+" "+mount);
@@ -56,7 +56,7 @@ public final class SignalControlRuntimeChecks {
                 world.setBlockToAir(pos);
             }
         }
-        System.out.println("[vandorlabs][reprolab] signal-control-runtime PASS two controls, all supported faces, four detents, channels, save, copy and limits");
+        System.out.println("[vandorlabs][reprolab] signal-control-runtime PASS four controls, all supported faces, four detents, channels, save, copy and limits");
     }
     private static void checkRetiredControls(){
         for(String id:new String[]{"thruster_lever_16px","thruster_wall_slider_16px","thruster_control_block_16px","thruster_control_block_32px","thruster_lever_32px","thruster_wall_slider_32px"}){

@@ -491,3 +491,5 @@ tile.vandorlabs.programmable_storage.name=Programmable Storage
 tile.vandorlabs.large_programmable_door.name=Large Programmable Door
 tile.vandorlabs.thruster_lever.name=Thruster Lever
 tile.vandorlabs.wall_slider.name=Wall Slider
+tile.vandorlabs.airliner_throttle.name=Airliner Throttle
+tile.vandorlabs.fighter_throttle.name=Fighter Throttle

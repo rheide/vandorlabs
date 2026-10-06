@@ -15,11 +15,11 @@ if target == 'signals':
     shapes=[0,1,2,3,7,17,21,22,23,25,26,27]
     selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui')]
 if target == 'redstone-dialogs':
-    selected=['channels_'+str(index) for index in range(11)]+['controls_hotbar_empty','controls_hotbar']
-    for index in range(2):
+    selected=['channels_'+str(index) for index in range(13)]+['controls_hotbar_empty','controls_hotbar']
+    for index in range(4):
         mounts=('', 'floor','ceiling') if index==0 else ('','south','east','west','floor','ceiling')
         for mount in mounts:
-            rotations=range(4) if index==1 and mount in ('floor','ceiling') else range(1)
+            rotations=range(4) if index>0 and mount in ('floor','ceiling') else range(1)
             for rotation in rotations:
                 suffix=('_'+mount if mount else '')+('_r'+str(rotation) if rotation else '')
                 selected += ['controls_'+str(index)+'_'+str(level)+suffix for level in range(4)]

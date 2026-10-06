@@ -10,7 +10,7 @@ filled=np.asarray(Image.open(root/'shot_controls_hotbar.png').convert('RGB'),dty
 assert empty.shape==filled.shape==(720,1280,3),'Unexpected hotbar viewport'
 scale=3;left=(427//2-91)*scale;top=(240-19)*scale
 changed=np.max(np.abs(empty-filled),axis=2)>25
-for slot in range(2):
+for slot in range(4):
     x=left+(slot*20+3)*scale
     mask=changed[top-scale:top+17*scale,x-scale:x+17*scale]
     yy,xx=np.nonzero(mask)

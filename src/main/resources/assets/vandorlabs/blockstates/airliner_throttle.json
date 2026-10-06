@@ -1,0 +1,612 @@
+{
+  "variants": {
+    "facing=down,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_z"
+    },
+    "facing=down,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_z"
+    },
+    "facing=down,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_z"
+    },
+    "facing=down,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_z"
+    },
+    "facing=down,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_x"
+    },
+    "facing=down,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_x"
+    },
+    "facing=down,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_x"
+    },
+    "facing=down,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_x"
+    },
+    "facing=down,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_z"
+    },
+    "facing=down,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_z"
+    },
+    "facing=down,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_z"
+    },
+    "facing=down,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_z"
+    },
+    "facing=down,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_x"
+    },
+    "facing=down,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_x"
+    },
+    "facing=down,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_x"
+    },
+    "facing=down,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_x"
+    },
+    "facing=down,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_z",
+      "y": 180
+    },
+    "facing=down,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_ceiling_x",
+      "y": 180
+    },
+    "facing=down,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_ceiling_x",
+      "y": 180
+    },
+    "facing=up,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_z"
+    },
+    "facing=up,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_z"
+    },
+    "facing=up,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_z"
+    },
+    "facing=up,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_z"
+    },
+    "facing=up,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_x"
+    },
+    "facing=up,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_x"
+    },
+    "facing=up,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_x"
+    },
+    "facing=up,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_x"
+    },
+    "facing=up,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_z",
+      "y": 180
+    },
+    "facing=up,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_z",
+      "y": 180
+    },
+    "facing=up,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_z",
+      "y": 180
+    },
+    "facing=up,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_z",
+      "y": 180
+    },
+    "facing=up,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_x",
+      "y": 180
+    },
+    "facing=up,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_x",
+      "y": 180
+    },
+    "facing=up,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_x",
+      "y": 180
+    },
+    "facing=up,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_x",
+      "y": 180
+    },
+    "facing=up,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_z"
+    },
+    "facing=up,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_z"
+    },
+    "facing=up,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_z"
+    },
+    "facing=up,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_z"
+    },
+    "facing=up,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_x"
+    },
+    "facing=up,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_x"
+    },
+    "facing=up,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_x"
+    },
+    "facing=up,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_x"
+    },
+    "facing=up,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_z",
+      "y": 180
+    },
+    "facing=up,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_z",
+      "y": 180
+    },
+    "facing=up,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_z",
+      "y": 180
+    },
+    "facing=up,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_z",
+      "y": 180
+    },
+    "facing=up,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_floor_x",
+      "y": 180
+    },
+    "facing=up,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_floor_x",
+      "y": 180
+    },
+    "facing=up,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_floor_x",
+      "y": 180
+    },
+    "facing=up,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_floor_x",
+      "y": 180
+    },
+    "facing=north,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=north,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_north"
+    },
+    "facing=north,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_north"
+    },
+    "facing=north,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_north"
+    },
+    "facing=north,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_north"
+    },
+    "facing=south,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=south,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_south"
+    },
+    "facing=south,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_south"
+    },
+    "facing=south,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_south"
+    },
+    "facing=south,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_south"
+    },
+    "facing=west,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=west,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_west"
+    },
+    "facing=west,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_west"
+    },
+    "facing=west,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_west"
+    },
+    "facing=west,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_west"
+    },
+    "facing=east,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    },
+    "facing=east,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_off_east"
+    },
+    "facing=east,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_low_east"
+    },
+    "facing=east,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_medium_east"
+    },
+    "facing=east,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:aircraft_throttles/32px/airliner_throttle_high_east"
+    }
+  }
+}

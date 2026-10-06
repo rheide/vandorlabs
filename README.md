@@ -179,10 +179,13 @@ the old suffixed IDs are not supported. Normal right-click cycles
 Off, Low, Medium and High. Shift-right-click opens the existing channel dialog
 with Low and High limits. Defaults are `0, 5, 10, 15`; Medium is the rounded midpoint.
 Low must be at least 1 and High must be at least two levels above Low, keeping
-four distinct outputs. They emit the selected level to physical redstone and
-every configured channel. Linked controls mirror channel values without
-rounding their output; the artwork shows the nearest positive detent. Levers
-and sliders mount on walls, floors and ceilings, with horizontal mounts rotated
+four distinct outputs. Airliner Throttle (`airliner_throttle`) and Fighter
+Throttle (`fighter_throttle`) offer the same settings and mounting options. The
+Airliner handles move together; small buttons are decorative. All four controls
+emit the selected level to physical redstone and every configured channel.
+Linked controls mirror channel values without rounding their output; the artwork
+shows the nearest positive detent. All four controls mount on walls, floors and
+ceilings, with horizontal mounts rotated
 to the player's facing.
 Creative pick-block copies limits and channels; the Duplifier also supports
 limits and the selected state.
@@ -214,7 +217,7 @@ on flat, diagonal, wall-mounted and ceiling-mounted surfaces, or
 `bash testclient/test_viewscreen.sh --focus redstone-dialogs` for setting and
 reopening channel, brightness, Trigger, propulsion and thruster-control dialogs.
 The latter also checks real four-detent clicks, wall/floor/ceiling models and
-visible padding on both control icons.
+visible padding on all four control icons.
 
 
 New blocks should have crafting recipes. Keep each recipe distinct so it does
@@ -307,7 +310,7 @@ The normal Vandor Labs jar includes `assets/vandorlabs/dynmap-models.txt` and
 directly from the mod jar. Dynmap's API is a compile-only dependency; the mod
 continues to load when Dynmap is absent.
 
-The definitions cover 99 block types and more than 20,000 block states.
+The definitions cover 101 block types and more than 20,000 block states.
 Ordinary JSON models retain their scanned shape, orientation, texture,
 power state, and connected square-thruster variant. Dynmap 1.12 cannot parse
 Forge OBJ models or execute tile-entity renderers, so the bundled data supplies

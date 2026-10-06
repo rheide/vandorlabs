@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit static listed-state defaults for the four-detent lever and slider.
+"""Emit static listed-state defaults for the four-detent mounted controls.
 
 Rotated grip cuboids use conservative bounds; tile configuration stays in game.
 """

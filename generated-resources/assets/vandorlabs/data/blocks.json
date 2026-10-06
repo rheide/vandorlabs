@@ -3547,5 +3547,21 @@
     "item": true,
     "control_kind": "wall_slider",
     "detail": 32
+  },
+  {
+    "id": "airliner_throttle",
+    "type": "switch",
+    "class": "BlockSignalControl",
+    "item": true,
+    "control_kind": "airliner_throttle",
+    "detail": 32
+  },
+  {
+    "id": "fighter_throttle",
+    "type": "switch",
+    "class": "BlockSignalControl",
+    "item": true,
+    "control_kind": "fighter_throttle",
+    "detail": 32
   }
 ]
