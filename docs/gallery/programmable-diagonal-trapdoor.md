@@ -28,7 +28,9 @@ Geometry copies between diagonal walls and trapdoors through the Duplifier's
 
 ## Motion and groups
 
-**Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical** and **Split X** are also available. Left/right moves the entire opening across its width. Horizontal splits move width halves apart; vertical splits move length halves apart along the slope. X splits retract four triangular panels toward the four edges. All travel stays in the panel’s plane and shares the selected artwork, collision and selection geometry. Leave space around the opening; these modes do not include the lifting stage of Slide over wall.
+Left-click settings buttons to cycle forward, or right-click to cycle backward.
+
+**Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical** and **Split X** are also available. Left/right moves the entire opening across its width. Joined straight and bent groups use one sideways direction and their full opening width, even when upper rows face the opposite way. Horizontal splits divide the whole group at one shared width midpoint; vertical splits move length halves apart along the slope. X splits retract four triangular panels toward the four edges. All travel stays in the panel’s plane and shares the selected artwork, collision and selection geometry. Leave space around the opening; these modes do not include the lifting stage of Slide over wall.
 
 Coplanar groups share their complete opening’s center and dimensions. Bent groups, including opposite-slope V assemblies, use each leaf’s own plane for the new split modes. Existing saved rotating and wall-slide choices are preserved. New modes synchronize across loaded groups, persist in configured items and copy with **Door / Trapdoor Movement**.
 

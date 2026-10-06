@@ -2,7 +2,7 @@
 
 One Programmable Door can use any of 21 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
 
-In Creative mode, shift-right-click either half to open the settings. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
+In Creative mode, shift-right-click either half to open the settings. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Left-click a settings button to cycle forward; right-click it to cycle backward. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
 
 ![Programmable Door settings](../images/gallery/doors/door-config.png)
 
@@ -52,7 +52,7 @@ The motion selector also offers **Slide Left**, **Slide Right**, **Split Horizon
 
 Left and right refer to the door's local orientation; viewing it from behind reverses them. Split cuts preserve the selected artwork and glazing. Frames and control panels stay fixed.
 
-New single doors retain placement-dependent left/right sliding. Placing a compatible second door changes that default to **Split Horizontal**; removing it restores the single-door default. Existing saved sideways sliding follows the same rule without changing its travel. Explicitly selected modes remain selected when pairing changes. Existing rotating, up, down and Large Door X splits also retain their saved behavior. All new modes survive world saves, pick-block and Duplifier copying.
+New single doors retain placement-dependent left/right sliding. Placing a compatible second door changes that default to **Split Horizontal**; removing it restores the single-door default. Existing saved sideways sliding follows the same rule without changing its travel. When a newly placed sideways-sliding door joins another Left/Right slider, both become **Split Horizontal**. Other selected modes remain selected when pairing changes. Existing rotating, up, down and Large Door X splits also retain their saved behavior. All new modes survive world saves, pick-block and Duplifier copying.
 
 The frame stays in place while the leaf moves. Rotating doors can show or hide their hinges; the hinge setting is saved even when you temporarily switch to sliding motion. Paired doors share appearance and settings.
 
@@ -93,4 +93,4 @@ All four opening types support **Slide Left**, **Slide Right**, **Split Horizont
 | Large Door | Entire three-block-wide opening | Opening midpoint, across its 3×3 area | Horizontal split; Rotating, Slide Up and Slide Down remain available. |
 | Trapdoor | Entire leaf or coplanar group width | Across its width / along its length, within the leaf’s plane | Rotating by default; existing Sliding and surface/next-block choices remain available. Diagonal leaves retain their wall-slide choices. |
 
-X splits use four triangular panels at each opening’s center. Coplanar trapdoor groups share one opening; bent diagonal groups split each leaf in its own plane. See the [flat](programmable-trapdoor.md) and [diagonal](programmable-diagonal-trapdoor.md) trapdoor guides. Rotating geometry and hinges are unchanged.
+X splits use four triangular panels at each opening’s center. Coplanar trapdoor groups share one opening; bent diagonal groups share sideways travel and the Horizontal split center, while Vertical and X splits follow each leaf’s plane. See the [flat](programmable-trapdoor.md) and [diagonal](programmable-diagonal-trapdoor.md) trapdoor guides. Rotating geometry and hinges are unchanged.

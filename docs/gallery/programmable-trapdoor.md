@@ -13,7 +13,7 @@ The leaf is 3px thick. **Bottom** spans approximately 0–3px above the block’
 
 ## Movement, next-block placement and texture layout
 
-The **Movement** button cycles **Rotating**, **Sliding**, **Slide over surface**, **Rotate into next block**, and **Slide into next block**, followed by **Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical** and **Split X**. The next-block movements place the closed leaf across the neighboring cell in its facing direction, with the trapdoor tile remaining in its own mounting cell.
+The **Movement** button cycles **Rotating**, **Sliding**, **Slide over surface**, **Rotate into next block**, and **Slide into next block**, followed by **Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical** and **Split X**. The next-block movements place the closed leaf across the neighboring cell in its facing direction, with the trapdoor tile remaining in its own mounting cell. Left-click settings buttons to cycle forward, or right-click to cycle backward.
 
 **Slide over surface** first raises the horizontal leaf clear of the neighboring surface, then slides it sideways. Ordinary Sliding travels sideways at its selected height.
 
