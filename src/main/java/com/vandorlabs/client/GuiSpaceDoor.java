@@ -62,7 +62,7 @@ public class GuiSpaceDoor extends GuiContainer {
         listLeft=layout.listX;listRight=listLeft+layout.listWidth;listTop=guiTop+38;
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
-        motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
+        motionButton=layout.control(10,30,(motion==SpaceDoorMotion.SIDEWAYS?tile.motionLabel():motion.label));buttonList.add(motionButton);
         buttonList.add(layout.control(11,50,SIZES[detail]));
         buttonList.add(layout.control(12,70,framed?"Frame: Framed":"Frame: Bare"));
         buttonList.add(layout.control(16,90,triggerLabel()));buttonList.add(layout.control(13,110,depthLabel()));

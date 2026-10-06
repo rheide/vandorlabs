@@ -48,8 +48,24 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public boolean isFramed() { return framed; }
     public boolean isSliding() { migrateLegacyMotion(); return sliding; }
     public int getSlideDirection() { return slideDirection; }
-    public static boolean validSlideDirection(int value) { return value>=0 && value<=3; }
+    public static boolean validSlideDirection(int value) { return value>=0 && value<=7; }
     public boolean isXSplit(){return this instanceof TileEntityLargeProgrammableDoor && isSliding() && slideDirection==3;}
+    /** Clipped panels are needed only for single horizontal splits and all vertical splits. */
+    public boolean hasSplitPanels(boolean paired) {
+        return isSliding() && (slideDirection==7 || slideDirection==6 && !paired);
+    }
+    public double horizontalTravel(boolean paired,boolean right) {
+        double width=this instanceof TileEntityLargeProgrammableDoor?2:paired?2:1;
+        return slideDirection==4?-width:slideDirection==5?width:
+                slideDirection==6?(right?1:-1):0;
+    }
+    public String motionLabel() {
+        if(!isSliding() || slideDirection!=0)return com.vandorlabs.render.SpaceDoorMotion.fromSettings(isSliding(),slideDirection).label;
+        if(this instanceof TileEntityLargeProgrammableDoor || mate()!=null)return "Split Horizontal";
+        if(world==null)return "Slide (Auto)";
+        IBlockState state=world.getBlockState(pos).getBlock().getActualState(world.getBlockState(pos),world,pos);
+        return state.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.LEFT?"Slide Right":"Slide Left";
+    }
     public double verticalTravel() {
         return com.vandorlabs.persistence.SpaceDoorData.verticalTravel(framed,slideDirection);
     }
@@ -206,7 +222,6 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
-        return slideDirection==0?super.getRenderBoundingBox():
-                new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,-2,-1),pos.add(2,4,2));
+        return new net.minecraft.util.math.AxisAlignedBB(pos.add(-2,-2,-2),pos.add(3,4,3));
     }
 }

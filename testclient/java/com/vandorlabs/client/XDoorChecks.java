@@ -49,6 +49,7 @@ final class XDoorChecks {
         }
         for(double area:areas)require(Math.abs(area-1)<1e-6,"closed panels overlap or leave a hole");
         replacementMaterials();
+        SplitDoorChecks.run();
         TileEntityLargeProgrammableDoor large=new TileEntityLargeProgrammableDoor();large.configure(23,2,true,3,false,true);
         TileEntityLargeProgrammableDoor copied=new TileEntityLargeProgrammableDoor();copied.applyItemSettings(large.itemSettings());require(copied.isXSplit(),"picked X mode lost");
         net.minecraft.nbt.NBTTagCompound saved=large.writeToNBT(new net.minecraft.nbt.NBTTagCompound());copied.readFromNBT(saved);require(copied.isXSplit(),"saved X mode lost");

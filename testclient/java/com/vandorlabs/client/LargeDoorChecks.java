@@ -52,7 +52,7 @@ final class LargeDoorChecks {
             require(renderers==1,"duplicate renderers");
             // Test a player's body in the middle of the opening, not just OPEN flags.
             for(boolean frame:new boolean[]{false,true})for(boolean slide:new boolean[]{false,true})
-                for(int direction=0;direction<(slide?4:1);direction++)for(int depth=0;depth<3;depth++)
+                for(int direction=0;direction<(slide?8:1);direction++)for(int depth=0;depth<3;depth++)
                     for(boolean hinges:new boolean[]{false,true}) {
                         root=block.root(world,anchor);root.configure(2,1,frame,direction,false,slide,hinges,0,false);root.setPlacementDepth(depth);
                         double localX=1.5,localZ=(slide?.5:13.24/16)+root.positionOffset();
@@ -82,7 +82,7 @@ final class LargeDoorChecks {
             world.chunkLimit=true;
             require(item.onItemUse(player,world,boundary.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.FAIL && stack.getCount()==2,"unloaded footprint");
         }
-        System.out.println("PASS: Large Door four-facing placement, "+cells+" cell roles/NBT, one renderer, 240 open/closed passage configurations, shared picking, atomic removal/obstruction/edit denial and unloaded chunk guards");
+        System.out.println("PASS: Large Door four-facing placement, "+cells+" cell roles/NBT, one renderer, 432 open/closed passage configurations, shared picking, atomic removal/obstruction/edit denial and unloaded chunk guards");
     }
     private static void timingAndPanel(){
         double regularTicks=TESlidingDoor.animationTicks(new TileEntitySpaceDoor());

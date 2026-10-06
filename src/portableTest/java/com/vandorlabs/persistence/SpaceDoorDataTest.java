@@ -55,15 +55,19 @@ public final class SpaceDoorDataTest {
             check(SpaceDoorData.positionOffset(sliding,framed,hinges,0)==(sliding?0:-5.24/16.0),
                     "middle door model moved");
         }
-        com.vandorlabs.render.SpaceDoorMotion motion=com.vandorlabs.render.SpaceDoorMotion.ROTATING;
-        for (int i=0;i<5;i++) {
-            check(motion.sliding==(i>0) && motion.direction==Math.max(0,i-1),"five motion choices");
-            check(com.vandorlabs.render.SpaceDoorMotion.fromSettings(motion.sliding,motion.direction)==motion,
-                    "dialog motion matches saved settings");
-            motion=motion.next();
+        for(com.vandorlabs.render.SpaceDoorMotion mode:com.vandorlabs.render.SpaceDoorMotion.values()) {
+            check(com.vandorlabs.render.SpaceDoorMotion.fromSettings(mode.sliding,mode.direction)==mode,"saved motion lookup");
+            MemoryPrimitiveData tag=new MemoryPrimitiveData();
+            new SpaceDoorData(23,1,true,mode.direction,false,mode.sliding).write(tag);
+            check(SpaceDoorData.read(tag).direction==mode.direction,"all motion values persist");
+            if(mode.direction>=3)check(SpaceDoorData.verticalTravel(true,mode.direction)==0,"nonvertical whole-leaf mode moved up");
         }
-        check(new SpaceDoorData(23,1,true,3,false,true).direction==3,"X motion persistence");
-        check(motion==com.vandorlabs.render.SpaceDoorMotion.ROTATING,"motion selector wraps");
+        com.vandorlabs.render.SpaceDoorMotion motion=com.vandorlabs.render.SpaceDoorMotion.ROTATING;
+        java.util.Set<com.vandorlabs.render.SpaceDoorMotion> choices=new java.util.HashSet<>();
+        do {check(choices.add(motion),"motion cycle repeats early");motion=motion.next();}
+        while(motion!=com.vandorlabs.render.SpaceDoorMotion.ROTATING);
+        check(choices.size()==8 && !choices.contains(com.vandorlabs.render.SpaceDoorMotion.SIDEWAYS),"eight explicit motions, legacy automatic is read-only");
+        check(com.vandorlabs.render.SpaceDoorMotion.fromSettings(true,0)==com.vandorlabs.render.SpaceDoorMotion.SIDEWAYS,"legacy sideways unchanged");
         System.out.println("Space door settings PASS: 4176 configurations, persistence, hinges, motion, vertical travel and bounds");
     }
 }

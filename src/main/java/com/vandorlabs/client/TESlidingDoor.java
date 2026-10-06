@@ -221,7 +221,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         for (int part=glass?2:0;part<=(glass?2:1);part++) {
-            if(tile.isXSplit() && part!=0) {
+            if((tile.isXSplit() || tile.hasSplitPanels(paired)) && part!=0) {
                 renderXPanels(tile,state,facing,progress,x,y,z,size,right,part,light,glass);
                 continue;
             }
@@ -230,7 +230,9 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             orientDetailedDoor(facing);
             GlStateManager.translate(0,0,tile.positionOffset());
             if (part!=0) {
-                if (sliding && tile.getSlideDirection()!=0)
+                if (sliding && tile.getSlideDirection()>=4)
+                    GlStateManager.translate(tile.horizontalTravel(paired,right)*progress*size,0,0);
+                else if (sliding && tile.getSlideDirection()!=0)
                     GlStateManager.translate(0,tile.verticalTravel()*progress*size,0);
                 else {
                     DoorLeafTransform pose=DoorLeafTransform.calculate(sliding,motion.getSlide(right),motion.getPivot(right),motion.getPivotZ(),motion.getAngle(right),progress);
@@ -288,16 +290,25 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
         }
-        for(int panel=0;panel<4;panel++) {
+        for(int panel=0;panel<panels.length;panel++) {
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
-            GlStateManager.translate(size*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress),
-                    size*com.vandorlabs.render.XDoorPanel.shiftY(panel,progress),tile.positionOffset());
+            GlStateManager.translate(size*panelShiftX(tile,panel,progress),
+                    size*panelShiftY(tile,panel,progress),tile.positionOffset());
             GlStateManager.scale(size,size,1);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             panels[panel].draw(buffer,light>>>16,light&65535);Tessellator.getInstance().draw();GlStateManager.popMatrix();
         }
         if(glass){GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();}
         GlStateManager.enableLighting();
+    }
+
+    static double panelShiftX(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int panel,double progress) {
+        return tile.isXSplit()?com.vandorlabs.render.XDoorPanel.shiftX(panel,progress):
+                com.vandorlabs.render.SplitDoorPanel.shiftX(tile.getSlideDirection()==7,panel,progress);
+    }
+    static double panelShiftY(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int panel,double progress) {
+        return tile.isXSplit()?com.vandorlabs.render.XDoorPanel.shiftY(panel,progress):
+                com.vandorlabs.render.SplitDoorPanel.shiftY(tile.getSlideDirection()==7,panel,progress);
     }
 
     private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,SelectedDoorGeometry geometry) {
