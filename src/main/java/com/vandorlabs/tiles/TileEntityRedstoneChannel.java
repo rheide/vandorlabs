@@ -24,7 +24,28 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     private final java.util.Map<Integer,Integer> levels=new java.util.HashMap<>();
     @Override public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
     @Override public int localSignalLevel(int channel){return isChannelLatch()?latchedLevel(channel):localOn?15:0;}
-    @Override public void applyLinkedLevels(java.util.Map<Integer,Integer> value){levels.clear();levels.putAll(value);RedstoneChannelLatch.super.applyLinkedLevels(value);markDirty();}
+    public int getOutputLevel(){
+        if(!localOn)return 0;
+        int level=15;for(int i=0;i<channels.size();i++)level=Math.min(level,latchedLevel(channels.get(i)));
+        return level;
+    }
+    @Override public void applyLinkedLevels(java.util.Map<Integer,Integer> value){
+        boolean changed=!levels.equals(value);levels.clear();levels.putAll(value);
+        RedstoneChannelLatch.super.applyLinkedLevels(value);
+        if(changed){markDirty();sync();if(world!=null && !world.isRemote){
+            net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
+            for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values()){
+                net.minecraft.util.math.BlockPos neighbor=pos.offset(side);
+                if(world.isBlockLoaded(neighbor))world.neighborChanged(neighbor,block,pos);
+                // The mounted support can conduct the changed strong level to dust.
+                if(world.isBlockLoaded(neighbor) && world.getBlockState(neighbor).isNormalCube())
+                    for(net.minecraft.util.EnumFacing supportSide:net.minecraft.util.EnumFacing.values()){
+                        net.minecraft.util.math.BlockPos target=neighbor.offset(supportSide);
+                        if(world.isBlockLoaded(target))world.neighborChanged(target,block,neighbor);
+                    }
+            }
+        }}
+    }
 
     @Override public ChannelList getRedstoneChannels(){return channels;}
 

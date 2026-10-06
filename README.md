@@ -149,9 +149,10 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
 Signal levels use the strongest physical or virtual source, from 0 (off) to 15.
 All channel sources remain limited to loaded chunks in the same dimension.
 In a programmable light dialog, select **Brightness: Signal + offset** and use
-the slider for an offset from −15 to +15. Emission is clamped to 0–15; this mode
-controls brightness directly, while **Brightness: Slider** retains the manual
-and redstone on/off trigger modes. Joined lights use their group's strongest signal.
+the slider for an offset from −15 to +15. The trigger selector cycles through
+Disabled, Redstone ON, Redstone OFF and Signal + offset. Emission is clamped to
+0–15; signal mode controls brightness directly, while the other modes keep the
+slider as the fixed brightness. Joined lights use their group's strongest signal.
 
 In a propulsion dialog, select **Brightness: Signal** to interpolate emitted
 light and emitter artwork brightness. **Particles at level** sets the minimum

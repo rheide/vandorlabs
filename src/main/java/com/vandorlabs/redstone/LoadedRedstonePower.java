@@ -28,6 +28,7 @@ public final class LoadedRedstonePower {
                         result=Math.max(result,world.getBlockState(source).getStrongPower(world, source, strongSide));
                 }
             } else result=Math.max(result,state.getWeakPower(world, neighbor, side));
+            if(result>=15)return 15;
         }
         return Math.min(15,result);
     }

@@ -36,19 +36,19 @@ public final class GuiRedstoneScreen extends GuiContainer {
         xSize=Math.min(420,width-12);ySize=Math.min(300,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int cx=guiLeft+xSize-164;
         rowListTop=header?82:54;
-        titleField=new GuiTextField(2,fontRenderer,guiLeft+78,guiTop+50,xSize-90,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
-        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+(header?102:64),148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
-        channelField=new GuiTextField(1,fontRenderer,cx,guiTop+(header?140:106),148,18);ChannelFields.configure(channelField);
+        titleField=new GuiTextField(2,fontRenderer,guiLeft+78,guiTop+50,xSize-258,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
+        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+68,148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
+        channelField=new GuiTextField(1,fontRenderer,cx,guiTop+106,148,18);ChannelFields.configure(channelField);
         housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-188,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
         buttonList.add(new GuiButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
         buttonList.add(new GuiButton(1,guiLeft+92,guiTop+28,90,20,"Housing"));
-        buttonList.add(new GuiButton(2,cx,guiTop+(header?178:144),70,20,"Add"));
-        buttonList.add(new GuiButton(3,cx+76,guiTop+(header?178:144),72,20,"Remove"));
-        buttonList.add(new GuiButton(5,cx,guiTop+(header?160:126),70,16,"Up"));
-        buttonList.add(new GuiButton(6,cx+76,guiTop+(header?160:126),72,16,"Down"));
-        buttonList.add(new GuiButton(7,cx,guiTop+202,148,18,"Toggle"));
-        buttonList.add(new GuiButton(8,cx,guiTop+222,70,18,"Min: 0"));buttonList.add(new GuiButton(9,cx+76,guiTop+222,72,18,"Max: 15"));
-        buttonList.add(new GuiButton(4,cx,guiTop+ySize-30,148,20,"Done"));load();refresh();
+        buttonList.add(new GuiButton(2,cx,guiTop+166,70,20,"Add"));
+        buttonList.add(new GuiButton(3,cx+76,guiTop+166,72,20,"Remove"));
+        buttonList.add(new GuiButton(5,cx,guiTop+146,70,16,"Up"));
+        buttonList.add(new GuiButton(6,cx+76,guiTop+146,72,16,"Down"));
+        buttonList.add(new GuiButton(7,cx,guiTop+126,148,18,"Toggle"));
+        buttonList.add(new GuiButton(8,cx,guiTop+188,70,18,"Min: 0"));buttonList.add(new GuiButton(9,cx+76,guiTop+188,72,18,"Max: 15"));
+        buttonList.add(new GuiButton(4,cx,guiTop+ySize-22,148,20,"Done"));load();refresh();
     }
     private boolean store(){
         boolean headingValid=!header || RedstoneScreenContents.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
@@ -68,6 +68,12 @@ public final class GuiRedstoneScreen extends GuiContainer {
         titleField.setVisible(header && !materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
         for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<tile.maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
+    }
+    void checkLayout(){
+        for(GuiButton a:buttonList)if(a.visible){
+            if(a.x<0 || a.y<0 || a.x+a.width>width || a.y+a.height>height)throw new IllegalStateException("Row button outside viewport: "+a.id);
+            for(GuiButton b:buttonList)if(b.visible && a.id<b.id && a.x<b.x+b.width && a.x+a.width>b.x && a.y<b.y+b.height && a.y+a.height>b.y)throw new IllegalStateException("Row buttons overlap: "+a.id+"/"+b.id);
+        }
     }
     private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
@@ -140,10 +146,10 @@ public final class GuiRedstoneScreen extends GuiContainer {
             fontRenderer.drawString(fontRenderer.trimStringToWidth(labels.get(row),xSize-204),guiLeft+18,yy+5,0xE0ECF5);
         }
         int cx=guiLeft+xSize-164;
-        if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+55,0xDAE8F0);titleField.drawTextBox();drawRect(guiLeft+12,guiTop+76,guiLeft+xSize-12,guiTop+77,0xFF365366);}
-        fontRenderer.drawString("Text is limited to screen width.",guiLeft+12,guiTop+ySize-14,0xADBECA);
-        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+(header?90:52),0xDAE8F0);fontRenderer.drawString("Channels (0 = none)",cx,guiTop+(header?128:94),0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
-        else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+(header?102:64),148,0xADBECA);
+        if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+55,0xDAE8F0);titleField.drawTextBox();drawRect(guiLeft+12,guiTop+76,guiLeft+xSize-180,guiTop+77,0xFF365366);}
+        fontRenderer.drawString(fontRenderer.trimStringToWidth("Text is limited to screen width.",xSize-192),guiLeft+12,guiTop+ySize-14,0xADBECA);
+        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+56,0xDAE8F0);fontRenderer.drawString("Channels (0 = none)",cx,guiTop+94,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
+        else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+68,148,0xADBECA);
         net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();
     }
 }

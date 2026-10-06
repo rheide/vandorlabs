@@ -64,7 +64,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         buttonList.add(layout.tab(90,0,2,"Light texture"));buttonList.add(layout.tab(91,1,2,"Housing"));
         buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
-        buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.control(105,198,brightnessLabel()));buttonList.add(layout.done(100));refreshTabs();
+        buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
     private String brightnessLabel(){return signalBrightness?"Brightness: Signal + offset":"Brightness: Slider";}
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
@@ -78,6 +78,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     }
 
     private String triggerLabel() {
+        if(signalBrightness)return brightnessLabel();
         return trigger == 1 ? "Trigger: Redstone ON"
                 : trigger == 2 ? "Trigger: Redstone OFF" : "Trigger: Disabled";
     }
@@ -154,11 +155,10 @@ public final class GuiProgrammableLight extends GuiContainer {
             button.displayString = joinLabel();
             send();
         }
-        if(button.id==105){signalBrightness=!signalBrightness;button.displayString=brightnessLabel();send();}
         if(button.id==103){small=!small;button.displayString=sizeLabel();send();}
         if(button.id==104){tileSides=!tileSides;button.displayString=sidesLabel();send();}
         if (button.id == 102) {
-            trigger = (trigger + 1) % 3;
+            if(signalBrightness){signalBrightness=false;trigger=0;}else if(trigger==2)signalBrightness=true;else trigger++;
             button.displayString = triggerLabel();
             send();
         }

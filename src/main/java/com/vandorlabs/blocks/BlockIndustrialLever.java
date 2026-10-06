@@ -197,14 +197,18 @@ public class BlockIndustrialLever extends BlockHorizontal {
 
     @Override
     public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
-        return state.getValue(POWERED) ? 15 : 0;
+        if(!state.getValue(POWERED))return 0;
+        TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof TileEntityRedstoneChannel?((TileEntityRedstoneChannel)tile).getOutputLevel():15;
     }
 
     @Override
     public int getStrongPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
         // Mod convention (matches BlockVandorSwitch): strong on every side
         // while on, so the support block conducts through to lamps and dust.
-        return state.getValue(POWERED) ? 15 : 0;
+        if(!state.getValue(POWERED))return 0;
+        TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof TileEntityRedstoneChannel?((TileEntityRedstoneChannel)tile).getOutputLevel():15;
     }
 
     @Override

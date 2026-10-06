@@ -11,6 +11,11 @@ if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
 if target == 'dialogs':
     selected = ['screen_gui', 'console_gui', 'half_console_gui', 'input_gui', 'full_input_gui', 'programmable_wall_gui', 'programmable_diagonal_width_gui', 'programmable_block_gui', 'programmable_face_overrides_gui', 'space_door_gui', 'programmable_light_gui', 'programmable_trigger_gui', 'thruster_gui', 'diagonal_trapdoor_gui', 'trapdoor_gui', 'trapdoor_surface_gui']
+if target == 'signals':
+    shapes=[0,1,2,3,7,17,21,22,23,25,26,27]
+    selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui')]
+if target == 'redstone-dialogs':
+    selected=['channels_'+str(index) for index in range(9)]
 assert selected, 'No mapped screenshots match ' + prefix
 log = (source / 'client.log').read_text()
 
@@ -23,7 +28,7 @@ for name in selected:
     with Image.open(image) as png:
         assert png.size == (1280, 720), 'Unexpected screenshot dimensions: ' + name
         png.verify()
-    require('wrote shot_' + name + '.png')
+    if target not in ('signals','redstone-dialogs'): require('wrote shot_' + name + '.png')
     if name.startswith('gallery_trapdoor_followup_'):
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):
@@ -39,6 +44,11 @@ if target == 'gallery_distant_geometry':
         neutral=(region.max(axis=2)-region.min(axis=2)<24)&(region.mean(axis=2)<180)
         assert np.count_nonzero(neutral)>=minimum, 'Distant geometry not visible: '+label
     print('PASS: gear, diagonal walls and ramp surfaces visible beyond 64 blocks')
+if target == 'signals':
+    for shape in shapes: require('redstone-slider-runtime PASS shape='+str(shape))
+    require('integrated-screen-duplifier-runtime PASS')
+if target == 'redstone-dialogs':
+    require('channel-gui-runtime PASS')
 require('custom-materials-runtime PASS')
 require('imported-materials-runtime PASS')
 if target == 'dialogs':
