@@ -10,6 +10,13 @@ import java.util.*;
 /** Real mesh cuts, atlas UV interpolation, closed coverage and four motion directions. */
 final class XDoorChecks {
     static void run() {
+        double travel=XDoorPanel.travel(1,false,1.5);
+        for(int panel=0;panel<4;panel++) {
+            double x=1.5*(1+XDoorPanel.shiftX(panel,travel)),y=1.5*(1+XDoorPanel.shiftY(panel,travel));
+            double inset=panel==0?x:panel==1?3-x:panel==2?3-y:y;
+            require(Math.abs(inset-1/16.0)<1e-9,"bare X panel does not retain exactly one world pixel");
+        }
+        require(XDoorPanel.travel(1,true,1.5)==1,"framed X travel changed");
         double[] areas=new double[4];int vertices=0;
         for(int hand=0;hand<2;hand++) {
             StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();

@@ -2,6 +2,7 @@
 
 ## 1.6
 
+- Leave one Minecraft pixel (1/16 block) visible at each fully open frameless Sliding X panel tip, with matching rendering, collision and click targeting.
 - Restore version 1.5 door and trapdoor movement, placement and pairing. Revert the experimental Slide Left/Right, Split Horizontal/Vertical and added regular-door/trapdoor split modes; retain the large door's existing Sliding X.
 - Keep large-door leaves and regular rotating doors targetable and collidable where they extend outside their original block cells. Draw selection outlines on the actual panel and allow ordinary right-click closing there.
 - Remove White Glass and Dark Glass leaf designs from flat and diagonal trapdoor artwork pickers; retain them for regular Programmable Doors.

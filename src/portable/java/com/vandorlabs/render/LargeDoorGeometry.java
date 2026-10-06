@@ -17,7 +17,7 @@ public final class LargeDoorGeometry {
         List<Box> result=new ArrayList<>();double jamb=1.5/16,z0=sliding?6/16.0:11.24/16,z1=z0+4/16.0;
         if(frame){add(result,0,0,z0,jamb,3,z1,depth,facing,0,0,0,0,0);add(result,3-jamb,0,z0,3,3,z1,depth,facing,0,0,0,0,0);add(result,jamb,0,z0,3-jamb,jamb,z1,depth,facing,0,0,0,0,0);add(result,jamb,3-jamb,z0,3-jamb,3,z1,depth,facing,0,0,0,0,0);}
         double low=frame?jamb:0,high=frame?3-jamb:3;
-        if(sliding && direction==3)addXPanels(result,low,high,open,depth,facing);
+        if(sliding && direction==3)addXPanels(result,low,high,open,depth,facing,frame);
         else for(int hand=0;hand<2;hand++){
             boolean right=hand==1;double x0=right?1.5:(frame?jamb:0),x1=right?(frame?3-jamb:3):1.5;
             double leafZ=sliding?7/16.0:12.24/16;
@@ -34,10 +34,10 @@ public final class LargeDoorGeometry {
         }
         return result;
     }
-    private static void addXPanels(List<Box> out,double low,double high,boolean open,double depth,int facing) {
+    private static void addXPanels(List<Box> out,double low,double high,boolean open,double depth,int facing,boolean frame) {
         if(!open){add(out,low,low,7/16.0,high,high,9/16.0,depth,facing,0,0,0,0,0);return;}
         // Narrow strips conservatively cover the diagonal faces for vanilla AABB collision.
-        // The exact tip is outside the aperture at full travel, so no strip seals the passage.
+        // Bare panels retain one pixel at their tips; the center stays clear.
         for(int panel=0;panel<4;panel++)for(int strip=0;strip<64;strip++) {
             double a=low+(high-low)*strip/64,b=low+(high-low)*(strip+1)/64;
             List<float[]> rectangle=new ArrayList<>();
@@ -52,7 +52,8 @@ public final class LargeDoorGeometry {
             double x0=Double.POSITIVE_INFINITY,y0=x0,x1=Double.NEGATIVE_INFINITY,y1=x1;
             for(float[] v:clipped){x0=Math.min(x0,v[0]*1.5);x1=Math.max(x1,v[0]*1.5);y0=Math.min(y0,v[1]*1.5);y1=Math.max(y1,v[1]*1.5);}
             if(x1-x0<1e-7 || y1-y0<1e-7)continue;
-            double sx=1.5*XDoorPanel.shiftX(panel,1),sy=1.5*XDoorPanel.shiftY(panel,1);
+            double travel=XDoorPanel.travel(1,frame,1.5);
+            double sx=1.5*XDoorPanel.shiftX(panel,travel),sy=1.5*XDoorPanel.shiftY(panel,travel);
             add(out,x0,y0+sy,7/16.0,x1,y1+sy,9/16.0,depth,facing,sx,0,0,0,0);
         }
     }

@@ -16,6 +16,8 @@ Door and trapdoor movement, placement and pairing retain their version 1.5
 behavior. The experimental 1.6 Slide Left/Right and Split Horizontal/Vertical
 choices, and the extra split choices for regular doors and trapdoors, were
 reverted. Large Programmable Doors retain their existing **Sliding X** mode.
+Without a frame, Sliding X leaves one Minecraft pixel (1/16 block) of each
+panel visible inside the opening so it can be clicked to close the door.
 See the [door guide](doors.md), [trapdoor guide](programmable-trapdoor.md) and
 [diagonal trapdoor guide](programmable-diagonal-trapdoor.md) for the available
 movement choices.

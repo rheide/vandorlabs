@@ -12,7 +12,7 @@ if target == 'gallery_distant_geometry':
 if target == 'dialogs':
     selected = ['screen_gui', 'console_gui', 'half_console_gui', 'input_gui', 'full_input_gui', 'programmable_wall_gui', 'programmable_diagonal_width_gui', 'programmable_block_gui', 'programmable_face_overrides_gui', 'space_door_gui', 'programmable_light_gui', 'programmable_trigger_gui', 'thruster_gui', 'diagonal_trapdoor_gui', 'trapdoor_gui', 'trapdoor_surface_gui']
 if target == 'door-selection':
-    selected=['large_door_selection_'+str(i) for i in range(8)]+['regular_door_selection_'+str(i) for i in range(4)]
+    selected=['large_door_selection_'+str(i) for i in range(8)]+['regular_door_selection_'+str(i) for i in range(4)]+['large_door_x_margin_'+str(i) for i in range(4)]
 if target == 'signals':
     shapes=[0,1,2,3,7,17,21,22,23,25,26,27]
     selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui','slider_0','slider_1','slider_2','slider_3')]
@@ -34,7 +34,7 @@ log = (source / 'client.log').read_text()
 def require(marker):
     assert marker in log, 'Missing runtime result: ' + marker
 
-if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24')
+if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24 xTips=16')
 
 # Actual Dynmap startup complements the structural checks when installed.
 for control in ('thruster_lever','wall_slider','airliner_throttle','fighter_throttle'):

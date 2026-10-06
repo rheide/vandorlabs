@@ -288,10 +288,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
         }
+        double travel=com.vandorlabs.render.XDoorPanel.travel(progress,tile.isFramed(),size);
         for(int panel=0;panel<4;panel++) {
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
-            GlStateManager.translate(size*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress),
-                    size*com.vandorlabs.render.XDoorPanel.shiftY(panel,progress),tile.positionOffset());
+            GlStateManager.translate(size*com.vandorlabs.render.XDoorPanel.shiftX(panel,travel),
+                    size*com.vandorlabs.render.XDoorPanel.shiftY(panel,travel),tile.positionOffset());
             GlStateManager.scale(size,size,1);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             panels[panel].draw(buffer,light>>>16,light&65535);Tessellator.getInstance().draw();GlStateManager.popMatrix();

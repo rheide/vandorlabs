@@ -7,6 +7,8 @@ public final class XDoorPanel {
     private XDoorPanel(){}
     // Left, right, top, bottom. Keep X/Y travel paired with these clipping regions.
     private static final double[][][] PLANES={{{-1,1,0},{-1,-1,2}},{{1,-1,0},{1,1,-2}},{{-1,1,0},{1,1,-2}},{{1,-1,0},{-1,-1,2}}};
+    /** Normalize world-space travel so a bare large door retains one 1/16-block pixel. */
+    public static double travel(double progress,boolean framed,double scale){return progress*(framed?1:1-1/(16*scale));}
     public static double shiftX(int panel,double progress){return panel==0?-progress:panel==1?progress:0;}
     public static double shiftY(int panel,double progress){return panel==2?progress:panel==3?-progress:0;}
     public static double distance(int panel,int plane,double x,double y){double[] p=PLANES[panel][plane];return p[0]*x+p[1]*y+p[2];}

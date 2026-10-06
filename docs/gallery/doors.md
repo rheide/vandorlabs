@@ -45,6 +45,10 @@ Each clip shows a complete open/close cycle. These are live in-game captures at 
 
 The frame stays in place while the leaf moves. Rotating doors can show or hide their hinges; the hinge setting is saved even when you temporarily switch to sliding motion. Paired doors share appearance and settings.
 
+Large Programmable Doors also offer **Sliding X**: four triangular panels retract
+outward from the center. When frameless, each fully open panel retains a
+one-pixel tip (1/16 block) inside the opening for click targeting.
+
 ## Choose the position in the block
 
 **Near**, **Middle**, and **Far** shift the entire assembly within the block, including its frame, hinges, panel, and collision. This lets the door line up with the face or center of an adjacent wall.
