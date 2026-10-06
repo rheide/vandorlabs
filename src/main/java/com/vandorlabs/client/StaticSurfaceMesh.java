@@ -35,17 +35,18 @@ final class StaticSurfaceMesh {
 
     /** Split source quads once, retaining atlas coordinates across the diagonal cuts. */
     StaticSurfaceMesh[] xPanels(int hand,boolean caps) {
-        return panels(hand,caps,0);
+        return xPanels(hand,caps,2);
     }
-    StaticSurfaceMesh[] splitPanels(boolean vertical,boolean caps) {return panels(0,caps,vertical?2:1);}
-    private StaticSurfaceMesh[] panels(int hand,boolean caps,int mode) {
+    StaticSurfaceMesh[] xPanels(int hand,boolean caps,double width) {return panels(hand,caps,0,width);}
+    StaticSurfaceMesh[] splitPanels(boolean vertical,boolean caps) {return panels(0,caps,vertical?2:1,1);}
+    private StaticSurfaceMesh[] panels(int hand,boolean caps,int mode,double width) {
         StaticSurfaceMesh[] panels=new StaticSurfaceMesh[mode==0?4:2];
         for(int panel=0;panel<panels.length;panel++) {
             Capture capture=capture();
             for(int offset=0;offset<vertices.length;offset+=32) {
                 java.util.List<float[]> polygon=new java.util.ArrayList<>();
                 for(int v=0;v<4;v++)polygon.add(Arrays.copyOfRange(vertices,offset+v*8,offset+(v+1)*8));
-                polygon=mode==0?com.vandorlabs.render.XDoorPanel.clip(polygon,hand,panel):
+                polygon=mode==0?com.vandorlabs.render.XDoorPanel.clip(polygon,hand,panel,width):
                         com.vandorlabs.render.SplitDoorPanel.clip(polygon,mode==2,panel,1);
                 for(int v=1;v+1<polygon.size();v++) {
                     emit(capture,polygon.get(0));emit(capture,polygon.get(v));emit(capture,polygon.get(v+1));emit(capture,polygon.get(v+1));
@@ -58,8 +59,8 @@ final class StaticSurfaceMesh {
                         double length=Math.hypot(a[0]-b[0],a[1]-b[1]);
                         if(length<1e-6)continue;
                         for(int plane=0;plane<(mode==0?2:1);plane++) {
-                            if(Math.abs(cutDistance(mode,panel,plane,hand,a))>1e-6
-                                    || Math.abs(cutDistance(mode,panel,plane,hand,b))>1e-6)continue;
+                            if(Math.abs(cutDistance(mode,panel,plane,hand,a,width))>1e-6
+                                    || Math.abs(cutDistance(mode,panel,plane,hand,b,width))>1e-6)continue;
                             float[] c=b.clone(),d=a.clone();c[2]=d[2]=7F/16;
                             float nx=(float)((b[1]-a[1])/length),ny=(float)((a[0]-b[0])/length);
                             for(float[] point:new float[][]{a.clone(),d,c,b.clone()}) {
@@ -73,8 +74,8 @@ final class StaticSurfaceMesh {
         }
         return panels;
     }
-    private static double cutDistance(int mode,int panel,int plane,int hand,float[] v) {
-        return mode==0?com.vandorlabs.render.XDoorPanel.distance(panel,plane,v[0]+hand,v[1]):
+    private static double cutDistance(int mode,int panel,int plane,int hand,float[] v,double width) {
+        return mode==0?com.vandorlabs.render.XDoorPanel.distance(panel,plane,v[0]+hand,v[1],width):
                 com.vandorlabs.render.SplitDoorPanel.distance(mode==2,panel,1,v[0],v[1]);
     }
     private static void emit(Capture capture,float[] v) {

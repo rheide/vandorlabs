@@ -49,11 +49,12 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public boolean isSliding() { migrateLegacyMotion(); return sliding; }
     public int getSlideDirection() { return slideDirection; }
     public static boolean validSlideDirection(int value) { return value>=0 && value<=7; }
-    public boolean isXSplit(){return this instanceof TileEntityLargeProgrammableDoor && isSliding() && slideDirection==3;}
+    public boolean isXSplit(){return isSliding() && slideDirection==3;}
     /** Clipped panels are needed only for single horizontal splits and all vertical splits. */
     public boolean hasSplitPanels(boolean paired) {
         return isSliding() && (slideDirection==7 || slideDirection==6 && !paired);
     }
+    public double splitWidth(){return this instanceof TileEntityLargeProgrammableDoor || mate()!=null?2:1;}
     public double horizontalTravel(boolean paired,boolean right) {
         double width=this instanceof TileEntityLargeProgrammableDoor?2:paired?2:1;
         return slideDirection==4?-width:slideDirection==5?width:
@@ -138,7 +139,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         configure(design,detail,framed,direction,middle,sliding,hinges,trigger,panel);
     }
     public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
-        if (!valid(design,detail) || !acceptsDesign(design) || direction==3 && !(this instanceof TileEntityLargeProgrammableDoor) || !validSlideDirection(direction)
+        if (!valid(design,detail) || !acceptsDesign(design) || !validSlideDirection(direction)
                 || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
         this.design=design; this.detail=Math.min(detail,1); this.framed=framed;
         this.slideDirection=direction;

@@ -303,7 +303,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
     }
 
     static double panelShiftX(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int panel,double progress) {
-        return tile.isXSplit()?com.vandorlabs.render.XDoorPanel.shiftX(panel,progress):
+        return tile.isXSplit()?tile.splitWidth()/2*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress):
                 com.vandorlabs.render.SplitDoorPanel.shiftX(tile.getSlideDirection()==7,panel,progress);
     }
     static double panelShiftY(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int panel,double progress) {

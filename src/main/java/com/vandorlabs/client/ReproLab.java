@@ -354,7 +354,7 @@ public class ReproLab {
             }
         }
         for(String size:new String[]{"single","paired","large"})
-            for(String movement:new String[]{"left","right","horizontal","vertical"})
+            for(String movement:new String[]{"left","right","horizontal","vertical","x"})
                 for(String pose:new String[]{"closed","open"})
                     SHOTS.add(new Shot("gallery_door_new_"+size+"_"+movement+"_"+pose,
                             GALLERY_X+1,GALLERY_Y+1,-28,0,4));

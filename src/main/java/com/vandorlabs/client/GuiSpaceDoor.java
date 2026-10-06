@@ -107,7 +107,6 @@ public class GuiSpaceDoor extends GuiContainer {
                         label.equals("Slide Right")?SpaceDoorMotion.RIGHT:SpaceDoorMotion.LEFT;
             }
             motion=motion.next();
-            if(motion==SpaceDoorMotion.X_SPLIT && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))motion=motion.next();
             motionButton.displayString=motion.label;
             updateHingeButton();
         }

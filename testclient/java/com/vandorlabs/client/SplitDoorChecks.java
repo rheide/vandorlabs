@@ -35,7 +35,28 @@ final class SplitDoorChecks {
             }
             require(Math.abs(area-2)<1e-6 && caps==2,"closed coverage and two sealed cut edges");
         }
-        for(int mode=4;mode<=7;mode++)for(boolean large:new boolean[]{false,true}) {
+        StaticSurfaceMesh.Capture single=StaticSurfaceMesh.capture();
+        for(float[] v:new float[][]{{0,0},{1,0},{1,2},{0,2}})
+            single.pos(v[0],v[1],9F/16).color(255,255,255,255).tex(v[0],v[1]/2).normal(0,0,1).endVertex();
+        StaticSurfaceMesh[] xPanels=single.finish().xPanels(0,true,1);
+        double xArea=0;
+        for(int panel=0;panel<4;panel++) {
+            VertexFormat format=BlockSurfaceFormat.get();BufferBuilder buffer=new BufferBuilder(4096);buffer.begin(7,format);
+            xPanels[panel].draw(buffer,192,80);buffer.finishDrawing();int stride=format.getNextOffset();
+            float[][] points=new float[buffer.getVertexCount()][3];
+            for(int v=0;v<points.length;v++) {
+                int offset=v*stride;float x=buffer.getByteBuffer().getFloat(offset),y=buffer.getByteBuffer().getFloat(offset+4),z=buffer.getByteBuffer().getFloat(offset+8);
+                points[v]=new float[]{x,y,z};
+                double mx=x+.5*com.vandorlabs.render.XDoorPanel.shiftX(panel,1),my=y+com.vandorlabs.render.XDoorPanel.shiftY(panel,1);
+                require(mx<=1e-6 || mx>=1-1e-6 || my<=1e-6 || my>=2-1e-6,"single X panel remains in aperture");
+            }
+            for(int v=0;v<points.length;v+=4) {
+                boolean front=true;for(int i=0;i<4;i++)front&=Math.abs(points[v+i][2]-9F/16)<1e-6;
+                if(front)xArea+=triangle(points[v],points[v+1],points[v+2])+triangle(points[v],points[v+2],points[v+3]);
+            }
+        }
+        require(Math.abs(xArea-2)<1e-6,"single X closed coverage");
+        for(int mode=3;mode<=7;mode++)for(boolean large:new boolean[]{false,true}) {
             TileEntitySpaceDoor door=large?new TileEntityLargeProgrammableDoor():new TileEntitySpaceDoor();
             door.configure(2,1,true,mode,false,true);
             TileEntitySpaceDoor copy=large?new TileEntityLargeProgrammableDoor():new TileEntitySpaceDoor();

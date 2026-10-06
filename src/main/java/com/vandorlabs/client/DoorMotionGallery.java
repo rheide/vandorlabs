@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 final class DoorMotionGallery {
     static void build(World world,String shot,int x,int y) {
         String[] bits=shot.split("_");boolean large=bits[3].equals("large"),paired=large || bits[3].equals("paired");
-        int direction=bits[4].equals("left")?4:bits[4].equals("right")?5:bits[4].equals("horizontal")?6:7;
+        int direction=bits[4].equals("left")?4:bits[4].equals("right")?5:bits[4].equals("horizontal")?6:bits[4].equals("vertical")?7:3;
         boolean open=bits[5].equals("open");
         Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",large?"large_programmable_door":"programmable_door"));
         BlockPos anchor=new BlockPos(x-(paired?1:0),y,-18);

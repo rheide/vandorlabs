@@ -10,7 +10,7 @@ public enum SpaceDoorMotion {
     VERTICAL_SPLIT("Split Vertical", true, 7),
     UP("Sliding Up", true, 1),
     DOWN("Sliding Down", true, 2),
-    X_SPLIT("Sliding X", true, 3);
+    X_SPLIT("Split X", true, 3);
 
     public final String label;
     public final boolean sliding;

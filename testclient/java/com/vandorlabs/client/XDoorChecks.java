@@ -53,8 +53,8 @@ final class XDoorChecks {
         TileEntityLargeProgrammableDoor large=new TileEntityLargeProgrammableDoor();large.configure(23,2,true,3,false,true);
         TileEntityLargeProgrammableDoor copied=new TileEntityLargeProgrammableDoor();copied.applyItemSettings(large.itemSettings());require(copied.isXSplit(),"picked X mode lost");
         net.minecraft.nbt.NBTTagCompound saved=large.writeToNBT(new net.minecraft.nbt.NBTTagCompound());copied.readFromNBT(saved);require(copied.isXSplit(),"saved X mode lost");
-        TileEntitySpaceDoor regular=new TileEntitySpaceDoor();regular.configure(2,1,true,3,false,true);require(regular.getSlideDirection()==0,"X mode accepted by regular door");
-        System.out.println("PASS: X panels close without gaps/overlap, UVs and diagonal caps, four travel directions, "+vertices+" vertices, four-facing batch/fallback poses and saved/picked large-only motion (no GL)");
+        TileEntitySpaceDoor regular=new TileEntitySpaceDoor();regular.configure(2,1,true,3,false,true);require(regular.isXSplit(),"X mode unavailable on regular door");
+        System.out.println("PASS: X panels close without gaps/overlap, UVs and diagonal caps, four travel directions, "+vertices+" vertices, four-facing batch/fallback poses and saved/picked regular and large motion (no GL)");
     }
     private static void replacementMaterials() {
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=new net.minecraft.client.renderer.texture.TextureAtlasSprite("x_panel_material"){};
