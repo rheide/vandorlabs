@@ -490,8 +490,8 @@ tile.vandorlabs.programmable_storage.name=Programmable Storage
 
 tile.vandorlabs.large_programmable_door.name=Large Programmable Door
 tile.vandorlabs.thruster_lever_16px.name=Thruster Lever (Simple)
-tile.vandorlabs.thruster_wall_slider_16px.name=Thruster Wall Slider (Simple)
+tile.vandorlabs.thruster_wall_slider_16px.name=Wall Slider (Simple)
 tile.vandorlabs.thruster_control_block_16px.name=Thruster Control Block (Simple)
 tile.vandorlabs.thruster_lever_32px.name=Thruster Lever (Detailed)
-tile.vandorlabs.thruster_wall_slider_32px.name=Thruster Wall Slider (Detailed)
+tile.vandorlabs.thruster_wall_slider_32px.name=Wall Slider (Detailed)
 tile.vandorlabs.thruster_control_block_32px.name=Thruster Control Block (Detailed)

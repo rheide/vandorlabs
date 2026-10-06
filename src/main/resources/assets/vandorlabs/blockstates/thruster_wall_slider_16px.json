@@ -13,16 +13,20 @@
       "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_z"
     },
     "facing=down,level=0,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z",
+      "y": 90
     },
     "facing=down,level=1,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_z",
+      "y": 90
     },
     "facing=down,level=2,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_z",
+      "y": 90
     },
     "facing=down,level=3,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_z",
+      "y": 90
     },
     "facing=down,level=0,on=false,rotation=2": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z",
@@ -41,20 +45,20 @@
       "y": 180
     },
     "facing=down,level=0,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z",
+      "y": 270
     },
     "facing=down,level=1,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_z",
+      "y": 270
     },
     "facing=down,level=2,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_z",
+      "y": 270
     },
     "facing=down,level=3,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_z",
+      "y": 270
     },
     "facing=down,level=0,on=true,rotation=0": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z"
@@ -69,16 +73,20 @@
       "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_z"
     },
     "facing=down,level=0,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z",
+      "y": 90
     },
     "facing=down,level=1,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_z",
+      "y": 90
     },
     "facing=down,level=2,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_z",
+      "y": 90
     },
     "facing=down,level=3,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_z",
+      "y": 90
     },
     "facing=down,level=0,on=true,rotation=2": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z",
@@ -97,20 +105,20 @@
       "y": 180
     },
     "facing=down,level=0,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_ceiling_z",
+      "y": 270
     },
     "facing=down,level=1,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_ceiling_z",
+      "y": 270
     },
     "facing=down,level=2,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_ceiling_z",
+      "y": 270
     },
     "facing=down,level=3,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_ceiling_z",
+      "y": 270
     },
     "facing=up,level=0,on=false,rotation=0": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z"
@@ -125,16 +133,20 @@
       "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_z"
     },
     "facing=up,level=0,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z",
+      "y": 90
     },
     "facing=up,level=1,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_z",
+      "y": 90
     },
     "facing=up,level=2,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_z",
+      "y": 90
     },
     "facing=up,level=3,on=false,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_z",
+      "y": 90
     },
     "facing=up,level=0,on=false,rotation=2": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z",
@@ -153,20 +165,20 @@
       "y": 180
     },
     "facing=up,level=0,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z",
+      "y": 270
     },
     "facing=up,level=1,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_z",
+      "y": 270
     },
     "facing=up,level=2,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_z",
+      "y": 270
     },
     "facing=up,level=3,on=false,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_z",
+      "y": 270
     },
     "facing=up,level=0,on=true,rotation=0": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z"
@@ -181,16 +193,20 @@
       "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_z"
     },
     "facing=up,level=0,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z",
+      "y": 90
     },
     "facing=up,level=1,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_z",
+      "y": 90
     },
     "facing=up,level=2,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_z",
+      "y": 90
     },
     "facing=up,level=3,on=true,rotation=1": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_x"
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_z",
+      "y": 90
     },
     "facing=up,level=0,on=true,rotation=2": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z",
@@ -209,20 +225,20 @@
       "y": 180
     },
     "facing=up,level=0,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_off_floor_z",
+      "y": 270
     },
     "facing=up,level=1,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_low_floor_z",
+      "y": 270
     },
     "facing=up,level=2,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_medium_floor_z",
+      "y": 270
     },
     "facing=up,level=3,on=true,rotation=3": {
-      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_x",
-      "y": 180
+      "model": "vandorlabs:thruster_controls/16px/wall_slider_high_floor_z",
+      "y": 270
     },
     "facing=north,level=0,on=false,rotation=0": {
       "model": "vandorlabs:thruster_controls/16px/wall_slider_off_north"

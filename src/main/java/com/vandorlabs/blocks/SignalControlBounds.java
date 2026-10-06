@@ -15,9 +15,9 @@ final class SignalControlBounds {
         bounds.put("16/thruster_lever/ceiling_x",new AxisAlignedBB(0.11330098,0.30394670,0.18750000,0.87565048,1.00000000,0.81250000));
         bounds.put("16/thruster_lever/ceiling_z",new AxisAlignedBB(0.18750000,0.30394670,0.12434952,0.81250000,1.00000000,0.88669902));
         bounds.put("16/wall_slider/north",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
-        bounds.put("16/wall_slider/south",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
-        bounds.put("16/wall_slider/east",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
-        bounds.put("16/wall_slider/west",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
+        bounds.put("16/wall_slider/south",new AxisAlignedBB(0.18750000,0.06250000,0.00000000,0.81250000,0.93750000,0.14062500));
+        bounds.put("16/wall_slider/east",new AxisAlignedBB(0.00000000,0.06250000,0.18750000,0.14062500,0.93750000,0.81250000));
+        bounds.put("16/wall_slider/west",new AxisAlignedBB(0.85937500,0.06250000,0.18750000,1.00000000,0.93750000,0.81250000));
         bounds.put("16/wall_slider/floor_x",new AxisAlignedBB(0.06250000,0.00000000,0.18750000,0.93750000,0.14062500,0.81250000));
         bounds.put("16/wall_slider/floor_z",new AxisAlignedBB(0.18750000,0.00000000,0.06250000,0.81250000,0.14062500,0.93750000));
         bounds.put("16/wall_slider/ceiling_x",new AxisAlignedBB(0.06250000,0.85937500,0.18750000,0.93750000,1.00000000,0.81250000));
@@ -31,9 +31,9 @@ final class SignalControlBounds {
         bounds.put("32/thruster_lever/ceiling_x",new AxisAlignedBB(0.11330098,0.30394670,0.18750000,0.87565048,1.00000000,0.81250000));
         bounds.put("32/thruster_lever/ceiling_z",new AxisAlignedBB(0.18750000,0.30394670,0.12434952,0.81250000,1.00000000,0.88669902));
         bounds.put("32/wall_slider/north",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
-        bounds.put("32/wall_slider/south",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
-        bounds.put("32/wall_slider/east",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
-        bounds.put("32/wall_slider/west",new AxisAlignedBB(0.18750000,0.06250000,0.85937500,0.81250000,0.93750000,1.00000000));
+        bounds.put("32/wall_slider/south",new AxisAlignedBB(0.18750000,0.06250000,0.00000000,0.81250000,0.93750000,0.14062500));
+        bounds.put("32/wall_slider/east",new AxisAlignedBB(0.00000000,0.06250000,0.18750000,0.14062500,0.93750000,0.81250000));
+        bounds.put("32/wall_slider/west",new AxisAlignedBB(0.85937500,0.06250000,0.18750000,1.00000000,0.93750000,0.81250000));
         bounds.put("32/wall_slider/floor_x",new AxisAlignedBB(0.06250000,0.00000000,0.18750000,0.93750000,0.14062500,0.81250000));
         bounds.put("32/wall_slider/floor_z",new AxisAlignedBB(0.18750000,0.00000000,0.06250000,0.81250000,0.14062500,0.93750000));
         bounds.put("32/wall_slider/ceiling_x",new AxisAlignedBB(0.06250000,0.85937500,0.18750000,0.93750000,1.00000000,0.81250000));

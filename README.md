@@ -173,7 +173,7 @@ selects one level from 0–15; other levels use the Off texture. In Off/On artwo
 mode, an exact match uses the On/High texture. The Duplifier's **Signal Levels**
 option copies these settings, light offsets and propulsion thresholds.
 
-Thruster Lever, Thruster Wall Slider and Thruster Control Block each have separate
+Thruster Lever, Wall Slider and Thruster Control Block each have separate
 Simple (16px) and Detailed (32px) blocks. Normal right-click cycles Off, Low,
 Medium and High. Shift-right-click opens the existing channel dialog with Low
 and High limits. Defaults are `0, 5, 10, 15`; Medium is the rounded midpoint.
