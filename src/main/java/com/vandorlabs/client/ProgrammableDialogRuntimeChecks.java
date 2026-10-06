@@ -73,27 +73,6 @@ final class ProgrammableDialogRuntimeChecks {
                         for(Field f:gui.getClass().getDeclaredFields()){f.setAccessible(true);Object value=f.get(gui);if(value instanceof HousingTextureList)checkDoorDesigns((HousingTextureList)value);}
                     }
                 }
-                if(gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableTrapdoor) {
-                    int motionId=gui instanceof GuiSpaceDoor?10:1;
-                    GuiButton motionButton=null;for(GuiButton b:buttons)if(b.id==motionId)motionButton=b;
-                    require(motionButton!=null,"missing opening-mode button");
-                    java.util.Map<Field,Object> originalSettings=new java.util.HashMap<>();
-                    String initialLabel=motionButton.displayString;
-                    for(String name:gui instanceof GuiSpaceDoor?new String[]{"motion"}:new String[]{"sliding","slideMode","cover","slideIntoWall","slideOverSurface"}) {
-                        Field f=gui.getClass().getDeclaredField(name);f.setAccessible(true);originalSettings.put(f,f.get(gui));
-                    }
-                    // Every cycle entry must be the inverse of its right-click, including wraparound.
-                    for(int step=0;step<12;step++) {
-                        int x=motionButton.x+motionButton.width/2,y=motionButton.y+motionButton.height/2;
-                        click(gui,x,y);String forward=motionButton.displayString;
-                        if(gui instanceof GuiSpaceDoor)((GuiSpaceDoor)gui).mouseClicked(x,y,1);
-                        else ((GuiProgrammableTrapdoor)gui).mouseClicked(x,y,1);
-                        click(gui,x,y);require(forward.equals(motionButton.displayString),"opening-mode reverse cycle differs");
-                    }
-                    for(java.util.Map.Entry<Field,Object> entry:originalSettings.entrySet())entry.getKey().set(gui,entry.getValue());
-                    java.lang.reflect.Method send=gui.getClass().getDeclaredMethod(gui instanceof GuiSpaceDoor?"sendUpdate":"send");send.setAccessible(true);send.invoke(gui);
-                    motionButton.displayString=initialLabel;
-                }
                 // Exercise tabs through the actual mouse path, then restore the original tab.
                 Field tab=null;try{tab=gui.getClass().getDeclaredField("textureTab");tab.setAccessible(true);}catch(NoSuchFieldException ignored){}
                 if(tab!=null) {

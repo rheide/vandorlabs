@@ -26,7 +26,7 @@ public final class SpaceDoorData {
         this.design=design>=0 && design<29?design:2;
         this.detail=detail>=0 && detail<3?Math.min(detail,1):1;
         this.framed=framed;
-        this.direction=direction>=0 && direction<8?direction:0;
+        this.direction=direction>=0 && direction<4?direction:0;
         this.middle=middle;
         this.sliding=sliding;
         this.hinges=hinges;
@@ -40,7 +40,7 @@ public final class SpaceDoorData {
     public static double verticalTravel(boolean framed,int direction) {
         // Framed leaves retract the extra pixel into the border; bare leaves
         // retain their one-pixel reveal. Different leaf heights yield the same travel.
-        return direction!=1 && direction!=2?0:31/16.0*(direction==2?-1:1);
+        return direction==0 || direction==3?0:31/16.0*(direction==2?-1:1);
     }
     /** Framed models meet the block edge; bare models keep one pixel of clearance. */
     public static double positionOffset(boolean sliding,boolean framed,boolean hinges,int depth) {

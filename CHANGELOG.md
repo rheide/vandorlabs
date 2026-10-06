@@ -2,13 +2,9 @@
 
 ## 1.6
 
-- Preserve the clicked side when placing new sliding doors. Adjacent Left/Right sliders form a double door with Split Horizontal, retaining rotating-door placement behavior.
-- Give joined diagonal doors one sideways direction and full-width travel across straight or opposite-slope rows. Split Horizontal uses one shared opening midpoint across the group.
-- Widen Redstone screen slider labels by two normal character widths while retaining four bordered settings.
-- Allow right-clicking door and trapdoor settings buttons to cycle backwards, including opening modes, positions and triggers.
+- Restore door and trapdoor movement, placement, pairing and settings to their behavior before the 1.6 opening-mode changes.
 
-- Add Slide Left, Slide Right, Split Horizontal and Split Vertical to Programmable and Large Programmable Doors, including split single leaves and full-width large-door travel. Preserve existing saved motion values and placement-dependent single/pair defaults, artwork/glazing, fixed frames and panels, configuration copying and collision clearance. Extend four-panel Split X to single and paired doors.
-- Add the same five whole-opening/split modes to flat and diagonal trapdoors, with shared coplanar group cuts, sealed cut edges, cached animated meshes, matching collision/selection, saved settings, copying and Dynmap geometry. Preserve rotating and legacy sliding behavior.
+- Widen Redstone screen slider labels by three normal character widths while retaining four bordered settings.
 
 - Carry redstone levels 0–15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
 - Let Programmable Lights, Light Slabs and Light Frames follow signal strength with a signed brightness offset; joined lights share the strongest loaded group signal.

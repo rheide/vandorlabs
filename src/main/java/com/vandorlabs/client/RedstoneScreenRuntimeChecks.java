@@ -97,7 +97,7 @@ final class RedstoneScreenRuntimeChecks {
             if(stage==12){
                 segment=0;pending=mc.getIntegratedServer().addScheduledTask(()->{
                     RedstoneScreenContents contents=tile(mc);net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();
-                    row.setString("Label","Engines");com.vandorlabs.redstone.ChannelData.write(row,ChannelList.of(16901));row.setBoolean("Slider",true);row.setInteger("Min",0);row.setInteger("Max",15);rows.appendTag(row);
+                    row.setString("Label","Thruster");com.vandorlabs.redstone.ChannelData.write(row,ChannelList.of(16901));row.setBoolean("Slider",true);row.setInteger("Min",0);row.setInteger("Max",15);rows.appendTag(row);
                     require(contents.applyRowConfiguration(rows),"live slider config");aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,RedstoneScreenContents.SLIDER_LEFT+(RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT)*.5/4);
                 });next(13);return;
             }
@@ -117,7 +117,7 @@ final class RedstoneScreenRuntimeChecks {
                 capture(mc,output,"slider_gui");
                 gui.actionPerformed(new GuiButton(8,0,0,"Low"));gui.actionPerformed(new GuiButton(9,0,0,"High"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(17);return;
             }
-            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==6 && tile(mc).rows().get(0).max==8 && tile(mc).rows().get(0).label.equals("Engines"),"slider dialog packet lost range"));next(18);return;}
+            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==6 && tile(mc).rows().get(0).max==8 && tile(mc).rows().get(0).label.equals("Thruster"),"slider dialog packet lost range"));next(18);return;}
             if(stage==18){System.out.println("[vandorlabs][reprolab] redstone-slider-runtime PASS shape="+shape);
                 System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){
                 int[] fixtures={0,1,2,3,7,17,21,22,23,25,26,27};int index=0;while(index<fixtures.length && fixtures[index]!=shape)index++;shape=index+1<fixtures.length?fixtures[index+1]:28;

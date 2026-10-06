@@ -3,8 +3,8 @@
 The Space family is independent of the Detailed doors. The creative menu has one
 Programmable Door item, initially set to Sliding Sideways. Its initial depth
 follows the placement click and can be changed in the settings.
-Shift-right-click either half to choose Rotating, Slide Left, Slide Right, Split Horizontal, Split Vertical, Split X, Sliding Up or Sliding Down,
-the design, Small/Large texture detail, framed/bare appearance, placement
+Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
+the design, Small/Medium/Large texture detail, framed/bare appearance, placement
 position (Near, Middle, or Far), Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
 scrollbar and up/down-key navigation. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
@@ -40,8 +40,6 @@ Vertical travel is 31/16
 block: framed leaves retract one pixel beyond the inner frame edge, while bare
 leaves preserve their one-pixel open-edge reveal. Sideways travel is 15/16 for
 single framed leaves and 16/16 for paired framed leaves; bare leaves retain 15/16.
-The saved legacy sideways mode retains that travel and chooses its side from placement for singles, changing to a horizontal split when paired. The dialog labels it with its current side or Split Horizontal. Explicit Slide Left/Right modes move a whole single door one block, a pair two blocks, or a Large Door three blocks. A newly formed pair of Left/Right sliders switches both leaves to Split Horizontal; other selected modes remain selected across pairing changes. Split Horizontal cuts a single leaf at its width midpoint; paired and large doors separate their existing leaves. Split Vertical cuts at mid-height and moves both halves by half the opening's height. Split X divides single, paired and large openings into four triangular panels that retract left, right, up and down. Native, glass and replacement faces preserve their UVs across cuts, and the new cut edges are sealed. These choices use appended saved direction values, preserving existing worlds, configured items and Duplifier settings.
-
 Frames remain fixed and glazed panes move with their leaf. The renderer's
 bounds cover the full vertical travel; the tile still has no tick loop.
 All motion modes offer Near / Middle / Far placement. Rotating art is edge-native and
@@ -51,10 +49,9 @@ distance around Middle. Existing sliding-block saves migrate to Middle;
 rotating saves retain their previous position. A middle-positioned open rotating leaf can naturally extend
 beyond the back of the door block during its swing.
 
-Twenty-one regular designs are available: Observation, Airlock, Standard, Security, Reactor
+Fifteen designs are available: Observation, Airlock, Standard, Security, Reactor
 Service, Viewport, Laboratory, Cargo, Ventilation, Cargo Lift, Blast Shield,
-Glazed Hangar, Quarantine Seal, Reactor Barrier, Modular Shutter, White Glass,
-Dark Glass, Plain Cargo, Stepped Freight, Observation Leaf and Reinforced Leaf. Observation,
+Glazed Hangar, Quarantine Seal, Reactor Barrier and Modular Shutter. Observation,
 Viewport, Laboratory and Glazed Hangar retain their translucent windows.
 Select Sliding Up for lift-style motion; selecting artwork does not
 override the current motion setting. All designs also support rotating doors.

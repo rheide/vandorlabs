@@ -49,12 +49,11 @@ final class XDoorChecks {
         }
         for(double area:areas)require(Math.abs(area-1)<1e-6,"closed panels overlap or leave a hole");
         replacementMaterials();
-        SplitDoorChecks.run();
         TileEntityLargeProgrammableDoor large=new TileEntityLargeProgrammableDoor();large.configure(23,2,true,3,false,true);
         TileEntityLargeProgrammableDoor copied=new TileEntityLargeProgrammableDoor();copied.applyItemSettings(large.itemSettings());require(copied.isXSplit(),"picked X mode lost");
         net.minecraft.nbt.NBTTagCompound saved=large.writeToNBT(new net.minecraft.nbt.NBTTagCompound());copied.readFromNBT(saved);require(copied.isXSplit(),"saved X mode lost");
-        TileEntitySpaceDoor regular=new TileEntitySpaceDoor();regular.configure(2,1,true,3,false,true);require(regular.isXSplit(),"X mode unavailable on regular door");
-        System.out.println("PASS: X panels close without gaps/overlap, UVs and diagonal caps, four travel directions, "+vertices+" vertices, four-facing batch/fallback poses and saved/picked regular and large motion (no GL)");
+        TileEntitySpaceDoor regular=new TileEntitySpaceDoor();regular.configure(2,1,true,3,false,true);require(regular.getSlideDirection()==0,"X mode accepted by regular door");
+        System.out.println("PASS: X panels close without gaps/overlap, UVs and diagonal caps, four travel directions, "+vertices+" vertices, four-facing batch/fallback poses and saved/picked large-only motion (no GL)");
     }
     private static void replacementMaterials() {
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=new net.minecraft.client.renderer.texture.TextureAtlasSprite("x_panel_material"){};
@@ -68,8 +67,8 @@ final class XDoorChecks {
         Map<EnumFacing,List<net.minecraft.client.renderer.block.model.BakedQuad>> faces=new EnumMap<>(EnumFacing.class);
         for(EnumFacing face:EnumFacing.values())faces.put(face,Collections.emptyList());
         net.minecraft.client.renderer.block.model.IBakedModel model=new net.minecraft.client.renderer.block.model.SimpleBakedModel(Collections.singletonList(quad),faces,false,true,sprite,net.minecraft.client.renderer.block.model.ItemCameraTransforms.DEFAULT,net.minecraft.client.renderer.block.model.ItemOverrideList.NONE);
-        for(boolean right:new boolean[]{false,true})for(int choice:new int[]{-1,0})for(boolean tiled:new boolean[]{false,true})for(int mode:new int[]{0,6,7}) {
-            StaticSurfaceMesh[] panels=XDoorMeshes.build(model,right,choice,tiled,sprite,true,mode);
+        for(boolean right:new boolean[]{false,true})for(int choice:new int[]{-1,0})for(boolean tiled:new boolean[]{false,true}) {
+            StaticSurfaceMesh[] panels=XDoorMeshes.build(model,right,choice,tiled,sprite,true);
             int count=0;
             for(StaticSurfaceMesh mesh:panels) {
                 VertexFormat format=BlockSurfaceFormat.get();BufferBuilder buffer=new BufferBuilder(4096);buffer.begin(7,format);mesh.draw(buffer,192,80);buffer.finishDrawing();

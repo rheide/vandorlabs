@@ -41,10 +41,6 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     }
     /** Broad artwork and native metal door leaf edges share the exact collision mesh. */
     static void drawConfiguredLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
-        if(tile.hasPanelMotion()){TrapdoorPanelMeshes.draw(buffer,sprite,tile,state,pose,light);return;}
-        drawConfiguredLeafRaw(buffer,sprite,tile,state,pose,light);
-    }
-    static void drawConfiguredLeafRaw(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
         try(TrapdoorRenderScratch scratch=TrapdoorRenderScratch.acquire()) {
             boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
             java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();

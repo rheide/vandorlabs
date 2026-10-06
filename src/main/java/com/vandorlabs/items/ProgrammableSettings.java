@@ -29,7 +29,6 @@ import net.minecraft.world.World;
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
     public static final String SIGNAL_SETTINGS="signal_settings";
-    public static final String TRAPDOOR_SLIDE_MODE="trapdoor_slide_mode";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
     public static final String TRAPDOOR_SLIDE_INTO_WALL="trapdoor_slide_into_wall";
     public static final String TRAPDOOR_COVER_FACING="trapdoor_cover_facing";
@@ -147,7 +146,7 @@ public final class ProgrammableSettings {
                 NBTTagCompound geometry=new NBTTagCompound();geometry.setInteger("mode",hatch.getPosition());out.setTag(DIAGONAL_GEOMETRY,geometry);
             } else out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
             if(hatch.canOffsetClosedLeaf())out.setInteger(TRAPDOOR_COVER_FACING,hatch.coverFacing().getHorizontalIndex());
-            out.setInteger(TRAPDOOR_SLIDE_MODE,hatch.getSlideMode());out.setBoolean(TRAPDOOR_SLIDE_OVER_SURFACE,hatch.isSlideOverSurface());out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
+            out.setBoolean(TRAPDOOR_SLIDE_OVER_SURFACE,hatch.isSlideOverSurface());out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
         } else if (tile instanceof TileEntityProgrammableLight) {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
             out.setInteger(WALL_TEXTURE, light.getHousingTexture());
@@ -332,7 +331,6 @@ public final class ProgrammableSettings {
                             || !world.isBlockModifiable(player,leaf.getPos()))return false;
                 com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.configureGroup(leaves,()->{
                 for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:leaves){
-                    if(values.hasKey(DOOR_SLIDING,1))leaf.setSlideMode(values.hasKey(TRAPDOOR_SLIDE_MODE,3)?values.getInteger(TRAPDOOR_SLIDE_MODE):0);
                     if(values.hasKey(TRAPDOOR_TILE_TEXTURE,1))leaf.setTileTexture(values.getBoolean(TRAPDOOR_TILE_TEXTURE));
                     if(values.hasKey(TRAPDOOR_COVER,1))leaf.setCover(values.getBoolean(TRAPDOOR_COVER));
                     if(values.hasKey(TRAPDOOR_COVER_FACING,3))leaf.setHingeFacing(EnumFacing.getHorizontal(values.getInteger(TRAPDOOR_COVER_FACING)));

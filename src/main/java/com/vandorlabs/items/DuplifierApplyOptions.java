@@ -133,7 +133,7 @@ public final class DuplifierApplyOptions {
         NBTTagCompound selected = captured.copy();
         for (int i = 0; i < OPTIONS.length; i++)
             if (!enabled(mask, i)) selected.removeTag(OPTIONS[i].key);
-        if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_MODE); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
+        if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
         if (!selected.hasKey(ProgrammableSettings.PRIMARY_TEXTURE))
             selected.removeTag(ProgrammableSettings.PRIMARY_KIND);

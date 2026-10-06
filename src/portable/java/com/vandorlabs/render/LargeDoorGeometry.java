@@ -23,13 +23,9 @@ public final class LargeDoorGeometry {
             double leafZ=sliding?7/16.0:12.24/16;
             double pivotX=right?3-jamb:jamb,pivotZ=11.24/16;
             double angle=open && !sliding?(right?-90:90):0;
-            double shiftX=open && sliding?(direction==4?-3:direction==5?3:direction==6?(right?1.5:-1.5):
-                    direction==0?(right?1:-1)*(frame?1.5:22.5/16):0):0;
+            double shiftX=open && sliding && direction==0?(right?1:-1)*(frame?1.5:22.5/16):0;
             double shiftY=open && sliding && direction!=0?1.5*SpaceDoorData.verticalTravel(frame,direction):0;
-            if(sliding && direction==7) {
-                add(result,x0,low-(open?1.5:0),leafZ,x1,1.5-(open?1.5:0),leafZ+2/16.0,depth,facing,0,0,0,0,0);
-                add(result,x0,1.5+(open?1.5:0),leafZ,x1,high+(open?1.5:0),leafZ+2/16.0,depth,facing,0,0,0,0,0);
-            } else add(result,x0,low+shiftY,leafZ,x1,high+shiftY,leafZ+2/16.0,depth,facing,shiftX,pivotX,pivotZ,angle,0);
+            add(result,x0,low+shiftY,leafZ,x1,high+shiftY,leafZ+2/16.0,depth,facing,shiftX,pivotX,pivotZ,angle,0);
         }
         if(panel){
             double x0=sliding?3-1.5/16:0,x1=sliding?3:1.5/16;

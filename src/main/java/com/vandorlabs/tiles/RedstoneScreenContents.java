@@ -20,7 +20,7 @@ public final class RedstoneScreenContents {
     public int getHousingTexture(){return owner.getHousingTexture();}
     private void setHousingTexture(int value){owner.setHousingTexture(value);}
     private void markDirty(){owner.markDirty();}
-    public static final int SLIDER_LABEL=10,SLIDER_LABEL_WIDTH=44,SLIDER_LEFT=54,SLIDER_RIGHT=120;
+    public static final int SLIDER_LABEL=11,SLIDER_LABEL_WIDTH=50,SLIDER_LEFT=60,SLIDER_RIGHT=120;
     public static final int MAX_ROWS=8,MAX_LABEL=24,MAX_TITLE=32;
     public static final String DEFAULT_TITLE="REDSTONE CONTROL";
     private String title=DEFAULT_TITLE;

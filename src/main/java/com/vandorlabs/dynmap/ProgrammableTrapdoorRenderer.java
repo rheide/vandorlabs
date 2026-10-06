@@ -7,7 +7,7 @@ import java.util.*;
 
 /** Current finish and open endpoint, including horizontal sliding. */
 public final class ProgrammableTrapdoorRenderer extends CustomRenderer {
-    @Override public String[] getTileEntityFieldsNeeded(){return TrapdoorPanelMap.fields("housingTexture","TrapdoorPosition","TrapdoorSliding","TrapdoorCover","TrapdoorSlideOverSurface");}
+    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"housingTexture","TrapdoorPosition","TrapdoorSliding","TrapdoorCover","TrapdoorSlideOverSurface"};}
     private static int number(Object value,int fallback){return value instanceof Number?((Number)value).intValue():fallback;}
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
         int position=Math.max(0,Math.min(2,number(context.getBlockTileEntityField("TrapdoorPosition"),0)));
@@ -23,10 +23,6 @@ public final class ProgrammableTrapdoorRenderer extends CustomRenderer {
         if(Boolean.TRUE.equals(cover)||number(cover,0)!=0)b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(TrapdoorGeometry.coverCorners(position,turns,context.getBlockType().isStateMatch("open","true")?1:0));
         int texture=ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(number(context.getBlockTileEntityField("housingTexture"),0)));
         if(texture>=ScreenHousingTextures.LEGACY_COUNT)texture=0;
-        if(sliding) {
-            RenderPatch[] panels=TrapdoorPanelMap.render(context,TrapdoorGeometry.corners(position,true,turns,0),false,context.getBlockType().isStateMatch("open","true")?1:0,texture);
-            if(panels!=null)return panels;
-        }
         List<RenderPatch> patches=new ArrayList<>();
         addBox(context.getPatchFactory(),patches,b[0],b[3],b[1],b[4],b[2],b[5],new int[]{texture,texture,texture,texture,texture,texture});
         return patches.toArray(new RenderPatch[0]);

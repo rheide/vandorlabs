@@ -48,25 +48,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public boolean isFramed() { return framed; }
     public boolean isSliding() { migrateLegacyMotion(); return sliding; }
     public int getSlideDirection() { return slideDirection; }
-    public static boolean validSlideDirection(int value) { return value>=0 && value<=7; }
-    public boolean isXSplit(){return isSliding() && slideDirection==3;}
-    /** Clipped panels are needed only for single horizontal splits and all vertical splits. */
-    public boolean hasSplitPanels(boolean paired) {
-        return isSliding() && (slideDirection==7 || slideDirection==6 && !paired);
-    }
-    public double splitWidth(){return this instanceof TileEntityLargeProgrammableDoor || mate()!=null?2:1;}
-    public double horizontalTravel(boolean paired,boolean right) {
-        double width=this instanceof TileEntityLargeProgrammableDoor?2:paired?2:1;
-        return slideDirection==4?-width:slideDirection==5?width:
-                slideDirection==6?(right?1:-1):0;
-    }
-    public String motionLabel() {
-        if(!isSliding() || slideDirection!=0)return com.vandorlabs.render.SpaceDoorMotion.fromSettings(isSliding(),slideDirection).label;
-        if(this instanceof TileEntityLargeProgrammableDoor || mate()!=null)return "Split Horizontal";
-        if(world==null)return "Slide (Auto)";
-        IBlockState state=world.getBlockState(pos).getBlock().getActualState(world.getBlockState(pos),world,pos);
-        return state.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.LEFT?"Slide Right":"Slide Left";
-    }
+    public static boolean validSlideDirection(int value) { return value>=0 && value<=3; }
+    public boolean isXSplit(){return this instanceof TileEntityLargeProgrammableDoor && isSliding() && slideDirection==3;}
     public double verticalTravel() {
         return com.vandorlabs.persistence.SpaceDoorData.verticalTravel(framed,slideDirection);
     }
@@ -139,7 +122,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         configure(design,detail,framed,direction,middle,sliding,hinges,trigger,panel);
     }
     public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
-        if (!valid(design,detail) || !acceptsDesign(design) || !validSlideDirection(direction)
+        if (!valid(design,detail) || !acceptsDesign(design) || direction==3 && !(this instanceof TileEntityLargeProgrammableDoor) || !validSlideDirection(direction)
                 || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
         this.design=design; this.detail=Math.min(detail,1); this.framed=framed;
         this.slideDirection=direction;
@@ -223,8 +206,6 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
-        if(isSliding() && slideDirection>=4)
-            return new net.minecraft.util.math.AxisAlignedBB(pos.add(-2,-2,-2),pos.add(3,4,3));
         return slideDirection==0?super.getRenderBoundingBox():
                 new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,-2,-1),pos.add(2,4,2));
     }

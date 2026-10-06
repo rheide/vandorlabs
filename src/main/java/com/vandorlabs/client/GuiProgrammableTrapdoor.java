@@ -26,13 +26,12 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     private GuiButton done;
     public GuiProgrammableTrapdoor(TileEntityProgrammableTrapdoor tile) {
         super(new ContainerProgrammableTrapdoor(tile));this.tile=tile;
-        slideMode=tile.getSlideMode();cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channelList=tile.getRedstoneChannels();channel=channelList.first();
+        cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channelList=tile.getRedstoneChannels();channel=channelList.first();
         doorDetail=HousingTextureList.doorDetail(tile.getHousingTexture());
         tileTexture=tile.isTileTexture();tallWidth=position==0?0:1;facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING);
         inverted=diagonal() && ((TileEntityProgrammableDiagonalTrapdoor)tile).isInverted();
         xSize=360;ySize=240;
     }
-    private int slideMode;
     private int controlsX, channelLabelY;
     @Override public void initGui() {
         String channelText=channelField==null?channelList.toString():channelField.getText();
@@ -62,7 +61,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
     }
     private String doorSizeLabel(){return "Texture size: "+new String[]{"Small","Large"}[doorDetail];}
-    private String motionLabel(){if(sliding && slideMode!=0)return com.vandorlabs.render.SpaceDoorMotion.fromSettings(true,slideMode).label;return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
+    private String motionLabel(){return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
     private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
     private String layoutLabel(){return "Texture: "+(tileTexture?"Tile / mirror":"Fit");}
     private String heightLabel(){return "Height: "+(position==2?"Half":"Full");}
@@ -73,47 +72,30 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         if(parsedChannel()>=0){channelList=ChannelFields.parse(channelField);channel=channelList.first();}
         int selected=textures.selected();
         tile.configureGroup(selected,position,sliding,trigger,channelList,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface);
-        tile.setSlideModeGroup(slideMode);
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withSlideMode(slideMode));
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList));
     }
-    private int cycleStep=1;
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
         if(button.id==9) {
-            doorDetail=Math.floorMod(doorDetail+cycleStep,2);
+            doorDetail=(doorDetail+1)%2;
             textures.setSelected(HousingTextureList.doorSizeChoice(textures.selected(),doorDetail));
             send();initGui();return;
         }
-        if(button.id==1){
-            int legacy=diagonal()?3:tile.canOffsetClosedLeaf()?5:3;
-            int mode=sliding && slideMode!=0?legacy+(slideMode==4?0:slideMode==5?1:slideMode==6?2:slideMode==7?3:4)
-                    :diagonal()?(sliding?slideIntoWall?2:1:0):cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;
-            mode=Math.floorMod(mode+cycleStep,legacy+5);
-            slideMode=mode>=legacy?new int[]{4,5,6,7,3}[mode-legacy]:0;
-            sliding=mode!=0 && (mode>=legacy || diagonal() || mode!=3);
-            cover=!diagonal() && mode<legacy && mode>=3;
-            slideIntoWall=diagonal() && mode==2;
-            slideOverSurface=!diagonal() && mode==2;
-            button.displayString=motionLabel();
-        }
-        else if(button.id==2){position=diagonal()?(position==0?1:0):Math.floorMod(position+cycleStep,3);if(diagonal())tallWidth=position;button.displayString=positionLabel();}
-        else if(button.id==3){trigger=Math.floorMod(trigger+cycleStep,3);button.displayString=triggerLabel();}
+        if(button.id==1){if(diagonal()){if(!sliding){sliding=true;slideIntoWall=false;}else if(!slideIntoWall)slideIntoWall=true;else{sliding=false;slideIntoWall=false;}}else{int mode=cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;mode=(mode+1)%(tile.canOffsetClosedLeaf()?5:3);cover=mode>=3;sliding=mode==1 || mode==2 || mode==4;slideOverSurface=mode==2;}button.displayString=motionLabel();}
+        else if(button.id==2){position=diagonal()?(position==0?1:0):(position+1)%3;if(diagonal())tallWidth=position;button.displayString=positionLabel();}
+        else if(button.id==3){trigger=(trigger+1)%3;button.displayString=triggerLabel();}
         else if(button.id==5){inverted=!inverted;}
         else if(button.id==6){tileTexture=!tileTexture;button.displayString=layoutLabel();}
         else if(button.id==7){
             if(diagonal()){if(position==2)position=tallWidth;else{tallWidth=position;position=2;}button.displayString=heightLabel();for(GuiButton other:buttonList)if(other.id==2){other.enabled=position!=2;other.displayString=positionLabel();}}
 
         }
-        else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=cycleStep<0?facing.rotateYCCW():facing.rotateY();button.displayString=facingLabel();}
+        else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=facing.rotateY();button.displayString=facingLabel();}
         send();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
         channelField.mouseClicked(x,y,button);int before=textures.selected();
-        if(textures.click(x,y,button)){if(before!=textures.selected())send();return;}
-        if(button==1)for(GuiButton control:buttonList)if(control.id!=4 && control.mousePressed(mc,x,y)) {
-            cycleStep=-1;try{control.playPressSound(mc.getSoundHandler());actionPerformed(control);}finally{cycleStep=1;}return;
-        }
-        super.mouseClicked(x,y,button);
+        if(textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
     }
     @Override protected void mouseClickMove(int x,int y,int button,long elapsed){if(!textures.drag(y))super.mouseClickMove(x,y,button,elapsed);}
     @Override protected void mouseReleased(int x,int y,int button){textures.release();super.mouseReleased(x,y,button);}

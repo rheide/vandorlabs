@@ -13,22 +13,16 @@ final class XDoorMeshes {
     private static final Map<Key,StaticSurfaceMesh[]> CACHE=new LinkedHashMap<>(64,.75F,true);
     static void clear(){CACHE.clear();}
     static StaticSurfaceMesh[] get(TileEntitySpaceDoor tile,IBlockState state,boolean right,int part) {
-        DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(state.getValue(com.vandorlabs.blocks.BlockConnectingDetailedDoor.PAIRED),right,part));
+        DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,part));
         int choice=part==1?tile.getFaceTexture():-1;
-        Key key=new Key(entry,right,choice,tile.isTileTexture(),tile.isXSplit()?0:tile.getSlideDirection(),state.getValue(com.vandorlabs.blocks.BlockConnectingDetailedDoor.PAIRED)?2:1);
+        Key key=new Key(entry,right,choice,tile.isTileTexture());
         StaticSurfaceMesh[] panels=CACHE.get(key);if(panels!=null)return panels;
         TextureAtlasSprite sprite=choice<0?null:Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice));
-        panels=build(entry.model,right,choice,tile.isTileTexture(),sprite,part==1,key.mode,key.width);
+        panels=build(entry.model,right,choice,tile.isTileTexture(),sprite,part==1);
         CACHE.put(key,panels);if(CACHE.size()>256)CACHE.remove(CACHE.keySet().iterator().next());
         return panels;
     }
     static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,boolean tiled,TextureAtlasSprite sprite,boolean caps) {
-        return build(model,right,choice,tiled,sprite,caps,0);
-    }
-    static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,boolean tiled,TextureAtlasSprite sprite,boolean caps,int mode) {
-        return build(model,right,choice,tiled,sprite,caps,mode,2);
-    }
-    static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,boolean tiled,TextureAtlasSprite sprite,boolean caps,int mode,int width) {
         SelectedDoorGeometry selected=choice<0?null:new SelectedDoorGeometry(model);
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
         if(selected!=null)SelectedDoorFaceCache.emit(capture,selected.bounds,sprite,choice,tiled,0);
@@ -42,12 +36,12 @@ final class XDoorMeshes {
                         .normal(normal.getFrontOffsetX(),normal.getFrontOffsetY(),normal.getFrontOffsetZ()).endVertex();
             }
         }
-        StaticSurfaceMesh full=capture.finish();return mode==0?full.xPanels(width==2 && right?1:0,caps,width):full.splitPanels(mode==7,caps);
+        StaticSurfaceMesh full=capture.finish();return full.xPanels(right?1:0,caps);
     }
     private static final class Key {
-        final DoorRenderModels.Entry entry;final boolean right,tiled;final int choice,mode,width;
-        Key(DoorRenderModels.Entry entry,boolean right,int choice,boolean tiled,int mode,int width){this.width=width;this.mode=mode;this.entry=entry;this.right=right;this.choice=choice;this.tiled=tiled;}
-        @Override public int hashCode(){return 31*(31*(31*System.identityHashCode(entry)+choice)+(right?2:0)+(tiled?1:0))+mode+width*17;}
-        @Override public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return entry==k.entry && right==k.right && choice==k.choice && tiled==k.tiled && mode==k.mode && width==k.width;}
+        final DoorRenderModels.Entry entry;final boolean right,tiled;final int choice;
+        Key(DoorRenderModels.Entry entry,boolean right,int choice,boolean tiled){this.entry=entry;this.right=right;this.choice=choice;this.tiled=tiled;}
+        @Override public int hashCode(){return 31*(31*System.identityHashCode(entry)+choice)+(right?2:0)+(tiled?1:0);}
+        @Override public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return entry==k.entry && right==k.right && choice==k.choice && tiled==k.tiled;}
     }
 }

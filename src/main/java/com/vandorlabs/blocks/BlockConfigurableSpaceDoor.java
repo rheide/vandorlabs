@@ -21,18 +21,14 @@ import net.minecraft.world.World;
 
 public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
     private static final ThreadLocal<Integer> PLACEMENT_DEPTH = new ThreadLocal<>();
-    private static final ThreadLocal<BlockPos> SLIDING_PLACEMENT_POS = new ThreadLocal<>();
-    private static final ThreadLocal<IBlockState> SLIDING_PLACEMENT = new ThreadLocal<>();
 
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
             EnumFacing side, float hitX, float hitY, float hitZ, int meta,
             EntityLivingBase placer, EnumHand hand) {
         EnumFacing front = placer.getHorizontalFacing().getOpposite();
         PLACEMENT_DEPTH.set(PanelDepth.fromHit(front, hitX, hitZ));
-        IBlockState placement=super.getStateForPlacement(world, pos, side, hitX, hitY, hitZ,
+        return super.getStateForPlacement(world, pos, side, hitX, hitY, hitZ,
                 meta, placer, hand);
-        SLIDING_PLACEMENT_POS.set(pos.toImmutable());
-        SLIDING_PLACEMENT.set(placement);return placement;
     }
     @Override protected boolean canToggleByHand(World world,BlockPos lowerPos) {
         TileEntity raw=world.getTileEntity(lowerPos);
@@ -156,9 +152,6 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         }
     }
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack) {
-        IBlockState placement=SLIDING_PLACEMENT.get();SLIDING_PLACEMENT.remove();
-        BlockPos clickedPos=SLIDING_PLACEMENT_POS.get();SLIDING_PLACEMENT_POS.remove();
-        if(placement==null || placement.getBlock()!=this || !pos.equals(clickedPos))placement=state;
         super.onBlockPlacedBy(world,pos,state,placer,stack);
         Integer clickedDepth = PLACEMENT_DEPTH.get();
         PLACEMENT_DEPTH.remove();
@@ -170,10 +163,8 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                 // both placement defaults and neighbor appearance inheritance.
                 tile.applyItemSettings(stack.getTagCompound().getCompoundTag("SpaceDoorSettings"));
                 tile.setPlacementDepth(clickedDepth == null ? 1 : clickedDepth);
-                finishSlidingPlacement(world,pos,tile,placement);return;
+                return;
             }
-            // Preserve the click side before neighbour inheritance resolves a pair.
-            if(!hasRotatingNeighbor(world,pos,state.getValue(FACING)))finishSlidingPlacement(world,pos,tile,placement);
             BlockPos mate=tile.mate();
             if (mate!=null && world.isBlockLoaded(mate) && world.getTileEntity(mate) instanceof TileEntitySpaceDoor) {
                 TileEntitySpaceDoor other=(TileEntitySpaceDoor)world.getTileEntity(mate);
@@ -187,46 +178,6 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
             }
             tile.setPlacementDepth(clickedDepth == null ? 1 : clickedDepth);
         }
-    }
-    private boolean hasRotatingNeighbor(World world,BlockPos pos,EnumFacing front) {
-        for(EnumFacing side:new EnumFacing[]{front.rotateY(),front.rotateYCCW()}) {
-            TileEntitySpaceDoor other=slidingNeighbor(world,pos.offset(side),front,false);
-            if(other!=null && !other.isSliding())return true;
-        }
-        return false;
-    }
-    private TileEntitySpaceDoor slidingNeighbor(World world,BlockPos pos,EnumFacing front,boolean slidingOnly) {
-        if(!world.isBlockLoaded(pos) || !world.isBlockLoaded(pos.up()))return null;
-        IBlockState lower=world.getBlockState(pos),upper=world.getBlockState(pos.up());
-        if(lower.getBlock()!=this || upper.getBlock()!=this || lower.getValue(HALF)!=BlockDoor.EnumDoorHalf.LOWER || upper.getValue(HALF)!=BlockDoor.EnumDoorHalf.UPPER || lower.getValue(FACING)!=front)return null;
-        TileEntity raw=world.getTileEntity(pos);
-        if(!(raw instanceof TileEntitySpaceDoor) || raw instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)return null;
-        TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;return slidingOnly && !tile.isSliding()?null:tile;
-    }
-    /** Repair only sliding leaf orientation; rotating placement and pivots stay unchanged. */
-    private void finishSlidingPlacement(World world,BlockPos pos,TileEntitySpaceDoor tile,IBlockState placement) {
-        if(!tile.isSliding() || tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)return;
-        IBlockState upper=world.getBlockState(pos.up());
-        if(upper.getBlock()!=this)return;
-        world.setBlockState(pos.up(),upper.withProperty(HINGE,placement.getValue(HINGE)),2);
-        EnumFacing front=world.getBlockState(pos).getValue(FACING);
-        for(EnumFacing side:new EnumFacing[]{front.rotateY(),front.rotateYCCW()}) {
-            BlockPos neighbor=pos.offset(side);TileEntitySpaceDoor other=slidingNeighbor(world,neighbor,front,true);
-            if(other==null)continue;
-            BlockPos existing=other.mate();if(existing!=null && !existing.equals(pos))continue;
-            BlockDoor.EnumHingePosition hand=side==front.rotateY()?BlockDoor.EnumHingePosition.LEFT:BlockDoor.EnumHingePosition.RIGHT;
-            world.setBlockState(pos.up(),world.getBlockState(pos.up()).withProperty(HINGE,hand),2);
-            world.setBlockState(neighbor.up(),world.getBlockState(neighbor.up()).withProperty(HINGE,hand==BlockDoor.EnumHingePosition.LEFT?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT),2);
-            int a=tile.getSlideDirection(),b=other.getSlideDirection();
-            if(sideways(a) && sideways(b) && (a!=0 || b!=0)){horizontalSplit(tile);horizontalSplit(other);}
-            world.notifyBlockUpdate(neighbor,world.getBlockState(neighbor),world.getBlockState(neighbor),3);
-            break;
-        }
-        world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
-    }
-    private static boolean sideways(int direction){return direction==0 || direction==4 || direction==5;}
-    private static void horizontalSplit(TileEntitySpaceDoor tile){
-        tile.configure(tile.getDesign(),tile.getDetail(),tile.isFramed(),6,tile.isMiddle(),true,tile.hasHinges(),tile.getTrigger(),tile.hasPanel());
     }
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult target,
             World world,BlockPos pos,EntityPlayer player) {

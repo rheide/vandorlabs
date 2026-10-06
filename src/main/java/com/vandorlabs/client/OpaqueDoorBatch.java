@@ -95,8 +95,7 @@ public final class OpaqueDoorBatch {
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         EnumFacing facing=state.getValue(BlockVandorDoor.FACING);
         double shiftX=0,shiftY=0,pivotX=0,pivotZ=0,angle=0;
-        if(tile.isSliding() && tile.getSlideDirection()>=4)shiftX=tile.horizontalTravel(paired,right)*progress*size;
-        else if(tile.isSliding() && tile.getSlideDirection()!=0)shiftY=tile.verticalTravel()*progress*size;
+        if(tile.isSliding() && tile.getSlideDirection()!=0)shiftY=tile.verticalTravel()*progress*size;
         else {
             DoorLeafTransform pose=DoorLeafTransform.calculate(tile.isSliding(),motion.getSlide(right),
                     motion.getPivot(right),motion.getPivotZ(),motion.getAngle(right),progress);
@@ -104,10 +103,10 @@ public final class OpaqueDoorBatch {
         }
         buffer.setTranslation(0,0,0);
         mesh(tile,state,paired,right,0).draw(buffer,facing,x,y,z,tile.positionOffset(),light,0,0,0,0,0,size,leafOffset);
-        if(tile.isXSplit() || tile.hasSplitPanels(paired)) {
+        if(tile.isXSplit()) {
             StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,1);
-            for(int panel=0;panel<panels.length;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,tile.positionOffset(),light,
-                    size*TESlidingDoor.panelShiftX(tile,panel,progress),size*TESlidingDoor.panelShiftY(tile,panel,progress),0,0,0,size,leafOffset);
+            for(int panel=0;panel<4;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,tile.positionOffset(),light,
+                    size*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress),size*com.vandorlabs.render.XDoorPanel.shiftY(panel,progress),0,0,0,size,leafOffset);
         } else mesh(tile,state,paired,right,1).draw(buffer,facing,x,y,z,tile.positionOffset(),light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
         SpaceDoorControlPanel.Side side=BlockConfigurableSpaceDoor.panelSide(tile.getWorld(),tile.getPos(),state);
         if(side!=SpaceDoorControlPanel.Side.NONE)
