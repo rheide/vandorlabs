@@ -39,12 +39,12 @@ final class RedstoneScreenRenderer {
         rect(buffer,0,0,128,height,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,row.active()?0xFF174C3B:0xFF1C2B37);
+            rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,!row.slider && row.active()?0xFF174C3B:0xFF1C2B37);
             if(row.slider){
                 for(int segment=0;segment<row.segments();segment++){
                     int left=42+78*segment/row.segments(),right=42+78*(segment+1)/row.segments();
                     rect(buffer,left,y,right,y+10,.02,0xFF91B5C8);
-                    rect(buffer,left+1,y+1,right-1,y+9,.03,row.level()>=row.segmentValue(segment)?0xFF30C58A:0xFF22394A);
+                    rect(buffer,left+1,y+1,right-1,y+9,.03,row.selectedSegment()==segment?(segment==0?0xFFFFB33B:0xFF38DDE4):(segment==0?0xFF4D3820:0xFF183B46));
                 }
             }else rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
         }
@@ -58,12 +58,7 @@ final class RedstoneScreenRenderer {
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             text(font,font.trimStringToWidth(row.label,row.slider?32:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
-            if(row.slider)for(int segment=0;segment<row.segments();segment++){
-                String value=Integer.toString(row.segmentValue(segment));
-                int center=42+78*(2*segment+1)/(2*row.segments());
-                GlStateManager.pushMatrix();GlStateManager.translate(center,y+2,.04F);GlStateManager.scale(.65F,.65F,1);
-                font.drawString(value,-font.getStringWidth(value)/2,0,0xE0FFF0);GlStateManager.popMatrix();
-            }else text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
+            if(!row.slider)text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
     }

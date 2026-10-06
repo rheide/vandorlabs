@@ -19,11 +19,11 @@ public final class SignalLevelRuntimeChecks {
             world.setBlockState(screenPos,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),2);
             RedstoneScreenContents screen=((TileEntityAnimatedScreenSelector)world.getTileEntity(screenPos)).redstoneScreen(0);
             NBTTagList rows=new NBTTagList();NBTTagCompound row=new NBTTagCompound();
-            row.setString("Label","Power");ChannelData.write(row,ChannelList.of(16001));row.setBoolean("Slider",true);row.setInteger("Min",0);row.setInteger("Max",15);rows.appendTag(row);
+            row.setString("Label","Power");ChannelData.write(row,ChannelList.of(16001));row.setBoolean("Slider",true);row.setInteger("Min",1);row.setInteger("Max",11);rows.appendTag(row);
             require(screen.applyRowConfiguration(rows),"slider configuration rejected");
             RedstoneScreenContents.Row slider=screen.rows().get(0);
-            int[] expected={0,2,4,6,9,11,13,15};
-            for(int i=0;i<8;i++)require(slider.segmentValue(i)==expected[i],"segment rounding");
+            int[] expected={0,1,6,11};
+            for(int i=0;i<4;i++)require(slider.segmentValue(i)==expected[i],"four lever detents");
             world.setBlockState(lightPos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),2);
             TileEntityProgrammableLight light=(TileEntityProgrammableLight)world.getTileEntity(lightPos);
             light.configureSignalBrightness(true,0);light.setRedstoneChannels(ChannelList.of(16001));
@@ -44,7 +44,7 @@ public final class SignalLevelRuntimeChecks {
                 require(trigger.getVisibleTexture()==(level==0?0:level<=5?1:level<=10?2:3),"trigger band "+level);
             }
             RedstoneChannels.register(source);source.level=12;RedstoneChannels.inputChanged(source);
-            screen.selectSegment(0,3);require(light.getLightLevel()==12,"weaker latch suppressed source");
+            screen.selectSegment(0,2);require(light.getLightLevel()==12,"weaker latch suppressed source");
             source.level=4;RedstoneChannels.inputChanged(source);require(light.getLightLevel()==6,"nonzero source decrease missed");
             light.configureSignalBrightness(true,-3);require(light.getLightLevel()==3,"negative offset");
             trigger.configureLevels(false,6,1,2);require(trigger.getVisibleTexture()==3,"exact trigger");
@@ -83,9 +83,11 @@ public final class SignalLevelRuntimeChecks {
             restoredTrigger.readFromNBT(trigger.writeToNBT(new NBTTagCompound()));
             require(!restoredTrigger.isLevelStates() && restoredTrigger.getExactLevel()==6 && restoredTrigger.getLowTexture()==1 && restoredTrigger.getMediumTexture()==2,"Trigger save");
             world.setBlockToAir(joinedPos);
-            row.setInteger("Min",5);row.setInteger("Max",7);require(screen.applyRowConfiguration(rows),"narrow range");require(screen.rows().get(0).segments()==3 && screen.rows().get(0).segmentValue(2)==7,"narrow segments");
-            row.setInteger("Min",7);require(screen.applyRowConfiguration(rows) && screen.rows().get(0).segments()==1,"single value range");
+            row.setInteger("Min",5);row.setInteger("Max",7);require(screen.applyRowConfiguration(rows),"narrow range");require(screen.rows().get(0).segments()==4 && screen.rows().get(0).segmentValue(0)==0 && screen.rows().get(0).segmentValue(1)==5 && screen.rows().get(0).segmentValue(2)==6 && screen.rows().get(0).segmentValue(3)==7,"narrow segments");
+            row.setInteger("Min",7);require(screen.applyRowConfiguration(rows) && screen.rows().get(0).min==5 && screen.rows().get(0).max==7,"legacy collapsed range migration");
             row.setInteger("Max",6);require(!screen.applyRowConfiguration(rows),"inverted range accepted");
+            row.setInteger("Min",0);row.setInteger("Max",15);require(screen.applyRowConfiguration(rows),"legacy Off range migration");
+            require(screen.rows().get(0).min==5 && screen.rows().get(0).max==15,"lever default limits differ");
             System.out.println("[vandorlabs][reprolab] signal-level-runtime PASS all 16 levels, max sources, nonzero transitions, offsets, particles, trigger bands/exact matching, save and segment ranges");
         } finally {
             RedstoneChannels.unregister(source);

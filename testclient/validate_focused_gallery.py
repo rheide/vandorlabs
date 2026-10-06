@@ -17,7 +17,7 @@ if target == 'dialogs':
     selected = ['screen_gui', 'console_gui', 'half_console_gui', 'input_gui', 'full_input_gui', 'programmable_wall_gui', 'programmable_diagonal_width_gui', 'programmable_block_gui', 'programmable_face_overrides_gui', 'space_door_gui', 'programmable_light_gui', 'programmable_trigger_gui', 'thruster_gui', 'diagonal_trapdoor_gui', 'trapdoor_gui', 'trapdoor_surface_gui']
 if target == 'signals':
     shapes=[0,1,2,3,7,17,21,22,23,25,26,27]
-    selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui')]
+    selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui','slider_0','slider_1','slider_2','slider_3')]
 if target == 'redstone-dialogs':
     selected=['channels_'+str(index) for index in range(13)]+['controls_hotbar_empty','controls_hotbar']
     for index in range(4):

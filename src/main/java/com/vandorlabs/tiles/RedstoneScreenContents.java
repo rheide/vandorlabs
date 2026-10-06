@@ -152,14 +152,19 @@ public final class RedstoneScreenContents {
         private ChannelList latched=ChannelList.EMPTY;
         private boolean active;
         public boolean slider;
-        public int min=0,max=15;
+        public int min=5,max=15;
         private int level;
         private final Map<Integer,Integer> levels=new HashMap<>();
         public int level(){return level;}
-        public int segments(){return Math.min(8,max-min+1);}
-        public int segmentValue(int index){return segments()==1?min:min+Math.round((max-min)*index/(float)(segments()-1));}
+        public int segments(){return 4;}
+        public int segmentValue(int index){return TileEntitySignalControl.levelForStep(index,min,max);}
+        public int selectedSegment(){return TileEntitySignalControl.stepForLevel(level,min,max);}
         void writeOptions(NBTTagCompound tag){tag.setBoolean("Slider",slider);tag.setInteger("Min",min);tag.setInteger("Max",max);}
-        void readOptions(NBTTagCompound tag){slider=tag.getBoolean("Slider");min=Math.max(0,Math.min(15,tag.getInteger("Min")));max=tag.hasKey("Max",3)?Math.max(min,Math.min(15,tag.getInteger("Max"))):15;}
+        void readOptions(NBTTagCompound tag){
+            slider=tag.getBoolean("Slider");max=tag.hasKey("Max",3)?Math.max(3,Math.min(15,tag.getInteger("Max"))):15;
+            // Older range sliders included Off in Min and allowed collapsed ranges.
+            int savedLow=tag.getInteger("Min");min=Math.max(1,Math.min(max-2,savedLow==0?5:savedLow));
+        }
         void writeLevels(NBTTagCompound tag){int[] saved=new int[channels.size()];for(int i=0;i<saved.length;i++)saved[i]=latchedLevel(channels.get(i));tag.setIntArray("Levels",saved);tag.setInteger("Level",level);}
         void readLevels(NBTTagCompound tag){int[] saved=tag.getIntArray("Levels");for(int i=0;i<Math.min(saved.length,channels.size());i++)levels.put(channels.get(i),Math.max(0,Math.min(15,saved[i])));level=Math.max(0,Math.min(15,tag.getInteger("Level")));}
         public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}

@@ -98,25 +98,25 @@ final class RedstoneScreenRuntimeChecks {
                 segment=0;pending=mc.getIntegratedServer().addScheduledTask(()->{
                     RedstoneScreenContents contents=tile(mc);net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();
                     row.setString("Label","Power");com.vandorlabs.redstone.ChannelData.write(row,ChannelList.of(16901));row.setBoolean("Slider",true);row.setInteger("Min",0);row.setInteger("Max",15);rows.appendTag(row);
-                    require(contents.applyRowConfiguration(rows),"live slider config");aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,42+78*.5/8);
+                    require(contents.applyRowConfiguration(rows),"live slider config");aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,42+78*.5/4);
                 });next(13);return;
             }
             if(stage==13 && ticks>25){click(mc);next(14);return;}
             if(stage==14 && ticks>15){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
-                    int[] values={0,2,4,6,9,11,13,15};require(RedstoneChannels.level(owner(mc).world,16901)==values[segment],"live slider picked wrong segment "+segment);
-                    segment++;if(segment<8)aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,42+78*(segment+.5)/8);
+                    int[] values={0,5,10,15};require(RedstoneChannels.level(owner(mc).world,16901)==values[segment],"live slider picked wrong segment "+segment);
+                    segment++;if(segment<4)aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,42+78*(segment+.5)/4);
                 });next(15);return;
             }
-            if(stage==15){if(segment<8){next(13);return;}capture(mc,output,"slider");open(mc);next(16);return;}
+            if(stage==15){capture(mc,output,"slider_"+(segment-1));if(segment<4){next(13);return;}capture(mc,output,"slider");open(mc);next(16);return;}
             if(stage==16 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
                 GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
                 int originalWidth=gui.width,originalHeight=gui.height;
                 for(int[] size:new int[][]{{320,240},{460,340},{originalWidth,originalHeight}}){gui.setWorldAndResolution(mc,size[0],size[1]);gui.checkLayout();}
                 capture(mc,output,"slider_gui");
-                gui.actionPerformed(new GuiButton(8,0,0,"Min"));gui.actionPerformed(new GuiButton(9,0,0,"Max"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(17);return;
+                gui.actionPerformed(new GuiButton(8,0,0,"Low"));gui.actionPerformed(new GuiButton(9,0,0,"High"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(17);return;
             }
-            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==1 && tile(mc).rows().get(0).max==1,"slider dialog packet lost range"));next(18);return;}
+            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==6 && tile(mc).rows().get(0).max==8,"slider dialog packet lost range"));next(18);return;}
             if(stage==18){System.out.println("[vandorlabs][reprolab] redstone-slider-runtime PASS shape="+shape);
                 System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){
                 int[] fixtures={0,1,2,3,7,17,21,22,23,25,26,27};int index=0;while(index<fixtures.length && fixtures[index]!=shape)index++;shape=index+1<fixtures.length?fixtures[index+1]:28;
