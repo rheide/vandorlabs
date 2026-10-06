@@ -70,19 +70,20 @@ public final class BlockProgrammableDiagonalTrapdoor extends BlockProgrammableTr
                 quarterTurns(state.getValue(FACING)),tile!=null && tile.isSliding(),tile!=null && tile.rotationReverse(group),pose,tile==null?1/16D:tile.motionHinge(),tile==null?15/16D:tile.motionTravel(),tile==null?1:tile.slideLiftDirection(group),tile!=null && tile.isSlideIntoWall(),out);
     }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
-        TileEntity raw=world.getTileEntity(pos);double[] b=DiagonalTrapdoorGeometry.bounds(corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0));
+        TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)raw).hasPanelMotion())return super.getBoundingBox(state,world,pos);double[] b=DiagonalTrapdoorGeometry.bounds(corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0));
         return new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]);
     }
     /** Tight slices instead of filling the entire slanted panel's bounding volume. */
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB entityBox,List<AxisAlignedBB> boxes,@Nullable Entity entity,boolean actual) {
         TileEntity raw=world.getTileEntity(pos);TileEntityProgrammableDiagonalTrapdoor tile=raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null;
+        if(tile!=null && tile.hasPanelMotion()){super.addCollisionBoxToList(state,world,pos,entityBox,boxes,entity,actual);return;}
         double[][] v=corners(state,tile,state.getValue(OPEN)?1:0);
         int across=state.getValue(OPEN) && (tile==null || !tile.isSliding())?16:1;
         DiagonalTrapdoorCollision.add(v,tile!=null && tile.getPosition()==2?4:2,across,pos,entityBox,boxes);
     }
 
     @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end) {
-        TileEntity raw=world.getTileEntity(pos);double[][] v=corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0);
+        TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)raw).hasPanelMotion())return super.collisionRayTrace(state,world,pos,start,end);double[][] v=corners(state,raw instanceof TileEntityProgrammableDiagonalTrapdoor?(TileEntityProgrammableDiagonalTrapdoor)raw:null,state.getValue(OPEN)?1:0);
         return DiagonalTrapdoorRayTrace.trace(v,pos,start,end);
     }
 }

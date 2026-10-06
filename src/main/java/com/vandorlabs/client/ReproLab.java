@@ -357,7 +357,12 @@ public class ReproLab {
             for(String movement:new String[]{"left","right","horizontal","vertical","x"})
                 for(String pose:new String[]{"closed","open"})
                     SHOTS.add(new Shot("gallery_door_new_"+size+"_"+movement+"_"+pose,
-                            GALLERY_X+1,GALLERY_Y+1,-28,0,4));
+                            GALLERY_X+1,GALLERY_Y+4,-28,0,4));
+        for(String shape:new String[]{"single","pair","square","tall","half","shallow"})
+            for(String movement:new String[]{"left","right","horizontal","vertical","x"})
+                for(String pose:new String[]{"closed","open"})
+                    SHOTS.add(new Shot("gallery_trapdoor_new_"+shape+"_"+movement+"_"+pose,
+                            GALLERY_X+1.5,GALLERY_Y+4,-23,12,shape.equals("tall") || shape.equals("half")?25:42));
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
         SHOTS.add(new Shot("gallery_round_portholes", GALLERY_X, galleryFeet + 2, -27, 0, 0));
         for (String hinges:new String[]{"on","off"}) SHOTS.add(new Shot("gallery_space_config_hinges_"+hinges,
@@ -475,7 +480,7 @@ public class ReproLab {
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
-            if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
+            if(!prefix.isEmpty())SHOTS.removeIf(shot->java.util.Arrays.stream(prefix.split(",")).noneMatch(shot.name::startsWith));
             if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
         }
     }
@@ -1315,7 +1320,9 @@ public class ReproLab {
             case 60:
                 if(--holdTicks>0)break;
                 checkSlidingStyle(mc,true);saveNamed(mc,"diagonal_trapdoor_into_wall_gui");
-                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                panelGuiIndex=0;pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                state=67;holdTicks=20;break;
+            case 68:
                 pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,6);
                 pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,2);
                 state=52;holdTicks=20;break;
@@ -1348,7 +1355,7 @@ public class ReproLab {
             case 62:
                 if(--holdTicks>0)break;
                 checkNormalMovement(mc,true,true,EnumFacing.SOUTH);
-                pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                for(int i=0;i<6;i++)pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
                 state=63;holdTicks=20;break;
             case 63:
                 if(--holdTicks>0)break;
@@ -1369,6 +1376,19 @@ public class ReproLab {
                 }
                 saveNamed(mc,"trapdoor_surface_gui");
                 System.out.println("[vandorlabs][reprolab] trapdoor-surface-sliding-gui PASS");
+                panelGuiIndex=0;for(int i=0;i<3;i++)pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);
+                state=66;holdTicks=20;break;
+            case 66:
+            case 67:
+                if(--holdTicks>0)break;
+                int expectedMode=new int[]{4,5,6,7,3,0}[panelGuiIndex];
+                for(World w:new World[]{mc.world,mc.getIntegratedServer().getWorld(0)}) {
+                    com.vandorlabs.tiles.TileEntityProgrammableTrapdoor root=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)w.getTileEntity(CONSOLE.add(15,0,3));
+                    for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:root.group())if(leaf.getSlideMode()!=expectedMode || leaf.isSliding()!=(expectedMode!=0))throw new IllegalStateException("trapdoor panel GUI mode/group packet failed: "+expectedMode);
+                }
+                if(panelGuiIndex++<5){pressTrapdoorControl((GuiProgrammableTrapdoor)mc.currentScreen,1);holdTicks=20;break;}
+                System.out.println("[vandorlabs][reprolab] trapdoor-panel-gui PASS "+(state==67?"diagonal group":"flat")+" left/right/horizontal/vertical/X and return to rotating");
+                if(state==67){state=68;break;}
                 mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] trapdoor-controls-runtime PASS");
                 System.out.println("[vandorlabs][reprolab] trapdoor-movement-hinge-gui PASS (all five movements, sliding hinge, client/server)");
@@ -1473,6 +1493,7 @@ public class ReproLab {
     }
     private CustomPickerReopenChecks customPickerChecks;
     private OffsetTrapdoorRuntimeChecks offsetTrapdoorChecks;
+    private int panelGuiIndex;
     private void openTrapdoorFollowup(Minecraft mc,boolean diagonal) {
         mc.getIntegratedServer().addScheduledTask(()->{
             World world=mc.getIntegratedServer().getWorld(0);BlockPos base=CONSOLE.add(15,0,3);
@@ -1983,7 +2004,7 @@ public class ReproLab {
     private static void buildGalleryStage(World world, String shot) {
         // Ramp cells are created by their server controller. A client-side clear
         // after chunk arrival would erase them without generating new packets.
-        if(world.isRemote && shot.equals("gallery_distant_geometry"))return;
+        if(world.isRemote && (shot.equals("gallery_distant_geometry") || shot.startsWith("gallery_trapdoor_new_")))return;
         world.getGameRules().setOrCreateGameRule("doMobSpawning", "false");
         // Documentation lives in its own empty chunk so the ordinary compact
         // regression fixtures never appear behind the catalog.
@@ -2040,6 +2061,8 @@ public class ReproLab {
             }
         } else if (shot.equals("gallery_storage_sets")) {
             StorageRuntimeChecks.build(world,GALLERY_X,GALLERY_Y);
+        } else if (shot.startsWith("gallery_trapdoor_new_")) {
+            TrapdoorMotionGallery.build(world,shot,GALLERY_X,GALLERY_Y);
         } else if (shot.startsWith("gallery_trapdoor_")) {
             TrapdoorGallery.build(world,shot.substring("gallery_trapdoor_".length()),GALLERY_X,GALLERY_Y);
         } else if (shot.startsWith("gallery_close_display_")) {
@@ -2150,7 +2173,7 @@ public class ReproLab {
                         .setHousingTexture(finish);
             }
         } else if (shot.startsWith("gallery_door_new_")) {
-            DoorMotionGallery.build(world,shot,GALLERY_X,GALLERY_Y);
+            DoorMotionGallery.build(world,shot,GALLERY_X,GALLERY_Y+3);
         } else if (shot.startsWith("gallery_door_")) {
             buildCloseDoorGallery(world,shot);
         } else if (shot.startsWith("gallery_ramp_mode_") && !world.isRemote) {

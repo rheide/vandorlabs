@@ -41,9 +41,22 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
     }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);TileEntityProgrammableTrapdoor tile=raw instanceof TileEntityProgrammableTrapdoor?(TileEntityProgrammableTrapdoor)raw:null;
+        if(tile!=null && tile.hasPanelMotion())return com.vandorlabs.render.TrapdoorPanelCollision.bounds(tile,state,state.getValue(OPEN)?1:0);
         int position=tile==null?(state.getValue(HALF)==DoorHalf.TOP?2:0):tile.getPosition();
         double[] b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(tile==null?TrapdoorGeometry.corners(position,false,quarterTurns(state.getValue(FACING)),state.getValue(OPEN)?1:0):tile.corners(state,state.getValue(OPEN)?1:0));
         return new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]);
+    }
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB entityBox,java.util.List<AxisAlignedBB> boxes,@Nullable net.minecraft.entity.Entity entity,boolean actual) {
+        TileEntity raw=world.getTileEntity(pos);
+        if(raw instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)raw).hasPanelMotion())
+            com.vandorlabs.render.TrapdoorPanelCollision.add((TileEntityProgrammableTrapdoor)raw,state,state.getValue(OPEN)?1:0,pos,entityBox,boxes);
+        else super.addCollisionBoxToList(state,world,pos,entityBox,boxes,entity,actual);
+    }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end) {
+        TileEntity raw=world.getTileEntity(pos);
+        if(raw instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)raw).hasPanelMotion())
+            return com.vandorlabs.render.TrapdoorPanelCollision.trace((TileEntityProgrammableTrapdoor)raw,state,state.getValue(OPEN)?1:0,pos,start,end);
+        return super.collisionRayTrace(state,world,pos,start,end);
     }
     @Override public net.minecraft.block.state.BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing face){return BlockFaceShape.UNDEFINED;}
     @Override public boolean isPassable(IBlockAccess world,BlockPos pos){return world.getBlockState(pos).getValue(OPEN);}

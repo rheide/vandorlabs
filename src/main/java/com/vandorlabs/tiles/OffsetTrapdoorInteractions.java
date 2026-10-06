@@ -23,6 +23,12 @@ public final class OffsetTrapdoorInteractions {
     }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
+        for(BlockPos pos:TrapdoorPanelOwners.candidates(world,new AxisAlignedBB(start,end))) {
+            if(!world.isBlockLoaded(pos) || !(world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor))continue;TileEntity raw=world.getTileEntity(pos);
+            if(!(raw instanceof TileEntityProgrammableTrapdoor) || !((TileEntityProgrammableTrapdoor)raw).hasPanelMotion())continue;
+            RayTraceResult hit=world.getBlockState(pos).collisionRayTrace(world,pos,start,end);
+            if(hit!=null && start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);nearest=hit;}
+        }
         for(BlockPos pos:TrapdoorRayCandidates.positions(start,end)) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null)continue;
             RayTraceResult hit=leaf instanceof TileEntityProgrammableDiagonalTrapdoor
@@ -38,6 +44,15 @@ public final class OffsetTrapdoorInteractions {
         addCollisions(event.getWorld(),event.getAabb(),event.getCollisionBoxesList());
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
+        for(BlockPos pos:TrapdoorPanelOwners.candidates(world,query)) {
+            if(!world.isBlockLoaded(pos) || !(world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor))continue;TileEntity raw=world.getTileEntity(pos);
+            if(!(raw instanceof TileEntityProgrammableTrapdoor) || !((TileEntityProgrammableTrapdoor)raw).hasPanelMotion())continue;
+            TileEntityProgrammableTrapdoor tile=(TileEntityProgrammableTrapdoor)raw;
+            double pose=world.getBlockState(pos).getValue(BlockProgrammableTrapdoor.OPEN)?1:0;
+            for(AxisAlignedBB box:tile.panelCollisionBoxes(world.getBlockState(pos),pose)) {
+                AxisAlignedBB moved=box.offset(pos);if(moved.intersects(query) && !boxes.contains(moved))boxes.add(moved);
+            }
+        }
         int x0=MathHelper.floor(query.minX-2),y0=MathHelper.floor(query.minY-1),z0=MathHelper.floor(query.minZ-2);
         int x1=MathHelper.floor(query.maxX+2),y1=MathHelper.floor(query.maxY+1),z1=MathHelper.floor(query.maxZ+2);
         if(!TrapdoorSectionPresence.mayContain(world,x0,y0,z0,x1,y1,z1))return;

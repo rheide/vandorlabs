@@ -74,6 +74,7 @@ public final class NonRenderingChecks {
         ComponentTextureChecks.run();
         ScreenDesignChecks.run();
         XDoorChecks.run();
+        TrapdoorPanelChecks.run();
         RampMaterialChecks.run();
         RampInterpolationChecks.run();
         DiagonalRayTraceChecks.run();

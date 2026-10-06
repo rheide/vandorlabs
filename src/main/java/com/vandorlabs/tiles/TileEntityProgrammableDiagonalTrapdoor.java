@@ -86,6 +86,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         return Arrays.asList(base,base.offset(across),base.offset(down),base.offset(across).offset(down));
     }
     @Override protected void sync() {
+        TrapdoorPanelOwners.refresh(this);
         // HALF is slope/band inversion here, independent of the three geometry modes.
         markDirty();if(!configuring && world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
     }
@@ -101,7 +102,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         if(pos.distanceSq(other.pos)!=1 || direction.getAxis()!=width().getAxis() && direction.getAxis()!=along().getAxis())return;
         partner=other.pos.toImmutable();other.partner=pos.toImmutable();
         reverse=direction!=width();other.reverse=direction.getOpposite()!=other.width();
-        sliding=other.sliding;slideIntoWall=other.slideIntoWall;trigger=other.trigger;setRedstoneChannels(other.getRedstoneChannels());
+        sliding=other.sliding;slideMode=other.slideMode;slideIntoWall=other.slideIntoWall;trigger=other.trigger;setRedstoneChannels(other.getRedstoneChannels());
         requestOpen(world.getBlockState(other.pos).getValue(BlockTrapDoor.OPEN));sync();other.sync();evaluatePower(true);
     }
     @Override public void completeSquare(EntityPlayer player,ItemStack stack) {
@@ -126,7 +127,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
             boolean motion=reference.sliding,open=world.getBlockState(reference.pos).getValue(BlockTrapDoor.OPEN);
             com.vandorlabs.redstone.ChannelList linked=reference.getRedstoneChannels();int activation=reference.trigger;
             EnumFacing basis=facing();
-            for(TileEntityProgrammableDiagonalTrapdoor leaf:leaves){leaf.groupFacing=basis;leaf.partner=null;leaf.sliding=motion;leaf.slideIntoWall=reference.slideIntoWall;leaf.trigger=activation;leaf.squareOrigin=base;leaf.setRedstoneChannels(linked);}
+            for(TileEntityProgrammableDiagonalTrapdoor leaf:leaves){leaf.groupFacing=basis;leaf.partner=null;leaf.sliding=motion;leaf.slideMode=reference.slideMode;leaf.slideIntoWall=reference.slideIntoWall;leaf.trigger=activation;leaf.squareOrigin=base;leaf.setRedstoneChannels(linked);}
             leaves.get(1).pairWith(leaves.get(0));leaves.get(3).pairWith(leaves.get(2));
             requestOpen(open);for(TileEntityProgrammableDiagonalTrapdoor leaf:leaves)leaf.sync();evaluatePower(true);return;
         }

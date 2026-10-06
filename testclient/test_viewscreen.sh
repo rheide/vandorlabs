@@ -10,7 +10,9 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = trapdoors ]; then
+        if [ "$TARGET" = opening-modes ]; then
+            PREFIX=gallery_door_new_,gallery_trapdoor_new_
+        elif [ "$TARGET" = trapdoors ]; then
             PREFIX=gallery_trapdoor_followup_
             export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
         elif [ "$TARGET" = signals ]; then

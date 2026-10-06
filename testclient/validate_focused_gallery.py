@@ -7,8 +7,10 @@ from export_gallery import SHOTS
 
 source, prefix, target = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 selected = [name for name in SHOTS if name.startswith(prefix)]
-if target == 'gallery_door_new_':
+if target in ('gallery_door_new_', 'opening-modes'):
     selected=['gallery_door_new_'+size+'_'+motion+'_'+pose for size in ('single','paired','large') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
+if target == 'opening-modes':
+    selected += ['gallery_trapdoor_new_'+shape+'_'+motion+'_'+pose for shape in ('single','pair','square','tall','half','shallow') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
 if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
 if target == 'dialogs':
@@ -45,11 +47,15 @@ for name in selected:
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):
         require('diagonal-partial-patch-runtime PASS client ' + name[len('gallery_trapdoor_'):])
-if target == 'gallery_door_new_':
+if target in ('gallery_door_new_', 'opening-modes'):
     require('door-runtime PASS')
     require('space-door-settings PASS')
     require('large-door-runtime PASS')
-    for name in selected: require('door-motion-scene PASS '+name)
+    require('door-motion-gui PASS')
+    for name in selected: require(('trapdoor-panel-scene PASS ' if name.startswith('gallery_trapdoor_new_') else 'door-motion-scene PASS ')+name)
+if target == 'opening-modes':
+    require('trapdoor-panel-gui PASS flat')
+    require('trapdoor-panel-gui PASS diagonal group')
 if target == 'gallery_distant_geometry':
     require('distant-geometry-runtime PASS')
     import numpy as np
