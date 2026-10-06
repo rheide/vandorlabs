@@ -14,5 +14,7 @@ public interface RedstoneChannelMember {
     }
     boolean hasLocalRedstoneSignal();
     default boolean hasLocalRedstoneSignal(int channel){return hasLocalRedstoneSignal();}
+    default int localSignalLevel(int channel){return hasLocalRedstoneSignal(channel)?15:0;}
+    default void setChannelLevel(int level){setChannelSignal(level>0);}
     void setChannelSignal(boolean powered);
 }

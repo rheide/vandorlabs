@@ -11,7 +11,12 @@ public final class LoadedRedstonePower {
     private LoadedRedstonePower() { }
 
     public static boolean isPowered(World world, BlockPos pos) {
-        if (world == null || pos == null || !world.isBlockLoaded(pos)) return false;
+        return level(world,pos)>0;
+    }
+
+    public static int level(World world, BlockPos pos) {
+        if (world == null || pos == null || !world.isBlockLoaded(pos)) return 0;
+        int result=0;
         for (EnumFacing side : SIDES) {
             BlockPos neighbor = pos.offset(side);
             if (!world.isBlockLoaded(neighbor)) continue;
@@ -19,12 +24,11 @@ public final class LoadedRedstonePower {
             if (state.getBlock().shouldCheckWeakPower(state, world, neighbor, side)) {
                 for (EnumFacing strongSide : SIDES) {
                     BlockPos source = neighbor.offset(strongSide);
-                    if (world.isBlockLoaded(source)
-                            && world.getBlockState(source).getStrongPower(world, source, strongSide) > 0)
-                        return true;
+                    if (world.isBlockLoaded(source))
+                        result=Math.max(result,world.getBlockState(source).getStrongPower(world, source, strongSide));
                 }
-            } else if (state.getWeakPower(world, neighbor, side) > 0) return true;
+            } else result=Math.max(result,state.getWeakPower(world, neighbor, side));
         }
-        return false;
+        return Math.min(15,result);
     }
 }

@@ -170,6 +170,17 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
     private int redstoneChannel;
     private boolean channelSignal;
+    private int channelLevel;
+    public int getSignalLevel(){return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
+    @Override public int localSignalLevel(int channel){return com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);}
+    @Override public void setChannelLevel(int level){
+        if(channelLevel==level)return;
+        channelLevel=level;setChannelSignal(level>0);
+        if(world!=null && !world.isRemote){
+            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
+            world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,pos);
+        }
+    }
     private int housingTexture;
     private int sideTexture=-1;
     private FaceTextures faceTextures = FaceTextures.DEFAULT;
@@ -287,6 +298,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }
     @Override public void setChannelSignal(boolean powered) {
+        if(!powered)channelLevel=0;else if(channelLevel==0)channelLevel=15;
         if (channelSignal == powered) return;
         channelSignal = powered;
         if (world != null && !world.isRemote) {
@@ -439,7 +451,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     protected boolean isTriggerPowered() {
-        return channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
+        return getSignalLevel()>0;
     }
 
     public boolean isUsableByPlayer(EntityPlayer player) {
@@ -454,7 +466,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        super.writeToNBT(compound);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -520,6 +532,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         redstoneChannel = data.redstoneChannel;
         channels=ChannelData.read(compound,redstoneChannel);redstoneChannel=channels.first();
         channelSignal = data.channelSignal;
+        channelLevel=compound.hasKey("ChannelLevel",3)?Math.max(0,Math.min(15,compound.getInteger("ChannelLevel"))):channelSignal?15:0;
         int savedHousing = data.housingTexture;
         if (!compound.hasKey("HousingTextureVersion", 3)) {
             // The removed vent grille occupied index 14 in existing worlds.
