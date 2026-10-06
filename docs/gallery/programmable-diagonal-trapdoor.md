@@ -4,7 +4,7 @@ Default, configured and Custom-finish inventory icons use a reduced scale to fit
 
 A movable panel aligned with Programmable Diagonal Walls. New panels use **Armored Hatch** from the Trapdoors category by default. Choose the shared categorized
 material catalog and redstone settings as [Programmable Trapdoor](programmable-trapdoor.md),
-with Rotating, Slide over wall or Slide into wall movement and no frame or hinge hardware.
+with rotating, sliding and splitting movement and no frame or hinge hardware.
 
 ## Geometry and placement
 
@@ -27,6 +27,10 @@ Geometry copies between diagonal walls and trapdoors through the Duplifier's
 **Diagonal Geometry** switch. Fill settings do not apply to trapdoors.
 
 ## Motion and groups
+
+**Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical** and **Split X** are also available. Left/right moves the entire opening across its width. Horizontal splits move width halves apart; vertical splits move length halves apart along the slope. X splits retract four triangular panels toward the four edges. All travel stays in the panel’s plane and shares the selected artwork, collision and selection geometry. Leave space around the opening; these modes do not include the lifting stage of Slide over wall.
+
+Coplanar groups share their complete opening’s center and dimensions. Bent groups, including opposite-slope V assemblies, use each leaf’s own plane for the new split modes. Existing saved rotating and wall-slide choices are preserved. New modes synchronize across loaded groups, persist in configured items and copy with **Door / Trapdoor Movement**.
 
 **Slide over wall** preserves the existing sliding motion: it first lifts the leaf clear of a solid continuation wall, then slides along the surface's width, leaving roughly one pixel visible in its original block. Tall leaves lift in their depth coordinate; shallow leaves lift vertically. Joined tall rows clear the group’s common outside face (the convex side for an opposite-slope bend) before separating sideways, including opposite slopes and reversed-facing continuations. **Slide into wall** instead moves sideways from the start, without lifting, so the leaf retracts into the neighboring wall/block like an ordinary sliding door. Both sliding choices work in all three shape modes and share the group’s sideways travel. Existing saved sliders retain Slide over wall. The choice is saved in configured items and copied by **Door / Trapdoor Movement**. Rendered vertices, selection and collision use the same motion. Rotating leaves retain the same one-pixel clearance at the side edge. Rotating swings 90 degrees around a sloping side edge. Adjacent
 compatible leaves pair and open toward opposite sides without reversing their

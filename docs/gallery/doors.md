@@ -41,17 +41,18 @@ Each clip shows a complete open/close cycle. These are live in-game captures at 
 | Slide up | ![Slide up](../images/gallery/doors/observation-up.gif) |
 | Slide down | ![Slide down](../images/gallery/doors/observation-down.gif) |
 
-The motion selector also offers **Slide Left**, **Slide Right**, **Split Horizontal**, and **Split Vertical** for single, paired and Large Programmable Doors:
+The motion selector also offers **Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical**, and **Split X** for single, paired and Large Programmable Doors:
 
 | Mode | Travel |
 | --- | --- |
 | Slide Left / Right | Move the entire door opening to one side: one block for a single, two for a pair, or three for a Large Door. |
 | Split Horizontal | Divide at the middle and move the halves left and right. A single leaf splits too. |
 | Split Vertical | Divide at mid-height and move the lower half down and the upper half up. |
+| Split X | Divide into four triangular panels moving left, right, up and down. |
 
 Left and right refer to the door's local orientation; viewing it from behind reverses them. Split cuts preserve the selected artwork and glazing. Frames and control panels stay fixed.
 
-New single doors retain placement-dependent left/right sliding. Placing a compatible second door changes that default to **Split Horizontal**; removing it restores the single-door default. Existing saved sideways sliding follows the same rule without changing its travel. Explicitly selected modes remain selected when pairing changes. Existing rotating, up, down and large-only Sliding X modes also retain their saved behavior. All new modes survive world saves, pick-block and Duplifier copying.
+New single doors retain placement-dependent left/right sliding. Placing a compatible second door changes that default to **Split Horizontal**; removing it restores the single-door default. Existing saved sideways sliding follows the same rule without changing its travel. Explicitly selected modes remain selected when pairing changes. Existing rotating, up, down and Large Door X splits also retain their saved behavior. All new modes survive world saves, pick-block and Duplifier copying.
 
 The frame stays in place while the leaf moves. Rotating doors can show or hide their hinges; the hinge setting is saved even when you temporarily switch to sliding motion. Paired doors share appearance and settings.
 
@@ -59,7 +60,7 @@ The frame stays in place while the leaf moves. Rotating doors can show or hide t
 
 A Large Programmable Door occupies one **3×3 opening** and is placed or removed as a whole. Any of its nine cells opens the shared settings. It offers the regular door designs plus eight large-only bay designs, and defaults to Cross Braced Bay. Its texture size setting changes artwork resolution, while its opening remains 3×3.
 
-The same movement choices apply; **Sliding X** is an additional large-only option that retracts four triangular panels left, right, up and down. Large doors open and close slightly more slowly than regular doors. Leave room beside, above or below the opening for the selected motion.
+The same movement choices apply, including **Split X**, which retracts four triangular panels left, right, up and down. Large doors open and close slightly more slowly than regular doors. Leave room beside, above or below the opening for the selected motion.
 
 ## Choose the position in the block
 
@@ -80,3 +81,16 @@ The small button pad can be shown or hidden. It sits on a jamb and opens the set
 | ![Door with panel](../images/gallery/doors/panel-on.png) | ![Door without panel](../images/gallery/doors/panel-off.png) |
 
 **Trigger: Disabled** keeps manual right-click operation. **Redstone ON** opens while powered; **Redstone OFF** opens while unpowered. Choose a physical signal or a virtual redstone channel. Creative pick-block retains selector settings for another placement; the new placement click sets its initial depth. For pairing, save details, and existing-world behavior, see the [door reference](../space-doors.md).
+
+## Opening modes by block
+
+All four opening types support **Slide Left**, **Slide Right**, **Split Horizontal**, **Split Vertical** and **Split X**. Directions follow each opening’s local orientation.
+
+| Opening | Whole left/right travel | Horizontal / vertical split | Default and other choices |
+| --- | --- | --- | --- |
+| Single Door | Entire one-block-wide leaf | Width midpoint / height midpoint | Placement-dependent sideways travel; Rotating, Slide Up and Slide Down remain available. |
+| Double Door | Both leaves move together across two blocks | Between leaves / through both leaves at mid-height | Automatic horizontal split when paired; explicit choices stay selected. |
+| Large Door | Entire three-block-wide opening | Opening midpoint, across its 3×3 area | Horizontal split; Rotating, Slide Up and Slide Down remain available. |
+| Trapdoor | Entire leaf or coplanar group width | Across its width / along its length, within the leaf’s plane | Rotating by default; existing Sliding and surface/next-block choices remain available. Diagonal leaves retain their wall-slide choices. |
+
+X splits use four triangular panels at each opening’s center. Coplanar trapdoor groups share one opening; bent diagonal groups split each leaf in its own plane. See the [flat](programmable-trapdoor.md) and [diagonal](programmable-diagonal-trapdoor.md) trapdoor guides. Rotating geometry and hinges are unchanged.

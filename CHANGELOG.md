@@ -2,7 +2,8 @@
 
 ## 1.6
 
-- Add Slide Left, Slide Right, Split Horizontal and Split Vertical to Programmable and Large Programmable Doors, including split single leaves and full-width large-door travel. Preserve existing saved motion values and placement-dependent single/pair defaults, artwork/glazing, fixed frames and panels, configuration copying and collision clearance.
+- Add Slide Left, Slide Right, Split Horizontal and Split Vertical to Programmable and Large Programmable Doors, including split single leaves and full-width large-door travel. Preserve existing saved motion values and placement-dependent single/pair defaults, artwork/glazing, fixed frames and panels, configuration copying and collision clearance. Extend four-panel Split X to single and paired doors.
+- Add the same five whole-opening/split modes to flat and diagonal trapdoors, with shared coplanar group cuts, sealed cut edges, cached animated meshes, matching collision/selection, saved settings, copying and Dynmap geometry. Preserve rotating and legacy sliding behavior.
 
 - Carry redstone levels 0–15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
 - Let Programmable Lights, Light Slabs and Light Frames follow signal strength with a signed brightness offset; joined lights share the strongest loaded group signal.

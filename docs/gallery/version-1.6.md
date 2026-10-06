@@ -128,6 +128,8 @@ threshold. They use a fixed camera and ordinary game lighting. See the
 
 ## Door opening modes
 
-Programmable Doors and Large Programmable Doors add **Slide Left**, **Slide Right**, **Split Horizontal** and **Split Vertical**. Left/right moves the entire door to one side. Horizontal splits move halves left/right; vertical splits move halves down/up, including single leaves. Large Doors support all four choices across their complete 3×3 opening.
+Programmable Doors and Large Programmable Doors add **Slide Left**, **Slide Right**, **Split Horizontal** and **Split Vertical**, and extend **Split X** to single and paired doors. Left/right moves the entire door to one side. Horizontal splits move halves left/right; vertical splits move halves down/up, including single leaves. Large Doors support all five choices across their complete 3×3 opening.
 
 New single doors retain placement-dependent sliding, switching their default to horizontal splitting when paired. Existing saved modes retain their behavior, and explicitly selected modes remain selected across pairing changes. Frames and panels stay fixed; native, glass and replacement textures follow the moving panels. See the [door guide](doors.md) for placement and movement details.
+
+Flat and diagonal trapdoors also offer all five new modes. Splits follow the leaf’s plane: width halves for Horizontal, length halves for Vertical, and four triangular panels for X. Coplanar groups share one opening; bent diagonal groups split each leaf in its own plane. Their previous rotating, surface-slide and wall-slide choices retain their behavior. See the [opening-mode comparison](doors.md#opening-modes-by-block) and the [trapdoor guide](programmable-trapdoor.md).
