@@ -14,14 +14,14 @@ import net.minecraft.world.World;
 
 /** Real mounted controls, numeric latches, persistence, configuration copy and support removal. */
 public final class SignalControlRuntimeChecks {
-    public static final String[] IDS={"thruster_lever_16px","thruster_wall_slider_16px","thruster_control_block_16px","thruster_lever_32px","thruster_wall_slider_32px","thruster_control_block_32px"};
+    public static final String[] IDS={"thruster_lever","wall_slider"};
     public static void run(World world){
+        if(Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs",IDS[0])))checkRetiredControls();
         BlockPos pos=new BlockPos(3,105,3);
         for(int index=0;index<IDS.length;index++){
             Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",IDS[index]));
-            if(!(block instanceof BlockSignalControl))block=new BlockSignalControl(IDS[index],index%3==0?"thruster_lever":index%3==1?"wall_slider":"control_block",index<3?16:32);
+            if(!(block instanceof BlockSignalControl))block=new BlockSignalControl(IDS[index],index==0?"thruster_lever":"wall_slider",32);
             for(EnumFacing mount:EnumFacing.values()){
-                if(index%3==2 && mount.getAxis()==EnumFacing.Axis.Y)continue;
                 world.setBlockState(pos.offset(mount.getOpposite()),Blocks.STONE.getDefaultState(),2);
                 require(block.canPlaceBlockOnSide(world,pos,mount),"supported mounting "+IDS[index]+" "+mount);
                 world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,mount),2);
@@ -52,11 +52,17 @@ public final class SignalControlRuntimeChecks {
                 RedstoneChannels.unregister(copied);world.setBlockToAir(copy);world.setBlockToAir(copy.down());
                 RedstoneChannels.unregister(control);world.setBlockToAir(pos.offset(mount.getOpposite()));
                 if(world.getBlockState(pos).getBlock()==block)block.neighborChanged(world.getBlockState(pos),world,pos,Blocks.STONE,pos.offset(mount.getOpposite()));
-                require(index%3==2?world.getBlockState(pos).getBlock()==block:world.isAirBlock(pos),"support removal contract");
+                require(world.isAirBlock(pos),"support removal contract");
                 world.setBlockToAir(pos);
             }
         }
-        System.out.println("[vandorlabs][reprolab] signal-control-runtime PASS six blocks, all supported faces, four detents, channels, save, copy and limits");
+        System.out.println("[vandorlabs][reprolab] signal-control-runtime PASS two controls, all supported faces, four detents, channels, save, copy and limits");
+    }
+    private static void checkRetiredControls(){
+        for(String id:new String[]{"thruster_lever_16px","thruster_wall_slider_16px","thruster_control_block_16px","thruster_control_block_32px","thruster_lever_32px","thruster_wall_slider_32px"}){
+            ResourceLocation key=new ResourceLocation("vandorlabs",id);
+            require(!Block.REGISTRY.containsKey(key) && !net.minecraft.item.Item.REGISTRY.containsKey(key),"removed control remains registered "+id);
+        }
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException(message);}
     private SignalControlRuntimeChecks(){}

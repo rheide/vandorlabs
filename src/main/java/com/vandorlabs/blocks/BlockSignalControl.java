@@ -26,12 +26,6 @@ public class BlockSignalControl extends BlockVandorSwitch {
         state=super.getActualState(state,world,pos);TileEntity tile=world.getTileEntity(pos);
         return state.withProperty(LEVEL,tile instanceof TileEntitySignalControl?((TileEntitySignalControl)tile).getStep():0);
     }
-    @Override public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side){return kind.equals("control_block") || super.canPlaceBlockOnSide(world,pos,side);}
-    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer,EnumHand hand){
-        if(kind.equals("control_block"))return getDefaultState().withProperty(FACING,placer.getHorizontalFacing().getOpposite());
-        return super.getStateForPlacement(world,pos,side,x,y,z,meta,placer,hand);
-    }
-    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){if(!kind.equals("control_block"))super.neighborChanged(state,world,pos,block,from);}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing facing,float x,float y,float z){
         if(player.isSneaking())return super.onBlockActivated(world,pos,state,player,hand,facing,x,y,z);
         if(!world.isRemote && world.getTileEntity(pos) instanceof TileEntitySignalControl){
@@ -41,10 +35,7 @@ public class BlockSignalControl extends BlockVandorSwitch {
         return true;
     }
     @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){return 0;}
-    @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return kind.equals("control_block")?FULL_BLOCK_AABB:NULL_AABB;}
-    @Override public boolean isFullCube(IBlockState state){return kind!=null && kind.equals("control_block");}
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){
-        if(kind.equals("control_block"))return FULL_BLOCK_AABB;
         EnumFacing facing=state.getValue(FACING);
         int rotation=super.getActualState(state,world,pos).getValue(ROTATION);
         String mount=facing.getName();

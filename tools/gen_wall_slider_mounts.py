@@ -20,7 +20,7 @@ def pose(data,transform):
         element['faces']={NAMES[transform(NORMAL[face])]:value for face,value in element['faces'].items()}
     return result
 
-for detail in (16,32):
+for detail in (32,):
     folder=ASSETS/f'models/block/thruster_controls/{detail}px'
     for state in ('off','low','medium','high'):
         data=json.loads((folder/f'wall_slider_{state}_north.json').read_text())
@@ -37,7 +37,7 @@ for detail in (16,32):
             (folder/f'wall_slider_{state}_{mount}.json').write_text(json.dumps(target,indent=2)+'\n')
         for mount in ('floor_x','ceiling_x'):
             (folder/f'wall_slider_{state}_{mount}.json').unlink(missing_ok=True)
-    states=ASSETS/f'blockstates/thruster_wall_slider_{detail}px.json'
+    states=ASSETS/'blockstates/wall_slider.json'
     if not states.exists():continue
     blockstates=json.loads(states.read_text())
     for key,variant in blockstates['variants'].items():

@@ -3533,31 +3533,7 @@
     "paired_model": "space_standard_rotating_door_framed_paired"
   },
   {
-    "id": "thruster_lever_16px",
-    "type": "switch",
-    "class": "BlockSignalControl",
-    "item": true,
-    "control_kind": "thruster_lever",
-    "detail": 16
-  },
-  {
-    "id": "thruster_wall_slider_16px",
-    "type": "switch",
-    "class": "BlockSignalControl",
-    "item": true,
-    "control_kind": "wall_slider",
-    "detail": 16
-  },
-  {
-    "id": "thruster_control_block_16px",
-    "type": "switch",
-    "class": "BlockSignalControl",
-    "item": true,
-    "control_kind": "control_block",
-    "detail": 16
-  },
-  {
-    "id": "thruster_lever_32px",
+    "id": "thruster_lever",
     "type": "switch",
     "class": "BlockSignalControl",
     "item": true,
@@ -3565,19 +3541,11 @@
     "detail": 32
   },
   {
-    "id": "thruster_wall_slider_32px",
+    "id": "wall_slider",
     "type": "switch",
     "class": "BlockSignalControl",
     "item": true,
     "control_kind": "wall_slider",
-    "detail": 32
-  },
-  {
-    "id": "thruster_control_block_32px",
-    "type": "switch",
-    "class": "BlockSignalControl",
-    "item": true,
-    "control_kind": "control_block",
     "detail": 32
   }
 ]

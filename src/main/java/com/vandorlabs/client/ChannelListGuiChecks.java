@@ -19,8 +19,8 @@ import javax.imageio.ImageIO;
 
 /** Opt-in real dialog -> network -> server -> reopened dialog regression. */
 final class ChannelListGuiChecks {
-    private static final int[] IDS={2,5,0,0,9,1,3,8,2,2,2,2,2,2,2};
-    private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit","submit","submit","submit","submit","submit","submit"};
+    private static final int[] IDS={2,5,0,0,9,1,3,8,2,2,2};
+    private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit","submit","submit"};
     private static final ChannelList EXPECTED=ChannelList.of(14861,14862,14863);
     private static final BlockPos POS=new BlockPos(8,80,8);
     private static int index,stage,ticks;
@@ -95,14 +95,16 @@ final class ChannelListGuiChecks {
                     StringBuilder signature=new StringBuilder();int count=0;
                     for(net.minecraft.util.EnumFacing side: new net.minecraft.util.EnumFacing[]{null,net.minecraft.util.EnumFacing.UP,net.minecraft.util.EnumFacing.DOWN,net.minecraft.util.EnumFacing.NORTH,net.minecraft.util.EnumFacing.SOUTH,net.minecraft.util.EnumFacing.EAST,net.minecraft.util.EnumFacing.WEST})
                         for(net.minecraft.client.renderer.block.model.BakedQuad quad:model.getQuads(state,side,0)){count++;signature.append(quad.getSprite().getIconName()).append(java.util.Arrays.hashCode(quad.getVertexData()));}
+                    if(((BlockSignalControl)block).controlKind().equals("wall_slider"))WallSliderModelChecks.check(model,state,facing,level);
                     require(count>0,"empty control model "+id);signatures.add(signature.toString());
                 }
                 require(signatures.size()==4,"detent artwork repeated "+id+" "+facing+" "+rotation);
             }
         }
-        System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation");
+        System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation; slider attachment and grip/panel alignment");
     }
-    private static int visualIndex,visualStep,visualMount;
+    private static int visualIndex,visualStep,visualMount,visualRotation;
+    private static final net.minecraft.util.EnumFacing[] VISUAL_MOUNTS={net.minecraft.util.EnumFacing.NORTH,net.minecraft.util.EnumFacing.SOUTH,net.minecraft.util.EnumFacing.EAST,net.minecraft.util.EnumFacing.WEST,net.minecraft.util.EnumFacing.UP,net.minecraft.util.EnumFacing.DOWN};
     private static void captureControls(Minecraft mc,File output){
         try{
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
@@ -118,7 +120,7 @@ final class ChannelListGuiChecks {
             }
             if(stage==7 && ++ticks>20){
                 capture(mc,output,"controls_hotbar_empty");
-                for(int slot=0;slot<6;slot++)mc.player.inventory.setInventorySlotContents(slot,new net.minecraft.item.ItemStack(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[slot]))));
+                for(int slot=0;slot<SignalControlRuntimeChecks.IDS.length;slot++)mc.player.inventory.setInventorySlotContents(slot,new net.minecraft.item.ItemStack(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[slot]))));
                 stage=8;ticks=0;return;
             }
             if(stage==8 && ++ticks>20){capture(mc,output,"controls_hotbar");if(Boolean.getBoolean("vandorlabs.controlIconsOnly")){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-icons PASS");mc.shutdown();}else stage=10;ticks=0;return;}
@@ -127,21 +129,39 @@ final class ChannelListGuiChecks {
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
                     world.setBlockToAir(POS);
                     for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())world.setBlockToAir(POS.offset(side));
-                    net.minecraft.util.EnumFacing mount=visualMount==0?net.minecraft.util.EnumFacing.NORTH:visualMount==1?net.minecraft.util.EnumFacing.UP:net.minecraft.util.EnumFacing.DOWN;
+                    net.minecraft.util.EnumFacing mount=VISUAL_MOUNTS[visualMount];
                     world.setBlockState(POS.offset(mount.getOpposite()),Blocks.STONE.getDefaultState(),3);
                     Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[visualIndex]));
-                    world.setBlockState(POS,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,mount),3);
-                    com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)world.getTileEntity(POS);control.setRedstoneChannels(ChannelList.of(16901));
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());owner.setSneaking(false);
-                    owner.connection.setPlayerLocation(POS.getX()+.5,POS.getY()-(visualMount==2?1:0),POS.getZ()-2,0,visualMount==2?-12:visualMount==1?28:22);
+                    boolean flat=mount.getAxis()==net.minecraft.util.EnumFacing.Axis.Y;
+                    net.minecraft.util.EnumFacing look=flat?net.minecraft.util.EnumFacing.getHorizontal((visualRotation+(mount==net.minecraft.util.EnumFacing.DOWN?2:0))&3):mount.getOpposite();
+                    double eyeY=POS.getY()+(flat?(mount==net.minecraft.util.EnumFacing.UP?2.5:-1.5):.5);
+                    owner.connection.setPlayerLocation(POS.getX()+.5-look.getFrontOffsetX()*2.5,eyeY-owner.getEyeHeight(),POS.getZ()+.5-look.getFrontOffsetZ()*2.5,look.getHorizontalAngle(),flat?(mount==net.minecraft.util.EnumFacing.UP?45:-45):0);
+                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(block);
+                    net.minecraft.block.state.IBlockState placed=block.getStateForPlacement(world,POS,mount,.5F,.5F,.5F,0,owner,net.minecraft.util.EnumHand.MAIN_HAND);
+                    require(((net.minecraft.item.ItemBlock)stack.getItem()).placeBlockAt(stack,owner,world,POS,mount,.5F,.5F,.5F,placed),"real item placement failed");
+                    require(world.getBlockState(POS).getValue(BlockVandorSwitch.FACING)==mount,"placement does not match clicked support face");
+                    com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)world.getTileEntity(POS);control.setRedstoneChannels(ChannelList.of(16901));
+                    if(flat)require(control.getMountRotation()==visualRotation,"placement rotation does not follow player facing");
                     for(int click=0;click<(visualStep==0?4:visualStep);click++)block.onBlockActivated(world,POS,world.getBlockState(POS),owner,net.minecraft.util.EnumHand.MAIN_HAND,mount,.5F,.5F,.5F);
                     require(control.getStep()==visualStep && RedstoneChannels.level(world,16901)==new int[]{0,5,10,15}[visualStep],"live click detent");
                 });stage=11;ticks=0;return;
             }
             if(stage==11 && ++ticks>30){
-                capture(mc,output,"controls_"+visualIndex+"_"+visualStep+(visualMount==1?"_floor":visualMount==2?"_ceiling":""));
-                visualStep++;if(visualStep==4){visualStep=0;visualMount++;if(visualIndex%3==2 || visualMount==3){visualMount=0;visualIndex++;}}
-                if(visualIndex==6){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS six icons, 24 wall/block poses and 32 floor/ceiling poses");mc.shutdown();}else stage=10;
+                net.minecraft.util.EnumFacing mount=VISUAL_MOUNTS[visualMount];
+                require(mc.objectMouseOver!=null && POS.equals(mc.objectMouseOver.getBlockPos()),"placed control selection misses mounted geometry");
+                String suffix=mount==net.minecraft.util.EnumFacing.NORTH?"":mount==net.minecraft.util.EnumFacing.UP?"_floor":mount==net.minecraft.util.EnumFacing.DOWN?"_ceiling":"_"+mount.getName();
+                if(visualRotation>0)suffix+="_r"+visualRotation;
+                capture(mc,output,"controls_"+visualIndex+"_"+visualStep+suffix);
+                visualStep++;
+                if(visualStep==4){
+                    visualStep=0;
+                    if(visualIndex==1 && mount.getAxis()==net.minecraft.util.EnumFacing.Axis.Y && visualRotation<3)visualRotation++;
+                    else{visualRotation=0;visualMount++;}
+                    if(visualIndex==0 && visualMount==1)visualMount=4;
+                    if(visualMount==VISUAL_MOUNTS.length){visualMount=0;visualIndex++;}
+                }
+                if(visualIndex==SignalControlRuntimeChecks.IDS.length){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS two icons, actual item placement and 60 mounted poses");mc.shutdown();}else stage=10;
                 ticks=0;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}

@@ -3,7 +3,7 @@
   "pattern": [
     " A ",
     "ARA",
-    " G "
+    " GD"
   ],
   "key": {
     "A": {
@@ -13,11 +13,14 @@
       "item": "minecraft:redstone"
     },
     "G": {
-      "item": "minecraft:lever"
+      "item": "minecraft:stone_button"
+    },
+    "D": {
+      "item": "minecraft:gold_ingot"
     }
   },
   "result": {
-    "item": "vandorlabs:thruster_lever_16px",
+    "item": "vandorlabs:wall_slider",
     "count": 1
   }
 }

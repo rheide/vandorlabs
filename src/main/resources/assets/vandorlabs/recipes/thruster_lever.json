@@ -13,14 +13,14 @@
       "item": "minecraft:redstone"
     },
     "G": {
-      "item": "minecraft:stone_button"
+      "item": "minecraft:lever"
     },
     "D": {
       "item": "minecraft:gold_ingot"
     }
   },
   "result": {
-    "item": "vandorlabs:thruster_wall_slider_32px",
+    "item": "vandorlabs:thruster_lever",
     "count": 1
   }
 }

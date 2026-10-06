@@ -8,7 +8,9 @@
 - Add slider rows to the Redstone screen/input/console controls. Configure minimum and maximum levels, use up to eight bordered clickable segments, and reserve most of each row for the progress bar. Preserve row settings through saving, configured items and Duplifier copying.
 - Add exact-level activation and off/low/medium/high artwork to Programmable Trigger blocks.
 
-- Add Simple and Detailed Thruster Levers, Wall Sliders and Control Blocks with four signal detents, configurable low/high limits, numeric physical/channel output, saving and copying. Levers and sliders mount on walls, floors and ceilings; all six inventory icons use padded transforms. Preserve intermediate output when changing channel lists.
+- Add detailed Thruster Levers and Wall Sliders with four signal detents, configurable low/high limits, numeric physical/channel output, saving and copying. Levers and sliders mount on walls, floors and ceilings; both inventory icons use padded transforms. Preserve intermediate output when changing channel lists.
+
+- Correct Wall Slider attachment on every wall and align flat-mounted handles with the panel markings, including rotated floor and ceiling mounts. Remove Simple variants and Thruster Control Blocks; simplify the remaining IDs to `thruster_lever` and `wall_slider`.
 
 ## 1.5
 
