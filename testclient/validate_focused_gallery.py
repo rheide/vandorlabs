@@ -36,6 +36,10 @@ log = (source / 'client.log').read_text()
 def require(marker):
     assert marker in log, 'Missing runtime result: ' + marker
 
+# Actual Dynmap startup complements the structural checks when installed.
+for control in ('thruster_lever','wall_slider','airliner_throttle','fighter_throttle'):
+    assert not any('Block vandorlabs:'+control+'[' in line and 'not enough textures for faces' in line for line in log.splitlines()), 'Dynmap texture-slot mismatch: '+control
+
 for name in selected:
     image = source / ('shot_' + name + '.png')
     assert image.exists(), 'Missing focused screenshot: ' + str(image)

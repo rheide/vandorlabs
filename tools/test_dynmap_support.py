@@ -82,6 +82,15 @@ def main():
         raise AssertionError("ramp source texture mapping is incomplete")
 
     texture_text = texture_path.read_text()
+    palettes={}
+    signal_ids={entry['id'] for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks.json').read_text()) if entry.get('class')=='BlockSignalControl'}
+    for line in texture_text.splitlines():
+        match=re.match(r'block:id=%([^,]+),state=([^,]+)',line)
+        if match and match.group(1) in signal_ids:
+            palette=tuple(re.findall(r'patch(\d+)=([^,]+)',line))
+            previous=palettes.setdefault(match.group(1),palette)
+            assert previous==palette,'signal control texture slots vary by listed state: '+match.group(1)
+
     declarations = dict(re.findall(
         r"^texture:id=([^,]+),filename=([^,]+)",
         texture_text, re.MULTILINE))

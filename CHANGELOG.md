@@ -12,7 +12,7 @@
 - Add exact-level activation and off/low/medium/high artwork to Programmable Trigger blocks.
 - Add detailed Thruster Levers and Wall Sliders with four signal detents, configurable low/high limits, numeric physical/channel output, saving and copying. Levers and sliders mount on walls, floors and ceilings; their inventory icons use padded transforms. Preserve intermediate output when changing channel lists.
 - Correct Wall Slider attachment on every wall and align flat-mounted handles with the panel markings, including rotated floor and ceiling mounts. Remove Simple variants and Thruster Control Blocks; simplify the remaining IDs to `thruster_lever` and `wall_slider`.
-- Add detailed Airliner and Fighter Throttles with the same four signal detents, low/high limits, physical/channel output, configuration copying, six mounting faces and padded inventory icons.
+- Add detailed Airliner and Fighter Throttles with the same four signal detents, low/high limits, physical/channel output, configuration copying, six mounting faces and padded inventory icons. Keep Dynmap texture slots stable across listed signal levels.
 - Orient floor-mounted Wall Sliders with the Off end nearest the placing player.
 - Add a concise player introduction with links to the illustrated documentation, the version 1.6 block guide and live GIF demonstrations of a Thruster Lever controlling a Rocket Thruster and a Wall Slider controlling a Programmable Light.
 

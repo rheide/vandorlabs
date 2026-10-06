@@ -13,12 +13,23 @@ for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks
     if entry.get('class')!='BlockSignalControl':continue
     name=entry['id']
     states=json.loads((ASSETS/'blockstates'/f'{name}.json').read_text())['variants']
+    # Dynmap can resolve several listed levels to the same metadata state.
+    # Keep texture slots stable across those definitions, including inactive art.
+    palette=set()
+    for variant in states.values():
+        source=json.loads((ASSETS/'models/block'/(variant['model'].split(':')[1]+'.json')).read_text())
+        for element in source['elements']:
+            for face in element['faces'].values():
+                tex=face['texture']
+                while tex.startswith('#'):tex=source['textures'][tex[1:]]
+                tex=tex.split(':')[1];palette.add('signal_'+tex.replace('/','_'))
+    patches={label:i for i,label in enumerate(sorted(palette))}
     for state,variant in states.items():
         props=dict(part.split('=') for part in state.split(','))
         if props['on']=='true':continue # This property does not change geometry.
         state='/'.join(f'{k}:{v}' for k,v in props.items() if k!='on')
         model=json.loads((ASSETS/'models/block'/(variant['model'].split(':')[1]+'.json')).read_text())
-        patches={};boxes=[]
+        boxes=[]
         for element in model['elements']:
             lo=element['from'];hi=element['to']
             if 'rotation' in element:
