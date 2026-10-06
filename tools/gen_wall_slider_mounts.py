@@ -46,7 +46,8 @@ for detail in (32,):
             mount='floor_z' if face=='up' else 'ceiling_z'
             state=('off','low','medium','high')[int(props['level'])]
             variant['model']=f'vandorlabs:thruster_controls/{detail}px/wall_slider_{state}_{mount}'
-            rotation=int(props['rotation'])*90
+            # On floors, keep the Off end nearest the placing player.
+            rotation=((int(props['rotation'])+(2 if face=='up' else 0))%4)*90
             variant.pop('y',None)
             if rotation:variant['y']=rotation
     states.write_text(json.dumps(blockstates,indent=2)+'\n')

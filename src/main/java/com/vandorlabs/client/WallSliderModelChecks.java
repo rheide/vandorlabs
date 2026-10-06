@@ -25,6 +25,11 @@ final class WallSliderModelChecks {
         for(int vertex=0;vertex<4;vertex++)require(Math.abs(coordinate(position(panel,vertex),axis)-plane)<.0001,"slider panel mounted away from support "+state);
         Vec3d center=Vec3d.ZERO;
         for(int vertex=0;vertex<4;vertex++)center=center.add(position(cap,vertex).scale(.25));
+        if(facing==EnumFacing.UP && (level==0 || level==3)){
+            EnumFacing look=EnumFacing.getHorizontal(state.getValue(com.vandorlabs.blocks.BlockVandorSwitch.ROTATION));
+            double distance=(center.x-.5)*look.getFrontOffsetX()+(center.z-.5)*look.getFrontOffsetZ();
+            require(level==0?distance<-.15:distance>.15,"floor slider Off end must face the placing player "+state);
+        }
         Vec3d origin=position(panel,0),u=position(panel,1).subtract(origin),v=position(panel,3).subtract(origin),point=center.subtract(origin);
         double a=point.dotProduct(u)/u.lengthSquared(),b=point.dotProduct(v)/v.lengthSquared();
         float[] uv0=uv(panel,0),uv1=uv(panel,1),uv3=uv(panel,3);

@@ -14,6 +14,8 @@
 
 - Add detailed Airliner and Fighter Throttles with the same four signal detents, low/high limits, physical/channel output, configuration copying, six mounting faces and padded inventory icons.
 
+- Orient floor-mounted Wall Sliders with the Off end nearest the placing player.
+
 ## 1.5
 
 - Preserve filesystem texture artwork in atlas/model lookups after legacy door-tier migration, including configured item previews. Update live checks for two artwork tiers and imported hatch variants.
