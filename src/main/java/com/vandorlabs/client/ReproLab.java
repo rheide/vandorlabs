@@ -1251,7 +1251,8 @@ public class ReproLab {
                 saveNamed(mc,"diagonal_direction_gui");
                 System.out.println("[vandorlabs][reprolab] diagonal-direction-gui PASS");
                 mc.player.closeScreen();
-                BlockPos rampOptionPos=CONSOLE.add(12,0,3);
+                // Keep the configurable platform clear of the input/gallery fixtures.
+                BlockPos rampOptionPos=CONSOLE.add(32,10,3);
                 mc.world.setBlockState(rampOptionPos,block("programmable_ramp").getDefaultState(),3);
                 mc.getIntegratedServer().addScheduledTask(()->{
                     World w=mc.getIntegratedServer().getWorld(0);
@@ -1270,7 +1271,7 @@ public class ReproLab {
             case 43:
                 if(--holdTicks>0)break;
                 if(((com.vandorlabs.tiles.TileEntityRampController)mc.getIntegratedServer().getWorld(0)
-                        .getTileEntity(CONSOLE.add(12,0,3))).matchTextures)
+                        .getTileEntity(CONSOLE.add(32,10,3))).matchTextures)
                     throw new IllegalStateException("ramp matching option packet failed");
                 saveNamed(mc,"ramp_matching_gui");
                 System.out.println("[vandorlabs][reprolab] ramp-matching-gui PASS");
@@ -1362,6 +1363,7 @@ public class ReproLab {
                 mc.player.closeScreen();
                 System.out.println("[vandorlabs][reprolab] trapdoor-controls-runtime PASS");
                 System.out.println("[vandorlabs][reprolab] trapdoor-movement-hinge-gui PASS (all five movements, sliding hinge, client/server)");
+                if(Boolean.getBoolean("vandorlabs.dialogChecksOnly")){state=999;mc.shutdown();break;}
                 offsetTrapdoorChecks=new OffsetTrapdoorRuntimeChecks(CONSOLE.add(15,0,3));state=58;break;
             case 58:
                 if(offsetTrapdoorChecks.tick(mc)){state=9;holdTicks=10;}break;

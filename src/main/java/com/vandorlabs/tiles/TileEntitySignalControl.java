@@ -44,9 +44,11 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     }
     @Override public void setLocalOn(boolean on){setStep(on?3:0);}
     @Override public void setRedstoneChannels(ChannelList channels){
-        boolean unlinked=getRedstoneChannels().isEmpty();int selected=getStep();
+        if(getRedstoneChannels().equals(channels))return;
+        int previous=getOutputLevel(),selected=getStep();
         super.setRedstoneChannels(channels);
-        if(channels.isEmpty() || unlinked && selected>0)setStep(selected);
+        if(channels.isEmpty())setStep(selected);
+        else if(previous>0)RedstoneChannels.latchLevelChanged(this,previous);
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);tag.setInteger("ControlStep",step);return tag;

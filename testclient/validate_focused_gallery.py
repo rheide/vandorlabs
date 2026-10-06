@@ -15,7 +15,9 @@ if target == 'signals':
     shapes=[0,1,2,3,7,17,21,22,23,25,26,27]
     selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui')]
 if target == 'redstone-dialogs':
-    selected=['channels_'+str(index) for index in range(15)]+['controls_hotbar_empty','controls_hotbar']+['controls_'+str(index)+'_'+str(level) for index in range(6) for level in range(4)]
+    selected=['channels_'+str(index) for index in range(15)]+['controls_hotbar_empty','controls_hotbar']+['controls_'+str(index)+'_'+str(level) for index in range(6) for level in range(4)]+['controls_'+str(index)+'_'+str(level)+'_'+mount for index in (0,1,3,4) for level in range(4) for mount in ('floor','ceiling')]
+if target == 'control-icons':
+    selected=['controls_hotbar_empty','controls_hotbar']
 assert selected, 'No mapped screenshots match ' + prefix
 log = (source / 'client.log').read_text()
 
@@ -28,7 +30,7 @@ for name in selected:
     with Image.open(image) as png:
         assert png.size == (1280, 720), 'Unexpected screenshot dimensions: ' + name
         png.verify()
-    if target not in ('signals','redstone-dialogs'): require('wrote shot_' + name + '.png')
+    if target not in ('signals','redstone-dialogs','control-icons'): require('wrote shot_' + name + '.png')
     if name.startswith('gallery_trapdoor_followup_'):
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):
@@ -61,6 +63,9 @@ if target == 'dialogs':
         require('programmable-dialog-layout PASS ' + gui)
     for family in ('block', 'slab', 'door', 'trapdoor'):
         require('custom-picker-reopen-runtime PASS ' + family)
+if target == 'control-icons':
+    require('signal-control-icons PASS')
+    require('signal-control-models PASS')
 if target == 'storage':
     for marker in ('storage-inventory-runtime PASS','storage-material-runtime PASS','storage-gui-runtime PASS','storage-hotbar-runtime PASS','storage-faces-gui PASS override','storage-faces-gui PASS inherited'):
         require(marker)

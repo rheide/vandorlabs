@@ -211,7 +211,9 @@ visual testing with the player's shader pack. For signal controls, run
 `bash testclient/test_viewscreen.sh --focus signals` to check clickable segments
 on flat, diagonal, wall-mounted and ceiling-mounted surfaces, or
 `bash testclient/test_viewscreen.sh --focus redstone-dialogs` for setting and
-reopening channel, brightness, Trigger and propulsion dialogs.
+reopening channel, brightness, Trigger, propulsion and thruster-control dialogs.
+The latter also checks real four-detent clicks, wall/floor/ceiling models and
+visible padding on all six control icons.
 
 
 New blocks should have crafting recipes. Keep each recipe distinct so it does
@@ -304,12 +306,13 @@ The normal Vandor Labs jar includes `assets/vandorlabs/dynmap-models.txt` and
 directly from the mod jar. Dynmap's API is a compile-only dependency; the mod
 continues to load when Dynmap is absent.
 
-The definitions cover 93 block types and more than 20,000 block states.
+The definitions cover 103 block types and more than 20,000 block states.
 Ordinary JSON models retain their scanned shape, orientation, texture,
 power state, and connected square-thruster variant. Dynmap 1.12 cannot parse
 Forge OBJ models or execute tile-entity renderers, so the bundled data supplies
 static Dynmap-native approximations for hexagonal and triangular thrusters,
-chairs, connected glass, and programmable input housings. Programmable Slabs
+chairs, connected glass, and programmable input housings. Thruster controls
+include listed-state model defaults; configured detent limits remain in game. Programmable Slabs
 read their top or bottom block state. Programmable Doors read facing, open state,
 and the lower tile's motion and depth settings. Deployed `controlled_ramp` cells
 read their saved clipped boxes and programmable main finish; sources from other

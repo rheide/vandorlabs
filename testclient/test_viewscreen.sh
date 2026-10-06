@@ -2,7 +2,7 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 
-unset VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
+unset VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -16,6 +16,9 @@ case "${1:-}" in
         elif [ "$TARGET" = signals ]; then
             PREFIX=redstone_screen_
             export VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY=true VANDOR_LABS_REDSTONE_SCREEN_FOCUSED=true
+        elif [ "$TARGET" = control-icons ]; then
+            PREFIX=controls_
+            export VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY=true VANDOR_LABS_CONTROL_ICONS_ONLY=true
         elif [ "$TARGET" = redstone-dialogs ]; then
             PREFIX=channels_
             export VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY=true
@@ -63,6 +66,7 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     python3 testclient/validate_focused_gallery.py "$RUN_OUT" "$PREFIX" "$TARGET"
+    if [ "$TARGET" = redstone-dialogs ] || [ "$TARGET" = control-icons ]; then python3 testclient/analyze_signal_control_icons.py "$RUN_OUT"; fi
     echo "Live-client artifacts: $RUN_OUT"
     exit 0
 fi
