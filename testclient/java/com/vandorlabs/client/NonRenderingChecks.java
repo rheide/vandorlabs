@@ -45,6 +45,8 @@ public final class NonRenderingChecks {
         TrapdoorTextureChecks.run();
         TrapdoorMeshParityChecks.run();
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableLight.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_light"));
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableTrigger.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_trigger"));
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityRedstoneLight.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_propulsion"));
         ModBlocks.PROGRAMMABLE_LIGHT=new BlockProgrammableLight();ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK=new BlockProgrammableTrigger();
         SignalLevelRuntimeChecks.run(new MemoryWorld(false));
         ChannelReconciliationChecks.run();

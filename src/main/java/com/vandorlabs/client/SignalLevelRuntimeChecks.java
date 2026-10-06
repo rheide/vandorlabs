@@ -59,13 +59,14 @@ public final class SignalLevelRuntimeChecks {
             Block switchBlock=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:rocker_switch"));
             if(!(switchBlock instanceof BlockVandorSwitch))switchBlock=new BlockVandorSwitch("rocker_switch",false);
             BlockPos switchPos=screenPos.south(3);
+            world.setBlockState(switchPos.south(),net.minecraft.init.Blocks.STONE.getDefaultState(),2);
             world.setBlockState(switchPos, switchBlock.getDefaultState(),2);
             TileEntityRedstoneChannel control=(TileEntityRedstoneChannel)world.getTileEntity(switchPos);
             control.setRedstoneChannels(ChannelList.of(16001));
             RedstoneChannels.latchLevelChanged(slider,9);source.level=0;RedstoneChannels.inputChanged(source);
-            require(RedstoneChannels.level(world,16001)==9 && control.getOutputLevel()==9,"linked control amplified slider");
+            require(RedstoneChannels.level(world,16001)==9 && control.getOutputLevel()==9,"linked control amplified slider: channel="+RedstoneChannels.level(world,16001)+" output="+control.getOutputLevel());
             require(switchBlock.getWeakPower(world.getBlockState(switchPos),world,switchPos,net.minecraft.util.EnumFacing.UP)==9,"linked physical strength");
-            RedstoneChannels.unregister(control);world.setBlockToAir(switchPos);
+            RedstoneChannels.unregister(control);world.setBlockToAir(switchPos);world.setBlockToAir(switchPos.south());
             // Joining shares intensity even when only one member subscribes to the channel.
             BlockPos joinedPos=lightPos.up();world.setBlockState(joinedPos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),2);
             TileEntityProgrammableLight joined=(TileEntityProgrammableLight)world.getTileEntity(joinedPos);
@@ -73,6 +74,14 @@ public final class SignalLevelRuntimeChecks {
             light.configure(light.getTexture(),15,true,ChannelList.of(16001),light.getHousingTexture(),0);light.configureSignalBrightness(true,0);
             RedstoneChannels.latchLevelChanged(screen.rows().get(0),4);
             require(joined.getLightLevel()==4,"joined intensity missing");
+            com.vandorlabs.items.ProgrammableSettings.apply(world,joinedPos,com.vandorlabs.items.ProgrammableSettings.capture(world,lightPos));
+            require(joined.isSignalBrightness() && joined.getLightOffset()==light.getLightOffset(),"Duplifier lost light mode/offset");
+            TileEntityRedstoneLight restoredEngine=new TileEntityRedstoneLight();
+            restoredEngine.readFromNBT(propulsion.writeToNBT(new NBTTagCompound()));
+            require(restoredEngine.isSignalBrightness() && restoredEngine.getParticleThreshold()==8,"propulsion save");
+            TileEntityProgrammableTrigger restoredTrigger=new TileEntityProgrammableTrigger();
+            restoredTrigger.readFromNBT(trigger.writeToNBT(new NBTTagCompound()));
+            require(!restoredTrigger.isLevelStates() && restoredTrigger.getExactLevel()==6 && restoredTrigger.getLowTexture()==1 && restoredTrigger.getMediumTexture()==2,"Trigger save");
             world.setBlockToAir(joinedPos);
             row.setInteger("Min",5);row.setInteger("Max",7);require(screen.applyRowConfiguration(rows),"narrow range");require(screen.rows().get(0).segments()==3 && screen.rows().get(0).segmentValue(2)==7,"narrow segments");
             row.setInteger("Min",7);require(screen.applyRowConfiguration(rows) && screen.rows().get(0).segments()==1,"single value range");

@@ -187,14 +187,18 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.4.jar`.
+`build/libs/vandorlabs-1.6.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
 To check placement settings, diagonal lighting data, render-distance policy,
 and connected Duplifier selection without opening a renderer, run
 `./gradlew testNonRendering --no-daemon` with Java 8. These checks do not replace
-visual testing with the player's shader pack.
+visual testing with the player's shader pack. For signal controls, run
+`bash testclient/test_viewscreen.sh --focus signals` to check clickable segments
+on flat, diagonal, wall-mounted and ceiling-mounted surfaces, or
+`bash testclient/test_viewscreen.sh --focus redstone-dialogs` for setting and
+reopening channel, brightness, Trigger and propulsion dialogs.
 
 
 New blocks should have crafting recipes. Keep each recipe distinct so it does

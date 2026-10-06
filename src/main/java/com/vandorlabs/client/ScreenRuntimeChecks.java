@@ -552,6 +552,22 @@ final class ScreenRuntimeChecks {
                 }
                 require(changed>=4&&emitter>0,
                         "propulsion housing or emitter missing: "+id);
+                long previousBrightness=-1;
+                for(int level=0;level<=15;level++){
+                    net.minecraftforge.common.property.IExtendedBlockState sample=((net.minecraftforge.common.property.IExtendedBlockState)extended)
+                            .withProperty(com.vandorlabs.blocks.BlockPropulsionLight.BRIGHTNESS,level);
+                    long brightness=0;
+                    for(int face=-1;face<6;face++)for(net.minecraft.client.renderer.block.model.BakedQuad quad:model.getQuads(sample,face<0?null:EnumFacing.getFront(face),0)){
+                        if(!quad.getSprite().getIconName().endsWith("_on"))continue;
+                        require(quad.getFormat().hasColor(),"emitter lacks vertex color: "+id);
+                        int stride=quad.getFormat().getIntegerSize(),offset=quad.getFormat().getColorOffset()/4;
+                        int[] data=quad.getVertexData();
+                        for(int vertex=0;vertex<4;vertex++)for(int component=0;component<3;component++)brightness+=data[vertex*stride+offset]>>>(component*8)&255;
+                    }
+                    require(brightness>previousBrightness,"emitter signal brightness is not distinct/monotonic: "+id+" level "+level);
+                    previousBrightness=brightness;
+                }
+                System.out.println("[vandorlabs][reprolab] propulsion-signal-artwork PASS "+id+" 16 distinct brightness levels");
             } finally {player.world.setBlockToAir(pos);}
         }
     }

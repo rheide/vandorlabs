@@ -39,20 +39,21 @@ RUN_OUT=$(mktemp -d "$ROOT/testclient/render-run.XXXXXX")
 
 cd "$ROOT"
 JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew build --no-daemon
-mkdir -p testclient/runtime/game/mods
+TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$ROOT/testclient/runtime/game"}
+mkdir -p "$TEST_RUNTIME_GAME/mods"
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
-rm -f testclient/runtime/game/mods/vandorlabs-*.jar
+rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar
 sha256sum "$TEST_JAR" > "$RUN_OUT/artifact.sha256"
 git rev-parse HEAD > "$RUN_OUT/source-commit.txt"
-cp "$TEST_JAR" "testclient/runtime/game/mods/vandorlabs-$VERSION.jar"
+cp "$TEST_JAR" "$TEST_RUNTIME_GAME/mods/vandorlabs-$VERSION.jar"
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
 cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
-    testclient/runtime/game/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar
+    "$TEST_RUNTIME_GAME/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar"
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
-    testclient/runtime/game/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar
-cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" testclient/runtime/game/mods/
+    "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
+cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
 # Allow the full software-rendered gallery to finish on a busy host.
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
