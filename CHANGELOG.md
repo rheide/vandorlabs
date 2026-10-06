@@ -2,6 +2,9 @@
 
 ## 1.6
 
+- Right-click setting buttons to cycle to the previous option, including light modes, screen Low/High limits, propulsion settings and the other configuration dialogs. Left-click still cycles forward.
+- Use the shared dark door edge texture for Double Doors artwork, including large-door leaves, frames and inventory models.
+
 - Restore door and trapdoor movement, placement, pairing and settings to their behavior before the 1.6 opening-mode changes.
 
 - Widen Redstone screen slider labels by three normal character widths while retaining four bordered settings.

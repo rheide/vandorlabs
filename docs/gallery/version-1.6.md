@@ -4,6 +4,15 @@ Version 1.6 carries redstone signal levels through channels, lights, propulsion
 blocks and screen controls. It also adds four-position levers, sliders and
 aircraft throttles with configurable output limits.
 
+## Configuration buttons
+
+In configuration dialogs, left-click an option button to select the next value;
+right-click selects the previous value, wrapping at either end. This also applies
+to Low/High limits, light modes, particle thresholds and door settings.
+
+Double Doors artwork now uses the same dark edge texture as the other
+programmable doors and trapdoors. Front and back artwork is unchanged.
+
 ## Signal levels and channels
 
 Channels carry values from **0 to 15**, with 0 unpowered. Independent sources

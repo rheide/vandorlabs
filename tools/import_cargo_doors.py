@@ -7,6 +7,18 @@ spec=importlib.util.spec_from_file_location('doors',ROOT/'tools/import_space_doo
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 FAMILIES='plain_cargo stepped_freight observation_leaf reinforced_leaf warehouse_shutter slotted_bay cross_braced_bay split_view_bay offset_cargo twin_observation armored_biparting service_freight'.split()
 
+def standard_edges(model):
+    """Match programmable door/trapdoor edge material without changing leaf artwork."""
+    for element in model['elements']:
+        x0,y0,z0=element['from'];x1,y1,z1=element['to']
+        for side in ('east','west','up','down'):
+            face=element['faces'].get(side)
+            if face is None or face['texture'] not in ('#edge','#frame','#leaf_side'):
+                continue
+            model['textures']['door_inner']='vandorlabs:blocks/programmable_glass/metal_side'
+            face['texture']='#door_inner';face['tintindex']=0
+            face['uv']=[z0,y0/2,z1,y1/2] if side in ('east','west') else [x0,z0,x1,z1]
+
 def generate(source,center_source):
     assets=ROOT/'generated-resources/assets/vandorlabs'
     geometry=json.loads((ROOT/'docs/space-door-pack/hinge/geometry.json').read_text())
@@ -45,6 +57,7 @@ def generate(source,center_source):
                                     es=[e for e in elements if not all(f['texture']=='#hinge' for f in e['faces'].values())] if no_hinge else elements
                                     model=m.model(es)
                                     model['textures'].update(leaf='vandorlabs:blocks/cargo_doors/'+tier+'/'+family,particle='vandorlabs:blocks/cargo_doors/'+tier+'/'+family,edge='vandorlabs:blocks/dark_wall_panel',frame='vandorlabs:blocks/space_doors/'+tier+'/double_frame_metal',hinge='vandorlabs:blocks/space_doors/'+tier+'/hinge')
+                                    standard_edges(model)
                                     path=assets/'models/block/detailed_doors'/tier/(name+'.json');path.write_text(json.dumps(model,indent=2)+'\n')
                                     path=assets/'models/item/detailed_doors'/tier/(name+'.json');path.write_text(json.dumps({'parent':'vandorlabs:block/detailed_doors/'+tier+'/'+name},indent=2)+'\n')
 if __name__=='__main__':

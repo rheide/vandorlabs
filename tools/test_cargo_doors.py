@@ -21,6 +21,13 @@ for tier,height in [('low',256),('medium',512)]:
     base='space_'+family+('_sliding_' if sliding else '_rotating_')+('framed' if framed else 'bare')
     left=load(ASSETS/'models/block/detailed_doors'/tier/(base+'_paired_left_leaf.json'))
     right=load(ASSETS/'models/block/detailed_doors'/tier/(base+'_paired_right_leaf.json'))
+    for model in (left,right):
+     assert model['textures']['door_inner']=='vandorlabs:blocks/programmable_glass/metal_side'
+     for slab in model['elements'][:2]:
+      for side in ('east','west','up','down'):
+       edge=slab['faces'][side]
+       assert edge['texture']=='#door_inner' and edge['tintindex']==0,'Cargo leaf edge differs from standard door'
+       assert len(set(edge['uv']))>1,'Cargo edge samples one texel'
     for a,b in zip(left['elements'][:2],right['elements'][:2]):
      au=a['faces']['south']['uv'];bu=b['faces']['south']['uv']
      if index>=4:
