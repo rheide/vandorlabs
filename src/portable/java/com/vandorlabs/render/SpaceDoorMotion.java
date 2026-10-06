@@ -22,6 +22,10 @@ public enum SpaceDoorMotion {
         SpaceDoorMotion next=values()[(ordinal()+1)%values().length];
         return next==SIDEWAYS?LEFT:next;
     }
+    public SpaceDoorMotion previous() {
+        SpaceDoorMotion previous=values()[(ordinal()+values().length-1)%values().length];
+        return previous==SIDEWAYS?ROTATING:previous;
+    }
     public static SpaceDoorMotion fromSettings(boolean sliding,int direction) {
         if(!sliding)return ROTATING;
         for(SpaceDoorMotion mode:values())if(mode.sliding && mode.direction==direction)return mode;

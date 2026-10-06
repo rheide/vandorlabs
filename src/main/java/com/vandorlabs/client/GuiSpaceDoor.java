@@ -98,6 +98,7 @@ public class GuiSpaceDoor extends GuiContainer {
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
                 lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels));
     }
+    private int cycleStep=1;
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
@@ -106,15 +107,15 @@ public class GuiSpaceDoor extends GuiContainer {
                 motion=label.equals("Split Horizontal")?SpaceDoorMotion.HORIZONTAL_SPLIT:
                         label.equals("Slide Right")?SpaceDoorMotion.RIGHT:SpaceDoorMotion.LEFT;
             }
-            motion=motion.next();
+            motion=cycleStep<0?motion.previous():motion.next();
             motionButton.displayString=motion.label;
             updateHingeButton();
         }
-        else if (button.id==11) { detail=(detail+1)%SIZES.length; faceTexture=HousingTextureList.doorSizeChoice(faceTexture,detail);initGui(); }
+        else if (button.id==11) { detail=Math.floorMod(detail+cycleStep,SIZES.length); faceTexture=HousingTextureList.doorSizeChoice(faceTexture,detail);initGui(); }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
-        else if (button.id==13) { depth=(depth+1)%3; button.displayString=depthLabel(); }
+        else if (button.id==13) { depth=Math.floorMod(depth+cycleStep,3); button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
-        else if (button.id==16) { trigger=(trigger+1)%3; button.displayString=triggerLabel(); }
+        else if (button.id==16) { trigger=Math.floorMod(trigger+cycleStep,3); button.displayString=triggerLabel(); }
         else if(button.id==18){tileTexture=!tileTexture;tile.setTileTexture(tileTexture);button.displayString=layoutLabel();}
         else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }
         else return;
@@ -138,6 +139,11 @@ public class GuiSpaceDoor extends GuiContainer {
                 else faceTexture=selected;
                 sendUpdate();
             }return;
+        }
+        if(button==1) {
+            for(GuiButton control:buttonList)if(control.id!=1 && control.mousePressed(mc,x,y)) {
+                cycleStep=-1;try{control.playPressSound(mc.getSoundHandler());actionPerformed(control);}finally{cycleStep=1;}return;
+            }
         }
         super.mouseClicked(x,y,button);
     }

@@ -64,7 +64,7 @@ public final class SpaceDoorDataTest {
         }
         com.vandorlabs.render.SpaceDoorMotion motion=com.vandorlabs.render.SpaceDoorMotion.ROTATING;
         java.util.Set<com.vandorlabs.render.SpaceDoorMotion> choices=new java.util.HashSet<>();
-        do {check(choices.add(motion),"motion cycle repeats early");motion=motion.next();}
+        do {check(choices.add(motion),"motion cycle repeats early");check(motion.next().previous()==motion && motion.previous().next()==motion,"forward and reverse mode cycles must undo each other");motion=motion.next();}
         while(motion!=com.vandorlabs.render.SpaceDoorMotion.ROTATING);
         check(choices.size()==8 && !choices.contains(com.vandorlabs.render.SpaceDoorMotion.SIDEWAYS),"eight explicit motions, legacy automatic is read-only");
         check(com.vandorlabs.render.SpaceDoorMotion.fromSettings(true,0)==com.vandorlabs.render.SpaceDoorMotion.SIDEWAYS,"legacy sideways unchanged");
