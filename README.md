@@ -11,6 +11,8 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab.
 
+**1.6:** Redstone channels carry levels 0–15. Use signal-driven programmable lights and propulsion brightness, bounded slider rows on screens and inputs, and exact-level or four-band Trigger artwork.
+
 **1.5:** Add permanently double 3×3 doors, White Glass leaves with handles, eight light designs, screen row ordering and curved ramp profiles. Compatible opaque doors share Forge's renderer buffer. See the [1.5 highlights and measured door comparison](docs/gallery/version-1.5.md).
 
 **1.4:** Turn existing programmable screens, inputs and consoles into editable redstone control panels through the `Redstone...` artwork choice. Add comma-separated redstone channel lists and Off/Light/Medium/Heavy propulsion particles, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
@@ -143,6 +145,32 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   toggle; linked lights use their authored lit/unlit variants to follow
   redstone power. Thrusters remember whether their active state uses a particle
   stream, so a channel switches between Off and the selected active mode.
+
+Signal levels use the strongest physical or virtual source, from 0 (off) to 15.
+All channel sources remain limited to loaded chunks in the same dimension.
+In a programmable light dialog, select **Brightness: Signal + offset** and use
+the slider for an offset from −15 to +15. Emission is clamped to 0–15; this mode
+controls brightness directly, while **Brightness: Slider** retains the manual
+and redstone on/off trigger modes. Joined lights use their group's strongest signal.
+
+In a propulsion dialog, select **Brightness: Signal** to interpolate emitted
+light and emitter artwork brightness. **Particles at level** sets the minimum
+signal for the selected Off/Light/Medium/Heavy particle density. Signal level 0
+keeps the fixture off, including when the particle threshold is 0.
+
+In the **Redstone...** row editor, choose **Control: Slider** and set **Min** and
+**Max**. Slider labels are limited to eight characters and the narrower label
+area. The bar shows both endpoints and at most eight evenly spaced, rounded
+signal levels; a range of 0–15 shows `0, 2, 4, 6, 9, 11, 13, 15`.
+Click a bordered segment to set every listed channel. A single-value range
+shows one segment. Toggle rows continue to set 0 or 15. Controls on overlapping
+channel lists retain independent values for each channel.
+
+Programmable Trigger dialogs can select **Artwork: Signal bands** with separate
+Off (0), Low (1–5), Mid (6–10) and High (11–15) textures. **Trigger: Exactly**
+selects one level from 0–15; other levels use the Off texture. In Off/On artwork
+mode, an exact match uses the On/High texture. The Duplifier's **Signal Levels**
+option copies these settings, light offsets and propulsion thresholds.
 
 ## Building
 

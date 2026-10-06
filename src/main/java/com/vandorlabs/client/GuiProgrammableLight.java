@@ -24,7 +24,8 @@ import java.io.IOException;
 public final class GuiProgrammableLight extends GuiContainer {
     private final TileEntityProgrammableLight tile;
     private int selected;
-    private int level;
+    private int level,offset;
+    private boolean signalBrightness;
     private boolean join;
     private int housing;
     private int trigger;
@@ -41,7 +42,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         this.tile = tile;
         small=tile.isSmallInput();tileSides=tile.isSlabTileSides();
         selected = tile.getFaceTexture();
-        level = tile.getLightLevel();
+        level = tile.getConfiguredLightLevel();offset=tile.getLightOffset();signalBrightness=tile.isSignalBrightness();
         join = tile.isJoin();
         housing = tile.getHousingTexture();
         trigger = tile.getTrigger();
@@ -63,8 +64,9 @@ public final class GuiProgrammableLight extends GuiContainer {
         buttonList.add(layout.tab(90,0,2,"Light texture"));buttonList.add(layout.tab(91,1,2,"Housing"));
         buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
-        buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
+        buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.control(105,198,brightnessLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
+    private String brightnessLabel(){return signalBrightness?"Brightness: Signal + offset":"Brightness: Slider";}
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
 
     private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
@@ -86,14 +88,15 @@ public final class GuiProgrammableLight extends GuiContainer {
         int channel = channel();
         if (channel < 0) return;
         tile.setSmallInput(small);tile.setSlabTileSides(tileSides);
-        tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, ChannelFields.parse(channelField), housing, trigger);
+        tile.configureSignalBrightness(signalBrightness,offset);tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, ChannelFields.parse(channelField), housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
-                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)));
+                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,offset));
     }
 
     private void setLevelFromMouse(int mouseX) {
         int next = Math.max(0, Math.min(15,
                 Math.round(15F * (mouseX - layout.controlsX - 8) / SLIDER_W)));
+        if(signalBrightness){offset=Math.max(-15,Math.min(15,Math.round(30F*(mouseX-layout.controlsX-8)/SLIDER_W)-15));send();return;}
         if (next != level) {
             level = next;
             send();
@@ -151,6 +154,7 @@ public final class GuiProgrammableLight extends GuiContainer {
             button.displayString = joinLabel();
             send();
         }
+        if(button.id==105){signalBrightness=!signalBrightness;button.displayString=brightnessLabel();send();}
         if(button.id==103){small=!small;button.displayString=sizeLabel();send();}
         if(button.id==104){tileSides=!tileSides;button.displayString=sidesLabel();send();}
         if (button.id == 102) {
@@ -195,10 +199,10 @@ public final class GuiProgrammableLight extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(textureTab==0)faceList.draw(fontRenderer,mouseX,mouseY);else housingList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.light.level")+": "+level,layout.controlsX,guiTop+124,0xDAE8F0);
+        fontRenderer.drawString((signalBrightness?"Signal offset":I18n.format("gui.vandorlabs.light.level"))+": "+(signalBrightness?offset:level),layout.controlsX,guiTop+124,0xDAE8F0);
         int sliderX=layout.controlsX+8;
         drawRect(sliderX,guiTop+142,sliderX+SLIDER_W,guiTop+148,0xFF555560);
-        int thumb=sliderX+Math.round(SLIDER_W*level/15F);
+        int thumb=sliderX+Math.round(SLIDER_W*(signalBrightness?(offset+15)/2F:level)/15F);
         drawRect(thumb-3,guiTop+138,thumb+3,guiTop+152,0xFFB8D7E8);
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
         super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();

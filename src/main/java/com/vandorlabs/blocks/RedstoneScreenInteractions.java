@@ -28,7 +28,16 @@ public final class RedstoneScreenInteractions {
         for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);
             int row=hitRow(state,tile,slot,eye,end,contents.rows().size());
-            if(row>=0){if(!world.isRemote)contents.toggleRow(row);return true;}
+            if(row>=0){
+                RedstoneScreenContents.Row control=contents.rows().get(row);
+                if(control.slider){
+                    double u=hitColumn(state,tile,slot,eye,end);
+                    if(u<RedstoneScreenContents.SLIDER_LEFT || u>=RedstoneScreenContents.SLIDER_RIGHT)return false;
+                    int segment=(int)((u-RedstoneScreenContents.SLIDER_LEFT)*control.segments()/(RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT));
+                    if(!world.isRemote)contents.selectSegment(row,segment);
+                }else if(!world.isRemote)contents.toggleRow(row);
+                return true;
+            }
         }
         return false;
     }
@@ -78,6 +87,13 @@ public final class RedstoneScreenInteractions {
             default:break;
         }
         return new Vec3d((lx+.5)*16,(ly+.5)*16,(lz+.5)*16);
+    }
+    public static double hitColumn(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end){
+        ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);
+        Vec3d a=local(start,face),d=local(end,face).subtract(a);
+        double denom=q.ny*d.y+q.nz*d.z;if(denom>=-1e-8)return -1;
+        double t=(q.ny*(q.topRight.y-a.y)+q.nz*(q.topRight.z-a.z))/denom;
+        return t<0 || t>1?-1:(q.topRight.x-a.add(d.scale(t)).x)/(q.topRight.x-q.topLeft.x)*128;
     }
     public static int hitRow(IBlockState state,Vec3d start,Vec3d end,int count){
         return hitRow(state,null,0,start,end,count);

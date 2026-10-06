@@ -20,7 +20,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     private final RedstoneChannelMember member;
     private GuiTextField channelField;
     private final boolean thruster;
-    private int particleLevel;
+    private int particleLevel,threshold=8;private boolean signalBrightness;
     private boolean connected;
     private boolean join;
     private GuiButton joinButton;
@@ -39,6 +39,7 @@ public class GuiRedstoneChannel extends GuiContainer {
                 && member.channelTile().getWorld().getBlockState(member.channelTile().getPos())
                         .getBlock() instanceof BlockPropulsionLight;
         this.particleLevel = thruster?((TileEntityRedstoneLight)member).getParticleLevel():0;
+        if(thruster){signalBrightness=((TileEntityRedstoneLight)member).isSignalBrightness();threshold=((TileEntityRedstoneLight)member).getParticleThreshold();}
         BlockPropulsionLight block = thruster ? (BlockPropulsionLight) member.channelTile()
                 .getWorld().getBlockState(member.channelTile().getPos()).getBlock() : null;
         this.programmableThruster = block != null && !block.familyId().isEmpty();
@@ -67,6 +68,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
         if (programmableThruster) buttonList.add(layout.control(4,96,shapeLabel()));
         refreshJoinButton();
+        if(thruster){buttonList.add(layout.control(5,152,brightnessLabel()));buttonList.add(layout.control(6,176,thresholdLabel()));}
         buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - 200) / 2,
                 guiTop + (thruster ? 158 : 72),
                 200, 20, "Done"));
@@ -88,10 +90,12 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
                         thruster, particleLevel>0, connected, join, thruster, sideTexture,
-                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)));
+                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,threshold));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==5){signalBrightness=!signalBrightness;button.displayString=brightnessLabel();}
+        if(button.id==6){threshold=(threshold+1)%16;button.displayString=thresholdLabel();}
         if (button.id == 1) {
             if(channel()<0)return;
             submit();
@@ -113,6 +117,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
+    private String brightnessLabel(){return signalBrightness?"Brightness: Signal":"Brightness: On/Off";}
+    private String thresholdLabel(){return "Particles at level: "+threshold;}
     private String particleLabel() { return "Particles: "+TileEntityRedstoneLight.PARTICLE_LEVELS[particleLevel]; }
     private String joinLabel() { return join ? "Join: On" : "Join: Off"; }
     private String shapeLabel() {

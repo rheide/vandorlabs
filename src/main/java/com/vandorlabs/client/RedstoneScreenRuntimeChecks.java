@@ -21,7 +21,7 @@ import javax.imageio.ImageIO;
 /** Real row clicks plus add/edit/remove/save/reopen over the integrated connection. */
 final class RedstoneScreenRuntimeChecks {
     private static final BlockPos POS=new BlockPos(8,80,8);
-    private static int shape,stage,ticks;
+    private static int shape,stage,ticks,segment;
     private static Vec3d hit;
     private static com.google.common.util.concurrent.ListenableFuture<?> pending;
     static void tick(Minecraft mc,File output){
@@ -94,7 +94,28 @@ final class RedstoneScreenRuntimeChecks {
                 gui.actionPerformed(new GuiButton(3,0,0,"Remove"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(11);return;
             }
             if(stage==11 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().size()==3 && tile(mc).rows().get(0).label.equals("Lights"),"GUI row removal failed"));next(12);return;}
-            if(stage==12){System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){
+            if(stage==12){
+                segment=0;pending=mc.getIntegratedServer().addScheduledTask(()->{
+                    RedstoneScreenContents contents=tile(mc);net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();
+                    row.setString("Label","Power");com.vandorlabs.redstone.ChannelData.write(row,ChannelList.of(16901));row.setBoolean("Slider",true);row.setInteger("Min",0);row.setInteger("Max",15);rows.appendTag(row);
+                    require(contents.applyRowConfiguration(rows),"live slider config");aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,42+78*.5/8);
+                });next(13);return;
+            }
+            if(stage==13 && ticks>25){click(mc);next(14);return;}
+            if(stage==14 && ticks>15){
+                pending=mc.getIntegratedServer().addScheduledTask(()->{
+                    int[] values={0,2,4,6,9,11,13,15};require(RedstoneChannels.level(owner(mc).world,16901)==values[segment],"live slider picked wrong segment "+segment);
+                    segment++;if(segment<8)aimAt(owner(mc),owner(mc).world.getBlockState(POS),0,42+78*(segment+.5)/8);
+                });next(15);return;
+            }
+            if(stage==15){if(segment<8){next(13);return;}capture(mc,output,"slider");open(mc);next(16);return;}
+            if(stage==16 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
+                GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;capture(mc,output,"slider_gui");
+                gui.actionPerformed(new GuiButton(8,0,0,"Min"));gui.actionPerformed(new GuiButton(9,0,0,"Max"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(17);return;
+            }
+            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==1 && tile(mc).rows().get(0).max==1,"slider dialog packet lost range"));next(18);return;}
+            if(stage==18){System.out.println("[vandorlabs][reprolab] redstone-slider-runtime PASS shape="+shape);
+                System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){
                 int[] fixtures={0,17,21,22,23,25,26,27};int index=0;while(index<fixtures.length && fixtures[index]!=shape)index++;shape=index+1<fixtures.length?fixtures[index+1]:28;
             }else shape++;next(shape<28?0:99);}
         }catch(Exception e){throw new IllegalStateException("redstone-screen live check shape="+shape+" stage="+stage,e);}
@@ -104,8 +125,9 @@ final class RedstoneScreenRuntimeChecks {
     private static RedstoneScreenContents tile(Minecraft mc){return ((TileEntityAnimatedScreenSelector)owner(mc).world.getTileEntity(POS)).redstoneScreen(slot());}
     private static GuiTextField field(GuiRedstoneScreen gui,String name)throws ReflectiveOperationException{Field f=GuiRedstoneScreen.class.getDeclaredField(name);f.setAccessible(true);return (GuiTextField)f.get(gui);}
     private static void open(Minecraft mc){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,slot()==0?GuiHandler.GUI_REDSTONE_SCREEN:GuiHandler.GUI_REDSTONE_SCREEN_SECONDARY,p.world,POS.getX(),POS.getY(),POS.getZ());});}
-    private static void aim(EntityPlayerMP owner,IBlockState state,int row){
-        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,((TileEntityAnimatedScreenSelector)owner.world.getTileEntity(POS)),slot());double u=(row==0?30:109)/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),slot())+row*12+5)/(double)RedstoneScreenInteractions.displayHeight(state.getBlock(),slot());
+    private static void aim(EntityPlayerMP owner,IBlockState state,int row){aimAt(owner,state,row,row==0?30:109);}
+    private static void aimAt(EntityPlayerMP owner,IBlockState state,int row,double column){
+        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,((TileEntityAnimatedScreenSelector)owner.world.getTileEntity(POS)),slot());double u=column/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),slot())+row*12+5)/(double)RedstoneScreenInteractions.displayHeight(state.getBlock(),slot());
         Vec3d localHit=new Vec3d(q.topRight.x+(q.topLeft.x-q.topRight.x)*u,q.topRight.y+(q.bottomRight.y-q.topRight.y)*v,q.topRight.z+(q.bottomRight.z-q.topRight.z)*v);
         EnumFacing facing=RedstoneScreenInteractions.facing(state);
         hit=worldPoint(localHit,facing);

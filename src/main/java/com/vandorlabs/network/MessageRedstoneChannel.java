@@ -27,6 +27,8 @@ public class MessageRedstoneChannel implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private boolean signalBrightness;private int threshold=8;
+    public MessageRedstoneChannel withSignalBrightness(boolean enabled,int threshold){this.signalBrightness=enabled;this.threshold=threshold;return this;}
     private BlockPos pos;
     private int channel;
     private boolean updateParticles;
@@ -82,7 +84,9 @@ public class MessageRedstoneChannel implements IMessage {
         updateShape = buf.readableBytes() > 0 && buf.readBoolean();
         shape = buf.readableBytes() >= 4 ? buf.readInt() : 0;
 
+        signalBrightness=buf.readBoolean();threshold=buf.readInt();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null || particleLevel>3;
+        invalidChannels|=threshold<0 || threshold>15;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -96,6 +100,7 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeBoolean(updateShape);
         buf.writeInt(shape);
 
+        buf.writeBoolean(signalBrightness);buf.writeInt(threshold);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
 
@@ -116,6 +121,7 @@ public class MessageRedstoneChannel implements IMessage {
                 net.minecraft.block.Block block = player.world.getBlockState(message.pos)
                         .getBlock();
                 if (block instanceof BlockConnectedPropulsionLight) {
+                    ((BlockConnectedPropulsionLight)block).configureSignalAssembly(player.world,message.pos,message.signalBrightness,message.threshold);
                     ((BlockConnectedPropulsionLight) block).configureAssembly(player.world,
                             message.pos, message.getRedstoneChannels(), message.updateParticles,
                             message.particleLevel, message.updateJoin, message.join,
@@ -130,6 +136,7 @@ public class MessageRedstoneChannel implements IMessage {
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile).setSideTexture(message.sideTexture);
                 }
+                if(tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight)((TileEntityRedstoneLight)tile).configureSignalBrightness(message.signalBrightness,message.threshold);
                 if (message.updateShape && block instanceof BlockPropulsionLight
                         && !((BlockPropulsionLight) block).familyId().isEmpty()) {
                     BlockPropulsionLight.configureShape(player.world, message.pos,

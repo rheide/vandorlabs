@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6
+
+- Carry redstone levels 0–15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
+- Let Programmable Lights, Light Slabs and Light Frames follow signal strength with a signed brightness offset; joined lights share the strongest loaded group signal.
+- Add signal-dependent propulsion light and emitter-texture brightness, with a configurable particle activation threshold and the existing particle density choices.
+- Add slider rows to the Redstone screen/input/console controls. Configure minimum and maximum levels, use up to eight bordered clickable segments, and reserve most of each row for the progress bar. Preserve row settings through saving, configured items and Duplifier copying.
+- Add exact-level activation and off/low/medium/high artwork to Programmable Trigger blocks.
+
 ## 1.5
 
 - Preserve filesystem texture artwork in atlas/model lookups after legacy door-tier migration, including configured item previews. Update live checks for two artwork tiers and imported hatch variants.

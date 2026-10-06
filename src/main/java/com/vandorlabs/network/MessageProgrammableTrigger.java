@@ -27,6 +27,8 @@ public final class MessageProgrammableTrigger implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private boolean states;private int exact=-1,low,medium;
+    public MessageProgrammableTrigger withLevels(boolean states,int exact,int low,int medium){this.states=states;this.exact=exact;this.low=low;this.medium=medium;return this;}
     private BlockPos pos;
     private int off, on, channel;
 
@@ -38,13 +40,17 @@ public final class MessageProgrammableTrigger implements IMessage {
         pos = BlockPos.fromLong(buf.readLong());
         off = buf.readInt(); on = buf.readInt(); channel = buf.readInt();
 
+        states=buf.readBoolean();exact=buf.readInt();low=buf.readInt();medium=buf.readInt();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
+        invalidChannels|=exact< -1 || exact>15 || !ScreenHousingTextures.validChoice(low) || !ScreenHousingTextures.validChoice(medium);
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         buf.writeInt(off); buf.writeInt(on); buf.writeInt(channel);
 
+        buf.writeBoolean(states);buf.writeInt(exact);buf.writeInt(low);buf.writeInt(medium);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+
     }
 
     public static final class Handler
@@ -68,6 +74,7 @@ public final class MessageProgrammableTrigger implements IMessage {
                 if (!(raw instanceof TileEntityProgrammableTrigger)
                         || container.getTileEntity() != raw
                         || !container.canInteractWith(player)) return;
+                ((TileEntityProgrammableTrigger) raw).configureLevels(msg.states,msg.exact,msg.low,msg.medium);
                 ((TileEntityProgrammableTrigger) raw).configure(msg.off, msg.on, msg.getRedstoneChannels());
             });
             return null;

@@ -13,6 +13,20 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     public int getFaceTexture(){return faceTexture<0?ScreenHousingTextures.lightIndex(texture):faceTexture;}
     public void setFaceTexture(int choice){int next=ScreenHousingTextures.clamp(choice);if(faceTexture==next)return;faceTexture=next;changed();}
     private int lightLevel = 15;
+    private boolean signalBrightness;
+    private int lightOffset,joinedLevel;
+    public boolean isSignalBrightness(){return signalBrightness;}
+    public int getConfiguredLightLevel(){return lightLevel;}
+    public int getLightOffset(){return lightOffset;}
+    public void configureSignalBrightness(boolean enabled,int offset){
+        signalBrightness=enabled;lightOffset=Math.max(-15,Math.min(15,offset));changed();
+    }
+    public void setJoinedSignalLevel(int level){
+        if(joinedLevel==level && joinedTriggerPower==(level>0))return;
+        joinedLevel=level;joinedTriggerPower=level>0;notifyChanged();
+    }
+    @Override public void setChannelLevel(int level){super.setChannelLevel(level);ProgrammableLightConnections.refreshAround(world,pos);}
+
     private boolean on = true;
     private boolean join;
     private boolean joinedTriggerPower;
@@ -36,8 +50,9 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     public static long getJoinRevision() { return joinRevision; }
 
     public int getTexture() { return texture; }
-    public int getLightLevel() { return lightLevel; }
+    public int getLightLevel() { return signalBrightness?Math.max(0,Math.min(15,(join?joinedLevel:getSignalLevel())+lightOffset)):lightLevel; }
     public boolean isOn() {
+        if(signalBrightness)return getLightLevel()>0;
         return isManual() ? on : SpaceDoorData.openForSignal(trigger, join ? joinedTriggerPower : isTriggerPowered());
     }
     public boolean isManualOn() { return on; }
@@ -155,6 +170,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         tag.setInteger("LightTexture", texture);
         tag.setInteger("LightFaceTexture",faceTexture);
         tag.setInteger("LightLevel", lightLevel);
+        tag.setBoolean("SignalBrightness",signalBrightness);tag.setInteger("LightOffset",lightOffset);tag.setInteger("JoinedSignalLevel",joinedLevel);
         tag.setBoolean("LightOn", on);
         tag.setBoolean("LightJoin", join);
         tag.setInteger("LightTrigger", trigger);
@@ -164,6 +180,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
+        signalBrightness=tag.getBoolean("SignalBrightness");lightOffset=Math.max(-15,Math.min(15,tag.getInteger("LightOffset")));joinedLevel=Math.max(0,Math.min(15,tag.getInteger("JoinedSignalLevel")));
         faceTexture=tag.hasKey("LightFaceTexture",3) && tag.getInteger("LightFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("LightFaceTexture")):-1;
         texture = ProgrammableLightTextures.clamp(tag.getInteger("LightTexture"));
         lightLevel = tag.hasKey("LightLevel", 3)

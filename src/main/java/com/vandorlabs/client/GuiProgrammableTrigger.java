@@ -25,14 +25,16 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     private ProgrammableDialogLayout layout;
     private int textureTab;
     private int off;
-    private int on;
+    private int on,low,medium,exact;private boolean states;
+    private HousingTextureList lowList,mediumList;
+    private HousingTextureList activeList(){return textureTab==0?offList:textureTab==1?lowList:textureTab==2?mediumList:onList;}
 
     public GuiProgrammableTrigger(InventoryPlayer inventory,
             TileEntityProgrammableTrigger tile) {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
         this.tile = tile;
         off = tile.getHousingTexture();
-        on = tile.getOnTexture();
+        on = tile.getOnTexture();low=tile.getLowTexture();medium=tile.getMediumTexture();exact=tile.getExactLevel();states=tile.isLevelStates();
         xSize = 420;
         ySize = 196;
     }
@@ -42,44 +44,44 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         offList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,off).visibleRows(layout.rows(true)).custom(value->{off=value;send();});
         onList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,on).visibleRows(layout.rows(true)).custom(value->{on=value;send();});
-        buttonList.add(layout.tab(90,0,2,"Redstone Off"));buttonList.add(layout.tab(91,1,2,"Redstone On"));
+        lowList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,low).visibleRows(layout.rows(true)).custom(value->{low=value;send();});
+        mediumList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,medium).visibleRows(layout.rows(true)).custom(value->{medium=value;send();});
+        String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};for(int i=0;i<4;i++)buttonList.add(layout.tab(90+i,i,4,names[i]));
+        buttonList.add(layout.control(101,76,statesLabel()));buttonList.add(layout.control(102,100,exactLabel()));
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+42,154,18);
         ChannelFields.configure(channelField);
         channelField.setText(tile.getRedstoneChannels().toString());buttonList.add(layout.done(100));refreshTabs();
     }
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;}
 
+    private String statesLabel(){return states?"Artwork: Signal bands":"Artwork: Off / On";}
+    private String exactLabel(){return exact<0?"Trigger: Any signal":"Trigger: Exactly "+exact;}
     private int channel() {return ChannelFields.first(channelField);}
 
     private void send() {
         int value = channel();
         if (value < 0) return;
-        tile.configure(off, on, value);
+        tile.configureLevels(states,exact,low,medium);tile.configure(off,on,ChannelFields.parse(channelField));
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrigger(
-                tile.getPos(), off, on, value).withChannels(ChannelFields.parse(channelField)));
+                tile.getPos(), off, on, value).withChannels(ChannelFields.parse(channelField)).withLevels(states,exact,low,medium));
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
-        if (textureTab==0 && offList.click(x, y, button)) {
-            if (off != offList.selected()) { off = offList.selected(); send(); }
-            return;
-        }
-        if (textureTab==1 && onList.click(x, y, button)) {
-            if (on != onList.selected()) { on = onList.selected(); send(); }
-            return;
+        if(activeList().click(x,y,button)){
+            int selected=activeList().selected();if(textureTab==0)off=selected;else if(textureTab==1)low=selected;else if(textureTab==2)medium=selected;else on=selected;send();return;
         }
         super.mouseClicked(x, y, button);
         channelField.mouseClicked(x, y, button);
     }
 
     @Override protected void mouseClickMove(int x, int y, int button, long elapsed) {
-        if (offList.drag(y) || onList.drag(y)) return;
+        if (activeList().drag(y)) return;
         super.mouseClickMove(x, y, button, elapsed);
     }
 
     @Override protected void mouseReleased(int x, int y, int button) {
         offList.release();
-        onList.release();
+        onList.release();lowList.release();mediumList.release();
         super.mouseReleased(x, y, button);
     }
 
@@ -88,12 +90,13 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         int x = Mouse.getEventX() * width / mc.displayWidth;
         int y = height - Mouse.getEventY() * height / mc.displayHeight - 1;
         int wheel = Mouse.getEventDWheel();
-        if(textureTab==0)offList.wheel(x, y, wheel);
-        if(textureTab==1)onList.wheel(x, y, wheel);
+        activeList().wheel(x,y,wheel);
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id==90 || button.id==91){textureTab=button.id-90;refreshTabs();return;}
+        if(button.id>=90 && button.id<=93){textureTab=button.id-90;refreshTabs();return;}
+        if(button.id==101){states=!states;button.displayString=statesLabel();send();}
+        if(button.id==102){exact=exact==15?-1:exact+1;button.displayString=exactLabel();send();}
         if (button.id == 100 && channel()>=0) { send(); mc.player.closeScreen(); }
     }
 
@@ -125,7 +128,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 24, 0xFF202028);
         fontRenderer.drawString("Programmable Trigger Block", guiLeft + 12,
                 guiTop + 8, 0xFFFFFFFF);
-        if(textureTab==0)offList.draw(fontRenderer,mouseX,mouseY);else onList.draw(fontRenderer,mouseX,mouseY);
+        activeList().draw(fontRenderer,mouseX,mouseY);
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+30,0xDAE8F0);
         super.drawScreen(mouseX, mouseY, partial);
         channelField.drawTextBox();

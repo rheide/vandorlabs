@@ -44,6 +44,9 @@ public final class NonRenderingChecks {
         CommonRenderChecks.run();
         TrapdoorTextureChecks.run();
         TrapdoorMeshParityChecks.run();
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableLight.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_light"));
+        ModBlocks.PROGRAMMABLE_LIGHT=new BlockProgrammableLight();ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK=new BlockProgrammableTrigger();
+        SignalLevelRuntimeChecks.run(new MemoryWorld(false));
         ChannelReconciliationChecks.run();
         ChannelListChecks.run();
         RedstoneScreenChecks.run();

@@ -70,7 +70,7 @@ public final class RedstoneChannels {
         network(tile.getWorld()).inputChanged(member);
     }
 
-    public static void latchChanged(RedstoneChannelLatch source,int level) {
+    public static void latchChanged(RedstoneChannelLatch source,boolean on) {
         TileEntity tile=source.channelTile();
         if (tile.getWorld()==null || tile.getWorld().isRemote || source.getRedstoneChannels().isEmpty()) return;
         network(tile.getWorld()).latchChanged(source,on?15:0);
@@ -98,6 +98,7 @@ public final class RedstoneChannels {
     private static final class Network {
         private final Map<Integer, Set<RedstoneChannelMember>> members=new java.util.HashMap<>();
         private final Map<RedstoneChannelMember,ChannelList> subscriptions=new IdentityHashMap<>();
+        private final Map<Integer,RedstoneChannelMember> strongestSources=new java.util.HashMap<>();
         private final Map<Integer,Integer> powerSources=new java.util.HashMap<>();
         private final Map<Integer,Integer> latchStates=new java.util.HashMap<>();
 
@@ -187,7 +188,7 @@ public final class RedstoneChannels {
                     int before=level(channel);
                     Set<RedstoneChannelMember> set=members.get(channel);
                     if(set==null || set.isEmpty()) {
-                        members.remove(channel);powerSources.remove(channel);latchStates.remove(channel);
+                        members.remove(channel);powerSources.remove(channel);strongestSources.remove(channel);latchStates.remove(channel);
                     } else if(before!=reconcile(channel,set))notify.addAll(set);
                 }
                 for(RedstoneChannelMember member:notify)member.setChannelLevel(anyPowered(subscriptions.get(member)));
@@ -202,12 +203,16 @@ public final class RedstoneChannels {
         }
 
         private int reconcile(int channel,Set<RedstoneChannelMember> set) {
-            int level=0;
+            RedstoneChannelMember previous=strongestSources.get(channel);
+            // A still-loaded maximum-strength source proves the maximum without a scan.
+            if(previous!=null && set.contains(previous) && previous.localSignalLevel(channel)==15){powerSources.put(channel,15);return 15;}
+            int level=0;RedstoneChannelMember strongest=null;
             for(RedstoneChannelMember member:new ArrayList<>(set)) {
-                level=Math.max(level,Math.max(0,Math.min(15,member.localSignalLevel(channel))));
+                int candidate=Math.max(0,Math.min(15,member.localSignalLevel(channel)));
+                if(candidate>level){level=candidate;strongest=member;}
                 if(level==15)break;
             }
-            if(level==0)powerSources.remove(channel);else powerSources.put(channel,level);
+            if(level==0){powerSources.remove(channel);strongestSources.remove(channel);}else{powerSources.put(channel,level);strongestSources.put(channel,strongest);}
             return level;
         }
         private static boolean isLatch(RedstoneChannelMember member) {

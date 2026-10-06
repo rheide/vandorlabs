@@ -57,12 +57,13 @@ final class RedstoneScreenChecks {
     }
     private static void copyMasks(NonRenderingChecks.MemoryWorld world,BlockPos source,BlockPos target){
         net.minecraft.item.ItemStack tool=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
-        long rowBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-2);
-        long interpolationBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
+        long rowBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-3);
+        long signalBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
+        long interpolationBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-2);
         net.minecraft.nbt.NBTTagCompound root=new net.minecraft.nbt.NBTTagCompound();root.setLong(com.vandorlabs.items.DuplifierApplyOptions.TAG,0);tool.setTagCompound(root);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(rowBit|interpolationBit),"legacy mask did not enable new options");
-        root.setInteger("DuplifierApplyOptionCount",com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==interpolationBit,"counted screen-era mask changed existing choices");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(rowBit|interpolationBit|signalBit),"legacy mask did not enable new options");
+        root.setInteger("DuplifierApplyOptionCount",com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-2);
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(interpolationBit|signalBit),"counted screen-era mask changed existing choices");
         root.removeTag("DuplifierApplyOptionCount");
         require(com.vandorlabs.items.ItemDuplifier.copyFrom(world,source,tool)!=null,"actual tool did not capture screen");
         require(com.vandorlabs.items.ItemDuplifier.applyTo(world,target,tool,null),"actual tool did not apply old-mask screen");

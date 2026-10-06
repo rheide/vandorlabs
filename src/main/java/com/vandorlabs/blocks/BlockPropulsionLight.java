@@ -43,6 +43,12 @@ public class BlockPropulsionLight extends BlockVandor {
         @Override public String valueToString(Integer value) { return value.toString(); }
     };
 
+    public static final IUnlistedProperty<Integer> BRIGHTNESS = new IUnlistedProperty<Integer>() {
+        public String getName(){return "signal_brightness";}
+        public boolean isValid(Integer value){return value!=null && value>=0 && value<=15;}
+        public Class<Integer> getType(){return Integer.class;}
+        public String valueToString(Integer value){return value.toString();}
+    };
     private final float depth;
 
     public BlockPropulsionLight(String name, boolean pointsUp, float depth) {
@@ -58,7 +64,7 @@ public class BlockPropulsionLight extends BlockVandor {
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this,
                 new IProperty<?>[]{FACING, POWERED, PARTICLES},
-                new IUnlistedProperty<?>[]{SIDE_TEXTURE});
+                new IUnlistedProperty<?>[]{SIDE_TEXTURE,BRIGHTNESS});
     }
 
     @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess source,
@@ -67,7 +73,7 @@ public class BlockPropulsionLight extends BlockVandor {
         int choice = tile instanceof TileEntityRedstoneLight
                 ? ((TileEntityRedstoneLight) tile).getSideTexture()
                 : com.vandorlabs.tiles.ScreenHousingTextures.INDUSTRIAL_BLOCK;
-        return ((IExtendedBlockState) state).withProperty(SIDE_TEXTURE, choice);
+        return ((IExtendedBlockState) state).withProperty(SIDE_TEXTURE, choice).withProperty(BRIGHTNESS,tile instanceof TileEntityRedstoneLight?((TileEntityRedstoneLight)tile).getBrightness():15);
     }
 
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess source,
@@ -214,7 +220,8 @@ public class BlockPropulsionLight extends BlockVandor {
     }
 
     @Override public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return state.getValue(POWERED) ? 15 : 0;
+        TileEntity tile=world.getTileEntity(pos);
+        return state.getValue(POWERED) ? tile instanceof TileEntityRedstoneLight?((TileEntityRedstoneLight)tile).getBrightness():15 : 0;
     }
 
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }

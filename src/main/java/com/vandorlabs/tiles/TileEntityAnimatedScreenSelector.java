@@ -171,7 +171,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int redstoneChannel;
     private boolean channelSignal;
     private int channelLevel;
-    public int getSignalLevel(){return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
+    public int getSignalLevel(){if(channelLevel==15)return 15;return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
     @Override public int localSignalLevel(int channel){return com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);}
     @Override public void setChannelLevel(int level){
         if(channelLevel==level)return;
@@ -451,7 +451,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     protected boolean isTriggerPowered() {
-        return getSignalLevel()>0;
+        return channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);
     }
 
     public boolean isUsableByPlayer(EntityPlayer player) {

@@ -207,6 +207,8 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
             configuration.removeTag("x");
             configuration.removeTag("y");
             configuration.removeTag("z");
+            configuration.removeTag("ChannelLevel");configuration.removeTag(com.vandorlabs.persistence.SaveSchema.Redstone.SIGNAL);
+            configuration.removeTag("JoinedSignalLevel");configuration.removeTag("LightGroupPowered");
             TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
             for(int slot=0;slot<2;slot++)if(configuration.hasKey(slot==0?"RedstonePrimary":"RedstoneSecondary",10))
                 configuration.setTag(slot==0?"RedstonePrimary":"RedstoneSecondary",screen.redstoneScreen(slot).configuration());

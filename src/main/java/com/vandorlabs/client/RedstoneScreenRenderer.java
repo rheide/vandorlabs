@@ -40,7 +40,13 @@ final class RedstoneScreenRenderer {
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,row.active()?0xFF174C3B:0xFF1C2B37);
-            rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
+            if(row.slider){
+                for(int segment=0;segment<row.segments();segment++){
+                    int left=42+78*segment/row.segments(),right=42+78*(segment+1)/row.segments();
+                    rect(buffer,left,y,right,y+10,.02,0xFF91B5C8);
+                    rect(buffer,left+1,y+1,right-1,y+9,.03,row.level()>=row.segmentValue(segment)?0xFF30C58A:0xFF22394A);
+                }
+            }else rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
         }
         Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
@@ -51,8 +57,13 @@ final class RedstoneScreenRenderer {
         }
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            text(font,font.getStringWidth(row.label)<=RedstoneScreenText.LABEL_WIDTH?row.label:font.trimStringToWidth(row.label,RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
-            text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
+            text(font,font.trimStringToWidth(row.label,row.slider?32:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
+            if(row.slider)for(int segment=0;segment<row.segments();segment++){
+                String value=Integer.toString(row.segmentValue(segment));
+                int center=42+78*(2*segment+1)/(2*row.segments());
+                GlStateManager.pushMatrix();GlStateManager.translate(center,y+2,.04F);GlStateManager.scale(.65F,.65F,1);
+                font.drawString(value,-font.getStringWidth(value)/2,0,0xE0FFF0);GlStateManager.popMatrix();
+            }else text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
     }

@@ -19,6 +19,10 @@ public final class MessageRedstoneScreen implements IMessage {
     private final List<String> labels=new ArrayList<>();
     private final List<ChannelList> channels=new ArrayList<>();
     private boolean valid;
+    private final List<Boolean> sliders=new ArrayList<>();
+    private final List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();
+    public MessageRedstoneScreen withSliders(List<Boolean> sliders,List<Integer> mins,List<Integer> maxs){this.sliders.addAll(sliders);this.mins.addAll(mins);this.maxs.addAll(maxs);return this;}
+
     public MessageRedstoneScreen(){}
     public MessageRedstoneScreen(BlockPos pos,List<String> labels,List<ChannelList> channels,int housing){
         this(pos,RedstoneScreenContents.DEFAULT_TITLE,labels,channels,housing);
@@ -35,10 +39,11 @@ public final class MessageRedstoneScreen implements IMessage {
             byte[] label=labels.get(i).getBytes(StandardCharsets.UTF_8);b.writeByte(label.length);b.writeBytes(label);
             ChannelList list=channels.get(i);b.writeByte(list.size());for(int j=0;j<list.size();j++)b.writeInt(list.get(j));
         }
+        for(int i=0;i<labels.size();i++){b.writeBoolean(sliders.size()>i && sliders.get(i));b.writeByte(mins.size()>i?mins.get(i):0);b.writeByte(maxs.size()>i?maxs.get(i):15);}
         byte[] heading=title.getBytes(StandardCharsets.UTF_8);b.writeByte(heading.length);b.writeBytes(heading);b.writeByte(slot);
     }
     public void fromBytes(ByteBuf b){
-        valid=false;labels.clear();channels.clear();
+        valid=false;labels.clear();channels.clear();sliders.clear();mins.clear();maxs.clear();
         try {
             pos=BlockPos.fromLong(b.readLong());housing=b.readInt();int count=b.readUnsignedByte();
             if(count>RedstoneScreenContents.MAX_ROWS)return;
@@ -49,6 +54,11 @@ public final class MessageRedstoneScreen implements IMessage {
                 int size=b.readUnsignedByte();if(size>ChannelList.MAX_CHANNELS)return;
                 int[] values=new int[size];for(int j=0;j<size;j++)values[j]=b.readInt();
                 labels.add(label);channels.add(ChannelList.of(values));
+            }
+            for(int i=0;i<count;i++){
+                boolean slider=b.readBoolean();int min=b.readUnsignedByte(),max=b.readUnsignedByte();
+                if(min>max || max>15 || slider && labels.get(i).length()>RedstoneScreenContents.SLIDER_LABEL)return;
+                sliders.add(slider);mins.add(min);maxs.add(max);
             }
             int bytes=b.readUnsignedByte();if(bytes>RedstoneScreenContents.MAX_TITLE*4 || b.readableBytes()<bytes)return;
             title=b.readCharSequence(bytes,StandardCharsets.UTF_8).toString();
@@ -64,7 +74,13 @@ public final class MessageRedstoneScreen implements IMessage {
                 ContainerAnimatedScreenSelector container=(ContainerAnimatedScreenSelector)player.openContainer;
                 if(container.redstoneSlot!=m.slot || !com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(container.getTileEntity().getBlockType(),m.slot) || player.world.getTileEntity(m.pos)!=container.getTileEntity()
                         || !container.canInteractWith(player))return;
-                container.getTileEntity().redstoneScreen(m.slot).configure(m.title,m.labels,m.channels,m.housing);
+                RedstoneScreenContents contents=container.getTileEntity().redstoneScreen(m.slot);
+                net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();
+                for(int i=0;i<m.labels.size();i++){
+                    net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();row.setString("Label",m.labels.get(i));com.vandorlabs.redstone.ChannelData.write(row,m.channels.get(i));
+                    row.setBoolean("Slider",m.sliders.get(i));row.setInteger("Min",m.mins.get(i));row.setInteger("Max",m.maxs.get(i));rows.appendTag(row);
+                }
+                if(contents.applyRowConfiguration(m.title,rows))container.getTileEntity().setHousingTexture(m.housing);
             });return null;
         }
     }

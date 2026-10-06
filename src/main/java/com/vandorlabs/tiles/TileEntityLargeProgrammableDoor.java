@@ -18,6 +18,12 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
         return pos.offset(state.getValue(com.vandorlabs.blocks.BlockVandorDoor.FACING).rotateYCCW(),-column).down(row);}
     @Override protected boolean isLowerDoor(){return isAnchor() && world!=null && world.getBlockState(pos).getBlock() instanceof BlockLargeProgrammableDoor;}
     @Override public BlockPos mate(){return null;}
+    @Override public int localSignalLevel(int channel){
+        if(!isLowerDoor())return 0;
+        net.minecraft.util.EnumFacing width=world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockVandorDoor.FACING).rotateYCCW();
+        int level=0;for(int x=0;x<3;x++)for(int y=0;y<3;y++)level=Math.max(level,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos.offset(width,x).up(y)));
+        return level;
+    }
     @Override public boolean hasLocalRedstoneSignal(){
         if(!isLowerDoor())return false;
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);

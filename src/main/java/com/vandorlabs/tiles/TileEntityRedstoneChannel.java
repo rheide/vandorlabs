@@ -21,6 +21,11 @@ import net.minecraft.tileentity.TileEntity;
 public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelLatch {
     private ChannelList channels=ChannelList.EMPTY;
     private ChannelList latched=ChannelList.EMPTY;
+    private final java.util.Map<Integer,Integer> levels=new java.util.HashMap<>();
+    @Override public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
+    @Override public int localSignalLevel(int channel){return isChannelLatch()?latchedLevel(channel):localOn?15:0;}
+    @Override public void applyLinkedLevels(java.util.Map<Integer,Integer> value){levels.clear();levels.putAll(value);RedstoneChannelLatch.super.applyLinkedLevels(value);markDirty();}
+
     @Override public ChannelList getRedstoneChannels(){return channels;}
 
     private int channel;
@@ -92,6 +97,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     public void setLocalOn(boolean value) {
         if (localOn == value && initialized && (value || latched.isEmpty())) return;
+        levels.clear();
         localOn = value;
         latched=value?channels:ChannelList.EMPTY;
         initialized = true;
@@ -141,6 +147,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);ChannelData.write(tag,channels);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
+        int[] savedLevels=new int[channels.size()];for(int i=0;i<savedLevels.length;i++)savedLevels[i]=latchedLevel(channels.get(i));tag.setIntArray("LatchedLevels",savedLevels);
         tag.setIntArray("LatchedChannels",latched.toArray());
         return tag;
     }
@@ -155,6 +162,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         channels=ChannelData.read(tag,channel);channel=channels.first();
         localOn=data.localOn;
         latched=ChannelData.read(tag,"LatchedChannels",localOn?channels:ChannelList.EMPTY).intersect(channels);
+        levels.clear();int[] savedLevels=tag.getIntArray("LatchedLevels");for(int i=0;i<Math.min(savedLevels.length,channels.size());i++)levels.put(channels.get(i),Math.max(0,Math.min(15,savedLevels[i])));
         initialized=data.initialized;
         mountRotation=data.mountRotation;
         if (world!=null && world.isRemote && oldRotation!=mountRotation)

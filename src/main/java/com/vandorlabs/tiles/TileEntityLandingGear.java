@@ -93,6 +93,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         ChannelList old=channels;channels=next;channel=next.first();
         channelSignal=false;RedstoneChannels.channelChanged(this,old);markDirty();sync();
     }
+    @Override public int localSignalLevel(int channel){return isRoot()?com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos):0;}
     public boolean hasLocalRedstoneSignal(){return isRoot()&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);}
     public void setChannelSignal(boolean value){if(channelSignal!=value){channelSignal=value;evaluateSignal(false);}}
     public void onLoad(){

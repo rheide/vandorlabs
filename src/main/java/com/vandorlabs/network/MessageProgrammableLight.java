@@ -26,6 +26,9 @@ public final class MessageProgrammableLight implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private boolean signalBrightness;
+    private int offset;
+    public MessageProgrammableLight withSignalBrightness(boolean enabled,int offset){this.signalBrightness=enabled;this.offset=offset;return this;}
     private BlockPos pos;
     private int texture;
     private int level;
@@ -71,7 +74,9 @@ public final class MessageProgrammableLight implements IMessage {
         trigger = buf.readInt();
         small=buf.readBoolean();tileSides=buf.readBoolean();
 
+        signalBrightness=buf.readBoolean();offset=buf.readInt();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
+        invalidChannels|=offset< -15 || offset>15;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -83,7 +88,9 @@ public final class MessageProgrammableLight implements IMessage {
         buf.writeInt(trigger);
         buf.writeBoolean(small);buf.writeBoolean(tileSides);
 
+        buf.writeBoolean(signalBrightness);buf.writeInt(offset);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableLight, IMessage> {
@@ -107,6 +114,7 @@ public final class MessageProgrammableLight implements IMessage {
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock()
                         instanceof com.vandorlabs.blocks.BlockProgrammableLight)) return;
+                ((TileEntityProgrammableLight)tile).configureSignalBrightness(msg.signalBrightness,msg.offset);
                 ((TileEntityProgrammableLight)tile).setSmallInput(msg.small);
                 ((TileEntityProgrammableLight)tile).setSlabTileSides(msg.tileSides);
                 ((TileEntityProgrammableLight)tile).setFaceTexture(msg.texture);

@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
     public static final String TRAPDOOR_SLIDE_INTO_WALL="trapdoor_slide_into_wall";
     public static final String TRAPDOOR_COVER_FACING="trapdoor_cover_facing";
@@ -152,7 +153,8 @@ public final class ProgrammableSettings {
             out.setString(PRIMARY_KIND, "light");
             out.setInteger(PRIMARY_TEXTURE, light.getTexture());
             out.setInteger(LIGHT_FACE_TEXTURE,light.getFaceTexture());
-            out.setInteger(LIGHT_LEVEL, light.getLightLevel());
+            out.setInteger(LIGHT_LEVEL, light.getConfiguredLightLevel());
+            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("Brightness",light.isSignalBrightness());signal.setInteger("Offset",light.getLightOffset());out.setTag(SIGNAL_SETTINGS,signal);
             out.setBoolean(SMALL_INPUT,light.isSmallInput());out.setBoolean(SLAB_TILE_SIDES,light.isSlabTileSides());
             out.setInteger(TRIGGER, light.getTrigger());
             out.setBoolean(JOIN, light.isJoin());
@@ -161,6 +163,7 @@ public final class ProgrammableSettings {
             TileEntityProgrammableTrigger trigger = (TileEntityProgrammableTrigger) tile;
             out.setInteger(WALL_TEXTURE, trigger.getHousingTexture());
             out.setInteger(TRIGGER_ON_TEXTURE, trigger.getOnTexture());
+            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());out.setTag(SIGNAL_SETTINGS,signal);
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
@@ -210,6 +213,7 @@ public final class ProgrammableSettings {
             out.setBoolean(JOIN, propulsion.isJoin());
             out.setBoolean(ACTIVE, propulsion.getManualMode() != 0);
             out.setInteger(PARTICLES,propulsion.getParticleLevel());
+            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("Brightness",propulsion.isSignalBrightness());signal.setInteger("Threshold",propulsion.getParticleThreshold());out.setTag(SIGNAL_SETTINGS,signal);
             if (!fixture.familyId().isEmpty()) out.setInteger(PROPULSION_SHAPE, fixture.shape());
         } else if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass) tile;
@@ -356,6 +360,7 @@ public final class ProgrammableSettings {
                 propulsion.setJoin(values.getBoolean(JOIN));
                 applicable = true;
             }
+            if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);propulsion.configureSignalBrightness(signal.getBoolean("Brightness"),signal.getInteger("Threshold"));applicable=true;}
             if (values.hasKey(ACTIVE, 1) || values.hasKey(PARTICLES, 1) || values.hasKey(PARTICLES,3)) {
                 ChannelList channel = propulsion.getRedstoneChannels();
                 propulsion.setRedstoneChannel(0);
@@ -377,17 +382,19 @@ public final class ProgrammableSettings {
                 primary = values.getInteger(PRIMARY_TEXTURE);
             if(values.hasKey(SMALL_INPUT,1))light.setSmallInput(values.getBoolean(SMALL_INPUT));
             if(values.hasKey(SLAB_TILE_SIDES,1))light.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES));
-            light.configure(primary, number(values, LIGHT_LEVEL, light.getLightLevel()),
+            if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);light.configureSignalBrightness(signal.getBoolean("Brightness"),signal.getInteger("Offset"));}
+            light.configure(primary, number(values, LIGHT_LEVEL, light.getConfiguredLightLevel()),
                     flag(values, JOIN, light.isJoin()),
                     channels(values,light),
                     number(values, WALL_TEXTURE, light.getHousingTexture()), trigger);
             if (values.hasKey(ACTIVE, 1)) light.setOn(values.getBoolean(ACTIVE));
             applicable = values.hasKey(JOIN) || values.hasKey(CHANNEL)
                     || values.hasKey(TRIGGER) || values.hasKey(WALL_TEXTURE)
-                    || values.hasKey(LIGHT_LEVEL) || values.hasKey(ACTIVE)
+                    || values.hasKey(LIGHT_LEVEL) || values.hasKey(SIGNAL_SETTINGS) || values.hasKey(ACTIVE)
                     || "light".equals(values.getString(PRIMARY_KIND));
         } else if (tile instanceof TileEntityProgrammableTrigger) {
             TileEntityProgrammableTrigger trigger = (TileEntityProgrammableTrigger) tile;
+            if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);trigger.configureLevels(signal.getBoolean("States"),signal.getInteger("Exact"),signal.getInteger("Low"),signal.getInteger("Medium"));applicable=true;}
             if (values.hasKey(WALL_TEXTURE) || values.hasKey(TRIGGER_ON_TEXTURE)
                     || values.hasKey(CHANNEL)) {
                 trigger.configure(number(values, WALL_TEXTURE, trigger.getHousingTexture()),

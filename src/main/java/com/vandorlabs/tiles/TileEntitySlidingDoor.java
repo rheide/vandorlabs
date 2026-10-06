@@ -56,6 +56,7 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
                 && state.getValue(BlockVandorDoor.HALF) == BlockDoor.EnumDoorHalf.LOWER;
     }
 
+    @Override public int localSignalLevel(int channel){return isLowerDoor()?Math.max(com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos),com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos.up())):0;}
     @Override public boolean hasLocalRedstoneSignal() {
         return isLowerDoor() && (com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos)
                 || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos.up()));

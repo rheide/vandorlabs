@@ -76,6 +76,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
 
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return redstoneChannel; }
+    @Override public int localSignalLevel(int channel){return com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);}
     @Override public boolean hasLocalRedstoneSignal() {
         return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }

@@ -84,15 +84,17 @@ public final class ProgrammableLightConnections {
             Set<BlockPos> group = members((TileEntityProgrammableLight) raw,
                     world.getBlockState(seed), false);
             visited.addAll(group);
-            boolean powered = false;
-            for (BlockPos member : group) {
-                if (((TileEntityProgrammableLight) world.getTileEntity(member)).hasDirectTriggerPower()) {
-                    powered = true;
-                    break;
-                }
+            boolean numeric=false;
+            for(BlockPos member:group)if(((TileEntityProgrammableLight)world.getTileEntity(member)).isSignalBrightness()){numeric=true;break;}
+            if(numeric){
+                int level=0;
+                for(BlockPos member:group){level=Math.max(level,((TileEntityProgrammableLight)world.getTileEntity(member)).getSignalLevel());if(level==15)break;}
+                for(BlockPos member:group)((TileEntityProgrammableLight)world.getTileEntity(member)).setJoinedSignalLevel(level);
+            }else{
+                boolean powered=false;
+                for(BlockPos member:group)if(((TileEntityProgrammableLight)world.getTileEntity(member)).hasDirectTriggerPower()){powered=true;break;}
+                for(BlockPos member:group)((TileEntityProgrammableLight)world.getTileEntity(member)).setJoinedTriggerPower(powered);
             }
-            for (BlockPos member : group)
-                ((TileEntityProgrammableLight) world.getTileEntity(member)).setJoinedTriggerPower(powered);
         }
     }
 

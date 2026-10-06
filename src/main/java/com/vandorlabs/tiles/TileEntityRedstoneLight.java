@@ -29,6 +29,22 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
 
     private int channel;
     private boolean channelSignal;
+    private int channelLevel;
+    private boolean signalBrightness;
+    private int particleThreshold=8;
+    public boolean isSignalBrightness(){return signalBrightness;}
+    public int getParticleThreshold(){return particleThreshold;}
+    public int getSignalLevel(){return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
+    public int getBrightness(){return signalBrightness?getSignalLevel():15;}
+    public void configureSignalBrightness(boolean enabled,int threshold){
+        signalBrightness=enabled;particleThreshold=Math.max(0,Math.min(15,threshold));markDirty();updateVisualState();sync();
+    }
+    @Override public int localSignalLevel(int channel){return com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);}
+    @Override public void setChannelLevel(int level){
+        if(channelLevel==level)return;
+        channelLevel=level;channelSignal=level>0;updateVisualState();sync();
+    }
+
     private boolean manualOn;
     private int particleLevel;
     public static final String[] PARTICLE_LEVELS={"Off","Light","Medium","Heavy"};
@@ -78,7 +94,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return channel; }
     public boolean isChannelSignalPowered() { return channelSignal; }
-    public boolean isParticleStreamSelected() { return particleLevel>0; }
+    public boolean isParticleStreamSelected() { return particleLevel>0 && (!signalBrightness || getSignalLevel()>=particleThreshold); }
     public int getManualMode() { return manualOn ? (particleLevel>0 ? 2 : 1) : 0; }
 
     public void setParticleStreamSelected(boolean selected) {
@@ -179,7 +195,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         IBlockState state = world.getBlockState(pos);
         if (!isLamp(state)) return;
         boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
-        boolean shouldBeOn = channel > 0 ? powered : manualOn;
+        boolean shouldBeOn = signalBrightness?getSignalLevel()>0:channel > 0 ? powered : manualOn;
         if (state.getBlock() instanceof BlockPropulsionLight) {
             if (state.getValue(BlockPropulsionLight.POWERED) != shouldBeOn) {
                 world.setBlockState(pos,
@@ -190,6 +206,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
                             .refreshConnectedModels(world, pos,
                                     state.getValue(BlockPropulsionLight.FACING));
             }
+            world.notifyBlockUpdate(pos,state,world.getBlockState(pos),3);
             world.checkLightFor(EnumSkyBlock.BLOCK, pos);
             return;
         }
@@ -242,7 +259,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
             loadPending = false;
             finishLoading();
         }
-        if (world == null || !world.isRemote || pos == null || particleLevel==0) return;
+        if (world == null || !world.isRemote || pos == null || !isParticleStreamSelected()) return;
         IBlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockPropulsionLight)
                 || !state.getValue(BlockPropulsionLight.POWERED)) return;
@@ -331,6 +348,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         new RedstoneData.Light(channel,channelSignal,manualOn,isParticleStreamSelected(),
                 initialized).write(new NbtPrimitiveData(tag));
         tag.setInteger("ParticleLevel",particleLevel);
+        tag.setInteger("ChannelLevel",channelLevel);tag.setBoolean("SignalBrightness",signalBrightness);tag.setInteger("ParticleThreshold",particleThreshold);
         tag.setBoolean("PropulsionJoin", join);
         tag.setInteger("PropulsionSideTexture", sideTexture);
         return tag;
@@ -344,6 +362,8 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         channel=data.channel;
         channels=ChannelData.read(tag,channel);channel=channels.first();
         channelSignal=data.signal;
+        channelLevel=tag.hasKey("ChannelLevel",3)?Math.max(0,Math.min(15,tag.getInteger("ChannelLevel"))):channelSignal?15:0;
+        signalBrightness=tag.getBoolean("SignalBrightness");particleThreshold=tag.hasKey("ParticleThreshold",3)?Math.max(0,Math.min(15,tag.getInteger("ParticleThreshold"))):8;
         manualOn=data.manualOn;
         particleLevel=tag.hasKey("ParticleLevel",3)?Math.max(0,Math.min(3,tag.getInteger("ParticleLevel"))):data.particleStream?1:0;
         initialized=data.initialized;

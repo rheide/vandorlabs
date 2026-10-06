@@ -15,6 +15,8 @@ import java.util.*;
 /** A bounded row list, with one label/channel editor and the existing housing picker. */
 public final class GuiRedstoneScreen extends GuiContainer {
     private final RedstoneScreenContents tile;
+    private final List<Boolean> sliders=new ArrayList<>();
+    private final List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();
     private final List<String> labels=new ArrayList<>();
     private final List<ChannelList> channels=new ArrayList<>();
     private GuiTextField titleField,labelField,channelField;
@@ -26,12 +28,12 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private boolean materials;
     public GuiRedstoneScreen(InventoryPlayer inventory,RedstoneScreenContents tile){
         super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;header=!com.vandorlabs.blocks.RedstoneScreenInteractions.half(tile.getBlockType(),tile.slot());title=tile.title();texture=tile.getHousingTexture();
-        for(int i=0;i<Math.min(tile.rows().size(),tile.maxRows());i++){RedstoneScreenContents.Row row=tile.rows().get(i);labels.add(row.label);channels.add(row.channels);}
+        for(int i=0;i<Math.min(tile.rows().size(),tile.maxRows());i++){RedstoneScreenContents.Row row=tile.rows().get(i);labels.add(row.label);channels.add(row.channels);sliders.add(row.slider);mins.add(row.min);maxs.add(row.max);}
         if(!labels.isEmpty())selected=0;
     }
     public void initGui(){
         if(labelField!=null)store();
-        xSize=Math.min(420,width-12);ySize=Math.min(240,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        xSize=Math.min(420,width-12);ySize=Math.min(300,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int cx=guiLeft+xSize-164;
         rowListTop=header?82:54;
         titleField=new GuiTextField(2,fontRenderer,guiLeft+78,guiTop+50,xSize-90,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
@@ -44,6 +46,8 @@ public final class GuiRedstoneScreen extends GuiContainer {
         buttonList.add(new GuiButton(3,cx+76,guiTop+(header?178:144),72,20,"Remove"));
         buttonList.add(new GuiButton(5,cx,guiTop+(header?160:126),70,16,"Up"));
         buttonList.add(new GuiButton(6,cx+76,guiTop+(header?160:126),72,16,"Down"));
+        buttonList.add(new GuiButton(7,cx,guiTop+202,148,18,"Toggle"));
+        buttonList.add(new GuiButton(8,cx,guiTop+222,70,18,"Min: 0"));buttonList.add(new GuiButton(9,cx+76,guiTop+222,72,18,"Max: 15"));
         buttonList.add(new GuiButton(4,cx,guiTop+ySize-30,148,20,"Done"));load();refresh();
     }
     private boolean store(){
@@ -52,25 +56,35 @@ public final class GuiRedstoneScreen extends GuiContainer {
         if(!headingValid)return false;
         if(header)title=titleField.getText().trim();
         if(selected<0)return true;
-        ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),RedstoneScreenText.LABEL_WIDTH);
+        ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),(sliders.get(selected)?32:RedstoneScreenText.LABEL_WIDTH)) && (!sliders.get(selected) || labelField.getText().length()<=RedstoneScreenContents.SLIDER_LABEL);
         labelField.setTextColor(valid?0xE0E0E0:0xFF7777);
         if(!valid || list==null)return false;
         labels.set(selected,labelField.getText().trim());channels.set(selected,list);return true;
     }
     private void load(){labelField.setText(selected<0?"":labels.get(selected));channelField.setText(selected<0?"0":channels.get(selected).toString());}
     private void refresh(){
+        for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Min: "+mins.get(selected):"Max: "+maxs.get(selected);}}
+
         titleField.setVisible(header && !materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
         for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<tile.maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
     }
-    private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture));mc.player.closeScreen();}
+    private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
-        if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
+        if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
+        if(b.id==7 && selected>=0){
+            if(!store())return;sliders.set(selected,!sliders.get(selected));
+            if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>8 || fontRenderer.getStringWidth(value)>32)value=value.substring(0,value.length()-1);labels.set(selected,value);}
+            load();refresh();return;
+        }
+        if(b.id==8 && selected>=0){mins.set(selected,(mins.get(selected)+1)%(maxs.get(selected)+1));refresh();return;}
+        if(b.id==9 && selected>=0){maxs.set(selected,maxs.get(selected)==15?mins.get(selected):maxs.get(selected)+1);refresh();return;}
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
-        else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
+        else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);sliders.add(false);mins.add(0);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
         else if(b.id==5 || b.id==6){
             int next=moveRow(labels,channels,selected,b.id==5?-1:1);
+            if(next!=selected){Collections.swap(sliders,selected,next);Collections.swap(mins,selected,next);Collections.swap(maxs,selected,next);}
             if(next!=selected){
                 selected=next;scroll=Math.max(Math.min(scroll,selected),selected-visibleRows()+1);
                 load();refresh();
@@ -100,7 +114,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }}
     protected void keyTyped(char c,int key)throws IOException{
         if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){send();return;}
-        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,RedstoneScreenText.LABEL_WIDTH,c,key)||channelField.textboxKeyTyped(c,key))){store();return;}super.keyTyped(c,key);
+        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,selected>=0 && sliders.get(selected)?32:RedstoneScreenText.LABEL_WIDTH,c,key)||channelField.textboxKeyTyped(c,key))){store();return;}super.keyTyped(c,key);
     }
     private boolean typeText(GuiTextField field,int budget,char c,int key){
         String before=field.getText();int cursor=field.getCursorPosition(),selection=field.getSelectionEnd();

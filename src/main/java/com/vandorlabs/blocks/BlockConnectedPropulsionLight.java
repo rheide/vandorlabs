@@ -150,7 +150,7 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this,
                 new IProperty<?>[]{FACING, POWERED, PARTICLES, partProperty()},
-                new IUnlistedProperty<?>[]{SIDE_TEXTURE});
+                new IUnlistedProperty<?>[]{SIDE_TEXTURE,BRIGHTNESS});
     }
 
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess source,
@@ -294,6 +294,10 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         if (updateSide)
             for (TileEntityRedstoneLight tile : tiles) tile.setSideTexture(sideTexture);
         refreshConnectedModels(world, pos, state.getValue(FACING));
+    }
+
+    public void configureSignalAssembly(World world,BlockPos pos,boolean enabled,int threshold){
+        for(TileEntityRedstoneLight tile:assemblyTiles(world,pos,world.getBlockState(pos)))tile.configureSignalBrightness(enabled,threshold);
     }
 
     @Override public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
