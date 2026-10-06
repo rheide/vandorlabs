@@ -92,15 +92,25 @@ configurable.
 ## Slider rows on screens and inputs
 
 The **Redstone...** artwork on programmable displays, inputs and consoles can
-use slider rows as well as on/off toggles. Choose Slider for a row, set its
-minimum and maximum within 0–15, and assign its channel list. Clicking a segment
-sets that row's channels to the represented level.
+use slider rows as well as on/off toggles. The row editor places **Add / Remove**
+first, then **Up / Down**, **Label**, **Channels**, **Control**, and **Low / High**.
+Choose Slider and assign its channel list.
 
-Each row displays at most **eight bordered segments**. A narrower range uses
-fewer segments; a wider range samples its levels evenly and rounds each segment
-to the nearest redstone value. Slider labels use a narrower area to leave most
-of the row for the progress bar. Row order, channels, mode and limits are retained
-when saving, creating configured items and copying with the Duplifier.
+Each slider has **four bordered settings**, matching the Thruster Lever:
+**Off**, **Low**, **Medium**, **High**. Off outputs 0; Low and High use the
+configured limits, and Medium uses their midpoint rounded upward. The default
+outputs are **0, 5, 10, 15**. Low must be positive and High at least two levels
+above it, up to 15, so the three powered settings stay distinct.
+
+The selected Off setting glows **amber**; Low, Medium and High glow **cyan**.
+The indicators have no numbers. Slider labels use a narrower area to leave
+most of the row for the controls. Clicking a setting sends its value to all
+of the row's channels. Incoming channel levels highlight the nearest powered
+setting, with zero reserved for Off, just like the levers.
+
+Row order, channels, mode and limits survive saving, configured items and
+Duplifier copying. Existing range settings migrate to valid four-step limits;
+old ranges starting at zero use the default Low where their High allows it.
 
 ## Programmable Trigger
 

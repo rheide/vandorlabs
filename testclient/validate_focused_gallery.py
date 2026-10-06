@@ -60,6 +60,14 @@ if target in ('gallery_door_new_', 'opening-modes'):
 if target == 'opening-modes':
     require('trapdoor-panel-gui PASS flat')
     require('trapdoor-panel-gui PASS diagonal group')
+if target == 'signals':
+    for shape in shapes:
+        for step in range(4):
+            with Image.open(source / ('shot_redstone_screen_'+str(shape)+'_slider_'+str(step)+'.png')) as png:
+                pixels=png.convert('RGB').getdata()
+                if step==0: count=sum(1 for r,g,b in pixels if r>220 and 120<g<210 and b<100)
+                else: count=sum(1 for r,g,b in pixels if r<100 and g>170 and b>190)
+                assert count>=40, 'Missing '+('amber Off' if step==0 else 'cyan powered')+' indicator: '+str(shape)+'/'+str(step)
 if target == 'gallery_distant_geometry':
     require('distant-geometry-runtime PASS')
     import numpy as np

@@ -55,9 +55,11 @@ See [building finishes](building.md) for examples of hull, padding, and pipe tex
 
 ## Signal-level screen controls
 
-The **Redstone...** artwork supports slider rows alongside on/off toggles. Set a
-row's channel list, Slider mode, and minimum/maximum levels. Up to eight bordered
-segments select the nearest value across that range; short ranges use fewer
-segments. Slider rows reserve a narrow label area so the progress bar occupies
-most of the line. See the [signal-level guide](version-1.6.md#slider-rows-on-screens-and-inputs)
-for setup, saving and copying behavior.
+The **Redstone...** artwork supports slider rows alongside on/off toggles.
+The row editor orders Add/Remove, Up/Down, Label, Channels, Control and Low/High.
+Sliders use four bordered settings matching the levers: Off, Low, Medium and
+High, with default outputs 0, 5, 10 and 15. Off glows amber; the selected powered
+setting glows cyan. There are no numbers on the indicators. Slider rows keep a
+narrow label area so the controls occupy most of the line. See the
+[signal-level guide](version-1.6.md#slider-rows-on-screens-and-inputs) for limits,
+saving and copying behavior.
