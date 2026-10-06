@@ -136,4 +136,3 @@ Both GIFs come from a real Forge client. Their recorded control and consumer
 levels are checked together at 0, 5, 10 and 15, including the thruster's particle
 threshold. They use a fixed camera and ordinary game lighting. See the
 [animated documentation guide](../animated-documentation.md) for capture details.
-
