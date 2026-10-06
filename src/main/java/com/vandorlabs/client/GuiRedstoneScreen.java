@@ -56,7 +56,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         if(!headingValid)return false;
         if(header)title=titleField.getText().trim();
         if(selected<0)return true;
-        ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),(sliders.get(selected)?32:RedstoneScreenText.LABEL_WIDTH)) && (!sliders.get(selected) || labelField.getText().length()<=RedstoneScreenContents.SLIDER_LABEL);
+        ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),(sliders.get(selected)?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH)) && (!sliders.get(selected) || labelField.getText().length()<=RedstoneScreenContents.SLIDER_LABEL);
         labelField.setTextColor(valid?0xE0E0E0:0xFF7777);
         if(!valid || list==null)return false;
         labels.set(selected,labelField.getText().trim());channels.set(selected,list);return true;
@@ -85,7 +85,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
         if(b.id==7 && selected>=0){
             if(!store())return;sliders.set(selected,!sliders.get(selected));
-            if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>8 || fontRenderer.getStringWidth(value)>32)value=value.substring(0,value.length()-1);labels.set(selected,value);}
+            if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>RedstoneScreenContents.SLIDER_LABEL || fontRenderer.getStringWidth(value)>RedstoneScreenContents.SLIDER_LABEL_WIDTH)value=value.substring(0,value.length()-1);labels.set(selected,value);}
             load();refresh();return;
         }
         if(b.id==8 && selected>=0){mins.set(selected,mins.get(selected)>=maxs.get(selected)-2?1:mins.get(selected)+1);refresh();return;}
@@ -125,7 +125,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }}
     protected void keyTyped(char c,int key)throws IOException{
         if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){send();return;}
-        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,selected>=0 && sliders.get(selected)?32:RedstoneScreenText.LABEL_WIDTH,c,key)||channelField.textboxKeyTyped(c,key))){store();return;}super.keyTyped(c,key);
+        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,selected>=0 && sliders.get(selected)?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH,c,key)||channelField.textboxKeyTyped(c,key))){store();return;}super.keyTyped(c,key);
     }
     private boolean typeText(GuiTextField field,int budget,char c,int key){
         String before=field.getText();int cursor=field.getCursorPosition(),selection=field.getSelectionEnd();

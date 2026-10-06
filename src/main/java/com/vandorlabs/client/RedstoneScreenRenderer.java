@@ -42,7 +42,8 @@ final class RedstoneScreenRenderer {
             rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,!row.slider && row.active()?0xFF174C3B:0xFF1C2B37);
             if(row.slider){
                 for(int segment=0;segment<row.segments();segment++){
-                    int left=42+78*segment/row.segments(),right=42+78*(segment+1)/row.segments();
+                    int width=RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT;
+                    int left=RedstoneScreenContents.SLIDER_LEFT+width*segment/row.segments(),right=RedstoneScreenContents.SLIDER_LEFT+width*(segment+1)/row.segments();
                     rect(buffer,left,y,right,y+10,.02,0xFF91B5C8);
                     rect(buffer,left+1,y+1,right-1,y+9,.03,row.selectedSegment()==segment?(segment==0?0xFFFFB33B:0xFF38DDE4):(segment==0?0xFF4D3820:0xFF183B46));
                 }
@@ -57,7 +58,7 @@ final class RedstoneScreenRenderer {
         }
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            text(font,font.trimStringToWidth(row.label,row.slider?32:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
+            text(font,font.trimStringToWidth(row.label,row.slider?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
             if(!row.slider)text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
