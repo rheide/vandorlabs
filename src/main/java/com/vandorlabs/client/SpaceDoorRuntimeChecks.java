@@ -126,7 +126,7 @@ final class SpaceDoorRuntimeChecks {
         check(item.placeBlockAt(blank.copy(),player,world,source.east(),EnumFacing.UP,.5F,.5F,.5F,other),"automatic pair placement");
         check(tile(world,source).getSlideDirection()==0 && tile(world,source).motionLabel().equals("Split Horizontal"),"legacy pair switches to horizontal split: source="+block.getActualState(world.getBlockState(source),world,source)+" mate="+block.getActualState(world.getBlockState(source.east()),world,source.east())+" direction="+tile(world,source).getSlideDirection()+" label="+tile(world,source).motionLabel());
         clear(world,source.east());
-        check(tile(world,source).motionLabel().equals(singleLabel),"unpair restores placement side");
+        check(tile(world,source).motionLabel().equals("Slide Left"),"unpair restores the surviving outside slide side");
         // Exercise the registered item, including metadata readback, for every facing/click side.
         ItemStack held=player.getHeldItemMainhand();float yaw=player.rotationYaw;
         try {

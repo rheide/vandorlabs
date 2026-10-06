@@ -10,7 +10,9 @@ selected = [name for name in SHOTS if name.startswith(prefix)]
 if target in ('gallery_door_new_', 'opening-modes'):
     selected=['gallery_door_new_'+size+'_'+motion+'_'+pose for size in ('single','paired','large') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
 if target == 'opening-modes':
-    selected += ['gallery_trapdoor_new_'+shape+'_'+motion+'_'+pose for shape in ('single','pair','square','tall','half','shallow') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
+    selected += ['gallery_trapdoor_new_'+shape+'_'+motion+'_'+pose for shape in ('single','pair','square','tall','half','shallow','bentnorth','bentsouth','benteast','bentwest','joinednorth','joinedsouth','joinedeast','joinedwest') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
+if target == 'diagonal-opening-modes':
+    selected=['gallery_trapdoor_new_'+shape+'_'+motion+'_'+pose for shape in ('bentnorth','bentsouth','benteast','bentwest','joinednorth','joinedsouth','joinedeast','joinedwest') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
 if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
 if target == 'dialogs':
@@ -51,13 +53,13 @@ for name in selected:
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):
         require('diagonal-partial-patch-runtime PASS client ' + name[len('gallery_trapdoor_'):])
-if target in ('gallery_door_new_', 'opening-modes'):
+if target in ('gallery_door_new_', 'opening-modes','diagonal-opening-modes'):
     require('door-runtime PASS')
     require('space-door-settings PASS')
     require('large-door-runtime PASS')
     require('door-motion-gui PASS')
     for name in selected: require(('trapdoor-panel-scene PASS ' if name.startswith('gallery_trapdoor_new_') else 'door-motion-scene PASS ')+name)
-if target == 'opening-modes':
+if target in ('opening-modes','diagonal-opening-modes'):
     require('trapdoor-panel-gui PASS flat')
     require('trapdoor-panel-gui PASS diagonal group')
 if target == 'signals':
@@ -68,6 +70,8 @@ if target == 'signals':
                 if step==0: count=sum(1 for r,g,b in pixels if r>220 and 120<g<210 and b<100)
                 else: count=sum(1 for r,g,b in pixels if r<100 and g>170 and b>190)
                 assert count>=40, 'Missing '+('amber Off' if step==0 else 'cyan powered')+' indicator: '+str(shape)+'/'+str(step)
+if target == 'diagonal-opening-modes':
+    selected=['gallery_trapdoor_new_'+shape+'_'+motion+'_'+pose for shape in ('bentnorth','bentsouth','benteast','bentwest','joinednorth','joinedsouth','joinedeast','joinedwest') for motion in ('left','right','horizontal','vertical','x') for pose in ('closed','open')]
 if target == 'gallery_distant_geometry':
     require('distant-geometry-runtime PASS')
     import numpy as np

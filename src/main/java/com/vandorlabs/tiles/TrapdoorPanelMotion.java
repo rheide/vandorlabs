@@ -5,7 +5,7 @@ import com.vandorlabs.render.*;
 import net.minecraft.block.state.IBlockState;
 import java.util.*;
 
-/** Use one basis for coplanar loaded groups; bent V assemblies split each leaf in its own plane. */
+/** Shared aperture coordinates for joined panels, including sideways movement across bends. */
 public final class TrapdoorPanelMotion {
     private TrapdoorPanelMotion(){}
     public static double[][] closed(TileEntityProgrammableTrapdoor tile,IBlockState state) {
@@ -30,8 +30,15 @@ public final class TrapdoorPanelMotion {
             boolean leafTall=leaf instanceof TileEntityProgrammableDiagonalTrapdoor && leaf.getPosition()!=2;
             if(Math.abs(projected-plane)>1e-5 || Math.abs(PanelPolyhedron.dot(normal,axis(corners,1)))>1e-5 || Math.abs(PanelPolyhedron.dot(normal,axis(corners,leafTall?2:4)))>1e-5){coplanar=false;break;}
         }
-        if(!coplanar){group=Collections.singletonList(tile);base=closed(tile,state);tall=tile instanceof TileEntityProgrammableDiagonalTrapdoor && tile.getPosition()!=2;u=axis(base,1);v=axis(base,tall?2:4);}
+        boolean sharedSideways=tile.getSlideMode()==4 || tile.getSlideMode()==5 || tile.getSlideMode()==6;
+        if(!coplanar && !sharedSideways){group=Collections.singletonList(tile);base=closed(tile,state);tall=tile instanceof TileEntityProgrammableDiagonalTrapdoor && tile.getPosition()!=2;u=axis(base,1);v=axis(base,tall?2:4);}
         if(group.isEmpty())group=Collections.singletonList(tile);
+        // Diagonal corner order runs leftward when viewed from the facing side.
+        // Use the same outward-facing right axis for all members, even reversed rows.
+        if(reference instanceof TileEntityProgrammableDiagonalTrapdoor) {
+            net.minecraft.util.EnumFacing right=((TileEntityProgrammableDiagonalTrapdoor)reference).facing().rotateYCCW();
+            u=new double[]{right.getFrontOffsetX(),0,right.getFrontOffsetZ()};
+        }
         double minU=Double.POSITIVE_INFINITY,minV=minU,maxU=Double.NEGATIVE_INFINITY,maxV=maxU;
         for(TileEntityProgrammableTrapdoor leaf:group) {
             double[][] corners=closed(leaf,state(leaf,tile,state));
