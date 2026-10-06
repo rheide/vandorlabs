@@ -10,10 +10,24 @@ In configuration dialogs, left-click an option button to select the next value;
 right-click selects the previous value, wrapping at either end. This also applies
 to Low/High limits, light modes, particle thresholds and door settings.
 
+## Doors and trapdoors
+
+Door and trapdoor movement, placement and pairing retain their version 1.5
+behavior. The experimental 1.6 Slide Left/Right and Split Horizontal/Vertical
+choices, and the extra split choices for regular doors and trapdoors, were
+reverted. Large Programmable Doors retain their existing **Sliding X** mode.
+See the [door guide](doors.md), [trapdoor guide](programmable-trapdoor.md) and
+[diagonal trapdoor guide](programmable-diagonal-trapdoor.md) for the available
+movement choices.
+
 Double Doors artwork now uses the same dark edge texture as the other
 programmable doors and trapdoors. Front and back artwork is unchanged.
 White Glass and Dark Glass leaf designs remain available for ordinary
 Programmable Doors, but are omitted from flat and diagonal trapdoor pickers.
+
+Open large doors and regular rotating doors remain clickable on the portions
+that extend into neighbouring blocks. Their selection outlines and collisions
+follow the moved panels.
 
 ## Signal levels and channels
 

@@ -28,6 +28,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -Dvandorlabs.redstoneScreenChecksOnly="${VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY:-false}" \
   -Dvandorlabs.controlIconsOnly="${VANDOR_LABS_CONTROL_ICONS_ONLY:-false}" \
   -Dvandorlabs.channelGuiChecksOnly="${VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.movedDoorChecksOnly="${VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY:-false}" \
   -Dvandorlabs.dialogChecksOnly="${VANDOR_LABS_DIALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.documentationDoorGif="${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" \
   -Dvandorlabs.documentationAnimations="${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" \

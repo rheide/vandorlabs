@@ -199,7 +199,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         IBlockState actual=getActualState(state,world,pos);
         net.minecraft.util.math.AxisAlignedBB box=tile==null?super.getBoundingBox(state,world,pos)
                 :tile.model(tile.isSliding()).spaceBounds(actual,world,pos);
-        return tile==null?box:positionedBounds(box,actual.getValue(FACING),tile.positionOffset());
+        return tile==null?box:positionedBounds(box,actual.getValue(FACING),tile.positionOffset(),!tile.isSliding() && actual.getValue(OPEN));
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getCollisionBoundingBox(IBlockState state,
             net.minecraft.world.IBlockAccess world,BlockPos pos) {
@@ -209,11 +209,12 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         if (tile.isSliding() && actual.getValue(OPEN)) return NULL_AABB;
         net.minecraft.util.math.AxisAlignedBB box=tile.model(tile.isSliding()).spaceBounds(actual,world,pos);
         EnumFacing facing=actual.getValue(FACING);
-        return positionedBounds(box,facing,tile.positionOffset());
+        return positionedBounds(box,facing,tile.positionOffset(),!tile.isSliding() && actual.getValue(OPEN));
     }
-    private static AxisAlignedBB positionedBounds(AxisAlignedBB box,EnumFacing facing,double offset) {
+    private static AxisAlignedBB positionedBounds(AxisAlignedBB box,EnumFacing facing,double offset,boolean rotatedOpen) {
         AxisAlignedBB moved=box.offset(facing.getFrontOffsetX()*offset,0,
                 facing.getFrontOffsetZ()*offset);
+        if(rotatedOpen)return moved;
         // The older selection boxes are wider than the door art. Keep the
         // shifted box inside its block when the visible outer face is flush.
         if (facing.getAxis()==EnumFacing.Axis.X)

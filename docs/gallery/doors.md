@@ -4,6 +4,8 @@ One Programmable Door can use any of 15 designs, with or without a frame. Its mo
 
 In Creative mode, shift-right-click either half to open the settings. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
 
+Open large-door panels and regular rotating leaves remain clickable where they extend into neighbouring blocks. The selection outline follows the panel under the cursor, and ordinary right-click closes a manually controlled door there.
+
 ![Programmable Door settings](../images/gallery/doors/door-config.png)
 
 ## Choose a design and frame

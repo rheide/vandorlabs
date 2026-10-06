@@ -21,5 +21,6 @@ public class CommonProxy {
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(BetterBuildersWandsCompat.INSTANCE);
         MinecraftForge.EVENT_BUS.register(com.vandorlabs.tiles.OffsetTrapdoorInteractions.INSTANCE);
+        MinecraftForge.EVENT_BUS.register(com.vandorlabs.tiles.MovedDoorInteractions.INSTANCE);
     }
 }

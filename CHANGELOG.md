@@ -2,15 +2,12 @@
 
 ## 1.6
 
+- Restore version 1.5 door and trapdoor movement, placement and pairing. Revert the experimental Slide Left/Right, Split Horizontal/Vertical and added regular-door/trapdoor split modes; retain the large door's existing Sliding X.
+- Keep large-door leaves and regular rotating doors targetable and collidable where they extend outside their original block cells. Draw selection outlines on the actual panel and allow ordinary right-click closing there.
 - Remove White Glass and Dark Glass leaf designs from flat and diagonal trapdoor artwork pickers; retain them for regular Programmable Doors.
-
 - Right-click setting buttons to cycle to the previous option, including light modes, screen Low/High limits, propulsion settings and the other configuration dialogs. Left-click still cycles forward.
 - Use the shared dark door edge texture for Double Doors artwork, including large-door leaves, frames and inventory models.
-
-- Restore door and trapdoor movement, placement, pairing and settings to their behavior before the 1.6 opening-mode changes.
-
 - Widen Redstone screen slider labels by three normal character widths while retaining four bordered settings.
-
 - Carry redstone levels 0–15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
 - Let Programmable Lights, Light Slabs and Light Frames follow signal strength with a signed brightness offset; joined lights share the strongest loaded group signal.
 - Add signal-dependent propulsion light and emitter-texture brightness, with a configurable particle activation threshold and the existing particle density choices.
