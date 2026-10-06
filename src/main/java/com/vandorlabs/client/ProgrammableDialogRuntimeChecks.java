@@ -77,7 +77,7 @@ final class ProgrammableDialogRuntimeChecks {
                 Field tab=null;try{tab=gui.getClass().getDeclaredField("textureTab");tab.setAccessible(true);}catch(NoSuchFieldException ignored){}
                 if(tab!=null) {
                     int original=tab.getInt(gui);
-                    for(GuiButton b:buttons)if(b.id>=90 && b.id<=93) {
+                    for(GuiButton b:buttons)if(b.visible && b.id>=90 && b.id<=93) {
                         click(gui,b.x+b.width/2,b.y+b.height/2);
                         require(tab.getInt(gui)==b.id-90,"tab click failed");
                         for(GuiButton a:buttons)if(a.visible)for(GuiButton other:buttons)if(a!=other && other.visible)

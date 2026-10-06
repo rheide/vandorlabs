@@ -30,9 +30,10 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         return level;
     }
     @Override public void applyLinkedLevels(java.util.Map<Integer,Integer> value){
+        int previousOutput=getOutputLevel();
         boolean changed=!levels.equals(value);levels.clear();levels.putAll(value);
         RedstoneChannelLatch.super.applyLinkedLevels(value);
-        if(changed){markDirty();sync();if(world!=null && !world.isRemote){
+        if(changed){markDirty();sync();if(previousOutput!=getOutputLevel() && world!=null && !world.isRemote){
             net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
             for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values()){
                 net.minecraft.util.math.BlockPos neighbor=pos.offset(side);

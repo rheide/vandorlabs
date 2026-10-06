@@ -222,6 +222,7 @@ public final class NonRenderingChecks {
             if(tile!=null){tile.setWorld(this);tile.setPos(p.toImmutable());tiles.put(p.toImmutable(),tile);}else tiles.remove(p);
             return true;
         }
+        @Override public boolean isSideSolid(BlockPos p,EnumFacing side,boolean fallback){return isBlockLoaded(p)?getBlockState(p).isSideSolid(this,p,side):fallback;}
         @Override public boolean isBlockModifiable(EntityPlayer player,BlockPos p){loaded(p);return true;}
         @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){loaded(p);updates++;super.notifyBlockUpdate(p,before,after,flags);}
         @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){renderUpdates++;renderMin=a.toImmutable();renderMax=b.toImmutable();super.markBlockRangeForRenderUpdate(a,b);}

@@ -52,7 +52,14 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         ChannelFields.configure(channelField);
         channelField.setText(tile.getRedstoneChannels().toString());buttonList.add(layout.done(100));refreshTabs();
     }
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){
+        String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};
+        for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93){
+            int index=b.id-90;b.visible=states || index==0 || index==3;b.enabled=index!=textureTab;
+            GuiButton position=layout.tab(b.id,states?index:index==0?0:1,states?4:2,states?names[index]:index==0?"Redstone Off":"Redstone On");
+            b.x=position.x;b.width=position.width;b.displayString=position.displayString;
+        }
+    }
 
     private String statesLabel(){return states?"Artwork: Signal bands":"Artwork: Off / On";}
     private String exactLabel(){return exact<0?"Trigger: Any signal":"Trigger: Exactly "+exact;}
@@ -95,7 +102,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
 
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id>=90 && button.id<=93){textureTab=button.id-90;refreshTabs();return;}
-        if(button.id==101){states=!states;button.displayString=statesLabel();send();}
+        if(button.id==101){states=!states;if(!states && (textureTab==1 || textureTab==2))textureTab=3;refreshTabs();button.displayString=statesLabel();send();}
         if(button.id==102){exact=exact==15?-1:exact+1;button.displayString=exactLabel();send();}
         if (button.id == 100 && channel()>=0) { send(); mc.player.closeScreen(); }
     }
