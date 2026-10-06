@@ -268,6 +268,7 @@ public class ModBlocks {
                 return new BlockVandorConsole(id);
             case "BlockDisplaySequenced":
                 return new BlockDisplaySequenced(id);
+            case "BlockSignalControl": return new BlockSignalControl(id,e.get("control_kind").getAsString(),e.get("detail").getAsInt());
             case "BlockVandorSwitch":
                 return new BlockVandorSwitch(id,
                         e.has("momentary") && e.get("momentary").getAsBoolean());

@@ -19,14 +19,15 @@ import javax.imageio.ImageIO;
 
 /** Opt-in real dialog -> network -> server -> reopened dialog regression. */
 final class ChannelListGuiChecks {
-    private static final int[] IDS={2,5,0,0,9,1,3,8,2};
-    private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit"};
+    private static final int[] IDS={2,5,0,0,9,1,3,8,2,2,2,2,2,2,2};
+    private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit","submit","submit","submit","submit","submit","submit"};
     private static final ChannelList EXPECTED=ChannelList.of(14861,14862,14863);
     private static final BlockPos POS=new BlockPos(8,80,8);
     private static int index,stage,ticks;
     private static com.google.common.util.concurrent.ListenableFuture<?> pending;
     static void tick(Minecraft mc,File output) {
         if(stage==9)return;
+        if(stage>=6){captureControls(mc,output);return;}
         try {
             if(++ticks>400)throw new IllegalStateException("channel GUI timeout index="+index+" stage="+stage);
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
@@ -37,7 +38,7 @@ final class ChannelListGuiChecks {
                     owner.setPositionAndUpdate(POS.getX()+.5,POS.getY(),POS.getZ()-2);
                     for(BlockPos p:BlockPos.getAllInBox(POS.add(-2,-2,-2),POS.add(2,3,2)))owner.world.setBlockToAir(p);
                     owner.world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
-                    Block block=index==0?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:rocker_switch")):
+                    Block block=index>=9?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[index-9])):index==0?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:rocker_switch")):
                         index==1?ModBlocks.PROGRAMMABLE_LIGHT:index==2?ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK:
                         index==3?ModBlocks.ANIMATED_SCREEN_SELECTOR:index==4?ModBlocks.PROGRAMMABLE_TRAPDOOR:
                         index==5?ModBlocks.PROGRAMMABLE_RAMP:index==8?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:ion_drive")):Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+(index==6?"programmable_door":"landing_gear")));
@@ -46,7 +47,7 @@ final class ChannelListGuiChecks {
                     if(!(owner.world.getTileEntity(POS) instanceof RedstoneChannelMember))throw new IllegalStateException("missing GUI fixture "+index);
                 });stage=1;ticks=0;return;
             }
-            if(stage==1 && ticks>20){open(mc);stage=2;ticks=0;return;}
+            if(stage==1 && ticks>20){if(index==0)checkControlModels(mc);open(mc);stage=2;ticks=0;return;}
             if(stage==2 && ticks>15 && mc.currentScreen!=null){
                 GuiTextField field=field(mc);
                 field.setText("14861,");require(ChannelFields.parse(field)==null,"incomplete list accepted");
@@ -54,12 +55,14 @@ final class ChannelListGuiChecks {
                 if(index==1)for(int i=0;i<3;i++)((GuiProgrammableLight)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Signal brightness"));
                 if(index==2){((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(101,0,0,"Signal bands"));((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Exact level"));}
                 if(index==8){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(5,0,0,"Signal brightness"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Threshold"));}
+                if(index>=9){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Low"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(8,0,0,"High"));}
                 Method send=mc.currentScreen.getClass().getDeclaredMethod(METHODS[index]);send.setAccessible(true);send.invoke(mc.currentScreen);
                 stage=3;ticks=0;return;
             }
             if(stage==3 && ticks>20){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     RedstoneChannelMember member=(RedstoneChannelMember)mc.getIntegratedServer().getEntityWorld().getTileEntity(POS);
+                    if(index>=9){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)member;require(control.getLowLimit()==6 && control.getHighLimit()==8,"control limits packet");}
                     require(member!=null && EXPECTED.equals(member.getRedstoneChannels()),"server lost submitted list index="+index);
                     if(index==1)require(((com.vandorlabs.tiles.TileEntityProgrammableLight)member).isSignalBrightness(),"light brightness packet");
                     if(index==2)require(((com.vandorlabs.tiles.TileEntityProgrammableTrigger)member).isLevelStates() && ((com.vandorlabs.tiles.TileEntityProgrammableTrigger)member).getExactLevel()==0,"trigger levels packet");
@@ -70,14 +73,67 @@ final class ChannelListGuiChecks {
             if(stage==5 && ticks>20 && mc.currentScreen!=null){
                 if(index==1 || index==8){Field signal=mc.currentScreen.getClass().getDeclaredField("signalBrightness");signal.setAccessible(true);require(signal.getBoolean(mc.currentScreen),"signal brightness lost on reopen");}
                 if(index==2){Field exact=mc.currentScreen.getClass().getDeclaredField("exact");exact.setAccessible(true);require(exact.getInt(mc.currentScreen)==0,"exact signal lost on reopen");}
+                if(index>=9){for(String key:new String[]{"lowLimit","highLimit"}){Field limit=mc.currentScreen.getClass().getDeclaredField(key);limit.setAccessible(true);require(limit.getInt(mc.currentScreen)==(key.equals("lowLimit")?6:8),"control limits lost on reopen");}}
                 require(EXPECTED.toString().equals(field(mc).getText()),"reopened GUI lost list index="+index);
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_channels_"+index+".png"));
                 System.out.println("[vandorlabs][reprolab] channel-gui PASS "+mc.currentScreen.getClass().getSimpleName());
                 mc.player.closeScreen();index++;stage=0;ticks=0;
-                if(index==IDS.length){stage=9;System.out.println("[vandorlabs][reprolab] channel-gui-runtime PASS");mc.shutdown();}
+                if(index==IDS.length){stage=6;System.out.println("[vandorlabs][reprolab] channel-gui-runtime PASS");}
             }
         }catch(Exception e){throw new IllegalStateException("channel dialog regression index="+index+" stage="+stage,e);}
     }
+    private static void checkControlModels(Minecraft mc){
+        for(String id:SignalControlRuntimeChecks.IDS){
+            Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
+            for(net.minecraft.util.EnumFacing facing:net.minecraft.util.EnumFacing.values())for(int rotation=0;rotation<4;rotation++){
+                java.util.Set<String> signatures=new java.util.HashSet<>();
+                for(int level=0;level<4;level++){
+                    net.minecraft.block.state.IBlockState state=block.getDefaultState().withProperty(BlockVandorSwitch.FACING,facing).withProperty(BlockVandorSwitch.ROTATION,rotation).withProperty(BlockSignalControl.LEVEL,level);
+                    net.minecraft.client.renderer.block.model.IBakedModel model=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
+                    require(model!=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),"missing control model "+id);
+                    StringBuilder signature=new StringBuilder();int count=0;
+                    for(net.minecraft.util.EnumFacing side: new net.minecraft.util.EnumFacing[]{null,net.minecraft.util.EnumFacing.UP,net.minecraft.util.EnumFacing.DOWN,net.minecraft.util.EnumFacing.NORTH,net.minecraft.util.EnumFacing.SOUTH,net.minecraft.util.EnumFacing.EAST,net.minecraft.util.EnumFacing.WEST})
+                        for(net.minecraft.client.renderer.block.model.BakedQuad quad:model.getQuads(state,side,0)){count++;signature.append(quad.getSprite().getIconName()).append(java.util.Arrays.hashCode(quad.getVertexData()));}
+                    require(count>0,"empty control model "+id);signatures.add(signature.toString());
+                }
+                require(signatures.size()==4,"detent artwork repeated "+id+" "+facing+" "+rotation);
+            }
+        }
+        System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation");
+    }
+    private static int visualIndex,visualStep;
+    private static void captureControls(Minecraft mc,File output){
+        try{
+            if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
+            if(stage==6){
+                mc.player.closeScreen();mc.gameSettings.hideGUI=false;mc.player.inventory.currentItem=8;
+                for(int slot=0;slot<9;slot++)mc.player.inventory.setInventorySlotContents(slot,net.minecraft.item.ItemStack.EMPTY);
+                mc.player.rotationYaw=0;mc.player.rotationPitch=22;stage=7;ticks=0;return;
+            }
+            if(stage==7 && ++ticks>20){
+                capture(mc,output,"controls_hotbar_empty");
+                for(int slot=0;slot<6;slot++)mc.player.inventory.setInventorySlotContents(slot,new net.minecraft.item.ItemStack(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[slot]))));
+                stage=8;ticks=0;return;
+            }
+            if(stage==8 && ++ticks>20){capture(mc,output,"controls_hotbar");stage=10;ticks=0;return;}
+            if(stage==10){
+                pending=mc.getIntegratedServer().addScheduledTask(()->{
+                    net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
+                    world.setBlockToAir(POS);world.setBlockState(POS.south(),Blocks.STONE.getDefaultState(),3);
+                    Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[visualIndex]));
+                    world.setBlockState(POS,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.NORTH),3);
+                    ((com.vandorlabs.tiles.TileEntitySignalControl)world.getTileEntity(POS)).setStep(visualStep);
+                });stage=11;ticks=0;return;
+            }
+            if(stage==11 && ++ticks>30){
+                capture(mc,output,"controls_"+visualIndex+"_"+visualStep);
+                visualStep++;if(visualStep==4){visualStep=0;visualIndex++;}
+                if(visualIndex==6){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS six icons and 24 world poses");mc.shutdown();}else stage=10;
+                ticks=0;
+            }
+        }catch(Exception e){throw new IllegalStateException("control visual regression",e);}
+    }
+    private static void capture(Minecraft mc,File output,String name)throws java.io.IOException{ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_"+name+".png"));}
     private static GuiTextField field(Minecraft mc)throws ReflectiveOperationException {
         Field field=mc.currentScreen.getClass().getDeclaredField(index==7?"channel":"channelField");field.setAccessible(true);return (GuiTextField)field.get(mc.currentScreen);
     }

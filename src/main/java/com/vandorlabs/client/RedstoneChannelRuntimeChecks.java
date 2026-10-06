@@ -34,6 +34,7 @@ final class RedstoneChannelRuntimeChecks {
 
     static void run(World world, EntityPlayer player) {
         SignalLevelRuntimeChecks.run(world);
+        SignalControlRuntimeChecks.run(world);
         checkLightTriggers(world, player);
         checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);

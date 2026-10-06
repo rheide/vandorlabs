@@ -1,0 +1,62 @@
+package com.vandorlabs.tiles;
+
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.RedstoneChannels;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.state.IBlockState;
+
+/** Four detents share the normal channel latch; limits are configuration, not live power. */
+public class TileEntitySignalControl extends TileEntityRedstoneChannel {
+    private int low=5,high=15,step;
+    public int getLowLimit(){return low;}
+    public int getHighLimit(){return high;}
+    public static boolean validLimits(int low,int high){return low>=1 && high<=15 && high-low>=2;}
+    public int levelForStep(int value){return value==0?0:value==1?low:value==2?(low+high+1)/2:high;}
+    public int getStep(){
+        if(getRedstoneChannels().isEmpty())return step;
+        int level=getOutputLevel(),nearest=0,distance=16;
+        for(int i=level>0?1:0;i<4;i++){int d=Math.abs(level-levelForStep(i));if(d<distance){nearest=i;distance=d;}}
+        return nearest;
+    }
+    @Override public int getOutputLevel(){return getRedstoneChannels().isEmpty()?levelForStep(step):super.getOutputLevel();}
+    public void configureLimits(int low,int high){
+        if(!validLimits(low,high))return;
+        int selected=getStep();this.low=low;this.high=high;markDirty();
+        setStep(selected);
+    }
+    public void setStep(int value){
+        if(value<0 || value>3)return;
+        step=value;
+        if(getRedstoneChannels().isEmpty())super.setLocalOn(value>0);
+        else RedstoneChannels.latchLevelChanged(this,levelForStep(value));
+        markDirty();
+        if(world!=null && !world.isRemote){
+            IBlockState state=world.getBlockState(pos);
+            ((com.vandorlabs.blocks.BlockSignalControl)state.getBlock()).applyLinkedState(world,pos,state,getOutputLevel()>0);
+            world.notifyBlockUpdate(pos,state,world.getBlockState(pos),3);
+            for(net.minecraft.util.EnumFacing facing:net.minecraft.util.EnumFacing.values()){
+                net.minecraft.util.math.BlockPos neighbor=pos.offset(facing);
+                if(world.isBlockLoaded(neighbor)){world.neighborChanged(neighbor,state.getBlock(),pos);
+                    if(world.getBlockState(neighbor).isNormalCube())for(net.minecraft.util.EnumFacing supportSide:net.minecraft.util.EnumFacing.values()){net.minecraft.util.math.BlockPos target=neighbor.offset(supportSide);if(world.isBlockLoaded(target))world.neighborChanged(target,state.getBlock(),neighbor);}
+                }
+            }
+        }
+    }
+    @Override public void setLocalOn(boolean on){setStep(on?3:0);}
+    @Override public void setRedstoneChannels(ChannelList channels){
+        boolean unlinked=getRedstoneChannels().isEmpty();int selected=getStep();
+        super.setRedstoneChannels(channels);
+        if(channels.isEmpty() || unlinked && selected>0)setStep(selected);
+    }
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
+        super.writeToNBT(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);tag.setInteger("ControlStep",step);return tag;
+    }
+    @Override public void readFromNBT(NBTTagCompound tag){
+        super.readFromNBT(tag);
+        int savedLow=tag.hasKey("LowLimit")?tag.getInteger("LowLimit"):5,savedHigh=tag.hasKey("HighLimit")?tag.getInteger("HighLimit"):15;
+        if(validLimits(savedLow,savedHigh)){low=savedLow;high=savedHigh;}
+        step=Math.max(0,Math.min(3,tag.getInteger("ControlStep")));
+        if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
+    }
+    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
+}

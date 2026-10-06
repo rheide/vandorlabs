@@ -8,6 +8,8 @@
 - Add slider rows to the Redstone screen/input/console controls. Configure minimum and maximum levels, use up to eight bordered clickable segments, and reserve most of each row for the progress bar. Preserve row settings through saving, configured items and Duplifier copying.
 - Add exact-level activation and off/low/medium/high artwork to Programmable Trigger blocks.
 
+- Add Simple and Detailed Thruster Levers, Wall Sliders and Control Blocks with four signal detents, configurable low/high limits, numeric physical/channel output, saving and copying. Levers and sliders mount on walls, floors and ceilings; all six inventory icons use padded transforms.
+
 ## 1.5
 
 - Preserve filesystem texture artwork in atlas/model lookups after legacy door-tier migration, including configured item previews. Update live checks for two artwork tiers and imported hatch variants.

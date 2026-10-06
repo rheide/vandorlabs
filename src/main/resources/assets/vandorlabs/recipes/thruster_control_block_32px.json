@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "ARA",
+    " GD"
+  ],
+  "key": {
+    "A": {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "G": {
+      "item": "minecraft:redstone_block"
+    },
+    "D": {
+      "item": "minecraft:gold_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:thruster_control_block_32px",
+    "count": 1
+  }
+}

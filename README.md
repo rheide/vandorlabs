@@ -173,6 +173,19 @@ selects one level from 0–15; other levels use the Off texture. In Off/On artwo
 mode, an exact match uses the On/High texture. The Duplifier's **Signal Levels**
 option copies these settings, light offsets and propulsion thresholds.
 
+Thruster Lever, Thruster Wall Slider and Thruster Control Block each have separate
+Simple (16px) and Detailed (32px) blocks. Normal right-click cycles Off, Low,
+Medium and High. Shift-right-click opens the existing channel dialog with Low
+and High limits. Defaults are `0, 5, 10, 15`; Medium is the rounded midpoint.
+Low must be at least 1 and High must be at least two levels above Low, keeping
+four distinct outputs. They emit the selected level to physical redstone and
+every configured channel. Linked controls mirror channel values without
+rounding their output; the artwork shows the nearest positive detent. Levers
+and sliders mount on walls, floors and ceilings, with horizontal mounts rotated
+to the player's facing. Control blocks stand freely and face the player.
+Creative pick-block copies limits and channels; the Duplifier also supports
+limits and the selected state.
+
 ## Building
 
 Requirements: Java 8, Python 3, and the included Gradle wrapper (Gradle 4.9 +

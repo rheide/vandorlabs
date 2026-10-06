@@ -15,7 +15,7 @@ if target == 'signals':
     shapes=[0,1,2,3,7,17,21,22,23,25,26,27]
     selected=['redstone_screen_'+str(shape)+'_'+suffix for shape in shapes for suffix in ('slider','slider_gui')]
 if target == 'redstone-dialogs':
-    selected=['channels_'+str(index) for index in range(9)]
+    selected=['channels_'+str(index) for index in range(15)]+['controls_hotbar_empty','controls_hotbar']+['controls_'+str(index)+'_'+str(level) for index in range(6) for level in range(4)]
 assert selected, 'No mapped screenshots match ' + prefix
 log = (source / 'client.log').read_text()
 
@@ -49,6 +49,9 @@ if target == 'signals':
     require('integrated-screen-duplifier-runtime PASS')
 if target == 'redstone-dialogs':
     require('channel-gui-runtime PASS')
+    require('signal-control-runtime PASS')
+    require('signal-control-models PASS')
+    require('signal-control-visuals PASS')
 require('custom-materials-runtime PASS')
 require('imported-materials-runtime PASS')
 if target == 'dialogs':

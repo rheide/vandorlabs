@@ -49,6 +49,8 @@ public final class NonRenderingChecks {
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityRedstoneLight.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_propulsion"));
         ModBlocks.PROGRAMMABLE_LIGHT=new BlockProgrammableLight();ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK=new BlockProgrammableTrigger();
         SignalLevelRuntimeChecks.run(new MemoryWorld(false));
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntitySignalControl.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_control"));
+        SignalControlRuntimeChecks.run(new MemoryWorld(false));
         ChannelReconciliationChecks.run();
         ChannelListChecks.run();
         RedstoneScreenChecks.run();

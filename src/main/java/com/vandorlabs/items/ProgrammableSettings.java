@@ -240,7 +240,8 @@ public final class ProgrammableSettings {
             out.setInteger(CHAIR_HEIGHT, chair.getHeight());
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
-            out.setBoolean(ACTIVE, switchTile.isLocalOn());
+            if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;out.setTag(SIGNAL_SETTINGS,control.configuration());out.setInteger(ACTIVE,control.getStep());}
+            else out.setBoolean(ACTIVE, switchTile.isLocalOn());
             out.setInteger(SWITCH_ROTATION, switchTile.getMountRotation());
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) {
             com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
@@ -535,6 +536,11 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
+            if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){
+                com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;
+                if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);control.configureLimits(signal.getInteger("LowLimit"),signal.getInteger("HighLimit"));applicable=true;}
+                if(values.hasKey(ACTIVE,3)){control.setStep(values.getInteger(ACTIVE));applicable=true;}
+            }
             if (values.hasKey(ACTIVE, 1)) {
                 switchTile.setLocalOn(values.getBoolean(ACTIVE)); applicable = true;
             }

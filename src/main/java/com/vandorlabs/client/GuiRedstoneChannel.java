@@ -19,6 +19,8 @@ import java.io.IOException;
 public class GuiRedstoneChannel extends GuiContainer {
     private final RedstoneChannelMember member;
     private GuiTextField channelField;
+    private final boolean signalControl;
+    private int lowLimit=5,highLimit=15;
     private final boolean thruster;
     private int particleLevel,threshold=8;private boolean signalBrightness;
     private boolean connected;
@@ -34,6 +36,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     public GuiRedstoneChannel(RedstoneChannelMember member) {
         super(new ContainerRedstoneChannel(member));
         this.member = member;
+        signalControl=member instanceof com.vandorlabs.tiles.TileEntitySignalControl;
+        if(signalControl){lowLimit=((com.vandorlabs.tiles.TileEntitySignalControl)member).getLowLimit();highLimit=((com.vandorlabs.tiles.TileEntitySignalControl)member).getHighLimit();}
         this.thruster = member instanceof TileEntityRedstoneLight
                 && member.channelTile().getWorld() != null
                 && member.channelTile().getWorld().getBlockState(member.channelTile().getPos())
@@ -48,7 +52,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         this.join = thruster && ((TileEntityRedstoneLight) member).isJoin();
         this.sideTexture = thruster ? ((TileEntityRedstoneLight) member).getSideTexture() : 0;
         xSize = thruster ? 400 : 240;
-        ySize = thruster ? 190 : 104;
+        ySize = thruster ? 190 : signalControl?152:104;
     }
 
     @Override public void initGui() {
@@ -69,8 +73,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (programmableThruster) buttonList.add(layout.control(4,96,shapeLabel()));
         refreshJoinButton();
         if(thruster){buttonList.add(layout.control(5,152,brightnessLabel()));buttonList.add(layout.control(6,176,thresholdLabel()));}
+        if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+66,102,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+124,guiTop+66,102,20,"High: "+highLimit));}
         buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - 200) / 2,
-                guiTop + (thruster ? 158 : 72),
+                guiTop + (signalControl ? 124 : thruster ? 158 : 72),
                 200, 20, "Done"));
     }
 
@@ -90,10 +95,12 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
                         thruster, particleLevel>0, connected, join, thruster, sideTexture,
-                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,threshold));
+                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,threshold).withControlLimits(signalControl,lowLimit,highLimit));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==7){lowLimit=lowLimit>=highLimit-2?1:lowLimit+1;button.displayString="Low: "+lowLimit;}
+        if(button.id==8){highLimit=highLimit>=15?lowLimit+2:highLimit+1;button.displayString="High: "+highLimit;}
         if(button.id==5){signalBrightness=!signalBrightness;button.displayString=brightnessLabel();}
         if(button.id==6){threshold=(threshold+1)%16;button.displayString=thresholdLabel();}
         if (button.id == 1) {
@@ -172,6 +179,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         fontRenderer.drawString(thruster?"Programmable Thruster":"Redstone Channels",12,8,0xFFFFFF);
         fontRenderer.drawString(thruster?"Channels (0 = none)":"Channels",thruster?layout.controlsX-guiLeft:14,thruster?27:43,0xDAE8F0);
         if(thruster)fontRenderer.drawString("Wall texture",12,27,0xDAE8F0);
+        if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,94,0xDAE8F0);fontRenderer.drawString("Click to cycle four levels",14,108,0xDAE8F0);}
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {

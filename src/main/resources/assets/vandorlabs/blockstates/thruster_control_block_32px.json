@@ -1,0 +1,676 @@
+{
+  "variants": {
+    "facing=down,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=down,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=down,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=down,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=down,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=up,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=up,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=up,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=up,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=north,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off"
+    },
+    "facing=north,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low"
+    },
+    "facing=north,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium"
+    },
+    "facing=north,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high"
+    },
+    "facing=south,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=south,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 180
+    },
+    "facing=south,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 180
+    },
+    "facing=south,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 180
+    },
+    "facing=south,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 180
+    },
+    "facing=west,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=west,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 270
+    },
+    "facing=west,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 270
+    },
+    "facing=west,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 270
+    },
+    "facing=west,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 270
+    },
+    "facing=east,level=0,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=false,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=false,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=false,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=false,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=true,rotation=0": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=true,rotation=1": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=true,rotation=2": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    },
+    "facing=east,level=0,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_off",
+      "y": 90
+    },
+    "facing=east,level=1,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_low",
+      "y": 90
+    },
+    "facing=east,level=2,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_medium",
+      "y": 90
+    },
+    "facing=east,level=3,on=true,rotation=3": {
+      "model": "vandorlabs:thruster_controls/32px/control_block_high",
+      "y": 90
+    }
+  }
+}

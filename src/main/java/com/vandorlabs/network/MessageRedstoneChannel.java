@@ -27,6 +27,8 @@ public class MessageRedstoneChannel implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private boolean controlLimits;private int lowLimit=5,highLimit=15;
+    public MessageRedstoneChannel withControlLimits(boolean enabled,int low,int high){controlLimits=enabled;lowLimit=low;highLimit=high;return this;}
     private boolean signalBrightness;private int threshold=8;
     public MessageRedstoneChannel withSignalBrightness(boolean enabled,int threshold){this.signalBrightness=enabled;this.threshold=threshold;return this;}
     private BlockPos pos;
@@ -85,8 +87,9 @@ public class MessageRedstoneChannel implements IMessage {
         shape = buf.readableBytes() >= 4 ? buf.readInt() : 0;
 
         signalBrightness=buf.readBoolean();threshold=buf.readInt();
+        controlLimits=buf.readBoolean();lowLimit=buf.readInt();highLimit=buf.readInt();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null || particleLevel>3;
-        invalidChannels|=threshold<0 || threshold>15;
+        invalidChannels|=threshold<0 || threshold>15 || controlLimits && !com.vandorlabs.tiles.TileEntitySignalControl.validLimits(lowLimit,highLimit);
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -101,6 +104,7 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeInt(shape);
 
         buf.writeBoolean(signalBrightness);buf.writeInt(threshold);
+        buf.writeBoolean(controlLimits);buf.writeInt(lowLimit);buf.writeInt(highLimit);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
 
@@ -127,6 +131,7 @@ public class MessageRedstoneChannel implements IMessage {
                             message.particleLevel, message.updateJoin, message.join,
                             message.updateSide, message.sideTexture);
                 } else {
+                    if(message.controlLimits && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureLimits(message.lowLimit,message.highLimit);
                     ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)

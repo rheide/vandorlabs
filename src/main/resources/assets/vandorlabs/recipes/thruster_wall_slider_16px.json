@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "ARA",
+    " G "
+  ],
+  "key": {
+    "A": {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "G": {
+      "item": "minecraft:stone_button"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:thruster_wall_slider_16px",
+    "count": 1
+  }
+}
