@@ -9,9 +9,10 @@ JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
 JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew build --no-daemon
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 RUN_OUT=$(mktemp -d "$ROOT/testclient/door-animation.XXXXXX")
-mkdir -p testclient/runtime/game/mods
-rm -f testclient/runtime/game/mods/vandorlabs-*.jar
-cp "build/libs/vandorlabs-$VERSION.jar" testclient/runtime/game/mods/
+TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$ROOT/testclient/runtime/game"}
+mkdir -p "$TEST_RUNTIME_GAME/mods"
+rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar
+cp "build/libs/vandorlabs-$VERSION.jar" "$TEST_RUNTIME_GAME/mods/"
 sha256sum "build/libs/vandorlabs-$VERSION.jar" > "$RUN_OUT/artifact.sha256"
 git rev-parse HEAD > "$RUN_OUT/source-commit.txt"
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" VANDOR_LABS_DOCUMENTATION_ANIMATIONS=true \

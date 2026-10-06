@@ -303,5 +303,33 @@
     "shot": "gallery_ramp_down_stairs",
     "kind": "ramp",
     "output": "ramp-controller/down-stairs.gif"
+  },
+  {
+    "id": "signal-thruster-lever",
+    "shot": "gallery_signal_thruster",
+    "kind": "signal",
+    "consumer": "thruster",
+    "output": "controls/signal-thruster-lever.gif",
+    "camera": [
+      161.4,
+      6.18,
+      -22.5,
+      18,
+      14
+    ]
+  },
+  {
+    "id": "signal-wall-slider",
+    "shot": "gallery_signal_light",
+    "kind": "signal",
+    "consumer": "light",
+    "output": "lights/signal-wall-slider.gif",
+    "camera": [
+      161.4,
+      6.18,
+      -22.5,
+      18,
+      14
+    ]
   }
 ]

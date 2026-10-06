@@ -18,6 +18,8 @@ def changed(a, b):
 def encode(folder, destination):
     meta = json.loads((folder / 'capture.json').read_text())
     rows = list(csv.DictReader((folder / 'frames.tsv').open(), delimiter='\t'))
+    if meta['kind'] == 'signal':
+        return encode_signal(folder, destination, meta, rows)
     assert len(rows) >= 25, f'{folder.name}: too few real frames'
     times = [float(row['elapsed_ms']) for row in rows]
     assert times[0] == 0 and all(b > a for a, b in zip(times, times[1:])), 'Invalid timestamps'
@@ -74,6 +76,67 @@ def encode(folder, destination):
     return result
 
 
+def encode_signal(folder, destination, meta, rows):
+    assert len(rows) >= 60, f'{folder.name}: too few real frames'
+    times = [float(row['elapsed_ms']) for row in rows]
+    assert times[0] == 0 and all(b > a for a, b in zip(times, times[1:])), 'Invalid timestamps'
+    levels = [int(row['control_level']) for row in rows]
+    transitions = [level for i, level in enumerate(levels) if i == 0 or level != levels[i-1]]
+    assert transitions == [0, 5, 10, 15, 0], f'Unexpected signal cycle: {transitions}'
+    frames = []
+    for row in rows:
+        with Image.open(folder / row['file']) as image:
+            assert image.size == (420, 350)
+            frames.append(image.convert('RGB'))
+    stable = {}
+    for level in (0, 5, 10, 15):
+        matching = [i for i, row in enumerate(rows) if int(row['control_level']) == int(row['consumer_level']) == level]
+        assert len(matching) >= 8, f'{folder.name}: consumer did not settle at {level}'
+        if level == 0:
+            first_on = next(i for i, value in enumerate(levels) if value == 5)
+            matching = [i for i in matching if i < first_on]
+        index = matching[len(matching)//2]
+        stable[level] = index
+        expected_particles = meta['consumer'] == 'thruster' and level >= 10
+        assert (rows[index]['particles'] == 'true') == expected_particles, 'Wrong particle threshold'
+    # Both the left-hand control and right-hand consumer must visibly change.
+    for box in ((35, 60, 210, 300), (210, 60, 385, 300)):
+        assert changed(frames[stable[0]].crop(box), frames[stable[15]].crop(box))[0] > 50, 'Control/consumer change not visible'
+    duration = meta['duration_ms']
+    chosen = [min(range(len(times)), key=lambda i: abs(times[i] - t)) for t in range(0, duration, 100)]
+    strip = Image.new('RGB', (120 * len(frames), 100))
+    for i, frame in enumerate(frames):
+        strip.paste(frame.resize((120, 100), Image.Resampling.BOX), (120 * i, 0))
+    palette = strip.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+    indexed = [frames[i].quantize(palette=palette, dither=Image.Dither.NONE) for i in chosen]
+    output = destination / meta['output']
+    output.parent.mkdir(parents=True, exist_ok=True)
+    indexed[0].save(output, save_all=True, append_images=indexed[1:], duration=100, loop=0, disposal=1, optimize=True)
+    with Image.open(output) as gif:
+        assert gif.is_animated and gif.info['loop'] == 0 and gif.size == (420, 350)
+        total = 0
+        for i in range(gif.n_frames):
+            gif.seek(i)
+            total += gif.info['duration']
+        assert total == duration, 'Encoded timing drift'
+        count = gif.n_frames
+    review = Image.new('RGB', (420*4, 350))
+    for slot, level in enumerate((0, 5, 10, 15)):
+        target = times[stable[level]]
+        with Image.open(output) as gif:
+            elapsed = 0
+            for frame in range(gif.n_frames):
+                gif.seek(frame)
+                if elapsed + gif.info['duration'] > target:
+                    review.paste(gif.convert('RGB'), (420*slot, 0))
+                    break
+                elapsed += gif.info['duration']
+    review.save(folder / 'decoded-review.png')
+    print(f'PASS: {meta["id"]}, levels 0/5/10/15/0, {count} GIF frames, {duration}ms, {output.stat().st_size} bytes')
+    gaps = [b-a for a, b in zip(times, times[1:])]
+    return {'id': meta['id'], 'output': str(output.relative_to(destination)), 'frames': count, 'captured': len(rows), 'duration_ms': duration, 'bytes': output.stat().st_size, 'median_gap_ms': round(statistics.median(gaps), 2), 'max_gap_ms': round(max(gaps), 2), 'output_step_ms': 100}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('capture', type=Path, nargs='+')
@@ -89,7 +152,7 @@ def main():
     assert folders, 'No completed captures'
     results = [encode(folder, args.destination) for folder in folders]
     (args.report or args.capture[-1] / 'encoding-results.json').write_text(json.dumps(results, indent=2) + '\n')
-    print('Validated', len(results), 'motion GIFs')
+    print('Validated', len(results), 'documentation GIFs')
 
 
 if __name__ == '__main__':

@@ -27,14 +27,16 @@ final class DocumentationAnimationCapture {
     private int phase;
     private boolean finished;
     private final int motionMs;
+    private final SignalControlAnimationCapture signalCapture;
 
     DocumentationAnimationCapture(File root,JsonObject spec) {
         this.spec=spec;output=new File(root,spec.get("id").getAsString());
         if(!output.mkdirs() && !output.isDirectory())throw new IllegalStateException("Capture directory unavailable");
         motionMs=kind().equals("ramp")?2000:1000;
+        signalCapture=kind().equals("signal")?new SignalControlAnimationCapture(output,spec):null;
     }
     String kind(){return spec.get("kind").getAsString();}
-    boolean isFinished(){return finished;}
+    boolean isFinished(){return signalCapture==null?finished:signalCapture.isFinished();}
     static List<JsonObject> scenes(boolean suite) {
         List<JsonObject> result=new ArrayList<>();
         String selection=System.getProperty("vandorlabs.documentationAnimationFilter","");
@@ -64,6 +66,7 @@ final class DocumentationAnimationCapture {
     }
     /** Start at the closed endpoint even for gallery fixtures built deployed. */
     void prepare(World world) {
+        if(signalCapture!=null){signalCapture.prepare(world);return;}
         for(TileEntity member:members(world))if(member instanceof TileEntityProgrammableTrapdoor) {
             TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)member;
             if(spec.has("overSurface"))leaf.setSlideOverSurface(spec.get("overSurface").getAsBoolean());
@@ -107,6 +110,7 @@ final class DocumentationAnimationCapture {
     }
     /** Called after actual rendering; image encoding cannot stall the recorded cycle. */
     void render(Minecraft mc) {
+        if(signalCapture!=null){signalCapture.render(mc);return;}
         if(finished || mc.world==null)return;
         long now=System.nanoTime();if(start==0){start=now;nextFrame=now;}
         double elapsed=(now-start)/1_000_000D;

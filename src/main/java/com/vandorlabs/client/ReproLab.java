@@ -2006,7 +2006,9 @@ public class ReproLab {
                 new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
-        if(shot.equals("gallery_distant_geometry")) {
+        if(shot.startsWith("gallery_signal_")) {
+            SignalControlAnimationCapture.build(world,shot);
+        } else if(shot.equals("gallery_distant_geometry")) {
             world.setWorldTime(6000);
             world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
             BlockPos gearPos=new BlockPos(GALLERY_X-6,GALLERY_Y+5,-18);
@@ -2613,7 +2615,11 @@ public class ReproLab {
     private void beginDocumentationScene(Minecraft mc) {
         com.google.gson.JsonObject spec=documentationScenes.get(documentationIndex);
         String name=spec.get("shot").getAsString(),kind=spec.get("kind").getAsString();
-        Shot source=null;for(Shot candidate:SHOTS)if(candidate.name.equals(name)){source=candidate;break;}
+        Shot source=null;
+        if(spec.has("camera")) {
+            com.google.gson.JsonArray camera=spec.getAsJsonArray("camera");
+            source=new Shot(name,camera.get(0).getAsDouble(),camera.get(1).getAsDouble(),camera.get(2).getAsDouble(),camera.get(3).getAsFloat(),camera.get(4).getAsFloat());
+        } else for(Shot candidate:SHOTS)if(candidate.name.equals(name)){source=candidate;break;}
         if(source==null)throw new IllegalStateException("Documentation scene missing: "+name);
         Shot camera=new Shot("documentation_camera",source.x,source.y,source.z,source.yaw,source.pitch);
         if(kind.equals("door") && !name.contains("rotating"))
@@ -2638,7 +2644,7 @@ public class ReproLab {
                 BlockPos.getAllInBox(new BlockPos(GALLERY_X-10,0,-32),new BlockPos(GALLERY_X+10,0,0))
                         .forEach(p->world.setBlockState(p,Blocks.STONEBRICK.getDefaultState(),2));
         });
-        mc.world.setWorldTime(6000);
+        mc.world.setWorldTime(kind.equals("signal")?18000:6000);
         state=299;holdTicks=documentationIndex==0?100:60;
         System.out.println("[vandorlabs][reprolab] documentation-animation begin "+spec.get("id").getAsString());
     }
