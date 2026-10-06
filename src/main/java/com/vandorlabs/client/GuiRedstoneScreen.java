@@ -88,8 +88,8 @@ public final class GuiRedstoneScreen extends GuiContainer {
             if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>RedstoneScreenContents.SLIDER_LABEL || fontRenderer.getStringWidth(value)>RedstoneScreenContents.SLIDER_LABEL_WIDTH)value=value.substring(0,value.length()-1);labels.set(selected,value);}
             load();refresh();return;
         }
-        if(b.id==8 && selected>=0){mins.set(selected,mins.get(selected)>=maxs.get(selected)-2?1:mins.get(selected)+1);refresh();return;}
-        if(b.id==9 && selected>=0){maxs.set(selected,maxs.get(selected)==15?mins.get(selected)+2:maxs.get(selected)+1);refresh();return;}
+        if(b.id==8 && selected>=0){mins.set(selected,GuiOptionCycle.next(mins.get(selected),1,maxs.get(selected)-2));refresh();return;}
+        if(b.id==9 && selected>=0){maxs.set(selected,GuiOptionCycle.next(maxs.get(selected),mins.get(selected)+2,15));refresh();return;}
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
         else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);sliders.add(false);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
@@ -111,6 +111,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }
     private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
     protected void mouseClicked(int x,int y,int button)throws IOException{
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;
         super.mouseClicked(x,y,button);
         if(materials){if(housing.click(x,y,button))texture=housing.selected();return;}
         titleField.mouseClicked(x,y,button);labelField.mouseClicked(x,y,button);channelField.mouseClicked(x,y,button);

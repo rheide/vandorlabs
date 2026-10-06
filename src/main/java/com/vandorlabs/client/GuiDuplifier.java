@@ -113,4 +113,9 @@ public final class GuiDuplifier extends GuiContainer {
         fontRenderer.drawString("Choose which copied properties to apply", guiLeft + 14,
                 guiTop + 70, 0xFFB8C7D2);
     }
+    @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,java.util.stream.IntStream.concat(java.util.stream.IntStream.of(98),
+                java.util.stream.IntStream.range(OPTION_START,OPTION_START+DuplifierApplyOptions.OPTIONS.length)).toArray()))return;
+        super.mouseClicked(x,y,button);
+    }
 }

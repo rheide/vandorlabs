@@ -106,6 +106,7 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104))return;
         int before=faceList.selected();
         if(textureTab==0 && faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){selected=faceList.selected();send();}return;}
         if (textureTab==1 && housingList.click(mouseX, mouseY, button)) {
@@ -158,7 +159,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         if(button.id==103){small=!small;button.displayString=sizeLabel();send();}
         if(button.id==104){tileSides=!tileSides;button.displayString=sidesLabel();send();}
         if (button.id == 102) {
-            if(signalBrightness){signalBrightness=false;trigger=0;}else if(trigger==2)signalBrightness=true;else trigger++;
+            int choice=GuiOptionCycle.next(signalBrightness?3:trigger,4);signalBrightness=choice==3;trigger=signalBrightness?2:choice;
             button.displayString = triggerLabel();
             send();
         }

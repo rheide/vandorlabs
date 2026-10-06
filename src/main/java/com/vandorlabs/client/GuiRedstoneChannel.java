@@ -99,17 +99,17 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id==7){lowLimit=lowLimit>=highLimit-2?1:lowLimit+1;button.displayString="Low: "+lowLimit;}
-        if(button.id==8){highLimit=highLimit>=15?lowLimit+2:highLimit+1;button.displayString="High: "+highLimit;}
+        if(button.id==7){lowLimit=GuiOptionCycle.next(lowLimit,1,highLimit-2);button.displayString="Low: "+lowLimit;}
+        if(button.id==8){highLimit=GuiOptionCycle.next(highLimit,lowLimit+2,15);button.displayString="High: "+highLimit;}
         if(button.id==5){signalBrightness=!signalBrightness;button.displayString=brightnessLabel();}
-        if(button.id==6){threshold=(threshold+1)%16;button.displayString=thresholdLabel();}
+        if(button.id==6){threshold=GuiOptionCycle.next(threshold,16);button.displayString=thresholdLabel();}
         if (button.id == 1) {
             if(channel()<0)return;
             submit();
             mc.player.closeScreen();
         }
         if (button.id == 2 && thruster) {
-            particleLevel=(particleLevel+1)%4;
+            particleLevel=GuiOptionCycle.next(particleLevel,4);
             particleButton.displayString = particleLabel();
         }
         if (button.id == 3 && connected) {
@@ -117,7 +117,7 @@ public class GuiRedstoneChannel extends GuiContainer {
             button.displayString = joinLabel();
         }
         if (button.id == 4 && programmableThruster) {
-            shape = (shape + 1) % 3;
+            shape = GuiOptionCycle.next(shape,3);
             button.displayString = shapeLabel();
             connected = shape == 0;
             refreshJoinButton();
@@ -143,6 +143,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,8))return;
         if (housingList != null && housingList.click(x, y, button)) {
             sideTexture = housingList.selected();
             return;

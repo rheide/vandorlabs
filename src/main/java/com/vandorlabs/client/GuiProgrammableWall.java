@@ -200,6 +200,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111))return;
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
@@ -258,7 +259,7 @@ public class GuiProgrammableWall extends GuiContainer {
         }
         if (button.id == 100) mc.player.closeScreen();
         if (button.id == 101) {
-            shade = (shade + 1) % SHADES.length;
+            shade = GuiOptionCycle.next(shade,SHADES.length);
             tile.setGlassShade(shade);
             button.displayString = shadeLabel();
             sendPortholeSettings();
@@ -277,7 +278,7 @@ public class GuiProgrammableWall extends GuiContainer {
                     tile.getPos(), tileSides));
         }
         if (button.id == 104) {
-            shape = (shape + 1) % SHAPES.length;
+            shape = GuiOptionCycle.next(shape,SHAPES.length);
             tile.setPortholeShape(shape);
             button.displayString = shapeLabel();
             sendPortholeSettings();
@@ -285,7 +286,7 @@ public class GuiProgrammableWall extends GuiContainer {
         if (button.id == 105 || button.id == 109 || button.id == 110) {
             int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
             int fill=tile.getDiagonalFill();
-            if (button.id==105) mode=(mode+1)%3;
+            if (button.id==105) mode=GuiOptionCycle.next(mode,3);
             if (button.id==109) fill^=1;
             if (button.id==110) fill^=2;
             tile.setDiagonalGeometry(mode,fill);

@@ -87,15 +87,13 @@ public class GuiRampController extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) {
-            if (!elevator && !extendSegments) extendSegments=true;
-            else if (!elevator) { elevator=true; extendSegments=false; }
-            else if (!extendSegments) extendSegments=true;
-            else { elevator=false; extendSegments=false; }
+            int mode=GuiOptionCycle.next(elevator?(extendSegments?3:2):(extendSegments?1:0),4);
+            elevator=mode>=2;extendSegments=(mode&1)!=0;
         }
         if (button.id==3) powerOn=!powerOn;
-        if (button.id==4) speed=(speed+1)%3;
-        if (button.id==6) direction=direction.rotateY();
-        if(button.id==19) interpolation=(interpolation+1)%3;
+        if (button.id==4) speed=GuiOptionCycle.next(speed,3);
+        if (button.id==6) direction=GuiOptionCycle.next(direction);
+        if(button.id==19) interpolation=GuiOptionCycle.next(interpolation,3);
         if (button.id==18) matchTextures=!matchTextures;
         if (button.id==17) travelAxis=travelAxis==0?2:0;
         if (button.id==7) mc.player.closeScreen();
@@ -151,6 +149,7 @@ public class GuiRampController extends GuiContainer {
         if (!treadBefore.equals(treadField.getText()) || !channelBefore.equals(channelField.getText())) submit();
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,3,4,6,17,18,19))return;
         super.mouseClicked(x,y,button); treadField.mouseClicked(x,y,button); channelField.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int button) {

@@ -42,8 +42,8 @@ public final class GuiProgrammableGlass extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id==2) { mc.player.closeScreen(); return; }
-        if (button.id==0) size=(size+1)%2;
-        if (button.id==1) shade=(shade+1)%3;
+        if (button.id==0) size=GuiOptionCycle.next(size,2);
+        if (button.id==1) shade=GuiOptionCycle.next(shade,3);
         if (button.id==3) join=!join;
         updateLabels();
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join));
@@ -56,5 +56,9 @@ public final class GuiProgrammableGlass extends GuiContainer {
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
         fontRenderer.drawString("Programmable Glass",20,12,0xD5EDF3);
+    }
+    @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,3))return;
+        super.mouseClicked(x,y,button);
     }
 }

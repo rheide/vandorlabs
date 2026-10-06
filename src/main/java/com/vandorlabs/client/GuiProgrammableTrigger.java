@@ -74,6 +74,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,101,102))return;
         if(activeList().click(x,y,button)){
             int selected=activeList().selected();if(textureTab==0)off=selected;else if(textureTab==1)low=selected;else if(textureTab==2)medium=selected;else on=selected;send();return;
         }
@@ -103,7 +104,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id>=90 && button.id<=93){textureTab=button.id-90;refreshTabs();return;}
         if(button.id==101){states=!states;if(!states && (textureTab==1 || textureTab==2))textureTab=3;refreshTabs();button.displayString=statesLabel();send();}
-        if(button.id==102){exact=exact==15?-1:exact+1;button.displayString=exactLabel();send();}
+        if(button.id==102){exact=GuiOptionCycle.next(exact,-1,15);button.displayString=exactLabel();send();}
         if (button.id == 100 && channel()>=0) { send(); mc.player.closeScreen(); }
     }
 

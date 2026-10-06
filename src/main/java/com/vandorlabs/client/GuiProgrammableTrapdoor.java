@@ -77,23 +77,24 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
         if(button.id==9) {
-            doorDetail=(doorDetail+1)%2;
+            doorDetail=GuiOptionCycle.next(doorDetail,2);
             textures.setSelected(HousingTextureList.doorSizeChoice(textures.selected(),doorDetail));
             send();initGui();return;
         }
-        if(button.id==1){if(diagonal()){if(!sliding){sliding=true;slideIntoWall=false;}else if(!slideIntoWall)slideIntoWall=true;else{sliding=false;slideIntoWall=false;}}else{int mode=cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;mode=(mode+1)%(tile.canOffsetClosedLeaf()?5:3);cover=mode>=3;sliding=mode==1 || mode==2 || mode==4;slideOverSurface=mode==2;}button.displayString=motionLabel();}
-        else if(button.id==2){position=diagonal()?(position==0?1:0):(position+1)%3;if(diagonal())tallWidth=position;button.displayString=positionLabel();}
-        else if(button.id==3){trigger=(trigger+1)%3;button.displayString=triggerLabel();}
+        if(button.id==1){if(diagonal()){int mode=GuiOptionCycle.next(sliding?slideIntoWall?2:1:0,3);sliding=mode!=0;slideIntoWall=mode==2;}else{int mode=cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;mode=GuiOptionCycle.next(mode,tile.canOffsetClosedLeaf()?5:3);cover=mode>=3;sliding=mode==1 || mode==2 || mode==4;slideOverSurface=mode==2;}button.displayString=motionLabel();}
+        else if(button.id==2){position=diagonal()?(position==0?1:0):GuiOptionCycle.next(position,3);if(diagonal())tallWidth=position;button.displayString=positionLabel();}
+        else if(button.id==3){trigger=GuiOptionCycle.next(trigger,3);button.displayString=triggerLabel();}
         else if(button.id==5){inverted=!inverted;}
         else if(button.id==6){tileTexture=!tileTexture;button.displayString=layoutLabel();}
         else if(button.id==7){
             if(diagonal()){if(position==2)position=tallWidth;else{tallWidth=position;position=2;}button.displayString=heightLabel();for(GuiButton other:buttonList)if(other.id==2){other.enabled=position!=2;other.displayString=positionLabel();}}
 
         }
-        else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=facing.rotateY();button.displayString=facingLabel();}
+        else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=GuiOptionCycle.next(facing);button.displayString=facingLabel();}
         send();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2,3,5,6,7,8,9))return;
         channelField.mouseClicked(x,y,button);int before=textures.selected();
         if(textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
     }

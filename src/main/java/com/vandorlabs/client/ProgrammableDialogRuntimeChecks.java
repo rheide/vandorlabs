@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiTextField;
 final class ProgrammableDialogRuntimeChecks {
     static void check(Minecraft mc) {
         GuiScreen gui=mc.currentScreen;
+        GuiOptionCycleRuntimeChecks.check(mc);
         if(!(gui instanceof GuiProgrammableWall || gui instanceof GuiProgrammableTrapdoor
                 || gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableLight
                 || gui instanceof GuiAnimatedScreenSelector || gui instanceof GuiProgrammableInput

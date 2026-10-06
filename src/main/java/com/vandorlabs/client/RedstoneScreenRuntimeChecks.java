@@ -114,6 +114,7 @@ final class RedstoneScreenRuntimeChecks {
                 int originalWidth=gui.width,originalHeight=gui.height;
                 for(int[] size:new int[][]{{320,240},{460,340},{originalWidth,originalHeight}}){gui.setWorldAndResolution(mc,size[0],size[1]);gui.checkLayout();}
                 require(mc.fontRenderer.getStringWidth(field(gui,"labelField").getText())<=RedstoneScreenContents.SLIDER_LABEL_WIDTH,"longer slider label does not fit");
+                GuiOptionCycleRuntimeChecks.check(mc);
                 capture(mc,output,"slider_gui");
                 gui.actionPerformed(new GuiButton(8,0,0,"Low"));gui.actionPerformed(new GuiButton(9,0,0,"High"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(17);return;
             }

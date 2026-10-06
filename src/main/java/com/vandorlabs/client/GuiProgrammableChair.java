@@ -56,7 +56,7 @@ public final class GuiProgrammableChair extends GuiContainer {
             tile.setStyle(selected);
             sendSettings();
         } else if (button.id == 11) {
-            height = (height + 1) % HEIGHTS.length;
+            height = GuiOptionCycle.next(height,HEIGHTS.length);
             tile.setHeight(height);
             button.displayString = heightLabel();
             sendSettings();
@@ -91,5 +91,9 @@ public final class GuiProgrammableChair extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.chair.preview"),
                 159, 33, 0xDDDDDD);
         fontRenderer.drawString("\u2713", 141, 31 + selected * 24, 0x66FFAA);
+    }
+    @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,11))return;
+        super.mouseClicked(x,y,button);
     }
 }

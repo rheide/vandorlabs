@@ -101,16 +101,16 @@ public class GuiSpaceDoor extends GuiContainer {
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
-            motion=motion.next();
-            if(motion==SpaceDoorMotion.X_SPLIT && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))motion=motion.next();
+            motion=SpaceDoorMotion.values()[GuiOptionCycle.next(motion.ordinal(),SpaceDoorMotion.values().length)];
+            if(motion==SpaceDoorMotion.X_SPLIT && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))motion=SpaceDoorMotion.values()[GuiOptionCycle.next(motion.ordinal(),SpaceDoorMotion.values().length)];
             motionButton.displayString=motion.label;
             updateHingeButton();
         }
-        else if (button.id==11) { detail=(detail+1)%SIZES.length; faceTexture=HousingTextureList.doorSizeChoice(faceTexture,detail);initGui(); }
+        else if (button.id==11) { detail=GuiOptionCycle.next(detail,SIZES.length); faceTexture=HousingTextureList.doorSizeChoice(faceTexture,detail);initGui(); }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
-        else if (button.id==13) { depth=(depth+1)%3; button.displayString=depthLabel(); }
+        else if (button.id==13) { depth=GuiOptionCycle.next(depth,3); button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
-        else if (button.id==16) { trigger=(trigger+1)%3; button.displayString=triggerLabel(); }
+        else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); button.displayString=triggerLabel(); }
         else if(button.id==18){tileTexture=!tileTexture;tile.setTileTexture(tileTexture);button.displayString=layoutLabel();}
         else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }
         else return;
@@ -125,6 +125,7 @@ public class GuiSpaceDoor extends GuiContainer {
         scrollIndex=Math.round((float)(y-listTop)/LIST_H*maxScroll()); clampScroll();
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18))return;
         channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
         if(textureList.click(x,y,button)) {

@@ -17,12 +17,16 @@ public final class GuiConnectedSeat extends GuiContainer {
     }
     protected void actionPerformed(GuiButton button){
         if(button.id==2){mc.displayGuiScreen(null);return;}
-        if(button.id==0)tile.setJoin(!tile.isJoin());else tile.setHeight((tile.getHeight()+1)%3);
+        if(button.id==0)tile.setJoin(!tile.isJoin());else tile.setHeight(GuiOptionCycle.next(tile.getHeight(),3));
         PacketHandler.INSTANCE.sendToServer(new MessageConnectedSeat(tile.getPos(),tile.isJoin(),tile.getHeight()));initGui();
     }
     protected void drawGuiContainerBackgroundLayer(float ticks,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xEE171B23);}
     protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString(new net.minecraft.item.ItemStack(tile.getBlockType()).getDisplayName(),14,12,0xFFFFFF);
         fontRenderer.drawString("Default legs: +1 px",14,84,0xBBBBBB);
+    }
+    @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1))return;
+        super.mouseClicked(x,y,button);
     }
 }
