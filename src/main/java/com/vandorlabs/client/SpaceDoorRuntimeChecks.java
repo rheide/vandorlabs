@@ -121,15 +121,33 @@ final class SpaceDoorRuntimeChecks {
         clear(world,source);clear(world,source.east());
         world.setBlockState(source.east().down(),Blocks.STONE.getDefaultState(),2);
         check(item.placeBlockAt(blank.copy(),player,world,source,EnumFacing.UP,.5F,.5F,.5F,state(block)),"automatic single placement");
-        // Explicit upper-half fixture hands avoid ItemBlock's metadata readback.
-        world.setBlockState(source.up(),world.getBlockState(source.up()).withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.RIGHT),2);
         String singleLabel=tile(world,source).motionLabel();
         check(singleLabel.equals("Slide Left") || singleLabel.equals("Slide Right"),"single default side");
         check(item.placeBlockAt(blank.copy(),player,world,source.east(),EnumFacing.UP,.5F,.5F,.5F,other),"automatic pair placement");
-        world.setBlockState(source.east().up(),world.getBlockState(source.east().up()).withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.LEFT),2);
         check(tile(world,source).getSlideDirection()==0 && tile(world,source).motionLabel().equals("Split Horizontal"),"legacy pair switches to horizontal split: source="+block.getActualState(world.getBlockState(source),world,source)+" mate="+block.getActualState(world.getBlockState(source.east()),world,source.east())+" direction="+tile(world,source).getSlideDirection()+" label="+tile(world,source).motionLabel());
         clear(world,source.east());
         check(tile(world,source).motionLabel().equals(singleLabel),"unpair restores placement side");
+        // Exercise the registered item, including metadata readback, for every facing/click side.
+        ItemStack held=player.getHeldItemMainhand();float yaw=player.rotationYaw;
+        try {
+            for(EnumFacing front:EnumFacing.HORIZONTALS)for(float hit:new float[]{.25F,.75F}) {
+                for(EnumFacing side:EnumFacing.HORIZONTALS)clear(world,source.offset(side));
+                clear(world,source);player.rotationYaw=front.getOpposite().getHorizontalAngle();
+                float hx=front.getAxis()==EnumFacing.Axis.Z?hit:.5F,hz=front.getAxis()==EnumFacing.Axis.X?hit:.5F;
+                IBlockState expected=block.getStateForPlacement(world,source,EnumFacing.UP,hx,1,hz,0,player,EnumHand.MAIN_HAND);
+                player.setHeldItem(EnumHand.MAIN_HAND,blank.copy());
+                check(item.onItemUse(player,world,source.down(),EnumHand.MAIN_HAND,EnumFacing.UP,hx,1,hz)==net.minecraft.util.EnumActionResult.SUCCESS,"real item placement");
+                check(block.getActualState(world.getBlockState(source),world,source).getValue(BlockVandorDoor.HINGE)==expected.getValue(BlockVandorDoor.HINGE),"real placement lost click side "+front+"/"+hit);
+                check(tile(world,source).motionLabel().equals(expected.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.RIGHT?"Slide Left":"Slide Right"),"real placement direction");
+                tile(world,source).configure(2,1,true,hit<.5F?4:5,true,true);
+                BlockPos adjacent=source.offset(front.rotateY());world.setBlockState(adjacent.down(),Blocks.STONE.getDefaultState(),2);
+                player.setHeldItem(EnumHand.MAIN_HAND,blank.copy());
+                check(item.onItemUse(player,world,adjacent.down(),EnumHand.MAIN_HAND,EnumFacing.UP,hx,1,hz)==net.minecraft.util.EnumActionResult.SUCCESS,"real pair placement");
+                check(adjacent.equals(tile(world,source).mate()) && source.equals(tile(world,adjacent).mate()),"real pair did not join");
+                check(tile(world,source).getSlideDirection()==6 && tile(world,adjacent).getSlideDirection()==6,"sideways pair did not become horizontal split");
+                clear(world,adjacent);
+            }
+        } finally {player.setHeldItem(EnumHand.MAIN_HAND,held);player.rotationYaw=yaw;}
         // The trigger changes both click policy and the response to a live redstone edge.
         BlockPos power=source.north();
         world.setBlockToAir(power);
