@@ -41,7 +41,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         Keyboard.enableRepeatEvents(true);buttonList.clear();
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH;
         controlsX=guiLeft+xSize-controlsWidth-12;
-        textures=HousingTextureList.forDoors(doorDetail,guiLeft+12,guiTop+38,controlsX-guiLeft-31,tile.getHousingTexture())
+        textures=HousingTextureList.forDoors(doorDetail,guiLeft+12,guiTop+38,controlsX-guiLeft-31,tile.getHousingTexture(),false,false)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->send());
         int y=guiTop+38;
         buttonList.add(new GuiButton(1,controlsX,y,controlsWidth,20,motionLabel()));y+=22;

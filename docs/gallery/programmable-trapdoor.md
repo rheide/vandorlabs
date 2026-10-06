@@ -1,5 +1,7 @@
 # Programmable Trapdoor
 
+White Glass and Dark Glass leaf designs are excluded from this artwork picker; they remain available for ordinary Programmable Doors.
+
 Programmable Trapdoors use the shared categorized material catalog, including door artwork and Custom block/door textures. New trapdoors default to **Armored Hatch** in the Trapdoors category.
 Right-click to open or close. Shift-right-click in creative mode, or right-click
 with the Configurizer in either game mode, to choose the finish, movement,

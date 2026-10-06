@@ -1,5 +1,7 @@
 # Programmable Diagonal Trapdoor
 
+White Glass and Dark Glass leaf designs are excluded from this artwork picker; they remain available for ordinary Programmable Doors.
+
 Default, configured and Custom-finish inventory icons use a reduced scale to fit the hotbar slot; see the [hotbar comparison](../images/gallery/tasks/diagonal-trapdoor-hotbar.png).
 
 A movable panel aligned with Programmable Diagonal Walls. New panels use **Armored Hatch** from the Trapdoors category by default. Choose the shared categorized

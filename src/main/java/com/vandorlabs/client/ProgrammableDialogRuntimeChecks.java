@@ -33,7 +33,7 @@ final class ProgrammableDialogRuntimeChecks {
                     if(value instanceof HousingTextureList) {
                         checkList((HousingTextureList)value,buttons);
                         if(gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableTrapdoor)
-                            checkDoorDesigns((HousingTextureList)value);
+                            checkDoorDesigns((HousingTextureList)value,gui instanceof GuiSpaceDoor);
                         if(gui instanceof GuiProgrammableLight) {
                             Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);
                             for(Object option:((java.util.Map<?,?>)options.get(value)).values()) {
@@ -71,7 +71,7 @@ final class ProgrammableDialogRuntimeChecks {
                     for(int step=1;step<=3;step++) {
                         click(gui,sizeButton.x+sizeButton.width/2,sizeButton.y+sizeButton.height/2);
                         require(detail.getInt(gui)==(initial+step)%2,"door size button failed");
-                        for(Field f:gui.getClass().getDeclaredFields()){f.setAccessible(true);Object value=f.get(gui);if(value instanceof HousingTextureList)checkDoorDesigns((HousingTextureList)value);}
+                        for(Field f:gui.getClass().getDeclaredFields()){f.setAccessible(true);Object value=f.get(gui);if(value instanceof HousingTextureList)checkDoorDesigns((HousingTextureList)value,gui instanceof GuiSpaceDoor);}
                     }
                 }
                 // Exercise tabs through the actual mouse path, then restore the original tab.
@@ -105,7 +105,7 @@ final class ProgrammableDialogRuntimeChecks {
         finally{gui.setWorldAndResolution(mc,width,height);}
         System.out.println("[vandorlabs][reprolab] programmable-dialog-layout PASS "+gui.getClass().getSimpleName());
     }
-    private static void checkDoorDesigns(HousingTextureList list)throws ReflectiveOperationException {
+    private static void checkDoorDesigns(HousingTextureList list,boolean glassLeaves)throws ReflectiveOperationException {
         Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);
         java.util.Set<Integer> designs=new java.util.HashSet<>();
         for(Object option:((java.util.Map<?,?>)options.get(list)).values()) {
@@ -117,10 +117,11 @@ final class ProgrammableDialogRuntimeChecks {
             }
         }
         boolean large=designs.stream().anyMatch(design->design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN);
-        int expected=large?com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length:com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN;
+        int expected=(large?com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length:com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN)-(glassLeaves?0:2);
+        require(glassLeaves?designs.contains(15) && designs.contains(16):!designs.contains(15) && !designs.contains(16),"glass leaf designs in wrong picker");
         require(designs.size()==expected,"door picker missing designs");
         for(int detail=0;detail<2;detail++) {
-            HousingTextureList sized=HousingTextureList.forDoors(detail,0,0,100,list.selected(),large);
+            HousingTextureList sized=HousingTextureList.forDoors(detail,0,0,100,list.selected(),large,glassLeaves);
             java.util.Set<Integer> sizedDesigns=new java.util.HashSet<>();
             for(Object option:((java.util.Map<?,?>)options.get(sized)).values()) {
                 HousingTextureList.Option item=(HousingTextureList.Option)option;

@@ -2,6 +2,8 @@
 
 ## 1.6
 
+- Remove White Glass and Dark Glass leaf designs from flat and diagonal trapdoor artwork pickers; retain them for regular Programmable Doors.
+
 - Right-click setting buttons to cycle to the previous option, including light modes, screen Low/High limits, propulsion settings and the other configuration dialogs. Left-click still cycles forward.
 - Use the shared dark door edge texture for Double Doors artwork, including large-door leaves, frames and inventory models.
 

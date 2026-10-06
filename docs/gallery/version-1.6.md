@@ -12,6 +12,8 @@ to Low/High limits, light modes, particle thresholds and door settings.
 
 Double Doors artwork now uses the same dark edge texture as the other
 programmable doors and trapdoors. Front and back artwork is unchanged.
+White Glass and Dark Glass leaf designs remain available for ordinary
+Programmable Doors, but are omitted from flat and diagonal trapdoor pickers.
 
 ## Signal levels and channels
 
