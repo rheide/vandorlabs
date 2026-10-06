@@ -45,6 +45,16 @@ final class LargeDoorRuntimeChecks {
             require(picked.getItem()==stack.getItem() && picked.getSubCompound("SpaceDoorSettings").getInteger("SpaceDesign")==15,"pick retains large type and design");
             door.onBlockActivated(world,center.up(2),world.getBlockState(center.up(2)),player,EnumHand.MAIN_HAND,front,.5F,.5F,.5F);
             for(int x=0;x<3;x++)for(int y=0;y<3;y++)require(world.getBlockState(anchor.offset(width,x).up(y)).getValue(BlockVandorDoor.OPEN),"both leaves open from any cell");
+            for(int mode=4;mode<=7;mode++) {
+                root.configure(2,1,true,mode,false,true,true,0,false);
+                TileEntityLargeProgrammableDoor restored=new TileEntityLargeProgrammableDoor();
+                restored.readFromNBT(root.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));
+                require(restored.getSlideDirection()==mode,"new mode survives world save");
+                require(door.getPickBlock(world.getBlockState(center),null,world,center,player)
+                        .getSubCompound("SpaceDoorSettings").getInteger("SpaceSlideDirection")==mode,"new mode survives pick");
+                java.util.List<net.minecraft.util.math.AxisAlignedBB> closed=root.collisionGeometry(front,false),opened=root.collisionGeometry(front,true);
+                require(!closed.equals(opened),"new mode collision did not move");
+            }
             root.configure(2,1,true,0,false,false,true,0,true);
             require(!door.geometry(world,center).isEmpty(),"open hinged leaf geometry");
             world.setBlockToAir(center.up());

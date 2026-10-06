@@ -2,6 +2,8 @@
 
 ## 1.6
 
+- Add Slide Left, Slide Right, Split Horizontal and Split Vertical to Programmable and Large Programmable Doors, including split single leaves and full-width large-door travel. Preserve existing saved motion values and placement-dependent single/pair defaults, artwork/glazing, fixed frames and panels, configuration copying and collision clearance.
+
 - Carry redstone levels 0–15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
 - Let Programmable Lights, Light Slabs and Light Frames follow signal strength with a signed brightness offset; joined lights share the strongest loaded group signal.
 - Add signal-dependent propulsion light and emitter-texture brightness, with a configurable particle activation threshold and the existing particle density choices.

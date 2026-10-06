@@ -101,6 +101,11 @@ public class GuiSpaceDoor extends GuiContainer {
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
+            if(motion==SpaceDoorMotion.SIDEWAYS) {
+                String label=tile.motionLabel();
+                motion=label.equals("Split Horizontal")?SpaceDoorMotion.HORIZONTAL_SPLIT:
+                        label.equals("Slide Right")?SpaceDoorMotion.RIGHT:SpaceDoorMotion.LEFT;
+            }
             motion=motion.next();
             if(motion==SpaceDoorMotion.X_SPLIT && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))motion=motion.next();
             motionButton.displayString=motion.label;

@@ -7,6 +7,8 @@ from export_gallery import SHOTS
 
 source, prefix, target = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 selected = [name for name in SHOTS if name.startswith(prefix)]
+if target == 'gallery_door_new_':
+    selected=['gallery_door_new_'+size+'_'+motion+'_'+pose for size in ('single','paired','large') for motion in ('left','right','horizontal','vertical') for pose in ('closed','open')]
 if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
 if target == 'dialogs':
@@ -43,6 +45,11 @@ for name in selected:
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):
         require('diagonal-partial-patch-runtime PASS client ' + name[len('gallery_trapdoor_'):])
+if target == 'gallery_door_new_':
+    require('door-runtime PASS')
+    require('space-door-settings PASS')
+    require('large-door-runtime PASS')
+    for name in selected: require('door-motion-scene PASS '+name)
 if target == 'gallery_distant_geometry':
     require('distant-geometry-runtime PASS')
     import numpy as np

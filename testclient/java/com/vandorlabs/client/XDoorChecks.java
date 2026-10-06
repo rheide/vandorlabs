@@ -68,8 +68,8 @@ final class XDoorChecks {
         Map<EnumFacing,List<net.minecraft.client.renderer.block.model.BakedQuad>> faces=new EnumMap<>(EnumFacing.class);
         for(EnumFacing face:EnumFacing.values())faces.put(face,Collections.emptyList());
         net.minecraft.client.renderer.block.model.IBakedModel model=new net.minecraft.client.renderer.block.model.SimpleBakedModel(Collections.singletonList(quad),faces,false,true,sprite,net.minecraft.client.renderer.block.model.ItemCameraTransforms.DEFAULT,net.minecraft.client.renderer.block.model.ItemOverrideList.NONE);
-        for(boolean right:new boolean[]{false,true})for(int choice:new int[]{-1,0})for(boolean tiled:new boolean[]{false,true}) {
-            StaticSurfaceMesh[] panels=XDoorMeshes.build(model,right,choice,tiled,sprite,true);
+        for(boolean right:new boolean[]{false,true})for(int choice:new int[]{-1,0})for(boolean tiled:new boolean[]{false,true})for(int mode:new int[]{0,6,7}) {
+            StaticSurfaceMesh[] panels=XDoorMeshes.build(model,right,choice,tiled,sprite,true,mode);
             int count=0;
             for(StaticSurfaceMesh mesh:panels) {
                 VertexFormat format=BlockSurfaceFormat.get();BufferBuilder buffer=new BufferBuilder(4096);buffer.begin(7,format);mesh.draw(buffer,192,80);buffer.finishDrawing();

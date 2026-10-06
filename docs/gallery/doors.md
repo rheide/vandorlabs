@@ -1,6 +1,6 @@
 # Programmable Door
 
-One Programmable Door can use any of 15 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
+One Programmable Door can use any of 21 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
 
 In Creative mode, shift-right-click either half to open the settings. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
 
@@ -8,7 +8,7 @@ In Creative mode, shift-right-click either half to open the settings. The option
 
 ## Choose a design and frame
 
-Each image shows the **bare door on the left** and the **framed door on the right**. The three detail levels change texture resolution without changing the chosen design.
+Each image shows the **bare door on the left** and the **framed door on the right**. The Small and Large artwork sizes change texture resolution without changing the chosen design.
 
 | Design | Bare (left) and framed (right) |
 | --- | --- |
@@ -41,7 +41,25 @@ Each clip shows a complete open/close cycle. These are live in-game captures at 
 | Slide up | ![Slide up](../images/gallery/doors/observation-up.gif) |
 | Slide down | ![Slide down](../images/gallery/doors/observation-down.gif) |
 
+The motion selector also offers **Slide Left**, **Slide Right**, **Split Horizontal**, and **Split Vertical** for single, paired and Large Programmable Doors:
+
+| Mode | Travel |
+| --- | --- |
+| Slide Left / Right | Move the entire door opening to one side: one block for a single, two for a pair, or three for a Large Door. |
+| Split Horizontal | Divide at the middle and move the halves left and right. A single leaf splits too. |
+| Split Vertical | Divide at mid-height and move the lower half down and the upper half up. |
+
+Left and right refer to the door's local orientation; viewing it from behind reverses them. Split cuts preserve the selected artwork and glazing. Frames and control panels stay fixed.
+
+New single doors retain placement-dependent left/right sliding. Placing a compatible second door changes that default to **Split Horizontal**; removing it restores the single-door default. Existing saved sideways sliding follows the same rule without changing its travel. Explicitly selected modes remain selected when pairing changes. Existing rotating, up, down and large-only Sliding X modes also retain their saved behavior. All new modes survive world saves, pick-block and Duplifier copying.
+
 The frame stays in place while the leaf moves. Rotating doors can show or hide their hinges; the hinge setting is saved even when you temporarily switch to sliding motion. Paired doors share appearance and settings.
+
+## Large Programmable Door
+
+A Large Programmable Door occupies one **3×3 opening** and is placed or removed as a whole. Any of its nine cells opens the shared settings. It offers the regular door designs plus eight large-only bay designs, and defaults to Cross Braced Bay. Its texture size setting changes artwork resolution, while its opening remains 3×3.
+
+The same movement choices apply; **Sliding X** is an additional large-only option that retracts four triangular panels left, right, up and down. Large doors open and close slightly more slowly than regular doors. Leave room beside, above or below the opening for the selected motion.
 
 ## Choose the position in the block
 

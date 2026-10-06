@@ -353,6 +353,11 @@ public class ReproLab {
                 }
             }
         }
+        for(String size:new String[]{"single","paired","large"})
+            for(String movement:new String[]{"left","right","horizontal","vertical"})
+                for(String pose:new String[]{"closed","open"})
+                    SHOTS.add(new Shot("gallery_door_new_"+size+"_"+movement+"_"+pose,
+                            GALLERY_X+1,GALLERY_Y+1,-28,0,4));
         SHOTS.add(new Shot("gallery_space_glass", GALLERY_X, galleryFeet, -23.0D, 0, 0));
         SHOTS.add(new Shot("gallery_round_portholes", GALLERY_X, galleryFeet + 2, -27, 0, 0));
         for (String hinges:new String[]{"on","off"}) SHOTS.add(new Shot("gallery_space_config_hinges_"+hinges,
@@ -1010,6 +1015,7 @@ public class ReproLab {
                     doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(11,0,0,"Size"));
                 for (int i=0;i<3;i++)
                     doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(12,0,0,"Frame"));
+                for(int i=0;i<4;i++)doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(10,0,0,"Motion"));
                 state=12;
                 holdTicks=GUI_SETTLE_TICKS;
                 break;
@@ -1020,6 +1026,9 @@ public class ReproLab {
                                 .getTileEntity(CONSOLE.add(0,0,3));
                 if (editedDoor.getDesign()!=7 || editedDoor.getDetail()!=0 || editedDoor.isFramed())
                     throw new IllegalStateException("Configurizer frame/size changes reset or stopped updating door");
+                if(!editedDoor.isSliding() || editedDoor.getSlideDirection()!=7)
+                    throw new IllegalStateException("Door motion GUI/packet did not select Split Vertical");
+                System.out.println("[vandorlabs][reprolab] door-motion-gui PASS left/right/horizontal/vertical choices and server update");
                 saveNamed(mc,"space_door_gui");
                 mc.displayGuiScreen(null);
                 BlockPos glassGui=CONSOLE.add(3,0,3);
@@ -2140,6 +2149,8 @@ public class ReproLab {
                 ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
                         .setHousingTexture(finish);
             }
+        } else if (shot.startsWith("gallery_door_new_")) {
+            DoorMotionGallery.build(world,shot,GALLERY_X,GALLERY_Y);
         } else if (shot.startsWith("gallery_door_")) {
             buildCloseDoorGallery(world,shot);
         } else if (shot.startsWith("gallery_ramp_mode_") && !world.isRemote) {

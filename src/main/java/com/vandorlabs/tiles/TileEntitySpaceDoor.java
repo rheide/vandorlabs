@@ -222,6 +222,9 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
-        return new net.minecraft.util.math.AxisAlignedBB(pos.add(-2,-2,-2),pos.add(3,4,3));
+        if(isSliding() && slideDirection>=4)
+            return new net.minecraft.util.math.AxisAlignedBB(pos.add(-2,-2,-2),pos.add(3,4,3));
+        return slideDirection==0?super.getRenderBoundingBox():
+                new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,-2,-1),pos.add(2,4,2));
     }
 }

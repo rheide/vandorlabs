@@ -125,3 +125,9 @@ Both GIFs come from a real Forge client. Their recorded control and consumer
 levels are checked together at 0, 5, 10 and 15, including the thruster's particle
 threshold. They use a fixed camera and ordinary game lighting. See the
 [animated documentation guide](../animated-documentation.md) for capture details.
+
+## Door opening modes
+
+Programmable Doors and Large Programmable Doors add **Slide Left**, **Slide Right**, **Split Horizontal** and **Split Vertical**. Left/right moves the entire door to one side. Horizontal splits move halves left/right; vertical splits move halves down/up, including single leaves. Large Doors support all four choices across their complete 3×3 opening.
+
+New single doors retain placement-dependent sliding, switching their default to horizontal splitting when paired. Existing saved modes retain their behavior, and explicitly selected modes remain selected across pairing changes. Frames and panels stay fixed; native, glass and replacement textures follow the moving panels. See the [door guide](doors.md) for placement and movement details.

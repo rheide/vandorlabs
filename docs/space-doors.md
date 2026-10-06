@@ -3,8 +3,8 @@
 The Space family is independent of the Detailed doors. The creative menu has one
 Programmable Door item, initially set to Sliding Sideways. Its initial depth
 follows the placement click and can be changed in the settings.
-Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
-the design, Small/Medium/Large texture detail, framed/bare appearance, placement
+Shift-right-click either half to choose Rotating, Slide Left, Slide Right, Split Horizontal, Split Vertical, Sliding Up or Sliding Down,
+the design, Small/Large texture detail, framed/bare appearance, placement
 position (Near, Middle, or Far), Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
 scrollbar and up/down-key navigation. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
@@ -40,6 +40,8 @@ Vertical travel is 31/16
 block: framed leaves retract one pixel beyond the inner frame edge, while bare
 leaves preserve their one-pixel open-edge reveal. Sideways travel is 15/16 for
 single framed leaves and 16/16 for paired framed leaves; bare leaves retain 15/16.
+The saved legacy sideways mode retains that travel and chooses its side from placement for singles, changing to a horizontal split when paired. The dialog labels it with its current side or Split Horizontal. Explicit Slide Left/Right modes move a whole single door one block, a pair two blocks, or a Large Door three blocks. Explicit modes remain selected across pairing changes. Split Horizontal cuts a single leaf at its width midpoint; paired and large doors separate their existing leaves. Split Vertical cuts at mid-height and moves both halves by half the opening's height. Native, glass and replacement faces preserve their UVs across cuts, and the new cut edges are sealed. These choices use appended saved direction values, preserving existing worlds, configured items and Duplifier settings.
+
 Frames remain fixed and glazed panes move with their leaf. The renderer's
 bounds cover the full vertical travel; the tile still has no tick loop.
 All motion modes offer Near / Middle / Far placement. Rotating art is edge-native and

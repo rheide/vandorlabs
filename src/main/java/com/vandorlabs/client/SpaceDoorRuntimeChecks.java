@@ -116,6 +116,20 @@ final class SpaceDoorRuntimeChecks {
                         cases++;
                     }
                 }
+        // Legacy sideways is contextual: each single uses its placement hand,
+        // a complete pair splits, and removing its mate restores the single default.
+        clear(world,source);clear(world,source.east());
+        world.setBlockState(source.east().down(),Blocks.STONE.getDefaultState(),2);
+        check(item.placeBlockAt(blank.copy(),player,world,source,EnumFacing.UP,.5F,.5F,.5F,state(block)),"automatic single placement");
+        // Explicit upper-half fixture hands avoid ItemBlock's metadata readback.
+        world.setBlockState(source.up(),world.getBlockState(source.up()).withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.RIGHT),2);
+        String singleLabel=tile(world,source).motionLabel();
+        check(singleLabel.equals("Slide Left") || singleLabel.equals("Slide Right"),"single default side");
+        check(item.placeBlockAt(blank.copy(),player,world,source.east(),EnumFacing.UP,.5F,.5F,.5F,other),"automatic pair placement");
+        world.setBlockState(source.east().up(),world.getBlockState(source.east().up()).withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.LEFT),2);
+        check(tile(world,source).getSlideDirection()==0 && tile(world,source).motionLabel().equals("Split Horizontal"),"legacy pair switches to horizontal split: source="+block.getActualState(world.getBlockState(source),world,source)+" mate="+block.getActualState(world.getBlockState(source.east()),world,source.east())+" direction="+tile(world,source).getSlideDirection()+" label="+tile(world,source).motionLabel());
+        clear(world,source.east());
+        check(tile(world,source).motionLabel().equals(singleLabel),"unpair restores placement side");
         // The trigger changes both click policy and the response to a live redstone edge.
         BlockPos power=source.north();
         world.setBlockToAir(power);
