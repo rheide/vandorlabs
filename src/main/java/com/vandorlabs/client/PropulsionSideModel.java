@@ -47,7 +47,7 @@ public final class PropulsionSideModel implements IBakedModel {
             boolean replace=housing && choice!=null && choice!=ScreenHousingTextures.INDUSTRIAL_BLOCK;
             TextureAtlasSprite target=replace?replacement:source;
             for (int vertex = 0; vertex < 4; vertex++) {
-                if(source.getIconName().startsWith(PREFIX) && (source.getIconName().endsWith("_on") || source.getIconName().endsWith("_stream")) && brightness<15 && quad.getFormat().hasColor()) {
+                if((source.getIconName().startsWith(PREFIX) || source.getIconName().startsWith("vandorlabs:blocks/hover/")) && (source.getIconName().endsWith("_on") || source.getIconName().endsWith("_stream")) && brightness<15 && quad.getFormat().hasColor()) {
                     int color=vertex*stride+quad.getFormat().getColorOffset()/4;
                     int old=data[color],next=old&0xFF000000;
                     float factor=.20F+.80F*brightness/15F;
