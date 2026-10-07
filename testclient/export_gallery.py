@@ -155,7 +155,7 @@ for name in ("small_power_lever","large_power_lever","compact_power_lever","indu
     for setting in ("raised_6px","raised_6px_tilted_45"):
         FOCUSED_SHOTS[f"controls_mount_{name}_{setting}"]=f"controls/{name.replace('_','-')}-{setting.replace('_','-')}.png"
 
-for index,name in ((0,"thruster-lever"),(2,"airliner-throttle"),(3,"fighter-throttle")):
+for index,name in ((3,"thruster-lever"),(0,"airliner-throttle"),(2,"fighter-throttle")):
     FOCUSED_SHOTS[f"channels_{index+9}"]=f"controls/{name}-config.png"
     for setting in ("standard","raised_2px","raised_4px","raised_6px","tilted_15","tilted_30","tilted_45","raised_6px_tilted_45"):
         FOCUSED_SHOTS[f"controls_mount_{name.replace('-','_')}_{setting}"]=f"controls/{name}-{setting.replace('_','-')}.png"

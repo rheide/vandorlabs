@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Name Thruster Lever types Standard, Twin and Grip, preserving saved types and existing controls.
+
 - Replace the textured Push Button with a compact square recessed button that lights cyan while pressed. Keep its ID, one-alloy recipe and automatic release; share the solid height/tilt mounting options. Give Push Button and Rocker Switch cyan faces a simple bright highlight using the Industrial Power Lever indicator palette.
 
 - Reduce Rocker Switch and Wall Slider models by 8%, with matching collision and selection bounds.

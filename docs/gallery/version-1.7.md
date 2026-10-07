@@ -34,7 +34,7 @@ The armor picker now includes **Custom...**, using the same non-consuming invent
 
 ## Throttle base height and tilt
 
-Thruster Lever, Airliner Throttle and Fighter Throttle now offer **Standard**,
+All three Thruster Lever types now offer **Standard**,
 **+2 px**, **+4 px** and **+6 px** base heights in their configuration dialog. Standard is
 the original minimum height. The mounting plate extends while the panel and
 handles move upward together, or outward from a wall/ceiling support.
@@ -99,10 +99,10 @@ height and tilt settings described below.
 
 ## One configurable throttle
 
-Craft **Thruster Lever**, then select **Type: Thruster/Airliner/Fighter** in its
+Craft **Thruster Lever**, then select **Type: Standard/Twin/Grip** in its
 configuration dialog. All three types share channels, signal limits, height
 and tilt settings. Changing type preserves these settings and the current
-detent. Existing Airliner and Fighter controls retain their appearance.
+detent. Existing controls retain their appearance.
 Pick-block, drops and the Duplifier’s **Signal Levels** option preserve type.
 
 ## Slim Glass doors

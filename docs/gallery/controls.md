@@ -62,7 +62,7 @@ Craft one Rocker Switch with **one stick above one Industrial Alloy Ingot**.
 
 ## Signal-level controls
 
-Thruster Lever, Wall Slider, Airliner Throttle and Fighter Throttle have four
+Thruster Lever (Standard, Twin and Grip) and Wall Slider have four
 positions: Off, Low, Medium and High. Normal right-click cycles their levels;
 Creative-mode shift-right-click configures channels and low/high limits. Defaults
 are 0, 5, 10 and 15. Their numeric outputs drive physical redstone and shared
@@ -71,16 +71,15 @@ channels, including interactive screen sliders and Programmable Trigger blocks.
 Push Button and Rocker Switch share the compact palette and light-like cyan faces.
 Rocker Switch and Wall Slider use compact models reduced by 8%.
 All four detailed models mount on walls, floors and ceilings. The floor-mounted
-Wall Slider puts Off nearest the placing player. Airliner handles move together;
-Fighter buttons are decorative. See the [signal-level guide and GIF examples](version-1.6.md)
+Wall Slider puts Off nearest the placing player. Twin handles move together;
+Grip buttons are decorative. See the [signal-level guide and GIF examples](version-1.6.md)
 for lighting, propulsion and screen settings.
 
 ## Control base height and tilt
 
-Thruster Lever has three selectable types: **Thruster**, **Airliner** and
-**Fighter**. Open its configuration dialog and click **Type** to cycle them.
-All types share the same recipe and settings. Existing Airliner and Fighter
-controls keep their appearance. Type is preserved when saving, pick-block and
+Thruster Lever has three selectable types: **Standard**, **Twin** and
+**Grip**. Open its configuration dialog and click **Type** to cycle them.
+All types share the same recipe and settings. Existing controls keep their appearance. Type is preserved when saving, pick-block and
 breaking/replacing; the Duplifier’s **Signal Levels** option copies it.
 
 All three throttle types, **Wall Slider**, **Power Lever**, **Industrial Power
@@ -116,22 +115,22 @@ All pictures below use the Off detent so the mounting settings can be compared d
 | Control | Standard | +2 px | +4 px | +6 px |
 | --- | --- | --- | --- | --- |
 | Thruster Lever | ![Thruster Lever standard](../images/gallery/controls/thruster-lever-standard.png) | ![Thruster Lever raised 2 px](../images/gallery/controls/thruster-lever-raised-2px.png) | ![Thruster Lever raised 4 px](../images/gallery/controls/thruster-lever-raised-4px.png) | ![Thruster Lever raised 6 px](../images/gallery/controls/thruster-lever-raised-6px.png) |
-| Airliner Throttle | ![Airliner Throttle standard](../images/gallery/controls/airliner-throttle-standard.png) | ![Airliner Throttle raised 2 px](../images/gallery/controls/airliner-throttle-raised-2px.png) | ![Airliner Throttle raised 4 px](../images/gallery/controls/airliner-throttle-raised-4px.png) | ![Airliner Throttle raised 6 px](../images/gallery/controls/airliner-throttle-raised-6px.png) |
-| Fighter Throttle | ![Fighter Throttle standard](../images/gallery/controls/fighter-throttle-standard.png) | ![Fighter Throttle raised 2 px](../images/gallery/controls/fighter-throttle-raised-2px.png) | ![Fighter Throttle raised 4 px](../images/gallery/controls/fighter-throttle-raised-4px.png) | ![Fighter Throttle raised 6 px](../images/gallery/controls/fighter-throttle-raised-6px.png) |
+| Thruster Lever: Twin | ![Thruster Lever: Twin standard](../images/gallery/controls/airliner-throttle-standard.png) | ![Thruster Lever: Twin raised 2 px](../images/gallery/controls/airliner-throttle-raised-2px.png) | ![Thruster Lever: Twin raised 4 px](../images/gallery/controls/airliner-throttle-raised-4px.png) | ![Thruster Lever: Twin raised 6 px](../images/gallery/controls/airliner-throttle-raised-6px.png) |
+| Thruster Lever: Grip | ![Thruster Lever: Grip standard](../images/gallery/controls/fighter-throttle-standard.png) | ![Thruster Lever: Grip raised 2 px](../images/gallery/controls/fighter-throttle-raised-2px.png) | ![Thruster Lever: Grip raised 4 px](../images/gallery/controls/fighter-throttle-raised-4px.png) | ![Thruster Lever: Grip raised 6 px](../images/gallery/controls/fighter-throttle-raised-6px.png) |
 
 | Control | 15 degrees | 30 degrees | 45 degrees |
 | --- | --- | --- | --- |
 | Thruster Lever | ![Thruster Lever tilted 15 degrees](../images/gallery/controls/thruster-lever-tilted-15.png) | ![Thruster Lever tilted 30 degrees](../images/gallery/controls/thruster-lever-tilted-30.png) | ![Thruster Lever tilted 45 degrees](../images/gallery/controls/thruster-lever-tilted-45.png) |
-| Airliner Throttle | ![Airliner Throttle tilted 15 degrees](../images/gallery/controls/airliner-throttle-tilted-15.png) | ![Airliner Throttle tilted 30 degrees](../images/gallery/controls/airliner-throttle-tilted-30.png) | ![Airliner Throttle tilted 45 degrees](../images/gallery/controls/airliner-throttle-tilted-45.png) |
-| Fighter Throttle | ![Fighter Throttle tilted 15 degrees](../images/gallery/controls/fighter-throttle-tilted-15.png) | ![Fighter Throttle tilted 30 degrees](../images/gallery/controls/fighter-throttle-tilted-30.png) | ![Fighter Throttle tilted 45 degrees](../images/gallery/controls/fighter-throttle-tilted-45.png) |
+| Thruster Lever: Twin | ![Thruster Lever: Twin tilted 15 degrees](../images/gallery/controls/airliner-throttle-tilted-15.png) | ![Thruster Lever: Twin tilted 30 degrees](../images/gallery/controls/airliner-throttle-tilted-30.png) | ![Thruster Lever: Twin tilted 45 degrees](../images/gallery/controls/airliner-throttle-tilted-45.png) |
+| Thruster Lever: Grip | ![Thruster Lever: Grip tilted 15 degrees](../images/gallery/controls/fighter-throttle-tilted-15.png) | ![Thruster Lever: Grip tilted 30 degrees](../images/gallery/controls/fighter-throttle-tilted-30.png) | ![Thruster Lever: Grip tilted 45 degrees](../images/gallery/controls/fighter-throttle-tilted-45.png) |
 
 Existing 15-degree mounts keep that angle. Earlier 5-degree and 10-degree mounts use 15 degrees when loaded.
 
 Height and tilt can be combined. These examples use **+6 px** and **45 degrees**:
 
-| Thruster Lever | Airliner Throttle | Fighter Throttle |
+| Thruster Lever | Thruster Lever: Twin | Thruster Lever: Grip |
 | --- | --- | --- |
-| ![Thruster raised and tilted](../images/gallery/controls/thruster-lever-raised-6px-tilted-45.png) | ![Airliner raised and tilted](../images/gallery/controls/airliner-throttle-raised-6px-tilted-45.png) | ![Fighter raised and tilted](../images/gallery/controls/fighter-throttle-raised-6px-tilted-45.png) |
+| ![Thruster raised and tilted](../images/gallery/controls/thruster-lever-raised-6px-tilted-45.png) | ![Twin raised and tilted](../images/gallery/controls/airliner-throttle-raised-6px-tilted-45.png) | ![Grip raised and tilted](../images/gallery/controls/fighter-throttle-raised-6px-tilted-45.png) |
 
 The same upright extension and filled tilt wedge are available on these controls:
 

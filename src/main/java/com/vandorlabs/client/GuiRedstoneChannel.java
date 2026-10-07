@@ -149,7 +149,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     private int baseControlsY(){return signalControl?selectableType?146:122:powerLever?96:66;}
-    private String typeLabel(){return "Type: "+new String[]{"Thruster","Airliner","Fighter"}[controlType];}
+    private String typeLabel(){return "Type: "+new String[]{"Standard","Twin","Grip"}[controlType];}
     private String sizeLabel(){boolean twin=member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever;return "Size: "+(twin?(powerLeverSize==0?"Small":"Large"):(powerLeverSize==0?"Compact":"Industrial"));}
     private String heightLabel(){return "Base height: "+(baseHeight==0?"Standard":"+"+(baseHeight*2)+" px");}
     private String tiltLabel(){return "Tilt: "+(baseTilt==0?"Flat":baseTilt*15+" deg");}
