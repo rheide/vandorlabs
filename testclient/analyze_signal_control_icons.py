@@ -20,8 +20,8 @@ for slot in range(4):
     assert yy.min()>=2*scale and yy.max()<16*scale,f'Control {slot}: missing vertical padding'
     print(f'Control {slot} padded icon PASS ({xx.max()-xx.min()+1} x {yy.max()-yy.min()+1} physical pixels)')
 
-# Every combination of the three base heights, four tilt angles and four directions.
-for page in range(18):
+# Every combination of the four base heights, four tilt angles and four directions.
+for page in range(24):
     shot=root/f'shot_controls_mount_icons_{page}.png'
     if not shot.exists():
         assert page==0, 'Missing configured icon page'

@@ -54,14 +54,22 @@ public class BlockSignalControl extends BlockVandorSwitch {
     }
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntity tile=world.getTileEntity(pos);int mount=0;
-        if(hasAdjustableBase() && tile instanceof TileEntitySignalControl){TileEntitySignalControl t=(TileEntitySignalControl)tile;mount=t.getBaseHeight()+3*(t.getBaseTilt()+4*t.getTiltDirection());}
+        if(hasAdjustableBase() && tile instanceof TileEntitySignalControl){TileEntitySignalControl t=(TileEntitySignalControl)tile;mount=t.getBaseHeight()+4*(t.getBaseTilt()+4*t.getTiltDirection());}
         return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(MOUNT,mount);
     }
+    public java.util.List<AxisAlignedBB> collisionPieces(IBlockState state,IBlockAccess world,BlockPos pos){
+        state=getActualState(state,world,pos);TileEntity tile=world.getTileEntity(pos);
+        if(!hasAdjustableBase())return java.util.Collections.emptyList();
+        TileEntitySignalControl t=tile instanceof TileEntitySignalControl?(TileEntitySignalControl)tile:null;
+        return SignalControlShape.boxes(this,state,t==null?0:t.getBaseHeight(),t==null?0:t.getBaseTilt(),t==null?0:t.getTiltDirection());
+    }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){
-        state=getActualState(state,world,pos);AxisAlignedBB original=originalBounds(state);TileEntity tile=world.getTileEntity(pos);
-        if(!hasAdjustableBase() || !(tile instanceof TileEntitySignalControl))return original;
-        TileEntitySignalControl t=(TileEntitySignalControl)tile;
-        return new SignalControlMount(state.getValue(FACING),state.getValue(ROTATION),t.getBaseHeight(),t.getBaseTilt(),t.getTiltDirection(),supportBounds(state)).bounds(original);
+        if(!hasAdjustableBase())return originalBounds(getActualState(state,world,pos));
+        AxisAlignedBB result=null;for(AxisAlignedBB box:collisionPieces(state,world,pos))result=result==null?box:result.union(box);return result;
+    }
+    @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return hasAdjustableBase()?getBoundingBox(state,world,pos):NULL_AABB;}
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> boxes,net.minecraft.entity.Entity entity,boolean actual){
+        for(AxisAlignedBB box:collisionPieces(state,world,pos))addCollisionBoxToList(pos,query,boxes,box);
     }
     @Override public void getDrops(NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){
         ItemStack stack=new ItemStack(this);TileEntity tile=world.getTileEntity(pos);

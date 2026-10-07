@@ -17,8 +17,8 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         baseHeight=height;baseTilt=tilt;tiltDirection=direction;markDirty();
         if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}
     }
-    public void readMount(NBTTagCompound tag){configureMount(tag.getInteger("BaseHeight"),tag.getInteger("BaseTilt"),tag.getInteger("TiltDirection"));}
-    private void writeMount(NBTTagCompound tag){tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
+    public void readMount(NBTTagCompound tag){configureMount(tag.getInteger("BaseHeight"),com.vandorlabs.blocks.SignalControlMount.readTilt(tag),tag.getInteger("TiltDirection"));}
+    private void writeMount(NBTTagCompound tag){tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
     public int getLowLimit(){return low;}
     public int getHighLimit(){return high;}
     public static boolean validLimits(int low,int high){return low>=1 && high<=15 && high-low>=2;}
@@ -70,7 +70,7 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);
-        int h=tag.getInteger("BaseHeight"),t=tag.getInteger("BaseTilt"),d=tag.getInteger("TiltDirection");
+        int h=tag.getInteger("BaseHeight"),t=com.vandorlabs.blocks.SignalControlMount.readTilt(tag),d=tag.getInteger("TiltDirection");
         baseHeight=baseTilt=tiltDirection=0;
         if(com.vandorlabs.blocks.SignalControlMount.valid(h,t,d)){baseHeight=h;baseTilt=t;tiltDirection=d;}
         int savedLow=tag.hasKey("LowLimit")?tag.getInteger("LowLimit"):5,savedHigh=tag.hasKey("HighLimit")?tag.getInteger("HighLimit"):15;

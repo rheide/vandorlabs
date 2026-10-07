@@ -28,9 +28,9 @@ public final class SignalControlRuntimeChecks {
                 TileEntitySignalControl control=(TileEntitySignalControl)world.getTileEntity(pos);
                 control.configureLimits(3,11);
                 if(((BlockSignalControl)block).hasAdjustableBase()){
-                    control.configureMount(2,3,1);TileEntitySignalControl restored=new TileEntitySignalControl();restored.readFromNBT(control.writeToNBT(new NBTTagCompound()));
-                    require(restored.getBaseHeight()==2&&restored.getBaseTilt()==3&&restored.getTiltDirection()==1,"mount NBT");
-                    control.configureMount(3,4,-1);require(control.getBaseHeight()==2&&control.getBaseTilt()==3,"invalid mount accepted");
+                    control.configureMount(3,3,1);TileEntitySignalControl restored=new TileEntitySignalControl();restored.readFromNBT(control.writeToNBT(new NBTTagCompound()));
+                    require(restored.getBaseHeight()==3&&restored.getBaseTilt()==3&&restored.getTiltDirection()==1,"mount NBT");
+                    control.configureMount(4,4,-1);require(control.getBaseHeight()==3&&control.getBaseTilt()==3,"invalid mount accepted");
                 }
                 for(int step=0;step<4;step++){
                     control.setStep(step);int expected=new int[]{0,3,7,11}[step];IBlockState state=world.getBlockState(pos);
@@ -48,12 +48,13 @@ public final class SignalControlRuntimeChecks {
                 control.setStep(2);control.setRedstoneChannels(ChannelList.of(16303));require(RedstoneChannels.level(world,16303)==7 && control.getOutputLevel()==7,"channel reassignment amplified output");
                 control.setRedstoneChannels(ChannelList.EMPTY);require(control.getOutputLevel()==7,"unlink loses selected detent");
                 for(int rotation=0;rotation<4;rotation++){control.setMountRotation(rotation);require(block.getBoundingBox(world.getBlockState(pos),world,pos).getAverageEdgeLength()>0,"mounted selection bounds");}
+                if(((BlockSignalControl)block).hasAdjustableBase())checkSolidMovement(world,pos,(BlockSignalControl)block,control);
                 control.configureLimits(15,1);require(control.getLowLimit()==3 && control.getHighLimit()==11,"invalid range accepted");
                 BlockPos copy=pos.east(4);world.setBlockState(copy,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),2);
                 world.setBlockState(copy.down(),Blocks.STONE.getDefaultState(),2);
                 com.vandorlabs.items.ProgrammableSettings.apply(world,copy,com.vandorlabs.items.ProgrammableSettings.capture(world,pos));
                 TileEntitySignalControl copied=(TileEntitySignalControl)world.getTileEntity(copy);
-                if(((BlockSignalControl)block).hasAdjustableBase())require(copied.getBaseHeight()==2&&copied.getBaseTilt()==3&&copied.getTiltDirection()==1,"Duplifier mount settings");
+                if(((BlockSignalControl)block).hasAdjustableBase())require(copied.getBaseHeight()==3&&copied.getBaseTilt()==3&&copied.getTiltDirection()==1,"Duplifier mount settings");
                 require(copied.getLowLimit()==3 && copied.getHighLimit()==11 && copied.getStep()==2,"Duplifier control settings");
                 net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> drops=net.minecraft.util.NonNullList.create();block.getDrops(drops,world,pos,world.getBlockState(pos),0);
                 require(drops.size()==1 && drops.get(0).getSubCompound("RedstoneChannelSettings")!=null,"configured control drop");
@@ -61,7 +62,7 @@ public final class SignalControlRuntimeChecks {
                 ((BlockSignalControl)block).onBlockPlacedBy(world,copy,world.getBlockState(copy),net.minecraftforge.common.util.FakePlayerFactory.getMinecraft((net.minecraft.world.WorldServer)world),drops.get(0));
                 TileEntitySignalControl placed=(TileEntitySignalControl)world.getTileEntity(copy);
                 require(placed.getLowLimit()==3 && placed.getHighLimit()==11,"configured drop limits on placement");
-                if(((BlockSignalControl)block).hasAdjustableBase())require(placed.getBaseHeight()==2 && placed.getBaseTilt()==3 && placed.getTiltDirection()==1,"configured drop mount on placement");
+                if(((BlockSignalControl)block).hasAdjustableBase())require(placed.getBaseHeight()==3 && placed.getBaseTilt()==3 && placed.getTiltDirection()==1,"configured drop mount on placement");
                 RedstoneChannels.unregister(copied);RedstoneChannels.unregister(placed);world.setBlockToAir(copy);world.setBlockToAir(copy.down());
                 RedstoneChannels.unregister(control);world.setBlockToAir(pos.offset(mount.getOpposite()));
                 if(world.getBlockState(pos).getBlock()==block)block.neighborChanged(world.getBlockState(pos),world,pos,Blocks.STONE,pos.offset(mount.getOpposite()));
@@ -70,6 +71,22 @@ public final class SignalControlRuntimeChecks {
             }
         }
         System.out.println("[vandorlabs][reprolab] signal-control-runtime PASS four controls, all supported faces, four detents, channels, save, copy and limits");
+    }
+    private static void checkSolidMovement(World world,BlockPos pos,BlockSignalControl block,TileEntitySignalControl control){
+        // A living-width body must be stopped by actual World collision queries, not just a selection box.
+        net.minecraft.entity.item.EntityArmorStand body=new net.minecraft.entity.item.EntityArmorStand(world);
+        java.util.List<net.minecraft.util.math.AxisAlignedBB> pieces=block.collisionPieces(world.getBlockState(pos),world,pos);
+        net.minecraft.util.math.AxisAlignedBB largest=pieces.get(0);
+        for(net.minecraft.util.math.AxisAlignedBB b:pieces)if((b.maxX-b.minX)*(b.maxY-b.minY)*(b.maxZ-b.minZ)>(largest.maxX-largest.minX)*(largest.maxY-largest.minY)*(largest.maxZ-largest.minZ))largest=b;
+        net.minecraft.util.math.AxisAlignedBB target=largest.offset(pos);double y=(target.minY+target.maxY)/2;
+        body.setPosition(target.minX-.8,y,target.getCenter().z);body.stepHeight=0;body.setNoGravity(true);
+        net.minecraft.util.math.BlockPos support=pos.offset(world.getBlockState(pos).getValue(BlockVandorSwitch.FACING).getOpposite());
+        IBlockState supportState=world.getBlockState(support);world.setBlockState(support,Blocks.AIR.getDefaultState(),2);
+        try{
+            double start=body.posX;body.move(net.minecraft.entity.MoverType.SELF,1.6,0,0);
+            require(body.posX<start+1.59,"walking passes through solid control");
+        }finally{world.setBlockState(support,supportState,2);}
+        require(block.getCollisionBoundingBox(world.getBlockState(pos),world,pos)!=null,"missing collision bounding box");
     }
     private static void checkRetiredControls(){
         for(String id:new String[]{"thruster_lever_16px","thruster_wall_slider_16px","thruster_control_block_16px","thruster_control_block_32px","thruster_lever_32px","thruster_wall_slider_32px"}){

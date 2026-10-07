@@ -104,7 +104,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id==9){baseHeight=GuiOptionCycle.next(baseHeight,3);button.displayString=heightLabel();}
+        if(button.id==9){baseHeight=GuiOptionCycle.next(baseHeight,4);button.displayString=heightLabel();}
         if(button.id==10){baseTilt=GuiOptionCycle.next(baseTilt,4);button.displayString=tiltLabel();}
         if(button.id==11){tiltDirection=GuiOptionCycle.next(tiltDirection,4);button.displayString=directionLabel();}
         if(button.id==7){lowLimit=GuiOptionCycle.next(lowLimit,1,highLimit-2);button.displayString="Low: "+lowLimit;}
@@ -133,7 +133,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     private String heightLabel(){return "Base height: "+(baseHeight==0?"Standard":"+"+(baseHeight*2)+" px");}
-    private String tiltLabel(){return "Tilt: "+(baseTilt==0?"Flat":baseTilt*5+" deg");}
+    private String tiltLabel(){return "Tilt: "+(baseTilt==0?"Flat":baseTilt*15+" deg");}
     private String directionLabel(){return new String[]{"Forward","Right","Backward","Left"}[tiltDirection];}
     private String brightnessLabel(){return signalBrightness?"Brightness: Signal":"Brightness: On/Off";}
     private String thresholdLabel(){return "Particles at level: "+threshold;}

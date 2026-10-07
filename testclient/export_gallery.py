@@ -154,8 +154,8 @@ FOCUSED_SHOTS = {
 
 for index,name in ((0,"thruster-lever"),(2,"airliner-throttle"),(3,"fighter-throttle")):
     FOCUSED_SHOTS[f"channels_{index+9}"]=f"controls/{name}-config.png"
-    for step,setting in ((0,"standard"),(1,"raised-2px"),(2,"raised-4px"),(3,"tilted")):
-        FOCUSED_SHOTS[f"controls_{index}_{step}_floor"]=f"controls/{name}-{setting}.png"
+    for setting in ("standard","raised_2px","raised_4px","raised_6px","tilted_15","tilted_30","tilted_45"):
+        FOCUSED_SHOTS[f"controls_mount_{name.replace('-','_')}_{setting}"]=f"controls/{name}-{setting.replace('_','-')}.png"
 
 for role in ("bioengineer","scientist","hazmat","repairman","pilot","civilian_staff","spaceship_staff","security_rescue"):
     FOCUSED_SHOTS[f"armor_stand_set_{role}_open"]=f"armor/{role.replace('_','-')}-open.png"

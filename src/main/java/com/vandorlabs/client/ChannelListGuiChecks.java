@@ -56,7 +56,7 @@ final class ChannelListGuiChecks {
                 if(index==1)for(int i=0;i<3;i++)((GuiProgrammableLight)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Signal brightness"));
                 if(index==2){((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(101,0,0,"Signal bands"));((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Exact level"));}
                 if(index==8){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(5,0,0,"Signal brightness"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Threshold"));}
-                if(index>=9 && index!=10){for(int id:new int[]{9,9,10,10,10,11})((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(id,0,0,"Mount"));}
+                if(index>=9 && index!=10){for(int id:new int[]{9,9,9,10,10,10,11})((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(id,0,0,"Mount"));}
                 if(index>=9){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Low"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(8,0,0,"High"));}
                 Method send=mc.currentScreen.getClass().getDeclaredMethod(METHODS[index]);send.setAccessible(true);send.invoke(mc.currentScreen);
                 stage=3;ticks=0;return;
@@ -64,7 +64,7 @@ final class ChannelListGuiChecks {
             if(stage==3 && ticks>20){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     RedstoneChannelMember member=(RedstoneChannelMember)mc.getIntegratedServer().getEntityWorld().getTileEntity(POS);
-                    if(index>=9){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)member;require(control.getLowLimit()==6 && control.getHighLimit()==8,"control limits packet");if(index!=10)require(control.getBaseHeight()==2 && control.getBaseTilt()==3 && control.getTiltDirection()==1,"base height/tilt packet");}
+                    if(index>=9){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)member;require(control.getLowLimit()==6 && control.getHighLimit()==8,"control limits packet");if(index!=10)require(control.getBaseHeight()==3 && control.getBaseTilt()==3 && control.getTiltDirection()==1,"base height/tilt packet");}
                     require(member!=null && EXPECTED.equals(member.getRedstoneChannels()),"server lost submitted list index="+index);
                     if(index==1)require(((com.vandorlabs.tiles.TileEntityProgrammableLight)member).isSignalBrightness(),"light brightness packet");
                     if(index==2)require(((com.vandorlabs.tiles.TileEntityProgrammableTrigger)member).isLevelStates() && ((com.vandorlabs.tiles.TileEntityProgrammableTrigger)member).getExactLevel()==0,"trigger levels packet");
@@ -76,7 +76,7 @@ final class ChannelListGuiChecks {
                 if(index==1 || index==8){Field signal=mc.currentScreen.getClass().getDeclaredField("signalBrightness");signal.setAccessible(true);require(signal.getBoolean(mc.currentScreen),"signal brightness lost on reopen");}
                 if(index==2){Field exact=mc.currentScreen.getClass().getDeclaredField("exact");exact.setAccessible(true);require(exact.getInt(mc.currentScreen)==0,"exact signal lost on reopen");}
                 if(index>=9){for(String key:new String[]{"lowLimit","highLimit"}){Field limit=mc.currentScreen.getClass().getDeclaredField(key);limit.setAccessible(true);require(limit.getInt(mc.currentScreen)==(key.equals("lowLimit")?6:8),"control limits lost on reopen");}}
-                if(index>=9 && index!=10)for(String key:new String[]{"baseHeight","baseTilt","tiltDirection"}){Field f=mc.currentScreen.getClass().getDeclaredField(key);f.setAccessible(true);require(f.getInt(mc.currentScreen)==(key.equals("baseHeight")?2:key.equals("baseTilt")?3:1),"mount settings lost on reopen");}
+                if(index>=9 && index!=10)for(String key:new String[]{"baseHeight","baseTilt","tiltDirection"}){Field f=mc.currentScreen.getClass().getDeclaredField(key);f.setAccessible(true);require(f.getInt(mc.currentScreen)==(key.equals("baseHeight")?3:key.equals("baseTilt")?3:1),"mount settings lost on reopen");}
                 require(EXPECTED.toString().equals(field(mc).getText()),"reopened GUI lost list index="+index);
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_channels_"+index+".png"));
                 System.out.println("[vandorlabs][reprolab] channel-gui PASS "+mc.currentScreen.getClass().getSimpleName());
@@ -106,7 +106,7 @@ final class ChannelListGuiChecks {
         SignalControlMountChecks.checkModels(mc);
         System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation; slider attachment and grip/panel alignment");
     }
-    private static int visualIndex,visualStep,visualMount,visualRotation,iconPage;
+    private static int visualIndex,visualStep,visualMount,visualRotation,iconPage,mountPreview;
     private static final net.minecraft.util.EnumFacing[] VISUAL_MOUNTS={net.minecraft.util.EnumFacing.NORTH,net.minecraft.util.EnumFacing.SOUTH,net.minecraft.util.EnumFacing.EAST,net.minecraft.util.EnumFacing.WEST,net.minecraft.util.EnumFacing.UP,net.minecraft.util.EnumFacing.DOWN};
     private static void captureControls(Minecraft mc,File output){
         try{
@@ -130,13 +130,13 @@ final class ChannelListGuiChecks {
             if(stage==12){
                 mc.player.inventory.setInventorySlotContents(8,net.minecraft.item.ItemStack.EMPTY);
                 for(int slot=0;slot<8;slot++){
-                    int variant=iconPage*8+slot,kind=variant/48,value=variant%48;
+                    int variant=iconPage*8+slot,kind=variant/64,value=variant%64;
                     net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[kind]));
-                    net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("BaseHeight",value%3);tag.setInteger("BaseTilt",value/3%4);tag.setInteger("TiltDirection",value/12);stack.setTagInfo("RedstoneChannelSettings",tag);mc.player.inventory.setInventorySlotContents(slot,stack);
+                    net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",value%4);tag.setInteger("BaseTilt",value/4%4);tag.setInteger("TiltDirection",value/16);stack.setTagInfo("RedstoneChannelSettings",tag);mc.player.inventory.setInventorySlotContents(slot,stack);
                 }
                 stage=13;ticks=0;return;
             }
-            if(stage==13 && ++ticks>15){capture(mc,output,"controls_mount_icons_"+iconPage);iconPage++;if(iconPage==18 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-icons PASS all 144 configured icons");mc.shutdown();}else stage=iconPage==18?10:12;ticks=0;return;}
+            if(stage==13 && ++ticks>15){capture(mc,output,"controls_mount_icons_"+iconPage);iconPage++;if(iconPage==24 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-icons PASS all 192 configured icons");mc.shutdown();}else stage=iconPage==24?10:12;ticks=0;return;}
             if(stage==10){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
@@ -174,8 +174,25 @@ final class ChannelListGuiChecks {
                     if(visualIndex==0 && visualMount==1)visualMount=4;
                     if(visualMount==VISUAL_MOUNTS.length){visualMount=0;visualIndex++;}
                 }
-                if(visualIndex==SignalControlRuntimeChecks.IDS.length){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS four icons, actual item placement and 156 mounted poses");mc.shutdown();}else stage=10;
+                if(visualIndex==SignalControlRuntimeChecks.IDS.length){stage=14;System.out.println("[vandorlabs][reprolab] signal-control-visuals PASS four icons, actual item placement and 156 mounted poses");}else stage=10;
                 ticks=0;
+            }
+            if(stage==14){
+                mc.gameSettings.hideGUI=true;
+                pending=mc.getIntegratedServer().addScheduledTask(()->{
+                    net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);world.setBlockToAir(POS);
+                    for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())world.setBlockToAir(POS.offset(side));
+                    world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
+                    Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/7]);
+                    world.setBlockState(POS,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.UP),3);
+                    com.vandorlabs.tiles.TileEntitySignalControl tile=(com.vandorlabs.tiles.TileEntitySignalControl)world.getTileEntity(POS);tile.setMountRotation(0);int setting=mountPreview%7;tile.configureMount(setting<4?setting:0,setting<4?0:setting-3,0);tile.setStep(0);
+                    EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
+                    player.connection.setPlayerLocation(POS.getX()-2,POS.getY()+2.2-player.getEyeHeight(),POS.getZ()-2.6,-38.9F,27F);
+                });stage=15;ticks=0;return;
+            }
+            if(stage==15 && ++ticks>25){
+                capture(mc,output,"controls_mount_"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/7]+"_"+new String[]{"standard","raised_2px","raised_4px","raised_6px","tilted_15","tilted_30","tilted_45"}[mountPreview%7]);
+                if(++mountPreview<21)stage=14;else{stage=9;System.out.println("[vandorlabs][reprolab] signal-control-mount-gallery PASS shots=21");mc.shutdown();}ticks=0;return;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}
     }
