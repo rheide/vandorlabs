@@ -70,3 +70,5 @@ such as `engineering_screen` for programmable blocks, and allow enough settle
 ticks for chunks, animated models, and block-change particles to stabilize.
 
 Use `bash testclient/test_viewscreen.sh --focus armor-tools` for world-face sampling and mounted armor configuration checks without recapturing every native role set. The `armor` focus includes these checks and the full armor suite.
+
+Use `bash testclient/test_viewscreen.sh --focus armor-duplifier` to validate armor appearance snapshots, every native role/slot combination, crafting preservation, normal/small stand interactions, survival offhand copying and the Armor Texture apply switch. The full `armor` and `armor-tools` focuses include these checks.

@@ -160,6 +160,8 @@ for index,name in enumerate(re.findall(r'"([^"]+)"',door_names)):
 
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
 FOCUSED_SHOTS["armor_stand_picker"] = "armor/stand-picker.png"
+FOCUSED_SHOTS["armor_custom_picker"] = "armor/custom-picker.png"
+FOCUSED_SHOTS["armor_duplifier_options"] = "tools/duplifier-config.png"
 
 
 def main():

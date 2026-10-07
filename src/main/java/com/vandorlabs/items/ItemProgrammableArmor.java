@@ -42,13 +42,17 @@ public final class ItemProgrammableArmor extends ItemArmor {
         setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
     }
 
-    /** Match the ordinary block picker, excluding its optional custom sample action. */
+    /** Custom samples can resolve any visible shared artwork, including door and screen items. */
     public static boolean validTexture(int choice) {
-        int index = ScreenHousingTextures.localIndex(choice);
-        if (ScreenHousingTextures.choiceAt(index) != choice || !ScreenHousingTextures.visible(index)) return false;
-        String category = ScreenHousingTextures.category(index);
-        return !category.equals("Screens")
-                && !category.equals("Doors") && !category.equals("Double Doors");
+        if(com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return true;
+        int index=ScreenHousingTextures.localIndex(choice);
+        return ScreenHousingTextures.choiceAt(index)==choice && ScreenHousingTextures.visible(index);
+    }
+    /** The ordinary armor menu adds lights to the block-material categories. */
+    public static boolean listedMaterial(int choice) {
+        if(!validTexture(choice) || com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return false;
+        String category=ScreenHousingTextures.category(ScreenHousingTextures.localIndex(choice));
+        return !category.equals("Screens") && !category.equals("Doors") && !category.equals("Double Doors");
     }
 
     /** Enforce native armor slot filtering on both the client and the server. */

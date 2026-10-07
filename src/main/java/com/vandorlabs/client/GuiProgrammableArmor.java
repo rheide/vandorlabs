@@ -19,11 +19,12 @@ public final class GuiProgrammableArmor extends GuiContainer {
         ySize=Math.min(268,height-16);
         super.initGui();
         textures = HousingTextureList.forArmor(armor.stack(mc.player),guiLeft + 12, guiTop + 38, xSize - 34,
-                ItemProgrammableArmor.texture(armor.stack(mc.player))).visibleRows(Math.max(2,(ySize-82)/22));
+                ItemProgrammableArmor.texture(armor.stack(mc.player))).visibleRows(Math.max(2,(ySize-82)/22)).custom(this::select);
         buttonList.add(new GuiButton(0, guiLeft + (xSize-100)/2, guiTop + ySize-30, 100, 20, "Done"));
     }
     void select(int choice) {
         if (!ItemProgrammableArmor.validTexture(armor.stack(mc.player),choice)) return;
+        ItemProgrammableArmor.setTexture(armor.stack(mc.player),choice);
         textures.setSelected(choice);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableArmor(inventorySlots.windowId, choice));
     }

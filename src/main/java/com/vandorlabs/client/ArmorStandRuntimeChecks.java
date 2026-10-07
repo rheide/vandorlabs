@@ -91,8 +91,9 @@ final class ArmorStandRuntimeChecks {
             if(stage==4){
                 if(++example<8){stage=0;ticks=0;return;}
                 System.out.println("[vandorlabs][reprolab] armor-stand-configuration PASS cases=8 (four slots, normal/small stands, survival Configurizer, equipment synchronization, metadata and stale target guards)");
-                stage=5;mc.shutdown();
+                stage=5;
             }
+            if(stage==5)DuplifierArmorRuntimeChecks.tick(mc);
         }catch(Exception e){throw new IllegalStateException("Armor stand checks example="+example+" stage="+stage,e);}
     }
 }

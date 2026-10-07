@@ -23,12 +23,17 @@ public final class RecipeCopiedSettings extends IForgeRegistryEntry.Impl<IRecipe
             ItemStack stack=inventory.getStackInSlot(i);
             if (stack.isEmpty()) continue;
             if (stack.getItem()==ModItems.DUPLIFIER && tool.isEmpty()) tool=stack;
-            else if (input.isEmpty() && stack.getItem() instanceof net.minecraft.item.ItemBlock) input=stack;
+            else if (input.isEmpty() && (stack.getItem() instanceof net.minecraft.item.ItemBlock || stack.getItem() instanceof ItemProgrammableArmor)) input=stack;
             else return ItemStack.EMPTY;
         }
         if (tool.isEmpty() || input.isEmpty() || !ItemDuplifier.hasCopy(tool)) return ItemStack.EMPTY;
-        return ProgrammableSettings.applyToItem(input, DuplifierApplyOptions.selected(
-                tool.getSubCompound(ItemDuplifier.SETTINGS_TAG),DuplifierApplyOptions.mask(tool)));
+        net.minecraft.nbt.NBTTagCompound settings=DuplifierApplyOptions.selected(
+                tool.getSubCompound(ItemDuplifier.SETTINGS_TAG),DuplifierApplyOptions.mask(tool));
+        if(input.getItem() instanceof ItemProgrammableArmor) {
+            ItemStack output=input.copy();
+            return DuplifierArmorTextures.apply(output,settings)?output:ItemStack.EMPTY;
+        }
+        return ProgrammableSettings.applyToItem(input,settings);
     }
     public NonNullList<ItemStack> getRemainingItems(InventoryCrafting inventory) {
         NonNullList<ItemStack> left=NonNullList.withSize(inventory.getSizeInventory(),ItemStack.EMPTY);

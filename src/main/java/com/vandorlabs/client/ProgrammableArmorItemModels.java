@@ -42,7 +42,7 @@ public final class ProgrammableArmorItemModels {
                 int choice=ItemProgrammableArmor.texture(stack);
                 String sample=ItemProgrammableArmor.sample(stack);
                 if(sample==null && roles.containsKey(choice))return roles.get(choice);
-                String sprite=sample==null?ScreenHousingTextures.texture(choice):sample;
+                String sprite=sample==null?ScreenHousingTextures.fullTexture(choice):sample;
                 return cache.computeIfAbsent(sprite,key->new FixedModel(base,Minecraft.getMinecraft().getTextureMapBlocks()
                         .getAtlasSprite(key)));
             }

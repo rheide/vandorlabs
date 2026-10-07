@@ -56,6 +56,10 @@ public final class ItemDuplifier extends Item {
     @Override public ActionResult<ItemStack> onItemRightClick(World world,
             EntityPlayer player, EnumHand hand) {
         ItemStack tool = player.getHeldItem(hand);
+        if(hand==EnumHand.MAIN_HAND && player.getHeldItemOffhand().getItem() instanceof ItemProgrammableArmor) {
+            if(!world.isRemote && !player.isSpectator())DuplifierArmorTextures.interact(player,tool,player.getHeldItemOffhand());
+            return new ActionResult<>(EnumActionResult.SUCCESS,tool);
+        }
         if (!world.isRemote) {
             if (player.isSneaking()) {
                 clearCopyState(tool);
@@ -95,6 +99,25 @@ public final class ItemDuplifier extends Item {
         return ProgrammableSettings.apply(world, pos,
                 DuplifierApplyOptions.selected(settings, DuplifierApplyOptions.mask(tool)),
                 player);
+    }
+
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH)
+    public static void onArmorStand(PlayerInteractEvent.EntityInteractSpecific event) {
+        if(event.getHand()!=EnumHand.MAIN_HAND || event.getItemStack().getItem()!=ModItems.DUPLIFIER
+                || !(event.getTarget() instanceof net.minecraft.entity.item.EntityArmorStand))return;
+        net.minecraft.entity.item.EntityArmorStand stand=(net.minecraft.entity.item.EntityArmorStand)event.getTarget();
+        EntityPlayer player=event.getEntityPlayer();
+        if(stand.hasMarker() || !stand.isEntityAlive() || player.isSpectator())return;
+        event.setCanceled(true);event.setCancellationResult(EnumActionResult.SUCCESS);
+        net.minecraft.inventory.EntityEquipmentSlot slot=ItemConfigurizer.armorSlot(stand,event.getLocalPos().y);
+        if(slot==null || !(stand.getItemStackFromSlot(slot).getItem() instanceof ItemProgrammableArmor)
+                || event.getWorld().isRemote || player.getDistanceSq(stand)>64)return;
+        if(DuplifierArmorTextures.interact(player,event.getItemStack(),stand.getItemStackFromSlot(slot)) && !player.isSneaking()) {
+            net.minecraft.entity.player.EntityPlayerMP owner=(net.minecraft.entity.player.EntityPlayerMP)player;
+            net.minecraft.network.play.server.SPacketEntityEquipment packet=new net.minecraft.network.play.server.SPacketEntityEquipment(
+                    stand.getEntityId(),slot,stand.getItemStackFromSlot(slot));
+            owner.getServerWorld().getEntityTracker().sendToTracking(stand,packet);owner.connection.sendPacket(packet);
+        }
     }
 
     @SubscribeEvent

@@ -17,7 +17,7 @@ public final class ProgrammableArmorTextures {
     private ProgrammableArmorTextures() { }
 
     public static String texture(int choice, boolean leggings) {
-        return texture(ScreenHousingTextures.texture(choice),leggings);
+        return texture(ScreenHousingTextures.fullTexture(choice),leggings);
     }
     public static String texture(String spriteName,boolean leggings) {
         int layer = leggings ? 1 : 0;

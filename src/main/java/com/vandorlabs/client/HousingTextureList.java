@@ -62,7 +62,7 @@ final class HousingTextureList {
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
-            if(com.vandorlabs.items.ItemProgrammableArmor.validTexture(ScreenHousingTextures.choiceAt(i))) {
+            if(com.vandorlabs.items.ItemProgrammableArmor.listedMaterial(ScreenHousingTextures.choiceAt(i))) {
                 int choice=ScreenHousingTextures.choiceAt(i);
                 entries.add(new Option(choice,"Lights".equals(ScreenHousingTextures.category(i)) ? ScreenHousingTextures.label(i) : name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
             }
@@ -118,7 +118,9 @@ final class HousingTextureList {
         return this;
     }
     void setSelected(int choice) {
-        custom=!nativeOptions && com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)?choice:-1;
+        custom=((!nativeOptions || customConsumer!=null) && com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)
+                || nativeOptions && customConsumer!=null && choice>=0 && !options.containsKey(choice)
+                    && com.vandorlabs.items.ItemProgrammableArmor.validTexture(choice))?choice:-1;
         missing=!nativeOptions && choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
         selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
         Option option=options.get(selected);if(option!=null)expanded.add(option.category);rebuild();
@@ -198,7 +200,8 @@ final class HousingTextureList {
             if(choice==REDSTONE_ROW){font.drawStringWithShadow("Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==CUSTOM_ROW){
                 if(custom>=0) {
-                    if(CustomBlockTextures.isDoor(custom)) {
+                    if(!com.vandorlabs.tiles.CustomBlockMaterials.isCustom(custom))drawThumbnail(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(custom)),yy);
+                    else if(CustomBlockTextures.isDoor(custom)) {
                         mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();
                         new Gui().drawTexturedModalRect(x+7,yy+3,CustomBlockTextures.sprite(custom,true),8,8);
                         new Gui().drawTexturedModalRect(x+7,yy+11,CustomBlockTextures.sprite(custom,false),8,8);

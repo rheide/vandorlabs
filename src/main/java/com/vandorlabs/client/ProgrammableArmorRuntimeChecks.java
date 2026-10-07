@@ -30,6 +30,7 @@ final class ProgrammableArmorRuntimeChecks {
     private static Future<?> pending;
     private static EntityPlayerMP owner(Minecraft mc) { return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID()); }
     static void tick(Minecraft mc,File output) {
+        if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_ARMOR_DUPLIFIER_ONLY"))) {DuplifierArmorRuntimeChecks.tick(mc);return;}
         if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_ARMOR_TOOLS_ONLY"))) {ArmorSamplingRuntimeChecks.tick(mc);return;}
         try {
             if(pending!=null) { if(!pending.isDone())return;pending.get();pending=null; }
@@ -159,7 +160,7 @@ final class ProgrammableArmorRuntimeChecks {
         require(!MessageProgrammableArmor.apply(player,91,-1),"invalid material rejected");
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             int choice=ScreenHousingTextures.choiceAt(i);
-            if(ItemProgrammableArmor.validTexture(choice))require(HousingTextureList.generalTexture(i) || "Lights".equals(ScreenHousingTextures.category(i)),"server picker parity");
+            if(ItemProgrammableArmor.listedMaterial(choice))require(HousingTextureList.generalTexture(i) || "Lights".equals(ScreenHousingTextures.category(i)),"server picker parity");
         }
         require(MessageProgrammableArmor.apply(player,91,1),"authorized material");
         ItemStack replacement=stack.copy();player.setHeldItem(EnumHand.MAIN_HAND,replacement);
@@ -222,7 +223,7 @@ final class ProgrammableArmorRuntimeChecks {
             ItemTransformVec3f gui=model.getItemCameraTransforms().gui;
             require(gui.rotation.x==0 && gui.rotation.y==0 && gui.rotation.z==0,"icon GUI rotation");
             for(BakedQuad quad:model.getQuads(null,null,0)) {
-                require(quad.getSprite().getIconName().equals(ScreenHousingTextures.texture(choice)),"icon uses selected sprite");
+                require(quad.getSprite().getIconName().equals(ScreenHousingTextures.fullTexture(choice)),"icon uses selected sprite");
                 int[] data=quad.getVertexData();int stride=data.length/4;
                 for(int v=0;v<4;v++)for(int axis=0;axis<2;axis++) {
                     float scale=axis==0?gui.scale.x:gui.scale.y;

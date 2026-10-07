@@ -2,6 +2,10 @@
 
 ## 1.7
 
+- Add Custom... to the armor picker, reusing the non-consuming inventory block/door sampler. Preserve the selected Custom row across dialog reopening, resolve configured item artwork, and support custom appearances in worn armor, icons and Duplifier copies.
+
+- Copy programmable armor appearances with the Duplifier on armor stands, offhand items or crafting outputs. Role designs resolve to the destination piece’s corresponding artwork; generic and sampled textures transfer unchanged. Preserve item metadata and clipboard/apply options, with a separate Armor Texture switch.
+
 - Design mounted programmable armor by right-clicking it with the Configurizer in creative or survival, on normal or small armor stands. Preserve equipment metadata and reject edits after the target or tool changes.
 - Resolve selected Programmable Door designs and custom leaf textures, current light on/off artwork and housings, and programmable wall/trigger materials when sampling world textures onto armor.
 - Add fifteen light artwork pairs to the armor picker’s Lights category with explicit On/Off labels; light artwork remains cosmetic.

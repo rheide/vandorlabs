@@ -19,3 +19,15 @@ You can design your armor with the **Configurizer while it is mounted on an armo
 ![Using the Configurizer to design a mounted helmet named Custom Uniform](../images/gallery/armor/stand-picker.png)
 
 World sampling also resolves the selected Programmable Door leaf design or custom leaf texture, and a Programmable Light’s current face artwork or housing material.
+
+## Copy armor designs with the Duplifier
+
+Shift-right-click a mounted piece with the Duplifier to copy its appearance, then right-click another mounted piece to apply it. A role design follows the destination piece: Hazmat leggings copied onto a helmet become the Hazmat helmet texture. Generic materials, light artwork and sampled world textures copy unchanged. Both pieces keep their damage, names and enchantments.
+
+This also works with armor in the offhand, using the Duplifier in the main hand and aiming into the air. A loaded Duplifier can apply the texture through crafting, too. The **Armor Texture** switch in the tool’s **Common** options controls applications. See the [Duplifier guide](../DUPLIFIER.md#armor-textures).
+
+## Custom block textures on armor
+
+The armor picker now includes **Custom...**, using the same non-consuming inventory sample dialog as Programmable Blocks. Drag a block or door item into the sample slot to use its texture. Configured programmable items use their selected material or door design. Custom selections persist when reopening the picker and can be copied with the Duplifier.
+
+![Armor picker retaining a custom brick texture](../images/gallery/armor/custom-picker.png)
