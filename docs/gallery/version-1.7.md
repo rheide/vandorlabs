@@ -84,3 +84,11 @@ configuration and linked switching. Mount it on walls, floors or ceilings.
 
 Craft it from one stick, one Industrial Alloy Ingot and one redstone dust.
 See the [controls gallery](controls.md#toggle-switch) for the two positions.
+
+## One configurable throttle
+
+Craft **Thruster Lever**, then select **Type: Thruster/Airliner/Fighter** in its
+configuration dialog. All three types share channels, signal limits, height
+and tilt settings. Changing type preserves these settings and the current
+detent. Existing Airliner and Fighter controls retain their appearance.
+Pick-block, drops and the Duplifier’s **Signal Levels** option preserve type.

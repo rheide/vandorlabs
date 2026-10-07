@@ -17,6 +17,7 @@ public final class SignalControlRuntimeChecks {
     public static final String[] IDS={"thruster_lever","wall_slider","airliner_throttle","fighter_throttle"};
     public static void run(World world){
         if(Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs",IDS[0])))checkRetiredControls();
+        checkTypeChanges(world);
         BlockPos pos=new BlockPos(3,105,3);
         for(int index=0;index<IDS.length;index++){
             Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",IDS[index]));
@@ -71,6 +72,21 @@ public final class SignalControlRuntimeChecks {
             }
         }
         System.out.println("[vandorlabs][reprolab] signal-control-runtime PASS four controls, all supported faces, four detents, channels, save, copy and limits");
+    }
+    private static void checkTypeChanges(World world){
+        BlockPos pos=new BlockPos(7,108,7);world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
+        BlockSignalControl block=(BlockSignalControl)Block.getBlockFromName("vandorlabs:thruster_lever");
+        world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
+        TileEntitySignalControl tile=(TileEntitySignalControl)world.getTileEntity(pos);tile.configureLimits(3,11);tile.configureMount(3,3,2);tile.setMountRotation(3);tile.setRedstoneChannels(ChannelList.of(17301));tile.setStep(2);
+        for(int type:new int[]{1,2,0}){
+            tile.configureType(type);require(world.getTileEntity(pos)==tile,"type replaced tile and channel latch");
+            require(tile.getControlType()==type && tile.getOutputLevel()==7 && tile.getLowLimit()==3 && tile.getHighLimit()==11 && tile.getBaseHeight()==3 && tile.getBaseTilt()==3 && tile.getTiltDirection()==2 && tile.getMountRotation()==3,"type lost settings");
+            BlockSignalControl current=(BlockSignalControl)world.getBlockState(pos).getBlock();
+            net.minecraft.item.ItemStack item=current.getPickBlock(world.getBlockState(pos),null,world,pos,null);
+            require(item.getItem()==net.minecraft.item.Item.getItemFromBlock(block) && item.getSubCompound("RedstoneChannelSettings").getInteger("ControlType")==type,"type pick not canonical");
+            require(!current.collisionPieces(world.getBlockState(pos),world,pos).isEmpty(),"new type has no solid shape");
+        }
+        world.setBlockToAir(pos);world.setBlockToAir(pos.down());System.out.println("[vandorlabs][reprolab] throttle-type PASS settings, channels, detent, pick, collision and tile identity");
     }
     private static void checkSolidMovement(World world,BlockPos pos,BlockSignalControl block,TileEntitySignalControl control){
         // A living-width body must be stopped by actual World collision queries, not just a selection box.

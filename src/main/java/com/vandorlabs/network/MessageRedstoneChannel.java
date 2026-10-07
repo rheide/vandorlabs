@@ -27,6 +27,8 @@ public class MessageRedstoneChannel implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private boolean controlTypeUpdate;private int controlType;
+    public MessageRedstoneChannel withControlType(boolean enabled,int type){controlTypeUpdate=enabled;controlType=type;return this;}
     private boolean powerLever;private int powerLeverSize;
     public MessageRedstoneChannel withPowerLeverSize(boolean enabled,int size){powerLever=enabled;powerLeverSize=size;return this;}
     private boolean controlMount;private int baseHeight,baseTilt,tiltDirection;
@@ -94,7 +96,8 @@ public class MessageRedstoneChannel implements IMessage {
         controlLimits=buf.readBoolean();lowLimit=buf.readInt();highLimit=buf.readInt();
         controlMount=buf.readBoolean();baseHeight=buf.readInt();baseTilt=buf.readInt();tiltDirection=buf.readInt();
         powerLever=buf.readBoolean();powerLeverSize=buf.readUnsignedByte();
-        channels=ChannelData.read(buf,channel);invalidChannels=channels==null || particleLevel>3 || powerLever && powerLeverSize>1;
+        controlTypeUpdate=buf.readBoolean();controlType=buf.readUnsignedByte();
+        channels=ChannelData.read(buf,channel);invalidChannels=controlTypeUpdate && controlType>2 || channels==null || particleLevel>3 || powerLever && powerLeverSize>1;
         invalidChannels|=controlMount && !com.vandorlabs.blocks.SignalControlMount.valid(baseHeight,baseTilt,tiltDirection);
         invalidChannels|=threshold<0 || threshold>15 || controlLimits && !com.vandorlabs.tiles.TileEntitySignalControl.validLimits(lowLimit,highLimit);
     }
@@ -114,6 +117,7 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeBoolean(controlLimits);buf.writeInt(lowLimit);buf.writeInt(highLimit);
         buf.writeBoolean(controlMount);buf.writeInt(baseHeight);buf.writeInt(baseTilt);buf.writeInt(tiltDirection);
         buf.writeBoolean(powerLever);buf.writeByte(powerLeverSize);
+        buf.writeBoolean(controlTypeUpdate);buf.writeByte(controlType);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
 
@@ -144,6 +148,7 @@ public class MessageRedstoneChannel implements IMessage {
                     if(message.controlLimits && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureLimits(message.lowLimit,message.highLimit);
                     if(message.controlMount && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureMount(message.baseHeight,message.baseTilt,message.tiltDirection);
                     ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
+                    if(message.controlTypeUpdate && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureType(message.controlType);
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile)

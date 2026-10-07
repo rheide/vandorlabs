@@ -3554,7 +3554,8 @@
     "class": "BlockSignalControl",
     "item": true,
     "control_kind": "airliner_throttle",
-    "detail": 32
+    "detail": 32,
+    "hidden": true
   },
   {
     "id": "fighter_throttle",
@@ -3562,7 +3563,8 @@
     "class": "BlockSignalControl",
     "item": true,
     "control_kind": "fighter_throttle",
-    "detail": 32
+    "detail": 32,
+    "hidden": true
   },
   {
     "id": "small_power_lever",

@@ -20,6 +20,15 @@ public class BlockSignalControl extends BlockVandorSwitch {
     private final int detail;
     public BlockSignalControl(String id,String kind,int detail){super(id);this.kind=kind;this.detail=detail;setDefaultState(getDefaultState().withProperty(LEVEL,0));}
     public String controlKind(){return kind;}
+    public static final String[] TYPES={"thruster_lever","airliner_throttle","fighter_throttle"};
+    public int controlType(){for(int i=0;i<TYPES.length;i++)if(TYPES[i].equals(kind))return i;return 0;}
+    @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
+        Block next=world.getBlockState(pos).getBlock();
+        if(hasAdjustableBase() && next instanceof BlockSignalControl && ((BlockSignalControl)next).hasAdjustableBase())return;
+        super.breakBlock(world,pos,state);
+    }
+    private Block itemBlock(){return hasAdjustableBase()?Block.getBlockFromName("vandorlabs:thruster_lever"):this;}
+
     public boolean hasAdjustableBase(){return !"wall_slider".equals(kind);}
     public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> MOUNT=ProgrammableHousingState.integer("control_mount");
     @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,ON,ROTATION,LEVEL},new net.minecraftforge.common.property.IUnlistedProperty[]{MOUNT});}
@@ -72,13 +81,13 @@ public class BlockSignalControl extends BlockVandorSwitch {
         for(AxisAlignedBB box:collisionPieces(state,world,pos))addCollisionBoxToList(pos,query,boxes,box);
     }
     @Override public void getDrops(NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){
-        ItemStack stack=new ItemStack(this);TileEntity tile=world.getTileEntity(pos);
+        ItemStack stack=new ItemStack(itemBlock());TileEntity tile=world.getTileEntity(pos);
         if(tile instanceof TileEntitySignalControl)stack.setTagInfo("RedstoneChannelSettings",((TileEntitySignalControl)tile).configuration());drops.add(stack);
     }
     @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest){return willHarvest || super.removedByPlayer(state,world,pos,player,false);}
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){super.harvestBlock(world,player,pos,state,tile,tool);world.setBlockToAir(pos);}
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,World world,BlockPos pos,EntityPlayer player){
-        ItemStack stack=new ItemStack(this);TileEntity tile=world.getTileEntity(pos);
+        ItemStack stack=new ItemStack(itemBlock());TileEntity tile=world.getTileEntity(pos);
         if(tile instanceof TileEntitySignalControl)stack.setTagInfo("RedstoneChannelSettings",((TileEntitySignalControl)tile).configuration());
         return stack;
     }
@@ -86,5 +95,6 @@ public class BlockSignalControl extends BlockVandorSwitch {
         NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");TileEntity tile=world.getTileEntity(pos);
         if(!world.isRemote && settings!=null && tile instanceof TileEntitySignalControl){((TileEntitySignalControl)tile).configureLimits(settings.getInteger("LowLimit"),settings.getInteger("HighLimit"));((TileEntitySignalControl)tile).readMount(settings);}
         super.onBlockPlacedBy(world,pos,state,placer,stack);
+        if(!world.isRemote && settings!=null && settings.hasKey("ControlType",3) && tile instanceof TileEntitySignalControl)((TileEntitySignalControl)tile).configureType(settings.getInteger("ControlType"));
     }
 }

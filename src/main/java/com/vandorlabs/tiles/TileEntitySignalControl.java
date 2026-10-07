@@ -8,6 +8,20 @@ import net.minecraft.block.state.IBlockState;
 /** Four detents share the normal channel latch; limits are configuration, not live power. */
 public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     private int low=5,high=15,step,baseHeight,baseTilt,tiltDirection;
+    public int getControlType(){return world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl?((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).controlType():0;}
+    public void configureType(int type){
+        if(world==null || world.isRemote || type<0 || type>2)return;
+        IBlockState before=world.getBlockState(pos);
+        if(!(before.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl) || !((com.vandorlabs.blocks.BlockSignalControl)before.getBlock()).hasAdjustableBase())return;
+        net.minecraft.block.Block next=net.minecraft.block.Block.getBlockFromName("vandorlabs:"+com.vandorlabs.blocks.BlockSignalControl.TYPES[type]);
+        if(next==before.getBlock())return;
+        IBlockState after=next.getDefaultState().withProperty(com.vandorlabs.blocks.BlockVandorSwitch.FACING,before.getValue(com.vandorlabs.blocks.BlockVandorSwitch.FACING)).withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ON,before.getValue(com.vandorlabs.blocks.BlockVandorSwitch.ON)).withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ROTATION,before.getValue(com.vandorlabs.blocks.BlockVandorSwitch.ROTATION));
+        world.setBlockState(pos,after,3);markDirty();world.notifyBlockUpdate(pos,after,after,3);
+    }
+    @Override public boolean shouldRefresh(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,IBlockState before,IBlockState after){
+        if(before.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && after.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)before.getBlock()).hasAdjustableBase() && ((com.vandorlabs.blocks.BlockSignalControl)after.getBlock()).hasAdjustableBase())return false;
+        return super.shouldRefresh(world,pos,before,after);
+    }
     public int getBaseHeight(){return baseHeight;}
     public int getBaseTilt(){return baseTilt;}
     public int getTiltDirection(){return tiltDirection;}
@@ -17,7 +31,7 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         baseHeight=height;baseTilt=tilt;tiltDirection=direction;markDirty();
         if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}
     }
-    public void readMount(NBTTagCompound tag){configureMount(tag.getInteger("BaseHeight"),com.vandorlabs.blocks.SignalControlMount.readTilt(tag),tag.getInteger("TiltDirection"));}
+    public void readMount(NBTTagCompound tag){if(tag.hasKey("ControlType",3))configureType(tag.getInteger("ControlType"));configureMount(tag.getInteger("BaseHeight"),com.vandorlabs.blocks.SignalControlMount.readTilt(tag),tag.getInteger("TiltDirection"));}
     private void writeMount(NBTTagCompound tag){tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
     public int getLowLimit(){return low;}
     public int getHighLimit(){return high;}
@@ -78,5 +92,5 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         step=Math.max(0,Math.min(3,tag.getInteger("ControlStep")));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }
-    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
+    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasAdjustableBase())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
 }

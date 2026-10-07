@@ -63,7 +63,13 @@ for lighting, propulsion and screen settings.
 
 ## Throttle base height and tilt
 
-Thruster Lever, Airliner Throttle and Fighter Throttle have configurable bases.
+Thruster Lever has three selectable types: **Thruster**, **Airliner** and
+**Fighter**. Open its configuration dialog and click **Type** to cycle them.
+All types share the same recipe and settings. Existing Airliner and Fighter
+controls keep their appearance. Type is preserved when saving, pick-block and
+breaking/replacing; the Duplifier’s **Signal Levels** option copies it.
+
+All three types have configurable bases.
 Shift-right-click a placed control, or right-click it with the Configurizer in
 survival, to open its channel/settings dialog. Set **Base height** to **Standard**
 (the original minimum), **+2 px**, **+4 px** or **+6 px**. The solid mounting plate extends;

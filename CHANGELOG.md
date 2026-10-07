@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Merge Thruster, Airliner and Fighter controls into one Thruster Lever item with a Type button, retaining existing placed controls, settings and configured item appearances.
+
 - Merge twin-arm power levers into Power Lever with a Small/Large configuration button, preserved legacy sizes and configured drops. Shorten the Small arm by one pixel.
 
 - Add Toggle Switch: a compact solid-color split rocker with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber bottom border while Off and a cyan top border while On and a stick/alloy/redstone recipe.

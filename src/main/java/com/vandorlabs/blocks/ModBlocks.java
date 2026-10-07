@@ -659,6 +659,9 @@ public class ModBlocks {
             if(control instanceof BlockSignalControl && ((BlockSignalControl)control).hasAdjustableBase())
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.SignalControlModel(event.getModelRegistry().getObject(location),(BlockSignalControl)control));
         }
+        net.minecraft.client.renderer.block.model.IBakedModel[] throttles=new net.minecraft.client.renderer.block.model.IBakedModel[3];
+        for(int i=0;i<3;i++)throttles[i]=event.getModelRegistry().getObject(new ModelResourceLocation("vandorlabs:"+BlockSignalControl.TYPES[i],"inventory"));
+        if(throttles[0]!=null && throttles[1]!=null && throttles[2]!=null)event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:thruster_lever","inventory"),new com.vandorlabs.client.ThrottleItemModel(throttles));
         // Snapshot native models before wrapping either legacy registry ID.
         java.util.Map<ModelResourceLocation,net.minecraft.client.renderer.block.model.IBakedModel> powerModels=new java.util.HashMap<>();
         for(ModelResourceLocation location:event.getModelRegistry().getKeys())if(location.getResourceDomain().equals(VandorLabs.MODID) && (location.getResourcePath().equals("small_power_lever") || location.getResourcePath().equals("large_power_lever")))powerModels.put(location,event.getModelRegistry().getObject(location));

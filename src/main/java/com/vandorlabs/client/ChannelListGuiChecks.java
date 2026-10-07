@@ -27,7 +27,7 @@ final class ChannelListGuiChecks {
     private static com.google.common.util.concurrent.ListenableFuture<?> pending;
     static void tick(Minecraft mc,File output) {
         if(stage==9)return;
-        if(stage==0 && index==0 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){checkControlModels(mc);index=13;}
+        if(stage==0 && index==0 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){checkControlModels(mc);index=9;}
         if(stage>=6){captureControls(mc,output);return;}
         try {
             if(++ticks>400)throw new IllegalStateException("channel GUI timeout index="+index+" stage="+stage);
@@ -58,6 +58,7 @@ final class ChannelListGuiChecks {
                 if(index==8){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(5,0,0,"Signal brightness"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Threshold"));}
                 if(index>=9 && index<13 && index!=10){for(int id:new int[]{9,9,9,10,10,10,11})((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(id,0,0,"Mount"));}
                 if(index>=9 && index<13){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Low"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(8,0,0,"High"));}
+                if(index>=9 && index<13 && index!=10)((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(13,0,0,"Type"));
                 if(index==13)((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(12,0,0,"Size"));
                 Method send=mc.currentScreen.getClass().getDeclaredMethod(METHODS[index]);send.setAccessible(true);send.invoke(mc.currentScreen);
                 stage=3;ticks=0;return;
@@ -65,7 +66,7 @@ final class ChannelListGuiChecks {
             if(stage==3 && ticks>20){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     RedstoneChannelMember member=(RedstoneChannelMember)mc.getIntegratedServer().getEntityWorld().getTileEntity(POS);
-                    if(index>=9 && index<13){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)member;require(control.getLowLimit()==6 && control.getHighLimit()==8,"control limits packet");if(index!=10)require(control.getBaseHeight()==3 && control.getBaseTilt()==3 && control.getTiltDirection()==1,"base height/tilt packet");}
+                    if(index>=9 && index<13){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)member;require(control.getLowLimit()==6 && control.getHighLimit()==8,"control limits packet");if(index!=10)require(control.getControlType()==(index==9?1:index==11?2:0),"type packet");if(index!=10)require(control.getBaseHeight()==3 && control.getBaseTilt()==3 && control.getTiltDirection()==1,"base height/tilt packet");}
                     if(index==13)require(((com.vandorlabs.tiles.TileEntityRedstoneChannel)member).getPowerLeverSize()==1,"size packet did not apply");
                     require(member!=null && EXPECTED.equals(member.getRedstoneChannels()),"server lost submitted list index="+index);
                     if(index==1)require(((com.vandorlabs.tiles.TileEntityProgrammableLight)member).isSignalBrightness(),"light brightness packet");
@@ -79,6 +80,7 @@ final class ChannelListGuiChecks {
                 if(index==2){Field exact=mc.currentScreen.getClass().getDeclaredField("exact");exact.setAccessible(true);require(exact.getInt(mc.currentScreen)==0,"exact signal lost on reopen");}
                 if(index>=9 && index<13){for(String key:new String[]{"lowLimit","highLimit"}){Field limit=mc.currentScreen.getClass().getDeclaredField(key);limit.setAccessible(true);require(limit.getInt(mc.currentScreen)==(key.equals("lowLimit")?6:8),"control limits lost on reopen");}}
                 if(index>=9 && index<13 && index!=10)for(String key:new String[]{"baseHeight","baseTilt","tiltDirection"}){Field f=mc.currentScreen.getClass().getDeclaredField(key);f.setAccessible(true);require(f.getInt(mc.currentScreen)==(key.equals("baseHeight")?3:key.equals("baseTilt")?3:1),"mount settings lost on reopen");}
+                if(index>=9 && index<13 && index!=10){Field type=mc.currentScreen.getClass().getDeclaredField("controlType");type.setAccessible(true);require(type.getInt(mc.currentScreen)==(index==9?1:index==11?2:0),"type lost on reopen");}
                 if(index==13){Field size=mc.currentScreen.getClass().getDeclaredField("powerLeverSize");size.setAccessible(true);require(size.getInt(mc.currentScreen)==1,"size lost on reopen");}
                 require(EXPECTED.toString().equals(field(mc).getText()),"reopened GUI lost list index="+index);
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_channels_"+index+".png"));
@@ -138,8 +140,8 @@ final class ChannelListGuiChecks {
                 mc.player.inventory.setInventorySlotContents(8,net.minecraft.item.ItemStack.EMPTY);
                 for(int slot=0;slot<8;slot++){
                     int variant=iconPage*8+slot,kind=variant/64,value=variant%64;
-                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[kind]));
-                    net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",value%4);tag.setInteger("BaseTilt",value/4%4);tag.setInteger("TiltDirection",value/16);stack.setTagInfo("RedstoneChannelSettings",tag);mc.player.inventory.setInventorySlotContents(slot,stack);
+                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:thruster_lever"));
+                    net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("ControlType",kind);tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",value%4);tag.setInteger("BaseTilt",value/4%4);tag.setInteger("TiltDirection",value/16);stack.setTagInfo("RedstoneChannelSettings",tag);mc.player.inventory.setInventorySlotContents(slot,stack);
                 }
                 stage=13;ticks=0;return;
             }
