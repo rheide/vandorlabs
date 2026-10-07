@@ -6,6 +6,7 @@ import io
 import json
 from pathlib import Path
 from zipfile import ZipFile
+from contextlib import ExitStack
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,16 +20,26 @@ ID_BASE = 0x10000000
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('archive', type=Path)
+    parser.add_argument('archive', type=Path, help='ZIP archive or extracted pack directory')
+    parser.add_argument('--role', action='append', help='Import only this role; may repeat')
     args = parser.parse_args()
     entries = json.loads(CATALOG.read_text()) if CATALOG.exists() else []
     existing = {entry['name']: entry for entry in entries}
     next_id = max([ID_BASE - 1] + [entry['choice'] for entry in entries]) + 1
-    with ZipFile(args.archive) as archive:
+    with ExitStack() as stack:
+        if args.archive.is_dir():
+            read = lambda name: (args.archive / name).read_bytes()
+        else:
+            read = stack.enter_context(ZipFile(args.archive)).read
         checksums = dict(line.split('  ', 1)[::-1] for line in
-                         archive.read('SHA256SUMS.txt').decode().splitlines() if line)
+                         read('SHA256SUMS.txt').decode().splitlines() if line)
         roles = list(dict.fromkeys(entry['role'] for entry in
-                                   json.loads(archive.read('texture_index.json'))))
+                                   json.loads(read('texture_index.json'))))
+        if args.role:
+            unknown = set(args.role) - set(roles)
+            if unknown:
+                parser.error('Unknown roles: ' + ', '.join(sorted(unknown)))
+            roles = [role for role in roles if role in args.role]
         for role in roles:
             for part, (slot, label) in PARTS.items():
                 name = f'{role}_{part}'
@@ -45,7 +56,7 @@ def main():
                         ('models/armor', 'models/armor/roles', (64, 32)),
                         ('items', 'items/armor', (16, 16))]:
                     source = f'assets/mctrek_armor/textures/{source_dir}/{name}.png'
-                    data = archive.read(source)
+                    data = read(source)
                     assert hashlib.sha256(data).hexdigest() == checksums[source], source
                     image = Image.open(io.BytesIO(data)).convert('RGBA')
                     assert image.size == expected_size, source

@@ -250,5 +250,41 @@
     "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_boots.png",
     "icon": "vandorlabs:items/armor/spaceship_staff_boots",
     "model": "vandorlabs:armor/spaceship_staff_boots"
+  },
+  {
+    "choice": 268435484,
+    "name": "security_rescue_helmet",
+    "slot": "HEAD",
+    "label": "Security Rescue Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/security_rescue_helmet.png",
+    "icon": "vandorlabs:items/armor/security_rescue_helmet",
+    "model": "vandorlabs:armor/security_rescue_helmet"
+  },
+  {
+    "choice": 268435485,
+    "name": "security_rescue_chestpiece",
+    "slot": "CHEST",
+    "label": "Security Rescue Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/security_rescue_chestpiece.png",
+    "icon": "vandorlabs:items/armor/security_rescue_chestpiece",
+    "model": "vandorlabs:armor/security_rescue_chestpiece"
+  },
+  {
+    "choice": 268435486,
+    "name": "security_rescue_leggings",
+    "slot": "LEGS",
+    "label": "Security Rescue Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/security_rescue_leggings.png",
+    "icon": "vandorlabs:items/armor/security_rescue_leggings",
+    "model": "vandorlabs:armor/security_rescue_leggings"
+  },
+  {
+    "choice": 268435487,
+    "name": "security_rescue_boots",
+    "slot": "FEET",
+    "label": "Security Rescue Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/security_rescue_boots.png",
+    "icon": "vandorlabs:items/armor/security_rescue_boots",
+    "model": "vandorlabs:armor/security_rescue_boots"
   }
 ]
