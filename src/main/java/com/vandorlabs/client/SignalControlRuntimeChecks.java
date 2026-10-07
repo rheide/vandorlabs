@@ -27,6 +27,11 @@ public final class SignalControlRuntimeChecks {
                 world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,mount),2);
                 TileEntitySignalControl control=(TileEntitySignalControl)world.getTileEntity(pos);
                 control.configureLimits(3,11);
+                if(((BlockSignalControl)block).hasAdjustableBase()){
+                    control.configureMount(2,3,1);TileEntitySignalControl restored=new TileEntitySignalControl();restored.readFromNBT(control.writeToNBT(new NBTTagCompound()));
+                    require(restored.getBaseHeight()==2&&restored.getBaseTilt()==3&&restored.getTiltDirection()==1,"mount NBT");
+                    control.configureMount(3,4,-1);require(control.getBaseHeight()==2&&control.getBaseTilt()==3,"invalid mount accepted");
+                }
                 for(int step=0;step<4;step++){
                     control.setStep(step);int expected=new int[]{0,3,7,11}[step];IBlockState state=world.getBlockState(pos);
                     require(control.getOutputLevel()==expected && block.getWeakPower(state,world,pos,EnumFacing.UP)==expected && block.getStrongPower(state,world,pos,EnumFacing.NORTH)==expected,"physical detent "+IDS[index]+" "+step);
@@ -48,8 +53,16 @@ public final class SignalControlRuntimeChecks {
                 world.setBlockState(copy.down(),Blocks.STONE.getDefaultState(),2);
                 com.vandorlabs.items.ProgrammableSettings.apply(world,copy,com.vandorlabs.items.ProgrammableSettings.capture(world,pos));
                 TileEntitySignalControl copied=(TileEntitySignalControl)world.getTileEntity(copy);
+                if(((BlockSignalControl)block).hasAdjustableBase())require(copied.getBaseHeight()==2&&copied.getBaseTilt()==3&&copied.getTiltDirection()==1,"Duplifier mount settings");
                 require(copied.getLowLimit()==3 && copied.getHighLimit()==11 && copied.getStep()==2,"Duplifier control settings");
-                RedstoneChannels.unregister(copied);world.setBlockToAir(copy);world.setBlockToAir(copy.down());
+                net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> drops=net.minecraft.util.NonNullList.create();block.getDrops(drops,world,pos,world.getBlockState(pos),0);
+                require(drops.size()==1 && drops.get(0).getSubCompound("RedstoneChannelSettings")!=null,"configured control drop");
+                world.setBlockToAir(copy);world.setBlockState(copy,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),2);
+                ((BlockSignalControl)block).onBlockPlacedBy(world,copy,world.getBlockState(copy),net.minecraftforge.common.util.FakePlayerFactory.getMinecraft((net.minecraft.world.WorldServer)world),drops.get(0));
+                TileEntitySignalControl placed=(TileEntitySignalControl)world.getTileEntity(copy);
+                require(placed.getLowLimit()==3 && placed.getHighLimit()==11,"configured drop limits on placement");
+                if(((BlockSignalControl)block).hasAdjustableBase())require(placed.getBaseHeight()==2 && placed.getBaseTilt()==3 && placed.getTiltDirection()==1,"configured drop mount on placement");
+                RedstoneChannels.unregister(copied);RedstoneChannels.unregister(placed);world.setBlockToAir(copy);world.setBlockToAir(copy.down());
                 RedstoneChannels.unregister(control);world.setBlockToAir(pos.offset(mount.getOpposite()));
                 if(world.getBlockState(pos).getBlock()==block)block.neighborChanged(world.getBlockState(pos),world,pos,Blocks.STONE,pos.offset(mount.getOpposite()));
                 require(world.isAirBlock(pos),"support removal contract");

@@ -27,6 +27,8 @@ public class MessageRedstoneChannel implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private boolean controlMount;private int baseHeight,baseTilt,tiltDirection;
+    public MessageRedstoneChannel withControlMount(boolean enabled,int height,int tilt,int direction){controlMount=enabled;baseHeight=height;baseTilt=tilt;tiltDirection=direction;return this;}
     private boolean controlLimits;private int lowLimit=5,highLimit=15;
     public MessageRedstoneChannel withControlLimits(boolean enabled,int low,int high){controlLimits=enabled;lowLimit=low;highLimit=high;return this;}
     private boolean signalBrightness;private int threshold=8;
@@ -88,7 +90,9 @@ public class MessageRedstoneChannel implements IMessage {
 
         signalBrightness=buf.readBoolean();threshold=buf.readInt();
         controlLimits=buf.readBoolean();lowLimit=buf.readInt();highLimit=buf.readInt();
+        controlMount=buf.readBoolean();baseHeight=buf.readInt();baseTilt=buf.readInt();tiltDirection=buf.readInt();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null || particleLevel>3;
+        invalidChannels|=controlMount && !com.vandorlabs.blocks.SignalControlMount.valid(baseHeight,baseTilt,tiltDirection);
         invalidChannels|=threshold<0 || threshold>15 || controlLimits && !com.vandorlabs.tiles.TileEntitySignalControl.validLimits(lowLimit,highLimit);
     }
     @Override public void toBytes(ByteBuf buf) {
@@ -105,6 +109,7 @@ public class MessageRedstoneChannel implements IMessage {
 
         buf.writeBoolean(signalBrightness);buf.writeInt(threshold);
         buf.writeBoolean(controlLimits);buf.writeInt(lowLimit);buf.writeInt(highLimit);
+        buf.writeBoolean(controlMount);buf.writeInt(baseHeight);buf.writeInt(baseTilt);buf.writeInt(tiltDirection);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
 
@@ -132,6 +137,7 @@ public class MessageRedstoneChannel implements IMessage {
                             message.updateSide, message.sideTexture);
                 } else {
                     if(message.controlLimits && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureLimits(message.lowLimit,message.highLimit);
+                    if(message.controlMount && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureMount(message.baseHeight,message.baseTilt,message.tiltDirection);
                     ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)

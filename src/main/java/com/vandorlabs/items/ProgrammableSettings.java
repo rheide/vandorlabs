@@ -538,7 +538,7 @@ public final class ProgrammableSettings {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
             if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){
                 com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;
-                if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);control.configureLimits(signal.getInteger("LowLimit"),signal.getInteger("HighLimit"));applicable=true;}
+                if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);control.configureLimits(signal.getInteger("LowLimit"),signal.getInteger("HighLimit"));if(signal.hasKey("BaseHeight"))control.readMount(signal);applicable=true;}
                 if(values.hasKey(ACTIVE,3)){control.setStep(values.getInteger(ACTIVE));applicable=true;}
             }
             if (values.hasKey(ACTIVE, 1)) {

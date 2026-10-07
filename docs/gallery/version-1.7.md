@@ -31,3 +31,20 @@ This also works with armor in the offhand, using the Duplifier in the main hand 
 The armor picker now includes **Custom...**, using the same non-consuming inventory sample dialog as Programmable Blocks. Drag a block or door item into the sample slot to use its texture. Configured programmable items use their selected material or door design. Custom selections persist when reopening the picker and can be copied with the Duplifier.
 
 ![Armor picker retaining a custom brick texture](../images/gallery/armor/custom-picker.png)
+
+## Throttle base height and tilt
+
+Thruster Lever, Airliner Throttle and Fighter Throttle now offer **Standard**,
+**+2 px** and **+4 px** base heights in their configuration dialog. Standard is
+the original minimum height. The mounting plate extends while the panel and
+handles move upward together, or outward from a wall/ceiling support.
+
+Choose **Flat**, **5 deg**, **10 deg** or **15 deg** and a direction to tilt the
+whole control, including its base. Directions follow the control’s mounting
+orientation. Selection outlines follow the transformed model. Shift-right-click
+the control to open the dialog, or use the Configurizer in survival; click
+**Done** to apply. Saved worlds, configured drops and pick-block retain the
+settings, and the Duplifier copies them through **Signal Levels**. See the
+[controls guide](controls.md#throttle-base-height-and-tilt).
+
+![Throttle base height and tilt in the settings dialog](../images/gallery/controls/airliner-throttle-config.png)

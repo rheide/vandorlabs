@@ -7,7 +7,18 @@ import net.minecraft.block.state.IBlockState;
 
 /** Four detents share the normal channel latch; limits are configuration, not live power. */
 public class TileEntitySignalControl extends TileEntityRedstoneChannel {
-    private int low=5,high=15,step;
+    private int low=5,high=15,step,baseHeight,baseTilt,tiltDirection;
+    public int getBaseHeight(){return baseHeight;}
+    public int getBaseTilt(){return baseTilt;}
+    public int getTiltDirection(){return tiltDirection;}
+    public void configureMount(int height,int tilt,int direction){
+        if(!com.vandorlabs.blocks.SignalControlMount.valid(height,tilt,direction))return;
+        if(world!=null && (!(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl) || !((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasAdjustableBase()))return;
+        baseHeight=height;baseTilt=tilt;tiltDirection=direction;markDirty();
+        if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}
+    }
+    public void readMount(NBTTagCompound tag){configureMount(tag.getInteger("BaseHeight"),tag.getInteger("BaseTilt"),tag.getInteger("TiltDirection"));}
+    private void writeMount(NBTTagCompound tag){tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
     public int getLowLimit(){return low;}
     public int getHighLimit(){return high;}
     public static boolean validLimits(int low,int high){return low>=1 && high<=15 && high-low>=2;}
@@ -55,14 +66,17 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         else if(previous>0)RedstoneChannels.latchLevelChanged(this,previous);
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);tag.setInteger("ControlStep",step);return tag;
+        super.writeToNBT(tag);writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);tag.setInteger("ControlStep",step);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);
+        int h=tag.getInteger("BaseHeight"),t=tag.getInteger("BaseTilt"),d=tag.getInteger("TiltDirection");
+        baseHeight=baseTilt=tiltDirection=0;
+        if(com.vandorlabs.blocks.SignalControlMount.valid(h,t,d)){baseHeight=h;baseTilt=t;tiltDirection=d;}
         int savedLow=tag.hasKey("LowLimit")?tag.getInteger("LowLimit"):5,savedHigh=tag.hasKey("HighLimit")?tag.getInteger("HighLimit"):15;
         if(validLimits(savedLow,savedHigh)){low=savedLow;high=savedHigh;}
         step=Math.max(0,Math.min(3,tag.getInteger("ControlStep")));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }
-    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
+    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
 }

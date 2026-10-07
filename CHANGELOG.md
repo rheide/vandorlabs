@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Configure Thruster Lever, Airliner Throttle and Fighter Throttle bases at their original minimum height, +2 px or +4 px. Tilt the complete control by 5, 10 or 15 degrees forward, backward, left or right. Match selection bounds to the transformed artwork, preserve settings in saves and configured drops/items, and copy them with the Duplifier’s Signal Levels option.
+
 - Add Custom... to the armor picker, reusing the non-consuming inventory block/door sampler. Preserve the selected Custom row across dialog reopening, resolve configured item artwork, and support custom appearances in worn armor, icons and Duplifier copies.
 
 - Copy programmable armor appearances with the Duplifier on armor stands, offhand items or crafting outputs. Role designs resolve to the destination piece’s corresponding artwork; generic and sampled textures transfer unchanged. Preserve item metadata and clipboard/apply options, with a separate Armor Texture switch.

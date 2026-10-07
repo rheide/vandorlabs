@@ -652,6 +652,11 @@ public class ModBlocks {
             if(VandorLabs.MODID.equals(location.getResourceDomain()) && (location.getResourcePath().equals("luxury_seat")||location.getResourcePath().equals("military_seat")))
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConnectedSeatModel(event.getModelRegistry().getObject(location)));
         }
+        for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())) {
+            Block control=Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation(location.getResourceDomain(),location.getResourcePath()));
+            if(control instanceof BlockSignalControl && ((BlockSignalControl)control).hasAdjustableBase())
+                event.getModelRegistry().putObject(location,new com.vandorlabs.client.SignalControlModel(event.getModelRegistry().getObject(location),(BlockSignalControl)control));
+        }
         com.vandorlabs.client.ProgrammableHousingModel cube = null, slab = null;
         for (ModelResourceLocation location : new java.util.ArrayList<>(
                 event.getModelRegistry().getKeys())) {

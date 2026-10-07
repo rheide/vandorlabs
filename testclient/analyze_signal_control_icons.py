@@ -19,3 +19,20 @@ for slot in range(4):
     assert xx.min()>=2*scale and xx.max()<16*scale,f'Control {slot}: missing side padding'
     assert yy.min()>=2*scale and yy.max()<16*scale,f'Control {slot}: missing vertical padding'
     print(f'Control {slot} padded icon PASS ({xx.max()-xx.min()+1} x {yy.max()-yy.min()+1} physical pixels)')
+
+# Every combination of the three base heights, four tilt angles and four directions.
+for page in range(18):
+    shot=root/f'shot_controls_mount_icons_{page}.png'
+    if not shot.exists():
+        assert page==0, 'Missing configured icon page'
+        break
+    configured=np.asarray(Image.open(shot).convert('RGB'),dtype=np.int16)
+    difference=np.max(np.abs(empty-configured),axis=2)>25
+    for slot in range(8):
+        x=left+(slot*20+3)*scale
+        yy,xx=np.nonzero(difference[top-scale:top+17*scale,x-scale:x+17*scale])
+        variant=page*8+slot
+        assert len(xx)>25, f'Configured control {variant}: invisible icon'
+        assert xx.min()>=2*scale and xx.max()<16*scale, f'Configured control {variant}: missing side padding'
+        assert yy.min()>=2*scale and yy.max()<16*scale, f'Configured control {variant}: missing vertical padding'
+    print(f'Configured control icons {page*8}..{page*8+7} padded PASS')

@@ -110,3 +110,10 @@ The output receives compatible settings selected in Apply Settings. The tool
 is returned unchanged. Shift-click the output to process a stack using normal
 Minecraft crafting; each craft consumes one block. Existing target settings
 that are not selected or supported remain intact.
+
+## Throttle mounts
+
+For Thruster Lever, Airliner Throttle and Fighter Throttle, **Common → Signal
+Levels** includes base height, tilt angle and tilt direction together with
+Low/High limits. Tilt directions are relative to the destination’s mounting orientation.
+The separate **Switch Rotation** option controls copying floor/ceiling rotation.

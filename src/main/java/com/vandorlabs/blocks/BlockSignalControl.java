@@ -20,7 +20,9 @@ public class BlockSignalControl extends BlockVandorSwitch {
     private final int detail;
     public BlockSignalControl(String id,String kind,int detail){super(id);this.kind=kind;this.detail=detail;setDefaultState(getDefaultState().withProperty(LEVEL,0));}
     public String controlKind(){return kind;}
-    @Override protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING,ON,ROTATION,LEVEL);}
+    public boolean hasAdjustableBase(){return !"wall_slider".equals(kind);}
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> MOUNT=ProgrammableHousingState.integer("control_mount");
+    @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,ON,ROTATION,LEVEL},new net.minecraftforge.common.property.IUnlistedProperty[]{MOUNT});}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntitySignalControl();}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         state=super.getActualState(state,world,pos);TileEntity tile=world.getTileEntity(pos);
@@ -35,14 +37,38 @@ public class BlockSignalControl extends BlockVandorSwitch {
         return true;
     }
     @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){return 0;}
-    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){
+    public AxisAlignedBB originalBounds(IBlockState state){
         EnumFacing facing=state.getValue(FACING);
-        int rotation=super.getActualState(state,world,pos).getValue(ROTATION);
+        int rotation=state.getValue(ROTATION);
         String mount=facing.getName();
         if(facing.getAxis()==EnumFacing.Axis.Y)mount=(facing==EnumFacing.UP?"floor":"ceiling")+(rotation%2==0?"_z":"_x");
         AxisAlignedBB box=SignalControlBounds.get(detail,kind,mount);
         return facing.getAxis()==EnumFacing.Axis.Y && rotation>=2?new AxisAlignedBB(1-box.maxX,box.minY,1-box.maxZ,1-box.minX,box.maxY,1-box.minZ):box;
     }
+    public AxisAlignedBB supportBounds(IBlockState state){
+        double a=kind.equals("thruster_lever")?3/16D:kind.equals("fighter_throttle")?1.5/16D:1/16D;
+        double b=kind.equals("thruster_lever")?2/16D:1/16D;EnumFacing face=state.getValue(FACING);
+        if(face.getAxis()==EnumFacing.Axis.Y){if(state.getValue(ROTATION)%2==1){double swap=a;a=b;b=swap;}double y=face==EnumFacing.UP?0:1;return new AxisAlignedBB(a,y,b,1-a,y,1-b);}
+        if(face.getAxis()==EnumFacing.Axis.Z){double z=face==EnumFacing.SOUTH?0:1;return new AxisAlignedBB(a,b,z,1-a,1-b,z);}
+        double x=face==EnumFacing.EAST?0:1;return new AxisAlignedBB(x,b,a,x,1-b,1-a);
+    }
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
+        TileEntity tile=world.getTileEntity(pos);int mount=0;
+        if(hasAdjustableBase() && tile instanceof TileEntitySignalControl){TileEntitySignalControl t=(TileEntitySignalControl)tile;mount=t.getBaseHeight()+3*(t.getBaseTilt()+4*t.getTiltDirection());}
+        return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(MOUNT,mount);
+    }
+    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){
+        state=getActualState(state,world,pos);AxisAlignedBB original=originalBounds(state);TileEntity tile=world.getTileEntity(pos);
+        if(!hasAdjustableBase() || !(tile instanceof TileEntitySignalControl))return original;
+        TileEntitySignalControl t=(TileEntitySignalControl)tile;
+        return new SignalControlMount(state.getValue(FACING),state.getValue(ROTATION),t.getBaseHeight(),t.getBaseTilt(),t.getTiltDirection(),supportBounds(state)).bounds(original);
+    }
+    @Override public void getDrops(NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){
+        ItemStack stack=new ItemStack(this);TileEntity tile=world.getTileEntity(pos);
+        if(tile instanceof TileEntitySignalControl)stack.setTagInfo("RedstoneChannelSettings",((TileEntitySignalControl)tile).configuration());drops.add(stack);
+    }
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest){return willHarvest || super.removedByPlayer(state,world,pos,player,false);}
+    @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){super.harvestBlock(world,player,pos,state,tile,tool);world.setBlockToAir(pos);}
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,World world,BlockPos pos,EntityPlayer player){
         ItemStack stack=new ItemStack(this);TileEntity tile=world.getTileEntity(pos);
         if(tile instanceof TileEntitySignalControl)stack.setTagInfo("RedstoneChannelSettings",((TileEntitySignalControl)tile).configuration());
@@ -50,7 +76,7 @@ public class BlockSignalControl extends BlockVandorSwitch {
     }
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack){
         NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");TileEntity tile=world.getTileEntity(pos);
-        if(!world.isRemote && settings!=null && tile instanceof TileEntitySignalControl)((TileEntitySignalControl)tile).configureLimits(settings.getInteger("LowLimit"),settings.getInteger("HighLimit"));
+        if(!world.isRemote && settings!=null && tile instanceof TileEntitySignalControl){((TileEntitySignalControl)tile).configureLimits(settings.getInteger("LowLimit"),settings.getInteger("HighLimit"));((TileEntitySignalControl)tile).readMount(settings);}
         super.onBlockPlacedBy(world,pos,state,placer,stack);
     }
 }
