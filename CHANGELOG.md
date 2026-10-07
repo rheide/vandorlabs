@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7
+
+- Begin version 1.7.
+
 ## 1.6
 
 - Leave one Minecraft pixel (1/16 block) visible at each fully open frameless Sliding X panel tip, with matching rendering, collision and click targeting.
