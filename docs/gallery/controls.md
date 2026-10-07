@@ -31,13 +31,15 @@ for lighting, propulsion and screen settings.
 Thruster Lever, Airliner Throttle and Fighter Throttle have configurable bases.
 Shift-right-click a placed control, or right-click it with the Configurizer in
 survival, to open its channel/settings dialog. Set **Base height** to **Standard**
-(the original minimum), **+2 px** or **+4 px**. The solid mounting plate extends;
+(the original minimum), **+2 px**, **+4 px** or **+6 px**. The solid mounting plate extends;
 the panel and handles above it move together.
 
-Set **Tilt** to **Flat**, **5 deg**, **10 deg** or **15 deg**, then select
+Set **Tilt** to **Flat**, **15 deg**, **30 deg** or **45 deg**, then select
 **Forward**, **Right**, **Backward** or **Left** relative to the mounted control.
-The entire base, panel and handles tilt together. This works on walls, floors
-and ceilings, and the selection outline follows the transformed control.
+The entire base, panel and handles tilt together. A solid wedge fills the space
+between the tilted base and its support. This works on walls, floors and ceilings.
+The controls have solid collision for their base, panel and handles, with a stepped
+collision surface along the wedge. The selection outline follows the control.
 Click **Done** to apply. Right-click a setting button to cycle backward.
 
 Existing controls remain Standard/Flat. Height and tilt survive saving,
@@ -47,10 +49,18 @@ The Wall Slider retains its existing mounting geometry.
 
 ![Throttle height and tilt settings](../images/gallery/controls/airliner-throttle-config.png)
 
-The pictures show different signal detents as well as the mounting settings.
+All pictures below use the Off detent so the mounting settings can be compared directly.
 
-| Control | Standard | +2 px | +4 px | Tilted 15 degrees |
+| Control | Standard | +2 px | +4 px | +6 px |
 | --- | --- | --- | --- | --- |
-| Thruster Lever | ![Thruster Lever standard](../images/gallery/controls/thruster-lever-standard.png) | ![Thruster Lever raised 2 px](../images/gallery/controls/thruster-lever-raised-2px.png) | ![Thruster Lever raised 4 px](../images/gallery/controls/thruster-lever-raised-4px.png) | ![Thruster Lever tilted](../images/gallery/controls/thruster-lever-tilted.png) |
-| Airliner Throttle | ![Airliner Throttle standard](../images/gallery/controls/airliner-throttle-standard.png) | ![Airliner Throttle raised 2 px](../images/gallery/controls/airliner-throttle-raised-2px.png) | ![Airliner Throttle raised 4 px](../images/gallery/controls/airliner-throttle-raised-4px.png) | ![Airliner Throttle tilted](../images/gallery/controls/airliner-throttle-tilted.png) |
-| Fighter Throttle | ![Fighter Throttle standard](../images/gallery/controls/fighter-throttle-standard.png) | ![Fighter Throttle raised 2 px](../images/gallery/controls/fighter-throttle-raised-2px.png) | ![Fighter Throttle raised 4 px](../images/gallery/controls/fighter-throttle-raised-4px.png) | ![Fighter Throttle tilted](../images/gallery/controls/fighter-throttle-tilted.png) |
+| Thruster Lever | ![Thruster Lever standard](../images/gallery/controls/thruster-lever-standard.png) | ![Thruster Lever raised 2 px](../images/gallery/controls/thruster-lever-raised-2px.png) | ![Thruster Lever raised 4 px](../images/gallery/controls/thruster-lever-raised-4px.png) | ![Thruster Lever raised 6 px](../images/gallery/controls/thruster-lever-raised-6px.png) |
+| Airliner Throttle | ![Airliner Throttle standard](../images/gallery/controls/airliner-throttle-standard.png) | ![Airliner Throttle raised 2 px](../images/gallery/controls/airliner-throttle-raised-2px.png) | ![Airliner Throttle raised 4 px](../images/gallery/controls/airliner-throttle-raised-4px.png) | ![Airliner Throttle raised 6 px](../images/gallery/controls/airliner-throttle-raised-6px.png) |
+| Fighter Throttle | ![Fighter Throttle standard](../images/gallery/controls/fighter-throttle-standard.png) | ![Fighter Throttle raised 2 px](../images/gallery/controls/fighter-throttle-raised-2px.png) | ![Fighter Throttle raised 4 px](../images/gallery/controls/fighter-throttle-raised-4px.png) | ![Fighter Throttle raised 6 px](../images/gallery/controls/fighter-throttle-raised-6px.png) |
+
+| Control | 15 degrees | 30 degrees | 45 degrees |
+| --- | --- | --- | --- |
+| Thruster Lever | ![Thruster Lever tilted 15 degrees](../images/gallery/controls/thruster-lever-tilted-15.png) | ![Thruster Lever tilted 30 degrees](../images/gallery/controls/thruster-lever-tilted-30.png) | ![Thruster Lever tilted 45 degrees](../images/gallery/controls/thruster-lever-tilted-45.png) |
+| Airliner Throttle | ![Airliner Throttle tilted 15 degrees](../images/gallery/controls/airliner-throttle-tilted-15.png) | ![Airliner Throttle tilted 30 degrees](../images/gallery/controls/airliner-throttle-tilted-30.png) | ![Airliner Throttle tilted 45 degrees](../images/gallery/controls/airliner-throttle-tilted-45.png) |
+| Fighter Throttle | ![Fighter Throttle tilted 15 degrees](../images/gallery/controls/fighter-throttle-tilted-15.png) | ![Fighter Throttle tilted 30 degrees](../images/gallery/controls/fighter-throttle-tilted-30.png) | ![Fighter Throttle tilted 45 degrees](../images/gallery/controls/fighter-throttle-tilted-45.png) |
+
+Existing 15-degree mounts keep that angle. Earlier 5-degree and 10-degree mounts use 15 degrees when loaded.

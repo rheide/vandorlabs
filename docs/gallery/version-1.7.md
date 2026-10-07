@@ -35,13 +35,14 @@ The armor picker now includes **Custom...**, using the same non-consuming invent
 ## Throttle base height and tilt
 
 Thruster Lever, Airliner Throttle and Fighter Throttle now offer **Standard**,
-**+2 px** and **+4 px** base heights in their configuration dialog. Standard is
+**+2 px**, **+4 px** and **+6 px** base heights in their configuration dialog. Standard is
 the original minimum height. The mounting plate extends while the panel and
 handles move upward together, or outward from a wall/ceiling support.
 
-Choose **Flat**, **5 deg**, **10 deg** or **15 deg** and a direction to tilt the
+Choose **Flat**, **15 deg**, **30 deg** or **45 deg** and a direction to tilt the
 whole control, including its base. Directions follow the control’s mounting
-orientation. Selection outlines follow the transformed model. Shift-right-click
+orientation. A solid wedge fills underneath a tilted base, and the base, panel
+and handles block movement. Selection outlines follow the transformed model. Shift-right-click
 the control to open the dialog, or use the Configurizer in survival; click
 **Done** to apply. Saved worlds, configured drops and pick-block retain the
 settings, and the Duplifier copies them through **Signal Levels**. See the

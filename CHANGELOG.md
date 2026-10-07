@@ -4,7 +4,7 @@
 
 - Add Open helmets and Short Sleeves chestplates for all eight armor roles, with matching inventory icons and 16 additional slot-filtered choices. Preserve original IDs, artwork and defaults; map Duplifier copies to matching alternate pieces and standard leggings/boots.
 
-- Configure Thruster Lever, Airliner Throttle and Fighter Throttle bases at their original minimum height, +2 px or +4 px. Tilt the complete control by 5, 10 or 15 degrees forward, backward, left or right. Match selection bounds to the transformed artwork, preserve settings in saves and configured drops/items, and copy them with the Duplifier’s Signal Levels option.
+- Configure Thruster Lever, Airliner Throttle and Fighter Throttle bases at their original minimum height, +2 px, +4 px or +6 px. Tilt the complete control by 15, 30 or 45 degrees forward, backward, left or right. Fill the tilted base down to its support and give the base, panel and handles solid component collision. Match selection bounds to the transformed artwork, preserve settings in saves and configured drops/items, and copy them with the Duplifier’s Signal Levels option.
 
 - Add Custom... to the armor picker, reusing the non-consuming inventory block/door sampler. Preserve the selected Custom row across dialog reopening, resolve configured item artwork, and support custom appearances in worn armor, icons and Duplifier copies.
 
