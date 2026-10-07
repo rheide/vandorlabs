@@ -24,6 +24,14 @@ for detail in (32,):
     folder=ASSETS/f'models/block/thruster_controls/{detail}px'
     for state in ('off','low','medium','high'):
         data=json.loads((folder/f'wall_slider_{state}_north.json').read_text())
+        # Normalize the native 10px-wide panel to 92% size, anchored to its support.
+        # Deriving the factor from the current width makes regeneration idempotent.
+        panel=data['elements'][0];factor=9.2/(panel['to'][0]-panel['from'][0])
+        for element in data['elements']:
+            for key in ('from','to'):
+                element[key]=[round(origin+(value-origin)*factor,6)
+                              for origin,value in zip((8,8,16),element[key])]
+        (folder/f'wall_slider_{state}_north.json').write_text(json.dumps(data,indent=2)+'\n')
         for mount,turns in (('east',1),('south',2),('west',3)):
             target=pose(data,lambda v:yaw(v,turns))
             (folder/f'wall_slider_{state}_{mount}.json').write_text(json.dumps(target,indent=2)+'\n')

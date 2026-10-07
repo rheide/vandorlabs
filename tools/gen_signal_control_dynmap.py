@@ -10,7 +10,7 @@ ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 MARKER='# Generated signal control models\n'
 models=[];blocks=[];textures={}
 for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks.json').read_text()):
-    if entry.get('class') not in ('BlockSignalControl','BlockTwinPowerLever','BlockToggleSwitch'):continue
+    if entry.get('class') not in ('BlockSignalControl','BlockTwinPowerLever','BlockRockerSwitch'):continue
     name=entry['id']
     states=json.loads((ASSETS/'blockstates'/f'{name}.json').read_text())['variants']
     # Dynmap can resolve several listed levels to the same metadata state.

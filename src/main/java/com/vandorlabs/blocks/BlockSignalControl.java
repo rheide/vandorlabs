@@ -53,11 +53,16 @@ public class BlockSignalControl extends BlockVandorSwitch {
         String mount=facing.getName();
         if(facing.getAxis()==EnumFacing.Axis.Y)mount=(facing==EnumFacing.UP?"floor":"ceiling")+(rotation%2==0?"_z":"_x");
         AxisAlignedBB box=SignalControlBounds.get(detail,kind,mount);
+        if(kind.equals("wall_slider")){
+            Vec3d origin=new Vec3d(.5,.5,.5).subtract(new Vec3d(facing.getDirectionVec()).scale(.5));
+            box=new AxisAlignedBB(origin.x+(box.minX-origin.x)*.92,origin.y+(box.minY-origin.y)*.92,origin.z+(box.minZ-origin.z)*.92,
+                    origin.x+(box.maxX-origin.x)*.92,origin.y+(box.maxY-origin.y)*.92,origin.z+(box.maxZ-origin.z)*.92);
+        }
         return facing.getAxis()==EnumFacing.Axis.Y && rotation>=2?new AxisAlignedBB(1-box.maxX,box.minY,1-box.maxZ,1-box.minX,box.maxY,1-box.minZ):box;
     }
     public AxisAlignedBB supportBounds(IBlockState state){
         double a=kind.equals("thruster_lever") || kind.equals("wall_slider")?3/16D:kind.equals("fighter_throttle")?1.5/16D:1/16D;
-        double b=kind.equals("thruster_lever")?2/16D:1/16D;EnumFacing face=state.getValue(FACING);
+        double b=kind.equals("thruster_lever")?2/16D:1/16D;if(kind.equals("wall_slider")){a=.5-(.5-a)*.92;b=.5-(.5-b)*.92;}EnumFacing face=state.getValue(FACING);
         if(face.getAxis()==EnumFacing.Axis.Y){if(state.getValue(ROTATION)%2==1){double swap=a;a=b;b=swap;}double y=face==EnumFacing.UP?0:1;return new AxisAlignedBB(a,y,b,1-a,y,1-b);}
         if(face.getAxis()==EnumFacing.Axis.Z){double z=face==EnumFacing.SOUTH?0:1;return new AxisAlignedBB(a,b,z,1-a,1-b,z);}
         double x=face==EnumFacing.EAST?0:1;return new AxisAlignedBB(x,b,a,x,1-b,1-a);

@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEST = ROOT / 'src/main/resources/assets/vandorlabs/models/block/toggle_switch'
+DEST = ROOT / 'src/main/resources/assets/vandorlabs/models/block/rocker_switch'
 TEXTURES = {name: 'vandorlabs:blocks/thruster_controls/32px/' + name
             for name in ('metal', 'dark', 'grip', 'edge', 'amber', 'cyan')}
 TEXTURES['particle'] = TEXTURES['metal']
@@ -51,7 +51,8 @@ def main():
         for mount, transform in MOUNTS.items():
             elements = []
             for low, high, color in geometry(on):
-                points = [transform(*point) for point in itertools.product(*zip(low, high))]
+                points = [transform(8+(x-8)*.92, y*.92, 8+(z-8)*.92)
+                          for x,y,z in itertools.product(*zip(low, high))]
                 elements.append({
                     'from': [min(point[axis] for point in points) for axis in range(3)],
                     'to': [max(point[axis] for point in points) for axis in range(3)],
@@ -60,7 +61,7 @@ def main():
                 })
             model = {'ambientocclusion': False, 'textures': TEXTURES, 'elements': elements}
             (DEST / f'{"on" if on else "off"}_{mount}.json').write_text(json.dumps(model, indent=2)+'\n')
-    print('Generated 12 split-rocker Toggle Switch models')
+    print('Generated 12 split-rocker Rocker Switch models')
 
 
 if __name__ == '__main__':

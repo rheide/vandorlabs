@@ -268,7 +268,7 @@ public class ModBlocks {
                 return new BlockVandorConsole(id);
             case "BlockDisplaySequenced":
                 return new BlockDisplaySequenced(id);
-            case "BlockToggleSwitch": return new BlockToggleSwitch(id);
+            case "BlockRockerSwitch": return new BlockRockerSwitch(id);
             case "BlockTwinPowerLever": return new BlockTwinPowerLever(id,e.get("large").getAsBoolean());
             case "BlockSignalControl": return new BlockSignalControl(id,e.get("control_kind").getAsString(),e.get("detail").getAsInt());
             case "BlockVandorSwitch":
@@ -674,7 +674,7 @@ public class ModBlocks {
         }
         for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())){
             Block binary=Block.REGISTRY.getObject(new ResourceLocation(location.getResourceDomain(),location.getResourcePath()));
-            if(binary instanceof BlockIndustrialLever || binary instanceof BlockToggleSwitch)event.getModelRegistry().putObject(location,new com.vandorlabs.client.MountedBinaryControlModel(event.getModelRegistry().getObject(location),binary));
+            if(binary instanceof BlockIndustrialLever || binary instanceof BlockRockerSwitch)event.getModelRegistry().putObject(location,new com.vandorlabs.client.MountedBinaryControlModel(event.getModelRegistry().getObject(location),binary));
         }
         com.vandorlabs.client.ProgrammableHousingModel cube = null, slab = null;
         for (ModelResourceLocation location : new java.util.ArrayList<>(

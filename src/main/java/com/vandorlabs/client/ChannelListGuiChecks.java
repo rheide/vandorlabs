@@ -39,7 +39,7 @@ final class ChannelListGuiChecks {
                     owner.setPositionAndUpdate(POS.getX()+.5,POS.getY(),POS.getZ()-2);
                     for(BlockPos p:BlockPos.getAllInBox(POS.add(-2,-2,-2),POS.add(2,3,2)))owner.world.setBlockToAir(p);
                     owner.world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
-                    Block block=index==14?Block.getBlockFromName("vandorlabs:industrial_power_lever"):index==15?Block.getBlockFromName("vandorlabs:toggle_switch"):index==13?Block.getBlockFromName("vandorlabs:small_power_lever"):index>=9 && index<13?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[index-9])):index==0?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:rocker_switch")):
+                    Block block=index==14?Block.getBlockFromName("vandorlabs:industrial_power_lever"):index==15?Block.getBlockFromName("vandorlabs:rocker_switch"):index==13?Block.getBlockFromName("vandorlabs:small_power_lever"):index>=9 && index<13?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[index-9])):index==0?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:rocker_switch")):
                         index==1?ModBlocks.PROGRAMMABLE_LIGHT:index==2?ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK:
                         index==3?ModBlocks.ANIMATED_SCREEN_SELECTOR:index==4?ModBlocks.PROGRAMMABLE_TRAPDOOR:
                         index==5?ModBlocks.PROGRAMMABLE_RAMP:index==8?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:ion_drive")):Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+(index==6?"programmable_door":"landing_gear")));
@@ -112,7 +112,7 @@ final class ChannelListGuiChecks {
         }
         SignalControlMountChecks.checkModels(mc);
         TwinPowerLeverChecks.checkModels(mc);
-        ToggleSwitchChecks.checkModels(mc);
+        RockerSwitchChecks.checkModels(mc);
         MountedBinaryControlChecks.checkModels(mc);
         System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation; slider attachment and grip/panel alignment");
     }
@@ -135,7 +135,7 @@ final class ChannelListGuiChecks {
                 capture(mc,output,"controls_hotbar_empty");
                 for(int slot=0;slot<SignalControlRuntimeChecks.IDS.length;slot++)mc.player.inventory.setInventorySlotContents(slot,new net.minecraft.item.ItemStack(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[slot]))));
                 for(int i=0;i<2;i++){net.minecraft.item.ItemStack lever=new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:small_power_lever"));net.minecraft.nbt.NBTTagCompound size=new net.minecraft.nbt.NBTTagCompound();size.setInteger("PowerLeverSize",i);lever.setTagInfo("RedstoneChannelSettings",size);mc.player.inventory.setInventorySlotContents(4+i,lever);}
-                mc.player.inventory.setInventorySlotContents(6,new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:toggle_switch")));
+                mc.player.inventory.setInventorySlotContents(6,new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:rocker_switch")));
                 stage=8;ticks=0;return;
             }
             if(stage==8 && ++ticks>20){capture(mc,output,"controls_hotbar");stage=12;ticks=0;return;}
@@ -143,7 +143,7 @@ final class ChannelListGuiChecks {
                 mc.player.inventory.setInventorySlotContents(8,net.minecraft.item.ItemStack.EMPTY);
                 for(int slot=0;slot<8;slot++){
                     int variant=iconPage*8+slot,kind=variant/64,value=variant%64;
-                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:"+(kind<3?"thruster_lever":kind==3?"wall_slider":kind<6?"small_power_lever":kind<8?"industrial_power_lever":"toggle_switch")));
+                    net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:"+(kind<3?"thruster_lever":kind==3?"wall_slider":kind<6?"small_power_lever":kind<8?"industrial_power_lever":"rocker_switch")));
                     net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("ControlType",kind<3?kind:0);if(kind>=4 && kind<8)tag.setInteger("PowerLeverSize",kind%2);tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",value%4);tag.setInteger("BaseTilt",value/4%4);tag.setInteger("TiltDirection",value/16);stack.setTagInfo("RedstoneChannelSettings",tag);mc.player.inventory.setInventorySlotContents(slot,stack);
                 }
                 stage=13;ticks=0;return;
@@ -212,7 +212,7 @@ final class ChannelListGuiChecks {
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
                     for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-4,-4),POS.add(4,6,4)))world.setBlockToAir(at);
                     for(net.minecraft.entity.item.EntityItem drop:world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new net.minecraft.util.math.AxisAlignedBB(POS).grow(12)))drop.setDead();
-                    Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"small_power_lever","small_power_lever","toggle_switch"}[powerPreview]);
+                    Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"small_power_lever","small_power_lever","rocker_switch"}[powerPreview]);
                     for(int i=0;i<2;i++){
                         BlockPos at=POS.east(i);world.setBlockState(at.south(),Blocks.STONEBRICK.getDefaultState(),3);
                         world.setBlockState(at,powerPreview==2?block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.NORTH).withProperty(BlockVandorSwitch.ON,i==0):block.getDefaultState().withProperty(BlockIndustrialLever.FACING,net.minecraft.util.EnumFacing.NORTH).withProperty(BlockIndustrialLever.POWERED,i==0),3);
@@ -223,7 +223,7 @@ final class ChannelListGuiChecks {
                 });stage=17;ticks=0;return;
             }
             if(stage==17 && ++ticks>25){
-                capture(mc,output,"gallery_close_control_"+new String[]{"small_power_lever","large_power_lever","toggle_switch"}[powerPreview]);
+                capture(mc,output,"gallery_close_control_"+new String[]{"small_power_lever","large_power_lever","rocker_switch"}[powerPreview]);
                 if(++powerPreview<3)stage=16;else{stage=18;System.out.println("[vandorlabs][reprolab] binary-control-gallery PASS shots=3");}ticks=0;return;
             }
             if(stage==18){
@@ -231,15 +231,15 @@ final class ChannelListGuiChecks {
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
                     for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-4,-4),POS.add(4,6,4)))world.setBlockToAir(at);
                     for(net.minecraft.entity.item.EntityItem drop:world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new net.minecraft.util.math.AxisAlignedBB(POS).grow(12)))drop.setDead();
-                    int kind=binaryMountPreview/2;Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"small_power_lever","small_power_lever","industrial_power_lever","industrial_power_lever","toggle_switch","wall_slider"}[kind]);
+                    int kind=binaryMountPreview/2;Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"small_power_lever","small_power_lever","industrial_power_lever","industrial_power_lever","rocker_switch","wall_slider"}[kind]);
                     world.setBlockState(POS.down(),Blocks.STONEBRICK.getDefaultState(),3);
                     world.setBlockState(POS,block instanceof BlockIndustrialLever?block.getDefaultState().withProperty(BlockIndustrialLever.FLOOR,true):block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.UP),3);
                     com.vandorlabs.tiles.TileEntityRedstoneChannel tile=(com.vandorlabs.tiles.TileEntityRedstoneChannel)world.getTileEntity(POS);tile.configureMount(3,binaryMountPreview%2==0?0:3,0);if(kind<4)tile.setPowerLeverSize(kind%2);
-                    EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());player.connection.setPlayerLocation(POS.getX()-2,POS.getY()+2.2-player.getEyeHeight(),POS.getZ()-2.6,-38.9F,27F);
+                    EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());player.connection.setPlayerLocation(POS.getX()+(kind==5?2:-2),POS.getY()+2.2-player.getEyeHeight(),POS.getZ()+(kind==5?2.6:-2.6),kind==5?141.1F:-38.9F,27F);
                 });stage=19;ticks=0;return;
             }
             if(stage==19 && ++ticks>25){
-                capture(mc,output,"controls_mount_"+new String[]{"small_power_lever","large_power_lever","compact_power_lever","industrial_power_lever","toggle_switch","wall_slider"}[binaryMountPreview/2]+(binaryMountPreview%2==0?"_raised_6px":"_raised_6px_tilted_45"));
+                capture(mc,output,"controls_mount_"+new String[]{"small_power_lever","large_power_lever","compact_power_lever","industrial_power_lever","rocker_switch","wall_slider"}[binaryMountPreview/2]+(binaryMountPreview%2==0?"_raised_6px":"_raised_6px_tilted_45"));
                 if(++binaryMountPreview<12)stage=18;else{stage=9;System.out.println("[vandorlabs][reprolab] binary-control-mount-gallery PASS shots=12");mc.shutdown();}ticks=0;return;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}

@@ -479,13 +479,8 @@ final class ItemRuntimeChecks {
         grid.setInventorySlotContents(4, new ItemStack(Blocks.COBBLESTONE));
         require(!rocker.matches(grid, player.world),
                 "Rocker Switch recipe accepts cobblestone instead of alloy");
-        grid.setInventorySlotContents(4,new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
-        grid.setInventorySlotContents(7,new ItemStack(Items.REDSTONE));
-        IRecipe toggle=CraftingManager.REGISTRY.getObject(new ResourceLocation("vandorlabs","toggle_switch"));
-        require(toggle!=null && toggle.matches(grid,player.world),"Toggle Switch recipe missing or does not match");
-        crafted=CraftingManager.findMatchingResult(grid,player.world);
-        require(crafted.getItem()==Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:toggle_switch")) && crafted.getCount()==1,"Toggle Switch recipe conflicts or crafts the wrong item");
-        grid.setInventorySlotContents(7,ItemStack.EMPTY);require(!toggle.matches(grid,player.world),"Toggle Switch recipe needs redstone");
+        require(!Block.REGISTRY.containsKey(new ResourceLocation("vandorlabs","toggle_switch")),"removed Toggle Switch ID is still registered");
+        require(CraftingManager.REGISTRY.getObject(new ResourceLocation("vandorlabs","toggle_switch"))==null,"removed Toggle Switch recipe is still registered");
     }
 
     private static void checkLeverAndTableRecipes(InventoryCrafting grid,

@@ -17,7 +17,7 @@ public final class MountedControlGeometry {
     public static final IUnlistedProperty<Integer> MOUNT=ProgrammableHousingState.integer("binary_control_mount");
     private static final Map<String,Pose> POSES=new java.util.concurrent.ConcurrentHashMap<>();
     private static final Map<String,List<AxisAlignedBB>> SHAPES=new java.util.concurrent.ConcurrentHashMap<>();
-    public static boolean supports(Block block){return block instanceof BlockSignalControl || block instanceof BlockIndustrialLever || block instanceof BlockToggleSwitch;}
+    public static boolean supports(Block block){return block instanceof BlockSignalControl || block instanceof BlockIndustrialLever || block instanceof BlockRockerSwitch;}
     public static int mount(IBlockAccess world,BlockPos pos){
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityRedstoneChannel))return 0;
         TileEntityRedstoneChannel t=(TileEntityRedstoneChannel)raw;return t.getBaseHeight()+4*(t.getBaseTilt()+4*t.getTiltDirection());
@@ -30,7 +30,7 @@ public final class MountedControlGeometry {
             String id=state.getBlock() instanceof BlockTwinPowerLever?(size==0?"small_power_lever":"large_power_lever"):(size==0?"compact_power_lever":"industrial_power_lever");
             return id+"/facing="+state.getValue(BlockIndustrialLever.FACING).getName()+",floor="+state.getValue(BlockIndustrialLever.FLOOR)+",powered="+state.getValue(BlockIndustrialLever.POWERED);
         }
-        return "toggle_switch/facing="+face(state).getName()+",on="+state.getValue(BlockVandorSwitch.ON)+",rotation="+state.getValue(BlockVandorSwitch.ROTATION);
+        return "rocker_switch/facing="+face(state).getName()+",on="+state.getValue(BlockVandorSwitch.ON)+",rotation="+state.getValue(BlockVandorSwitch.ROTATION);
     }
     public static Pose nativePose(IBlockState state,int size){return POSES.computeIfAbsent(key(state,size),key->{
         String[] parts=key.split("/",2);JsonObject variants=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants");JsonObject variant=variants.getAsJsonObject(parts[1]);

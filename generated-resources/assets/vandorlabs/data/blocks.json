@@ -1263,7 +1263,7 @@
   {
     "id": "rocker_switch",
     "type": "switch",
-    "class": "BlockVandorSwitch",
+    "class": "BlockRockerSwitch",
     "item": true,
     "momentary": false
   },
@@ -3580,11 +3580,5 @@
     "type": "control",
     "item": true,
     "hidden": true
-  },
-  {
-    "id": "toggle_switch",
-    "class": "BlockToggleSwitch",
-    "type": "switch",
-    "item": true
   }
 ]

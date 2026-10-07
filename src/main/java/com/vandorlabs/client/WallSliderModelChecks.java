@@ -21,7 +21,7 @@ final class WallSliderModelChecks {
         }
         require(panel!=null && cap!=null,"missing outward panel/grip face "+state);
         int axis=facing.getAxis()==EnumFacing.Axis.X?0:facing.getAxis()==EnumFacing.Axis.Y?1:2;
-        double plane=facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1.0/16:15.0/16;
+        double plane=facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?.92/16:1-.92/16;
         for(int vertex=0;vertex<4;vertex++)require(Math.abs(coordinate(position(panel,vertex),axis)-plane)<.0001,"slider panel mounted away from support "+state);
         Vec3d center=Vec3d.ZERO;
         for(int vertex=0;vertex<4;vertex++)center=center.add(position(cap,vertex).scale(.25));

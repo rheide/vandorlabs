@@ -15,7 +15,7 @@ import net.minecraftforge.common.property.IExtendedBlockState;
 final class MountedBinaryControlChecks {
     static void checkModels(Minecraft mc){
         int poses=0,icons=0;
-        for(String id:new String[]{"small_power_lever","industrial_power_lever","toggle_switch"}){
+        for(String id:new String[]{"small_power_lever","industrial_power_lever","rocker_switch"}){
             Block block=Block.getBlockFromName("vandorlabs:"+id);boolean lever=block instanceof BlockIndustrialLever;
             for(EnumFacing face:EnumFacing.values())for(int rotation=0;rotation<(face.getAxis()==EnumFacing.Axis.Y?4:1);rotation++)for(int size=0;size<(lever?2:1);size++)for(boolean on:new boolean[]{false,true}){
                 if(lever && face==EnumFacing.DOWN)continue;

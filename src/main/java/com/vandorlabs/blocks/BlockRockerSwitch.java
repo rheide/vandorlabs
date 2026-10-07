@@ -12,8 +12,8 @@ import net.minecraft.world.*;
 import net.minecraft.tileentity.TileEntity;
 
 /** Compact split rocker using the shared latch and configurable solid mounting base. */
-public final class BlockToggleSwitch extends BlockVandorSwitch {
-    public BlockToggleSwitch(String name){super(name,false);}
+public final class BlockRockerSwitch extends BlockVandorSwitch {
+    public BlockRockerSwitch(String name){super(name,false);}
     @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,ON,ROTATION},new net.minecraftforge.common.property.IUnlistedProperty[]{MountedControlGeometry.MOUNT});}
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(MountedControlGeometry.MOUNT,MountedControlGeometry.mount(world,pos));}
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return MountedControlGeometry.bounds(state,world,pos);}

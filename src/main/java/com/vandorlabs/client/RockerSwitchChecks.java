@@ -14,9 +14,9 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
 /** Real placement/power and baked-artwork checks for the compact binary switch. */
-final class ToggleSwitchChecks {
+final class RockerSwitchChecks {
     static void server(World world,EntityPlayer player){
-        BlockToggleSwitch block=(BlockToggleSwitch)Block.getBlockFromName("vandorlabs:toggle_switch");
+        BlockRockerSwitch block=(BlockRockerSwitch)Block.getBlockFromName("vandorlabs:rocker_switch");
         BlockPos pos=new BlockPos(20,100,40);boolean sneaking=player.isSneaking();player.setSneaking(false);int mounts=0;
         try{
             for(EnumFacing face:EnumFacing.values())for(int rotation=0;rotation<(face.getAxis()==EnumFacing.Axis.Y?4:1);rotation++){
@@ -35,10 +35,10 @@ final class ToggleSwitchChecks {
                 tile.setRedstoneChannel(0);world.setBlockToAir(support);require(world.isAirBlock(pos),"toggle remained after support removal");mounts++;
             }
         }finally{world.setBlockToAir(pos);for(EnumFacing face:EnumFacing.values())world.setBlockToAir(pos.offset(face));player.setSneaking(sneaking);}
-        System.out.println("[vandorlabs][reprolab] toggle-switch-runtime PASS mounts="+mounts+" (toggle, all-side power, persistence and support removal)");
+        System.out.println("[vandorlabs][reprolab] rocker-switch-runtime PASS mounts="+mounts+" (toggle, all-side power, persistence and support removal)");
     }
     static void checkModels(Minecraft mc){
-        BlockToggleSwitch block=(BlockToggleSwitch)Block.getBlockFromName("vandorlabs:toggle_switch");int poses=0;
+        BlockRockerSwitch block=(BlockRockerSwitch)Block.getBlockFromName("vandorlabs:rocker_switch");int poses=0;
         for(EnumFacing face:EnumFacing.values())for(int rotation=0;rotation<4;rotation++){
             java.util.Set<String> signatures=new java.util.HashSet<>();
             for(boolean on:new boolean[]{false,true}){
@@ -61,7 +61,7 @@ final class ToggleSwitchChecks {
             }
             require(signatures.size()==2,"toggle artwork repeats between states");
         }
-        System.out.println("[vandorlabs][reprolab] toggle-switch-models PASS poses="+poses+" (binary artwork, every mount/rotation, selection and outward indicators)");
+        System.out.println("[vandorlabs][reprolab] rocker-switch-models PASS poses="+poses+" (binary artwork, every mount/rotation, selection and outward indicators)");
     }
     private static void require(boolean pass,String message){if(!pass)throw new IllegalStateException(message);}
 }

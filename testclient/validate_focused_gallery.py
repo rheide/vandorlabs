@@ -27,7 +27,7 @@ if target == 'redstone-dialogs':
                 selected += ['controls_'+str(index)+'_'+str(level)+suffix for level in range(4)]
 
 if target == 'control-icons':
-    selected=['controls_hotbar_empty','controls_hotbar','gallery_close_control_small_power_lever','gallery_close_control_large_power_lever','gallery_close_control_toggle_switch']
+    selected=['controls_hotbar_empty','controls_hotbar','gallery_close_control_small_power_lever','gallery_close_control_large_power_lever','gallery_close_control_rocker_switch']
 assert selected, 'No mapped screenshots match ' + prefix
 log = (source / 'client.log').read_text()
 
@@ -42,8 +42,8 @@ if target == 'control-icons':
     require('binary-control-mount-gallery PASS shots=12')
     require('binary-control-mounts PASS')
     require('binary-control-runtime PASS')
-    require('toggle-switch-models PASS poses=48')
-    require('toggle-switch-runtime PASS mounts=12')
+    require('rocker-switch-models PASS poses=48')
+    require('rocker-switch-runtime PASS mounts=12')
 
 # Actual Dynmap startup complements the structural checks when installed.
 for control in ('thruster_lever','wall_slider','airliner_throttle','fighter_throttle'):

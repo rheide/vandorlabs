@@ -1,5 +1,5 @@
 {
-  "parent": "vandorlabs:block/toggle_switch/off_floor",
+  "parent": "vandorlabs:block/rocker_switch/off_floor",
   "display": {
     "gui": {
       "rotation": [
