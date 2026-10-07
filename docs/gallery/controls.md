@@ -8,13 +8,16 @@ These controls generate local redstone power and can participate in virtual reds
 | --- | --- | --- |
 | Push Button | ![Push Button states](../images/gallery/controls/push-button.png) | Momentary input for doors and circuits. |
 | Rocker Switch | ![Rocker Switch states](../images/gallery/controls/rocker-switch.png) | Persistent on/off input. |
-| Toggle Switch | ![Toggle Switch states](../images/gallery/controls/toggle-switch.png) | Split rocker with an illuminated border on the pressed half. |
-| Compact Power Lever | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
-| Industrial Power Lever | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
+| Toggle Switch | ![Toggle Switch states](../images/gallery/controls/toggle-switch.png) | Split rocker with amber Off and a cyan top button when On. |
+| Industrial Power Lever: Compact | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
+| Industrial Power Lever: Industrial | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
 | Power Lever: Small | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 67.5-degree throw. |
 | Power Lever: Large | ![Large Power Lever states](../images/gallery/controls/large-power-lever.png) | Longer twin arms and shared grip; 90-degree throw. |
 
-The compact and industrial levers have separate recipes based on a vanilla lever plus Industrial Alloy Ingots. The button and rocker switch likewise use Industrial Alloy Ingots. See the in-game recipe book for the arrangements.
+Industrial Power Lever uses a vanilla lever and two Industrial Alloy Ingots.
+Select **Size: Compact/Industrial** in its configuration dialog. Existing
+Compact controls keep their size. The button and rocker switch likewise use
+Industrial Alloy Ingots; see the in-game recipe book for the arrangements.
 
 Power Lever mounts on walls or floors and toggles
 between Off and On with a normal right-click. The joined arms and grip move
@@ -23,8 +26,8 @@ its On angle is 45 degrees. Large keeps its 45-degree angles in both states,
 with arms shortened by 2 pixels. Small’s arm is one pixel shorter than its original design. Moving arms sit slightly inside the pivot
 caps to avoid overlapping surfaces at the base. They provide 0 or 15 redstone power
 and use the same channel settings and linked switching as Industrial Power
-Lever. Use the Configurizer to configure channels in survival. Like the
-Industrial Power Lever, these controls do not obstruct movement.
+Lever. Use the Configurizer to configure channels in survival. Power Lever and Industrial Power Lever have solid collision matching their
+bases, arms and grips.
 
 Craft one Power Lever with **two vanilla levers** and **one Industrial Alloy
 Ingot**, in any arrangement. In its configuration dialog, click **Size: Small**
@@ -36,14 +39,13 @@ Large Power Levers retain their original size.
 
 Toggle Switch uses a compact **6 × 8 pixel** plate with a recessed, split
 rocker in the newer levers’ solid-color palette. **Off** presses the bottom
-half with an amber border; **On** presses the top half with a cyan border.
-Only the active half has a colored border. Normal right-click toggles it and
+half with an amber border; **On** presses the fully cyan top half. Normal right-click toggles it and
 outputs 0 or 15 redstone power.
 
 Mount it on a wall, floor or ceiling. Floor and ceiling orientation follows
 placement. It uses the Rocker Switch’s channel configuration and linked latch
 behavior, including the Configurizer in survival and channel-preserving
-pick-block. Like the Rocker Switch, it does not obstruct movement.
+pick-block. Its mounting base and rocker have solid collision.
 
 Craft one Toggle Switch from **one stick**, **one Industrial Alloy Ingot** and
 **one redstone dust**, in any arrangement.
@@ -61,7 +63,7 @@ Wall Slider puts Off nearest the placing player. Airliner handles move together;
 Fighter buttons are decorative. See the [signal-level guide and GIF examples](version-1.6.md)
 for lighting, propulsion and screen settings.
 
-## Throttle base height and tilt
+## Control base height and tilt
 
 Thruster Lever has three selectable types: **Thruster**, **Airliner** and
 **Fighter**. Open its configuration dialog and click **Type** to cycle them.
@@ -69,7 +71,8 @@ All types share the same recipe and settings. Existing Airliner and Fighter
 controls keep their appearance. Type is preserved when saving, pick-block and
 breaking/replacing; the Duplifier’s **Signal Levels** option copies it.
 
-All three types have configurable bases.
+All three throttle types, **Wall Slider**, **Power Lever**, **Industrial Power
+Lever** and **Toggle Switch** have configurable bases.
 Shift-right-click a placed control, or right-click it with the Configurizer in
 survival, to open its channel/settings dialog. Set **Base height** to **Standard**
 (the original minimum), **+2 px**, **+4 px** or **+6 px**. The solid mounting plate extends;
@@ -79,17 +82,22 @@ Set **Tilt** to **Flat**, **15 deg**, **30 deg** or **45 deg**, then select
 **Forward**, **Right**, **Backward** or **Left** relative to the mounted control.
 The control tilts on top of a straight height extension, perpendicular to the
 support face. Increasing height raises the tilted assembly without shifting it
-sideways. A solid wedge fills underneath the tilt. This works on walls, floors and ceilings.
+sideways. A solid wedge fills underneath the tilt. This works on each control’s supported mounting faces.
 The controls have solid collision for their base, panel and handles, with a stepped
 collision surface along the wedge. The selection outline follows the control.
 Click **Done** to apply. Right-click a setting button to cycle backward.
 
 Existing controls remain Standard/Flat. Height and tilt survive saving,
 breaking and replacing a configured control, and pick-block. The Duplifier’s
-**Signal Levels** option copies these settings along with the control’s limits.
-The Wall Slider retains its existing mounting geometry.
+**Signal Levels** option copies these settings along with signal-level limits where supported.
+All controls retain their original minimum base height when set to Standard/Flat.
 
 ![Throttle height and tilt settings](../images/gallery/controls/airliner-throttle-config.png)
+
+![Industrial Power Lever size, height and tilt settings](../images/gallery/controls/industrial-power-lever-config.png)
+
+[Power Lever settings](../images/gallery/controls/power-lever-config.png) and
+[Toggle Switch settings](../images/gallery/controls/toggle-switch-config.png) use the same mounting buttons.
 
 All pictures below use the Off detent so the mounting settings can be compared directly.
 
@@ -112,3 +120,14 @@ Height and tilt can be combined. These examples use **+6 px** and **45 degrees**
 | Thruster Lever | Airliner Throttle | Fighter Throttle |
 | --- | --- | --- |
 | ![Thruster raised and tilted](../images/gallery/controls/thruster-lever-raised-6px-tilted-45.png) | ![Airliner raised and tilted](../images/gallery/controls/airliner-throttle-raised-6px-tilted-45.png) | ![Fighter raised and tilted](../images/gallery/controls/fighter-throttle-raised-6px-tilted-45.png) |
+
+The same upright extension and filled tilt wedge are available on these controls:
+
+| Control | +6 px | +6 px and 45 degrees |
+| --- | --- | --- |
+| Power Lever: Small | ![Power Lever: Small raised](../images/gallery/controls/small-power-lever-raised-6px.png) | ![Power Lever: Small raised and tilted](../images/gallery/controls/small-power-lever-raised-6px-tilted-45.png) |
+| Power Lever: Large | ![Power Lever: Large raised](../images/gallery/controls/large-power-lever-raised-6px.png) | ![Power Lever: Large raised and tilted](../images/gallery/controls/large-power-lever-raised-6px-tilted-45.png) |
+| Industrial Power Lever: Compact | ![Industrial Power Lever: Compact raised](../images/gallery/controls/compact-power-lever-raised-6px.png) | ![Industrial Power Lever: Compact raised and tilted](../images/gallery/controls/compact-power-lever-raised-6px-tilted-45.png) |
+| Industrial Power Lever: Industrial | ![Industrial Power Lever: Industrial raised](../images/gallery/controls/industrial-power-lever-raised-6px.png) | ![Industrial Power Lever: Industrial raised and tilted](../images/gallery/controls/industrial-power-lever-raised-6px-tilted-45.png) |
+| Toggle Switch | ![Toggle Switch raised](../images/gallery/controls/toggle-switch-raised-6px.png) | ![Toggle Switch raised and tilted](../images/gallery/controls/toggle-switch-raised-6px-tilted-45.png) |
+| Wall Slider | ![Wall Slider raised](../images/gallery/controls/wall-slider-raised-6px.png) | ![Wall Slider raised and tilted](../images/gallery/controls/wall-slider-raised-6px-tilted-45.png) |

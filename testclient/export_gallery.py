@@ -151,6 +151,9 @@ FOCUSED_SHOTS = {
     for role in ("bioengineer", "scientist", "hazmat", "repairman", "pilot",
                  "civilian_staff", "spaceship_staff", "security_rescue")
 }
+for name in ("small_power_lever","large_power_lever","compact_power_lever","industrial_power_lever","toggle_switch","wall_slider"):
+    for setting in ("raised_6px","raised_6px_tilted_45"):
+        FOCUSED_SHOTS[f"controls_mount_{name}_{setting}"]=f"controls/{name.replace('_','-')}-{setting.replace('_','-')}.png"
 
 for index,name in ((0,"thruster-lever"),(2,"airliner-throttle"),(3,"fighter-throttle")):
     FOCUSED_SHOTS[f"channels_{index+9}"]=f"controls/{name}-config.png"
@@ -167,6 +170,10 @@ for index,name in enumerate(re.findall(r'"([^"]+)"',door_names)):
     SHOTS["gallery_catalog_door_"+str(index)] = "doors/design-"+("reactor-service" if name=="reactor" else name.replace("_","-"))+".png"
 
 SHOTS["gallery_catalog_door_29_large"]="doors/design-slim-glass-large.png"
+
+FOCUSED_SHOTS["channels_13"]="controls/power-lever-config.png"
+FOCUSED_SHOTS["channels_14"]="controls/industrial-power-lever-config.png"
+FOCUSED_SHOTS["channels_15"]="controls/toggle-switch-config.png"
 
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
 FOCUSED_SHOTS["armor_stand_picker"] = "armor/stand-picker.png"

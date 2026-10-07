@@ -47,7 +47,7 @@ and handles block movement. Selection outlines follow the transformed model. Shi
 the control to open the dialog, or use the Configurizer in survival; click
 **Done** to apply. Saved worlds, configured drops and pick-block retain the
 settings, and the Duplifier copies them through **Signal Levels**. See the
-[controls guide](controls.md#throttle-base-height-and-tilt).
+[controls guide](controls.md#control-base-height-and-tilt).
 
 ![Throttle base height and tilt in the settings dialog](../images/gallery/controls/airliner-throttle-config.png)
 
@@ -79,7 +79,7 @@ states and mounting details.
 
 The new **Toggle Switch** is a compact, solid-color split rocker with only Off and On
 positions. Off presses the bottom half with an amber border; On presses the
-top half with a cyan border. Only the active border lights up, and it uses the Rocker Switch’s redstone output, channel
+top half with an entirely cyan face and border. and it uses the Rocker Switch’s redstone output, channel
 configuration and linked switching. Mount it on walls, floors or ceilings.
 
 Craft it from one stick, one Industrial Alloy Ingot and one redstone dust.
@@ -100,3 +100,17 @@ Programmable Doors. The **Small/Large** artwork choices use the supplied
 128×256 and 256×512 textures. Both openings use the same subtle translucent
 reflection material as Programmable Glass, behind the cutout frame.
 See the [door gallery](doors.md) for regular and large examples.
+
+## Mounting options on switches and levers
+
+**Power Lever**, **Wall Slider**, **Toggle Switch** and **Industrial Power Lever**
+now share the throttle’s base options: **Standard / +2 / +4 / +6 px**, **Flat /
+15 / 30 / 45 degrees**, and four tilt directions. Height extends upright from
+the support, with a filled wedge beneath the tilted assembly. The base and
+control have solid collision. Settings survive saving, pick-block, breaking
+and replacement, and the Duplifier’s **Signal Levels** option.
+
+Compact and Industrial levers now share one **Industrial Power Lever** item.
+Choose **Size: Compact/Industrial** in its dialog; existing placed Compact
+levers retain their size. Craft the unified item using its Industrial recipe.
+See the [controls gallery](controls.md#control-base-height-and-tilt) for examples.

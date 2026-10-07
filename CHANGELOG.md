@@ -2,19 +2,21 @@
 
 ## 1.7
 
+- Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Toggle Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Toggle Switch’s top face fully cyan while On.
+
 - Add Slim Glass artwork for regular and Large Programmable Doors at both supported resolutions, with the existing translucent glass shimmer behind its clear openings.
 
 - Merge Thruster, Airliner and Fighter controls into one Thruster Lever item with a Type button, retaining existing placed controls, settings and configured item appearances.
 
 - Merge twin-arm power levers into Power Lever with a Small/Large configuration button, preserved legacy sizes and configured drops. Shorten the Small arm by one pixel.
 
-- Add Toggle Switch: a compact solid-color split rocker with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber bottom border while Off and a cyan top border while On and a stick/alloy/redstone recipe.
+- Add Toggle Switch: a compact solid-color split rocker with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber bottom border while Off and a fully cyan top button while On, with a stick/alloy/redstone recipe.
 
 - Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power Lever’s On angle to 45 degrees for 67.5 degrees of total travel.
 
 - Keep throttle height extensions perpendicular to the support face, with the tilted assembly on top; increasing height no longer shifts it sideways. Preserve filled mounting geometry and matching collision/selection bounds.
 
-- Add Small Power Lever and Large Power Lever with supplied twin-arm on/off artwork, wall/floor mounts, Industrial Power Lever channel behavior, distinct recipes and padded inventory icons.
+- Add Power Lever with supplied twin-arm on/off artwork, selectable Small/Large sizes, wall/floor mounts, Industrial Power Lever channel behavior, a shared recipe and padded inventory icons.
 
 - Add Open helmets and Short Sleeves chestplates for all eight armor roles, with matching inventory icons and 16 additional slot-filtered choices. Preserve original IDs, artwork and defaults; map Duplifier copies to matching alternate pieces and standard leggings/boots.
 
