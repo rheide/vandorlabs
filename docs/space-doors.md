@@ -5,7 +5,7 @@ Programmable Door item, initially set to Sliding Sideways. Its initial depth
 follows the placement click and can be changed in the settings.
 Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
 the design, Small/Large texture size, framed/bare appearance, placement
-position (Near, Middle, or Far), Trigger mode, and redstone channel. Door artwork uses a categorized thumbnail list with mouse-wheel and scrollbar navigation. Regular doors offer 21 native designs; large doors add eight Double Doors designs. Each design appears once, with its artwork size controlled separately. Each option change applies immediately,
+position (Near, Middle, or Far), Trigger mode, and redstone channel. Door artwork uses a categorized thumbnail list with mouse-wheel and scrollbar navigation. Regular doors offer 22 native designs; large doors add eight Double Doors designs. Each design appears once, with its artwork size controlled separately. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
 Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
 lower tile entity and synchronized by the server. Configuring a pair applies
@@ -160,3 +160,8 @@ There is no per-frame/tick repair cost; it runs only on texture loading/reloadin
 
 An earlier, separate importer artifact came from sampling the hinge atlas on
 extruded frame sides. Those sides now sample the frame material.
+
+**Slim Glass** adds a slim metal perimeter and central strut around two clear
+openings. It is available for regular and large doors at both supported
+resolutions, with the existing glass reflection pane behind the supplied
+cutout artwork.

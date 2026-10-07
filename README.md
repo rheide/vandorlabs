@@ -181,9 +181,10 @@ the old suffixed IDs are not supported. Normal right-click cycles
 Off, Low, Medium and High. Shift-right-click opens the existing channel dialog
 with Low and High limits. Defaults are `0, 5, 10, 15`; Medium is the rounded midpoint.
 Low must be at least 1 and High must be at least two levels above Low, keeping
-four distinct outputs. Airliner Throttle (`airliner_throttle`) and Fighter
-Throttle (`fighter_throttle`) offer the same settings and mounting options. The
-Airliner handles move together; small buttons are decorative. All four controls
+four distinct outputs. The **Type** button selects **Thruster**, **Airliner** or
+**Fighter** on the same Thruster Lever item, preserving channels, limits, height,
+tilt and the current detent. Existing Airliner and Fighter controls retain
+their appearance. Airliner handles move together; small buttons are decorative. These controls
 emit the selected level to physical redstone and every configured channel.
 Linked controls mirror channel values without rounding their output; the artwork
 shows the nearest positive detent. All four controls mount on walls, floors and

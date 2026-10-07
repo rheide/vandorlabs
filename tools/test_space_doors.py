@@ -26,7 +26,7 @@ gui=(ROOT/'src/main/java/com/vandorlabs/client/GuiSpaceDoor.java').read_text()
 assert len(re.findall(r'"[^"]+"',re.search(r'LABELS=\{(.*?)\};',gui,re.S).group(1)))==len(designs)
 sprites=(ROOT/'src/main/java/com/vandorlabs/client/SpaceDoorTextures.java').read_text()
 glass_indices={int(i) for i in re.findall(r'design==(\d+)',re.search(r'hasGlassDesign\(int design\) \{(.*?)\}',tile).group(1))}
-assert {designs[i] for i in glass_indices}==set(GLASS_FAMILIES)|{"white_glass","dark_glass"}
+assert {designs[i] for i in glass_indices}==set(GLASS_FAMILIES)|{"white_glass","dark_glass","slim_glass"}
 for family in FAMILIES:
     for suffix in ('','_metal','_glass') if family in GLASS_FAMILIES else ('',):
         assert '"'+texture_name(family+suffix)+'"' in sprites
@@ -237,3 +237,22 @@ for family,material in [('white_glass','light_alloy_hull'),('dark_glass','progra
                     assert all(abs(actual-want)<1e-6 for actual,want in zip((abs(u1-u0),abs(v1-v0)),expected))
                     assert all(0<=v<=16 for v in face['uv'])
 print('Glass-rim doors PASS: white/dark materials, thicker tiled rails, separate glazing, simple handles, proportional UVs, both motions and all tiers')
+
+# Slim Glass keeps native cutouts and uses the existing faint-reflection pane.
+for tier,expected_size in [('low',(128,256)),('medium',(256,512))]:
+    from PIL import Image
+    image=Image.open(ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/glass_doors'/tier/'slim_glass.png').convert('RGBA')
+    assert image.size==expected_size
+    assert set(image.getchannel('A').getdata())=={0,255}
+    for sliding in [False,True]:
+        for framed in [False,True]:
+            for paired in [False,True]:
+                for right in [False,True]:
+                    base='space_slim_glass'+('_sliding_' if sliding else '_rotating_')+('framed' if framed else 'bare')+('_paired' if paired else '')+('_right_' if right else '_left_')
+                    pane=load(ASSETS/'models/block/detailed_doors'/tier/(base+'glass.json'))
+                    assert pane['textures']['pane']=='vandorlabs:blocks/space_doors/'+tier+'/glass_tile'
+                    assert pane['elements']
+                    for element in pane['elements']:
+                        assert set(element['faces'])=={'north','south'}
+                        assert all(0<=uv<=16 for face in element['faces'].values() for uv in face['uv'])
+print('Slim Glass PASS: both native resolutions, cutout frames and isolated shimmer panes on every mount variant')

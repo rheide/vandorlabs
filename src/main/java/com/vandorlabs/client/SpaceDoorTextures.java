@@ -28,16 +28,25 @@ public final class SpaceDoorTextures {
                     "vandorlabs:blocks/space_doors/" + level + name));
         }
         }
+        for(String tier:new String[]{"low","medium"}){
+            event.getMap().setTextureEntry(new RectangularSprite("vandorlabs:blocks/glass_doors/"+tier+"/slim_glass"));
+            // Keep faint pane reflections when atlas mipmaps are generated.
+            event.getMap().setTextureEntry(new RectangularSprite("vandorlabs:blocks/space_doors/"+tier+"/glass_tile"));
+        }
         for(String tier:new String[]{"low","medium"})
             for(String name:new String[]{"plain_cargo","stepped_freight","observation_leaf","reinforced_leaf"})
                 event.getMap().setTextureEntry(new RectangularSprite("vandorlabs:blocks/cargo_doors/"+tier+"/"+name));
     }
 
     static void checkFrameCleanup(IResourceManager manager) {
-        for (String name : new String[]{"standard", "observation_glass"}) {
+        for (String name : new String[]{"standard", "observation_glass", "glass_tile"}) {
             RectangularSprite sprite = new RectangularSprite("vandorlabs:blocks/space_doors/medium/" + name);
             sprite.load(manager, new ResourceLocation("vandorlabs", "textures/blocks/space_doors/medium/" + name + ".png"), ignored -> null);
             sprite.generateMipmaps(2);
+            if(name.equals("glass_tile")){
+                int[] mip=sprite.getFrameTextureData(0)[2];boolean visible=false;for(int pixel:mip)visible|=(pixel>>>24)>0;
+                if(!visible)throw new IllegalStateException("Glass shimmer disappeared from mipmaps");
+            }
             sprite.clearFramesTextureData();
             if (sprite.getFrameCount() != 0) throw new IllegalStateException("Door sprite frames were not cleared");
         }
@@ -69,7 +78,7 @@ public final class SpaceDoorTextures {
         @Override
         public void generateMipmaps(int levels) {
             int[][] pixels = Arrays.copyOf(getFrameTextureData(0), levels + 1);
-            if (!getIconName().endsWith("_glass")) {
+            if (!getIconName().endsWith("_glass") && !getIconName().endsWith("/glass_tile")) {
                 setFramesTextureData(new java.util.ArrayList<>(Collections.singletonList(pixels)));
                 super.generateMipmaps(levels);
                 return;

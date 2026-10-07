@@ -2341,5 +2341,25 @@
     "label": "Amber Hex Off",
     "category": "Lights",
     "source": "textures2_t3_r2_c2"
+  },
+  {
+    "id": "door_slim_glass_low",
+    "label": "Slim Glass Small",
+    "category": "Doors",
+    "source": "glass_doors/low/slim_glass",
+    "rectangular": true,
+    "crop": true,
+    "design": 29,
+    "detail": 0
+  },
+  {
+    "id": "door_slim_glass_medium",
+    "label": "Slim Glass Large",
+    "category": "Doors",
+    "source": "glass_doors/medium/slim_glass",
+    "rectangular": true,
+    "crop": true,
+    "design": 29,
+    "detail": 1
   }
 ]

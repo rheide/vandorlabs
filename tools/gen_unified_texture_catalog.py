@@ -56,6 +56,9 @@ for original in list(entries):
         entries.append(small)
 # Explicit static off entry for the amber lamp; append to preserve saved choices.
 entries.append(dict(id='light_amber_hex_off',label='Amber Hex Off',category='Lights',source='textures2_t3_r2_c2'))
+# Append the glass leaf after all saved texture choices.
+for detail,tier in enumerate(['low','medium']):
+    entries.append(dict(id='door_slim_glass_'+tier,label='Slim Glass '+['Small','Large'][detail],category='Doors',source='glass_doors/'+tier+'/slim_glass',rectangular=True,crop=True,design=29,detail=detail))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

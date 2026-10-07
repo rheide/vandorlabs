@@ -35,11 +35,11 @@ public class GuiSpaceDoor extends GuiContainer {
     private int previewX,previewY;
     private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
             "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
-            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass","Dark Glass","Plain Cargo","Stepped Freight","Observation Leaf","Reinforced Leaf","Warehouse Shutter","Slotted Bay","Cross Braced Bay","Split View Bay","Offset Cargo","Twin Observation","Armored Biparting","Service Freight"};
+            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass","Dark Glass","Plain Cargo","Stepped Freight","Observation Leaf","Reinforced Leaf","Warehouse Shutter","Slotted Bay","Cross Braced Bay","Split View Bay","Offset Cargo","Twin Observation","Armored Biparting","Service Freight","Slim Glass"};
     private static final String[] SIZES={"Size: Small","Size: Large"};
     private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
             "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
-            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight"};
+            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight","slim_glass"};
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));

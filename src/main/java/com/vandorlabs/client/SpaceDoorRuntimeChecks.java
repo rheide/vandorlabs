@@ -91,7 +91,7 @@ final class SpaceDoorRuntimeChecks {
         tile(world,neighbor).configure(0,0,true,2,false,true);
         NBTTagCompound neighborSettings=tile(world,neighbor).itemSettings();
         int cases=0;
-        for (int design=0;design<TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN;design++) for (int detail=0;detail<3;detail++)
+        for (int design:java.util.stream.IntStream.concat(java.util.stream.IntStream.range(0,TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN),java.util.stream.IntStream.of(29)).toArray()) for (int detail=0;detail<3;detail++)
             for (SpaceDoorMotion motion:SpaceDoorMotion.values()) for (boolean framed:new boolean[]{false,true})
                 for (boolean middle:new boolean[]{false,true}) for (boolean hinges:new boolean[]{false,true}) {
                     TileEntitySpaceDoor original=tile(world,source);

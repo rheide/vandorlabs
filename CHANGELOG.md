@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Add Slim Glass artwork for regular and Large Programmable Doors at both supported resolutions, with the existing translucent glass shimmer behind its clear openings.
+
 - Merge Thruster, Airliner and Fighter controls into one Thruster Lever item with a Type button, retaining existing placed controls, settings and configured item appearances.
 
 - Merge twin-arm power levers into Power Lever with a Small/Large configuration button, preserved legacy sizes and configured drops. Shorten the Small arm by one pixel.

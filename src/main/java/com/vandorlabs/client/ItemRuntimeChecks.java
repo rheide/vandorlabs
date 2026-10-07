@@ -284,6 +284,7 @@ final class ItemRuntimeChecks {
     }
 
     private static void checkConfiguredItemModels(Minecraft mc) {
+        SlimGlassDoorChecks.run(mc);
         Block[] housingBlocks = {
                 com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK,
                 com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_SLAB,

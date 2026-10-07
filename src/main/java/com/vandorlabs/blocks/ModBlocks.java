@@ -745,7 +745,7 @@ public class ModBlocks {
                         net.minecraft.client.renderer.block.model.IBakedModel baked =
                                 event.getModelRegistry().getObject(location);
                         if (baked != null) event.getModelRegistry().putObject(location,
-                                new com.vandorlabs.client.ScaledDoorItemModel(baked));
+                                new com.vandorlabs.client.ScaledDoorItemModel(baked,design==29));
                     }
     }
 

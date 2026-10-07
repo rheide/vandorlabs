@@ -116,8 +116,8 @@ final class ProgrammableDialogRuntimeChecks {
                 require(!item.label.matches(".* (Small|Medium|Large)$"),"door size remains in design label");
             }
         }
-        boolean large=designs.stream().anyMatch(design->design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN);
-        int expected=(large?com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length:com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN)-(glassLeaves?0:2);
+        boolean large=designs.stream().anyMatch(design->design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN && design!=29);
+        int expected=(large?com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length:com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN+1)-(glassLeaves?0:2);
         require(glassLeaves?designs.contains(15) && designs.contains(16):!designs.contains(15) && !designs.contains(16),"glass leaf designs in wrong picker");
         require(designs.size()==expected,"door picker missing designs");
         for(int detail=0;detail<2;detail++) {

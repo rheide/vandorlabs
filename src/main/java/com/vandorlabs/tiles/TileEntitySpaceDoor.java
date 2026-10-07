@@ -13,7 +13,7 @@ import net.minecraft.util.math.BlockPos;
 /** Appearance belongs to the placed door, not a separate registered block. */
 public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
-            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight"};
+            "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight","slim_glass"};
     public static final int FIRST_DOUBLE_DESIGN=21, DEFAULT_LARGE_DESIGN=23;
     public static final String[] DETAILS={"low","medium"};
     private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
@@ -68,7 +68,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
             world.notifyBlockUpdate(pos, state, state, 3);
         }
     }
-    public boolean acceptsDesign(int design) { return design<FIRST_DOUBLE_DESIGN || this instanceof TileEntityLargeProgrammableDoor; }
+    public boolean acceptsDesign(int design) { return design<FIRST_DOUBLE_DESIGN || design==29 || this instanceof TileEntityLargeProgrammableDoor; }
     public static boolean valid(int design,int detail) { return design>=0 && design<DESIGNS.length && detail>=0 && detail<3; }
 
     public BlockSpaceDoor model(boolean sliding) {
@@ -195,7 +195,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if (!world.isRemote) markDirty();
     }
     @Override public void onLoad() { super.onLoad(); migrateLegacyMotion(); }
-    public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16; }
+    public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16 || design==29; }
     public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)

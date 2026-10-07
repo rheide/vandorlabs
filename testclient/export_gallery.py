@@ -166,6 +166,8 @@ door_names = re.search(r'DESIGNS=\{(.*?)\};', (ROOT / "src/main/java/com/vandorl
 for index,name in enumerate(re.findall(r'"([^"]+)"',door_names)):
     SHOTS["gallery_catalog_door_"+str(index)] = "doors/design-"+("reactor-service" if name=="reactor" else name.replace("_","-"))+".png"
 
+SHOTS["gallery_catalog_door_29_large"]="doors/design-slim-glass-large.png"
+
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
 FOCUSED_SHOTS["armor_stand_picker"] = "armor/stand-picker.png"
 FOCUSED_SHOTS["armor_custom_picker"] = "armor/custom-picker.png"

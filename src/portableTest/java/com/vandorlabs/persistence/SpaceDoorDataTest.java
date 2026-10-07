@@ -5,7 +5,7 @@ public final class SpaceDoorDataTest {
         if (!value) throw new AssertionError(message);
     }
     public static void main(String[] args) {
-        for (int design=0;design<29;design++) for (int detail=0;detail<3;detail++)
+        for (int design=0;design<30;design++) for (int detail=0;detail<3;detail++)
             for (boolean framed:new boolean[]{false,true}) for (int direction=0;direction<3;direction++)
                 for (boolean middle:new boolean[]{false,true}) for (boolean sliding:new boolean[]{false,true})
                     for (boolean hinges:new boolean[]{false,true}) {
@@ -41,9 +41,10 @@ public final class SpaceDoorDataTest {
                 ==SpaceDoorData.TRIGGER_DISABLED,"invalid trigger fallback");
         check(new SpaceDoorData(15,1,true,0).design==15,"white glass design survives codec");
         check(new SpaceDoorData(16,1,true,0).design==16,"dark glass design survives codec");
+        check(new SpaceDoorData(29,1,true,0).design==29,"slim glass design survives codec");
         SpaceDoorData bad=new SpaceDoorData(-1,9,false,90);
         check(bad.design==2 && bad.detail==1 && bad.direction==0,"invalid settings fallback");
-        check(new SpaceDoorData(29,1,true,0).design==2,"unknown design fallback");
+        check(new SpaceDoorData(30,1,true,0).design==2,"unknown design fallback");
         for (boolean sliding:new boolean[]{false,true}) for (boolean framed:new boolean[]{false,true})
                 for (boolean hinges:new boolean[]{false,true}) {
             double low=sliding?(framed?6:7):(hinges?10.49:framed?11.24:12.24);

@@ -92,3 +92,11 @@ configuration dialog. All three types share channels, signal limits, height
 and tilt settings. Changing type preserves these settings and the current
 detent. Existing Airliner and Fighter controls retain their appearance.
 Pick-block, drops and the Duplifier’s **Signal Levels** option preserve type.
+
+## Slim Glass doors
+
+**Slim Glass** is available in the texture picker for regular and Large
+Programmable Doors. The **Small/Large** artwork choices use the supplied
+128×256 and 256×512 textures. Both openings use the same subtle translucent
+reflection material as Programmable Glass, behind the cutout frame.
+See the [door gallery](doors.md) for regular and large examples.

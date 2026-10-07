@@ -1,6 +1,6 @@
 # Programmable Door
 
-One Programmable Door can use any of 21 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
+One Programmable Door can use any of 22 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
 
 In Creative mode, shift-right-click either half to open the settings; in survival, right-click with the Configurizer. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
 
@@ -31,18 +31,19 @@ Each image shows the **framed door on the left** and the **bare door on the righ
 | Modular Shutter | ![Modular Shutter](../images/gallery/doors/design-modular-shutter.png) |
 | White Glass | ![White Glass](../images/gallery/doors/design-white-glass.png) |
 | Dark Glass | ![Dark Glass](../images/gallery/doors/design-dark-glass.png) |
+| Slim Glass | ![Slim Glass](../images/gallery/doors/design-slim-glass.png) |
 | Plain Cargo | ![Plain Cargo](../images/gallery/doors/design-plain-cargo.png) |
 | Stepped Freight | ![Stepped Freight](../images/gallery/doors/design-stepped-freight.png) |
 | Observation Leaf | ![Observation Leaf](../images/gallery/doors/design-observation-leaf.png) |
 | Reinforced Leaf | ![Reinforced Leaf](../images/gallery/doors/design-reinforced-leaf.png) |
 
-Observation, Viewport, Laboratory, Glazed Hangar, White Glass and Dark Glass have translucent windows. A design does not force a motion: choose either independently.
+Observation, Viewport, Laboratory, Glazed Hangar, White Glass, Dark Glass and Slim Glass have translucent windows. A design does not force a motion: choose either independently.
 
 ## Large doors and double-door artwork
 
 The Large Programmable Door fills a **3×3 opening** with two 1.5×3 leaves. Place it at the bottom center on three solid supports. Craft it from two Programmable Doors and seven Programmable Matter Ingots. Configure any cell to edit the assembly; breaking any cell removes it.
 
-Large doors accept all 21 regular designs plus these **eight Double Doors designs**. Each image shows a framed assembly on the left and a bare assembly on the right. The default is **Cross Braced Bay**. Large doors support the regular motions and **Sliding X**.
+Large doors accept all 22 regular designs plus these **eight Double Doors designs**. Each image shows a framed assembly on the left and a bare assembly on the right. The default is **Cross Braced Bay**. Large doors support the regular motions and **Sliding X**.
 
 | Double Doors design | Framed (left) and bare (right) |
 | --- | --- |
@@ -54,6 +55,12 @@ Large doors accept all 21 regular designs plus these **eight Double Doors design
 | Twin Observation | ![Twin Observation](../images/gallery/doors/design-twin-observation.png) |
 | Armored Biparting | ![Armored Biparting](../images/gallery/doors/design-armored-biparting.png) |
 | Service Freight | ![Service Freight](../images/gallery/doors/design-service-freight.png) |
+
+Slim Glass is also available on large doors. Its **Small** artwork is 128×256
+and **Large** artwork is 256×512, with the existing glass reflection material
+behind the two clear openings.
+
+![Slim Glass large doors](../images/gallery/doors/design-slim-glass-large.png)
 
 Select any shared material to replace a leaf face. **Face texture: Fit/Tile** controls its mapping; the native thin edges and hardware remain. See [unified materials](../unified-materials.md) for Custom and filesystem artwork.
 

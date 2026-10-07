@@ -49,3 +49,10 @@ previews are not runtime assets.
 imports the native images, padded item models and armor catalog. Existing
 catalog choice IDs are retained on reimport. The separate armor catalog keeps
 these slot-specific designs out of block and screen artwork lists.
+
+## Slim Glass doors
+
+The supplied mirrorable glass door artwork is included at 128×256 and
+256×512. Right leaves mirror the left artwork. Models keep the transparent
+openings and use the shipped glass reflection material in a separate pane
+pass, matching Programmable Glass.

@@ -347,8 +347,9 @@ public class ReproLab {
                     galleryFeet+3.0D,-26.0D,0.0F,5.0F));
         for (int design=0;design<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;design++)
             SHOTS.add(new Shot("gallery_catalog_door_"+design,GALLERY_X+.5D,
-                    galleryFeet+(design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN?.7D:.25D),
-                    design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN?-24D:-20.4D,0,0));
+                    galleryFeet+(design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN && design!=29?.7D:.25D),
+                    design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN && design!=29?-24D:-20.4D,0,0));
+        SHOTS.add(new Shot("gallery_catalog_door_29_large",GALLERY_X+.5D,galleryFeet+.7D,-24D,0,0));
         for (int page = 0; page < (com.vandorlabs.tiles.ScreenHousingTextures.LEGACY_COUNT + 9) / 10; page++)
             SHOTS.add(new Shot("gallery_finish_overview_" + page, GALLERY_X + .5D,
                     galleryFeet + 3.0D, -26.0D, 0.0F, 5.0F));
@@ -2495,8 +2496,8 @@ public class ReproLab {
     private static void buildCloseDoorGallery(World world, String shot) {
         BlockPos centre=new BlockPos(GALLERY_X,GALLERY_Y,-18);
         if (shot.startsWith("gallery_door_design_") || shot.startsWith("gallery_catalog_door_")) {
-            int design=Integer.parseInt(shot.substring((shot.startsWith("gallery_catalog_door_")?"gallery_catalog_door_":"gallery_door_design_").length()));
-            if(design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN) {
+            int design=Integer.parseInt(shot.substring((shot.startsWith("gallery_catalog_door_")?"gallery_catalog_door_":"gallery_door_design_").length()).replace("_large",""));
+            if(shot.endsWith("_large") || design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN && design!=29) {
                 Block doorBlock=block("large_programmable_door");
                 for(int i=0;i<2;i++) {
                     BlockPos anchor=centre.add(i==0?-1:3,0,0);

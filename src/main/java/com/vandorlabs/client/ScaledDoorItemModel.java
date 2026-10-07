@@ -24,8 +24,14 @@ public final class ScaledDoorItemModel implements IBakedModel {
             HAND, HAND);
 
     private final IBakedModel original;
+    private final ItemCameraTransforms transforms;
 
-    public ScaledDoorItemModel(IBakedModel original) { this.original = original; }
+    public ScaledDoorItemModel(IBakedModel original) { this(original,false); }
+    public ScaledDoorItemModel(IBakedModel original,boolean padded) {
+        this.original=original;
+        ItemTransformVec3f gui=padded?new ItemTransformVec3f(new Vector3f(15,205,0),new Vector3f(0,-.15F,0),new Vector3f(.4F,.4F,.4F)):GUI;
+        transforms=padded?new ItemCameraTransforms(HAND,HAND,HAND,HAND,ItemTransformVec3f.DEFAULT,gui,HAND,HAND):TRANSFORMS;
+    }
     boolean stableQuads(){return DoorQuadPlan.stableQuads(original);}
 
     @Override public List<BakedQuad> getQuads(IBlockState state, EnumFacing side,
@@ -37,5 +43,5 @@ public final class ScaledDoorItemModel implements IBakedModel {
         return original.getParticleTexture();
     }
     @Override public ItemOverrideList getOverrides() { return original.getOverrides(); }
-    @Override public ItemCameraTransforms getItemCameraTransforms() { return TRANSFORMS; }
+    @Override public ItemCameraTransforms getItemCameraTransforms() { return transforms; }
 }
