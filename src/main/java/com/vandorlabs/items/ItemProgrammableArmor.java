@@ -42,7 +42,9 @@ public final class ItemProgrammableArmor extends ItemArmor {
 
     public static int texture(ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
-        return tag != null && tag.hasKey(TEXTURE_TAG, 3) ? tag.getInteger(TEXTURE_TAG) : 0;
+        if(tag != null && tag.hasKey(TEXTURE_TAG, 3))return tag.getInteger(TEXTURE_TAG);
+        return stack.getItem() instanceof ItemProgrammableArmor
+                ? ArmorTextures.defaultChoice(((ItemProgrammableArmor)stack.getItem()).armorType) : 0;
     }
 
     public static void setTexture(ItemStack stack, int choice) {

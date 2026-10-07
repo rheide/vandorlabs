@@ -37,6 +37,10 @@ public final class ArmorTextures {
         ALL=Collections.unmodifiableList(entries);
     }
     private ArmorTextures() { }
+    public static int defaultChoice(EntityEquipmentSlot slot) {
+        for(Entry entry:ALL)if(entry.slot==slot && entry.name.startsWith("civilian_staff_"))return entry.choice;
+        throw new IllegalStateException("Civilian Staff armor missing for "+slot);
+    }
     public static Entry entry(int choice) {return CHOICES.get(choice);}
     public static boolean fits(int choice,EntityEquipmentSlot slot) {
         Entry entry=entry(choice);return entry!=null && entry.slot==slot;
