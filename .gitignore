@@ -21,3 +21,6 @@ __pycache__/
 testclient/door-animation.*/
 
 /testclient/render-channel.*/
+
+# Local Forge installation helper.
+/copy-latest.sh
