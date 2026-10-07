@@ -598,6 +598,7 @@ public class ReproLab {
                     holdTicks = GUI_SETTLE_TICKS;
                     break;
                 }
+                if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_close_control_"))TwinPowerLeverChecks.checkModels(mc);
                 Shot firstShot=SHOTS.get(shotIndex);
                 if(firstShot.name.equals("gallery_distant_geometry")) {
                     mc.gameSettings.renderDistanceChunks=12;
@@ -663,7 +664,7 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
-                    if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_catalog_")) {
+                    if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_catalog_") || System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_close_control_")) {
                         state=999;mc.shutdown();return;
                     }
                     beginShot(mc, new Shot("gui_return", CONSOLE.getX() + 0.5D,
@@ -2110,17 +2111,19 @@ public class ReproLab {
             Block block=block(shot.substring("gallery_close_control_".length()));
             for (int i=0;i<2;i++) {
                 BlockPos at=new BlockPos(GALLERY_X-1+i,GALLERY_Y+1,-18);
+                // The south-facing camera reverses world X: Off is left, On is right.
+                world.setBlockToAir(at);
                 world.setBlockState(at.south(),Blocks.STONEBRICK.getDefaultState(),3);
                 IBlockState state=block.getDefaultState();
                 if (block instanceof com.vandorlabs.blocks.BlockVandorSwitch)
                     state=state.withProperty(com.vandorlabs.blocks.BlockVandorSwitch.FACING,
                                     EnumFacing.NORTH)
-                            .withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ON,i==1);
+                            .withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ON,i==0);
                 else if (block instanceof com.vandorlabs.blocks.BlockIndustrialLever)
                     state=state.withProperty(net.minecraft.block.BlockHorizontal.FACING,
                                     EnumFacing.NORTH)
                             .withProperty(com.vandorlabs.blocks.BlockIndustrialLever.POWERED,
-                                    i==1);
+                                    i==0);
                 world.setBlockState(at,state,3);
             }
         } else if (shot.startsWith("gallery_close_chair_")) {

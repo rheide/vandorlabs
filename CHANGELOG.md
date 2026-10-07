@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Add Small Power Lever and Large Power Lever with supplied twin-arm on/off artwork, wall/floor mounts, Industrial Power Lever channel behavior, distinct recipes and padded inventory icons.
+
 - Add Open helmets and Short Sleeves chestplates for all eight armor roles, with matching inventory icons and 16 additional slot-filtered choices. Preserve original IDs, artwork and defaults; map Duplifier copies to matching alternate pieces and standard leggings/boots.
 
 - Configure Thruster Lever, Airliner Throttle and Fighter Throttle bases at their original minimum height, +2 px, +4 px or +6 px. Tilt the complete control by 15, 30 or 45 degrees forward, backward, left or right. Fill the tilted base down to its support and give the base, panel and handles solid component collision. Match selection bounds to the transformed artwork, preserve settings in saves and configured drops/items, and copy them with the Duplifier’s Signal Levels option.

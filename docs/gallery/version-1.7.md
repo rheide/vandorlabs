@@ -60,3 +60,15 @@ set on an armor stand. Duplifier copies match Open helmets with Short Sleeves
 chestplates; leggings and boots use the role’s standard artwork.
 
 ![Civilian Staff with an open helmet and short sleeves](../images/gallery/armor/civilian-staff-open.png)
+
+## Twin-arm power levers
+
+**Small Power Lever** and **Large Power Lever** are binary controls with two
+arms joined by one grip. Small has a 45-degree throw; Large has a 90-degree
+throw. Right-click toggles Off/On, with a cyan grip indicating On. Both mount
+on walls or floors and share the Industrial Power Lever’s redstone output,
+channel configuration and linked switching.
+
+Craft Small from two vanilla levers and one Industrial Alloy Ingot; use two
+ingots instead for Large. See the [controls gallery](controls.md) for both
+states and mounting details.
