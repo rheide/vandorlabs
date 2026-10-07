@@ -7,8 +7,7 @@ These controls generate local redstone power and can participate in virtual reds
 | Control | States | Use |
 | --- | --- | --- |
 | Push Button | ![Push Button states](../images/gallery/controls/push-button.png) | Momentary input for doors and circuits. |
-| Rocker Switch | ![Rocker Switch states](../images/gallery/controls/rocker-switch.png) | Persistent on/off input. |
-| Toggle Switch | ![Toggle Switch states](../images/gallery/controls/toggle-switch.png) | Split rocker with amber Off and a cyan top button when On. |
+| Rocker Switch | ![Rocker Switch states](../images/gallery/controls/rocker-switch.png) | Split rocker with amber Off and a cyan top button when On. |
 | Industrial Power Lever: Compact | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
 | Industrial Power Lever: Industrial | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
 | Power Lever: Small | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 67.5-degree throw. |
@@ -35,20 +34,19 @@ or **Size: Large** and then **Done**. Size survives saving, pick-block and
 breaking/replacing; the Duplifier’s **Signal Levels** option copies it. Existing
 Large Power Levers retain their original size.
 
-## Toggle Switch
+## Rocker Switch
 
-Toggle Switch uses a compact **6 × 8 pixel** plate with a recessed, split
+Rocker Switch uses an approximately **5.5 × 7.4 pixel** plate with a recessed, split
 rocker in the newer levers’ solid-color palette. **Off** presses the bottom
 half with an amber border; **On** presses the fully cyan top half. Normal right-click toggles it and
 outputs 0 or 15 redstone power.
 
 Mount it on a wall, floor or ceiling. Floor and ceiling orientation follows
-placement. It uses the Rocker Switch’s channel configuration and linked latch
+placement. It retains its channel configuration and linked latch
 behavior, including the Configurizer in survival and channel-preserving
 pick-block. Its mounting base and rocker have solid collision.
 
-Craft one Toggle Switch from **one stick**, **one Industrial Alloy Ingot** and
-**one redstone dust**, in any arrangement.
+Craft one Rocker Switch with **one stick above one Industrial Alloy Ingot**.
 
 ## Signal-level controls
 
@@ -58,6 +56,7 @@ Creative-mode shift-right-click configures channels and low/high limits. Default
 are 0, 5, 10 and 15. Their numeric outputs drive physical redstone and shared
 channels, including interactive screen sliders and Programmable Trigger blocks.
 
+Rocker Switch and Wall Slider use compact models reduced by 8%.
 All four detailed models mount on walls, floors and ceilings. The floor-mounted
 Wall Slider puts Off nearest the placing player. Airliner handles move together;
 Fighter buttons are decorative. See the [signal-level guide and GIF examples](version-1.6.md)
@@ -72,7 +71,7 @@ controls keep their appearance. Type is preserved when saving, pick-block and
 breaking/replacing; the Duplifier’s **Signal Levels** option copies it.
 
 All three throttle types, **Wall Slider**, **Power Lever**, **Industrial Power
-Lever** and **Toggle Switch** have configurable bases.
+Lever** and **Rocker Switch** have configurable bases.
 Shift-right-click a placed control, or right-click it with the Configurizer in
 survival, to open its channel/settings dialog. Set **Base height** to **Standard**
 (the original minimum), **+2 px**, **+4 px** or **+6 px**. The solid mounting plate extends;
@@ -97,7 +96,7 @@ All controls retain their original minimum base height when set to Standard/Flat
 ![Industrial Power Lever size, height and tilt settings](../images/gallery/controls/industrial-power-lever-config.png)
 
 [Power Lever settings](../images/gallery/controls/power-lever-config.png) and
-[Toggle Switch settings](../images/gallery/controls/toggle-switch-config.png) use the same mounting buttons.
+[Rocker Switch settings](../images/gallery/controls/rocker-switch-config.png) use the same mounting buttons.
 
 All pictures below use the Off detent so the mounting settings can be compared directly.
 
@@ -129,5 +128,5 @@ The same upright extension and filled tilt wedge are available on these controls
 | Power Lever: Large | ![Power Lever: Large raised](../images/gallery/controls/large-power-lever-raised-6px.png) | ![Power Lever: Large raised and tilted](../images/gallery/controls/large-power-lever-raised-6px-tilted-45.png) |
 | Industrial Power Lever: Compact | ![Industrial Power Lever: Compact raised](../images/gallery/controls/compact-power-lever-raised-6px.png) | ![Industrial Power Lever: Compact raised and tilted](../images/gallery/controls/compact-power-lever-raised-6px-tilted-45.png) |
 | Industrial Power Lever: Industrial | ![Industrial Power Lever: Industrial raised](../images/gallery/controls/industrial-power-lever-raised-6px.png) | ![Industrial Power Lever: Industrial raised and tilted](../images/gallery/controls/industrial-power-lever-raised-6px-tilted-45.png) |
-| Toggle Switch | ![Toggle Switch raised](../images/gallery/controls/toggle-switch-raised-6px.png) | ![Toggle Switch raised and tilted](../images/gallery/controls/toggle-switch-raised-6px-tilted-45.png) |
+| Rocker Switch | ![Rocker Switch raised](../images/gallery/controls/rocker-switch-raised-6px.png) | ![Rocker Switch raised and tilted](../images/gallery/controls/rocker-switch-raised-6px-tilted-45.png) |
 | Wall Slider | ![Wall Slider raised](../images/gallery/controls/wall-slider-raised-6px.png) | ![Wall Slider raised and tilted](../images/gallery/controls/wall-slider-raised-6px-tilted-45.png) |

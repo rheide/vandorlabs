@@ -86,7 +86,7 @@ for index, name in enumerate(("porthole", "light-column", "slatted-lamp",
     SHOTS[f"gallery_close_light_{index}"] = f"lights/{name}.png"
 
 for name in ("push_button", "rocker_switch", "compact_power_lever",
-             "industrial_power_lever", "small_power_lever", "large_power_lever", "toggle_switch"):
+             "industrial_power_lever", "small_power_lever", "large_power_lever"):
     SHOTS[f"gallery_close_control_{name}"] = f"controls/{name.replace('_', '-')}.png"
 
 for index, name in enumerate(("command", "companion", "operator",
@@ -151,7 +151,7 @@ FOCUSED_SHOTS = {
     for role in ("bioengineer", "scientist", "hazmat", "repairman", "pilot",
                  "civilian_staff", "spaceship_staff", "security_rescue")
 }
-for name in ("small_power_lever","large_power_lever","compact_power_lever","industrial_power_lever","toggle_switch","wall_slider"):
+for name in ("small_power_lever","large_power_lever","compact_power_lever","industrial_power_lever","rocker_switch","wall_slider"):
     for setting in ("raised_6px","raised_6px_tilted_45"):
         FOCUSED_SHOTS[f"controls_mount_{name}_{setting}"]=f"controls/{name.replace('_','-')}-{setting.replace('_','-')}.png"
 
@@ -173,7 +173,7 @@ SHOTS["gallery_catalog_door_29_large"]="doors/design-slim-glass-large.png"
 
 FOCUSED_SHOTS["channels_13"]="controls/power-lever-config.png"
 FOCUSED_SHOTS["channels_14"]="controls/industrial-power-lever-config.png"
-FOCUSED_SHOTS["channels_15"]="controls/toggle-switch-config.png"
+FOCUSED_SHOTS["channels_15"]="controls/rocker-switch-config.png"
 
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
 FOCUSED_SHOTS["armor_stand_picker"] = "armor/stand-picker.png"

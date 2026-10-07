@@ -2,9 +2,11 @@
 
 ## 1.7
 
+- Reduce Rocker Switch and Wall Slider models by 8%, with matching collision and selection bounds.
+
 - Fit Slim Glass artwork and glazing inside framed door openings, preserving the original thin rails instead of cropping them beneath the outer frame. Bare doors keep their full-size artwork.
 
-- Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Toggle Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Toggle Switch’s top face fully cyan while On.
+- Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Rocker Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Rocker Switch’s top face fully cyan while On.
 
 - Add Slim Glass artwork for regular and Large Programmable Doors at both supported resolutions, with the existing translucent glass shimmer behind its clear openings.
 
@@ -12,7 +14,7 @@
 
 - Merge twin-arm power levers into Power Lever with a Small/Large configuration button, preserved legacy sizes and configured drops. Shorten the Small arm by one pixel.
 
-- Add Toggle Switch: a compact solid-color split rocker with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber bottom border while Off and a fully cyan top button while On, with a stick/alloy/redstone recipe.
+- Redesign Rocker Switch as a compact solid-color split rocker, with wall/floor/ceiling mounts, an amber bottom border while Off and a fully cyan top button while On. Retain its block ID and stick/alloy recipe; remove the separate Toggle Switch block.
 
 - Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power Lever’s On angle to 45 degrees for 67.5 degrees of total travel.
 

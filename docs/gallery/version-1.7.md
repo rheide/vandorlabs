@@ -75,15 +75,16 @@ Craft it from two vanilla levers and one Industrial Alloy Ingot. Change
 Large levers retain their size. See the [controls gallery](controls.md) for both
 states and mounting details.
 
-## Toggle Switch
+## Rocker Switch
 
-The new **Toggle Switch** is a compact, solid-color split rocker with only Off and On
+The redesigned **Rocker Switch** is a compact, solid-color split rocker with only Off and On
 positions. Off presses the bottom half with an amber border; On presses the
-top half with an entirely cyan face and border. and it uses the Rocker Switch’s redstone output, channel
+top half with an entirely cyan face and border. It retains its redstone output, channel
 configuration and linked switching. Mount it on walls, floors or ceilings.
 
-Craft it from one stick, one Industrial Alloy Ingot and one redstone dust.
-See the [controls gallery](controls.md#toggle-switch) for the two positions.
+Craft it with one stick above one Industrial Alloy Ingot. Existing Rocker Switches use the new design and keep their channel and mounting orientation.
+Rocker Switch and Wall Slider are 8% smaller, including their selection and collision bounds.
+See the [controls gallery](controls.md#rocker-switch) for the two positions.
 
 ## One configurable throttle
 
@@ -106,7 +107,7 @@ See the [door gallery](doors.md) for regular and large examples.
 
 ## Mounting options on switches and levers
 
-**Power Lever**, **Wall Slider**, **Toggle Switch** and **Industrial Power Lever**
+**Power Lever**, **Wall Slider**, **Rocker Switch** and **Industrial Power Lever**
 now share the throttle’s base options: **Standard / +2 / +4 / +6 px**, **Flat /
 15 / 30 / 45 degrees**, and four tilt directions. Height extends upright from
 the support, with a filled wedge beneath the tilted assembly. The base and
