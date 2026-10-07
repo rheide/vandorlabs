@@ -3576,7 +3576,8 @@
     "class": "BlockTwinPowerLever",
     "large": true,
     "type": "control",
-    "item": true
+    "item": true,
+    "hidden": true
   },
   {
     "id": "toggle_switch",

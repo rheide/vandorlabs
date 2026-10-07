@@ -64,14 +64,15 @@ chestplates; leggings and boots use the role’s standard artwork.
 
 ## Twin-arm power levers
 
-**Small Power Lever** and **Large Power Lever** are binary controls with two
+**Power Lever** is a binary control with configurable **Small/Large** sizes and two
 arms joined by one grip. Small has a 67.5-degree throw (22.5 degrees Off, 45 degrees On);
-Large has a 90-degree throw with arms shortened by 2 pixels. Right-click toggles Off/On, with a cyan grip indicating On. Both mount
+Large has a 90-degree throw with arms shortened by 2 pixels; Small’s arm is one pixel shorter. Right-click toggles Off/On, with a cyan grip indicating On. Both mount
 on walls or floors and share the Industrial Power Lever’s redstone output,
 channel configuration and linked switching.
 
-Craft Small from two vanilla levers and one Industrial Alloy Ingot; use two
-ingots instead for Large. See the [controls gallery](controls.md) for both
+Craft it from two vanilla levers and one Industrial Alloy Ingot. Change
+**Size: Small/Large** in its configuration dialog and click **Done**. Existing
+Large levers retain their size. See the [controls gallery](controls.md) for both
 states and mounting details.
 
 ## Toggle Switch

@@ -502,6 +502,6 @@ item.vandorlabs.programmable_armor.hint=Shift-right-click a block to copy its fa
 item.vandorlabs.programmable_armor.sampled=Armor texture: %s
 item.vandorlabs.programmable_armor.no_sample=No block texture found on this face.
 
-tile.vandorlabs.small_power_lever.name=Small Power Lever
-tile.vandorlabs.large_power_lever.name=Large Power Lever
+tile.vandorlabs.small_power_lever.name=Power Lever
+tile.vandorlabs.large_power_lever.name=Power Lever (legacy Large)
 tile.vandorlabs.toggle_switch.name=Toggle Switch

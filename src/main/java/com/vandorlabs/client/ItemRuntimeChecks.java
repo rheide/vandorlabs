@@ -489,7 +489,7 @@ final class ItemRuntimeChecks {
 
     private static void checkLeverAndTableRecipes(InventoryCrafting grid,
             EntityPlayer player) {
-        for (String id : new String[] {"compact_power_lever", "industrial_power_lever", "small_power_lever", "large_power_lever"}) {
+        for (String id : new String[] {"compact_power_lever", "industrial_power_lever", "small_power_lever"}) {
             IRecipe recipe = CraftingManager.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs", id));
             require(recipe != null, "missing lever recipe: " + id);

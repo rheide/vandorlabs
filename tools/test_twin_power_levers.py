@@ -18,10 +18,9 @@ for path in sorted(models.glob('*.json')):
             assert part['to'][pivot_axis] <= elements[cap]['to'][pivot_axis] - .0625, (path, index, 'coplanar pivot face')
     for part in elements[7:16]:
         assert abs(part['rotation']['angle']) == (22.5 if small and not on else 45), (path, 'throw angle')
-    if not small:
-        lower = elements[7]
-        lengths = [b-a for a, b in zip(lower['from'], lower['to'])]
-        assert max(lengths) == 2.5, (path, 'shortened lower arm length')
+    lower = elements[7]
+    lengths = [b-a for a, b in zip(lower['from'], lower['to'])]
+    assert max(lengths) == 2.5, (path, 'shortened lower arm length')
     count += 1
 assert count == 24, count
-print(f'Twin power lever geometry PASS: {count} poses, recessed arm faces, shortened Large arms and increased Small On angle')
+print(f'Twin power lever geometry PASS: {count} poses, recessed arm faces, shortened arms in both sizes and increased Small On angle')

@@ -54,6 +54,18 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     private boolean localOn;
     private boolean initialized;
     private int mountRotation;
+    // Missing tags retain the original size of legacy placed blocks.
+    private int powerLeverSize=-1;
+    public int getPowerLeverSize(){
+        if(powerLeverSize>=0)return powerLeverSize;
+        return world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever
+                && ((com.vandorlabs.blocks.BlockTwinPowerLever)world.getBlockState(pos).getBlock()).isLegacyLarge()?1:0;
+    }
+    public void setPowerLeverSize(int size){
+        if(size<0 || size>1 || powerLeverSize==size)return;
+        powerLeverSize=size;markDirty();sync();
+        if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);
+    }
 
     public int getMountRotation() { return mountRotation; }
     public void setMountRotation(int value) {
@@ -168,6 +180,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);ChannelData.write(tag,channels);
+        if(powerLeverSize>=0)tag.setInteger("PowerLeverSize",powerLeverSize);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
         int[] savedLevels=new int[channels.size()];for(int i=0;i<savedLevels.length;i++)savedLevels[i]=latchedLevel(channels.get(i));tag.setIntArray("LatchedLevels",savedLevels);
         tag.setIntArray("LatchedChannels",latched.toArray());
@@ -178,6 +191,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         ChannelList previousChannels=channels;
         int oldChannel = channel;
         int oldRotation = mountRotation;
+        int oldSize=getPowerLeverSize();
         super.readFromNBT(tag);
         RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
         channel=data.channel;
@@ -187,6 +201,8 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         levels.clear();int[] savedLevels=tag.getIntArray("LatchedLevels");for(int i=0;i<Math.min(savedLevels.length,channels.size());i++)levels.put(channels.get(i),Math.max(0,Math.min(15,savedLevels[i])));
         initialized=data.initialized;
         mountRotation=data.mountRotation;
+        powerLeverSize=tag.hasKey("PowerLeverSize",3)?Math.max(0,Math.min(1,tag.getInteger("PowerLeverSize"))):-1;
+        if(world!=null && world.isRemote && oldSize!=getPowerLeverSize())world.markBlockRangeForRenderUpdate(pos,pos);
         if (world!=null && world.isRemote && oldRotation!=mountRotation)
             world.markBlockRangeForRenderUpdate(pos,pos);
         if (world != null && !world.isRemote && !previousChannels.equals(channels))

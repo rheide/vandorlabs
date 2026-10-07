@@ -20,6 +20,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     private final RedstoneChannelMember member;
     private GuiTextField channelField;
     private final boolean signalControl;
+    private final boolean powerLever;
+    private int powerLeverSize;
     private int lowLimit=5,highLimit=15,baseHeight,baseTilt,tiltDirection;
     private boolean adjustableBase;
     private final boolean thruster;
@@ -37,6 +39,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     public GuiRedstoneChannel(RedstoneChannelMember member) {
         super(new ContainerRedstoneChannel(member));
         this.member = member;
+        powerLever=member.channelTile().getWorld()!=null && member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever;
+        if(powerLever)powerLeverSize=((com.vandorlabs.tiles.TileEntityRedstoneChannel)member).getPowerLeverSize();
         signalControl=member instanceof com.vandorlabs.tiles.TileEntitySignalControl;
         if(signalControl){lowLimit=((com.vandorlabs.tiles.TileEntitySignalControl)member).getLowLimit();highLimit=((com.vandorlabs.tiles.TileEntitySignalControl)member).getHighLimit();}
         if(signalControl){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)member;
@@ -56,7 +60,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         this.join = thruster && ((TileEntityRedstoneLight) member).isJoin();
         this.sideTexture = thruster ? ((TileEntityRedstoneLight) member).getSideTexture() : 0;
         xSize = thruster ? 400 : 240;
-        ySize = thruster ? 190 : signalControl?(adjustableBase?224:152):104;
+        ySize = thruster ? 190 : signalControl?(adjustableBase?224:152):powerLever?136:104;
     }
 
     @Override public void initGui() {
@@ -79,8 +83,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         if(thruster){buttonList.add(layout.control(5,152,brightnessLabel()));buttonList.add(layout.control(6,176,thresholdLabel()));}
         if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+66,102,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+124,guiTop+66,102,20,"High: "+highLimit));}
         if(adjustableBase){buttonList.add(new GuiButton(9,guiLeft+14,guiTop+122,212,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,guiTop+146,102,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+124,guiTop+146,102,20,directionLabel()));}
+        if(powerLever)buttonList.add(new GuiButton(12,guiLeft+14,guiTop+66,212,20,sizeLabel()));
         buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - 200) / 2,
-                guiTop + (signalControl ? adjustableBase?196:124 : thruster ? 158 : 72),
+                guiTop + (signalControl ? adjustableBase?196:124 : thruster ? 158 : powerLever?104:72),
                 200, 20, "Done"));
     }
 
@@ -100,10 +105,11 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
                         thruster, particleLevel>0, connected, join, thruster, sideTexture,
-                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,threshold).withControlLimits(signalControl,lowLimit,highLimit).withControlMount(adjustableBase,baseHeight,baseTilt,tiltDirection));
+                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,threshold).withControlLimits(signalControl,lowLimit,highLimit).withControlMount(adjustableBase,baseHeight,baseTilt,tiltDirection).withPowerLeverSize(powerLever,powerLeverSize));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==12){powerLeverSize=GuiOptionCycle.next(powerLeverSize,2);button.displayString=sizeLabel();}
         if(button.id==9){baseHeight=GuiOptionCycle.next(baseHeight,4);button.displayString=heightLabel();}
         if(button.id==10){baseTilt=GuiOptionCycle.next(baseTilt,4);button.displayString=tiltLabel();}
         if(button.id==11){tiltDirection=GuiOptionCycle.next(tiltDirection,4);button.displayString=directionLabel();}
@@ -132,6 +138,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
+    private String sizeLabel(){return "Size: "+(powerLeverSize==0?"Small":"Large");}
     private String heightLabel(){return "Base height: "+(baseHeight==0?"Standard":"+"+(baseHeight*2)+" px");}
     private String tiltLabel(){return "Tilt: "+(baseTilt==0?"Flat":baseTilt*15+" deg");}
     private String directionLabel(){return new String[]{"Forward","Right","Backward","Left"}[tiltDirection];}
@@ -154,7 +161,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,8,9,10,11))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,8,9,10,11,12))return;
         if (housingList != null && housingList.click(x, y, button)) {
             sideTexture = housingList.selected();
             return;

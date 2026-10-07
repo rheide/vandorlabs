@@ -11,24 +11,26 @@ These controls generate local redstone power and can participate in virtual reds
 | Toggle Switch | ![Toggle Switch states](../images/gallery/controls/toggle-switch.png) | Split rocker with an illuminated border on the pressed half. |
 | Compact Power Lever | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
 | Industrial Power Lever | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
-| Small Power Lever | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 67.5-degree throw. |
-| Large Power Lever | ![Large Power Lever states](../images/gallery/controls/large-power-lever.png) | Longer twin arms and shared grip; 90-degree throw. |
+| Power Lever: Small | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 67.5-degree throw. |
+| Power Lever: Large | ![Large Power Lever states](../images/gallery/controls/large-power-lever.png) | Longer twin arms and shared grip; 90-degree throw. |
 
 The compact and industrial levers have separate recipes based on a vanilla lever plus Industrial Alloy Ingots. The button and rocker switch likewise use Industrial Alloy Ingots. See the in-game recipe book for the arrangements.
 
-Small Power Lever and Large Power Lever mount on walls or floors and toggle
+Power Lever mounts on walls or floors and toggles
 between Off and On with a normal right-click. The joined arms and grip move
 together; the grip turns cyan while On. Small’s Off angle is 22.5 degrees and
 its On angle is 45 degrees. Large keeps its 45-degree angles in both states,
-with arms shortened by 2 pixels. Moving arms sit slightly inside the pivot
+with arms shortened by 2 pixels. Small’s arm is one pixel shorter than its original design. Moving arms sit slightly inside the pivot
 caps to avoid overlapping surfaces at the base. They provide 0 or 15 redstone power
 and use the same channel settings and linked switching as Industrial Power
 Lever. Use the Configurizer to configure channels in survival. Like the
 Industrial Power Lever, these controls do not obstruct movement.
 
-Craft either twin-arm lever with **two vanilla levers** and Industrial Alloy
-Ingots: **one ingot for Small**, **two ingots for Large**. These shapeless
-recipes produce one block.
+Craft one Power Lever with **two vanilla levers** and **one Industrial Alloy
+Ingot**, in any arrangement. In its configuration dialog, click **Size: Small**
+or **Size: Large** and then **Done**. Size survives saving, pick-block and
+breaking/replacing; the Duplifier’s **Signal Levels** option copies it. Existing
+Large Power Levers retain their original size.
 
 ## Toggle Switch
 

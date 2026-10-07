@@ -36,6 +36,7 @@ final class RedstoneChannelRuntimeChecks {
         SignalLevelRuntimeChecks.run(world);
         SignalControlRuntimeChecks.run(world);
         ToggleSwitchChecks.server(world,player);
+        PowerLeverRuntimeChecks.run(world,player);
         checkLightTriggers(world, player);
         checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);
@@ -298,7 +299,7 @@ final class RedstoneChannelRuntimeChecks {
                             && picked.getSubCompound("RedstoneChannelSettings").getInteger("Channel")==4271,
                     id+" creative pick lost channel");
             require(picked.getItem() instanceof ItemBlock && ((ItemBlock)picked.getItem()).placeBlockAt(
-                    picked.copy(),player,world,target,EnumFacing.UP,.5F,.5F,.5F,state),
+                    picked.copy(),player,world,target,EnumFacing.UP,.5F,.5F,.5F,((ItemBlock)picked.getItem()).getBlock().getStateFromMeta(block.getMetaFromState(state))),
                     id+" picked item did not place");
             TileEntityRedstoneChannel copy=(TileEntityRedstoneChannel)world.getTileEntity(target);
             require(copy.getRedstoneChannel()==4271 && !copy.isLocalOn(),

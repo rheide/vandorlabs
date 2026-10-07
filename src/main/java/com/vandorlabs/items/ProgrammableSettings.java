@@ -243,6 +243,7 @@ public final class ProgrammableSettings {
             if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;out.setTag(SIGNAL_SETTINGS,control.configuration());out.setInteger(ACTIVE,control.getStep());}
             else out.setBoolean(ACTIVE, switchTile.isLocalOn());
             out.setInteger(SWITCH_ROTATION, switchTile.getMountRotation());
+            if(tile.getWorld()!=null && tile.getWorld().getBlockState(tile.getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever){NBTTagCompound size=new NBTTagCompound();size.setInteger("PowerLeverSize",switchTile.getPowerLeverSize());out.setTag(SIGNAL_SETTINGS,size);}
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) {
             com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
             out.setInteger(GEAR_SIZE,gear.getSize());out.setInteger(GEAR_LENGTH,gear.getExtensionPixels());out.setInteger(GEAR_MODE,gear.getMode());
@@ -540,6 +541,9 @@ public final class ProgrammableSettings {
                 com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;
                 if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);control.configureLimits(signal.getInteger("LowLimit"),signal.getInteger("HighLimit"));if(signal.hasKey("BaseHeight"))control.readMount(signal);applicable=true;}
                 if(values.hasKey(ACTIVE,3)){control.setStep(values.getInteger(ACTIVE));applicable=true;}
+            }
+            if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever && values.hasKey(SIGNAL_SETTINGS,10) && values.getCompoundTag(SIGNAL_SETTINGS).hasKey("PowerLeverSize",3)){
+                switchTile.setPowerLeverSize(values.getCompoundTag(SIGNAL_SETTINGS).getInteger("PowerLeverSize"));applicable=true;
             }
             if (values.hasKey(ACTIVE, 1)) {
                 switchTile.setLocalOn(values.getBoolean(ACTIVE)); applicable = true;
