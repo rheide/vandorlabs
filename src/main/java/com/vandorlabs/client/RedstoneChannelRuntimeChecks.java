@@ -35,6 +35,7 @@ final class RedstoneChannelRuntimeChecks {
     static void run(World world, EntityPlayer player) {
         SignalLevelRuntimeChecks.run(world);
         SignalControlRuntimeChecks.run(world);
+        ToggleSwitchChecks.server(world,player);
         checkLightTriggers(world, player);
         checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);
@@ -281,7 +282,7 @@ final class RedstoneChannelRuntimeChecks {
         BlockPos source=new BlockPos(20,25,28),target=source.east(2);
         world.setBlockState(source.down(),Blocks.STONE.getDefaultState(),3);
         world.setBlockState(target.down(),Blocks.STONE.getDefaultState(),3);
-        for (String id:new String[]{"rocker_switch","push_button","industrial_power_lever","compact_power_lever","small_power_lever","large_power_lever"}) {
+        for (String id:new String[]{"rocker_switch","toggle_switch","push_button","industrial_power_lever","compact_power_lever","small_power_lever","large_power_lever"}) {
             Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
             require(block instanceof BlockVandorSwitch || block instanceof BlockIndustrialLever,
                     "missing channel source "+id);
@@ -308,11 +309,12 @@ final class RedstoneChannelRuntimeChecks {
     }
 
     private static void checkLinkedLatches(World world,EntityPlayer player) {
+        for(String rockerId:new String[]{"rocker_switch","toggle_switch"})
         for(String leverId:new String[]{"industrial_power_lever","small_power_lever","large_power_lever"}) {
             BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs",leverId));
             BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs","rocker_switch"));
+                    new ResourceLocation("vandorlabs",rockerId));
             BlockVandorSwitch button=(BlockVandorSwitch)Block.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs","push_button"));
             BlockPos leverPos=new BlockPos(20,25,32),rockerPos=leverPos.east(2),buttonPos=leverPos.east(4);

@@ -504,3 +504,4 @@ item.vandorlabs.programmable_armor.no_sample=No block texture found on this face
 
 tile.vandorlabs.small_power_lever.name=Small Power Lever
 tile.vandorlabs.large_power_lever.name=Large Power Lever
+tile.vandorlabs.toggle_switch.name=Toggle Switch

@@ -86,7 +86,7 @@ for index, name in enumerate(("porthole", "light-column", "slatted-lamp",
     SHOTS[f"gallery_close_light_{index}"] = f"lights/{name}.png"
 
 for name in ("push_button", "rocker_switch", "compact_power_lever",
-             "industrial_power_lever", "small_power_lever", "large_power_lever"):
+             "industrial_power_lever", "small_power_lever", "large_power_lever", "toggle_switch"):
     SHOTS[f"gallery_close_control_{name}"] = f"controls/{name.replace('_', '-')}.png"
 
 for index, name in enumerate(("command", "companion", "operator",

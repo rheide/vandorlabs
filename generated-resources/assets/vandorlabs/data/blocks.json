@@ -3577,5 +3577,11 @@
     "large": true,
     "type": "control",
     "item": true
+  },
+  {
+    "id": "toggle_switch",
+    "class": "BlockToggleSwitch",
+    "type": "switch",
+    "item": true
   }
 ]

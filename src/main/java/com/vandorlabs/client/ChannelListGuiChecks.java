@@ -105,6 +105,7 @@ final class ChannelListGuiChecks {
         }
         SignalControlMountChecks.checkModels(mc);
         TwinPowerLeverChecks.checkModels(mc);
+        ToggleSwitchChecks.checkModels(mc);
         System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation; slider attachment and grip/panel alignment");
     }
     private static int visualIndex,visualStep,visualMount,visualRotation,iconPage,mountPreview,powerPreview;
@@ -113,7 +114,7 @@ final class ChannelListGuiChecks {
         try{
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
             if(stage==6){
-                mc.player.closeScreen();mc.gameSettings.hideGUI=false;mc.player.inventory.currentItem=8;
+                mc.player.closeScreen();mc.gameSettings.hideGUI=false;mc.gameSettings.clouds=0;mc.player.inventory.currentItem=8;
                 for(int slot=0;slot<9;slot++)mc.player.inventory.setInventorySlotContents(slot,net.minecraft.item.ItemStack.EMPTY);
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
@@ -126,6 +127,7 @@ final class ChannelListGuiChecks {
                 capture(mc,output,"controls_hotbar_empty");
                 for(int slot=0;slot<SignalControlRuntimeChecks.IDS.length;slot++)mc.player.inventory.setInventorySlotContents(slot,new net.minecraft.item.ItemStack(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[slot]))));
                 for(int i=0;i<2;i++)mc.player.inventory.setInventorySlotContents(4+i,new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:"+(i==0?"small":"large")+"_power_lever")));
+                mc.player.inventory.setInventorySlotContents(6,new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:toggle_switch")));
                 stage=8;ticks=0;return;
             }
             if(stage==8 && ++ticks>20){capture(mc,output,"controls_hotbar");stage=12;ticks=0;return;}
@@ -184,6 +186,7 @@ final class ChannelListGuiChecks {
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
                     for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-4,-4),POS.add(4,6,4)))world.setBlockToAir(at);
+                    for(net.minecraft.entity.item.EntityItem drop:world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new net.minecraft.util.math.AxisAlignedBB(POS).grow(12)))drop.setDead();
                     world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
                     Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/8]);
                     world.setBlockState(POS,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.UP),3);
@@ -200,18 +203,19 @@ final class ChannelListGuiChecks {
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
                     for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-4,-4),POS.add(4,6,4)))world.setBlockToAir(at);
-                    Block block=Block.getBlockFromName("vandorlabs:"+(powerPreview==0?"small":"large")+"_power_lever");
+                    for(net.minecraft.entity.item.EntityItem drop:world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new net.minecraft.util.math.AxisAlignedBB(POS).grow(12)))drop.setDead();
+                    Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"small_power_lever","large_power_lever","toggle_switch"}[powerPreview]);
                     for(int i=0;i<2;i++){
                         BlockPos at=POS.east(i);world.setBlockState(at.south(),Blocks.STONEBRICK.getDefaultState(),3);
-                        world.setBlockState(at,block.getDefaultState().withProperty(BlockIndustrialLever.FACING,net.minecraft.util.EnumFacing.NORTH).withProperty(BlockIndustrialLever.POWERED,i==0),3);
+                        world.setBlockState(at,powerPreview==2?block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.NORTH).withProperty(BlockVandorSwitch.ON,i==0):block.getDefaultState().withProperty(BlockIndustrialLever.FACING,net.minecraft.util.EnumFacing.NORTH).withProperty(BlockIndustrialLever.POWERED,i==0),3);
                     }
                     EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
                     player.connection.setPlayerLocation(POS.getX()+1,POS.getY()+.58-player.getEyeHeight(),POS.getZ()-2.1,0,8);
                 });stage=17;ticks=0;return;
             }
             if(stage==17 && ++ticks>25){
-                capture(mc,output,"gallery_close_control_"+(powerPreview==0?"small":"large")+"_power_lever");
-                if(++powerPreview<2)stage=16;else{stage=9;System.out.println("[vandorlabs][reprolab] twin-power-lever-gallery PASS shots=2");mc.shutdown();}ticks=0;return;
+                capture(mc,output,"gallery_close_control_"+new String[]{"small_power_lever","large_power_lever","toggle_switch"}[powerPreview]);
+                if(++powerPreview<3)stage=16;else{stage=9;System.out.println("[vandorlabs][reprolab] binary-control-gallery PASS shots=3");mc.shutdown();}ticks=0;return;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}
     }
