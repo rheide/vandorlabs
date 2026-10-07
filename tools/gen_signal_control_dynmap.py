@@ -10,7 +10,7 @@ ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 MARKER='# Generated signal control models\n'
 models=[];blocks=[];textures={}
 for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks.json').read_text()):
-    if entry.get('class')!='BlockSignalControl':continue
+    if entry.get('class') not in ('BlockSignalControl','BlockTwinPowerLever'):continue
     name=entry['id']
     states=json.loads((ASSETS/'blockstates'/f'{name}.json').read_text())['variants']
     # Dynmap can resolve several listed levels to the same metadata state.
@@ -26,7 +26,7 @@ for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks
     patches={label:i for i,label in enumerate(sorted(palette))}
     for state,variant in states.items():
         props=dict(part.split('=') for part in state.split(','))
-        if props['on']=='true':continue # This property does not change geometry.
+        if props.get('on')=='true':continue # This property does not change geometry.
         state='/'.join(f'{k}:{v}' for k,v in props.items() if k!='on')
         model=json.loads((ASSETS/'models/block'/(variant['model'].split(':')[1]+'.json')).read_text())
         boxes=[]

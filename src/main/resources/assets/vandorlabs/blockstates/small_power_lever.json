@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "facing=north,floor=false,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_north"
+    },
+    "facing=north,floor=false,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_north"
+    },
+    "facing=north,floor=true,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_floor_z"
+    },
+    "facing=north,floor=true,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_floor_z"
+    },
+    "facing=south,floor=false,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_south"
+    },
+    "facing=south,floor=false,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_south"
+    },
+    "facing=south,floor=true,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_floor_z"
+    },
+    "facing=south,floor=true,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_floor_z"
+    },
+    "facing=east,floor=false,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_east"
+    },
+    "facing=east,floor=false,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_east"
+    },
+    "facing=east,floor=true,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_floor_x"
+    },
+    "facing=east,floor=true,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_floor_x"
+    },
+    "facing=west,floor=false,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_west"
+    },
+    "facing=west,floor=false,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_west"
+    },
+    "facing=west,floor=true,powered=false": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_off_floor_x"
+    },
+    "facing=west,floor=true,powered=true": {
+      "model": "vandorlabs:twin_power_levers/small_power_lever_on_floor_x"
+    }
+  }
+}

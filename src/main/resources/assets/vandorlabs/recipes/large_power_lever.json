@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:lever"
+    },
+    {
+      "item": "minecraft:lever"
+    },
+    {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    },
+    {
+      "item": "vandorlabs:industrial_alloy_ingot"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:large_power_lever"
+  }
+}

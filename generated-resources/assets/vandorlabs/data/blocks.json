@@ -3563,5 +3563,19 @@
     "item": true,
     "control_kind": "fighter_throttle",
     "detail": 32
+  },
+  {
+    "id": "small_power_lever",
+    "class": "BlockTwinPowerLever",
+    "large": false,
+    "type": "control",
+    "item": true
+  },
+  {
+    "id": "large_power_lever",
+    "class": "BlockTwinPowerLever",
+    "large": true,
+    "type": "control",
+    "item": true
   }
 ]

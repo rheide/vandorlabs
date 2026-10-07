@@ -412,7 +412,7 @@ public class ReproLab {
             SHOTS.add(new Shot("gallery_close_light_" + style,
                     GALLERY_X, galleryFeet + 1.2D, -20.1D, 0, 8));
         for (String control : new String[]{"push_button", "rocker_switch",
-                "compact_power_lever", "industrial_power_lever"})
+                "compact_power_lever", "industrial_power_lever", "small_power_lever", "large_power_lever"})
             SHOTS.add(new Shot("gallery_close_control_" + control,
                     GALLERY_X, galleryFeet + 1.2D, -20.1D, 0, 8));
         for (int style=0;style<5;style++)

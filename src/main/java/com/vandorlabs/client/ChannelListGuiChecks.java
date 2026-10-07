@@ -104,6 +104,7 @@ final class ChannelListGuiChecks {
             }
         }
         SignalControlMountChecks.checkModels(mc);
+        TwinPowerLeverChecks.checkModels(mc);
         System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation; slider attachment and grip/panel alignment");
     }
     private static int visualIndex,visualStep,visualMount,visualRotation,iconPage,mountPreview;
@@ -124,6 +125,7 @@ final class ChannelListGuiChecks {
             if(stage==7 && ++ticks>20){
                 capture(mc,output,"controls_hotbar_empty");
                 for(int slot=0;slot<SignalControlRuntimeChecks.IDS.length;slot++)mc.player.inventory.setInventorySlotContents(slot,new net.minecraft.item.ItemStack(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[slot]))));
+                for(int i=0;i<2;i++)mc.player.inventory.setInventorySlotContents(4+i,new net.minecraft.item.ItemStack(Block.getBlockFromName("vandorlabs:"+(i==0?"small":"large")+"_power_lever")));
                 stage=8;ticks=0;return;
             }
             if(stage==8 && ++ticks>20){capture(mc,output,"controls_hotbar");stage=12;ticks=0;return;}

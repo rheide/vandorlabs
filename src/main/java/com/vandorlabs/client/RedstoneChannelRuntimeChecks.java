@@ -281,7 +281,7 @@ final class RedstoneChannelRuntimeChecks {
         BlockPos source=new BlockPos(20,25,28),target=source.east(2);
         world.setBlockState(source.down(),Blocks.STONE.getDefaultState(),3);
         world.setBlockState(target.down(),Blocks.STONE.getDefaultState(),3);
-        for (String id:new String[]{"rocker_switch","push_button","industrial_power_lever","compact_power_lever"}) {
+        for (String id:new String[]{"rocker_switch","push_button","industrial_power_lever","compact_power_lever","small_power_lever","large_power_lever"}) {
             Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
             require(block instanceof BlockVandorSwitch || block instanceof BlockIndustrialLever,
                     "missing channel source "+id);
@@ -308,66 +308,68 @@ final class RedstoneChannelRuntimeChecks {
     }
 
     private static void checkLinkedLatches(World world,EntityPlayer player) {
-        BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","industrial_power_lever"));
-        BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","rocker_switch"));
-        BlockVandorSwitch button=(BlockVandorSwitch)Block.REGISTRY.getObject(
-                new ResourceLocation("vandorlabs","push_button"));
-        BlockPos leverPos=new BlockPos(20,25,32),rockerPos=leverPos.east(2),buttonPos=leverPos.east(4);
-        for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos})
-            world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
-        world.setBlockState(leverPos,lever.getDefaultState()
-                .withProperty(BlockIndustrialLever.FLOOR,true),3);
-        world.setBlockState(rockerPos,rocker.getDefaultState()
-                .withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
-        world.setBlockState(buttonPos,button.getDefaultState()
-                .withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
-        TileEntityRedstoneChannel leverTile=(TileEntityRedstoneChannel)world.getTileEntity(leverPos);
-        TileEntityRedstoneChannel rockerTile=(TileEntityRedstoneChannel)world.getTileEntity(rockerPos);
-        TileEntityRedstoneChannel buttonTile=(TileEntityRedstoneChannel)world.getTileEntity(buttonPos);
-        leverTile.setRedstoneChannel(8107);
-        lever.onBlockActivated(world,leverPos,world.getBlockState(leverPos),player,
-                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
-        rockerTile.setRedstoneChannel(8107);
-        require(world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON)
-                        && rockerTile.isLocalOn(),"joining rocker did not adopt active lever");
-        rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
-                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
-        require(!world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
-                        && !leverTile.isLocalOn(),"rocker OFF did not turn lever OFF");
-        buttonTile.setRedstoneChannel(8107);
-        button.onBlockActivated(world,buttonPos,world.getBlockState(buttonPos),player,
-                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
-        require(world.getBlockState(buttonPos).getValue(BlockVandorSwitch.ON)
-                        && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON)
-                        && !world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED),
-                "momentary button changed linked latch state");
-        rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
-                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
-        require(world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED),
-                "rocker ON did not turn lever ON while button was active");
-        rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
-                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
-        require(!world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
-                        && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON),
-                "latches stayed ON because momentary input kept channel powered");
-        leverTile.setRedstoneChannel(0);
-        lever.onBlockActivated(world,leverPos,world.getBlockState(leverPos),player,
-                EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
-        require(world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
-                        && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON),
-                "channel-zero lever should remain independent");
-        for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos}) {
-            world.setBlockToAir(pos);
-            world.setBlockToAir(pos.down());
+        for(String leverId:new String[]{"industrial_power_lever","small_power_lever","large_power_lever"}) {
+            BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs",leverId));
+            BlockVandorSwitch rocker=(BlockVandorSwitch)Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs","rocker_switch"));
+            BlockVandorSwitch button=(BlockVandorSwitch)Block.REGISTRY.getObject(
+                    new ResourceLocation("vandorlabs","push_button"));
+            BlockPos leverPos=new BlockPos(20,25,32),rockerPos=leverPos.east(2),buttonPos=leverPos.east(4);
+            for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos})
+                world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
+            world.setBlockState(leverPos,lever.getDefaultState()
+                    .withProperty(BlockIndustrialLever.FLOOR,true),3);
+            world.setBlockState(rockerPos,rocker.getDefaultState()
+                    .withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
+            world.setBlockState(buttonPos,button.getDefaultState()
+                    .withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),3);
+            TileEntityRedstoneChannel leverTile=(TileEntityRedstoneChannel)world.getTileEntity(leverPos);
+            TileEntityRedstoneChannel rockerTile=(TileEntityRedstoneChannel)world.getTileEntity(rockerPos);
+            TileEntityRedstoneChannel buttonTile=(TileEntityRedstoneChannel)world.getTileEntity(buttonPos);
+            leverTile.setRedstoneChannel(8107);
+            lever.onBlockActivated(world,leverPos,world.getBlockState(leverPos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            rockerTile.setRedstoneChannel(8107);
+            require(world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON)
+                            && rockerTile.isLocalOn(),"joining rocker did not adopt active lever");
+            rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            require(!world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
+                            && !leverTile.isLocalOn(),"rocker OFF did not turn lever OFF");
+            buttonTile.setRedstoneChannel(8107);
+            button.onBlockActivated(world,buttonPos,world.getBlockState(buttonPos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            require(world.getBlockState(buttonPos).getValue(BlockVandorSwitch.ON)
+                            && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON)
+                            && !world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED),
+                    "momentary button changed linked latch state");
+            rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            require(world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED),
+                    "rocker ON did not turn lever ON while button was active");
+            rocker.onBlockActivated(world,rockerPos,world.getBlockState(rockerPos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            require(!world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
+                            && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON),
+                    "latches stayed ON because momentary input kept channel powered");
+            leverTile.setRedstoneChannel(0);
+            lever.onBlockActivated(world,leverPos,world.getBlockState(leverPos),player,
+                    EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+            require(world.getBlockState(leverPos).getValue(BlockIndustrialLever.POWERED)
+                            && !world.getBlockState(rockerPos).getValue(BlockVandorSwitch.ON),
+                    "channel-zero lever should remain independent");
+            for (BlockPos pos:new BlockPos[]{leverPos,rockerPos,buttonPos}) {
+                world.setBlockToAir(pos);
+                world.setBlockToAir(pos.down());
+            }
         }
     }
 
     private static void checkLeverPlacement(World world,EntityPlayer player) {
         BlockPos pos=new BlockPos(20,25,20);
         world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);
-        for (String id:new String[]{"industrial_power_lever","compact_power_lever"}) {
+        for (String id:new String[]{"industrial_power_lever","compact_power_lever","small_power_lever","large_power_lever"}) {
             Block raw=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",id));
             require(raw instanceof BlockIndustrialLever,id+" is missing");
             BlockIndustrialLever lever=(BlockIndustrialLever)raw;
@@ -406,7 +408,7 @@ final class RedstoneChannelRuntimeChecks {
 
     private static void checkFloorLeverPower(World world,EntityPlayer player) {
         BlockPos pos=new BlockPos(20,25,20);
-        for (String id:new String[]{"industrial_power_lever","compact_power_lever"}) {
+        for (String id:new String[]{"industrial_power_lever","compact_power_lever","small_power_lever","large_power_lever"}) {
             BlockIndustrialLever lever=(BlockIndustrialLever)Block.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs",id));
             world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),3);

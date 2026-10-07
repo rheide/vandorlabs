@@ -482,15 +482,16 @@ final class ItemRuntimeChecks {
 
     private static void checkLeverAndTableRecipes(InventoryCrafting grid,
             EntityPlayer player) {
-        for (String id : new String[] {"compact_power_lever", "industrial_power_lever"}) {
+        for (String id : new String[] {"compact_power_lever", "industrial_power_lever", "small_power_lever", "large_power_lever"}) {
             IRecipe recipe = CraftingManager.REGISTRY.getObject(
                     new ResourceLocation("vandorlabs", id));
             require(recipe != null, "missing lever recipe: " + id);
             for (int slot = 0; slot < 9; slot++)
                 grid.setInventorySlotContents(slot, ItemStack.EMPTY);
             grid.setInventorySlotContents(0, new ItemStack(Blocks.LEVER));
+            if (id.equals("small_power_lever") || id.equals("large_power_lever")) grid.setInventorySlotContents(3,new ItemStack(Blocks.LEVER));
             grid.setInventorySlotContents(1, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
-            if (id.equals("industrial_power_lever"))
+            if (id.endsWith("large_power_lever") || id.equals("industrial_power_lever"))
                 grid.setInventorySlotContents(2, new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
             require(recipe.matches(grid, player.world), "lever recipe does not match: " + id);
             ItemStack result = recipe.getCraftingResult(grid);

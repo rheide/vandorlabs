@@ -35,6 +35,7 @@ def require(marker):
     assert marker in log, 'Missing runtime result: ' + marker
 
 if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24 xTips=16')
+if target == 'control-icons': require('twin-power-lever-models PASS poses=32')
 
 # Actual Dynmap startup complements the structural checks when installed.
 for control in ('thruster_lever','wall_slider','airliner_throttle','fighter_throttle'):
