@@ -6,14 +6,14 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
-/** Compact two-position slider using the Rocker Switch's latch and channel behavior. */
+/** Compact split rocker using the Rocker Switch's latch and channel behavior. */
 public final class BlockToggleSwitch extends BlockVandorSwitch {
     public BlockToggleSwitch(String name){super(name,false);}
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){
         EnumFacing face=state.getValue(FACING);
         net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
         if(face.getAxis()==EnumFacing.Axis.Y && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)state=state.withProperty(ROTATION,((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).getMountRotation());
-        double width=5/16D,length=4/16D,depth=2.375/16D;
+        double width=5/16D,length=4/16D,depth=1.75/16D;
         if(face.getAxis()==EnumFacing.Axis.Y && state.getValue(ROTATION)%2==1){double swap=width;width=length;length=swap;}
         switch(face){
             case UP:return new AxisAlignedBB(width,0,length,1-width,depth,1-length);

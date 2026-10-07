@@ -76,9 +76,9 @@ states and mounting details.
 
 ## Toggle Switch
 
-The new **Toggle Switch** is a compact, solid-color counterpart to the Wall
-Slider with only Off and On positions. Its amber/cyan marker follows the
-selected state, and it uses the Rocker Switch’s redstone output, channel
+The new **Toggle Switch** is a compact, solid-color split rocker with only Off and On
+positions. Off presses the bottom half with an amber border; On presses the
+top half with a cyan border. Only the active border lights up, and it uses the Rocker Switch’s redstone output, channel
 configuration and linked switching. Mount it on walls, floors or ceilings.
 
 Craft it from one stick, one Industrial Alloy Ingot and one redstone dust.

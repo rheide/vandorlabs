@@ -8,7 +8,7 @@ These controls generate local redstone power and can participate in virtual reds
 | --- | --- | --- |
 | Push Button | ![Push Button states](../images/gallery/controls/push-button.png) | Momentary input for doors and circuits. |
 | Rocker Switch | ![Rocker Switch states](../images/gallery/controls/rocker-switch.png) | Persistent on/off input. |
-| Toggle Switch | ![Toggle Switch states](../images/gallery/controls/toggle-switch.png) | Compact two-position slider in the controls’ solid-color palette. |
+| Toggle Switch | ![Toggle Switch states](../images/gallery/controls/toggle-switch.png) | Split rocker with an illuminated border on the pressed half. |
 | Compact Power Lever | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
 | Industrial Power Lever | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
 | Small Power Lever | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 67.5-degree throw. |
@@ -32,10 +32,11 @@ recipes produce one block.
 
 ## Toggle Switch
 
-Toggle Switch uses a compact **6 × 8 pixel** plate, a plain dark track and a
-small grip, matching the Wall Slider and the newer levers. It has just two
-positions: **Off** with an amber marker, and **On** with a cyan marker. Normal
-right-click toggles it and outputs 0 or 15 redstone power.
+Toggle Switch uses a compact **6 × 8 pixel** plate with a recessed, split
+rocker in the newer levers’ solid-color palette. **Off** presses the bottom
+half with an amber border; **On** presses the top half with a cyan border.
+Only the active half has a colored border. Normal right-click toggles it and
+outputs 0 or 15 redstone power.
 
 Mount it on a wall, floor or ceiling. Floor and ceiling orientation follows
 placement. It uses the Rocker Switch’s channel configuration and linked latch

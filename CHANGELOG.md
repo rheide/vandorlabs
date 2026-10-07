@@ -2,7 +2,7 @@
 
 ## 1.7
 
-- Add Toggle Switch: a compact solid-color, two-position counterpart to Wall Slider with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber/cyan indicator and a stick/alloy/redstone recipe.
+- Add Toggle Switch: a compact solid-color split rocker with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber bottom border while Off and a cyan top border while On and a stick/alloy/redstone recipe.
 
 - Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power Lever’s On angle to 45 degrees for 67.5 degrees of total travel.
 

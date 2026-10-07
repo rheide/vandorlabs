@@ -45,13 +45,19 @@ final class ToggleSwitchChecks {
                 IBlockState state=block.getDefaultState().withProperty(BlockVandorSwitch.FACING,face).withProperty(BlockVandorSwitch.ROTATION,rotation).withProperty(BlockVandorSwitch.ON,on);
                 IBakedModel model=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
                 require(model!=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),"missing toggle model");
-                AxisAlignedBB bounds=block.getBoundingBox(state,mc.world,new BlockPos(0,250,0)).grow(.00002);StringBuilder signature=new StringBuilder();int count=0;boolean indicator=false;
+                AxisAlignedBB bounds=block.getBoundingBox(state,mc.world,new BlockPos(0,250,0)).grow(.00002);StringBuilder signature=new StringBuilder();int count=0,coloredFaces=0;boolean indicator=false;Vec3d indicatorCenter=Vec3d.ZERO;
                 for(EnumFacing side:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad q:model.getQuads(state,side,0)){
-                    count++;signature.append(java.util.Arrays.hashCode(q.getVertexData()));indicator|=q.getFace()==face && q.getSprite().getIconName().endsWith(on?"/cyan":"/amber");
+                    count++;signature.append(java.util.Arrays.hashCode(q.getVertexData()));
+                    String sprite=q.getSprite().getIconName();
+                    require(!sprite.endsWith(on?"/amber":"/cyan"),"inactive rocker border is colored");
+                    boolean colored=q.getFace()==face && sprite.endsWith(on?"/cyan":"/amber");indicator|=colored;
+                    if(colored){coloredFaces++;int[] vertices=q.getVertexData();int step=vertices.length/4;for(int i=0;i<4;i++)indicatorCenter=indicatorCenter.add(new Vec3d(Float.intBitsToFloat(vertices[i*step]),Float.intBitsToFloat(vertices[i*step+1]),Float.intBitsToFloat(vertices[i*step+2])).scale(.25));}
                     int[] data=q.getVertexData();int stride=data.length/4;
                     for(int i=0;i<4;i++)require(bounds.contains(new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]))),"toggle selection excludes artwork "+face+"/"+rotation);
                 }
-                require(count>0 && indicator,"toggle outward indicator missing");signatures.add(signature.toString());poses++;
+                require(count>0 && indicator && coloredFaces==4,"toggle must have a four-sided active border");
+                indicatorCenter=indicatorCenter.scale(1D/coloredFaces);
+                if(face.getAxis()!=EnumFacing.Axis.Y)require(on?indicatorCenter.y>.5:indicatorCenter.y<.5,"rocker border is on the wrong half");signatures.add(signature.toString());poses++;
             }
             require(signatures.size()==2,"toggle artwork repeats between states");
         }
