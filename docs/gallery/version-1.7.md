@@ -11,3 +11,11 @@ Shift-right-click a block face while holding armor to copy its displayed texture
 To open the categorized picker, aim into the air and shift-right-click. Creative players can hold the armor directly; survival players hold a Configurizer in the main hand and armor in the offhand. Picking another material replaces a sampled texture. Ordinary right-click equips the armor.
 
 See the [armor guide](../programmable-armor.md), [current block materials](building.md#programmable-block-finishes), [door artwork](doors.md) and [shared texture guide](../unified-materials.md).
+
+## Design armor on a stand
+
+You can design your armor with the **Configurizer while it is mounted on an armor stand**. Hold the Configurizer in your main hand and right-click the mounted helmet, chestplate, leggings or boots to open that piece’s texture menu. Choose a role design, a block material, or static **On**/**Off** artwork from **Lights**. The armor stays on the stand and updates as you select textures. This works in creative and survival, with normal and small armor stands. Aim at the head, torso, legs or feet to select the corresponding piece.
+
+![Using the Configurizer to design a mounted helmet named Custom Uniform](../images/gallery/armor/stand-picker.png)
+
+World sampling also resolves the selected Programmable Door leaf design or custom leaf texture, and a Programmable Light’s current face artwork or housing material.

@@ -159,6 +159,7 @@ for index,name in enumerate(re.findall(r'"([^"]+)"',door_names)):
     SHOTS["gallery_catalog_door_"+str(index)] = "doors/design-"+("reactor-service" if name=="reactor" else name.replace("_","-"))+".png"
 
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
+FOCUSED_SHOTS["armor_stand_picker"] = "armor/stand-picker.png"
 
 
 def main():

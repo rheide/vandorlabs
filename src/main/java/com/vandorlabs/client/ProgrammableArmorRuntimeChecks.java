@@ -30,6 +30,7 @@ final class ProgrammableArmorRuntimeChecks {
     private static Future<?> pending;
     private static EntityPlayerMP owner(Minecraft mc) { return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID()); }
     static void tick(Minecraft mc,File output) {
+        if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_ARMOR_TOOLS_ONLY"))) {ArmorSamplingRuntimeChecks.tick(mc);return;}
         try {
             if(pending!=null) { if(!pending.isDone())return;pending.get();pending=null; }
             if(stage==12) {RoleArmorRuntimeChecks.tick(mc,output);return;}
@@ -158,7 +159,7 @@ final class ProgrammableArmorRuntimeChecks {
         require(!MessageProgrammableArmor.apply(player,91,-1),"invalid material rejected");
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             int choice=ScreenHousingTextures.choiceAt(i);
-            if(ItemProgrammableArmor.validTexture(choice))require(HousingTextureList.generalTexture(i),"server picker parity");
+            if(ItemProgrammableArmor.validTexture(choice))require(HousingTextureList.generalTexture(i) || "Lights".equals(ScreenHousingTextures.category(i)),"server picker parity");
         }
         require(MessageProgrammableArmor.apply(player,91,1),"authorized material");
         ItemStack replacement=stack.copy();player.setHeldItem(EnumHand.MAIN_HAND,replacement);

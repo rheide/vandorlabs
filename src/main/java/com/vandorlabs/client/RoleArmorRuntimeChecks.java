@@ -141,13 +141,19 @@ final class RoleArmorRuntimeChecks {
     private static void checkFilter(GuiProgrammableArmor gui,ItemStack stack) throws Exception {
         java.lang.reflect.Field field=GuiProgrammableArmor.class.getDeclaredField("textures");field.setAccessible(true);
         Map<Integer,HousingTextureList.Option> entries=options((HousingTextureList)field.get(gui));
-        int nativeCount=0;
+        int nativeCount=0,lightCount=0;
         for(HousingTextureList.Option option:entries.values()) {
             require(ItemProgrammableArmor.validTexture(stack,option.choice),"every listed choice valid for piece");
+            if("Lights".equals(option.category)) {
+                require(option.label.endsWith(" On") || option.label.endsWith(" Off"),"light states have explicit picker labels");lightCount++;
+            }
             if("Armor".equals(option.category)) {
                 require(ArmorTextures.fits(option.choice,ITEMS[piece].armorType),"Armor menu contains only correct slot");nativeCount++;
             }
         }
+        require(lightCount>=30,"all fifteen light artwork pairs offered on armor: "+lightCount);
+        for(int i=0;i<ScreenHousingTextures.BUILTIN_COUNT;i++)if("Lights".equals(ScreenHousingTextures.category(i)) && ScreenHousingTextures.visible(i))
+            require(entries.containsKey(ScreenHousingTextures.choiceAt(i)),"every bundled light choice offered");
         require(nativeCount==8 && entries.size()>nativeCount,"eight native designs plus existing block materials");
         Map<Integer,HousingTextureList.Option> blocks=options(new HousingTextureList(0,0,250,0));
         for(HousingTextureList.Option option:blocks.values())require(!"Armor".equals(option.category) && ArmorTextures.entry(option.choice)==null,"Armor category absent from block picker");

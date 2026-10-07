@@ -54,9 +54,9 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if (ID == GUI_PROGRAMMABLE_ARMOR && x >= 0 && x < net.minecraft.util.EnumHand.values().length) {
-            com.vandorlabs.container.ContainerProgrammableArmor armor = new com.vandorlabs.container.ContainerProgrammableArmor(player, net.minecraft.util.EnumHand.values()[x]);
-            if (armor.canInteractWith(player)) return armor;
+        if (ID == GUI_PROGRAMMABLE_ARMOR) {
+            com.vandorlabs.container.ContainerProgrammableArmor armor = com.vandorlabs.container.ContainerProgrammableArmor.resolve(player,world,x,y,z);
+            if (armor != null && armor.canInteractWith(player)) return armor;
             return null;
         }
 
@@ -131,9 +131,9 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if (ID == GUI_PROGRAMMABLE_ARMOR && x >= 0 && x < net.minecraft.util.EnumHand.values().length) {
-            com.vandorlabs.container.ContainerProgrammableArmor armor = new com.vandorlabs.container.ContainerProgrammableArmor(player, net.minecraft.util.EnumHand.values()[x]);
-            if (armor.canInteractWith(player)) return new com.vandorlabs.client.GuiProgrammableArmor(armor);
+        if (ID == GUI_PROGRAMMABLE_ARMOR) {
+            com.vandorlabs.container.ContainerProgrammableArmor armor = com.vandorlabs.container.ContainerProgrammableArmor.resolve(player,world,x,y,z);
+            if (armor != null && armor.canInteractWith(player)) return new com.vandorlabs.client.GuiProgrammableArmor(armor);
             return null;
         }
 

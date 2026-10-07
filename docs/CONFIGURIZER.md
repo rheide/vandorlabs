@@ -23,3 +23,5 @@ main hand and armor in the offhand, then shift-right-click into the air to open
 the armor picker in survival. Shift-right-clicking a block in this arrangement
 copies its displayed face texture to the armor. Armor held directly can also
 sample a block face in either game mode without the tool.
+
+You can also design armor while it is mounted on an armor stand: right-click its head, torso, legs or feet with the Configurizer in your main hand to open the corresponding programmable piece’s picker. Normal and small stands work in creative and survival; the armor stays mounted while you edit.

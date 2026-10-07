@@ -37,3 +37,5 @@ See the [programmable armor guide](../programmable-armor.md) for crafting and ma
 ## Security Rescue
 
 ![Full Security Rescue armor set on an armor stand](../images/gallery/armor/security-rescue.png)
+
+Use a Configurizer on a stand’s head, torso, legs or feet to configure that mounted piece in creative or survival. The armor picker also offers fifteen light designs with separate static **On** and **Off** artwork; these textures do not emit light.

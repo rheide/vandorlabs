@@ -2,7 +2,7 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 
-unset VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
+unset VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -10,9 +10,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = armor ]; then
+        if [ "$TARGET" = armor ] || [ "$TARGET" = armor-tools ]; then
             PREFIX=armor_
             export VANDOR_LABS_ARMOR_CHECKS_ONLY=true
+            if [ "$TARGET" = armor-tools ]; then export VANDOR_LABS_ARMOR_TOOLS_ONLY=true; fi
         elif [ "$TARGET" = trapdoors ]; then
             PREFIX=gallery_trapdoor_followup_
             export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
@@ -73,8 +74,13 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     exit 1
 fi
 if [ "$MODE" = focus ]; then
-    if [ "$TARGET" = armor ]; then
-        grep -q 'armor-world-sampling PASS cases=7' "$RUN_OUT/client.log"
+    if [ "$TARGET" = armor ] || [ "$TARGET" = armor-tools ]; then
+        grep -q 'armor-world-sampling PASS cases=25' "$RUN_OUT/client.log"
+        grep -q 'armor-stand-configuration PASS cases=8' "$RUN_OUT/client.log"
+        if [ "$TARGET" = armor-tools ]; then
+            echo "Live armor tool checks passed: $RUN_OUT"
+            exit 0
+        fi
         grep -q 'armor-material-centering PASS' "$RUN_OUT/client.log"
         grep -q 'programmable-armor PASS' "$RUN_OUT/client.log"
         grep -q 'role-armor PASS choices=32 icons=32 sets=8' "$RUN_OUT/client.log"

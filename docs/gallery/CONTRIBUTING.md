@@ -68,3 +68,5 @@ image is a separate live-client scene.
 Keep documentation scenes in the isolated gallery area, use a non-ship screen
 such as `engineering_screen` for programmable blocks, and allow enough settle
 ticks for chunks, animated models, and block-change particles to stabilize.
+
+Use `bash testclient/test_viewscreen.sh --focus armor-tools` for world-face sampling and mounted armor configuration checks without recapturing every native role set. The `armor` focus includes these checks and the full armor suite.

@@ -26,6 +26,13 @@ public final class MessageProgrammableArmor implements IMessage {
         ContainerProgrammableArmor container = (ContainerProgrammableArmor)player.openContainer;
         if (!container.canInteractWith(player) || !ItemProgrammableArmor.validTexture(container.armor,choice)) return false;
         ItemProgrammableArmor.setTexture(container.armor, choice);
+        if(container.stand!=null) {
+            net.minecraft.network.play.server.SPacketEntityEquipment packet=new net.minecraft.network.play.server.SPacketEntityEquipment(
+                    container.stand.getEntityId(),container.slot,container.armor);
+            player.getServerWorld().getEntityTracker().sendToTracking(container.stand,packet);
+            player.connection.sendPacket(packet);
+            return true;
+        }
         player.inventory.markDirty();
         player.inventoryContainer.detectAndSendChanges();
         // Window 0 only synchronizes hotbar slots while another container is open.

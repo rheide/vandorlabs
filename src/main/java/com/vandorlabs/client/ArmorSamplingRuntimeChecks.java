@@ -24,10 +24,18 @@ final class ArmorSamplingRuntimeChecks {
     private static BlockPos pos;
     private static Future<?> pending;
     private static EntityPlayerMP owner(Minecraft mc) {return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());}
-    private static EnumFacing face() {return example==0 || example==4 || example==5?EnumFacing.UP:example==2?EnumFacing.NORTH:EnumFacing.EAST;}
+    private static EnumFacing face() {return example==0 || example==4 || example==5 || example==14 || example==19?EnumFacing.UP:example==2 || example>=7 && example!=12 && example!=13 && example!=14?EnumFacing.NORTH:EnumFacing.EAST;}
     private static EnumHand hand() {return example==6?EnumHand.OFF_HAND:EnumHand.MAIN_HAND;}
     private static Vec3d hit() {EnumFacing face=face();return new Vec3d(pos).addVector(.5+face.getFrontOffsetX()*.5,.5+face.getFrontOffsetY()*.5,.5+face.getFrontOffsetZ()*.5);}
     private static String expected() {
+        if(example==19 || example==23)return ScreenHousingTextures.texture(2);
+        if(example==20 || example==21)return ScreenHousingTextures.texture(ScreenHousingTextures.lightIndex(2),example==20);
+        if(example==22)return "vandorlabs:blocks/sequence_border_off";
+        if(example==24)return ScreenHousingTextures.fullTexture(ScreenHousingTextures.screenIndex("engineering_screen_static"));
+        if(example==17 || example==18)return ScreenHousingTextures.fullTexture(ScreenHousingTextures.doorIndex(example==17?7:23,1));
+        if(example>=7 && example<=9)return ScreenHousingTextures.fullTexture(example==9?2:ScreenHousingTextures.doorIndex(example==8?3:7,1));
+        if(example>=10 && example<=14)return example==13?ScreenHousingTextures.texture(2):ScreenHousingTextures.texture(ScreenHousingTextures.lightIndex(2),example!=11);
+        if(example==15 || example==16)return ScreenHousingTextures.texture(2);
         if(example==0)return "minecraft:blocks/log_oak_top";
         if(example==1)return "minecraft:blocks/log_oak";
         if(example==5)return ScreenHousingTextures.storageTexture(ScreenHousingTextures.DEFAULT_STORAGE,EnumFacing.UP);
@@ -45,13 +53,67 @@ final class ArmorSamplingRuntimeChecks {
                     if(pos==null)pos=player.getPosition().up(6);
                     for(EnumFacing direction:EnumFacing.values())player.world.setBlockToAir(pos.offset(direction));
                     player.world.setBlockState(pos,(example<2?Blocks.LOG:example==5?ModBlocks.PROGRAMMABLE_STORAGE:ModBlocks.PROGRAMMABLE_BLOCK).getDefaultState(),3);
-                    if(example>=2) {
+                    if(example>=2 && example<7) {
                         player.world.setBlockState(pos,player.world.getBlockState(pos).withProperty(BlockAnimatedScreenSelector.FACING,
                                 example==3 || example==6?EnumFacing.EAST:EnumFacing.NORTH),3);
                         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(pos);
                         tile.setHousingTexture(example==5?ScreenHousingTextures.DEFAULT_STORAGE:1);
                         int[] values={-1,-1,-1,-1,-1,-1};values[EnumFacing.NORTH.getIndex()]=2;
                         tile.setFaceTextures(new FaceTextures(example==3 || example==4 || example==6,values));
+                    }
+                    if(example>=7 && example<=9 || example==17) {
+                        net.minecraft.block.Block door=net.minecraft.block.Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_door"));
+                        BlockPos lower=example==17?pos.down():pos;
+                        player.world.setBlockState(lower.down(),Blocks.STONE.getDefaultState(),3);
+                        net.minecraft.block.state.IBlockState state=door.getDefaultState().withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH);
+                        player.world.setBlockState(lower,state.withProperty(BlockVandorDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.LOWER),2);
+                        player.world.setBlockState(lower.up(),state.withProperty(BlockVandorDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),2);
+                        TileEntitySpaceDoor tile=(TileEntitySpaceDoor)player.world.getTileEntity(lower);
+                        tile.configure(example==8?3:7,1,false);tile.setPlacementDepth(0);
+                        if(example==9)tile.setFaceTexture(2);
+                        player.world.notifyBlockUpdate(lower,state,state,3);
+                    }
+                    if(example==18) {
+                        net.minecraft.block.Block door=net.minecraft.block.Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:large_programmable_door"));
+                        BlockPos anchor=pos.east();
+                        net.minecraft.block.state.IBlockState state=door.getDefaultState().withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH);
+                        for(int x=0;x<3;x++)for(int y=0;y<3;y++) {
+                            BlockPos cell=anchor.west(x).up(y);
+                            player.world.setBlockState(cell.down(y+1),Blocks.STONE.getDefaultState(),2);
+                            player.world.setBlockState(cell,state,2);
+                            ((TileEntityLargeProgrammableDoor)player.world.getTileEntity(cell)).assign(anchor);
+                        }
+                        TileEntitySpaceDoor tile=(TileEntitySpaceDoor)player.world.getTileEntity(anchor);tile.configure(23,1,false);tile.setPlacementDepth(0);
+                    }
+                    if(example>=10 && example<=14) {
+                        player.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,
+                                example==12?EnumFacing.EAST:example==14?EnumFacing.UP:EnumFacing.NORTH),3);
+                        TileEntityProgrammableLight light=(TileEntityProgrammableLight)player.world.getTileEntity(pos);
+                        light.configure(2,15);light.setOn(example!=11);light.setHousingTexture(2);
+                    }
+                    if(example==15) {
+                        player.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_WALL.getDefaultState(),3);
+                        ((TileEntityAnimatedScreenSelector)player.world.getTileEntity(pos)).setHousingTexture(2);
+                    }
+                    if(example==16) {
+                        player.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),3);
+                        TileEntityProgrammableTrigger trigger=(TileEntityProgrammableTrigger)player.world.getTileEntity(pos);
+                        trigger.configure(1,2,0);trigger.configureLevels(false,0,1,1);
+                    }
+                    if(example==19) {
+                        player.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_TRAPDOOR.getDefaultState(),3);
+                        ((TileEntityProgrammableTrapdoor)player.world.getTileEntity(pos)).configure(2,0,false,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,0);
+                    }
+                    if(example==20 || example==21) {
+                        player.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT_FRAME.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH),3);
+                        TileEntityProgrammableLight light=(TileEntityProgrammableLight)player.world.getTileEntity(pos);light.configure(2,15);light.setOn(example==20);
+                    }
+                    if(example>=22 && example<=24) {
+                        player.world.setBlockState(pos,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH),3);
+                        TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(pos);
+                        tile.setHousingTexture(2);tile.setSelectedScreen("engineering_screen");
+                        tile.setDisplayMode(example==22?TileEntityAnimatedScreenSelector.MODE_OFF:TileEntityAnimatedScreenSelector.MODE_STATIC);
+                        if(example==23)tile.setSurfaceTexture(0,2);
                     }
                     ItemStack armor=new ItemStack(ITEMS[example%4]);armor.setItemDamage(19);armor.setStackDisplayName("Sample check");
                     armor.addEnchantment(net.minecraft.init.Enchantments.PROTECTION,2);
@@ -68,7 +130,7 @@ final class ArmorSamplingRuntimeChecks {
                 mc.player.rotationYaw=yaw();mc.player.rotationPitch=pitch();
                 mc.player.movementInput.sneak=true;
                 mc.player.connection.sendPacket(new CPacketEntityAction(mc.player,CPacketEntityAction.Action.START_SNEAKING));
-                require(expected().equals(ArmorTextureSampler.resolve(mc.world,pos,face(),hit())),"correct visible face resolved");
+                require(expected().equals(ArmorTextureSampler.resolve(mc.world,pos,face(),hit())),"correct visible face resolved: expected="+expected()+" actual="+ArmorTextureSampler.resolve(mc.world,pos,face(),hit()));
                 require(mc.playerController.processRightClickBlock(mc.player,mc.world,pos,face(),hit(),
                         example==6?EnumHand.MAIN_HAND:hand())==EnumActionResult.SUCCESS,"real Shift block-use gesture consumed");
                 stage=2;ticks=0;return;
@@ -98,13 +160,14 @@ final class ArmorSamplingRuntimeChecks {
                     require(ItemProgrammableArmor.sample(stack)==null,"picker selection clears sample");
                     player.sendContainerToPlayer(player.inventoryContainer);
                 });
-                if(++example<7) {stage=0;ticks=0;return;}
+                if(++example<25) {stage=0;ticks=0;return;}
                 stage=3;return;
             }
             if(stage==3) {
-                System.out.println("[vandorlabs][reprolab] armor-world-sampling PASS cases=7 (vanilla top/side, programmable main/rotated overrides/inheritance, storage top, survival Configurizer offhand, NBT, icons, worn skins and packet guards)");
-                stage=4;mc.shutdown();
+                System.out.println("[vandorlabs][reprolab] armor-world-sampling PASS cases=25 (vanilla top/side, programmable main/rotated overrides/inheritance, storage top, survival Configurizer offhand, NBT, icons, worn skins and packet guards)");
+                stage=4;
             }
+            if(stage==4)ArmorStandRuntimeChecks.tick(mc);
         } catch(Exception e) {throw new IllegalStateException("Armor sample checks example="+example+" stage="+stage,e);}
     }
     private static float yaw() {return face()==EnumFacing.EAST?90:0;}

@@ -257,6 +257,7 @@ Use these dimensions for new or replacement art:
 | Half-height console screens and control faces | 128x64 | Keep the authored 2:1 aspect ratio; do not stretch them to square. |
 | Console-control inventory previews | 128x128 | These are the matching `_item.png` files. |
 | Programmable Door face atlases | 128x256 or 256x512 | Small and Large artwork tiers; preserve native frame, hinge, and glass atlas proportions. |
+| Double Door face atlases | 256x256 or 512x512 | Small and Large square artwork for large programmable doors. |
 | Native role armor atlases | 64x32 | Keep the vanilla armor UV layout and transparent unused regions. |
 | Role armor inventory icons | 16x16 | Preserve visible padding, including after the GUI transform. |
 | Imported hatch artwork | 128x128 or 256x256 | Small and Large artwork tiers. |

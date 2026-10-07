@@ -2,6 +2,11 @@
 
 ## 1.7
 
+- Design mounted programmable armor by right-clicking it with the Configurizer in creative or survival, on normal or small armor stands. Preserve equipment metadata and reject edits after the target or tool changes.
+- Resolve selected Programmable Door designs and custom leaf textures, current light on/off artwork and housings, and programmable wall/trigger materials when sampling world textures onto armor.
+- Add fifteen light artwork pairs to the armor picker’s Lights category with explicit On/Off labels; light artwork remains cosmetic.
+- Refresh the building gallery’s 114 current materials, all 21 regular and eight additional large-door designs, and current configuration dialogs.
+
 - Shift-right-click a block face with programmable armor to copy its displayed texture in creative or survival, including programmable face overrides and storage top/side/front artwork. Samples persist on the item and appear in its texture picker.
 
 - Add the Security Rescue armor set with matching slot-filtered designs, inventory icons and an armor stand gallery image.
