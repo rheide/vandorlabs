@@ -2335,5 +2335,11 @@
     "source": "imported/trapdoors/reinforced_cyan_x_hatch_2_small",
     "textureFamily": "imported_trapdoors_reinforced_cyan_x_hatch_2",
     "detail": 0
+  },
+  {
+    "id": "light_amber_hex_off",
+    "label": "Amber Hex Off",
+    "category": "Lights",
+    "source": "textures2_t3_r2_c2"
   }
 ]

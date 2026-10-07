@@ -54,6 +54,8 @@ for original in list(entries):
         small=dict(original,id=original['id']+'_small',source=original['source']+'_small',detail=0)
         small['label']=original['label'].removesuffix(' Large')+' Small'
         entries.append(small)
+# Explicit static off entry for the amber lamp; append to preserve saved choices.
+entries.append(dict(id='light_amber_hex_off',label='Amber Hex Off',category='Lights',source='textures2_t3_r2_c2'))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

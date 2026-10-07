@@ -62,9 +62,9 @@ final class HousingTextureList {
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
-            if(ScreenHousingTextures.visible(i) && generalTexture(i)) {
+            if(com.vandorlabs.items.ItemProgrammableArmor.validTexture(ScreenHousingTextures.choiceAt(i))) {
                 int choice=ScreenHousingTextures.choiceAt(i);
-                entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+                entries.add(new Option(choice,"Lights".equals(ScreenHousingTextures.category(i)) ? ScreenHousingTextures.label(i) : name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
             }
         }
         for(com.vandorlabs.items.ArmorTextures.Entry entry:com.vandorlabs.items.ArmorTextures.ALL)

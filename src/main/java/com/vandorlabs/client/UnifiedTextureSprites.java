@@ -14,6 +14,10 @@ import java.util.function.Function;
 /** Resource-pack-aware first frames and door faces, padded once during atlas loading. */
 public final class UnifiedTextureSprites {
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/screen_off"));
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/sequence_border_off"));
+        for(String panel:com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.INPUT_PANELS)
+            event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/console_inputs/"+panel+"_off","console_inputs/"+panel+"_off",false,false));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             // Filesystem examples may be hidden but remain valid external choices.
             if(i<ScreenHousingTextures.BUILTIN_COUNT && !ScreenHousingTextures.visible(i))continue;
@@ -29,6 +33,8 @@ public final class UnifiedTextureSprites {
             if(e!=null && e.has("unlit"))event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i,false)));
         }
     }
+    static int contentWidth(TextureAtlasSprite sprite){return sprite instanceof Sprite?Math.round(sprite.getIconWidth()*((Sprite)sprite).usedU):sprite.getIconWidth();}
+    static int contentHeight(TextureAtlasSprite sprite){return sprite instanceof Sprite?Math.round(sprite.getIconHeight()*((Sprite)sprite).usedV):sprite.getIconHeight();}
     static float aspect(TextureAtlasSprite sprite){return sprite instanceof Sprite?((Sprite)sprite).usedU/((Sprite)sprite).usedV:(float)sprite.getIconWidth()/sprite.getIconHeight();}
     private static final class Sprite extends TextureAtlasSprite {
         private final ResourceLocation source;

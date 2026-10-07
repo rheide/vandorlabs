@@ -28,7 +28,12 @@ public final class ProgrammableArmorTextures {
         TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteName);
         if (sprite.getFrameCount() == 0) return "minecraft:textures/models/armor/diamond_layer_"+(layer+1)+".png";
         int[] pixels = sprite.getFrameTextureData(0)[0];
-        int w = sprite.getIconWidth(), h = sprite.getIconHeight();
+        int w = UnifiedTextureSprites.contentWidth(sprite), h = UnifiedTextureSprites.contentHeight(sprite);
+        if(w!=sprite.getIconWidth() || h!=sprite.getIconHeight()) {
+            int[] content=new int[w*h];
+            for(int y=0;y<h;y++)System.arraycopy(pixels,y*sprite.getIconWidth(),content,y*w,w);
+            pixels=content;
+        }
         BufferedImage mask = mask(layer);
         BufferedImage skin = bake(pixels,w,h,mask);
         ResourceLocation location = mc.getTextureManager().getDynamicTextureLocation("programmable_armor",new DynamicTexture(skin));

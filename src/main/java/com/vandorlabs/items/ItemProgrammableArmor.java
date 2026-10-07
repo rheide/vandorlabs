@@ -47,7 +47,7 @@ public final class ItemProgrammableArmor extends ItemArmor {
         int index = ScreenHousingTextures.localIndex(choice);
         if (ScreenHousingTextures.choiceAt(index) != choice || !ScreenHousingTextures.visible(index)) return false;
         String category = ScreenHousingTextures.category(index);
-        return !category.equals("Screens") && !category.equals("Lights")
+        return !category.equals("Screens")
                 && !category.equals("Doors") && !category.equals("Double Doors");
     }
 

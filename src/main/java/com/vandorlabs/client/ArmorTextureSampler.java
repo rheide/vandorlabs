@@ -1,6 +1,9 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.network.*;
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import com.vandorlabs.render.ScreenSurface;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.*;
@@ -24,6 +27,48 @@ public final class ArmorTextureSampler {
     public static String resolve(World world,BlockPos pos,EnumFacing face,Vec3d hit) {
         if(face==null || hit==null || !world.isBlockLoaded(pos) || world.isAirBlock(pos))return null;
         IBlockState listed=world.getBlockState(pos);
+        // These surfaces are drawn by tile renderers, rather than the baked block model.
+        net.minecraft.tileentity.TileEntity target=world.getTileEntity(com.vandorlabs.items.ProgrammableTarget.settingsPos(world,pos));
+        if(target instanceof com.vandorlabs.tiles.TileEntitySpaceDoor) {
+            com.vandorlabs.tiles.TileEntitySpaceDoor door=(com.vandorlabs.tiles.TileEntitySpaceDoor)target;
+            int choice=door.getFaceTexture()<0?com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(door.getDesign(),door.getDetail()):door.getFaceTexture();
+            return com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice);
+        }
+        if(target instanceof com.vandorlabs.tiles.TileEntityProgrammableLight) {
+            com.vandorlabs.tiles.TileEntityProgrammableLight light=(com.vandorlabs.tiles.TileEntityProgrammableLight)target;
+            if(face==listed.getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING))
+                return com.vandorlabs.tiles.ScreenHousingTextures.texture(light.getFaceTexture(),light.isOn() && light.getLightLevel()>0);
+            return com.vandorlabs.tiles.ScreenHousingTextures.texture(light.getHousingTexture());
+        }
+        if(target instanceof com.vandorlabs.tiles.TileEntityProgrammableTrigger)
+            return com.vandorlabs.tiles.ScreenHousingTextures.texture(((com.vandorlabs.tiles.TileEntityProgrammableTrigger)target).getVisibleTexture());
+        if(listed.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall && target instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)
+            return com.vandorlabs.tiles.ScreenHousingTextures.texture(((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)target).getHousingTexture());
+        if(target instanceof TileEntityProgrammableTrapdoor)
+            return ScreenHousingTextures.fullTexture(((TileEntityProgrammableTrapdoor)target).getHousingTexture());
+        if(target instanceof TileEntityAnimatedScreenSelector && RedstoneScreenInteractions.supports(listed.getBlock())) {
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)target;
+            Vec3d local=RedstoneScreenInteractions.local(hit.subtract(new Vec3d(pos)),RedstoneScreenInteractions.facing(listed));
+            for(int slot=0;slot<2;slot++)if(RedstoneScreenInteractions.supportsSlot(listed.getBlock(),slot)) {
+                ScreenSurface.Quad surface=RedstoneScreenInteractions.surface(listed,tile,slot);
+                Vec3d[] corners=new Vec3d[4];
+                for(int i=0;i<4;i++)corners[i]=new Vec3d(surface.vertices[i].x,surface.vertices[i].y,surface.vertices[i].z);
+                if(Math.min(distance(local,corners[0],corners[1],corners[2]),distance(local,corners[0],corners[2],corners[3]))>1.6)continue;
+                // A generated redstone screen has no single source material.
+                if(tile.hasRedstoneScreen(slot))return null;
+                if(tile.getSurfaceTexture(slot)>=0)return ScreenHousingTextures.texture(tile.getSurfaceTexture(slot));
+                boolean input=slot==1 || RedstoneScreenInteractions.half(listed.getBlock(),slot);
+                boolean off=tile.getEffectiveMode()==TileEntityAnimatedScreenSelector.MODE_OFF;
+                if(input) {
+                    String panel=listed.getBlock() instanceof BlockProgrammableHalfConsole && slot==1?tile.getSecondaryInputPanel():tile.getInputPanel();
+                    return off?"vandorlabs:blocks/console_inputs/"+panel+"_off":ScreenHousingTextures.fullTexture(ScreenHousingTextures.screenIndex("console_inputs/"+panel+"_static"));
+                }
+                String id=tile.getSelectedScreen();if(!ModBlocks.DISPLAY_SCREEN_IDS.contains(id))id="engineering_screen";
+                return off?"vandorlabs:blocks/"+(ModBlocks.DISPLAY_FRAMED_IDS.contains(id)?"sequence_border_off":"screen_off")
+                        :ScreenHousingTextures.fullTexture(ScreenHousingTextures.screenIndex(id+"_static"));
+            }
+            return ScreenHousingTextures.texture(tile.getHousingTexture());
+        }
         IBlockState actual=listed.getActualState(world,pos);
         IBakedModel model=Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(actual);
         IBlockState state=actual.getBlock().getExtendedState(actual,world,pos);
