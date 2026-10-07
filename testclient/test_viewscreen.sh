@@ -47,7 +47,9 @@ JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
 RUN_OUT=$(mktemp -d "$ROOT/testclient/render-run.XXXXXX")
 
 cd "$ROOT"
-JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew build --no-daemon
+BUILD_ARGS=(build --no-daemon)
+if [ "${VANDOR_LABS_TEST_OFFLINE:-false}" = true ]; then BUILD_ARGS+=(--offline); fi
+JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew "${BUILD_ARGS[@]}"
 TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$ROOT/testclient/runtime/game"}
 mkdir -p "$TEST_RUNTIME_GAME/mods"
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
@@ -73,6 +75,7 @@ fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = armor ]; then
         grep -q 'programmable-armor PASS' "$RUN_OUT/client.log"
+        grep -q 'role-armor PASS choices=28 icons=28 sets=7' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/shot_armor_picker.png"
         test -s "$RUN_OUT/shot_armor_worn_and_icons.png"
         echo "Live armor checks passed: $RUN_OUT"

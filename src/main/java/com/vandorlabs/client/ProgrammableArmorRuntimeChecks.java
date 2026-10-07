@@ -32,6 +32,7 @@ final class ProgrammableArmorRuntimeChecks {
     static void tick(Minecraft mc,File output) {
         try {
             if(pending!=null) { if(!pending.isDone())return;pending.get();pending=null; }
+            if(stage==12) {RoleArmorRuntimeChecks.tick(mc,output);return;}
             if(stage==0) {
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP player=owner(mc);
@@ -141,7 +142,7 @@ final class ProgrammableArmorRuntimeChecks {
             if(stage==6) {
                 shot(mc,output,"armor_worn_and_icons");
                 System.out.println("[vandorlabs][reprolab] programmable-armor PASS (four real picker/equip packets, survival offhand sync, diamond stats, recipes, permissions, stale stacks, saved NBT and every material icon)");
-                stage=7;mc.shutdown();
+                stage=12;
             }
         } catch(Exception e) {throw new IllegalStateException("Armor live checks piece="+piece+" stage="+stage,e);}
     }

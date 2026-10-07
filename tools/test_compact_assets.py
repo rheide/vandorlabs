@@ -48,7 +48,12 @@ with ZipFile(jar) as archive:
         if name.startswith(prefix+'blockstates/') and name.endswith('.json'):references(json.loads(archive.read(name)),name)
         if name.endswith('.png'):
             image=Image.open(io.BytesIO(archive.read(name)))
-            if '/textures/items/' in name:assert image.size==(128,128),name
+            if '/textures/items/armor/' in name:
+                assert image.size==(16,16),name
+                x0,y0,x1,y1=image.convert('RGBA').getbbox()
+                assert x0>0 and y0>0 and x1<16 and y1<16,name
+            elif '/textures/items/' in name:assert image.size==(128,128),name
+            elif '/textures/models/armor/roles/' in name:assert image.size==(64,32),name
             if '/imported/trapdoors/' in name:assert image.size==((128,128) if name.endswith('_small.png') else (256,256)),name
         assert not any(path in name for path in ['/textures/blocks/space_doors/high/','/textures/blocks/cargo_doors/high/','/models/block/detailed_doors/high/','/models/item/detailed_doors/high/'])
     pane=lambda tier:Image.open(io.BytesIO(archive.read(prefix+'textures/blocks/space_doors/'+tier+'/glass_tile.png'))).convert('RGBA')
