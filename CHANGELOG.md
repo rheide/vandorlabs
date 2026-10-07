@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Add Toggle Switch: a compact solid-color, two-position counterpart to Wall Slider with Rocker Switch channel/latch behavior, wall/floor/ceiling mounts, an amber/cyan indicator and a stick/alloy/redstone recipe.
+
 - Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power Lever’s On angle to 45 degrees for 67.5 degrees of total travel.
 
 - Keep throttle height extensions perpendicular to the support face, with the tilted assembly on top; increasing height no longer shifts it sideways. Preserve filled mounting geometry and matching collision/selection bounds.

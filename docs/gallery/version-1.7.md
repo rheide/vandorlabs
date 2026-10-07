@@ -73,3 +73,13 @@ channel configuration and linked switching.
 Craft Small from two vanilla levers and one Industrial Alloy Ingot; use two
 ingots instead for Large. See the [controls gallery](controls.md) for both
 states and mounting details.
+
+## Toggle Switch
+
+The new **Toggle Switch** is a compact, solid-color counterpart to the Wall
+Slider with only Off and On positions. Its amber/cyan marker follows the
+selected state, and it uses the Rocker Switch’s redstone output, channel
+configuration and linked switching. Mount it on walls, floors or ceilings.
+
+Craft it from one stick, one Industrial Alloy Ingot and one redstone dust.
+See the [controls gallery](controls.md#toggle-switch) for the two positions.
