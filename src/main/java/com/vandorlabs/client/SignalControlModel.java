@@ -14,14 +14,17 @@ public final class SignalControlModel implements IBakedModel {
     private final IBakedModel base;
     private final BlockSignalControl block;
     private final int itemMount;
-    private final Map<String,List<BakedQuad>> cache=new java.util.concurrent.ConcurrentHashMap<>();
+    // Keep recent mount variants without retaining every possible transformed mesh.
+    private final Map<String,List<BakedQuad>> cache=Collections.synchronizedMap(new LinkedHashMap<String,List<BakedQuad>>(16,.75f,true){
+        @Override protected boolean removeEldestEntry(Map.Entry<String,List<BakedQuad>> entry){return size()>8;}
+    });
     public SignalControlModel(IBakedModel base,BlockSignalControl block){this(base,block,0);}
     private SignalControlModel(IBakedModel base,BlockSignalControl block,int mount){this.base=base;this.block=block;itemMount=mount;}
     public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed){
         Integer value=state instanceof IExtendedBlockState?((IExtendedBlockState)state).getValue(BlockSignalControl.MOUNT):null;
         int mount=value==null?itemMount:value;
         if(mount%16==0)return base.getQuads(state,side,seed);
-        IBlockState pose=state==null?block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.UP):state;
+        IBlockState pose=state==null?block.getDefaultState().withProperty(BlockVandorSwitch.FACING,block.hasSelectableType()?EnumFacing.UP:EnumFacing.NORTH):state;
         // Tilted faces cannot be culled against the original support or adjacent blocks.
         if(side!=null)return Collections.emptyList();
         return cache.computeIfAbsent(pose.getValue(BlockVandorSwitch.FACING)+"/"+pose.getValue(BlockVandorSwitch.ROTATION)+"/"+mount,k->{
@@ -42,7 +45,7 @@ public final class SignalControlModel implements IBakedModel {
             return Collections.unmodifiableList(result);
         });
     }
-    private static void addQuad(List<BakedQuad> result,BakedQuad source,Vec3d[] points){
+    static void addQuad(List<BakedQuad> result,BakedQuad source,Vec3d[] points){
         Vec3d normal=Vec3d.ZERO;
         for(int i=1;i<3 && normal.lengthSquared()<1e-14;i++)normal=points[i].subtract(points[0]).crossProduct(points[i+1].subtract(points[0]));
         if(normal.lengthSquared()<1e-14)return;normal=normal.normalize();
@@ -59,11 +62,7 @@ public final class SignalControlModel implements IBakedModel {
     public boolean isBuiltInRenderer(){return false;}
     public TextureAtlasSprite getParticleTexture(){return base.getParticleTexture();}
     public ItemCameraTransforms getItemCameraTransforms(){
-        ItemCameraTransforms source=base.getItemCameraTransforms();if(itemMount%16==0)return source;
-        ItemTransformVec3f gui=source.gui;
-        org.lwjgl.util.vector.Vector3f centered=new org.lwjgl.util.vector.Vector3f(gui.translation);centered.y*=.5F;
-        ItemTransformVec3f padded=new ItemTransformVec3f(gui.rotation,centered,new org.lwjgl.util.vector.Vector3f(gui.scale.x*.65F,gui.scale.y*.65F,gui.scale.z*.65F));
-        return new ItemCameraTransforms(source.thirdperson_left,source.thirdperson_right,source.firstperson_left,source.firstperson_right,source.head,padded,source.ground,source.fixed);
+        ItemCameraTransforms source=base.getItemCameraTransforms();return itemMount%16==0?source:ControlItemPadding.fit(this,source);
     }
     public ItemOverrideList getOverrides(){return new ItemOverrideList(Collections.emptyList()){
         @Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){

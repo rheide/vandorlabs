@@ -40,7 +40,7 @@ def geometry(on):
             ([10.125, .75, low], [10.375, height, high], color),
             ([5.875, .75, low], [10.125, height, low+.25], color),
             ([5.875, .75, high-.25], [10.125, height, high], color),
-            ([5.875, .75, low+.25], [10.125, height-.125, high-.25], 'metal'),
+            ([5.875, .75, low+.25], [10.125, height-.125, high-.25], 'cyan' if on and top else 'metal'),
         ]
     return boxes
 

@@ -241,9 +241,11 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
             if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;out.setTag(SIGNAL_SETTINGS,control.configuration());out.setInteger(ACTIVE,control.getStep());}
-            else out.setBoolean(ACTIVE, switchTile.isLocalOn());
+            else {
+                out.setBoolean(ACTIVE, switchTile.isLocalOn());
+                if(tile.getWorld()!=null && com.vandorlabs.blocks.MountedControlGeometry.supports(tile.getWorld().getBlockState(tile.getPos()).getBlock()))out.setTag(SIGNAL_SETTINGS,switchTile.configuration());
+            }
             out.setInteger(SWITCH_ROTATION, switchTile.getMountRotation());
-            if(tile.getWorld()!=null && tile.getWorld().getBlockState(tile.getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever){NBTTagCompound size=new NBTTagCompound();size.setInteger("PowerLeverSize",switchTile.getPowerLeverSize());out.setTag(SIGNAL_SETTINGS,size);}
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) {
             com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
             out.setInteger(GEAR_SIZE,gear.getSize());out.setInteger(GEAR_LENGTH,gear.getExtensionPixels());out.setInteger(GEAR_MODE,gear.getMode());
@@ -542,8 +544,9 @@ public final class ProgrammableSettings {
                 if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);control.configureLimits(signal.getInteger("LowLimit"),signal.getInteger("HighLimit"));if(signal.hasKey("BaseHeight"))control.readMount(signal);applicable=true;}
                 if(values.hasKey(ACTIVE,3)){control.setStep(values.getInteger(ACTIVE));applicable=true;}
             }
-            if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever && values.hasKey(SIGNAL_SETTINGS,10) && values.getCompoundTag(SIGNAL_SETTINGS).hasKey("PowerLeverSize",3)){
-                switchTile.setPowerLeverSize(values.getCompoundTag(SIGNAL_SETTINGS).getInteger("PowerLeverSize"));applicable=true;
+            if(!(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl) && world!=null && com.vandorlabs.blocks.MountedControlGeometry.supports(world.getBlockState(pos).getBlock()) && values.hasKey(SIGNAL_SETTINGS,10)){
+                NBTTagCompound settings=values.getCompoundTag(SIGNAL_SETTINGS);switchTile.readMount(settings);
+                if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever && settings.hasKey("PowerLeverSize",3))switchTile.setPowerLeverSize(settings.getInteger("PowerLeverSize"));applicable=true;
             }
             if (values.hasKey(ACTIVE, 1)) {
                 switchTile.setLocalOn(values.getBoolean(ACTIVE)); applicable = true;

@@ -22,7 +22,7 @@ final class SignalControlMountChecks {
         net.minecraft.nbt.NBTTagCompound legacy=new net.minecraft.nbt.NBTTagCompound();legacy.setInteger("BaseTilt",3);
         require(SignalControlMount.readTilt(legacy)==1,"legacy 15 degree mount preserved");legacy.setInteger("ControlMountVersion",2);require(SignalControlMount.readTilt(legacy)==3,"new 45 degree mount preserved");
         int poses=0,icons=0;
-        for(String id:new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}){
+        for(String id:new String[]{"thruster_lever","airliner_throttle","fighter_throttle","wall_slider"}){
             BlockSignalControl block=(BlockSignalControl)Block.getBlockFromName("vandorlabs:"+id);
             for(EnumFacing facing:EnumFacing.values())for(int rotation=0;rotation<(facing.getAxis()==EnumFacing.Axis.Y?4:1);rotation++)for(int level=0;level<4;level++){
                 IBlockState pose=block.getDefaultState().withProperty(BlockVandorSwitch.FACING,facing).withProperty(BlockVandorSwitch.ROTATION,rotation).withProperty(BlockSignalControl.LEVEL,level);
@@ -47,7 +47,7 @@ final class SignalControlMountChecks {
                     int count=0;
                     for(EnumFacing side:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad q:model.getQuads(extended,side,0)){
                         int[] data=q.getVertexData();int stride=data.length/4;count++;
-                        for(int i=0;i<4;i++){Vec3d p=new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]));require(collision.stream().anyMatch(b->b.grow(.00002).contains(p)),"rendered part missing collision "+id+" "+facing+" "+h+"/"+tilt+"/"+direction);require(expected.grow(.00001).contains(p),"selection excludes model "+id+" "+facing+" "+h+"/"+tilt+"/"+direction);double depth=p.subtract(new Vec3d(.5,.5,.5).subtract(new Vec3d(facing.getDirectionVec()).scale(.5))).dotProduct(new Vec3d(facing.getDirectionVec()));require(depth>=-.00001,"model intersects support "+id);}
+                        for(int i=0;i<4;i++){Vec3d p=new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]));require(collision.stream().anyMatch(b->b.grow(.00002).contains(p)),"rendered part missing collision "+id+" "+facing+" rotation="+rotation+" "+h+"/"+tilt+"/"+direction);require(expected.grow(.00001).contains(p),"selection excludes model "+id+" "+facing+" "+h+"/"+tilt+"/"+direction);double depth=p.subtract(new Vec3d(.5,.5,.5).subtract(new Vec3d(facing.getDirectionVec()).scale(.5))).dotProduct(new Vec3d(facing.getDirectionVec()));require(depth>=-.00001,"model intersects support "+id);}
                     }
                     require(count>0,"empty configured model");if(h>0 || tilt>0)require(count==originalQuads+(h>0?4:3),"mount must have a bottom and closed pedestal sides");poses++;
                 }

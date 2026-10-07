@@ -55,7 +55,7 @@ final class ToggleSwitchChecks {
                     int[] data=q.getVertexData();int stride=data.length/4;
                     for(int i=0;i<4;i++)require(bounds.contains(new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]))),"toggle selection excludes artwork "+face+"/"+rotation);
                 }
-                require(count>0 && indicator && coloredFaces==4,"toggle must have a four-sided active border");
+                require(count>0 && indicator && coloredFaces==(on?5:4),"toggle must have a four-sided active border");
                 indicatorCenter=indicatorCenter.scale(1D/coloredFaces);
                 if(face.getAxis()!=EnumFacing.Axis.Y)require(on?indicatorCenter.y>.5:indicatorCenter.y<.5,"rocker border is on the wrong half");signatures.add(signature.toString());poses++;
             }

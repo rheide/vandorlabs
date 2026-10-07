@@ -144,9 +144,9 @@ public class MessageRedstoneChannel implements IMessage {
                             message.particleLevel, message.updateJoin, message.join,
                             message.updateSide, message.sideTexture);
                 } else {
-                    if(message.powerLever && block instanceof com.vandorlabs.blocks.BlockTwinPowerLever && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).setPowerLeverSize(message.powerLeverSize);
+                    if(message.powerLever && block instanceof com.vandorlabs.blocks.BlockIndustrialLever && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).setPowerLeverSize(message.powerLeverSize);
                     if(message.controlLimits && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureLimits(message.lowLimit,message.highLimit);
-                    if(message.controlMount && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureMount(message.baseHeight,message.baseTilt,message.tiltDirection);
+                    if(message.controlMount && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).configureMount(message.baseHeight,message.baseTilt,message.tiltDirection);
                     ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
                     if(message.controlTypeUpdate && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureType(message.controlType);
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight

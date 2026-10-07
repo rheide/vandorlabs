@@ -21,7 +21,8 @@ for slot in range(7):
     print(f'Control {slot} padded icon PASS ({xx.max()-xx.min()+1} x {yy.max()-yy.min()+1} physical pixels)')
 
 # Every combination of the four base heights, four tilt angles and four directions.
-for page in range(24):
+pages=72 if "all 576 configured icons" in (root/"client.log").read_text() else 24
+for page in range(pages):
     shot=root/f'shot_controls_mount_icons_{page}.png'
     if not shot.exists():
         assert page==0, 'Missing configured icon page'

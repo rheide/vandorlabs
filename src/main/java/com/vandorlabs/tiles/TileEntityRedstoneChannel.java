@@ -54,12 +54,25 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     private boolean localOn;
     private boolean initialized;
     private int mountRotation;
+    private int baseHeight,baseTilt,tiltDirection;
+    public int getBaseHeight(){return baseHeight;}
+    public int getBaseTilt(){return baseTilt;}
+    public int getTiltDirection(){return tiltDirection;}
+    public void configureMount(int height,int tilt,int direction){
+        if(!com.vandorlabs.blocks.SignalControlMount.valid(height,tilt,direction) || world!=null && !com.vandorlabs.blocks.MountedControlGeometry.supports(world.getBlockState(pos).getBlock()))return;
+        baseHeight=height;baseTilt=tilt;tiltDirection=direction;markDirty();sync();if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);
+    }
+    public void readMount(NBTTagCompound tag){configureMount(tag.getInteger("BaseHeight"),com.vandorlabs.blocks.SignalControlMount.readTilt(tag),tag.getInteger("TiltDirection"));}
+    public NBTTagCompound configuration(){
+        NBTTagCompound tag=new NBTTagCompound();ChannelData.write(tag,channels);tag.setInteger("Channel",channel);tag.setInteger("ControlMountVersion",2);
+        tag.setInteger("BaseHeight",getBaseHeight());tag.setInteger("BaseTilt",getBaseTilt());tag.setInteger("TiltDirection",getTiltDirection());
+        if(world!=null && world.getBlockState(pos).getBlock() instanceof BlockIndustrialLever)tag.setInteger("PowerLeverSize",getPowerLeverSize());return tag;
+    }
     // Missing tags retain the original size of legacy placed blocks.
     private int powerLeverSize=-1;
     public int getPowerLeverSize(){
         if(powerLeverSize>=0)return powerLeverSize;
-        return world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever
-                && ((com.vandorlabs.blocks.BlockTwinPowerLever)world.getBlockState(pos).getBlock()).isLegacyLarge()?1:0;
+        return world!=null && world.getBlockState(pos).getBlock() instanceof BlockIndustrialLever?((BlockIndustrialLever)world.getBlockState(pos).getBlock()).defaultSize():0;
     }
     public void setPowerLeverSize(int size){
         if(size<0 || size>1 || powerLeverSize==size)return;
@@ -180,6 +193,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);ChannelData.write(tag,channels);
+        tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);
         if(powerLeverSize>=0)tag.setInteger("PowerLeverSize",powerLeverSize);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
         int[] savedLevels=new int[channels.size()];for(int i=0;i<savedLevels.length;i++)savedLevels[i]=latchedLevel(channels.get(i));tag.setIntArray("LatchedLevels",savedLevels);
@@ -193,6 +207,9 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         int oldRotation = mountRotation;
         int oldSize=getPowerLeverSize();
         super.readFromNBT(tag);
+        int height=tag.getInteger("BaseHeight"),tilt=com.vandorlabs.blocks.SignalControlMount.readTilt(tag),direction=tag.getInteger("TiltDirection");
+        if(com.vandorlabs.blocks.SignalControlMount.valid(height,tilt,direction)){baseHeight=height;baseTilt=tilt;tiltDirection=direction;}
+        if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
         RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
         channel=data.channel;
         channels=ChannelData.read(tag,channel);channel=channels.first();

@@ -24,12 +24,13 @@ public class BlockSignalControl extends BlockVandorSwitch {
     public int controlType(){for(int i=0;i<TYPES.length;i++)if(TYPES[i].equals(kind))return i;return 0;}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
         Block next=world.getBlockState(pos).getBlock();
-        if(hasAdjustableBase() && next instanceof BlockSignalControl && ((BlockSignalControl)next).hasAdjustableBase())return;
+        if(hasSelectableType() && next instanceof BlockSignalControl && ((BlockSignalControl)next).hasSelectableType())return;
         super.breakBlock(world,pos,state);
     }
-    private Block itemBlock(){return hasAdjustableBase()?Block.getBlockFromName("vandorlabs:thruster_lever"):this;}
+    private Block itemBlock(){return hasSelectableType()?Block.getBlockFromName("vandorlabs:thruster_lever"):this;}
 
-    public boolean hasAdjustableBase(){return !"wall_slider".equals(kind);}
+    public boolean hasAdjustableBase(){return true;}
+    public boolean hasSelectableType(){return !"wall_slider".equals(kind);}
     public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> MOUNT=ProgrammableHousingState.integer("control_mount");
     @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,ON,ROTATION,LEVEL},new net.minecraftforge.common.property.IUnlistedProperty[]{MOUNT});}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntitySignalControl();}
@@ -55,7 +56,7 @@ public class BlockSignalControl extends BlockVandorSwitch {
         return facing.getAxis()==EnumFacing.Axis.Y && rotation>=2?new AxisAlignedBB(1-box.maxX,box.minY,1-box.maxZ,1-box.minX,box.maxY,1-box.minZ):box;
     }
     public AxisAlignedBB supportBounds(IBlockState state){
-        double a=kind.equals("thruster_lever")?3/16D:kind.equals("fighter_throttle")?1.5/16D:1/16D;
+        double a=kind.equals("thruster_lever") || kind.equals("wall_slider")?3/16D:kind.equals("fighter_throttle")?1.5/16D:1/16D;
         double b=kind.equals("thruster_lever")?2/16D:1/16D;EnumFacing face=state.getValue(FACING);
         if(face.getAxis()==EnumFacing.Axis.Y){if(state.getValue(ROTATION)%2==1){double swap=a;a=b;b=swap;}double y=face==EnumFacing.UP?0:1;return new AxisAlignedBB(a,y,b,1-a,y,1-b);}
         if(face.getAxis()==EnumFacing.Axis.Z){double z=face==EnumFacing.SOUTH?0:1;return new AxisAlignedBB(a,b,z,1-a,1-b,z);}

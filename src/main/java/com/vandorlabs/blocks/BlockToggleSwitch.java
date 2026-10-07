@@ -1,27 +1,28 @@
 package com.vandorlabs.blocks;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import com.vandorlabs.tiles.TileEntityRedstoneChannel;
+import net.minecraft.block.state.*;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.*;
+import net.minecraft.world.*;
+import net.minecraft.tileentity.TileEntity;
 
-/** Compact split rocker using the Rocker Switch's latch and channel behavior. */
+/** Compact split rocker using the shared latch and configurable solid mounting base. */
 public final class BlockToggleSwitch extends BlockVandorSwitch {
     public BlockToggleSwitch(String name){super(name,false);}
-    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){
-        EnumFacing face=state.getValue(FACING);
-        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
-        if(face.getAxis()==EnumFacing.Axis.Y && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)state=state.withProperty(ROTATION,((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).getMountRotation());
-        double width=5/16D,length=4/16D,depth=1.75/16D;
-        if(face.getAxis()==EnumFacing.Axis.Y && state.getValue(ROTATION)%2==1){double swap=width;width=length;length=swap;}
-        switch(face){
-            case UP:return new AxisAlignedBB(width,0,length,1-width,depth,1-length);
-            case DOWN:return new AxisAlignedBB(width,1-depth,length,1-width,1,1-length);
-            case SOUTH:return new AxisAlignedBB(width,length,0,1-width,1-length,depth);
-            case EAST:return new AxisAlignedBB(0,length,width,depth,1-length,1-width);
-            case WEST:return new AxisAlignedBB(1-depth,length,width,1,1-length,1-width);
-            default:return new AxisAlignedBB(width,length,1-depth,1-width,1-length,1);
-        }
-    }
+    @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,ON,ROTATION},new net.minecraftforge.common.property.IUnlistedProperty[]{MountedControlGeometry.MOUNT});}
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(MountedControlGeometry.MOUNT,MountedControlGeometry.mount(world,pos));}
+    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return MountedControlGeometry.bounds(state,world,pos);}
+    @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return getBoundingBox(state,world,pos);}
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> boxes,net.minecraft.entity.Entity entity,boolean actual){for(AxisAlignedBB box:MountedControlGeometry.boxes(state,world,pos))addCollisionBoxToList(pos,query,boxes,box);}
+    private ItemStack configured(IBlockAccess world,BlockPos pos){ItemStack stack=new ItemStack(this);TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityRedstoneChannel)stack.setTagInfo("RedstoneChannelSettings",((TileEntityRedstoneChannel)tile).configuration());return stack;}
+    @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult ray,World world,BlockPos pos,EntityPlayer player){return configured(world,pos);}
+    @Override public void getDrops(NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){drops.add(configured(world,pos));}
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest){return willHarvest || super.removedByPlayer(state,world,pos,player,false);}
+    @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){super.harvestBlock(world,player,pos,state,tile,tool);world.setBlockToAir(pos);}
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase player,ItemStack stack){super.onBlockPlacedBy(world,pos,state,player,stack);NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");TileEntity tile=world.getTileEntity(pos);if(!world.isRemote && settings!=null && tile instanceof TileEntityRedstoneChannel)((TileEntityRedstoneChannel)tile).readMount(settings);}
 }

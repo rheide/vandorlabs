@@ -662,13 +662,19 @@ public class ModBlocks {
         net.minecraft.client.renderer.block.model.IBakedModel[] throttles=new net.minecraft.client.renderer.block.model.IBakedModel[3];
         for(int i=0;i<3;i++)throttles[i]=event.getModelRegistry().getObject(new ModelResourceLocation("vandorlabs:"+BlockSignalControl.TYPES[i],"inventory"));
         if(throttles[0]!=null && throttles[1]!=null && throttles[2]!=null)event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:thruster_lever","inventory"),new com.vandorlabs.client.ThrottleItemModel(throttles));
-        // Snapshot native models before wrapping either legacy registry ID.
+        // Snapshot both lever families before wrapping either legacy size ID.
         java.util.Map<ModelResourceLocation,net.minecraft.client.renderer.block.model.IBakedModel> powerModels=new java.util.HashMap<>();
-        for(ModelResourceLocation location:event.getModelRegistry().getKeys())if(location.getResourceDomain().equals(VandorLabs.MODID) && (location.getResourcePath().equals("small_power_lever") || location.getResourcePath().equals("large_power_lever")))powerModels.put(location,event.getModelRegistry().getObject(location));
+        for(ModelResourceLocation location:event.getModelRegistry().getKeys())if(location.getResourceDomain().equals(VandorLabs.MODID) && (location.getResourcePath().equals("small_power_lever") || location.getResourcePath().equals("large_power_lever") || location.getResourcePath().equals("compact_power_lever") || location.getResourcePath().equals("industrial_power_lever")))powerModels.put(location,event.getModelRegistry().getObject(location));
         for(ModelResourceLocation location:powerModels.keySet()){
-            net.minecraft.client.renderer.block.model.IBakedModel small=powerModels.get(new ModelResourceLocation("vandorlabs:small_power_lever",location.getVariant()));
-            net.minecraft.client.renderer.block.model.IBakedModel large=powerModels.get(new ModelResourceLocation("vandorlabs:large_power_lever",location.getVariant()));
-            if(small!=null && large!=null)event.getModelRegistry().putObject(location,new com.vandorlabs.client.PowerLeverModel(small,large,location.getResourcePath().equals("large_power_lever")?1:0));
+            boolean twin=location.getResourcePath().equals("small_power_lever") || location.getResourcePath().equals("large_power_lever");
+            String smallId=twin?"small_power_lever":"compact_power_lever",largeId=twin?"large_power_lever":"industrial_power_lever";
+            net.minecraft.client.renderer.block.model.IBakedModel small=powerModels.get(new ModelResourceLocation("vandorlabs:"+smallId,location.getVariant()));
+            net.minecraft.client.renderer.block.model.IBakedModel large=powerModels.get(new ModelResourceLocation("vandorlabs:"+largeId,location.getVariant()));
+            if(small!=null && large!=null)event.getModelRegistry().putObject(location,new com.vandorlabs.client.PowerLeverModel(small,large,location.getResourcePath().equals(largeId)?1:0));
+        }
+        for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())){
+            Block binary=Block.REGISTRY.getObject(new ResourceLocation(location.getResourceDomain(),location.getResourcePath()));
+            if(binary instanceof BlockIndustrialLever || binary instanceof BlockToggleSwitch)event.getModelRegistry().putObject(location,new com.vandorlabs.client.MountedBinaryControlModel(event.getModelRegistry().getObject(location),binary));
         }
         com.vandorlabs.client.ProgrammableHousingModel cube = null, slab = null;
         for (ModelResourceLocation location : new java.util.ArrayList<>(

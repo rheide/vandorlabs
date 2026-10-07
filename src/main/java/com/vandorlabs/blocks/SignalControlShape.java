@@ -14,8 +14,9 @@ public final class SignalControlShape {
     private static final Map<String,List<AxisAlignedBB>> SHAPES=new java.util.concurrent.ConcurrentHashMap<>();
     public static List<AxisAlignedBB> boxes(BlockSignalControl block,IBlockState state,int height,int tilt,int direction){
         EnumFacing face=state.getValue(BlockVandorSwitch.FACING);int rotation=state.getValue(BlockVandorSwitch.ROTATION);
-        String mount=face.getAxis()==EnumFacing.Axis.Y?(face==EnumFacing.UP?"floor":"ceiling")+(rotation%2==0?"_z":"_x"):face.getName();
-        String path="/assets/vandorlabs/models/block/"+(block.controlKind().equals("thruster_lever")?"thruster_controls":"aircraft_throttles")+"/32px/"+block.controlKind()+"_"+new String[]{"off","low","medium","high"}[state.getValue(BlockSignalControl.LEVEL)]+"_"+mount+".json";
+        boolean slider=block.controlKind().equals("wall_slider");
+        String mount=face.getAxis()==EnumFacing.Axis.Y?(face==EnumFacing.UP?"floor":"ceiling")+(slider || rotation%2==0?"_z":"_x"):face.getName();
+        String path="/assets/vandorlabs/models/block/"+((block.controlKind().equals("thruster_lever") || block.controlKind().equals("wall_slider"))?"thruster_controls":"aircraft_throttles")+"/32px/"+block.controlKind()+"_"+new String[]{"off","low","medium","high"}[state.getValue(BlockSignalControl.LEVEL)]+"_"+mount+".json";
         return SHAPES.computeIfAbsent(path+"/"+rotation+"/"+height+"/"+tilt+"/"+direction,key->{
             SignalControlMount transform=new SignalControlMount(face,rotation,height,tilt,direction,block.supportBounds(state));
             List<AxisAlignedBB> boxes=new ArrayList<>();
@@ -25,7 +26,8 @@ public final class SignalControlShape {
                 for(double x:new double[]{low.x,high.x})for(double y:new double[]{low.y,high.y})for(double z:new double[]{low.z,high.z}){
                     Vec3d point=new Vec3d(x,y,z);
                     if(element.has("rotation"))point=rotate(point,element.getAsJsonObject("rotation"));
-                    if(face.getAxis()==EnumFacing.Axis.Y && rotation>=2)point=new Vec3d(1-point.x,point.y,1-point.z);
+                    if(slider && face.getAxis()==EnumFacing.Axis.Y)point=point.subtract(new Vec3d(.5,.5,.5)).rotateYaw((float)(-((rotation+(face==EnumFacing.UP?2:0))&3)*Math.PI/2)).addVector(.5,.5,.5);
+                    else if(face.getAxis()==EnumFacing.Axis.Y && rotation>=2)point=new Vec3d(1-point.x,point.y,1-point.z);
                     points.add(transform.transform(point));
                 }
                 boxes.add(hull(points));

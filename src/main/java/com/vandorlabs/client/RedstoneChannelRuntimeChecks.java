@@ -37,6 +37,7 @@ final class RedstoneChannelRuntimeChecks {
         SignalControlRuntimeChecks.run(world);
         ToggleSwitchChecks.server(world,player);
         PowerLeverRuntimeChecks.run(world,player);
+        BinaryControlRuntimeChecks.run(world,player);
         checkLightTriggers(world, player);
         checkJoinedLightTriggers(world);
         checkTrianglePlacement(world, player);

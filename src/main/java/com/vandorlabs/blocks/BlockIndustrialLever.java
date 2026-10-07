@@ -36,6 +36,17 @@ import net.minecraft.tileentity.TileEntity;
 public class BlockIndustrialLever extends BlockHorizontal {
     public static final PropertyBool POWERED = PropertyBool.create("powered");
     public static final PropertyBool FLOOR = PropertyBool.create("floor");
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> SIZE=ProgrammableHousingState.integer("power_lever_size");
+    public int defaultSize(){return this instanceof BlockCompactLever?0:1;}
+    public int size(IBlockAccess world,BlockPos pos){TileEntity tile=world.getTileEntity(pos);return tile instanceof TileEntityRedstoneChannel?((TileEntityRedstoneChannel)tile).getPowerLeverSize():defaultSize();}
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(SIZE,size(world,pos)).withProperty(MountedControlGeometry.MOUNT,MountedControlGeometry.mount(world,pos));}
+    private Block itemBlock(){return Block.getBlockFromName(this instanceof BlockTwinPowerLever?"vandorlabs:small_power_lever":"vandorlabs:industrial_power_lever");}
+    private ItemStack configured(IBlockAccess world,BlockPos pos){ItemStack stack=new ItemStack(itemBlock());TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityRedstoneChannel)stack.setTagInfo("RedstoneChannelSettings",((TileEntityRedstoneChannel)tile).configuration());return stack;}
+    @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){drops.add(configured(world,pos));}
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest){return willHarvest || super.removedByPlayer(state,world,pos,player,false);}
+    @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){super.harvestBlock(world,player,pos,state,tile,tool);world.setBlockToAir(pos);}
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> boxes,net.minecraft.entity.Entity entity,boolean actual){for(AxisAlignedBB box:MountedControlGeometry.boxes(state,world,pos))addCollisionBoxToList(pos,query,boxes,box);}
+
 
     public BlockIndustrialLever() {
         this("industrial_power_lever");
@@ -54,7 +65,7 @@ public class BlockIndustrialLever extends BlockHorizontal {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, POWERED, FLOOR);
+        return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,POWERED,FLOOR},new net.minecraftforge.common.property.IUnlistedProperty[]{SIZE,MountedControlGeometry.MOUNT});
     }
 
     @Override
@@ -77,16 +88,7 @@ public class BlockIndustrialLever extends BlockHorizontal {
 
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,
             World world,BlockPos pos,EntityPlayer player) {
-        ItemStack stack=new ItemStack(this);
-        TileEntity raw=world.getTileEntity(pos);
-        if (raw instanceof TileEntityRedstoneChannel
-                && ((TileEntityRedstoneChannel)raw).getRedstoneChannel()!=0) {
-            NBTTagCompound settings=new NBTTagCompound();
-            settings.setInteger("Channel",((TileEntityRedstoneChannel)raw).getRedstoneChannel());
-            com.vandorlabs.redstone.ChannelData.write(settings,((TileEntityRedstoneChannel)raw).getRedstoneChannels());
-            stack.setTagInfo("RedstoneChannelSettings",settings);
-        }
-        return stack;
+        return configured(world,pos);
     }
 
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,
@@ -94,8 +96,10 @@ public class BlockIndustrialLever extends BlockHorizontal {
         super.onBlockPlacedBy(world,pos,state,placer,stack);
         NBTTagCompound settings=stack.getSubCompound("RedstoneChannelSettings");
         TileEntity raw=world.getTileEntity(pos);
-        if (!world.isRemote && settings!=null && raw instanceof TileEntityRedstoneChannel)
-            ((TileEntityRedstoneChannel)raw).setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
+        if (!world.isRemote && settings!=null && raw instanceof TileEntityRedstoneChannel){
+            TileEntityRedstoneChannel tile=(TileEntityRedstoneChannel)raw;tile.setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
+            tile.readMount(settings);if(settings.hasKey("PowerLeverSize",3))tile.setPowerLeverSize(settings.getInteger("PowerLeverSize"));
+        }
     }
 
     @Override
@@ -224,19 +228,11 @@ public class BlockIndustrialLever extends BlockHorizontal {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        // Conservative union of both handle positions, including rear wall feet.
-        double a = 1.0 / 16.0, b = 15.0 / 16.0, front = 7.0 / 16.0;
-        if (state.getValue(FLOOR)) return new AxisAlignedBB(a,0,a,b,9.0/16,b);
-        switch (state.getValue(FACING)) {
-            case SOUTH: return new AxisAlignedBB(a, 2.0/16, 0, b, 14.0/16, 1-front);
-            case EAST:  return new AxisAlignedBB(0, 2.0/16, a, 1-front, 14.0/16, b);
-            case WEST:  return new AxisAlignedBB(front, 2.0/16, a, 1, 14.0/16, b);
-            default:    return new AxisAlignedBB(a, 2.0/16, front, b, 14.0/16, 1);
-        }
+        return MountedControlGeometry.bounds(state,world,pos);
     }
 
     @Override
     public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return NULL_AABB; // Like a vanilla lever: selectable, no movement collision.
+        return getBoundingBox(state,world,pos);
     }
 }

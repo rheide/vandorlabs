@@ -12,14 +12,14 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     public void configureType(int type){
         if(world==null || world.isRemote || type<0 || type>2)return;
         IBlockState before=world.getBlockState(pos);
-        if(!(before.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl) || !((com.vandorlabs.blocks.BlockSignalControl)before.getBlock()).hasAdjustableBase())return;
+        if(!(before.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl) || !((com.vandorlabs.blocks.BlockSignalControl)before.getBlock()).hasSelectableType())return;
         net.minecraft.block.Block next=net.minecraft.block.Block.getBlockFromName("vandorlabs:"+com.vandorlabs.blocks.BlockSignalControl.TYPES[type]);
         if(next==before.getBlock())return;
         IBlockState after=next.getDefaultState().withProperty(com.vandorlabs.blocks.BlockVandorSwitch.FACING,before.getValue(com.vandorlabs.blocks.BlockVandorSwitch.FACING)).withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ON,before.getValue(com.vandorlabs.blocks.BlockVandorSwitch.ON)).withProperty(com.vandorlabs.blocks.BlockVandorSwitch.ROTATION,before.getValue(com.vandorlabs.blocks.BlockVandorSwitch.ROTATION));
         world.setBlockState(pos,after,3);markDirty();world.notifyBlockUpdate(pos,after,after,3);
     }
     @Override public boolean shouldRefresh(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,IBlockState before,IBlockState after){
-        if(before.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && after.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)before.getBlock()).hasAdjustableBase() && ((com.vandorlabs.blocks.BlockSignalControl)after.getBlock()).hasAdjustableBase())return false;
+        if(before.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && after.getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)before.getBlock()).hasSelectableType() && ((com.vandorlabs.blocks.BlockSignalControl)after.getBlock()).hasSelectableType())return false;
         return super.shouldRefresh(world,pos,before,after);
     }
     public int getBaseHeight(){return baseHeight;}
@@ -92,5 +92,5 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         step=Math.max(0,Math.min(3,tag.getInteger("ControlStep")));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }
-    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasAdjustableBase())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
+    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasSelectableType())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
 }

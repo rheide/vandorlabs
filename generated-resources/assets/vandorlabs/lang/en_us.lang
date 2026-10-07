@@ -278,7 +278,7 @@ tile.vandorlabs.impulse_engine_wedge_top_right.name=Impulse Engine - Wedge (Top 
 tile.vandorlabs.impulse_engine_wedge_top_left.name=Impulse Engine - Wedge (Top Left)
 tile.vandorlabs.industrial_table.name=Industrial Table
 tile.vandorlabs.industrial_power_lever.name=Industrial Power Lever
-tile.vandorlabs.compact_power_lever.name=Compact Power Lever
+tile.vandorlabs.compact_power_lever.name=Industrial Power Lever
 tile.vandorlabs.programmable_viewscreen.name=Programmable Screen
 tile.vandorlabs.programmable_console.name=Programmable Console
 tile.vandorlabs.programmable_wall.name=Programmable Wall
@@ -503,5 +503,5 @@ item.vandorlabs.programmable_armor.sampled=Armor texture: %s
 item.vandorlabs.programmable_armor.no_sample=No block texture found on this face.
 
 tile.vandorlabs.small_power_lever.name=Power Lever
-tile.vandorlabs.large_power_lever.name=Power Lever (legacy Large)
+tile.vandorlabs.large_power_lever.name=Power Lever
 tile.vandorlabs.toggle_switch.name=Toggle Switch

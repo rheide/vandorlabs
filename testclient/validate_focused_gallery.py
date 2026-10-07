@@ -39,6 +39,9 @@ if target == 'control-icons' or target == 'gallery_close_control_': require('twi
 if target == 'control-icons':
     require('signal-control-mount-gallery PASS shots=24')
     require('binary-control-gallery PASS shots=3')
+    require('binary-control-mount-gallery PASS shots=12')
+    require('binary-control-mounts PASS')
+    require('binary-control-runtime PASS')
     require('toggle-switch-models PASS poses=48')
     require('toggle-switch-runtime PASS mounts=12')
 
