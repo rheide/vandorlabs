@@ -107,7 +107,7 @@ final class ChannelListGuiChecks {
         TwinPowerLeverChecks.checkModels(mc);
         System.out.println("[vandorlabs][reprolab] signal-control-models PASS every detent, mount and rotation; slider attachment and grip/panel alignment");
     }
-    private static int visualIndex,visualStep,visualMount,visualRotation,iconPage,mountPreview;
+    private static int visualIndex,visualStep,visualMount,visualRotation,iconPage,mountPreview,powerPreview;
     private static final net.minecraft.util.EnumFacing[] VISUAL_MOUNTS={net.minecraft.util.EnumFacing.NORTH,net.minecraft.util.EnumFacing.SOUTH,net.minecraft.util.EnumFacing.EAST,net.minecraft.util.EnumFacing.WEST,net.minecraft.util.EnumFacing.UP,net.minecraft.util.EnumFacing.DOWN};
     private static void captureControls(Minecraft mc,File output){
         try{
@@ -182,8 +182,8 @@ final class ChannelListGuiChecks {
             if(stage==14){
                 mc.gameSettings.hideGUI=true;
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
-                    net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);world.setBlockToAir(POS);
-                    for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())world.setBlockToAir(POS.offset(side));
+                    net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
+                    for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-4,-4),POS.add(4,6,4)))world.setBlockToAir(at);
                     world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
                     Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/8]);
                     world.setBlockState(POS,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.UP),3);
@@ -194,7 +194,24 @@ final class ChannelListGuiChecks {
             }
             if(stage==15 && ++ticks>25){
                 capture(mc,output,"controls_mount_"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/8]+"_"+new String[]{"standard","raised_2px","raised_4px","raised_6px","tilted_15","tilted_30","tilted_45","raised_6px_tilted_45"}[mountPreview%8]);
-                if(++mountPreview<24)stage=14;else{stage=9;System.out.println("[vandorlabs][reprolab] signal-control-mount-gallery PASS shots=24");mc.shutdown();}ticks=0;return;
+                if(++mountPreview<24)stage=14;else{stage=16;System.out.println("[vandorlabs][reprolab] signal-control-mount-gallery PASS shots=24");}ticks=0;return;
+            }
+            if(stage==16){
+                pending=mc.getIntegratedServer().addScheduledTask(()->{
+                    net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
+                    for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-4,-4),POS.add(4,6,4)))world.setBlockToAir(at);
+                    Block block=Block.getBlockFromName("vandorlabs:"+(powerPreview==0?"small":"large")+"_power_lever");
+                    for(int i=0;i<2;i++){
+                        BlockPos at=POS.east(i);world.setBlockState(at.south(),Blocks.STONEBRICK.getDefaultState(),3);
+                        world.setBlockState(at,block.getDefaultState().withProperty(BlockIndustrialLever.FACING,net.minecraft.util.EnumFacing.NORTH).withProperty(BlockIndustrialLever.POWERED,i==0),3);
+                    }
+                    EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
+                    player.connection.setPlayerLocation(POS.getX()+1,POS.getY()+.58-player.getEyeHeight(),POS.getZ()-2.1,0,8);
+                });stage=17;ticks=0;return;
+            }
+            if(stage==17 && ++ticks>25){
+                capture(mc,output,"gallery_close_control_"+(powerPreview==0?"small":"large")+"_power_lever");
+                if(++powerPreview<2)stage=16;else{stage=9;System.out.println("[vandorlabs][reprolab] twin-power-lever-gallery PASS shots=2");mc.shutdown();}ticks=0;return;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}
     }

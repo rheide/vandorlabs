@@ -10,14 +10,17 @@ These controls generate local redstone power and can participate in virtual reds
 | Rocker Switch | ![Rocker Switch states](../images/gallery/controls/rocker-switch.png) | Persistent on/off input. |
 | Compact Power Lever | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
 | Industrial Power Lever | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
-| Small Power Lever | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 45-degree throw. |
+| Small Power Lever | ![Small Power Lever states](../images/gallery/controls/small-power-lever.png) | Twin arms and shared grip; 67.5-degree throw. |
 | Large Power Lever | ![Large Power Lever states](../images/gallery/controls/large-power-lever.png) | Longer twin arms and shared grip; 90-degree throw. |
 
 The compact and industrial levers have separate recipes based on a vanilla lever plus Industrial Alloy Ingots. The button and rocker switch likewise use Industrial Alloy Ingots. See the in-game recipe book for the arrangements.
 
 Small Power Lever and Large Power Lever mount on walls or floors and toggle
 between Off and On with a normal right-click. The joined arms and grip move
-together; the grip turns cyan while On. They provide 0 or 15 redstone power
+together; the grip turns cyan while On. Small’s Off angle is 22.5 degrees and
+its On angle is 45 degrees. Large keeps its 45-degree angles in both states,
+with arms shortened by 2 pixels. Moving arms sit slightly inside the pivot
+caps to avoid overlapping surfaces at the base. They provide 0 or 15 redstone power
 and use the same channel settings and linked switching as Industrial Power
 Lever. Use the Configurizer to configure channels in survival. Like the
 Industrial Power Lever, these controls do not obstruct movement.

@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power Lever’s On angle to 45 degrees for 67.5 degrees of total travel.
+
 - Keep throttle height extensions perpendicular to the support face, with the tilted assembly on top; increasing height no longer shifts it sideways. Preserve filled mounting geometry and matching collision/selection bounds.
 
 - Add Small Power Lever and Large Power Lever with supplied twin-arm on/off artwork, wall/floor mounts, Industrial Power Lever channel behavior, distinct recipes and padded inventory icons.

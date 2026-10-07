@@ -65,8 +65,8 @@ chestplates; leggings and boots use the role’s standard artwork.
 ## Twin-arm power levers
 
 **Small Power Lever** and **Large Power Lever** are binary controls with two
-arms joined by one grip. Small has a 45-degree throw; Large has a 90-degree
-throw. Right-click toggles Off/On, with a cyan grip indicating On. Both mount
+arms joined by one grip. Small has a 67.5-degree throw (22.5 degrees Off, 45 degrees On);
+Large has a 90-degree throw with arms shortened by 2 pixels. Right-click toggles Off/On, with a cyan grip indicating On. Both mount
 on walls or floors and share the Industrial Power Lever’s redstone output,
 channel configuration and linked switching.
 

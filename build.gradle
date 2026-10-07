@@ -498,3 +498,9 @@ task testSignalUpdateBatch(type: JavaExec) {
     main = 'com.vandorlabs.redstone.SignalUpdateBatchTest'
 }
 check.dependsOn testSignalUpdateBatch
+
+// Supplied twin-arm models must keep moving faces clear of the fixed pivot caps.
+task testTwinPowerLevers(type: Exec) {
+    commandLine 'python3', 'tools/test_twin_power_levers.py'
+}
+check.dependsOn testTwinPowerLevers

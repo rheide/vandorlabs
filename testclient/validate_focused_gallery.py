@@ -27,7 +27,7 @@ if target == 'redstone-dialogs':
                 selected += ['controls_'+str(index)+'_'+str(level)+suffix for level in range(4)]
 
 if target == 'control-icons':
-    selected=['controls_hotbar_empty','controls_hotbar']
+    selected=['controls_hotbar_empty','controls_hotbar','gallery_close_control_small_power_lever','gallery_close_control_large_power_lever']
 assert selected, 'No mapped screenshots match ' + prefix
 log = (source / 'client.log').read_text()
 
@@ -36,7 +36,9 @@ def require(marker):
 
 if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24 xTips=16')
 if target == 'control-icons' or target == 'gallery_close_control_': require('twin-power-lever-models PASS poses=32')
-if target == 'control-icons': require('signal-control-mount-gallery PASS shots=24')
+if target == 'control-icons':
+    require('signal-control-mount-gallery PASS shots=24')
+    require('twin-power-lever-gallery PASS shots=2')
 
 # Actual Dynmap startup complements the structural checks when installed.
 for control in ('thruster_lever','wall_slider','airliner_throttle','fighter_throttle'):
