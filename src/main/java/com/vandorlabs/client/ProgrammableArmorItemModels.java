@@ -19,7 +19,7 @@ public final class ProgrammableArmorItemModels {
                 ModItems.PROGRAMMABLE_CHESTPLATE, ModItems.PROGRAMMABLE_LEGGINGS, ModItems.PROGRAMMABLE_BOOTS}) {
             ModelResourceLocation location=new ModelResourceLocation(item.getRegistryName(),"inventory");
             IBakedModel base=event.getModelRegistry().getObject(location);
-            if(base!=null)event.getModelRegistry().putObject(location,new MaterialModel(base));
+            if(base!=null)event.getModelRegistry().putObject(location,new MaterialModel(base,item.armorType,event));
         }
     }
     private static final class MaterialModel implements IBakedModel {
@@ -27,11 +27,20 @@ public final class ProgrammableArmorItemModels {
         private final Map<Integer,IBakedModel> cache=new LinkedHashMap<Integer,IBakedModel>(16,.75F,true) {
             @Override protected boolean removeEldestEntry(Map.Entry<Integer,IBakedModel> entry) { return size()>128; }
         };
-        MaterialModel(IBakedModel base) { this.base=base; }
+        private final Map<Integer,IBakedModel> roles=new HashMap<>();
+        MaterialModel(IBakedModel base,net.minecraft.inventory.EntityEquipmentSlot slot,ModelBakeEvent event) {
+            this.base=base;
+            for(ArmorTextures.Entry entry:ArmorTextures.ALL)if(entry.slot==slot) {
+                IBakedModel model=event.getModelRegistry().getObject(new ModelResourceLocation(entry.model,"inventory"));
+                if(model==null)throw new IllegalStateException("Armor icon model missing: "+entry.model);
+                roles.put(entry.choice,model);
+            }
+        }
         private final ItemOverrideList overrides=new ItemOverrideList(Collections.emptyList()) {
             @Override public IBakedModel handleItemState(IBakedModel original,ItemStack stack,
                     net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity) {
                 int choice=ItemProgrammableArmor.texture(stack);
+                if(roles.containsKey(choice))return roles.get(choice);
                 return cache.computeIfAbsent(choice,key->new FixedModel(base,Minecraft.getMinecraft().getTextureMapBlocks()
                         .getAtlasSprite(ScreenHousingTextures.texture(key))));
             }

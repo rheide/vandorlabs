@@ -18,12 +18,12 @@ public final class GuiProgrammableArmor extends GuiContainer {
         xSize=Math.min(284,width-16);
         ySize=Math.min(268,height-16);
         super.initGui();
-        textures = new HousingTextureList(guiLeft + 12, guiTop + 38, xSize - 34,
+        textures = HousingTextureList.forArmor(mc.player.getHeldItem(armor.hand),guiLeft + 12, guiTop + 38, xSize - 34,
                 ItemProgrammableArmor.texture(mc.player.getHeldItem(armor.hand))).visibleRows(Math.max(2,(ySize-82)/22));
         buttonList.add(new GuiButton(0, guiLeft + (xSize-100)/2, guiTop + ySize-30, 100, 20, "Done"));
     }
     void select(int choice) {
-        if (!ItemProgrammableArmor.validTexture(choice)) return;
+        if (!ItemProgrammableArmor.validTexture(mc.player.getHeldItem(armor.hand),choice)) return;
         textures.setSelected(choice);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableArmor(inventorySlots.windowId, choice));
     }

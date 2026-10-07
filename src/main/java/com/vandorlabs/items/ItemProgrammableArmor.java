@@ -34,6 +34,12 @@ public final class ItemProgrammableArmor extends ItemArmor {
                 && !category.equals("Doors") && !category.equals("Double Doors");
     }
 
+    /** Enforce native armor slot filtering on both the client and the server. */
+    public static boolean validTexture(ItemStack stack, int choice) {
+        return stack.getItem() instanceof ItemProgrammableArmor
+                && (validTexture(choice) || ArmorTextures.fits(choice, ((ItemProgrammableArmor)stack.getItem()).armorType));
+    }
+
     public static int texture(ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
         return tag != null && tag.hasKey(TEXTURE_TAG, 3) ? tag.getInteger(TEXTURE_TAG) : 0;
@@ -56,7 +62,11 @@ public final class ItemProgrammableArmor extends ItemArmor {
 
     @Override @SideOnly(Side.CLIENT)
     public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String type) {
-        return com.vandorlabs.client.ProgrammableArmorTextures.texture(texture(stack), slot == EntityEquipmentSlot.LEGS);
+        int choice=texture(stack);
+        ArmorTextures.Entry armor=ArmorTextures.entry(choice);
+        if(armor!=null && armor.slot==armorType)return armor.worn;
+        return com.vandorlabs.client.ProgrammableArmorTextures.texture(validTexture(choice)?choice:0,
+                slot == EntityEquipmentSlot.LEGS);
     }
 
     @Override @SideOnly(Side.CLIENT)

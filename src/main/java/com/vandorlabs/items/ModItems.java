@@ -62,6 +62,13 @@ public final class ModItems {
                 new ModelResourceLocation(PROGRAMMABLE_LEGGINGS.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_BOOTS, 0,
                 new ModelResourceLocation(PROGRAMMABLE_BOOTS.getRegistryName(), "inventory"));
+        for (ItemProgrammableArmor armor : new ItemProgrammableArmor[]{PROGRAMMABLE_HELMET,
+                PROGRAMMABLE_CHESTPLATE, PROGRAMMABLE_LEGGINGS, PROGRAMMABLE_BOOTS}) {
+            java.util.List<ResourceLocation> variants = new java.util.ArrayList<>();
+            for (ArmorTextures.Entry entry : ArmorTextures.ALL)
+                if (entry.slot == armor.armorType) variants.add(new ResourceLocation(entry.model));
+            ModelLoader.registerItemVariants(armor, variants.toArray(new ResourceLocation[0]));
+        }
         ResourceLocation off = new ResourceLocation(VandorLabs.MODID, "duplifier_off");
         ResourceLocation on = new ResourceLocation(VandorLabs.MODID, "duplifier_on");
         ResourceLocation multi = new ResourceLocation(VandorLabs.MODID, "duplifier_multi");

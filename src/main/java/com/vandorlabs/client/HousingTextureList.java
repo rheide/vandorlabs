@@ -58,6 +58,20 @@ final class HousingTextureList {
         String category=ScreenHousingTextures.category(choice);
         return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
     }
+    /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */
+    static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
+        List<Option> entries=new ArrayList<>();
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
+            if(ScreenHousingTextures.visible(i) && generalTexture(i)) {
+                int choice=ScreenHousingTextures.choiceAt(i);
+                entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+            }
+        }
+        for(com.vandorlabs.items.ArmorTextures.Entry entry:com.vandorlabs.items.ArmorTextures.ALL)
+            if(com.vandorlabs.items.ItemProgrammableArmor.validTexture(stack,entry.choice))
+                entries.add(new Option(entry.choice,entry.label,"Armor",entry.icon));
+        return new HousingTextureList(x,y,width,selected,8,entries);
+    }
     static HousingTextureList forCategory(String category,int x,int y,int width,int selected) {
         return forCategory(category,x,y,width,selected,8);
     }

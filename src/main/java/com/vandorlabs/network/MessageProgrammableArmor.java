@@ -22,9 +22,9 @@ public final class MessageProgrammableArmor implements IMessage {
     }
     public static boolean apply(EntityPlayerMP player, int window, int choice) {
         if (!(player.openContainer instanceof ContainerProgrammableArmor)
-                || player.openContainer.windowId != window || !ItemProgrammableArmor.validTexture(choice)) return false;
+                || player.openContainer.windowId != window) return false;
         ContainerProgrammableArmor container = (ContainerProgrammableArmor)player.openContainer;
-        if (!container.canInteractWith(player)) return false;
+        if (!container.canInteractWith(player) || !ItemProgrammableArmor.validTexture(container.armor,choice)) return false;
         ItemProgrammableArmor.setTexture(container.armor, choice);
         player.inventory.markDirty();
         player.inventoryContainer.detectAndSendChanges();

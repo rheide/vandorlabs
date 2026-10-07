@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Add seven role armor designs: Bioengineer, Scientist, Hazmat, Repairman, Pilot, Civilian Staff and Spaceship Staff. The armor-only `Armor` category offers seven matching-slot choices per piece, with native worn artwork and matching inventory icons. Existing block materials remain available.
+
 - Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, durability, enchantability and repair behavior. Craft with Programmable Matter Ingots in the vanilla armor patterns.
 - Shift-right-click held armor in creative, or with a Configurizer in the main hand, to choose its material from the default Programmable Block texture list. Each piece saves its choice independently and shows that material when worn and in inventory. Ordinary right-click equips armor.
 
