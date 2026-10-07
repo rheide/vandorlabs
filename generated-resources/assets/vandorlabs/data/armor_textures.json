@@ -1,0 +1,254 @@
+[
+  {
+    "choice": 268435456,
+    "name": "bioengineer_helmet",
+    "slot": "HEAD",
+    "label": "Bioengineer Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/bioengineer_helmet.png",
+    "icon": "vandorlabs:items/armor/bioengineer_helmet",
+    "model": "vandorlabs:armor/bioengineer_helmet"
+  },
+  {
+    "choice": 268435457,
+    "name": "bioengineer_chestpiece",
+    "slot": "CHEST",
+    "label": "Bioengineer Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/bioengineer_chestpiece.png",
+    "icon": "vandorlabs:items/armor/bioengineer_chestpiece",
+    "model": "vandorlabs:armor/bioengineer_chestpiece"
+  },
+  {
+    "choice": 268435458,
+    "name": "bioengineer_leggings",
+    "slot": "LEGS",
+    "label": "Bioengineer Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/bioengineer_leggings.png",
+    "icon": "vandorlabs:items/armor/bioengineer_leggings",
+    "model": "vandorlabs:armor/bioengineer_leggings"
+  },
+  {
+    "choice": 268435459,
+    "name": "bioengineer_boots",
+    "slot": "FEET",
+    "label": "Bioengineer Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/bioengineer_boots.png",
+    "icon": "vandorlabs:items/armor/bioengineer_boots",
+    "model": "vandorlabs:armor/bioengineer_boots"
+  },
+  {
+    "choice": 268435460,
+    "name": "scientist_helmet",
+    "slot": "HEAD",
+    "label": "Scientist Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/scientist_helmet.png",
+    "icon": "vandorlabs:items/armor/scientist_helmet",
+    "model": "vandorlabs:armor/scientist_helmet"
+  },
+  {
+    "choice": 268435461,
+    "name": "scientist_chestpiece",
+    "slot": "CHEST",
+    "label": "Scientist Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/scientist_chestpiece.png",
+    "icon": "vandorlabs:items/armor/scientist_chestpiece",
+    "model": "vandorlabs:armor/scientist_chestpiece"
+  },
+  {
+    "choice": 268435462,
+    "name": "scientist_leggings",
+    "slot": "LEGS",
+    "label": "Scientist Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/scientist_leggings.png",
+    "icon": "vandorlabs:items/armor/scientist_leggings",
+    "model": "vandorlabs:armor/scientist_leggings"
+  },
+  {
+    "choice": 268435463,
+    "name": "scientist_boots",
+    "slot": "FEET",
+    "label": "Scientist Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/scientist_boots.png",
+    "icon": "vandorlabs:items/armor/scientist_boots",
+    "model": "vandorlabs:armor/scientist_boots"
+  },
+  {
+    "choice": 268435464,
+    "name": "hazmat_helmet",
+    "slot": "HEAD",
+    "label": "Hazmat Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/hazmat_helmet.png",
+    "icon": "vandorlabs:items/armor/hazmat_helmet",
+    "model": "vandorlabs:armor/hazmat_helmet"
+  },
+  {
+    "choice": 268435465,
+    "name": "hazmat_chestpiece",
+    "slot": "CHEST",
+    "label": "Hazmat Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/hazmat_chestpiece.png",
+    "icon": "vandorlabs:items/armor/hazmat_chestpiece",
+    "model": "vandorlabs:armor/hazmat_chestpiece"
+  },
+  {
+    "choice": 268435466,
+    "name": "hazmat_leggings",
+    "slot": "LEGS",
+    "label": "Hazmat Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/hazmat_leggings.png",
+    "icon": "vandorlabs:items/armor/hazmat_leggings",
+    "model": "vandorlabs:armor/hazmat_leggings"
+  },
+  {
+    "choice": 268435467,
+    "name": "hazmat_boots",
+    "slot": "FEET",
+    "label": "Hazmat Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/hazmat_boots.png",
+    "icon": "vandorlabs:items/armor/hazmat_boots",
+    "model": "vandorlabs:armor/hazmat_boots"
+  },
+  {
+    "choice": 268435468,
+    "name": "repairman_helmet",
+    "slot": "HEAD",
+    "label": "Repairman Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/repairman_helmet.png",
+    "icon": "vandorlabs:items/armor/repairman_helmet",
+    "model": "vandorlabs:armor/repairman_helmet"
+  },
+  {
+    "choice": 268435469,
+    "name": "repairman_chestpiece",
+    "slot": "CHEST",
+    "label": "Repairman Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/repairman_chestpiece.png",
+    "icon": "vandorlabs:items/armor/repairman_chestpiece",
+    "model": "vandorlabs:armor/repairman_chestpiece"
+  },
+  {
+    "choice": 268435470,
+    "name": "repairman_leggings",
+    "slot": "LEGS",
+    "label": "Repairman Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/repairman_leggings.png",
+    "icon": "vandorlabs:items/armor/repairman_leggings",
+    "model": "vandorlabs:armor/repairman_leggings"
+  },
+  {
+    "choice": 268435471,
+    "name": "repairman_boots",
+    "slot": "FEET",
+    "label": "Repairman Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/repairman_boots.png",
+    "icon": "vandorlabs:items/armor/repairman_boots",
+    "model": "vandorlabs:armor/repairman_boots"
+  },
+  {
+    "choice": 268435472,
+    "name": "pilot_helmet",
+    "slot": "HEAD",
+    "label": "Pilot Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/pilot_helmet.png",
+    "icon": "vandorlabs:items/armor/pilot_helmet",
+    "model": "vandorlabs:armor/pilot_helmet"
+  },
+  {
+    "choice": 268435473,
+    "name": "pilot_chestpiece",
+    "slot": "CHEST",
+    "label": "Pilot Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/pilot_chestpiece.png",
+    "icon": "vandorlabs:items/armor/pilot_chestpiece",
+    "model": "vandorlabs:armor/pilot_chestpiece"
+  },
+  {
+    "choice": 268435474,
+    "name": "pilot_leggings",
+    "slot": "LEGS",
+    "label": "Pilot Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/pilot_leggings.png",
+    "icon": "vandorlabs:items/armor/pilot_leggings",
+    "model": "vandorlabs:armor/pilot_leggings"
+  },
+  {
+    "choice": 268435475,
+    "name": "pilot_boots",
+    "slot": "FEET",
+    "label": "Pilot Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/pilot_boots.png",
+    "icon": "vandorlabs:items/armor/pilot_boots",
+    "model": "vandorlabs:armor/pilot_boots"
+  },
+  {
+    "choice": 268435476,
+    "name": "civilian_staff_helmet",
+    "slot": "HEAD",
+    "label": "Civilian Staff Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/civilian_staff_helmet.png",
+    "icon": "vandorlabs:items/armor/civilian_staff_helmet",
+    "model": "vandorlabs:armor/civilian_staff_helmet"
+  },
+  {
+    "choice": 268435477,
+    "name": "civilian_staff_chestpiece",
+    "slot": "CHEST",
+    "label": "Civilian Staff Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/civilian_staff_chestpiece.png",
+    "icon": "vandorlabs:items/armor/civilian_staff_chestpiece",
+    "model": "vandorlabs:armor/civilian_staff_chestpiece"
+  },
+  {
+    "choice": 268435478,
+    "name": "civilian_staff_leggings",
+    "slot": "LEGS",
+    "label": "Civilian Staff Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/civilian_staff_leggings.png",
+    "icon": "vandorlabs:items/armor/civilian_staff_leggings",
+    "model": "vandorlabs:armor/civilian_staff_leggings"
+  },
+  {
+    "choice": 268435479,
+    "name": "civilian_staff_boots",
+    "slot": "FEET",
+    "label": "Civilian Staff Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/civilian_staff_boots.png",
+    "icon": "vandorlabs:items/armor/civilian_staff_boots",
+    "model": "vandorlabs:armor/civilian_staff_boots"
+  },
+  {
+    "choice": 268435480,
+    "name": "spaceship_staff_helmet",
+    "slot": "HEAD",
+    "label": "Spaceship Staff Helmet",
+    "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_helmet.png",
+    "icon": "vandorlabs:items/armor/spaceship_staff_helmet",
+    "model": "vandorlabs:armor/spaceship_staff_helmet"
+  },
+  {
+    "choice": 268435481,
+    "name": "spaceship_staff_chestpiece",
+    "slot": "CHEST",
+    "label": "Spaceship Staff Chestplate",
+    "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_chestpiece.png",
+    "icon": "vandorlabs:items/armor/spaceship_staff_chestpiece",
+    "model": "vandorlabs:armor/spaceship_staff_chestpiece"
+  },
+  {
+    "choice": 268435482,
+    "name": "spaceship_staff_leggings",
+    "slot": "LEGS",
+    "label": "Spaceship Staff Leggings",
+    "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_leggings.png",
+    "icon": "vandorlabs:items/armor/spaceship_staff_leggings",
+    "model": "vandorlabs:armor/spaceship_staff_leggings"
+  },
+  {
+    "choice": 268435483,
+    "name": "spaceship_staff_boots",
+    "slot": "FEET",
+    "label": "Spaceship Staff Boots",
+    "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_boots.png",
+    "icon": "vandorlabs:items/armor/spaceship_staff_boots",
+    "model": "vandorlabs:armor/spaceship_staff_boots"
+  }
+]

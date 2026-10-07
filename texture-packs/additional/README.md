@@ -35,3 +35,16 @@ preserve existing saved material indices.
 Storage PNGs remain 140×140 on disk. The shared atlas loader pads them internally
 with edge pixels and bounds their UVs to the artwork, supporting Minecraft
 mipmaps without stretching or changing the exported files.
+
+## Role armor
+
+The MCTrek role armor pack supplies seven vanilla-layout sets: Bioengineer,
+Scientist, Hazmat, Repairman, Pilot, Civilian Staff and Spaceship Staff.
+The 28 separate 64×32 worn atlases and 28 matching 16×16 inventory icons are
+bundled without changing their PNG bytes. Combined layers and authoring
+previews are not runtime assets.
+
+`tools/import_role_armor.py ARCHIVE.zip` verifies the source checksums and
+imports the native images, padded item models and armor catalog. Existing
+catalog choice IDs are retained on reimport. The separate armor catalog keeps
+these slot-specific designs out of block and screen artwork lists.
