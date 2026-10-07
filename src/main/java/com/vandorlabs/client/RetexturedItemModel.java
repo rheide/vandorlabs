@@ -7,7 +7,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.EnumFacing;
 
 /** Reuses the configured shape without generating a JSON model for every material. */
-public final class RetexturedItemModel implements IBakedModel {
+public class RetexturedItemModel implements IBakedModel {
     private final IBakedModel base;
     private final TextureAtlasSprite sprite;
     private final boolean lightOnly;

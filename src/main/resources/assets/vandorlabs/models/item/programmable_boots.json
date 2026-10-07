@@ -1,0 +1,198 @@
+{
+  "textures": {
+    "material": "vandorlabs:blocks/dark_wall_panel",
+    "particle": "#material"
+  },
+  "elements": [
+    {
+      "from": [
+        3,
+        4,
+        7.5
+      ],
+      "to": [
+        6,
+        10,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#material"
+        },
+        "south": {
+          "texture": "#material"
+        },
+        "east": {
+          "texture": "#material"
+        },
+        "west": {
+          "texture": "#material"
+        },
+        "up": {
+          "texture": "#material"
+        },
+        "down": {
+          "texture": "#material"
+        }
+      }
+    },
+    {
+      "from": [
+        10,
+        4,
+        7.5
+      ],
+      "to": [
+        13,
+        10,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#material"
+        },
+        "south": {
+          "texture": "#material"
+        },
+        "east": {
+          "texture": "#material"
+        },
+        "west": {
+          "texture": "#material"
+        },
+        "up": {
+          "texture": "#material"
+        },
+        "down": {
+          "texture": "#material"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        3,
+        7.5
+      ],
+      "to": [
+        6,
+        5,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#material"
+        },
+        "south": {
+          "texture": "#material"
+        },
+        "east": {
+          "texture": "#material"
+        },
+        "west": {
+          "texture": "#material"
+        },
+        "up": {
+          "texture": "#material"
+        },
+        "down": {
+          "texture": "#material"
+        }
+      }
+    },
+    {
+      "from": [
+        10,
+        3,
+        7.5
+      ],
+      "to": [
+        14,
+        5,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#material"
+        },
+        "south": {
+          "texture": "#material"
+        },
+        "east": {
+          "texture": "#material"
+        },
+        "west": {
+          "texture": "#material"
+        },
+        "up": {
+          "texture": "#material"
+        },
+        "down": {
+          "texture": "#material"
+        }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.85,
+        0.85,
+        0.85
+      ]
+    },
+    "ground": {
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ]
+    },
+    "fixed": {
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    }
+  }
+}

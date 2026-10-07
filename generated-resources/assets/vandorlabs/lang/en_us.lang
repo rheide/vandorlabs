@@ -493,3 +493,9 @@ tile.vandorlabs.thruster_lever.name=Thruster Lever
 tile.vandorlabs.wall_slider.name=Wall Slider
 tile.vandorlabs.airliner_throttle.name=Airliner Throttle
 tile.vandorlabs.fighter_throttle.name=Fighter Throttle
+
+item.vandorlabs.programmable_helmet.name=Programmable Helmet
+item.vandorlabs.programmable_chestplate.name=Programmable Chestplate
+item.vandorlabs.programmable_leggings.name=Programmable Leggings
+item.vandorlabs.programmable_boots.name=Programmable Boots
+item.vandorlabs.programmable_armor.hint=Shift-right-click to select armor texture (creative or Configurizer).

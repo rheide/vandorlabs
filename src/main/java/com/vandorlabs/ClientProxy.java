@@ -24,6 +24,8 @@ public class ClientProxy extends CommonProxy {
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.DiagonalWallMeshCache.Events());
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorTextures.Events());
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorItemModels());
         OBJLoader.INSTANCE.addDomain(VandorLabs.MODID);
         net.minecraftforge.client.model.ModelLoaderRegistry.registerLoader(new com.vandorlabs.client.UnifiedItemModels());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.SpaceDoorTextures());

@@ -11,6 +11,8 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
+**1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats and selectable block materials. See the [armor guide](docs/programmable-armor.md).
+
 **1.6:** Redstone channels carry levels 0–15. Use signal-driven programmable lights and propulsion brightness, bounded slider rows on screens and inputs, and exact-level or four-band Trigger artwork. Add four-position Thruster Levers, Wall Sliders, Airliner Throttles and Fighter Throttles. See the [1.6 guide and live demonstrations](docs/gallery/version-1.6.md).
 
 **1.5:** Add permanently double 3×3 doors, White Glass leaves with handles, eight light designs, screen row ordering and curved ramp profiles. Compatible opaque doors share Forge's renderer buffer. See the [1.5 highlights and measured door comparison](docs/gallery/version-1.5.md).

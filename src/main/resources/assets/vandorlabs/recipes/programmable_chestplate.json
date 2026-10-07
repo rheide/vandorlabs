@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    "III",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:programmable_chestplate"
+  }
+}

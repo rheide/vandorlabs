@@ -2,7 +2,8 @@
 
 ## 1.7
 
-- Begin version 1.7.
+- Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, durability, enchantability and repair behavior. Craft with Programmable Matter Ingots in the vanilla armor patterns.
+- Shift-right-click held armor in creative, or with a Configurizer in the main hand, to choose its material from the default Programmable Block texture list. Each piece saves its choice independently and shows that material when worn and in inventory. Ordinary right-click equips armor.
 
 ## 1.6
 

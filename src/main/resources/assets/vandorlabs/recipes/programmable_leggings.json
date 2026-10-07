@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "I I",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:programmable_leggings"
+  }
+}

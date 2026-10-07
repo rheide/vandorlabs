@@ -25,6 +25,11 @@ public final class ModItems {
     public static final Item CONFIGURIZER = new ItemConfigurizer();
     public static final Item DUPLIFIER = new ItemDuplifier();
 
+    public static final ItemProgrammableArmor PROGRAMMABLE_HELMET = new ItemProgrammableArmor("programmable_helmet", net.minecraft.inventory.EntityEquipmentSlot.HEAD);
+    public static final ItemProgrammableArmor PROGRAMMABLE_CHESTPLATE = new ItemProgrammableArmor("programmable_chestplate", net.minecraft.inventory.EntityEquipmentSlot.CHEST);
+    public static final ItemProgrammableArmor PROGRAMMABLE_LEGGINGS = new ItemProgrammableArmor("programmable_leggings", net.minecraft.inventory.EntityEquipmentSlot.LEGS);
+    public static final ItemProgrammableArmor PROGRAMMABLE_BOOTS = new ItemProgrammableArmor("programmable_boots", net.minecraft.inventory.EntityEquipmentSlot.FEET);
+
     private ModItems() { }
 
     @SubscribeEvent
@@ -33,6 +38,11 @@ public final class ModItems {
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
         event.getRegistry().register(CONFIGURIZER);
         event.getRegistry().register(DUPLIFIER);
+        event.getRegistry().register(PROGRAMMABLE_HELMET);
+        event.getRegistry().register(PROGRAMMABLE_CHESTPLATE);
+        event.getRegistry().register(PROGRAMMABLE_LEGGINGS);
+        event.getRegistry().register(PROGRAMMABLE_BOOTS);
+
     }
 
     @SubscribeEvent
@@ -44,6 +54,14 @@ public final class ModItems {
                 new ModelResourceLocation(INDUSTRIAL_ALLOY_INGOT.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(CONFIGURIZER, 0,
                 new ModelResourceLocation(CONFIGURIZER.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_HELMET, 0,
+                new ModelResourceLocation(PROGRAMMABLE_HELMET.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_CHESTPLATE, 0,
+                new ModelResourceLocation(PROGRAMMABLE_CHESTPLATE.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_LEGGINGS, 0,
+                new ModelResourceLocation(PROGRAMMABLE_LEGGINGS.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_BOOTS, 0,
+                new ModelResourceLocation(PROGRAMMABLE_BOOTS.getRegistryName(), "inventory"));
         ResourceLocation off = new ResourceLocation(VandorLabs.MODID, "duplifier_off");
         ResourceLocation on = new ResourceLocation(VandorLabs.MODID, "duplifier_on");
         ResourceLocation multi = new ResourceLocation(VandorLabs.MODID, "duplifier_multi");

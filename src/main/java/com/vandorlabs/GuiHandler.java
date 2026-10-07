@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
 
+    public static final int GUI_PROGRAMMABLE_ARMOR = 13;
     public static final int GUI_REDSTONE_SCREEN=11,GUI_REDSTONE_SCREEN_SECONDARY=12;
     public static final int GUI_ANIMATED_SCREEN_SELECTOR = 0;
     public static final int GUI_RAMP_CONTROLLER = 1;
@@ -53,6 +54,12 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_PROGRAMMABLE_ARMOR && x >= 0 && x < net.minecraft.util.EnumHand.values().length) {
+            com.vandorlabs.container.ContainerProgrammableArmor armor = new com.vandorlabs.container.ContainerProgrammableArmor(player, net.minecraft.util.EnumHand.values()[x]);
+            if (armor.canInteractWith(player)) return armor;
+            return null;
+        }
+
         if((ID==GUI_REDSTONE_SCREEN || ID==GUI_REDSTONE_SCREEN_SECONDARY) && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             int slot=ID==GUI_REDSTONE_SCREEN?0:1;
@@ -124,6 +131,12 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if (ID == GUI_PROGRAMMABLE_ARMOR && x >= 0 && x < net.minecraft.util.EnumHand.values().length) {
+            com.vandorlabs.container.ContainerProgrammableArmor armor = new com.vandorlabs.container.ContainerProgrammableArmor(player, net.minecraft.util.EnumHand.values()[x]);
+            if (armor.canInteractWith(player)) return new com.vandorlabs.client.GuiProgrammableArmor(armor);
+            return null;
+        }
+
         if((ID==GUI_REDSTONE_SCREEN || ID==GUI_REDSTONE_SCREEN_SECONDARY) && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             int slot=ID==GUI_REDSTONE_SCREEN?0:1;
