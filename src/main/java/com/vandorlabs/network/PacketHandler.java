@@ -35,5 +35,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageSideTexture.Handler.class,MessageSideTexture.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageRedstoneScreen.Handler.class,MessageRedstoneScreen.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableArmor.Handler.class, MessageProgrammableArmor.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageSampleArmorTexture.Handler.class, MessageSampleArmorTexture.class, id++, Side.SERVER);
     }
 }

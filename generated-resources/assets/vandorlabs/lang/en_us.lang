@@ -498,4 +498,6 @@ item.vandorlabs.programmable_helmet.name=Programmable Helmet
 item.vandorlabs.programmable_chestplate.name=Programmable Chestplate
 item.vandorlabs.programmable_leggings.name=Programmable Leggings
 item.vandorlabs.programmable_boots.name=Programmable Boots
-item.vandorlabs.programmable_armor.hint=Shift-right-click to select armor texture (creative or Configurizer).
+item.vandorlabs.programmable_armor.hint=Shift-right-click a block to copy its face texture. In air: texture picker (creative or Configurizer).
+item.vandorlabs.programmable_armor.sampled=Armor texture: %s
+item.vandorlabs.programmable_armor.no_sample=No block texture found on this face.

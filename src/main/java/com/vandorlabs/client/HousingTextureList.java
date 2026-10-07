@@ -70,6 +70,12 @@ final class HousingTextureList {
         for(com.vandorlabs.items.ArmorTextures.Entry entry:com.vandorlabs.items.ArmorTextures.ALL)
             if(com.vandorlabs.items.ItemProgrammableArmor.validTexture(stack,entry.choice))
                 entries.add(new Option(entry.choice,entry.label,"Armor",entry.icon));
+        String sample=com.vandorlabs.items.ItemProgrammableArmor.sample(stack);
+        if(sample!=null) {
+            net.minecraft.util.ResourceLocation sprite=new net.minecraft.util.ResourceLocation(sample);
+            entries.add(new Option(com.vandorlabs.items.ItemProgrammableArmor.SAMPLE_CHOICE,
+                    sample,"Sampled",sprite.getResourceDomain()+":textures/"+sprite.getResourcePath()+".png"));
+        }
         return new HousingTextureList(x,y,width,selected,8,entries);
     }
     static HousingTextureList forCategory(String category,int x,int y,int width,int selected) {

@@ -11,18 +11,21 @@ import java.util.*;
 
 /** Center one aspect-preserving material image on each visible vanilla armor face. */
 public final class ProgrammableArmorTextures {
-    private static final Map<Long, ResourceLocation> CACHE = new LinkedHashMap<>(16, .75F, true);
+    private static final Map<String, ResourceLocation> CACHE = new LinkedHashMap<>(16, .75F, true);
     private static final int LIMIT = 128;
     private static final BufferedImage[] MASKS = new BufferedImage[2];
     private ProgrammableArmorTextures() { }
 
     public static String texture(int choice, boolean leggings) {
+        return texture(ScreenHousingTextures.texture(choice),leggings);
+    }
+    public static String texture(String spriteName,boolean leggings) {
         int layer = leggings ? 1 : 0;
-        long key = ((long)choice << 1) | layer;
+        String key = spriteName+"/"+layer;
         ResourceLocation cached = CACHE.get(key);
         if (cached != null) return cached.toString();
         Minecraft mc = Minecraft.getMinecraft();
-        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
+        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(spriteName);
         if (sprite.getFrameCount() == 0) return "minecraft:textures/models/armor/diamond_layer_"+(layer+1)+".png";
         int[] pixels = sprite.getFrameTextureData(0)[0];
         int w = sprite.getIconWidth(), h = sprite.getIconHeight();

@@ -74,6 +74,7 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = armor ]; then
+        grep -q 'armor-world-sampling PASS cases=7' "$RUN_OUT/client.log"
         grep -q 'armor-material-centering PASS' "$RUN_OUT/client.log"
         grep -q 'programmable-armor PASS' "$RUN_OUT/client.log"
         grep -q 'role-armor PASS choices=32 icons=32 sets=8' "$RUN_OUT/client.log"

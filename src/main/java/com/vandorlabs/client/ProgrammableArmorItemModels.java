@@ -24,8 +24,8 @@ public final class ProgrammableArmorItemModels {
     }
     private static final class MaterialModel implements IBakedModel {
         private final IBakedModel base;
-        private final Map<Integer,IBakedModel> cache=new LinkedHashMap<Integer,IBakedModel>(16,.75F,true) {
-            @Override protected boolean removeEldestEntry(Map.Entry<Integer,IBakedModel> entry) { return size()>128; }
+        private final Map<String,IBakedModel> cache=new LinkedHashMap<String,IBakedModel>(16,.75F,true) {
+            @Override protected boolean removeEldestEntry(Map.Entry<String,IBakedModel> entry) { return size()>128; }
         };
         private final Map<Integer,IBakedModel> roles=new HashMap<>();
         MaterialModel(IBakedModel base,net.minecraft.inventory.EntityEquipmentSlot slot,ModelBakeEvent event) {
@@ -40,9 +40,11 @@ public final class ProgrammableArmorItemModels {
             @Override public IBakedModel handleItemState(IBakedModel original,ItemStack stack,
                     net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity) {
                 int choice=ItemProgrammableArmor.texture(stack);
-                if(roles.containsKey(choice))return roles.get(choice);
-                return cache.computeIfAbsent(choice,key->new FixedModel(base,Minecraft.getMinecraft().getTextureMapBlocks()
-                        .getAtlasSprite(ScreenHousingTextures.texture(key))));
+                String sample=ItemProgrammableArmor.sample(stack);
+                if(sample==null && roles.containsKey(choice))return roles.get(choice);
+                String sprite=sample==null?ScreenHousingTextures.texture(choice):sample;
+                return cache.computeIfAbsent(sprite,key->new FixedModel(base,Minecraft.getMinecraft().getTextureMapBlocks()
+                        .getAtlasSprite(key)));
             }
         };
         @Override public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed) { return base.getQuads(state,side,seed); }

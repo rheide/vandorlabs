@@ -36,6 +36,7 @@ final class RoleArmorRuntimeChecks {
     static void tick(Minecraft mc,File output) {
         try {
             if(pending!=null) {if(!pending.isDone())return;pending.get();pending=null;}
+            if(stage==9) {ArmorSamplingRuntimeChecks.tick(mc);return;}
             if(stage==0) {
                 choices=choices(ITEMS[piece]);design=0;
                 require(choices.size()==8,"eight role choices per piece");
@@ -129,7 +130,7 @@ final class RoleArmorRuntimeChecks {
                 shot(mc,output,"armor_stand_set_"+choices(ITEMS[0]).get(preview).name.replace("_helmet",""));
                 if(++preview<choices(ITEMS[0]).size()) {stage=7;ticks=0;return;}
                 System.out.println("[vandorlabs][reprolab] role-armor PASS choices=32 icons=32 sets=8 (Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
-                stage=9;mc.shutdown();
+                stage=9;
             }
         } catch(Exception e) {throw new IllegalStateException("Role armor check piece="+piece+" design="+design+" stage="+stage,e);}
     }

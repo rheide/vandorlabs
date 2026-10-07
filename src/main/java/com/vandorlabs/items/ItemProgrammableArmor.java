@@ -17,6 +17,23 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 /** Diamond armor behavior with an independent, persistent programmable material. */
 public final class ItemProgrammableArmor extends ItemArmor {
     public static final String TEXTURE_TAG = "ArmorTexture";
+    public static final String SAMPLE_TAG = "ArmorSampleTexture";
+    public static final int SAMPLE_CHOICE = 0x7FFFFFFE;
+    public static boolean validSample(String sprite) {
+        return sprite!=null && sprite.length()<=256 && sprite.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")
+                && !sprite.contains("..") && !sprite.endsWith(":missingno");
+    }
+    public static String sample(ItemStack stack) {
+        NBTTagCompound tag=stack.getTagCompound();
+        String value=tag==null?null:tag.getString(SAMPLE_TAG);
+        return validSample(value)?value:null;
+    }
+    public static void setSample(ItemStack stack,String sprite) {
+        if(!validSample(sprite))throw new IllegalArgumentException("Invalid armor sprite");
+        NBTTagCompound tag=stack.getTagCompound();
+        if(tag==null) {tag=new NBTTagCompound();stack.setTagCompound(tag);}
+        tag.setString(SAMPLE_TAG,sprite);
+    }
 
     public ItemProgrammableArmor(String name, EntityEquipmentSlot slot) {
         super(ArmorMaterial.DIAMOND, 0, slot);
@@ -41,6 +58,7 @@ public final class ItemProgrammableArmor extends ItemArmor {
     }
 
     public static int texture(ItemStack stack) {
+        if(sample(stack)!=null)return SAMPLE_CHOICE;
         NBTTagCompound tag = stack.getTagCompound();
         if(tag != null && tag.hasKey(TEXTURE_TAG, 3))return tag.getInteger(TEXTURE_TAG);
         return stack.getItem() instanceof ItemProgrammableArmor
@@ -50,6 +68,7 @@ public final class ItemProgrammableArmor extends ItemArmor {
     public static void setTexture(ItemStack stack, int choice) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) { tag = new NBTTagCompound(); stack.setTagCompound(tag); }
+        tag.removeTag(SAMPLE_TAG);
         tag.setInteger(TEXTURE_TAG, choice);
     }
 
@@ -64,6 +83,8 @@ public final class ItemProgrammableArmor extends ItemArmor {
 
     @Override @SideOnly(Side.CLIENT)
     public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String type) {
+        String sampled=sample(stack);
+        if(sampled!=null)return com.vandorlabs.client.ProgrammableArmorTextures.texture(sampled,slot==EntityEquipmentSlot.LEGS);
         int choice=texture(stack);
         ArmorTextures.Entry armor=ArmorTextures.entry(choice);
         if(armor!=null && armor.slot==armorType)return armor.worn;

@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Shift-right-click a block face with programmable armor to copy its displayed texture in creative or survival, including programmable face overrides and storage top/side/front artwork. Samples persist on the item and appear in its texture picker.
+
 - Add the Security Rescue armor set with matching slot-filtered designs, inventory icons and an armor stand gallery image.
 - Center block-material artwork on each visible armor face instead of repeating tiles across the armor atlas, preserving texture proportions and vanilla cutouts.
 - Default unconfigured programmable armor to its matching Civilian Staff design; preserve saved choices. Add armor stand images of all eight full sets to the gallery.

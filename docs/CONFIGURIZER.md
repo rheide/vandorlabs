@@ -17,3 +17,9 @@ I
 
 The Configurizer edits the clicked block. To copy settings between blocks,
 use the [Duplifier](DUPLIFIER.md).
+
+For [programmable armor](programmable-armor.md), hold the Configurizer in the
+main hand and armor in the offhand, then shift-right-click into the air to open
+the armor picker in survival. Shift-right-clicking a block in this arrangement
+copies its displayed face texture to the armor. Armor held directly can also
+sample a block face in either game mode without the tool.
