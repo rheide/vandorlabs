@@ -74,11 +74,16 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = armor ]; then
+        grep -q 'armor-material-centering PASS' "$RUN_OUT/client.log"
         grep -q 'programmable-armor PASS' "$RUN_OUT/client.log"
         grep -q 'role-armor PASS choices=28 icons=28 sets=7' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/shot_armor_picker.png"
         test -s "$RUN_OUT/shot_armor_worn_and_icons.png"
+        for role in bioengineer scientist hazmat repairman pilot civilian_staff spaceship_staff; do
+            test -s "$RUN_OUT/shot_armor_stand_set_$role.png"
+        done
         echo "Live armor checks passed: $RUN_OUT"
+        echo "Live-client artifacts: $RUN_OUT"
         exit 0
     fi
     python3 testclient/validate_focused_gallery.py "$RUN_OUT" "$PREFIX" "$TARGET"

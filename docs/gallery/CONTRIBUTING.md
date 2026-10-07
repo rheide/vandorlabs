@@ -9,6 +9,10 @@ For a small trapdoor change, capture and validate just the affected scenes:
 testclient/generate_gallery.sh --focus trapdoors
 ```
 
+`--focus armor` validates all four programmable armor pieces, their default Civilian Staff
+designs, texture selection and inventory icons, and captures all seven full role
+sets on armor stands. Its captures export to `docs/images/gallery/armor`.
+
 `--focus storage` captures the storage sets, inventory, material picker and hotbar icons and
 runs the storage inventory and rendering contracts.
 

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.*;
@@ -41,8 +42,13 @@ final class RoleArmorRuntimeChecks {
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP player=owner(mc);player.setGameType(GameType.CREATIVE);
                     player.inventory.currentItem=0;
-                    ItemStack stack=new ItemStack(ITEMS[piece]);stack.setItemDamage(23);
+                    ItemStack stack=new ItemStack(ITEMS[piece]);
+                    require(ItemProgrammableArmor.texture(stack)==ArmorTextures.defaultChoice(ITEMS[piece].armorType),"fresh armor defaults to matching Civilian Staff");
+                    ItemProgrammableArmor.setTexture(stack,0);
+                    require(ItemProgrammableArmor.texture(stack)==0,"explicit saved block choice preserved");
+                    stack.setItemDamage(23);
                     NBTTagCompound tag=new NBTTagCompound();tag.setString("RoleTest","preserve");stack.setTagCompound(tag);
+                    ItemProgrammableArmor.setTexture(stack,0);
                     player.setHeldItem(EnumHand.MAIN_HAND,stack);
                     player.setItemStackToSlot(ITEMS[piece].armorType,ItemStack.EMPTY);
                     player.sendContainerToPlayer(player.inventoryContainer);
@@ -120,9 +126,9 @@ final class RoleArmorRuntimeChecks {
             }
             if(stage==8) {
                 for(ItemProgrammableArmor item:ITEMS)require(ItemProgrammableArmor.texture(mc.player.getItemStackFromSlot(item.armorType))==choices(item).get(preview).choice,"complete role preview synchronized");
-                shot(mc,output,"armor_role_set_"+choices(ITEMS[0]).get(preview).name.replace("_helmet",""));
+                shot(mc,output,"armor_stand_set_"+choices(ITEMS[0]).get(preview).name.replace("_helmet",""));
                 if(++preview<7) {stage=7;ticks=0;return;}
-                System.out.println("[vandorlabs][reprolab] role-armor PASS choices=28 icons=28 sets=7 (slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip and padded icons)");
+                System.out.println("[vandorlabs][reprolab] role-armor PASS choices=28 icons=28 sets=7 (Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
                 stage=9;mc.shutdown();
             }
         } catch(Exception e) {throw new IllegalStateException("Role armor check piece="+piece+" design="+design+" stage="+stage,e);}
@@ -173,12 +179,20 @@ final class RoleArmorRuntimeChecks {
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_"+name+".png"));
     }
     private static final class Preview extends GuiScreen {
+        private EntityArmorStand stand;
+        @Override public void initGui() {
+            stand=new EntityArmorStand(mc.world);
+            NBTTagCompound tag=new NBTTagCompound();tag.setBoolean("ShowArms",true);
+            stand.readEntityFromNBT(tag);
+        }
         @Override public boolean doesGuiPauseGame() {return false;}
         @Override public void drawScreen(int x,int y,float partial) {
             drawRect(0,0,width,height,0xFF253441);
             String name=choices(ITEMS[0]).get(Math.min(preview,6)).label.replace(" Helmet","");
             drawCenteredString(fontRenderer,name,width/2,16,0xFFFFFF);
-            GuiInventory.drawEntityOnScreen(width/2,height-55,65,0,0,mc.player);
+            for(ItemProgrammableArmor item:ITEMS)
+                stand.setItemStackToSlot(item.armorType,mc.player.getItemStackFromSlot(item.armorType).copy());
+            GuiInventory.drawEntityOnScreen(width/2,height-55,65,0,0,stand);
             RenderHelper.enableGUIStandardItemLighting();
             for(int i=0;i<ITEMS.length;i++) {
                 int xx=width/2-44+i*24,yy=height-35;

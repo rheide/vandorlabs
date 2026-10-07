@@ -144,6 +144,16 @@ SHOTS["programmable_face_overrides_gui"] = "v1.1/face-overrides-config.png"
 SHOTS["programmable_diagonal_width_gui"] = "v1.1/diagonal-config.png"
 
 
+# Armor has its own live suite; the main full-gallery run does not capture it.
+FOCUSED_SHOTS = {
+    "armor_stand_set_" + role: "armor/" + role.replace("_", "-") + ".png"
+    for role in ("bioengineer", "scientist", "hazmat", "repairman", "pilot",
+                 "civilian_staff", "spaceship_staff")
+}
+
+FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Incrementally export available gallery captures; preserve unrelated images.")
     parser.add_argument("source", type=Path)
@@ -153,10 +163,11 @@ def main():
     args = parser.parse_args()
     if args.full and (args.prefix or args.only):
         parser.error("--full cannot be combined with a selection")
-    unknown = set(args.only) - SHOTS.keys()
+    mapped = SHOTS if args.full else {**SHOTS, **FOCUSED_SHOTS}
+    unknown = set(args.only) - mapped.keys()
     if unknown:
         parser.error("Unknown shots: " + ", ".join(sorted(unknown)))
-    selected = {name: dest for name, dest in SHOTS.items()
+    selected = {name: dest for name, dest in mapped.items()
                 if not (args.prefix or args.only) or name in args.only
                 or any(name.startswith(prefix) for prefix in args.prefix)}
     if not selected:

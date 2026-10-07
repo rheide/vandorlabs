@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Center block-material artwork on each visible armor face instead of repeating tiles across the armor atlas, preserving texture proportions and vanilla cutouts.
+- Default unconfigured programmable armor to its matching Civilian Staff design; preserve saved choices. Add armor stand images of all seven full sets to the gallery.
 - Add seven role armor designs: Bioengineer, Scientist, Hazmat, Repairman, Pilot, Civilian Staff and Spaceship Staff. The armor-only `Armor` category offers seven matching-slot choices per piece, with native worn artwork and matching inventory icons. Existing block materials remain available.
 
 - Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, durability, enchantability and repair behavior. Craft with Programmable Matter Ingots in the vanilla armor patterns.
