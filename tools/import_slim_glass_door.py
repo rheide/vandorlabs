@@ -35,10 +35,15 @@ def generate(source):
                 for paired in [False,True]:
                     x0=1 if framed else 0;x1=16 if paired or not framed else 15;y0,y1=(1,31) if framed else (0,32)
                     z0,z1=(7,9) if sliding else (12.24,14.24)
-                    leaf=[m.plate(x0,ya,x1,yb,'leaf',[x0,(32-yb)/2,x1,(32-ya)/2],z0,z1) for ya,yb in [(y0,16),(16,y1)]]
+                    # Fit the entire artwork into the frame opening instead of cropping its
+                    # outer rails. Keep the existing slab bounds and hinge pivot unchanged.
+                    leaf=[m.plate(x0,ya,x1,yb,'leaf',[0,v0,16,v1],z0,z1)
+                          for ya,yb,v0,v1 in [(y0,16,8,16),(16,y1,0,8)]]
                     glass=[]
                     for xa,ya,xb,yb in panes:
-                        xa,xb=max(x0,xa),min(x1,xb);ya,yb=max(y0,ya),min(y1,yb)
+                        # The glazing must follow the same inset as the leaf artwork.
+                        xa,xb=x0+xa*(x1-x0)/16,x0+xb*(x1-x0)/16
+                        ya,yb=y0+ya*(y1-y0)/32,y0+yb*(y1-y0)/32
                         if xa>=xb or ya>=yb:continue
                         # Repeat the existing square glass material once per world block.
                         cuts=sorted({ya,yb,*[v for v in [16] if ya<v<yb]})

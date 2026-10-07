@@ -2,7 +2,7 @@
 
 ## 1.7
 
-- Update Slim Glass regular and large door artwork with wider gunmetal outer rails at Small and Medium resolutions, retaining the translucent glass reflection layer.
+- Fit Slim Glass artwork and glazing inside framed door openings, preserving the original thin rails instead of cropping them beneath the outer frame. Bare doors keep their full-size artwork.
 
 - Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Toggle Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Toggle Switch’s top face fully cyan while On.
 

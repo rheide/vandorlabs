@@ -97,7 +97,9 @@ Pick-block, drops and the Duplifier’s **Signal Levels** option preserve type.
 
 **Slim Glass** is available in the texture picker for regular and Large
 Programmable Doors. The **Small/Large** artwork choices use the supplied
-128×256 and 256×512 textures. Wide gunmetal outer rails surround two clear openings, separated by a central strut and cyan accent.
+128×256 and 256×512 textures. Thin gunmetal rails surround two clear openings, separated by a central strut and cyan accent.
+Framed doors fit the complete artwork into the frame opening with a one-pixel inset
+at its outer edges, so the leaf rails remain visible.
 Both openings use the same subtle translucent
 reflection material as Programmable Glass, behind the cutout frame.
 See the [door gallery](doors.md) for regular and large examples.
