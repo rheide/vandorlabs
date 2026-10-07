@@ -4,6 +4,10 @@ Programmable Helmet, Chestplate, Leggings and Boots use vanilla diamond armor pr
 
 Hold a piece and **shift-right-click** to open its categorized texture dialog. Configuration is available in creative mode, or in survival by holding a Configurizer in the main hand and the armor in the off hand. Select any material in the default Programmable Block texture list, then click **Done** or press Escape. Ordinary right-click equips the armor into its matching empty slot.
 
-Each piece remembers its own material when equipped, dropped, moved between inventories or saved. Selecting a material preserves damage, enchantments and names. Armor starts with Dark Wall Panel. The selected artwork covers the vanilla armor shape and the padded inventory silhouette. Artwork uses its first frame and is opaque on armor; this does not add light emission. Resource packs also affect armor materials.
+Each piece remembers its own material when equipped, dropped, moved between inventories or saved. Selecting a material preserves damage, enchantments and names. Armor starts with Dark Wall Panel. The selected artwork covers the armor and the padded inventory silhouette. Worn armor retains the vanilla diamond helmet’s face opening and other cutouts. Artwork uses its first frame and is opaque on armor; this does not add light emission. Resource packs also affect armor materials.
 
 Remove equipped armor and hold it to change its material. Changes apply to that piece only.
+
+![Programmable armor with independent materials and padded item icons](images/programmable-armor.png)
+
+![The categorized armor texture picker](images/programmable-armor-picker.png)

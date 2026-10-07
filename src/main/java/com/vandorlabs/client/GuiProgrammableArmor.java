@@ -15,10 +15,12 @@ public final class GuiProgrammableArmor extends GuiContainer {
         super(armor); this.armor = armor; xSize = 284; ySize = 268;
     }
     @Override public void initGui() {
+        xSize=Math.min(284,width-16);
+        ySize=Math.min(268,height-16);
         super.initGui();
-        textures = new HousingTextureList(guiLeft + 12, guiTop + 38, 250,
-                ItemProgrammableArmor.texture(armor.armor)).visibleRows(8);
-        buttonList.add(new GuiButton(0, guiLeft + 92, guiTop + 238, 100, 20, "Done"));
+        textures = new HousingTextureList(guiLeft + 12, guiTop + 38, xSize - 34,
+                ItemProgrammableArmor.texture(mc.player.getHeldItem(armor.hand))).visibleRows(Math.max(2,(ySize-82)/22));
+        buttonList.add(new GuiButton(0, guiLeft + (xSize-100)/2, guiTop + ySize-30, 100, 20, "Done"));
     }
     void select(int choice) {
         if (!ItemProgrammableArmor.validTexture(choice)) return;
@@ -42,7 +44,10 @@ public final class GuiProgrammableArmor extends GuiContainer {
         fontRenderer.drawString(armor.armor.getDisplayName(),guiLeft+12,guiTop+12,0xFFFFFF);
         fontRenderer.drawString("Armor texture",guiLeft+12,guiTop+26,0xCCDDEE);
         textures.draw(fontRenderer,x,y);
-        itemRender.renderItemAndEffectIntoGUI(armor.armor,guiLeft+262,guiTop+10);
+        net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+        net.minecraft.client.renderer.GlStateManager.enableDepth();
+        itemRender.renderItemAndEffectIntoGUI(mc.player.getHeldItem(armor.hand),guiLeft+xSize-22,guiTop+10);
+        net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
     }
     @Override public void drawScreen(int x,int y,float partial) { drawDefaultBackground(); super.drawScreen(x,y,partial); }
 }

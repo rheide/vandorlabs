@@ -28,6 +28,11 @@ public final class MessageProgrammableArmor implements IMessage {
         ItemProgrammableArmor.setTexture(container.armor, choice);
         player.inventory.markDirty();
         player.inventoryContainer.detectAndSendChanges();
+        // Window 0 only synchronizes hotbar slots while another container is open.
+        // Address the inventory directly so offhand armor updates in its picker too.
+        player.connection.sendPacket(new net.minecraft.network.play.server.SPacketSetSlot(-2,
+                container.hand == net.minecraft.util.EnumHand.MAIN_HAND ? player.inventory.currentItem : 40,
+                container.armor));
         return true;
     }
 }

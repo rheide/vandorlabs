@@ -56,7 +56,7 @@ public final class ItemProgrammableArmor extends ItemArmor {
 
     @Override @SideOnly(Side.CLIENT)
     public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String type) {
-        return com.vandorlabs.client.ProgrammableArmorTextures.texture(texture(stack));
+        return com.vandorlabs.client.ProgrammableArmorTextures.texture(texture(stack), slot == EntityEquipmentSlot.LEGS);
     }
 
     @Override @SideOnly(Side.CLIENT)
