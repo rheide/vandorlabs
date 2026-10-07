@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
-**1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, seven role designs and selectable block materials. Each piece defaults to Civilian Staff. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
+**1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, eight role designs and selectable block materials. Each piece defaults to Civilian Staff. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
 
 **1.6:** Redstone channels carry levels 0–15. Use signal-driven programmable lights and propulsion brightness, bounded slider rows on screens and inputs, and exact-level or four-band Trigger artwork. Add four-position Thruster Levers, Wall Sliders, Airliner Throttles and Fighter Throttles. See the [1.6 guide and live demonstrations](docs/gallery/version-1.6.md).
 

@@ -148,7 +148,7 @@ SHOTS["programmable_diagonal_width_gui"] = "v1.1/diagonal-config.png"
 FOCUSED_SHOTS = {
     "armor_stand_set_" + role: "armor/" + role.replace("_", "-") + ".png"
     for role in ("bioengineer", "scientist", "hazmat", "repairman", "pilot",
-                 "civilian_staff", "spaceship_staff")
+                 "civilian_staff", "spaceship_staff", "security_rescue")
 }
 
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"

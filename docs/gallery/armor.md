@@ -32,3 +32,6 @@ Hold a piece and shift-right-click while aiming into the air to configure it in 
 
 ![Full Spaceship Staff armor set on an armor stand](../images/gallery/armor/spaceship-staff.png)
 
+## Security Rescue
+
+![Full Security Rescue armor set on an armor stand](../images/gallery/armor/security-rescue.png)

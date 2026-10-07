@@ -6,9 +6,9 @@ Hold a piece, aim into the air and **shift-right-click** to open its categorized
 
 Each piece remembers its own material when equipped, dropped, moved between inventories or saved. Selecting a material preserves damage, enchantments and names. Each piece starts with its matching Civilian Staff design. Explicitly saved material choices are preserved. The selected artwork covers the armor and the padded inventory silhouette. Block materials retain the vanilla diamond helmet’s face opening and other cutouts. Block artwork is centered once on each visible armor face, preserving its proportions and cropping the edges to fit. It uses its first frame and is opaque on armor; this does not add light emission. Resource packs also affect armor materials.
 
-The **Armor** category appears only for armor items. Each picker offers seven matching designs for its own piece: Bioengineer, Scientist, Hazmat, Repairman, Pilot, Civilian Staff and Spaceship Staff. A helmet lists helmet designs, a chestplate lists chestplates, and leggings and boots list their corresponding artwork. Role designs use native armor atlases, including their painted visors and transparent unused areas, and matching inventory icons. You can mix roles between pieces.
+The **Armor** category appears only for armor items. Each picker offers eight matching designs for its own piece: Bioengineer, Scientist, Hazmat, Repairman, Pilot, Civilian Staff, Spaceship Staff and Security Rescue. A helmet lists helmet designs, a chestplate lists chestplates, and leggings and boots list their corresponding artwork. Role designs use native armor atlases, including their painted visors and transparent unused areas, and matching inventory icons. You can mix roles between pieces.
 
-See the [armor gallery](gallery/armor.md) for all seven full sets on armor stands.
+See the [armor gallery](gallery/armor.md) for all eight full sets on armor stands.
 
 Remove equipped armor and hold it to change its material. Changes apply to that piece only.
 

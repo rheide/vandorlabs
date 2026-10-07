@@ -15,7 +15,7 @@ at full size to inspect its texture and model.
 
 ## Items
 
-- [Programmable armor: all seven role sets](armor.md)
+- [Programmable armor: all eight role sets](armor.md)
 
 ## Blocks and systems
 

@@ -76,10 +76,10 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = armor ]; then
         grep -q 'armor-material-centering PASS' "$RUN_OUT/client.log"
         grep -q 'programmable-armor PASS' "$RUN_OUT/client.log"
-        grep -q 'role-armor PASS choices=28 icons=28 sets=7' "$RUN_OUT/client.log"
+        grep -q 'role-armor PASS choices=32 icons=32 sets=8' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/shot_armor_picker.png"
         test -s "$RUN_OUT/shot_armor_worn_and_icons.png"
-        for role in bioengineer scientist hazmat repairman pilot civilian_staff spaceship_staff; do
+        for role in bioengineer scientist hazmat repairman pilot civilian_staff spaceship_staff security_rescue; do
             test -s "$RUN_OUT/shot_armor_stand_set_$role.png"
         done
         echo "Live armor checks passed: $RUN_OUT"
