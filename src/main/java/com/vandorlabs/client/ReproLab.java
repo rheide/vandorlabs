@@ -342,6 +342,13 @@ public class ReproLab {
                 galleryFeet+2, -11, 180, 5));
         SHOTS.add(new Shot("gallery_structure", GALLERY_X, galleryFeet + 2.0D,
                 -30.0D, 0.0F, 4.0F));
+        for (int page=0;page<(CurrentMaterialGallery.choices().size()+9)/10;page++)
+            SHOTS.add(new Shot("gallery_catalog_material_"+page,GALLERY_X+.5D,
+                    galleryFeet+3.0D,-26.0D,0.0F,5.0F));
+        for (int design=0;design<com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;design++)
+            SHOTS.add(new Shot("gallery_catalog_door_"+design,GALLERY_X+.5D,
+                    galleryFeet+(design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN?.7D:.25D),
+                    design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN?-24D:-20.4D,0,0));
         for (int page = 0; page < (com.vandorlabs.tiles.ScreenHousingTextures.LEGACY_COUNT + 9) / 10; page++)
             SHOTS.add(new Shot("gallery_finish_overview_" + page, GALLERY_X + .5D,
                     galleryFeet + 3.0D, -26.0D, 0.0F, 5.0F));
@@ -656,6 +663,9 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
+                    if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_catalog_")) {
+                        state=999;mc.shutdown();return;
+                    }
                     beginShot(mc, new Shot("gui_return", CONSOLE.getX() + 0.5D,
                             Y + 1.0D - 1.62D, CONSOLE.getZ() - 2.5D,
                             0.0F, -90.0F), false);
@@ -1980,6 +1990,8 @@ public class ReproLab {
         // after chunk arrival would erase them without generating new packets.
         if(world.isRemote && shot.equals("gallery_distant_geometry"))return;
         world.getGameRules().setOrCreateGameRule("doMobSpawning", "false");
+        boolean tileDrops=world.getGameRules().getBoolean("doTileDrops");
+        world.getGameRules().setOrCreateGameRule("doTileDrops","false");
         // Documentation lives in its own empty chunk so the ordinary compact
         // regression fixtures never appear behind the catalog.
         for (Entity entity : new ArrayList<Entity>(world.loadedEntityList)) {
@@ -2010,6 +2022,7 @@ public class ReproLab {
                 new BlockPos(GALLERY_X + 14, GALLERY_Y - 1, -14))
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
+        world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(tileDrops));
         if(shot.startsWith("gallery_signal_")) {
             SignalControlAnimationCapture.build(world,shot);
         } else if(shot.equals("gallery_distant_geometry")) {
@@ -2132,11 +2145,14 @@ public class ReproLab {
                 if (finish>=0) ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
                         .setHousingTexture(finish);
             }
-        } else if (shot.startsWith("gallery_finish_overview_")) {
-            int page = Integer.parseInt(shot.substring("gallery_finish_overview_".length()));
+        } else if (shot.startsWith("gallery_finish_overview_") || shot.startsWith("gallery_catalog_material_")) {
+            boolean current=shot.startsWith("gallery_catalog_material_");
+            int page = Integer.parseInt(shot.substring((current?"gallery_catalog_material_":"gallery_finish_overview_").length()));
+            java.util.List<Integer> choices=current?CurrentMaterialGallery.choices():null;
             for (int cell = 0; cell < 10; cell++) {
                 int finish = page * 10 + cell;
-                if (finish >= com.vandorlabs.tiles.ScreenHousingTextures.IDS.length) break;
+                if (finish >= (current?choices.size():com.vandorlabs.tiles.ScreenHousingTextures.IDS.length)) break;
+                if(current)finish=choices.get(finish);
                 BlockPos at = new BlockPos(GALLERY_X + 4 - (cell % 5) * 2,
                         GALLERY_Y + (cell < 5 ? 3 : 1), -18);
                 world.setBlockState(at, ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState()
@@ -2144,7 +2160,7 @@ public class ReproLab {
                 ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
                         .setHousingTexture(finish);
             }
-        } else if (shot.startsWith("gallery_door_")) {
+        } else if (shot.startsWith("gallery_door_") || shot.startsWith("gallery_catalog_door_")) {
             buildCloseDoorGallery(world,shot);
         } else if (shot.startsWith("gallery_ramp_mode_") && !world.isRemote) {
             EntityPlayerMP player=null;
@@ -2475,8 +2491,26 @@ public class ReproLab {
 
     private static void buildCloseDoorGallery(World world, String shot) {
         BlockPos centre=new BlockPos(GALLERY_X,GALLERY_Y,-18);
-        if (shot.startsWith("gallery_door_design_")) {
-            int design=Integer.parseInt(shot.substring("gallery_door_design_".length()));
+        if (shot.startsWith("gallery_door_design_") || shot.startsWith("gallery_catalog_door_")) {
+            int design=Integer.parseInt(shot.substring((shot.startsWith("gallery_catalog_door_")?"gallery_catalog_door_":"gallery_door_design_").length()));
+            if(design>=com.vandorlabs.tiles.TileEntitySpaceDoor.FIRST_DOUBLE_DESIGN) {
+                Block doorBlock=block("large_programmable_door");
+                for(int i=0;i<2;i++) {
+                    BlockPos anchor=centre.add(i==0?-1:3,0,0);
+                    IBlockState state=doorBlock.getDefaultState().withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH);
+                    for(int column=0;column<3;column++)for(int row=0;row<3;row++) {
+                        BlockPos cell=anchor.west(column).up(row);
+                        world.setBlockState(cell.down(row+1),net.minecraft.init.Blocks.STONE.getDefaultState(),2);
+                        world.setBlockState(cell,state,2);
+                        ((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)world.getTileEntity(cell)).assign(anchor);
+                    }
+                    com.vandorlabs.tiles.TileEntitySpaceDoor tile=(com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(anchor);
+                    tile.configure(design,1,i==1,0,true,true,true,
+                            com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,true);
+                    tile.setPlacementDepth(0);
+                }
+                return;
+            }
             for (int i=0;i<2;i++) {
                 BlockPos at=centre.add(i==0?-1:1,0,0);
                 placeDoor(world,at,"programmable_door",false);

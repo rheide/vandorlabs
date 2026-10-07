@@ -2,6 +2,7 @@
 """Copy documentation-worthy ReproLab shots to stable GitHub paths."""
 
 import argparse
+from material_catalog import choices as material_choices
 import re
 import shutil
 import sys
@@ -150,6 +151,12 @@ FOCUSED_SHOTS = {
     for role in ("bioengineer", "scientist", "hazmat", "repairman", "pilot",
                  "civilian_staff", "spaceship_staff", "security_rescue")
 }
+
+for page in range((len(material_choices())+9)//10):
+    SHOTS["gallery_catalog_material_"+str(page)] = f"building/current-materials-{page+1:02d}.png"
+door_names = re.search(r'DESIGNS=\{(.*?)\};', (ROOT / "src/main/java/com/vandorlabs/tiles/TileEntitySpaceDoor.java").read_text(), re.S).group(1)
+for index,name in enumerate(re.findall(r'"([^"]+)"',door_names)):
+    SHOTS["gallery_catalog_door_"+str(index)] = "doors/design-"+("reactor-service" if name=="reactor" else name.replace("_","-"))+".png"
 
 FOCUSED_SHOTS["armor_worn_and_icons"] = "armor/block-materials.png"
 

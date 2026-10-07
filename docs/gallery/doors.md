@@ -1,8 +1,8 @@
 # Programmable Door
 
-One Programmable Door can use any of 15 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
+One Programmable Door can use any of 21 designs, with or without a frame. Its motion, placement depth, hinges, control panel, detail level, and redstone behavior are configurable. Craft one from six Programmable Matter Ingots in two adjacent columns of three. Place a second compatible door beside the first to make a pair; the inner frame rails disappear.
 
-In Creative mode, shift-right-click either half to open the settings. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
+In Creative mode, shift-right-click either half to open the settings; in survival, right-click with the Configurizer. The optional button panel also opens them when clicked. Changes apply as soon as you select them. Right-click toggles a manually controlled door; a door using a redstone trigger instead follows its signal.
 
 Open large-door panels and regular rotating leaves remain clickable where they extend into neighbouring blocks. The selection outline follows the panel under the cursor, and ordinary right-click closes a manually controlled door there.
 
@@ -10,9 +10,9 @@ Open large-door panels and regular rotating leaves remain clickable where they e
 
 ## Choose a design and frame
 
-Each image shows the **bare door on the left** and the **framed door on the right**. The three detail levels change texture resolution without changing the chosen design.
+Each image shows the **framed door on the left** and the **bare door on the right**. The **Small** and **Large** size choices change texture resolution without changing the chosen design. Each design appears once in the picker; the size button controls its artwork tier.
 
-| Design | Bare (left) and framed (right) |
+| Design | Framed (left) and bare (right) |
 | --- | --- |
 | Observation | ![Observation](../images/gallery/doors/design-observation.png) |
 | Airlock | ![Airlock](../images/gallery/doors/design-airlock.png) |
@@ -29,8 +29,33 @@ Each image shows the **bare door on the left** and the **framed door on the righ
 | Quarantine Seal | ![Quarantine Seal](../images/gallery/doors/design-quarantine-seal.png) |
 | Reactor Barrier | ![Reactor Barrier](../images/gallery/doors/design-reactor-barrier.png) |
 | Modular Shutter | ![Modular Shutter](../images/gallery/doors/design-modular-shutter.png) |
+| White Glass | ![White Glass](../images/gallery/doors/design-white-glass.png) |
+| Dark Glass | ![Dark Glass](../images/gallery/doors/design-dark-glass.png) |
+| Plain Cargo | ![Plain Cargo](../images/gallery/doors/design-plain-cargo.png) |
+| Stepped Freight | ![Stepped Freight](../images/gallery/doors/design-stepped-freight.png) |
+| Observation Leaf | ![Observation Leaf](../images/gallery/doors/design-observation-leaf.png) |
+| Reinforced Leaf | ![Reinforced Leaf](../images/gallery/doors/design-reinforced-leaf.png) |
 
-Observation, Viewport, Laboratory, and Glazed Hangar have translucent windows. A design does not force a motion: choose either independently.
+Observation, Viewport, Laboratory, Glazed Hangar, White Glass and Dark Glass have translucent windows. A design does not force a motion: choose either independently.
+
+## Large doors and double-door artwork
+
+The Large Programmable Door fills a **3×3 opening** with two 1.5×3 leaves. Place it at the bottom center on three solid supports. Craft it from two Programmable Doors and seven Programmable Matter Ingots. Configure any cell to edit the assembly; breaking any cell removes it.
+
+Large doors accept all 21 regular designs plus these **eight Double Doors designs**. Each image shows a framed assembly on the left and a bare assembly on the right. The default is **Cross Braced Bay**. Large doors support the regular motions and **Sliding X**.
+
+| Double Doors design | Framed (left) and bare (right) |
+| --- | --- |
+| Warehouse Shutter | ![Warehouse Shutter](../images/gallery/doors/design-warehouse-shutter.png) |
+| Slotted Bay | ![Slotted Bay](../images/gallery/doors/design-slotted-bay.png) |
+| Cross Braced Bay | ![Cross Braced Bay](../images/gallery/doors/design-cross-braced-bay.png) |
+| Split View Bay | ![Split View Bay](../images/gallery/doors/design-split-view-bay.png) |
+| Offset Cargo | ![Offset Cargo](../images/gallery/doors/design-offset-cargo.png) |
+| Twin Observation | ![Twin Observation](../images/gallery/doors/design-twin-observation.png) |
+| Armored Biparting | ![Armored Biparting](../images/gallery/doors/design-armored-biparting.png) |
+| Service Freight | ![Service Freight](../images/gallery/doors/design-service-freight.png) |
+
+Select any shared material to replace a leaf face. **Face texture: Fit/Tile** controls its mapping; the native thin edges and hardware remain. See [unified materials](../unified-materials.md) for Custom and filesystem artwork.
 
 ## Choose how the door opens
 

@@ -9,10 +9,12 @@ The sixteen retired built-in finishes are omitted from both the picker and
 runtime JAR/atlas. Their saved identifiers remain valid and render with Dark
 Wall Panel; reorganized selectable finishes keep their artwork. The Example filesystem
 category is hidden when its only entry is the default sample panel.
+The bundled block-material list currently has **114 selectable designs** across Materials, Panels, Tech, Hull, Industrial, Trapdoors, Windows and Storage. See the [current block gallery](gallery/building.md#programmable-block-finishes) for every design. Screen, light and door menus add their specialized artwork; filesystem catalogs vary by installation.
+
 Storage offers fourteen matching top/side/front sets; [Programmable
 Storage](programmable-storage.md) uses all three faces and other shapes use
 the front artwork. Blue Hex and Amber Hex are paired light finishes, with
-separate lit and unlit artwork. Newly placed normal and diagonal trapdoors use **Armored Hatch** from Trapdoors. Existing saved selections retain their artwork. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Programmable light dialogs hide the separate Off choices in both lists; select the On material and let the light switch its artwork automatically. Their taller dialog shows up to seven textures plus the pinned category heading, temporarily reducing Minecraft's GUI scale when necessary to fit, and restoring that setting on close. Door entries provide Small, Medium and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
+separate lit and unlit artwork. Newly placed normal and diagonal trapdoors use **Armored Hatch** from Trapdoors. Existing saved selections retain their artwork. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Programmable light dialogs hide the separate Off choices in both lists; select the On material and let the light switch its artwork automatically. Their taller dialog shows up to seven textures plus the pinned category heading, temporarily reducing Minecraft's GUI scale when necessary to fit, and restoring that setting on close. Door entries provide Small and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
 
 Hull groups exterior plating and protective cladding; Panels groups interior sheets and access covers. Industrial holds fourteen pipe, grille, rib, bulkhead and machinery finishes. Microchip and the Matter color variants are in Tech. The [complete category moves](texture-category-proposal.md) preserve saved selections.
 
@@ -51,3 +53,9 @@ Dynmap's existing material table covers the original finishes. New static catalo
 Screen, input and console configuration dialogs preview artwork in their categorized list thumbnails. Separate preview panels are removed, including both Half-Console input panels. Off/Static/Animated modes, frame and size controls, and animation speed retain their existing behavior.
 
 When a block uses a Custom sample, reopening its dialog selects and reveals the **Custom** row, with the sample name and current thumbnail. The sample remains selected until you choose another material or confirm a replacement in the Custom picker.
+
+## Programmable armor
+
+[Programmable armor](programmable-armor.md) uses the default block-material list, plus an **Armor** category with eight role designs filtered to the held piece. New pieces use Civilian Staff. Block materials are centered on each visible armor face; native role atlases retain their own layout.
+
+Shift-right-click a world block face with armor to copy the displayed artwork in creative or survival. The resolver reads the actual and extended model state, including programmable face overrides and storage top/side/front textures. This differs from the inventory Custom picker, which uses a block item's representative texture. The saved sample appears in the armor picker under **Sampled**; selecting another design replaces it.

@@ -1,6 +1,6 @@
 # Filesystem textures
 
-Vandor Labs scans PNG textures once during mod startup. The textures appear in the same categorized picker used by programmable blocks, trapdoors, doors, lights and static screen/control surfaces.
+Vandor Labs scans PNG textures once during mod startup. The textures appear in the same categorized picker used by programmable blocks, trapdoors, doors, lights, static screen/control surfaces and programmable armor. Armor retains its separate slot-filtered **Armor** category.
 
 ## First launch
 

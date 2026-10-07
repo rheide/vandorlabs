@@ -10,8 +10,12 @@ testclient/generate_gallery.sh --focus trapdoors
 ```
 
 `--focus armor` validates all four programmable armor pieces, their default Civilian Staff
-designs, texture selection and inventory icons, and captures all eight full role
+designs, texture selection, world-face sampling and inventory icons, and captures all eight full role
 sets on armor stands. Its captures export to `docs/images/gallery/armor`.
+
+`--focus gallery_catalog_` captures all current bundled block materials and all 29 door designs, including the eight large-door-only designs. The material pages exclude retired and per-install filesystem choices.
+
+`--focus dialogs` refreshes the supported configuration-dialog captures.
 
 `--focus storage` captures the storage sets, inventory, material picker and hotbar icons and
 runs the storage inventory and rendering contracts.

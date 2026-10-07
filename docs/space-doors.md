@@ -4,15 +4,14 @@ The Space family is independent of the Detailed doors. The creative menu has one
 Programmable Door item, initially set to Sliding Sideways. Its initial depth
 follows the placement click and can be changed in the settings.
 Shift-right-click either half to choose Rotating, Sliding Sideways, Sliding Up or Sliding Down,
-the design, Small/Medium/Large texture detail, framed/bare appearance, placement
-position (Near, Middle, or Far), Trigger mode, and redstone channel. Door types use a scrollable list with mouse-wheel,
-scrollbar and up/down-key navigation. Each option change applies immediately,
+the design, Small/Large texture size, framed/bare appearance, placement
+position (Near, Middle, or Far), Trigger mode, and redstone channel. Door artwork uses a categorized thumbnail list with mouse-wheel and scrollbar navigation. Regular doors offer 21 native designs; large doors add eight Double Doors designs. Each design appears once, with its artwork size controlled separately. Each option change applies immediately,
 including valid channel edits, like the programmable-screen selector. Done or
 Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
 lower tile entity and synchronized by the server. Configuring a pair applies
 to both leaves; a newly placed matching mate inherits the existing appearance.
-An 80x160 native-aspect artwork preview updates with design and detail choices;
-The Hinges button below the preview toggles both fixed and moving hardware for
+The categorized list previews each design at its native aspect ratio. The
+Hinges button toggles both fixed and moving hardware for
 rotating doors without changing their leaf, pivot or frame. It is disabled for
 sliding motion, preserving the last rotating choice. Existing doors default to
 hinges on. This preference is saved, synchronized to paired leaves, inherited
@@ -65,16 +64,15 @@ legacy doors remain fixed-design; use the unified Programmable Door for the sele
 
 Assets come from `scifi_industrial_door_pack_v2.zip`,
 `scifi_industrial_door_expansion.zip` and `scifi_industrial_lift_doors.zip`.
-Medium detail is the new-door default:
-256x512 door leaves, 512x512 frame and repeating glass, 64x64 hinge atlas.
-All three independently authored sets are preserved unchanged under
-`texture-packs/space-doors/{low,medium,high}`. Door sizes are respectively
-128x256, 256x512 and 512x1024. All three sets ship together and are selectable
-per door without rebuilding. `--detail` on the importer changes only the legacy
-fixed-design artwork and item defaults. It does not remove the selectable sets.
+Large artwork is the new-door default. The selectable Small and Large tiers
+use 128×256 and 256×512 door leaves, respectively. The larger archived tier
+is retained as a validation reference and is omitted from the standard runtime
+JAR. Imported PNGs retain their native dimensions. Separate Double Doors
+artwork is available only on the 3×3 Large Programmable Door. See the
+[current door gallery](gallery/doors.md) for every design and size behavior.
 Framed geometry crops UVs at the native texel density. It never rescales or
 rewrites a PNG. Rails use nine-slice sampling of the supplied square frame.
-Right leaves mirror the same texture; there are no separate double-door textures.
+Regular paired leaves share their selected design. The Large Programmable Door also supports dedicated Double Doors artwork.
 The client uses custom atlas sprites because vanilla 1.12 assumes non-animated
 sprites are square. Native pixels occupy square atlas slots with edge padding;
 UV accessors expose only the original rectangle. PNGs are never resized.
@@ -134,13 +132,12 @@ integer angle. Live checks exercise default
 placement, saved settings and 2,880 upper/lower pick-and-place combinations,
 including both hinge choices and precedence over a differently configured
 adjacent door. Mixed glass tiers are checked in both wall orientations; live
-fixtures show all three tiers, hinges on/off and the updated door dialog. Four live
+fixtures cover Small/Large artwork, hinges on/off and the current door dialog. Four live
 inside-frame screenshots look sideways at both jambs from both depth edges.
 A magenta backing wall makes missing faces visible; the pixel check rejects any
 backing pixels between the jamb edges across every interior scanline (excluding
 two silhouette pixels for antialiasing), and checks the backing is present
-outside it. The gallery
-checks rendering; it does not automate interaction with the configuration GUI.
+outside it. The catalog gallery checks rendering; the focused dialog suite also exercises GUI controls and server synchronization.
 Dynmap has static simplified door/glass fallbacks, not animated joined geometry.
 
 The supplied medium/high `double_frame_metal.png` has damaged opaque outer

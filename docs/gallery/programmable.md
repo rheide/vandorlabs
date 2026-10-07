@@ -51,6 +51,8 @@ The wall texture menu changes the material around a screen; it does not replace 
 
 ![Programmable Block finish selector](../images/gallery/programmable/block-config.png)
 
+See [the current block material gallery](building.md#programmable-block-finishes), [shared material selection](../unified-materials.md), and [filesystem imports](../filesystem-textures.md). Held [programmable armor](armor.md) can copy a displayed block face with shift-right-click.
+
 See [building finishes](building.md) for examples of hull, padding, and pipe textures.
 
 ## Signal-level screen controls

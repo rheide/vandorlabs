@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
-**1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, eight role designs and selectable block materials. Each piece defaults to Civilian Staff. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
+**1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, eight role designs and selectable block materials. Each piece defaults to Civilian Staff and can copy a displayed world texture with shift-right-click. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
 
 **1.6:** Redstone channels carry levels 0–15. Use signal-driven programmable lights and propulsion brightness, bounded slider rows on screens and inputs, and exact-level or four-band Trigger artwork. Add four-position Thruster Levers, Wall Sliders, Airliner Throttles and Fighter Throttles. See the [1.6 guide and live demonstrations](docs/gallery/version-1.6.md).
 
@@ -238,12 +238,13 @@ The default pack mixes resolutions according to the job each texture performs.
 128x128 is not a blanket requirement for every block; imported model artwork
 keeps its authored dimensions.
 
-The shared housing finish menu has 78 choices: the original 28, 16 selected
-textures from `textures`, 23 from `textures2`, and 11 Hull Plating finishes from
-`hulls`. The second-pack choices use the supplied 64x64 versions; their earlier
-artwork remains in the original archive. Removed choices were deleted without a
-save migration, so older saved finish numbers may select different artwork.
-Programmable Blocks, Slabs, Stairs, Walls and other housing menus use this list.
+The shared housing menu has 114 selectable bundled block materials, grouped by
+category, plus specialized screen, light and door artwork where supported.
+Filesystem imports add installation-specific choices. Retired entries stay out
+of new selections; saved retired identifiers render with Dark Wall Panel.
+See the [current material gallery](docs/gallery/building.md#programmable-block-finishes)
+and [shared texture guide](docs/unified-materials.md) for the available designs
+and saved-choice behavior.
 
 Use these dimensions for new or replacement art:
 
@@ -256,6 +257,8 @@ Use these dimensions for new or replacement art:
 | Half-height console screens and control faces | 128x64 | Keep the authored 2:1 aspect ratio; do not stretch them to square. |
 | Console-control inventory previews | 128x128 | These are the matching `_item.png` files. |
 | Programmable Door face atlases | 128x256 or 256x512 | Small and Large artwork tiers; preserve native frame, hinge, and glass atlas proportions. |
+| Native role armor atlases | 64x32 | Keep the vanilla armor UV layout and transparent unused regions. |
+| Role armor inventory icons | 16x16 | Preserve visible padding, including after the GUI transform. |
 | Imported hatch artwork | 128x128 or 256x256 | Small and Large artwork tiers. |
 | Programmable Glass panes/frames | 256x256 or 512x512 | Small and Large use matching reflection patterns. |
 | Connected glass-wall tiles | 64x64 | The generated 6px edge/corner slices preserve their model proportions. |

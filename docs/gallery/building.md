@@ -3,7 +3,7 @@
 For face texture overrides, diagonal portholes, half-height walls and fill
 options, see [the 1.1 additions](version-1.1.md).
 
-Programmable Block, Wall, Slab, Stairs, Ramp, and other compatible shapes use a shared finish list. Choose a material in the Creative-mode shift-right-click dialog. Some screen blocks use the same list for their wall or side texture while keeping a separate primary screen selection. The [Duplifier](../DUPLIFIER.md) can carry a compatible finish to another shape.
+Programmable Block, Wall, Slab, Stairs, Ramp, and other compatible shapes use a shared finish list. Choose a material with shift-right-click in Creative mode, or use the [Configurizer](../CONFIGURIZER.md) in survival. Some screen blocks use the same list for their wall or side texture while keeping a separate primary screen selection. The [Duplifier](../DUPLIFIER.md) can carry a compatible finish to another shape.
 
 ## Choose a form
 
@@ -22,83 +22,116 @@ Block, Slab and Stairs have optional per-face texture overrides, disabled by def
 
 ## Programmable Block finishes
 
-The original 78 saved finishes are shown below on full Programmable Blocks.
-These reference images also include retired finishes retained for existing
-builds: Wall Vent, the three Padding choices and Hull Plating are hidden from
-new selections. Blue/Amber Hex now belong to Programmable Light. For the
-current categories and additional choices, see [unified materials](../unified-materials.md). Each image shows up to ten finishes, with the top row followed by the bottom row. Names run left to right in each row.
+The images below show all **114 currently selectable bundled block materials**, grouped and sorted like the texture picker. Retired materials are omitted. Each image has up to ten blocks; names run left to right across the top row, then the bottom row. The [shared material guide](../unified-materials.md) explains categories, face overrides, Custom choices and filesystem imports.
 
-### Finishes 1–10
+Storage materials use their front artwork on ordinary blocks; [Programmable Storage](../programmable-storage.md) uses matching top, side and front artwork. Dedicated screen, light and door menus retain their own artwork lists. [Programmable armor](armor.md) offers these block materials alongside eight matching role designs and can sample a displayed world face directly.
 
-![Programmable Blocks showing finishes 1 to 10](../images/gallery/building/finishes-01.png)
+### Materials 1–10
+
+![Current block materials 1 to 10](../images/gallery/building/current-materials-01.png)
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | Dark Wall Panel | Light Wall Panel | Light Alloy Hull | Metal Floor | Dark Gunmetal Hull |
-| Bottom | Midnight Matte Hull | Dark Industrial Panel | Light Industrial Panel | Ribbed Wall | Industrial Block |
+| Top | Dark Hull 1 (Hull) | Dark Hull 10 (Hull) | Dark Hull 11 (Hull) | Dark Hull 12 (Hull) | Dark Hull 2 (Hull) |
+| Bottom | Dark Hull 3 (Hull) | Dark Hull 4 (Hull) | Dark Hull 5 (Hull) | Dark Hull 6 (Hull) | Dark Hull 7 (Hull) |
 
-### Finishes 11–20
+### Materials 11–20
 
-![Programmable Blocks showing finishes 11 to 20](../images/gallery/building/finishes-02.png)
-
-| Row | 1 | 2 | 3 | 4 | 5 |
-| --- | --- | --- | --- | --- | --- |
-| Top | Industrial Trim | Industrial Grate | Wall Vent | Bolted Wall Plate | Burgundy |
-| Bottom | Bluegray | Matter | Matter - Amber | Matter - Cyan | Matter - Red |
-
-### Finishes 21–30
-
-![Programmable Blocks showing finishes 21 to 30](../images/gallery/building/finishes-03.png)
+![Current block materials 11 to 20](../images/gallery/building/current-materials-02.png)
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | Wall Pipes | Framed Wall Pipes | Midnight Satin Hull | Seamed Padding | Ribbed Padding |
-| Bottom | Stitched Padding | Glass Frame Interior | Door Interior (Dark) | Metal Floor | Composite Wall 1 |
+| Top | Dark Hull 8 (Hull) | Dark Hull 9 (Hull) | Gravity Floor (Hull) | Metal Floor (Hull) | Nano-Fiber Hull (Hull) |
+| Bottom | Scaled Armor (Hull) | Thermal Shield 1 (Hull) | Thermal Shield 2 (Hull) | Weathered Hull 1 (Hull) | Weathered Hull 2 (Hull) |
 
-### Finishes 31–40
+### Materials 21–30
 
-![Programmable Blocks showing finishes 31 to 40](../images/gallery/building/finishes-04.png)
-
-| Row | 1 | 2 | 3 | 4 | 5 |
-| --- | --- | --- | --- | --- | --- |
-| Top | Composite Wall 2 | Circuit Panel | Heavy Bulkhead 1 | Heavy Bulkhead 2 | Data Cores |
-| Bottom | Gravity Floor | Thermal Shield 1 | Thermal Shield 2 | Nano-Fiber Hull | Perforated Deck |
-
-### Finishes 41–50
-
-![Programmable Blocks showing finishes 41 to 50](../images/gallery/building/finishes-05.png)
+![Current block materials 21 to 30](../images/gallery/building/current-materials-03.png)
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | Greebled Panel 1 | Greebled Panel 2 | Biomech Block 1 | Biomech Block 2 | Microchip |
-| Bottom | Blue Node | Braced Hull | Green Console | Green Panel | Green Core |
+| Top | Worn Bulkhead (Hull) | Biomech Block 1 (Industrial) | Biomech Block 2 (Industrial) | Braced Hull (Industrial) | Dark Socket (Industrial) |
+| Bottom | Framed Wall Pipes (Industrial) | Heavy Bulkhead 1 (Industrial) | Heavy Bulkhead 2 (Industrial) | Industrial Block (Industrial) | Industrial Frame (Industrial) |
 
-### Finishes 51–60
+### Materials 31–40
 
-![Programmable Blocks showing finishes 51 to 60](../images/gallery/building/finishes-06.png)
-
-| Row | 1 | 2 | 3 | 4 | 5 |
-| --- | --- | --- | --- | --- | --- |
-| Top | Gray Panel 1 | Gray Panel 2 | Industrial Frame | Worn Bulkhead | Octagon Plate |
-| Bottom | Twin Panels | Switch Bank | Weathered Hull 1 | Weathered Hull 2 | Amber Hex Off |
-
-### Finishes 61–70
-
-![Programmable Blocks showing finishes 61 to 70](../images/gallery/building/finishes-07.png)
+![Current block materials 31 to 40](../images/gallery/building/current-materials-04.png)
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | Scaled Armor | Ivory Hatch 1 | Ivory Hatch 2 | Blue Hex Off | Blue Hex On |
-| Bottom | Blue Socket | Dark Socket | Hull Plating 1 | Hull Plating 2 | Hull Plating 3 |
+| Top | Industrial Grate (Industrial) | Industrial Trim (Industrial) | Perforated Deck (Industrial) | Ribbed Wall (Industrial) | Wall Pipes (Industrial) |
+| Bottom | Bluegray (Materials) | Burgundy (Materials) | Dark Gunmetal Hull (Materials) | Dark Industrial Panel (Materials) | Door Interior (Dark) (Materials) |
 
-### Finishes 71–78
+### Materials 41–50
 
-![Programmable Blocks showing finishes 71 to 78](../images/gallery/building/finishes-08.png)
+![Current block materials 41 to 50](../images/gallery/building/current-materials-05.png)
 
 | Row | 1 | 2 | 3 | 4 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | Hull Plating 4 | Hull Plating 5 | Hull Plating 6 | Hull Plating 7 | Hull Plating 8 |
-| Bottom | Hull Plating 9 | Hull Plating 10 | Hull Plating 11 |  |  |
+| Top | Glass Frame Interior (Materials) | Light Alloy Hull (Materials) | Metal Floor (Materials) | Midnight Matte Hull (Materials) | Midnight Satin Hull (Materials) |
+| Bottom | Bolted Wall Plate (Panels) | Composite Wall 1 (Panels) | Composite Wall 2 (Panels) | Dark Wall Panel (Panels) | Gray Panel 1 (Panels) |
+
+### Materials 51–60
+
+![Current block materials 51 to 60](../images/gallery/building/current-materials-06.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Gray Panel 2 (Panels) | Green Panel (Panels) | Ivory Hatch 1 (Panels) | Ivory Hatch 2 (Panels) | Light Industrial Panel (Panels) |
+| Bottom | Light Wall Panel (Panels) | Octagon Plate (Panels) | Twin Panels (Panels) | Blue-Gray Overhead Bin (Storage) | Cabinet (Storage) |
+
+### Materials 61–70
+
+![Current block materials 61 to 70](../images/gallery/building/current-materials-07.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Chest (Storage) | Drawers (Storage) | Lab Drawer (Storage) | Metal Cabinet (Storage) | Metal Drawers (Storage) |
+| Bottom | Metal Overhead Bin (Storage) | Military Cabinet (Storage) | Square Charcoal Overhead Bin (Storage) | Square Matte Overhead Bin (Storage) | Storage Atlas (Storage) |
+
+### Materials 71–80
+
+![Current block materials 71 to 80](../images/gallery/building/current-materials-08.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Storage Cabinet (Storage) | Storage Crate (Storage) | Battery Cell Bank (Tech) | Battery Charging Dock (Tech) | Battery Power Buffer (Tech) |
+| Bottom | Blue Node (Tech) | Blue Socket (Tech) | Circuit Panel (Tech) | Data Cores (Tech) | Fuel Port Dual (Tech) |
+
+### Materials 81–90
+
+![Current block materials 81 to 90](../images/gallery/building/current-materials-09.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Fuel Port Round (Tech) | Greebled Panel 1 (Tech) | Greebled Panel 2 (Tech) | Green Console (Tech) | Green Core (Tech) |
+| Bottom | Matter (Tech) | Matter - Amber (Tech) | Matter - Cyan (Tech) | Matter - Red (Tech) | Microchip (Tech) |
+
+### Materials 91–100
+
+![Current block materials 91 to 100](../images/gallery/building/current-materials-10.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Server Compute Rack (Tech) | Server Data Storage (Tech) | Server Network Core (Tech) | Switch Bank (Tech) | Armored Hatch Large (Trapdoors) |
+| Bottom | Armored Hatch Small (Trapdoors) | Industrial Hatch Large (Trapdoors) | Industrial Hatch Small (Trapdoors) | Reinforced Hatch Large (Trapdoors) | Reinforced Hatch Small (Trapdoors) |
+
+### Materials 101–110
+
+![Current block materials 101 to 110](../images/gallery/building/current-materials-11.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Service Hatch Large (Trapdoors) | Service Hatch Small (Trapdoors) | Slit Hatch Large (Trapdoors) | Slit Hatch Small (Trapdoors) | Twin-Window Hatch Large (Trapdoors) |
+| Bottom | Twin-Window Hatch Small (Trapdoors) | Utility Hatch Large (Trapdoors) | Utility Hatch Small (Trapdoors) | Viewport Hatch Large (Trapdoors) | Viewport Hatch Small (Trapdoors) |
+
+### Materials 111–114
+
+![Current block materials 111 to 114](../images/gallery/building/current-materials-12.png)
+
+| Row | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Window Armored Slit (Windows) | Window Clear Frame (Windows) | Window Cross Brace (Windows) | Window Observation (Windows) |  |
 
 ## Selected close-ups and glass
 
