@@ -49,8 +49,9 @@ the panel and handles above it move together.
 
 Set **Tilt** to **Flat**, **15 deg**, **30 deg** or **45 deg**, then select
 **Forward**, **Right**, **Backward** or **Left** relative to the mounted control.
-The entire base, panel and handles tilt together. A solid wedge fills the space
-between the tilted base and its support. This works on walls, floors and ceilings.
+The control tilts on top of a straight height extension, perpendicular to the
+support face. Increasing height raises the tilted assembly without shifting it
+sideways. A solid wedge fills underneath the tilt. This works on walls, floors and ceilings.
 The controls have solid collision for their base, panel and handles, with a stepped
 collision surface along the wedge. The selection outline follows the control.
 Click **Done** to apply. Right-click a setting button to cycle backward.
@@ -77,3 +78,9 @@ All pictures below use the Off detent so the mounting settings can be compared d
 | Fighter Throttle | ![Fighter Throttle tilted 15 degrees](../images/gallery/controls/fighter-throttle-tilted-15.png) | ![Fighter Throttle tilted 30 degrees](../images/gallery/controls/fighter-throttle-tilted-30.png) | ![Fighter Throttle tilted 45 degrees](../images/gallery/controls/fighter-throttle-tilted-45.png) |
 
 Existing 15-degree mounts keep that angle. Earlier 5-degree and 10-degree mounts use 15 degrees when loaded.
+
+Height and tilt can be combined. These examples use **+6 px** and **45 degrees**:
+
+| Thruster Lever | Airliner Throttle | Fighter Throttle |
+| --- | --- | --- |
+| ![Thruster raised and tilted](../images/gallery/controls/thruster-lever-raised-6px-tilted-45.png) | ![Airliner raised and tilted](../images/gallery/controls/airliner-throttle-raised-6px-tilted-45.png) | ![Fighter raised and tilted](../images/gallery/controls/fighter-throttle-raised-6px-tilted-45.png) |

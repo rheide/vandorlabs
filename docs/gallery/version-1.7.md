@@ -40,8 +40,9 @@ the original minimum height. The mounting plate extends while the panel and
 handles move upward together, or outward from a wall/ceiling support.
 
 Choose **Flat**, **15 deg**, **30 deg** or **45 deg** and a direction to tilt the
-whole control, including its base. Directions follow the control’s mounting
-orientation. A solid wedge fills underneath a tilted base, and the base, panel
+control on top of its straight height extension. Added height stays perpendicular
+to the support face, so raising a tilted control does not shift it sideways.
+Directions follow the control’s mounting orientation. A solid wedge fills underneath a tilted base, and the base, panel
 and handles block movement. Selection outlines follow the transformed model. Shift-right-click
 the control to open the dialog, or use the Configurizer in survival; click
 **Done** to apply. Saved worlds, configured drops and pick-block retain the

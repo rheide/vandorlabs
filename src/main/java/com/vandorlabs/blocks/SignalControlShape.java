@@ -30,7 +30,7 @@ public final class SignalControlShape {
                 }
                 boxes.add(hull(points));
             }
-            if(tilt>0)boxes.addAll(transform.wedgeBoxes(block.supportBounds(state)));
+            if(height>0 || tilt>0)boxes.addAll(transform.wedgeBoxes(block.supportBounds(state)));
             return Collections.unmodifiableList(boxes);
         });
     }

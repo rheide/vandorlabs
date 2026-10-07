@@ -21,8 +21,8 @@ public final class SignalControlMount {
     }
     public Vec3d transform(Vec3d point){
         Vec3d p=point.subtract(origin);double depth=p.dotProduct(normal),along=p.dotProduct(tangent);
-        double raised=depth+extra*Math.min(1,Math.max(0,depth*16));
-        return point.add(normal.scale(raised*cos-along*sin+lift-depth)).add(tangent.scale(raised*sin+along*cos-along));
+        // Height is an upright pedestal; rotate the unextended control above it.
+        return point.add(normal.scale(depth*cos-along*sin+lift+extra-depth)).add(tangent.scale(depth*sin+along*cos-along));
     }
     public double depth(Vec3d point){return point.subtract(origin).dotProduct(normal);}
     public Vec3d project(Vec3d point){return point.subtract(normal.scale(depth(point)));}

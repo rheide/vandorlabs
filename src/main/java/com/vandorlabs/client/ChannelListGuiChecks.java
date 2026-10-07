@@ -138,7 +138,7 @@ final class ChannelListGuiChecks {
                 }
                 stage=13;ticks=0;return;
             }
-            if(stage==13 && ++ticks>15){capture(mc,output,"controls_mount_icons_"+iconPage);iconPage++;if(iconPage==24 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){stage=9;System.out.println("[vandorlabs][reprolab] signal-control-icons PASS all 192 configured icons");mc.shutdown();}else stage=iconPage==24?10:12;ticks=0;return;}
+            if(stage==13 && ++ticks>15){capture(mc,output,"controls_mount_icons_"+iconPage);iconPage++;if(iconPage==24 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){stage=14;System.out.println("[vandorlabs][reprolab] signal-control-icons PASS all 192 configured icons");}else stage=iconPage==24?10:12;ticks=0;return;}
             if(stage==10){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
@@ -185,16 +185,16 @@ final class ChannelListGuiChecks {
                     net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);world.setBlockToAir(POS);
                     for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())world.setBlockToAir(POS.offset(side));
                     world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
-                    Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/7]);
+                    Block block=Block.getBlockFromName("vandorlabs:"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/8]);
                     world.setBlockState(POS,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.UP),3);
-                    com.vandorlabs.tiles.TileEntitySignalControl tile=(com.vandorlabs.tiles.TileEntitySignalControl)world.getTileEntity(POS);tile.setMountRotation(0);int setting=mountPreview%7;tile.configureMount(setting<4?setting:0,setting<4?0:setting-3,0);tile.setStep(0);
+                    com.vandorlabs.tiles.TileEntitySignalControl tile=(com.vandorlabs.tiles.TileEntitySignalControl)world.getTileEntity(POS);tile.setMountRotation(0);int setting=mountPreview%8;tile.configureMount(setting<4?setting:setting==7?3:0,setting<4?0:setting==7?3:setting-3,0);tile.setStep(0);
                     EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
                     player.connection.setPlayerLocation(POS.getX()-2,POS.getY()+2.2-player.getEyeHeight(),POS.getZ()-2.6,-38.9F,27F);
                 });stage=15;ticks=0;return;
             }
             if(stage==15 && ++ticks>25){
-                capture(mc,output,"controls_mount_"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/7]+"_"+new String[]{"standard","raised_2px","raised_4px","raised_6px","tilted_15","tilted_30","tilted_45"}[mountPreview%7]);
-                if(++mountPreview<21)stage=14;else{stage=9;System.out.println("[vandorlabs][reprolab] signal-control-mount-gallery PASS shots=21");mc.shutdown();}ticks=0;return;
+                capture(mc,output,"controls_mount_"+new String[]{"thruster_lever","airliner_throttle","fighter_throttle"}[mountPreview/8]+"_"+new String[]{"standard","raised_2px","raised_4px","raised_6px","tilted_15","tilted_30","tilted_45","raised_6px_tilted_45"}[mountPreview%8]);
+                if(++mountPreview<24)stage=14;else{stage=9;System.out.println("[vandorlabs][reprolab] signal-control-mount-gallery PASS shots=24");mc.shutdown();}ticks=0;return;
             }
         }catch(Exception e){throw new IllegalStateException("control visual regression",e);}
     }

@@ -33,7 +33,7 @@ public final class SignalControlModel implements IBakedModel {
                     int at=i*stride;Vec3d original=new Vec3d(Float.intBitsToFloat(data[at]),Float.intBitsToFloat(data[at+1]),Float.intBitsToFloat(data[at+2]));
                     bottom &= Math.abs(transform.depth(original))<1e-7;points[i]=transform.transform(original);
                 }
-                if(bottom && (mount/4)%4>0){
+                if(bottom && mount%16>0){
                     Vec3d[] projected=new Vec3d[4];for(int i=0;i<4;i++)projected[i]=transform.project(points[i]);
                     addQuad(result,quad,projected);
                     for(int i=0;i<4;i++){int next=(i+1)%4;addQuad(result,quad,new Vec3d[]{points[i],points[next],projected[next],projected[i]});}

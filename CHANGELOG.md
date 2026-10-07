@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Keep throttle height extensions perpendicular to the support face, with the tilted assembly on top; increasing height no longer shifts it sideways. Preserve filled mounting geometry and matching collision/selection bounds.
+
 - Add Small Power Lever and Large Power Lever with supplied twin-arm on/off artwork, wall/floor mounts, Industrial Power Lever channel behavior, distinct recipes and padded inventory icons.
 
 - Add Open helmets and Short Sleeves chestplates for all eight armor roles, with matching inventory icons and 16 additional slot-filtered choices. Preserve original IDs, artwork and defaults; map Duplifier copies to matching alternate pieces and standard leggings/boots.
