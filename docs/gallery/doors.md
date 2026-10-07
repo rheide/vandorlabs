@@ -56,7 +56,8 @@ Large doors accept all 22 regular designs plus these **eight Double Doors design
 | Armored Biparting | ![Armored Biparting](../images/gallery/doors/design-armored-biparting.png) |
 | Service Freight | ![Service Freight](../images/gallery/doors/design-service-freight.png) |
 
-Slim Glass is also available on large doors. Its **Small** artwork is 128×256
+Slim Glass has wide gunmetal outer rails, a central strut and a cyan accent.
+It is also available on large doors. Its **Small** artwork is 128×256
 and **Large** artwork is 256×512, with the existing glass reflection material
 behind the two clear openings.
 

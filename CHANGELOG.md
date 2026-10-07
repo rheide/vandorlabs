@@ -2,6 +2,8 @@
 
 ## 1.7
 
+- Update Slim Glass regular and large door artwork with wider gunmetal outer rails at Small and Medium resolutions, retaining the translucent glass reflection layer.
+
 - Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Toggle Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Toggle Switch’s top face fully cyan while On.
 
 - Add Slim Glass artwork for regular and Large Programmable Doors at both supported resolutions, with the existing translucent glass shimmer behind its clear openings.

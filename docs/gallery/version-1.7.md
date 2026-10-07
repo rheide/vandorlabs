@@ -97,7 +97,8 @@ Pick-block, drops and the Duplifier’s **Signal Levels** option preserve type.
 
 **Slim Glass** is available in the texture picker for regular and Large
 Programmable Doors. The **Small/Large** artwork choices use the supplied
-128×256 and 256×512 textures. Both openings use the same subtle translucent
+128×256 and 256×512 textures. Wide gunmetal outer rails surround two clear openings, separated by a central strut and cyan accent.
+Both openings use the same subtle translucent
 reflection material as Programmable Glass, behind the cutout frame.
 See the [door gallery](doors.md) for regular and large examples.
 
