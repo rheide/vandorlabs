@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
-/** Bake square atlas artwork into the vanilla armor UV layout, at one tile per 8 UV pixels. */
+/** Center one aspect-preserving material image on each visible vanilla armor face. */
 public final class ProgrammableArmorTextures {
     private static final Map<Long, ResourceLocation> CACHE = new LinkedHashMap<>(16, .75F, true);
     private static final int LIMIT = 128;
@@ -27,13 +27,7 @@ public final class ProgrammableArmorTextures {
         int[] pixels = sprite.getFrameTextureData(0)[0];
         int w = sprite.getIconWidth(), h = sprite.getIconHeight();
         BufferedImage mask = mask(layer);
-        BufferedImage skin = new BufferedImage(256,128,BufferedImage.TYPE_INT_ARGB);
-        for (int y=0;y<128;y++) for (int x=0;x<256;x++) {
-            // Preserve the diamond helmet's face opening and the separate leggings UV mask.
-            // Material transparency does not punch additional holes in protective armor.
-            int alpha = mask.getRGB(x*mask.getWidth()/256,y*mask.getHeight()/128) & 0xFF000000;
-            skin.setRGB(x,y,alpha | (pixels[(y%32)*h/32*w+(x%32)*w/32] & 0xFFFFFF));
-        }
+        BufferedImage skin = bake(pixels,w,h,mask);
         ResourceLocation location = mc.getTextureManager().getDynamicTextureLocation("programmable_armor",new DynamicTexture(skin));
         CACHE.put(key,location);
         if (CACHE.size()>LIMIT) {
@@ -41,6 +35,35 @@ public final class ProgrammableArmorTextures {
             mc.getTextureManager().deleteTexture(oldest.next());oldest.remove();
         }
         return location.toString();
+    }
+
+    // Vanilla ModelBiped cuboid faces: head, torso, arms and legs, in 64x32 UV units.
+    private static final int[][] FACES = {
+        {8,0,8,8},{16,0,8,8},{0,8,8,8},{8,8,8,8},{16,8,8,8},{24,8,8,8},
+        {20,16,8,4},{28,16,8,4},{16,20,4,12},{20,20,8,12},{28,20,4,12},{32,20,8,12},
+        {44,16,4,4},{48,16,4,4},{40,20,4,12},{44,20,4,12},{48,20,4,12},{52,20,4,12},
+        {4,16,4,4},{8,16,4,4},{0,20,4,12},{4,20,4,12},{8,20,4,12},{12,20,4,12}
+    };
+    static BufferedImage bake(int[] pixels,int width,int height,BufferedImage mask) {
+        BufferedImage skin=new BufferedImage(256,128,BufferedImage.TYPE_INT_ARGB);
+        for(int y=0;y<128;y++)for(int x=0;x<256;x++)
+            skin.setRGB(x,y,mask.getRGB(x*mask.getWidth()/256,y*mask.getHeight()/128)&0xFF000000);
+        for(int[] face:FACES) {
+            int left=face[0]*4,top=face[1]*4,right=left+face[2]*4,bottom=top+face[3]*4;
+            int x0=right,y0=bottom,x1=left,y1=top;
+            for(int y=top;y<bottom;y++)for(int x=left;x<right;x++)if((skin.getRGB(x,y)>>>24)!=0) {
+                x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+1);y1=Math.max(y1,y+1);
+            }
+            if(x0>=x1 || y0>=y1)continue;
+            // Center on the visible area, so the boots' shorter mask is centered too.
+            double scale=Math.max((double)(x1-x0)/width,(double)(y1-y0)/height);
+            for(int y=top;y<bottom;y++)for(int x=left;x<right;x++) {
+                int sx=Math.max(0,Math.min(width-1,(int)((x+.5-(x0+x1)/2.0)/scale+width/2.0)));
+                int sy=Math.max(0,Math.min(height-1,(int)((y+.5-(y0+y1)/2.0)/scale+height/2.0)));
+                skin.setRGB(x,y,(skin.getRGB(x,y)&0xFF000000)|(pixels[sy*width+sx]&0xFFFFFF));
+            }
+        }
+        return skin;
     }
 
     private static BufferedImage mask(int layer) {

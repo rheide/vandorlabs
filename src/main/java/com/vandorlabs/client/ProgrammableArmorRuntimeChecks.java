@@ -178,6 +178,20 @@ final class ProgrammableArmorRuntimeChecks {
         ItemProgrammableArmor.setTexture(stack,0);
     }
     private static void checkWornMasks(Minecraft mc) throws java.io.IOException {
+        int[] source=new int[32*32];
+        for(int y=0;y<32;y++)for(int x=0;x<32;x++)source[y*32+x]=0xFF000000|(x<<16)|(y<<8);
+        java.awt.image.BufferedImage mask=new java.awt.image.BufferedImage(64,32,java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        for(int y=0;y<32;y++)for(int x=0;x<64;x++)mask.setRGB(x,y,0xFFFFFFFF);
+        // A shorter boot face must center independently from a full-height leg.
+        for(int y=20;y<26;y++)for(int x=4;x<8;x++)mask.setRGB(x,y,0);
+        java.awt.image.BufferedImage centered=ProgrammableArmorTextures.bake(source,32,32,mask);
+        for(int[] point:new int[][]{{12*4,12*4},{24*4,26*4},{6*4,29*4}}) {
+            int color=centered.getRGB(point[0],point[1]);
+            require(Math.abs(((color>>>16)&255)-16)<=1 && Math.abs(((color>>>8)&255)-16)<=1,
+                    "material center aligns with helmet, torso and shortened boot faces");
+        }
+        require(centered.getRGB(6*4,22*4)>>>24==0,"centering preserves mask holes");
+        System.out.println("[vandorlabs][reprolab] armor-material-centering PASS helmet torso boots");
         for(ItemProgrammableArmor item:ITEMS) {
             ItemStack stack=mc.player.getItemStackFromSlot(item.armorType);
             String path=item.getArmorTexture(stack,mc.player,item.armorType,null);
