@@ -37,6 +37,9 @@ final class DuplifierArmorRuntimeChecks {
             ItemStack tool=new ItemStack(ModItems.DUPLIFIER);require(DuplifierArmorTextures.copyFrom(from,tool)!=null,"capture native role");
             ItemStack target=armor(item);ItemProgrammableArmor.setSample(target,"minecraft:blocks/log_oak");ItemStack before=target.copy();
             ArmorTextures.Entry expected=ArmorTextures.forSlot(source.choice,item.armorType);
+            String part=item.armorType==EntityEquipmentSlot.HEAD?"helmet":item.armorType==EntityEquipmentSlot.CHEST?"chestpiece":item.armorType==EntityEquipmentSlot.LEGS?"leggings":"boots";
+            String suffix=source.variant.equals("open")?(item.armorType==EntityEquipmentSlot.HEAD?"_open":item.armorType==EntityEquipmentSlot.CHEST?"_short":""):"";
+            require(expected!=null && expected.name.equals(source.role+"_"+part+suffix),"correct full/open/short artwork family");
             require(expected!=null && DuplifierArmorTextures.applyTo(target,tool),"native role maps to every slot");
             require(ItemProgrammableArmor.texture(target)==expected.choice && ItemProgrammableArmor.sample(target)==null,"native copy clears old sample");sameMetadata(before,target);
             InventoryCrafting grid=new InventoryCrafting(player.inventoryContainer,2,2);grid.setInventorySlotContents(0,tool);grid.setInventorySlotContents(1,before);
@@ -46,7 +49,7 @@ final class DuplifierArmorRuntimeChecks {
             ItemStack saved=new ItemStack(tool.writeToNBT(new NBTTagCompound()));require(DuplifierArmorTextures.applyTo(armor(item),saved),"saved clipboard round trip");
             count++;
         }
-        require(count==128,"all eight roles across all source/destination slots");
+        require(count==192,"all full and alternate roles across all source/destination slots");
         for(int choice:new int[]{0,2,ScreenHousingTextures.lightIndex(0),ScreenHousingTextures.screenIndex("porthole_off"),com.vandorlabs.tiles.CustomBlockMaterials.choice(new ItemStack(net.minecraft.init.Blocks.BRICK_BLOCK)),ScreenHousingTextures.doorIndex(7,1)})for(ItemProgrammableArmor item:ITEMS){
             ItemStack source=armor(ModItems.PROGRAMMABLE_LEGGINGS),tool=new ItemStack(ModItems.DUPLIFIER),target=armor(item);ItemProgrammableArmor.setTexture(source,choice);
             DuplifierArmorTextures.copyFrom(source,tool);ItemProgrammableArmor.setTexture(source,1);
@@ -61,7 +64,7 @@ final class DuplifierArmorRuntimeChecks {
         NBTTagCompound block=new NBTTagCompound();block.setInteger(ProgrammableSettings.WALL_TEXTURE,2);require(!DuplifierArmorTextures.apply(target,block),"block settings cannot change armor");
         NBTTagCompound malformed=new NBTTagCompound(),appearance=new NBTTagCompound();appearance.setString("sample","../invalid");malformed.setTag(DuplifierArmorTextures.KEY,appearance);require(!DuplifierArmorTextures.apply(target,malformed) && ItemStack.areItemStacksEqual(before,target),"malformed snapshots preserve armor");
         DuplifierRuntimeChecks.run(player);
-        System.out.println("[vandorlabs][reprolab] armor-duplifier-matrix PASS native=128 (all role mappings, generic/light/sample textures, metadata, crafting, clipboard NBT, masks and existing block copies)");
+        System.out.println("[vandorlabs][reprolab] armor-duplifier-matrix PASS native=192 (all role mappings, generic/light/sample textures, metadata, crafting, clipboard NBT, masks and existing block copies)");
     }
     private static void sneak(Minecraft mc,boolean value){mc.player.movementInput.sneak=value;mc.player.connection.sendPacket(new CPacketEntityAction(mc.player,value?CPacketEntityAction.Action.START_SNEAKING:CPacketEntityAction.Action.STOP_SNEAKING));}
     private static void click(Minecraft mc,EntityEquipmentSlot slot){

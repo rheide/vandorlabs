@@ -286,5 +286,181 @@
     "worn": "vandorlabs:textures/models/armor/roles/security_rescue_boots.png",
     "icon": "vandorlabs:items/armor/security_rescue_boots",
     "model": "vandorlabs:armor/security_rescue_boots"
+  },
+  {
+    "choice": 268435488,
+    "name": "bioengineer_helmet_open",
+    "slot": "HEAD",
+    "label": "Bioengineer Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/bioengineer_helmet_open.png",
+    "icon": "vandorlabs:items/armor/bioengineer_helmet_open",
+    "model": "vandorlabs:armor/bioengineer_helmet_open",
+    "role": "bioengineer",
+    "variant": "open"
+  },
+  {
+    "choice": 268435489,
+    "name": "bioengineer_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Bioengineer Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/bioengineer_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/bioengineer_chestpiece_short",
+    "model": "vandorlabs:armor/bioengineer_chestpiece_short",
+    "role": "bioengineer",
+    "variant": "open"
+  },
+  {
+    "choice": 268435490,
+    "name": "scientist_helmet_open",
+    "slot": "HEAD",
+    "label": "Scientist Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/scientist_helmet_open.png",
+    "icon": "vandorlabs:items/armor/scientist_helmet_open",
+    "model": "vandorlabs:armor/scientist_helmet_open",
+    "role": "scientist",
+    "variant": "open"
+  },
+  {
+    "choice": 268435491,
+    "name": "scientist_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Scientist Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/scientist_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/scientist_chestpiece_short",
+    "model": "vandorlabs:armor/scientist_chestpiece_short",
+    "role": "scientist",
+    "variant": "open"
+  },
+  {
+    "choice": 268435492,
+    "name": "hazmat_helmet_open",
+    "slot": "HEAD",
+    "label": "Hazmat Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/hazmat_helmet_open.png",
+    "icon": "vandorlabs:items/armor/hazmat_helmet_open",
+    "model": "vandorlabs:armor/hazmat_helmet_open",
+    "role": "hazmat",
+    "variant": "open"
+  },
+  {
+    "choice": 268435493,
+    "name": "hazmat_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Hazmat Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/hazmat_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/hazmat_chestpiece_short",
+    "model": "vandorlabs:armor/hazmat_chestpiece_short",
+    "role": "hazmat",
+    "variant": "open"
+  },
+  {
+    "choice": 268435494,
+    "name": "repairman_helmet_open",
+    "slot": "HEAD",
+    "label": "Repairman Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/repairman_helmet_open.png",
+    "icon": "vandorlabs:items/armor/repairman_helmet_open",
+    "model": "vandorlabs:armor/repairman_helmet_open",
+    "role": "repairman",
+    "variant": "open"
+  },
+  {
+    "choice": 268435495,
+    "name": "repairman_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Repairman Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/repairman_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/repairman_chestpiece_short",
+    "model": "vandorlabs:armor/repairman_chestpiece_short",
+    "role": "repairman",
+    "variant": "open"
+  },
+  {
+    "choice": 268435496,
+    "name": "pilot_helmet_open",
+    "slot": "HEAD",
+    "label": "Pilot Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/pilot_helmet_open.png",
+    "icon": "vandorlabs:items/armor/pilot_helmet_open",
+    "model": "vandorlabs:armor/pilot_helmet_open",
+    "role": "pilot",
+    "variant": "open"
+  },
+  {
+    "choice": 268435497,
+    "name": "pilot_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Pilot Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/pilot_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/pilot_chestpiece_short",
+    "model": "vandorlabs:armor/pilot_chestpiece_short",
+    "role": "pilot",
+    "variant": "open"
+  },
+  {
+    "choice": 268435498,
+    "name": "civilian_staff_helmet_open",
+    "slot": "HEAD",
+    "label": "Civilian Staff Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/civilian_staff_helmet_open.png",
+    "icon": "vandorlabs:items/armor/civilian_staff_helmet_open",
+    "model": "vandorlabs:armor/civilian_staff_helmet_open",
+    "role": "civilian_staff",
+    "variant": "open"
+  },
+  {
+    "choice": 268435499,
+    "name": "civilian_staff_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Civilian Staff Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/civilian_staff_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/civilian_staff_chestpiece_short",
+    "model": "vandorlabs:armor/civilian_staff_chestpiece_short",
+    "role": "civilian_staff",
+    "variant": "open"
+  },
+  {
+    "choice": 268435500,
+    "name": "spaceship_staff_helmet_open",
+    "slot": "HEAD",
+    "label": "Spaceship Staff Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_helmet_open.png",
+    "icon": "vandorlabs:items/armor/spaceship_staff_helmet_open",
+    "model": "vandorlabs:armor/spaceship_staff_helmet_open",
+    "role": "spaceship_staff",
+    "variant": "open"
+  },
+  {
+    "choice": 268435501,
+    "name": "spaceship_staff_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Spaceship Staff Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/spaceship_staff_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/spaceship_staff_chestpiece_short",
+    "model": "vandorlabs:armor/spaceship_staff_chestpiece_short",
+    "role": "spaceship_staff",
+    "variant": "open"
+  },
+  {
+    "choice": 268435502,
+    "name": "security_rescue_helmet_open",
+    "slot": "HEAD",
+    "label": "Security Rescue Helmet (Open)",
+    "worn": "vandorlabs:textures/models/armor/roles/security_rescue_helmet_open.png",
+    "icon": "vandorlabs:items/armor/security_rescue_helmet_open",
+    "model": "vandorlabs:armor/security_rescue_helmet_open",
+    "role": "security_rescue",
+    "variant": "open"
+  },
+  {
+    "choice": 268435503,
+    "name": "security_rescue_chestpiece_short",
+    "slot": "CHEST",
+    "label": "Security Rescue Chestplate (Short Sleeves)",
+    "worn": "vandorlabs:textures/models/armor/roles/security_rescue_chestpiece_short.png",
+    "icon": "vandorlabs:items/armor/security_rescue_chestpiece_short",
+    "model": "vandorlabs:armor/security_rescue_chestpiece_short",
+    "role": "security_rescue",
+    "variant": "open"
   }
 ]

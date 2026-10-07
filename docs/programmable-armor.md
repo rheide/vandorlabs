@@ -12,11 +12,11 @@ The sampled texture appears in the armor dialog under **Sampled**. Choosing anot
 
 Each piece remembers its own material when equipped, dropped, moved between inventories or saved. Selecting a material preserves damage, enchantments and names. Each piece starts with its matching Civilian Staff design. Explicitly saved material choices are preserved. The selected artwork covers the armor and the padded inventory silhouette. Block materials retain the vanilla diamond helmet’s face opening and other cutouts. Block artwork is centered once on each visible armor face, preserving its proportions and cropping the edges to fit. It uses its first frame and is opaque on armor; this does not add light emission. Resource packs also affect armor materials.
 
-The **Armor** category appears only for armor items. Each picker offers eight matching designs for its own piece: Bioengineer, Scientist, Hazmat, Repairman, Pilot, Civilian Staff, Spaceship Staff and Security Rescue. A helmet lists helmet designs, a chestplate lists chestplates, and leggings and boots list their corresponding artwork. Role designs use native armor atlases, including their painted visors and transparent unused areas, and matching inventory icons. You can mix roles between pieces.
+The **Armor** category appears only for armor items. Each picker offers eight matching role designs for its own piece: Bioengineer, Scientist, Hazmat, Repairman, Pilot, Civilian Staff, Spaceship Staff and Security Rescue. A helmet lists helmet designs, a chestplate lists chestplates, and leggings and boots list their corresponding artwork. Role designs use native armor atlases, including their painted visors and transparent unused areas, and matching inventory icons. You can mix roles between pieces. Helmets also offer an **Open** design for every role, and chestplates offer **Short Sleeves** designs. Leggings and boots keep their eight original choices.
 
 **Copy armor designs:** use the [Duplifier](DUPLIFIER.md#armor-textures) to copy a mounted or offhand piece’s appearance. Shift-right-click copies and right-click applies. Role designs select the destination piece’s matching artwork; generic and sampled textures transfer unchanged. Damage, names and enchantments are preserved.
 
-See the [armor gallery](gallery/armor.md) for all eight full sets on armor stands.
+See the [armor gallery](gallery/armor.md) for all eight full sets and their open-helmet/short-sleeve variants on armor stands.
 
 **Armor stands:** hold a Configurizer in the main hand and right-click the mounted programmable piece to open its menu. Aim at the head, torso, legs or feet to choose the corresponding slot. This works in creative and survival, on normal and small stands, without removing the armor. Changes apply only to the clicked piece and preserve its damage, name and enchantments. Keep the Configurizer in hand and remain near the stand while editing.
 
@@ -31,3 +31,5 @@ Remove armor worn by your player and hold it to change its material.
 ![Hazmat role armor with matching padded inventory icons](images/programmable-armor-hazmat.png)
 
 ![Custom texture selected in the armor picker](images/gallery/armor/custom-picker.png)
+
+When copying an Open helmet or Short Sleeves chestplate with the Duplifier, a destination helmet receives the matching Open design and a chestplate receives Short Sleeves. Leggings and boots use the role’s standard design. New items still default to the original Civilian Staff design.

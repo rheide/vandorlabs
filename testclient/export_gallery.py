@@ -58,11 +58,6 @@ SHOTS = {
     "gallery_ramp_down_stairs": "ramp-controller/down-stairs.png",
 }
 
-for index,name in ((0,"thruster-lever"),(2,"airliner-throttle"),(3,"fighter-throttle")):
-    SHOTS[f"channels_{index+9}"]=f"controls/{name}-config.png"
-    for step,setting in ((0,"standard"),(1,"raised-2px"),(2,"raised-4px"),(3,"tilted")):
-        SHOTS[f"controls_{index}_{step}_floor"]=f"controls/{name}-{setting}.png"
-
 SHOTS["trapdoor_gui"]="tasks/trapdoor-config.png"
 SHOTS["trapdoor_joined_gui"]="tasks/trapdoor-joined-config.png"
 SHOTS["offset_trapdoor_closed_selection"]="tasks/trapdoor-offset-closed-selection.png"
@@ -156,6 +151,14 @@ FOCUSED_SHOTS = {
     for role in ("bioengineer", "scientist", "hazmat", "repairman", "pilot",
                  "civilian_staff", "spaceship_staff", "security_rescue")
 }
+
+for index,name in ((0,"thruster-lever"),(2,"airliner-throttle"),(3,"fighter-throttle")):
+    FOCUSED_SHOTS[f"channels_{index+9}"]=f"controls/{name}-config.png"
+    for step,setting in ((0,"standard"),(1,"raised-2px"),(2,"raised-4px"),(3,"tilted")):
+        FOCUSED_SHOTS[f"controls_{index}_{step}_floor"]=f"controls/{name}-{setting}.png"
+
+for role in ("bioengineer","scientist","hazmat","repairman","pilot","civilian_staff","spaceship_staff","security_rescue"):
+    FOCUSED_SHOTS[f"armor_stand_set_{role}_open"]=f"armor/{role.replace('_','-')}-open.png"
 
 for page in range((len(material_choices())+9)//10):
     SHOTS["gallery_catalog_material_"+str(page)] = f"building/current-materials-{page+1:02d}.png"

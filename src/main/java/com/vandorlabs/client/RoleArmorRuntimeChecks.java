@@ -39,7 +39,7 @@ final class RoleArmorRuntimeChecks {
             if(stage==9) {ArmorSamplingRuntimeChecks.tick(mc);return;}
             if(stage==0) {
                 choices=choices(ITEMS[piece]);design=0;
-                require(choices.size()==8,"eight role choices per piece");
+                require(choices.size()==(piece<2?16:8),"eight full roles plus slot-specific alternates");
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP player=owner(mc);player.setGameType(GameType.CREATIVE);
                     player.inventory.currentItem=0;
@@ -110,7 +110,7 @@ final class RoleArmorRuntimeChecks {
                 ItemStack equipped=mc.player.getItemStackFromSlot(ITEMS[piece].armorType);
                 require(equipped.getItem()==ITEMS[piece] && ItemProgrammableArmor.texture(equipped)==choices.get(choices.size()-1).choice,"role equipment sync");
                 if(++piece<ITEMS.length) {stage=0;ticks=0;return;}
-                require(icons==32,"every native inventory variant checked");
+                require(icons==48,"every native inventory variant checked");
                 stage=7;ticks=0;return;
             }
             if(stage==7) {
@@ -118,7 +118,7 @@ final class RoleArmorRuntimeChecks {
                     EntityPlayerMP player=owner(mc);
                     player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setHeldItem(EnumHand.OFF_HAND,ItemStack.EMPTY);
                     for(ItemProgrammableArmor item:ITEMS) {
-                        ItemStack stack=new ItemStack(item);ItemProgrammableArmor.setTexture(stack,choices(item).get(preview).choice);
+                        ItemStack stack=new ItemStack(item);ItemProgrammableArmor.setTexture(stack,previewEntry(item).choice);
                         player.setItemStackToSlot(item.armorType,stack);
                     }
                     player.sendContainerToPlayer(player.inventoryContainer);
@@ -126,10 +126,10 @@ final class RoleArmorRuntimeChecks {
                 mc.displayGuiScreen(new Preview());stage=8;ticks=0;return;
             }
             if(stage==8) {
-                for(ItemProgrammableArmor item:ITEMS)require(ItemProgrammableArmor.texture(mc.player.getItemStackFromSlot(item.armorType))==choices(item).get(preview).choice,"complete role preview synchronized");
+                for(ItemProgrammableArmor item:ITEMS)require(ItemProgrammableArmor.texture(mc.player.getItemStackFromSlot(item.armorType))==previewEntry(item).choice,"complete role preview synchronized");
                 shot(mc,output,"armor_stand_set_"+choices(ITEMS[0]).get(preview).name.replace("_helmet",""));
                 if(++preview<choices(ITEMS[0]).size()) {stage=7;ticks=0;return;}
-                System.out.println("[vandorlabs][reprolab] role-armor PASS choices=32 icons=32 sets=8 (Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
+                System.out.println("[vandorlabs][reprolab] role-armor PASS choices=48 icons=48 sets=16 (Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
                 stage=9;
             }
         } catch(Exception e) {throw new IllegalStateException("Role armor check piece="+piece+" design="+design+" stage="+stage,e);}
@@ -154,7 +154,7 @@ final class RoleArmorRuntimeChecks {
         require(lightCount>=30,"all fifteen light artwork pairs offered on armor: "+lightCount);
         for(int i=0;i<ScreenHousingTextures.BUILTIN_COUNT;i++)if("Lights".equals(ScreenHousingTextures.category(i)) && ScreenHousingTextures.visible(i))
             require(entries.containsKey(ScreenHousingTextures.choiceAt(i)),"every bundled light choice offered");
-        require(nativeCount==8 && entries.size()>nativeCount,"eight native designs plus existing block materials");
+        require(nativeCount==(piece<2?16:8) && entries.size()>nativeCount,"slot-specific native designs plus existing block materials");
         Map<Integer,HousingTextureList.Option> blocks=options(new HousingTextureList(0,0,250,0));
         for(HousingTextureList.Option option:blocks.values())require(!"Armor".equals(option.category) && ArmorTextures.entry(option.choice)==null,"Armor category absent from block picker");
         for(ArmorTextures.Entry entry:ArmorTextures.ALL) {
@@ -162,6 +162,7 @@ final class RoleArmorRuntimeChecks {
             require(!ScreenHousingTextures.validChoice(entry.choice),"armor choice cannot be accepted as block material");
         }
     }
+    private static ArmorTextures.Entry previewEntry(ItemProgrammableArmor item){return ArmorTextures.forSlot(choices(ITEMS[0]).get(preview).choice,item.armorType);}
     private static void checkIcon(Minecraft mc,ItemStack stack,ArmorTextures.Entry entry) {
         IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);
         org.apache.commons.lang3.tuple.Pair<? extends IBakedModel,javax.vecmath.Matrix4f> gui=

@@ -11,13 +11,15 @@ public final class ArmorTextures {
     public static final class Entry {
         public final int choice;
         public final EntityEquipmentSlot slot;
-        public final String name, label, worn, icon, model;
+        public final String name, label, worn, icon, model, role, variant;
         private Entry(JsonObject json) {
             choice=json.get("choice").getAsInt();
             slot=EntityEquipmentSlot.valueOf(json.get("slot").getAsString());
             name=json.get("name").getAsString();label=json.get("label").getAsString();
             worn=json.get("worn").getAsString();icon=json.get("icon").getAsString();
             model=json.get("model").getAsString();
+            role=json.has("role")?json.get("role").getAsString():name.replaceFirst("_(helmet|chestpiece|leggings|boots)(_(open|short))?$","");
+            variant=json.has("variant")?json.get("variant").getAsString():"full";
         }
     }
     public static final List<Entry> ALL;
@@ -43,9 +45,12 @@ public final class ArmorTextures {
     }
     public static Entry forSlot(int choice,EntityEquipmentSlot slot) {
         Entry source=entry(choice);if(source==null)return null;
-        String role=source.name.substring(0,source.name.lastIndexOf('_'));
-        for(Entry entry:ALL)if(entry.slot==slot && entry.name.substring(0,entry.name.lastIndexOf('_')).equals(role))return entry;
-        return null;
+        Entry fallback=null;
+        for(Entry entry:ALL)if(entry.slot==slot && entry.role.equals(source.role)){
+            if(entry.variant.equals(source.variant))return entry;
+            if(entry.variant.equals("full"))fallback=entry;
+        }
+        return fallback;
     }
     public static Entry entry(int choice) {return CHOICES.get(choice);}
     public static boolean fits(int choice,EntityEquipmentSlot slot) {

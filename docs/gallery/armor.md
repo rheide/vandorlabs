@@ -39,3 +39,42 @@ See the [programmable armor guide](../programmable-armor.md) for crafting and ma
 ![Full Security Rescue armor set on an armor stand](../images/gallery/armor/security-rescue.png)
 
 Use a Configurizer on a stand’s head, torso, legs or feet to configure that mounted piece in creative or survival. The armor picker also offers fifteen light designs with separate static **On** and **Off** artwork; these textures do not emit light.
+
+## Open helmets and short sleeves
+
+Every role also has an **Open** helmet and a **Short Sleeves** chestplate in
+its piece-specific Armor list. These use the same armor stats and can be mixed
+independently with any leggings or boots. Each stand below combines the open
+helmet and short-sleeve chestplate with that role’s standard leggings and boots.
+
+### Civilian Staff
+
+![Civilian Staff open helmet and short sleeves on an armor stand](../images/gallery/armor/civilian-staff-open.png)
+
+### Bioengineer
+
+![Bioengineer open helmet and short sleeves on an armor stand](../images/gallery/armor/bioengineer-open.png)
+
+### Scientist
+
+![Scientist open helmet and short sleeves on an armor stand](../images/gallery/armor/scientist-open.png)
+
+### Hazmat
+
+![Hazmat open helmet and short sleeves on an armor stand](../images/gallery/armor/hazmat-open.png)
+
+### Repairman
+
+![Repairman open helmet and short sleeves on an armor stand](../images/gallery/armor/repairman-open.png)
+
+### Pilot
+
+![Pilot open helmet and short sleeves on an armor stand](../images/gallery/armor/pilot-open.png)
+
+### Spaceship Staff
+
+![Spaceship Staff open helmet and short sleeves on an armor stand](../images/gallery/armor/spaceship-staff-open.png)
+
+### Security Rescue
+
+![Security Rescue open helmet and short sleeves on an armor stand](../images/gallery/armor/security-rescue-open.png)

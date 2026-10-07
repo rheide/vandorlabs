@@ -23,11 +23,17 @@ Use the Duplifier on programmable armor mounted on normal or small armor stands.
 
 Generic block materials, light On/Off artwork, **Custom...** block-item selections and sampled world textures transfer unchanged. Role designs adapt to the destination piece: copying Hazmat leggings onto a helmet selects the Hazmat helmet design. The same rule applies to every role and all four armor slots, including the default Civilian Staff design.
 
+Open helmet and Short Sleeves chestplate designs are a matching alternate family:
+copying either applies the same role’s Open helmet or Short Sleeves chestplate
+where available, and its standard leggings or boots otherwise.
+
 For held armor, keep the Duplifier in the main hand and the source armor in the offhand. Shift-right-click into the air to copy, replace the offhand armor with the target, then right-click into the air to apply. With an empty offhand, the usual air actions still open Apply Settings or clear the clipboard.
 
 You can also combine a loaded Duplifier and a programmable armor piece in a crafting grid. The output keeps the armor’s damage, name, enchantments and other item data, and the Duplifier is returned with its clipboard intact.
 
 The **Armor Texture** switch on the **Common** page controls armor applications. It starts On, including on older saved Duplifiers. Copying armor replaces the previous snapshot, while retaining apply switches and Connected Matching Blocks. Connected mode applies to blocks; armor operations change only the selected piece. Armor copying transfers appearance alone and preserves both pieces’ other item data.
+
+## Connected matching blocks
 
 **Connected Matching Blocks** starts Off. A tool holding copied settings uses
 the multi-block icon when this mode is On; an empty tool keeps the off icon.

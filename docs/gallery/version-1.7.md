@@ -48,3 +48,14 @@ settings, and the Duplifier copies them through **Signal Levels**. See the
 [controls guide](controls.md#throttle-base-height-and-tilt).
 
 ![Throttle base height and tilt in the settings dialog](../images/gallery/controls/airliner-throttle-config.png)
+
+## Open helmets and short sleeves
+
+All eight roles now offer an **Open** helmet and a **Short Sleeves** chestplate
+in the Armor list, adding 16 choices. Each appears only for its corresponding
+piece. The original full designs and Civilian Staff defaults remain available.
+The [armor gallery](armor.md#open-helmets-and-short-sleeves) shows every alternate
+set on an armor stand. Duplifier copies match Open helmets with Short Sleeves
+chestplates; leggings and boots use the role’s standard artwork.
+
+![Civilian Staff with an open helmet and short sleeves](../images/gallery/armor/civilian-staff-open.png)

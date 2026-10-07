@@ -15,6 +15,8 @@ MODELS = ROOT / 'src/main/resources/assets/vandorlabs/models/item/armor'
 CATALOG = ROOT / 'generated-resources/assets/vandorlabs/data/armor_textures.json'
 PARTS = {'helmet': ('HEAD', 'Helmet'), 'chestpiece': ('CHEST', 'Chestplate'),
          'leggings': ('LEGS', 'Leggings'), 'boots': ('FEET', 'Boots')}
+ALTERNATES = {"helmet_open": ("HEAD", "Helmet (Open)"),
+              "chestpiece_short": ("CHEST", "Chestplate (Short Sleeves)")}
 ID_BASE = 0x10000000
 
 
@@ -22,6 +24,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('archive', type=Path, help='ZIP archive or extracted pack directory')
     parser.add_argument('--role', action='append', help='Import only this role; may repeat')
+    parser.add_argument("--alternates-only", action="store_true", help="Append open helmets and short-sleeve chestpieces without replacing original artwork")
     args = parser.parse_args()
     entries = json.loads(CATALOG.read_text()) if CATALOG.exists() else []
     existing = {entry['name']: entry for entry in entries}
@@ -41,7 +44,7 @@ def main():
                 parser.error('Unknown roles: ' + ', '.join(sorted(unknown)))
             roles = [role for role in roles if role in args.role]
         for role in roles:
-            for part, (slot, label) in PARTS.items():
+            for part, (slot, label) in (ALTERNATES if args.alternates_only else PARTS).items():
                 name = f'{role}_{part}'
                 if name not in existing:
                     entry = {'choice': next_id, 'name': name, 'slot': slot,
@@ -49,6 +52,8 @@ def main():
                              'worn': f'vandorlabs:textures/models/armor/roles/{name}.png',
                              'icon': f'vandorlabs:items/armor/{name}',
                              'model': f'vandorlabs:armor/{name}'}
+                    if args.alternates_only:
+                        entry.update(role=role, variant="open")
                     entries.append(entry)
                     existing[name] = entry
                     next_id += 1

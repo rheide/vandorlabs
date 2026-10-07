@@ -95,7 +95,7 @@ final class ArmorCustomTextureRuntimeChecks {
                 });stage=7;ticks=0;return;
             }
             if(stage==7){
-                open(mc);stage=5;ticks=0;return;
+                mc.getToastGui().clear();open(mc);stage=5;ticks=0;return;
             }
             if(stage==5){
                 if(!(mc.currentScreen instanceof GuiProgrammableArmor)){

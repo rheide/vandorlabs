@@ -56,7 +56,7 @@ When a block uses a Custom sample, reopening its dialog selects and reveals the 
 
 ## Programmable armor
 
-[Programmable armor](programmable-armor.md) uses the default block-material list, plus an **Armor** category with eight role designs filtered to the held piece. New pieces use Civilian Staff. Block materials are centered on each visible armor face; native role atlases retain their own layout.
+[Programmable armor](programmable-armor.md) uses the default block-material list, plus an **Armor** category with eight role designs filtered to the held piece. Helmets additionally offer an Open variant for each role, and chestplates offer Short Sleeves; leggings and boots retain their standard role designs. New pieces use Civilian Staff. Block materials are centered on each visible armor face; native role atlases retain their own layout.
 
 Shift-right-click a world block face with armor to copy the displayed artwork in creative or survival. The resolver reads the actual and extended model state, including programmable face overrides and storage top/side/front textures. This differs from the inventory Custom picker, which uses a block item's representative texture. The saved sample appears in the armor picker under **Sampled**; selecting another design replaces it.
 

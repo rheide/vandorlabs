@@ -76,7 +76,7 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = armor ] || [ "$TARGET" = armor-tools ] || [ "$TARGET" = armor-duplifier ]; then
-        grep -q 'armor-duplifier-matrix PASS native=128' "$RUN_OUT/client.log"
+        grep -q 'armor-duplifier-matrix PASS native=192' "$RUN_OUT/client.log"
         grep -q 'armor-custom-picker PASS cases=4' "$RUN_OUT/client.log"
         grep -q 'armor-duplifier-interactions PASS cases=6' "$RUN_OUT/client.log"
         if [ "$TARGET" = armor-duplifier ]; then
@@ -91,11 +91,12 @@ if [ "$MODE" = focus ]; then
         fi
         grep -q 'armor-material-centering PASS' "$RUN_OUT/client.log"
         grep -q 'programmable-armor PASS' "$RUN_OUT/client.log"
-        grep -q 'role-armor PASS choices=32 icons=32 sets=8' "$RUN_OUT/client.log"
+        grep -q 'role-armor PASS choices=48 icons=48 sets=16' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/shot_armor_picker.png"
         test -s "$RUN_OUT/shot_armor_worn_and_icons.png"
         for role in bioengineer scientist hazmat repairman pilot civilian_staff spaceship_staff security_rescue; do
             test -s "$RUN_OUT/shot_armor_stand_set_$role.png"
+            test -s "$RUN_OUT/shot_armor_stand_set_${role}_open.png"
         done
         echo "Live armor checks passed: $RUN_OUT"
         echo "Live-client artifacts: $RUN_OUT"
