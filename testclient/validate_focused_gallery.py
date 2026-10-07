@@ -27,7 +27,7 @@ if target == 'redstone-dialogs':
                 selected += ['controls_'+str(index)+'_'+str(level)+suffix for level in range(4)]
 
 if target == 'control-icons':
-    selected=['controls_hotbar_empty','controls_hotbar','gallery_close_control_small_power_lever','gallery_close_control_large_power_lever','gallery_close_control_rocker_switch']
+    selected=['controls_hotbar_empty','controls_hotbar','gallery_close_control_small_power_lever','gallery_close_control_large_power_lever','gallery_close_control_rocker_switch','gallery_close_control_push_button']
 assert selected, 'No mapped screenshots match ' + prefix
 log = (source / 'client.log').read_text()
 
@@ -38,7 +38,7 @@ if target == 'door-selection': require('moved-door-selection PASS large=40 regul
 if target == 'control-icons' or target == 'gallery_close_control_': require('twin-power-lever-models PASS poses=32')
 if target == 'control-icons':
     require('signal-control-mount-gallery PASS shots=24')
-    require('binary-control-gallery PASS shots=3')
+    require('binary-control-gallery PASS shots=4')
     require('binary-control-mount-gallery PASS shots=12')
     require('binary-control-mounts PASS')
     require('binary-control-runtime PASS')

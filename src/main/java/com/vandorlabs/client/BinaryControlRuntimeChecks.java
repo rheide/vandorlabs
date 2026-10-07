@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 final class BinaryControlRuntimeChecks {
     static void run(World world,EntityPlayer player){
         BlockPos pos=new BlockPos(38,103,38),copy=pos.east(4);int cases=0;
-        for(String id:new String[]{"small_power_lever","large_power_lever","industrial_power_lever","compact_power_lever","rocker_switch"}){
+        for(String id:new String[]{"small_power_lever","large_power_lever","industrial_power_lever","compact_power_lever","rocker_switch","push_button"}){
             Block block=Block.getBlockFromName("vandorlabs:"+id);boolean lever=block instanceof BlockIndustrialLever;
             for(EnumFacing face:EnumFacing.values()){
                 if(lever && face==EnumFacing.DOWN)continue;

@@ -3,14 +3,22 @@
 
 Rotated grip cuboids use conservative bounds; tile configuration stays in game.
 """
-import itertools,json,math
+import itertools,json,math,shutil
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 MARKER='# Generated signal control models\n'
+CYAN_ATLAS='signal_blocks_industrial_power_lever'
+def texture_tile(label):return 3 if label==CYAN_ATLAS else 0
+def texture_grid(label):return 4 if label==CYAN_ATLAS else 1
+# Dynmap keys its texture grids by filename. Isolate the indicator atlas from
+# the legacy lever definition, which still treats the original as one tile.
+indicator=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/panel_switches/indicator_atlas.png'
+indicator.parent.mkdir(parents=True,exist_ok=True)
+shutil.copyfile(ROOT/'texture-packs/default/assets/vandorlabs/textures/blocks/industrial_power_lever.png',indicator)
 models=[];blocks=[];textures={}
 for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks.json').read_text()):
-    if entry.get('class') not in ('BlockSignalControl','BlockTwinPowerLever','BlockRockerSwitch'):continue
+    if entry.get('class') not in ('BlockSignalControl','BlockTwinPowerLever','BlockRockerSwitch','BlockPushButton'):continue
     name=entry['id']
     states=json.loads((ASSETS/'blockstates'/f'{name}.json').read_text())['variants']
     # Dynmap can resolve several listed levels to the same metadata state.
@@ -42,12 +50,12 @@ for entry in json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks
             for face,key in [('east','e'),('up','u'),('north','n'),('south','s'),('down','d'),('west','w')]:
                 tex=element['faces'][face]['texture']
                 while tex.startswith('#'):tex=model['textures'][tex[1:]]
-                tex=tex.split(':')[1];label='signal_'+tex.replace('/','_');textures[label]=tex+'.png'
+                tex=tex.split(':')[1];label='signal_'+tex.replace('/','_');textures[label]='blocks/panel_switches/indicator_atlas.png' if label==CYAN_ATLAS else tex+'.png'
                 if label not in patches:patches[label]=len(patches)
                 faces.append(key+'/'+str(patches[label]))
             boxes.append(',box='+ '/'.join(f'{v:.6f}' for v in lo)+':'+ '/'.join(f'{v:.6f}' for v in hi)+':'+':'.join(faces)+(f':R/0/{variant["y"]}/0' if variant.get('y') else ''))
         models.append(f'modellist:id=%{name},state={state}'+''.join(boxes))
-        blocks.append(f'block:id=%{name},state={state}'+''.join(f',patch{i}=0:{tex}' for tex,i in patches.items())+',transparency=TRANSPARENT,stdrot=true')
-for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[f'texture:id={label},filename=assets/vandorlabs/textures/{path},xcount=1,ycount=1' for label,path in textures.items()]+blocks)]:
+        blocks.append(f'block:id=%{name},state={state}'+''.join(f',patch{i}={texture_tile(tex)}:{tex}' for tex,i in patches.items())+',transparency=TRANSPARENT,stdrot=true')
+for filename,lines in [('dynmap-models.txt',models),('dynmap-texture.txt',[f'texture:id={label},filename=assets/vandorlabs/textures/{path},xcount={texture_grid(label)},ycount={texture_grid(label)}' for label,path in textures.items()]+blocks)]:
     path=ASSETS/filename;path.write_text(path.read_text().split(MARKER)[0].rstrip()+'\n\n'+MARKER+'\n'.join(lines)+'\n')
 print(f'Generated {len(models)} signal control Dynmap states')

@@ -50,7 +50,7 @@ final class RockerSwitchChecks {
                     count++;signature.append(java.util.Arrays.hashCode(q.getVertexData()));
                     String sprite=q.getSprite().getIconName();
                     require(!sprite.endsWith(on?"/amber":"/cyan"),"inactive rocker border is colored");
-                    boolean colored=q.getFace()==face && sprite.endsWith(on?"/cyan":"/amber");indicator|=colored;
+                    boolean colored=q.getFace()==face && (sprite.endsWith(on?"/cyan":"/amber") || on && sprite.endsWith("/industrial_power_lever"));indicator|=colored;
                     if(colored){coloredFaces++;int[] vertices=q.getVertexData();int step=vertices.length/4;for(int i=0;i<4;i++)indicatorCenter=indicatorCenter.add(new Vec3d(Float.intBitsToFloat(vertices[i*step]),Float.intBitsToFloat(vertices[i*step+1]),Float.intBitsToFloat(vertices[i*step+2])).scale(.25));}
                     int[] data=q.getVertexData();int stride=data.length/4;
                     for(int i=0;i<4;i++)require(bounds.contains(new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]))),"toggle selection excludes artwork "+face+"/"+rotation);

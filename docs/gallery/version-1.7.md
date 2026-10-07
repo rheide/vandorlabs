@@ -86,6 +86,17 @@ Craft it with one stick above one Industrial Alloy Ingot. Existing Rocker Switch
 Rocker Switch and Wall Slider are 8% smaller, including their selection and collision bounds.
 See the [controls gallery](controls.md#rocker-switch) for the two positions.
 
+## Push Button
+
+Push Button now uses a compact square metal plate and recessed face. It lights
+cyan while pressed, with the same simple bright highlight and shaded lower edge
+as the redesigned Rocker Switch. It releases after one second, retaining its
+existing ID, redstone channels and one-alloy recipe. Both switches use the
+Industrial Power Lever’s cyan indicator palette. Push Button also shares the
+height and tilt settings described below.
+
+![Push Button released and pressed](../images/gallery/controls/push-button.png)
+
 ## One configurable throttle
 
 Craft **Thruster Lever**, then select **Type: Thruster/Airliner/Fighter** in its
@@ -107,7 +118,7 @@ See the [door gallery](doors.md) for regular and large examples.
 
 ## Mounting options on switches and levers
 
-**Power Lever**, **Wall Slider**, **Rocker Switch** and **Industrial Power Lever**
+**Power Lever**, **Wall Slider**, **Rocker Switch**, **Push Button** and **Industrial Power Lever**
 now share the throttle’s base options: **Standard / +2 / +4 / +6 px**, **Flat /
 15 / 30 / 45 degrees**, and four tilt directions. Height extends upright from
 the support, with a filled wedge beneath the tilted assembly. The base and

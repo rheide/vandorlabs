@@ -7,7 +7,8 @@
     "edge": "vandorlabs:blocks/thruster_controls/32px/edge",
     "amber": "vandorlabs:blocks/thruster_controls/32px/amber",
     "cyan": "vandorlabs:blocks/thruster_controls/32px/cyan",
-    "particle": "vandorlabs:blocks/thruster_controls/32px/metal"
+    "particle": "vandorlabs:blocks/thruster_controls/32px/metal",
+    "lit_cyan": "vandorlabs:blocks/industrial_power_lever"
   },
   "elements": [
     {
@@ -839,12 +840,12 @@
       ],
       "faces": {
         "north": {
-          "texture": "#cyan",
+          "texture": "#lit_cyan",
           "uv": [
-            0,
+            12,
             0,
             16,
-            16
+            4
           ]
         },
         "south": {
@@ -907,12 +908,12 @@
       ],
       "faces": {
         "north": {
-          "texture": "#cyan",
+          "texture": "#lit_cyan",
           "uv": [
-            0,
+            12,
             0,
             16,
-            16
+            4
           ]
         },
         "south": {
@@ -975,12 +976,12 @@
       ],
       "faces": {
         "north": {
-          "texture": "#cyan",
+          "texture": "#lit_cyan",
           "uv": [
-            0,
+            12,
             0,
             16,
-            16
+            4
           ]
         },
         "south": {
@@ -1043,12 +1044,12 @@
       ],
       "faces": {
         "north": {
-          "texture": "#cyan",
+          "texture": "#lit_cyan",
           "uv": [
-            0,
+            12,
             0,
             16,
-            16
+            4
           ]
         },
         "south": {
@@ -1111,12 +1112,12 @@
       ],
       "faces": {
         "north": {
-          "texture": "#cyan",
+          "texture": "#lit_cyan",
           "uv": [
-            0,
+            12,
             0,
             16,
-            16
+            4
           ]
         },
         "south": {

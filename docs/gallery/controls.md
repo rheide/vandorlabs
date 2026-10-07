@@ -6,7 +6,7 @@ These controls generate local redstone power and can participate in virtual reds
 
 | Control | States | Use |
 | --- | --- | --- |
-| Push Button | ![Push Button states](../images/gallery/controls/push-button.png) | Momentary input for doors and circuits. |
+| Push Button | ![Push Button states](../images/gallery/controls/push-button.png) | Square recessed button; cyan while pressed. |
 | Rocker Switch | ![Rocker Switch states](../images/gallery/controls/rocker-switch.png) | Split rocker with amber Off and a cyan top button when On. |
 | Industrial Power Lever: Compact | ![Compact Power Lever states](../images/gallery/controls/compact-power-lever.png) | Small lever control. |
 | Industrial Power Lever: Industrial | ![Industrial Power Lever states](../images/gallery/controls/industrial-power-lever.png) | Larger lever control. |
@@ -34,11 +34,23 @@ or **Size: Large** and then **Done**. Size survives saving, pick-block and
 breaking/replacing; the Duplifier’s **Signal Levels** option copies it. Existing
 Large Power Levers retain their original size.
 
+## Push Button
+
+Push Button uses a square metal plate and recessed button in the same solid-color
+palette as Rocker Switch. Pressing it lowers the face and lights it cyan, with a
+simple bright highlight and darker lower edge. It releases automatically after
+one second and outputs 15 redstone power while pressed.
+
+Mount it on a wall, floor or ceiling. It keeps the existing Push Button ID,
+channel behavior and recipe: **one Industrial Alloy Ingot**. Its base supports
+height and tilt settings, with solid collision and matching selection bounds.
+
 ## Rocker Switch
 
 Rocker Switch uses an approximately **5.5 × 7.4 pixel** plate with a recessed, split
 rocker in the newer levers’ solid-color palette. **Off** presses the bottom
-half with an amber border; **On** presses the fully cyan top half. Normal right-click toggles it and
+half with an amber border; **On** presses the fully cyan top half, with a subtle
+bright highlight and darker lower edge. Normal right-click toggles it and
 outputs 0 or 15 redstone power.
 
 Mount it on a wall, floor or ceiling. Floor and ceiling orientation follows
@@ -56,6 +68,7 @@ Creative-mode shift-right-click configures channels and low/high limits. Default
 are 0, 5, 10 and 15. Their numeric outputs drive physical redstone and shared
 channels, including interactive screen sliders and Programmable Trigger blocks.
 
+Push Button and Rocker Switch share the compact palette and light-like cyan faces.
 Rocker Switch and Wall Slider use compact models reduced by 8%.
 All four detailed models mount on walls, floors and ceilings. The floor-mounted
 Wall Slider puts Off nearest the placing player. Airliner handles move together;
@@ -71,7 +84,7 @@ controls keep their appearance. Type is preserved when saving, pick-block and
 breaking/replacing; the Duplifier’s **Signal Levels** option copies it.
 
 All three throttle types, **Wall Slider**, **Power Lever**, **Industrial Power
-Lever** and **Rocker Switch** have configurable bases.
+Lever**, **Rocker Switch** and **Push Button** have configurable bases.
 Shift-right-click a placed control, or right-click it with the Configurizer in
 survival, to open its channel/settings dialog. Set **Base height** to **Standard**
 (the original minimum), **+2 px**, **+4 px** or **+6 px**. The solid mounting plate extends;

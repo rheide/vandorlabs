@@ -1256,7 +1256,7 @@
   {
     "id": "push_button",
     "type": "switch",
-    "class": "BlockVandorSwitch",
+    "class": "BlockPushButton",
     "item": true,
     "momentary": true
   },

@@ -1,0 +1,160 @@
+{
+  "variants": {
+    "facing=up,on=false,rotation=0": {
+      "model": "vandorlabs:push_button/off_floor"
+    },
+    "facing=up,on=true,rotation=0": {
+      "model": "vandorlabs:push_button/on_floor"
+    },
+    "facing=up,on=false,rotation=1": {
+      "model": "vandorlabs:push_button/off_floor",
+      "y": 90
+    },
+    "facing=up,on=true,rotation=1": {
+      "model": "vandorlabs:push_button/on_floor",
+      "y": 90
+    },
+    "facing=up,on=false,rotation=2": {
+      "model": "vandorlabs:push_button/off_floor",
+      "y": 180
+    },
+    "facing=up,on=true,rotation=2": {
+      "model": "vandorlabs:push_button/on_floor",
+      "y": 180
+    },
+    "facing=up,on=false,rotation=3": {
+      "model": "vandorlabs:push_button/off_floor",
+      "y": 270
+    },
+    "facing=up,on=true,rotation=3": {
+      "model": "vandorlabs:push_button/on_floor",
+      "y": 270
+    },
+    "facing=down,on=false,rotation=0": {
+      "model": "vandorlabs:push_button/off_ceiling"
+    },
+    "facing=down,on=true,rotation=0": {
+      "model": "vandorlabs:push_button/on_ceiling"
+    },
+    "facing=down,on=false,rotation=1": {
+      "model": "vandorlabs:push_button/off_ceiling",
+      "y": 90
+    },
+    "facing=down,on=true,rotation=1": {
+      "model": "vandorlabs:push_button/on_ceiling",
+      "y": 90
+    },
+    "facing=down,on=false,rotation=2": {
+      "model": "vandorlabs:push_button/off_ceiling",
+      "y": 180
+    },
+    "facing=down,on=true,rotation=2": {
+      "model": "vandorlabs:push_button/on_ceiling",
+      "y": 180
+    },
+    "facing=down,on=false,rotation=3": {
+      "model": "vandorlabs:push_button/off_ceiling",
+      "y": 270
+    },
+    "facing=down,on=true,rotation=3": {
+      "model": "vandorlabs:push_button/on_ceiling",
+      "y": 270
+    },
+    "facing=north,on=false,rotation=0": {
+      "model": "vandorlabs:push_button/off_north"
+    },
+    "facing=north,on=true,rotation=0": {
+      "model": "vandorlabs:push_button/on_north"
+    },
+    "facing=north,on=false,rotation=1": {
+      "model": "vandorlabs:push_button/off_north"
+    },
+    "facing=north,on=true,rotation=1": {
+      "model": "vandorlabs:push_button/on_north"
+    },
+    "facing=north,on=false,rotation=2": {
+      "model": "vandorlabs:push_button/off_north"
+    },
+    "facing=north,on=true,rotation=2": {
+      "model": "vandorlabs:push_button/on_north"
+    },
+    "facing=north,on=false,rotation=3": {
+      "model": "vandorlabs:push_button/off_north"
+    },
+    "facing=north,on=true,rotation=3": {
+      "model": "vandorlabs:push_button/on_north"
+    },
+    "facing=south,on=false,rotation=0": {
+      "model": "vandorlabs:push_button/off_south"
+    },
+    "facing=south,on=true,rotation=0": {
+      "model": "vandorlabs:push_button/on_south"
+    },
+    "facing=south,on=false,rotation=1": {
+      "model": "vandorlabs:push_button/off_south"
+    },
+    "facing=south,on=true,rotation=1": {
+      "model": "vandorlabs:push_button/on_south"
+    },
+    "facing=south,on=false,rotation=2": {
+      "model": "vandorlabs:push_button/off_south"
+    },
+    "facing=south,on=true,rotation=2": {
+      "model": "vandorlabs:push_button/on_south"
+    },
+    "facing=south,on=false,rotation=3": {
+      "model": "vandorlabs:push_button/off_south"
+    },
+    "facing=south,on=true,rotation=3": {
+      "model": "vandorlabs:push_button/on_south"
+    },
+    "facing=east,on=false,rotation=0": {
+      "model": "vandorlabs:push_button/off_east"
+    },
+    "facing=east,on=true,rotation=0": {
+      "model": "vandorlabs:push_button/on_east"
+    },
+    "facing=east,on=false,rotation=1": {
+      "model": "vandorlabs:push_button/off_east"
+    },
+    "facing=east,on=true,rotation=1": {
+      "model": "vandorlabs:push_button/on_east"
+    },
+    "facing=east,on=false,rotation=2": {
+      "model": "vandorlabs:push_button/off_east"
+    },
+    "facing=east,on=true,rotation=2": {
+      "model": "vandorlabs:push_button/on_east"
+    },
+    "facing=east,on=false,rotation=3": {
+      "model": "vandorlabs:push_button/off_east"
+    },
+    "facing=east,on=true,rotation=3": {
+      "model": "vandorlabs:push_button/on_east"
+    },
+    "facing=west,on=false,rotation=0": {
+      "model": "vandorlabs:push_button/off_west"
+    },
+    "facing=west,on=true,rotation=0": {
+      "model": "vandorlabs:push_button/on_west"
+    },
+    "facing=west,on=false,rotation=1": {
+      "model": "vandorlabs:push_button/off_west"
+    },
+    "facing=west,on=true,rotation=1": {
+      "model": "vandorlabs:push_button/on_west"
+    },
+    "facing=west,on=false,rotation=2": {
+      "model": "vandorlabs:push_button/off_west"
+    },
+    "facing=west,on=true,rotation=2": {
+      "model": "vandorlabs:push_button/on_west"
+    },
+    "facing=west,on=false,rotation=3": {
+      "model": "vandorlabs:push_button/off_west"
+    },
+    "facing=west,on=true,rotation=3": {
+      "model": "vandorlabs:push_button/on_west"
+    }
+  }
+}

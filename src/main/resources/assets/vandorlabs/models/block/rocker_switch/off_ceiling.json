@@ -7,7 +7,8 @@
     "edge": "vandorlabs:blocks/thruster_controls/32px/edge",
     "amber": "vandorlabs:blocks/thruster_controls/32px/amber",
     "cyan": "vandorlabs:blocks/thruster_controls/32px/cyan",
-    "particle": "vandorlabs:blocks/thruster_controls/32px/metal"
+    "particle": "vandorlabs:blocks/thruster_controls/32px/metal",
+    "lit_cyan": "vandorlabs:blocks/industrial_power_lever"
   },
   "elements": [
     {
