@@ -61,11 +61,11 @@ public final class CanopyRenderer extends CustomRenderer {
                 polygon = clip(polygon, axis, 1, false);
             }
             int texture =
-                    face.material.equals("glass")
+                    face.baseMaterial.equals("glass")
                             ? 1
-                            : face.material.equals("amber")
+                            : face.baseMaterial.equals("amber")
                                     ? 2
-                                    : face.material.equals("cyan") ? 3 : 0;
+                                    : face.baseMaterial.equals("cyan") ? 3 : 0;
             for (int i = 1; i < polygon.size() - 1; i++) {
                 Vec3d a = polygon.get(0), b = polygon.get(i), c = polygon.get(i + 1);
                 RenderPatch patch =

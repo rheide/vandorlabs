@@ -31,7 +31,8 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
             int stage,
             float alpha) {
         if (tile.block() == null || !tile.draws()) return;
-        List<DrawFace> opaque = new ArrayList<>(), glass = new ArrayList<>();
+        com.vandorlabs.shipsystems.MountFrame frame=tile.frame();
+        List<DrawFace> opaque = new ArrayList<>(), glass = new ArrayList<>(), emissive = new ArrayList<>();
         Vec3d camera =
                 new Vec3d(
                         rendererDispatcher.entityX - tile.getPos().getX(),
@@ -44,13 +45,14 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
             Vec3d center = Vec3d.ZERO;
             for (int i = 0; i < draw.v.length; i++) {
                 draw.v[i] =
-                        CanopyMesh.rotate(
-                                f.vertices[i],
-                                tile.facing());
+                        frame.point(f.vertices[i]);
                 center = center.add(draw.v[i]);
             }
             draw.distance = center.scale(1D / draw.v.length).squareDistanceTo(camera);
-            (f.material.equals("glass") ? glass : opaque).add(draw);
+            String material = f.baseMaterial;
+            boolean glowing = tile.active && (material.equals("cyan") || material.equals("amber") || material.equals("display_on")
+                    || material.startsWith("energy_") && !material.endsWith("_off"));
+            (material.equals("glass") ? glass : glowing ? emissive : opaque).add(draw);
         }
         glass.sort((a, b) -> Double.compare(b.distance, a.distance));
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -64,6 +66,9 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         draw(opaque);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+        draw(emissive);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(
                 GlStateManager.SourceFactor.SRC_ALPHA,

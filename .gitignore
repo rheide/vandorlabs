@@ -7,6 +7,7 @@ __pycache__/
 
 # Forge development-client state (configs, logs, crashes and worlds).
 /run/
+/logs/
 
 # The live-client harness source is tracked, but downloaded runtimes and
 # screenshot/log output from individual runs are local test artifacts.

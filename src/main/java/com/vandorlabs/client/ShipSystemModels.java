@@ -32,7 +32,7 @@ public final class ShipSystemModels {
 
     @SubscribeEvent
     public void textures(TextureStitchEvent.Pre event) {
-        for (String m : new String[] {"alloy", "graphite", "service", "glass", "amber", "cyan", "kestrel", "aster"})
+        for (String m : ShipSystemMesh.MATERIALS)
             event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/ship_systems/" + m));
     }
 
@@ -40,7 +40,7 @@ public final class ShipSystemModels {
     public void bake(ModelBakeEvent event) {
         for (net.minecraft.block.Block b : ModBlocks.BLOCKS)
             if (b instanceof BlockShipSystem) {
-                String id = ((BlockShipSystem) b).kind;
+                String id = ((BlockShipSystem) b).itemModel();
                 event.getModelRegistry()
                         .putObject(
                                 new ModelResourceLocation(b.getRegistryName(), "inventory"),

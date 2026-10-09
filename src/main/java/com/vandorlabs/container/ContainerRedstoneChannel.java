@@ -12,6 +12,8 @@ public class ContainerRedstoneChannel extends Container {
 
     @Override public boolean canInteractWith(EntityPlayer player) {
         TileEntity tile = member.channelTile();
+        if (tile instanceof com.vandorlabs.tiles.TileEntityShipSystem
+                && !((com.vandorlabs.tiles.TileEntityShipSystem)tile).canConfigure(player)) return false;
         return tile.getWorld() != null && tile.getWorld().getTileEntity(tile.getPos()) == tile
                 && player.getDistanceSq(tile.getPos()) <= 64
                 && player.canPlayerEdit(tile.getPos(), net.minecraft.util.EnumFacing.UP,

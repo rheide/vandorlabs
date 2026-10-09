@@ -1,10 +1,53 @@
 """Import the ship systems model kit into the host mod's resource namespace."""
 import argparse
 import json
-import shutil
 from pathlib import Path
+from ship_system_surfaces import clean_surfaces, coplanar_overlaps
+from planar_surfaces import clean, overlap_count
+from kit_textures import import_textures
+from machine_accents import apply_accents
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def collision_boxes(model):
+    faces = [face for face in model['faces'] if face['material'] != 'glass']
+    assert len(faces) % 6 == 0
+    boxes = []
+    for offset in range(0, len(faces), 6):
+        vertices = [v for face in faces[offset:offset + 6] for v in face['v']]
+        low = [min(v[i] for v in vertices) for i in range(3)]
+        high = [max(v[i] for v in vertices) for i in range(3)]
+        assert all(high[i] > low[i] for i in range(3))
+        assert all(all(v[i] in (low[i], high[i]) for i in range(3)) for v in vertices)
+        boxes.append(low + high)
+    for face in model['faces']:
+        if face['material'] == 'glass':
+            low = [min(v[i] for v in face['v']) for i in range(3)]
+            high = [max(v[i] for v in face['v']) for i in range(3)]
+            axis = next(i for i in range(3) if low[i] == high[i])
+            low[axis] -= 1 / 64
+            high[axis] += 1 / 64
+            boxes.append(low + high)
+    return boxes
+
+
+def prepare_models(models, existing):
+    previous = {model['id']: model for model in existing}
+    detailed = any('base_material' in face for model in models for face in model['faces'])
+    for model in models:
+        if detailed:
+            baseline = previous[model['id']]
+            assert model['occupancy_xyz'] == baseline['occupancy_xyz'], model['id']
+            # Recessed surface panels retain the established assembly collision volume.
+            model['collision'] = baseline['collision']
+        else:
+            model['collision'] = collision_boxes(model)
+            clean_surfaces(model)
+            assert coplanar_overlaps(model) == 0, model['id']
+    removed = clean(models)
+    assert overlap_count(models) == 0
+    print(f'Clipped {removed} coplanar overlaps across {len(models)} meshes')
 
 
 def main():
@@ -12,38 +55,23 @@ def main():
     parser.add_argument('kit', type=Path)
     kit = parser.parse_args().kit
     models = json.loads((kit / 'model_catalog.json').read_text(encoding='utf-8'))
-    assert len(models) == 18
+    assert len(models) in (18, 36)
+    assemblies = [model for model in models if not model.get('active', False)]
+    assert len(assemblies) == 18
     assets = ROOT / 'src/main/resources/assets/vandorlabs'
+    prepare_models(models, json.loads((assets / 'data/ship_system_meshes.json').read_text(encoding='utf-8')))
     for model in models:
         model['footprint'] = [model['occupancy_xyz'][0], model['occupancy_xyz'][2]]
-        faces = [face for face in model['faces'] if face['material'] != 'glass']
-        # The source exports each cuboid as six consecutive rectangular faces.
-        assert len(faces) % 6 == 0
-        boxes = []
-        for offset in range(0, len(faces), 6):
-            group = faces[offset:offset + 6]
-            vertices = [v for face in group for v in face['v']]
-            low = [min(v[i] for v in vertices) for i in range(3)]
-            high = [max(v[i] for v in vertices) for i in range(3)]
-            assert all(high[i] > low[i] for i in range(3))
-            assert all(all(v[i] in (low[i], high[i]) for i in range(3)) for v in vertices)
-            boxes.append(low + high)
-        for face in model['faces']:
-            if face['material'] == 'glass':
-                low = [min(v[i] for v in face['v']) for i in range(3)]
-                high = [max(v[i] for v in face['v']) for i in range(3)]
-                axis = next(i for i in range(3) if low[i] == high[i])
-                low[axis] -= 1 / 64
-                high[axis] += 1 / 64
-                boxes.append(low + high)
-        model['collision'] = boxes
-        name = model['id']
+        if model.get('active', False):
+            continue
+        name = model.get('stem', model['id'])
+        model['block_id'] = name
         for folder, data in [
                 ('blockstates', {'variants': {'normal': {'model': 'vandorlabs:ship_system_empty'}}}),
                 ('models/item', {'parent': 'block/block'})]:
             (assets / folder / (name + '.json')).write_text(json.dumps(data) + '\n', encoding='utf-8')
         # Unique small recipes; large variants upgrade their matching small machine.
-        index = models.index(model) // 2
+        index = assemblies.index(model) // 2
         if model['size'] == 'small':
             ingredients = [{'item': 'vandorlabs:programmable_matter_ingot'},
                            {'item': 'minecraft:redstone', 'data': 0}]
@@ -56,18 +84,18 @@ def main():
         recipe = {'type': 'minecraft:crafting_shapeless', 'ingredients': ingredients,
                   'result': {'item': 'vandorlabs:' + name}}
         (assets / 'recipes' / (name + '.json')).write_text(json.dumps(recipe) + '\n', encoding='utf-8')
-    (assets / 'data/ship_system_meshes.json').write_text(json.dumps(models, separators=(',', ':')) + '\n', encoding='utf-8')
     (assets / 'models/block/ship_system_empty.json').write_text('{"textures":{"particle":"vandorlabs:blocks/ship_systems/alloy"},"elements":[]}\n', encoding='utf-8')
     target = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/ship_systems'
     target.mkdir(parents=True, exist_ok=True)
-    for texture in (kit / 'forge/resources/assets/shipsystems/textures/blocks').glob('*.png'):
-        shutil.copyfile(texture, target / texture.name)
+    import_textures(models, kit / 'forge/resources/assets/shipsystems/textures/blocks', target)
+    apply_accents(models, target)
+    (assets / 'data/ship_system_meshes.json').write_text(json.dumps(models, separators=(',', ':')) + '\n', encoding='utf-8')
     lang = ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang'
     text = lang.read_text(encoding='utf-8')
-    text = '\n'.join(line for line in text.splitlines() if not any(line.startswith('tile.' + m['id'] + '.') for m in models))
-    text += '\n' + '\n'.join('tile.' + m['id'] + '.name=' + m['label'].replace(' · ', ' ') for m in models) + '\n'
+    text = '\n'.join(line for line in text.splitlines() if not any(line.startswith('tile.' + m['block_id'] + '.') for m in assemblies))
+    text += '\n' + '\n'.join('tile.' + m['block_id'] + '.name=' + m['label'].replace(' · OFF', '').replace(' · ', ' ') for m in assemblies) + '\n'
     lang.write_text(text, encoding='utf-8')
-    print('Imported 18 ship systems with authored collision cuboids and recipes')
+    print(f'Imported 18 ship systems with {len(models)} state meshes, authored collision cuboids and recipes')
 
 
 if __name__ == '__main__':

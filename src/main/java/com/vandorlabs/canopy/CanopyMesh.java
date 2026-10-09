@@ -12,11 +12,12 @@ import java.util.*;
 public final class CanopyMesh {
     public static final Map<String, List<Face>> MODELS = new HashMap<>();
     public static final Map<String, int[]> DIMENSIONS = new HashMap<>();
+    public static final Set<String> MATERIALS = new LinkedHashSet<>();
 
     public static final class Face {
         public Vec3d[] vertices;
         public double[][] uv;
-        public String material, group;
+        public String material, baseMaterial, group;
         public boolean doubleSided;
     }
 
@@ -44,6 +45,8 @@ public final class CanopyMesh {
                         face.uv[i] = new double[] {b.get(0).getAsDouble(), b.get(1).getAsDouble()};
                     }
                     face.material = f.get("material").getAsString();
+                    face.baseMaterial = f.has("base_material") ? f.get("base_material").getAsString() : face.material;
+                    MATERIALS.add(face.material);
                     face.group = f.get("group").getAsString();
                     face.doubleSided = f.get("double").getAsBoolean();
                     faces.add(face);

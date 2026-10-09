@@ -277,7 +277,7 @@ public final class CanopyRuntimeChecks {
                                 }
                             for (CanopyMesh.Face face :
                                     CanopyMesh.MODELS.get("visor_module_front_h2"))
-                                if (face.material.equals("metal")) {
+                                if (face.baseMaterial.equals("metal")) {
                                     boolean low = true, high = true;
                                     for (Vec3d v : face.vertices) {
                                         low &= v.y <= .125 + 1E-8;

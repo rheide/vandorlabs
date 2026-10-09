@@ -1,0 +1,1 @@
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:quartz"}, {"item": "minecraft:dye", "data": 10}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:gold_ingot"}], "result": {"item": "vandorlabs:vektor_dampener_small"}}

@@ -174,7 +174,7 @@ public class ModBlocks {
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
-        for (String id : com.vandorlabs.shipsystems.ShipSystemMesh.MODELS.keySet())
+        for (String id : com.vandorlabs.shipsystems.ShipSystemMesh.BLOCK_MODELS.keySet())
             add(new BlockShipSystem(id));
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);

@@ -1,0 +1,1 @@
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:rivet_deck_small_g32"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_block"}], "result": {"item": "vandorlabs:rivet_deck_large_g32"}}

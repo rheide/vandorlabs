@@ -1,0 +1,1 @@
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:vektor_gravity_small"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_block"}], "result": {"item": "vandorlabs:vektor_gravity_large"}}

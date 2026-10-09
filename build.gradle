@@ -25,9 +25,47 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '1.8'
+version = '1.8-alpha'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
+
+task compileKitSpriteChecks(type: JavaCompile) {
+    dependsOn compileJava
+    source = files('testclient/java/com/vandorlabs/client/KitSpriteFormatChecks.java')
+    classpath = sourceSets.main.runtimeClasspath
+    destinationDir = file("$buildDir/kit-sprite-checks/classes")
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+task testKitSpriteFormats(type: JavaExec) {
+    group = 'verification'
+    description = 'Validate packaged canopy and machinery textures with the Minecraft sprite loader'
+    dependsOn compileKitSpriteChecks, jar
+    classpath = sourceSets.main.runtimeClasspath + files(compileKitSpriteChecks.destinationDir)
+    main = 'com.vandorlabs.client.KitSpriteFormatChecks'
+    doFirst { args jar.archivePath.absolutePath }
+}
+
+assemble.dependsOn testKitSpriteFormats
+
+task compileConsoleChecks(type: JavaCompile) {
+    dependsOn compileJava
+    source = files('testclient/java/com/vandorlabs/client/ConsoleRectangleChecks.java')
+    classpath = sourceSets.main.runtimeClasspath
+    destinationDir = file("$buildDir/console-checks/classes")
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+task testConsoleRectangles(type: JavaExec) {
+    group = 'verification'
+    description = 'Check Vektor console rectangle grouping, gaps, rotations and saved membership'
+    dependsOn compileConsoleChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileConsoleChecks.destinationDir)
+    main = 'com.vandorlabs.client.ConsoleRectangleChecks'
+}
+assemble.dependsOn testConsoleRectangles
 
 task compileNonRenderingChecks(type: JavaCompile) {
     dependsOn classes

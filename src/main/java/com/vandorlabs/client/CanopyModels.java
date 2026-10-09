@@ -31,8 +31,9 @@ public final class CanopyModels {
 
     @SubscribeEvent
     public void textures(TextureStitchEvent.Pre event) {
-        for (String m : new String[] {"metal", "glass", "amber", "cyan"})
+        for (String m : CanopyMesh.MATERIALS)
             event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/canopy/" + m));
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/canopy/metal"));
     }
 
     @SubscribeEvent

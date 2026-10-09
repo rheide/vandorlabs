@@ -11,12 +11,21 @@ import java.util.*;
 public final class ShipSystemMesh {
     public static final Map<String, List<CanopyMesh.Face>> MODELS = new LinkedHashMap<>();
     public static final Map<String, int[]> DIMENSIONS = new LinkedHashMap<>();
+    public static final Map<String, String> BLOCK_MODELS = new LinkedHashMap<>();
+    public static final Set<String> MATERIALS = new LinkedHashSet<>();
     private static final Map<String, List<AxisAlignedBB>> BOXES = new HashMap<>();
     static {
-        try (InputStream in = ShipSystemMesh.class.getResourceAsStream("/assets/vandorlabs/data/ship_system_meshes.json")) {
+        load("ship_system_meshes.json");
+        load("vh_system_meshes.json");
+        load("rivet_system_meshes.json");
+    }
+    private static void load(String resource) {
+        try (InputStream in = ShipSystemMesh.class.getResourceAsStream("/assets/vandorlabs/data/" + resource)) {
             for (JsonElement entry : new JsonParser().parse(new InputStreamReader(in, "UTF-8")).getAsJsonArray()) {
                 JsonObject model = entry.getAsJsonObject();
                 String id = model.get("id").getAsString();
+                if (model.has("block_id")) BLOCK_MODELS.put(model.get("block_id").getAsString(), id);
+                else if (!model.has("active")) BLOCK_MODELS.put(id, id);
                 JsonArray size = model.getAsJsonArray("occupancy_xyz");
                 DIMENSIONS.put(id, new int[]{size.get(0).getAsInt(), size.get(2).getAsInt(), size.get(1).getAsInt()});
                 List<CanopyMesh.Face> faces = new ArrayList<>();
@@ -32,6 +41,8 @@ public final class ShipSystemMesh {
                         face.uv[i] = new double[]{u.get(0).getAsDouble(), u.get(1).getAsDouble()};
                     }
                     face.material = f.get("material").getAsString();
+                    face.baseMaterial = f.has("base_material") ? f.get("base_material").getAsString() : face.material.substring(face.material.lastIndexOf('/') + 1);
+                    MATERIALS.add(face.material);
                     face.group = "fixed";
                     face.doubleSided = f.get("double").getAsBoolean();
                     faces.add(face);
@@ -47,10 +58,14 @@ public final class ShipSystemMesh {
         } catch (IOException e) { throw new ExceptionInInitializerError(e); }
     }
     public static List<AxisAlignedBB> boxes(String id, EnumFacing facing, BlockPos origin) {
+        return boxes(id, facing, EnumFacing.UP, origin);
+    }
+    public static List<AxisAlignedBB> boxes(String id, EnumFacing facing, EnumFacing mount, BlockPos origin) {
         List<AxisAlignedBB> result = new ArrayList<>();
+        MountFrame frame=new MountFrame(facing,mount);
         for (AxisAlignedBB b : BOXES.get(id)) {
-            Vec3d a = CanopyMesh.rotate(new Vec3d(b.minX, b.minY, b.minZ), facing);
-            Vec3d c = CanopyMesh.rotate(new Vec3d(b.maxX, b.maxY, b.maxZ), facing);
+            Vec3d a = frame.point(new Vec3d(b.minX, b.minY, b.minZ));
+            Vec3d c = frame.point(new Vec3d(b.maxX, b.maxY, b.maxZ));
             result.add(new AxisAlignedBB(a, c).offset(origin));
         }
         return result;

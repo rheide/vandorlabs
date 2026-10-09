@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
-**1.8:** Add thirty canopy components: connected regular and angled glass, sliding and rear-hinged shells with automatic two-column pairing, fixed cockpit shells, and composable visor fronts, corners and sides in one- and two-block heights. See the [canopy guide](docs/canopies.md).
+**1.8-alpha:** Add canopy components and decorative ship systems, including connected Vektor console surfaces, machine-specific activity colors, and floor/wall/ceiling mounting. See the [canopy guide](docs/canopies.md).
 
 **1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, eight role designs and selectable block materials. Each piece defaults to Civilian Staff and can copy a displayed world texture with shift-right-click. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
 
@@ -203,11 +203,74 @@ Capacitor, Warp Cassette, Containment Core, Phase Drive, Reactor Block,
 Cross-flow Core, and Power Deck. Find them in the Vandor Labs creative tab.
 Place one item to reserve the complete machine footprint, facing toward you.
 Placement requires clear space for the entire machine. Breaking any occupied
-part dismantles it; survival harvesting returns one machine item. Small variants
+part dismantles it; survival harvesting returns one machine item. Click a floor,
+wall or ceiling face to mount the machine with its feet against that surface.
+The complete footprint, collision and selection geometry rotate with the mount;
+matching consoles join in the same mounting plane. Older machines retain their
+floor orientation. Small variants
 have distinct crafting recipes; Large variants upgrade the matching Small item
 with two Programmable Matter Ingots and an Iron Block. These machines currently
 provide decoration and collision only; their names do not imply working power,
 shield, or FTL mechanics.
+
+The machinery and canopy models use detailed surface textures at 32 texels per
+block and recessed metal panels. Unused texture canvas space is trimmed without
+resampling. Coplanar overlaps are clipped during import while preserving UVs;
+moving canopy shells and fixed mounts retain separate geometry.
+
+Machinery activity colors vary by role: Computer Cores use navy blue, Shield
+Capacitors orange, Power Decks/Reactors/Cross-flow Cores red, Inertial Dampeners
+light green, Gravity Generators dark green, Tractor Emitters light blue and
+Sensors yellow. These ON highlights use Rivet Dynamics' palette across
+manufacturers; OFF textures retain their authored appearance.
+
+Rivet Dynamics adds 36 separate machines: nine roles in Small/Large sizes,
+each available with G32 or G64 geometry. Both tiers retain their own models
+and share the machinery controls and mounting options. G64 recipes upgrade
+the matching G32 machine with a Programmable Matter Ingot and an Iron Nugget.
+
+New machines default to **Trigger: Disabled**, initially ON, matching Programmable
+Light blocks. Normal right-click toggles the whole machine. With **Trigger:
+Redstone ON** selected, redstone power at any occupied member switches the complete
+machine ON, with full-bright activity surfaces and controls. Removing
+power restores OFF. An incomplete
+or partially unloaded machine stays OFF. Existing block IDs and recipes are
+preserved; metal, glass and manufacturer markings keep their original colours.
+
+Vektor Industries and Hadron Tech add Small/Large gravity generators, tractor
+emitters, inertial dampeners, sensor/analysis units and computer cores. Redstone
+power at any occupied cell selects the ON appearance in Redstone ON mode; removing power restores
+OFF. Active panels and controls render at full brightness without emitting
+world light. These are decorative systems with no gravity, tractor, sensor or
+computer gameplay effects.
+
+Each manufacturer also has a Navigation Console item. Place matching consoles
+side by side, at the same height and facing, to form continuous workstations up
+to three blocks wide. Longer rows split into groups of three from the left.
+Vektor consoles also join in depth, forming filled rectangles up to three blocks
+wide and three deep. A 3-wide, 2-deep arrangement has one continuous top and
+display surface. Gaps split the assembly into filled rectangles; breaking a cell
+regroups its neighbors and returns only the removed console. All cells in a
+rectangle share manual switching, trigger inputs and Configurizer settings.
+Power at any member switches its whole group ON. Removing a console regroups
+the remaining row and returns only that console; Hadron consoles reserve the
+space above each member for their taller screens. Different manufacturers,
+facings and gaps separate groups. New Small machines and consoles use a
+Programmable Matter Ingot, Quartz, manufacturer dye (Lime for Vektor, Lapis for
+Hadron), and design-specific Iron/Gold Ingot counts; Large machines upgrade
+their matching Small item with two Programmable Matter Ingots and an Iron Block.
+
+Use the Configurizer on any part of a ship system to open its channel dialog.
+Creative players can also Shift-right-click any part to open the same dialog.
+The title identifies the machine; channel and trigger changes apply immediately.
+Enter one or more comma-separated redstone channels; `0` or an empty list leaves
+the machine unlinked. **Trigger: Redstone ON** activates on physical power or any linked
+channel; **Trigger: Redstone OFF** activates when neither is powered. **Trigger:
+Disabled** ignores these inputs and enables normal right-click ON/OFF control.
+Joined consoles share these settings: configuring or toggling any member applies
+to the current group, and a group's leftmost console supplies its operating mode.
+Settings and manual state are saved with the machine. Imported solid and glass
+meshes have hidden/coplanar overlaps removed to prevent coincident surfaces.
 
 Requirements: a Java 8 JDK, Python 3 with Pillow, and the included Gradle wrapper (Gradle 4.9 +
 ForgeGradle 3).
@@ -237,7 +300,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.8.jar`.
+`build/libs/vandorlabs-1.8-alpha.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 

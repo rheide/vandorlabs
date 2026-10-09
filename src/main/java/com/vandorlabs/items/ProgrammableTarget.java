@@ -12,6 +12,11 @@ public final class ProgrammableTarget {
 
     public static BlockPos settingsPos(World world, BlockPos clicked) {
         IBlockState state = world.getBlockState(clicked);
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockShipSystem) {
+            com.vandorlabs.tiles.TileEntityShipSystem tile = com.vandorlabs.tiles.TileEntityShipSystem.at(world, clicked);
+            com.vandorlabs.tiles.TileEntityShipSystem owner = tile == null ? null : tile.configurationOwner();
+            return owner == null ? clicked : owner.getPos();
+        }
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor){
             com.vandorlabs.tiles.TileEntityLargeProgrammableDoor root=((com.vandorlabs.blocks.BlockLargeProgrammableDoor)state.getBlock()).root(world,clicked);
             return root==null?clicked:root.getPos();

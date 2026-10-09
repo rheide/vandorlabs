@@ -58,7 +58,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
                 center = center.add(draw.v[i]);
             }
             draw.distance = center.scale(1D / draw.v.length).squareDistanceTo(camera);
-            (f.material.equals("glass") ? glass : opaque).add(draw);
+            (f.baseMaterial.equals("glass") ? glass : opaque).add(draw);
         }
         glass.sort((a, b) -> Double.compare(b.distance, a.distance));
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);

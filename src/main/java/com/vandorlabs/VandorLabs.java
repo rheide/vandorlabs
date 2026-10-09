@@ -22,7 +22,7 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "1.8";
+    public static final String VERSION = "1.8-alpha";
     /** Bump on every test build so logs identify the exact binary. */
     public static final String BUILD_ID = "t131";
 
