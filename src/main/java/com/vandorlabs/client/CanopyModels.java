@@ -33,7 +33,6 @@ public final class CanopyModels {
     public void textures(TextureStitchEvent.Pre event) {
         for (String m : CanopyMesh.MATERIALS)
             event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/canopy/" + m));
-        event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/canopy/metal"));
     }
 
     @SubscribeEvent
@@ -63,7 +62,7 @@ public final class CanopyModels {
             particle =
                     Minecraft.getMinecraft()
                             .getTextureMapBlocks()
-                            .getAtlasSprite("vandorlabs:blocks/canopy/metal");
+                            .getAtlasSprite("vandorlabs:blocks/canopy/" + CanopyMesh.MODELS.get(id).get(0).material);
             ItemTransformVec3f gui =
                     new ItemTransformVec3f(
                             new Vector3f(25, 225, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));

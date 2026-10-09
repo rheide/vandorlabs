@@ -1,1 +1,0 @@
-{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:quartz"}, {"item": "minecraft:comparator"}, {"item": "minecraft:dye", "data": 1}], "result": {"item": "vandorlabs:kestrel_external_sensor_g32"}}

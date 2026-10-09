@@ -1,1 +1,1 @@
-{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:kestrel_external_sensor_g32"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_nugget"}], "result": {"item": "vandorlabs:kestrel_external_sensor_g64"}}
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:quartz"}, {"item": "minecraft:dye", "data": 14}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:iron_ingot"}], "result": {"item": "vandorlabs:kestrel_external_sensor_g64"}}

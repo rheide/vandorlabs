@@ -70,7 +70,7 @@ public final class ShipSystemModels {
             particle =
                     Minecraft.getMinecraft()
                             .getTextureMapBlocks()
-                            .getAtlasSprite("vandorlabs:blocks/ship_systems/alloy");
+                            .getAtlasSprite("vandorlabs:blocks/ship_systems/" + ShipSystemMesh.MODELS.get(id).get(0).material);
             ItemTransformVec3f gui =
                     new ItemTransformVec3f(
                             new Vector3f(25, 225, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));

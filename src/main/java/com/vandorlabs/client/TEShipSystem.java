@@ -52,7 +52,8 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
             String material = f.baseMaterial;
             boolean glowing = tile.active && (material.equals("cyan") || material.equals("amber") || material.equals("display_on")
                     || material.startsWith("energy_") && !material.endsWith("_off")
-                    || material.equals("red_light") || material.equals("green_light") || material.equals("hot"));
+                    || material.equals("red_light") || material.equals("green_light") || material.equals("hot")
+                    || material.equals("energy") || material.equals("light") || material.equals("display"));
             (material.equals("glass") ? glass : glowing ? emissive : opaque).add(draw);
         }
         glass.sort((a, b) -> Double.compare(b.distance, a.distance));

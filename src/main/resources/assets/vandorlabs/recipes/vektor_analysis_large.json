@@ -1,1 +1,1 @@
-{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:vektor_analysis_small"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_block"}], "result": {"item": "vandorlabs:vektor_analysis_large"}}
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:quartz"}, {"item": "minecraft:dye", "data": 15}, {"item": "minecraft:iron_ingot"}], "result": {"item": "vandorlabs:vektor_analysis_large"}}

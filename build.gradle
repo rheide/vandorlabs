@@ -468,6 +468,9 @@ dependencies {
 }
 
 processResources {
+    // Copy tasks retain deleted files; rebuild this staging tree so retired
+    // block models and recipes cannot survive an incremental asset replacement.
+    doFirst { delete destinationDir }
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", "1.12.2"

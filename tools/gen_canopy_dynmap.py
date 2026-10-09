@@ -12,7 +12,9 @@ ids = [entry['id'] for entry in json.loads(
 materials = ['metal', 'glass', 'amber', 'cyan']
 models = [f'customblock:id=%{name},state=*,class=com.vandorlabs.dynmap.CanopyRenderer'
           for name in ids]
-textures = [f'texture:id=canopy_{m},filename=assets/vandorlabs/textures/blocks/canopy/{m}.png,xcount=1,ycount=1'
+files = {'metal': 'canopy_canopy_steel', 'glass': 'canopy_canopy_glass',
+         'amber': 'canopy_canopy_amber', 'cyan': 'canopy_canopy_light'}
+textures = [f'texture:id=canopy_{m},filename=assets/vandorlabs/textures/blocks/canopy/{files[m]}.png,xcount=1,ycount=1'
             for m in materials]
 textures += [f'block:id=%{name},state=*' + ''.join(
     f',patch{i}=0:canopy_{m}' for i, m in enumerate(materials)) +

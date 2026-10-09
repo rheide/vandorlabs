@@ -198,7 +198,7 @@ limits and the selected state.
 ## Building
 
 The decorative ship systems include nine Kestrel Systems and Aster Dynamics
-designs, each in Small and Large sizes: Hull Plate, Field Coupler, Shield
+designs, each in one full-detail size: Hull Plate, Field Coupler, Shield
 Capacitor, Warp Cassette, Containment Core, Phase Drive, Reactor Block,
 Cross-flow Core, and Power Deck. Find them in the Vandor Labs creative tab.
 Place one item to reserve the complete machine footprint, facing toward you.
@@ -206,15 +206,14 @@ Placement requires clear space for the entire machine. Breaking any occupied
 part dismantles it; survival harvesting returns one machine item. Click a floor,
 wall or ceiling face to mount the machine with its feet against that surface.
 The complete footprint, collision and selection geometry rotate with the mount;
-matching consoles join in the same mounting plane. Older machines retain their
-floor orientation. Small variants
-have distinct crafting recipes; Large variants upgrade the matching Small item
-with two Programmable Matter Ingots and an Iron Block. These machines currently
+matching consoles join in the same mounting plane. Each machine crafts directly
+from a Programmable Matter Ingot, Quartz, dye and Iron Ingots; there are no
+size or geometry-tier upgrade chains. These machines currently
 provide decoration and collision only; their names do not imply working power,
 shield, or FTL mechanics.
 
-The machinery and canopy models use detailed surface textures at 32 texels per
-block and recessed metal panels. Unused texture canvas space is trimmed without
+The machinery and canopy models use rebuilt armor, mechanisms, retainers and
+hardware, with surface textures at 32 texels per block. Unused texture canvas space is trimmed without
 resampling. Coplanar overlaps are clipped during import while preserving UVs;
 moving canopy shells and fixed mounts retain separate geometry.
 
@@ -224,24 +223,20 @@ light green, Gravity Generators dark green, Tractor Emitters light blue and
 Sensors yellow. These ON highlights use Rivet Dynamics' palette across
 manufacturers; OFF textures retain their authored appearance.
 
-Rivet Dynamics adds 36 separate machines: nine roles in Small/Large sizes,
-each available with G32 or G64 geometry. Both tiers retain their own models
-and share the machinery controls and mounting options. G64 recipes upgrade
-the matching G32 machine with a Programmable Matter Ingot and an Iron Nugget.
+Rivet Dynamics adds nine full-detail machines, one per role. The rebuilt
+collection uses the large geometry and G64 tier wherever alternatives were
+supplied. Small and G32 machinery variants have been removed without remaps.
 
 Exterior sensors add five hull-mounted designs from Kestrel, Aster, Vektor,
-Hadron and Rivet, each with separate G32/G64 items. Each reserves a 2×2 mounting
+Hadron and Rivet, each with one full-detail item. Each reserves a 2×2 mounting
 area, one block outward from the support surface. Rear lugs sit flush against
 the clicked wall, floor or ceiling. These decorative sensors use yellow ON
-highlights and the shared manual, redstone and Configurizer controls. G64
-recipes upgrade the matching G32 item with a Programmable Matter Ingot and
-an Iron Nugget.
+highlights and the shared manual, redstone and Configurizer controls.
 
-Six additional Rivet Reference blocks provide separate Small/Large reactors,
+Three additional Rivet Reference blocks provide reactors,
 cross-flow cores and inertial dampeners with 1/64-grid armor, shafts and hardware.
 They retain authored red/green lights, world-lit conduits and transparent
-containment panes. Each crafts from its corresponding Rivet G64 machine plus
-a Programmable Matter Ingot, Iron Ingot and Quartz. Collision uses individual
+containment panes. Collision uses individual
 part bounds, while placement reserves the full rounded-up assembly envelope.
 They share the machinery mounting, manual switching and Configurizer controls.
 
@@ -250,10 +245,10 @@ Light blocks. Normal right-click toggles the whole machine. With **Trigger:
 Redstone ON** selected, redstone power at any occupied member switches the complete
 machine ON, with full-bright activity surfaces and controls. Removing
 power restores OFF. An incomplete
-or partially unloaded machine stays OFF. Existing block IDs and recipes are
-preserved; metal, glass and manufacturer markings keep their original colours.
+or partially unloaded machine stays OFF. Metal, glass and manufacturer markings
+keep their original colours.
 
-Vektor Industries and Hadron Tech add Small/Large gravity generators, tractor
+Vektor Industries and Hadron Tech add full-detail gravity generators, tractor
 emitters, inertial dampeners, sensor/analysis units and computer cores. Redstone
 power at any occupied cell selects the ON appearance in Redstone ON mode; removing power restores
 OFF. Active panels and controls render at full brightness without emitting
@@ -271,10 +266,8 @@ rectangle share manual switching, trigger inputs and Configurizer settings.
 Power at any member switches its whole group ON. Removing a console regroups
 the remaining row and returns only that console; Hadron consoles reserve the
 space above each member for their taller screens. Different manufacturers,
-facings and gaps separate groups. New Small machines and consoles use a
-Programmable Matter Ingot, Quartz, manufacturer dye (Lime for Vektor, Lapis for
-Hadron), and design-specific Iron/Gold Ingot counts; Large machines upgrade
-their matching Small item with two Programmable Matter Ingots and an Iron Block.
+facings and gaps separate groups. Connected console widths and depths remain
+runtime configurations of a single item, rather than separate size variants.
 
 Use the Configurizer on any part of a ship system to open its channel dialog.
 Creative players can also Shift-right-click any part to open the same dialog.

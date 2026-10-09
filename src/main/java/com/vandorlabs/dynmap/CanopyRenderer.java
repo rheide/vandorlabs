@@ -65,7 +65,7 @@ public final class CanopyRenderer extends CustomRenderer {
                             ? 1
                             : face.baseMaterial.equals("amber")
                                     ? 2
-                                    : face.baseMaterial.equals("cyan") ? 3 : 0;
+                                    : face.baseMaterial.equals("light") ? 3 : 0;
             for (int i = 1; i < polygon.size() - 1; i++) {
                 Vec3d a = polygon.get(0), b = polygon.get(i), c = polygon.get(i + 1);
                 RenderPatch patch =

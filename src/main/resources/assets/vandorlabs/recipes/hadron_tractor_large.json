@@ -1,1 +1,1 @@
-{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:hadron_tractor_small"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_block"}], "result": {"item": "vandorlabs:hadron_tractor_large"}}
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:quartz"}, {"item": "minecraft:dye", "data": 12}, {"item": "minecraft:iron_ingot"}], "result": {"item": "vandorlabs:hadron_tractor_large"}}

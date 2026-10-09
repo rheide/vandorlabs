@@ -21233,10 +21233,10 @@ block:id=%large_power_lever,state=facing:west/floor:true/powered:false,patch0=0:
 block:id=%large_power_lever,state=facing:west/floor:true/powered:true,patch0=0:signal_blocks_twin_power_levers_amber,patch1=0:signal_blocks_twin_power_levers_cyan,patch2=0:signal_blocks_twin_power_levers_dark,patch3=0:signal_blocks_twin_power_levers_edge,patch4=0:signal_blocks_twin_power_levers_grip,patch5=0:signal_blocks_twin_power_levers_metal,transparency=TRANSPARENT,stdrot=true
 
 # Generated canopy overview models
-texture:id=canopy_metal,filename=assets/vandorlabs/textures/blocks/canopy/metal.png,xcount=1,ycount=1
-texture:id=canopy_glass,filename=assets/vandorlabs/textures/blocks/canopy/glass.png,xcount=1,ycount=1
-texture:id=canopy_amber,filename=assets/vandorlabs/textures/blocks/canopy/amber.png,xcount=1,ycount=1
-texture:id=canopy_cyan,filename=assets/vandorlabs/textures/blocks/canopy/cyan.png,xcount=1,ycount=1
+texture:id=canopy_metal,filename=assets/vandorlabs/textures/blocks/canopy/canopy_canopy_steel.png,xcount=1,ycount=1
+texture:id=canopy_glass,filename=assets/vandorlabs/textures/blocks/canopy/canopy_canopy_glass.png,xcount=1,ycount=1
+texture:id=canopy_amber,filename=assets/vandorlabs/textures/blocks/canopy/canopy_canopy_amber.png,xcount=1,ycount=1
+texture:id=canopy_cyan,filename=assets/vandorlabs/textures/blocks/canopy/canopy_canopy_light.png,xcount=1,ycount=1
 block:id=%angled_front_1x1,state=*,patch0=0:canopy_metal,patch1=0:canopy_glass,patch2=0:canopy_amber,patch3=0:canopy_cyan,transparency=SEMITRANSPARENT
 block:id=%angled_front_1x2,state=*,patch0=0:canopy_metal,patch1=0:canopy_glass,patch2=0:canopy_amber,patch3=0:canopy_cyan,transparency=SEMITRANSPARENT
 block:id=%opening_slide_1x2,state=*,patch0=0:canopy_metal,patch1=0:canopy_glass,patch2=0:canopy_amber,patch3=0:canopy_cyan,transparency=SEMITRANSPARENT

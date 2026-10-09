@@ -1,1 +1,0 @@
-{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:quartz"}, {"item": "minecraft:dye", "data": 4}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:gold_ingot"}], "result": {"item": "vandorlabs:hadron_tractor_small"}}
