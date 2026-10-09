@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:visor_module_corner_left_h1"
+    },
+    {
+      "item": "vandorlabs:visor_module_corner_left_h1"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:visor_module_corner_left_h2"
+  }
+}

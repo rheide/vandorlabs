@@ -3580,5 +3580,155 @@
     "type": "control",
     "item": true,
     "hidden": true
+  },
+  {
+    "id": "angled_front_1x1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "angled_front_1x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "opening_slide_1x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "opening_hinge_1x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "opening_slide_2x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "opening_hinge_2x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "regular_canopy_glass",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "large_front_canopy_glass",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "figher_canopy_glass",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_wedge_1x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_longnose_1x3",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_crystal_2x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_shuttle_2x3",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_visor_2x1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_visor_3x1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_visor_5x1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_bubble_wedge_2x2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "space_visor_5x1_double_height",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_front_h1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_front_latch_h1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_corner_left_h1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_corner_right_h1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_side_left_h1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_side_right_h1",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_front_h2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_front_latch_h2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_corner_left_h2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_corner_right_h2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_side_left_h2",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
+    "id": "visor_module_side_right_h2",
+    "type": "canopy",
+    "class": "BlockCanopy"
   }
 ]

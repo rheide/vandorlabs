@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:regular_canopy_glass"
+    },
+    {
+      "item": "vandorlabs:regular_canopy_glass"
+    },
+    {
+      "item": "minecraft:glass_pane"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:space_crystal_2x2"
+  }
+}

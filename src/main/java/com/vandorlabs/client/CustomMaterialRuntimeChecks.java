@@ -110,7 +110,7 @@ final class CustomMaterialRuntimeChecks {
                 require(entries.containsKey(64) && entries.containsKey(amber),"hex light choices missing");
                 for(String artwork:new String[]{"bussard_classic","bussard_modern","deflector_amber","deflector_blue","nacelle_a","nacelle_d","nacelle_defiant","nacelle_intrepid"})
                     require(entries.containsKey(ScreenHousingTextures.screenIndex("lights/"+artwork+"_on")),"new light missing from picker: "+artwork);
-                require(on==6 && off==16,"light picker paired artwork coverage");
+                require(on==6 && off==17,"light picker paired artwork coverage");
             }
             System.out.println("[vandorlabs][reprolab] light-picker-runtime PASS rows="+expected);
         } catch(ReflectiveOperationException e){throw new RuntimeException(e);}

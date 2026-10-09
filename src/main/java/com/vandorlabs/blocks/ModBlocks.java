@@ -242,6 +242,7 @@ public class ModBlocks {
     private static Block create(String cls, JsonObject e, Map<String, Block> byId) {
         String id = e.get("id").getAsString();
         switch (cls) {
+            case "BlockCanopy": return new BlockCanopy(id);
             case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
             case "BlockConnectedSeat": return new BlockConnectedSeat(id);
@@ -409,6 +410,7 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
+                        : block instanceof BlockCanopy ? new BlockCanopy.CanopyItem((BlockCanopy)block)
                         : block == PROGRAMMABLE_HALF_CONSOLE
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
                         : block == PROGRAMMABLE_TRAPDOOR ? new com.vandorlabs.items.ItemProgrammableTrapdoor((BlockProgrammableTrapdoor)block)

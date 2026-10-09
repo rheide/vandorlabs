@@ -22,9 +22,9 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "1.7";
+    public static final String VERSION = "1.8";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t130";
+    public static final String BUILD_ID = "t131";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -63,6 +63,8 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRedstoneLight.class, "vandorlabs:redstone_light");
         EntityRegistry.registerModEntity(new ResourceLocation(MODID, "chair_seat"),
                 EntityChairSeat.class, "chair_seat", 1, this, 32, 10, false);
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCanopy.class,"vandorlabs:canopy");
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new com.vandorlabs.canopy.CanopyInteractions());
         PacketHandler.register();
         logger.info("Vandor Labs pre-initialization: engaging warp drive...");
     }

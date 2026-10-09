@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:space_visor_3x1"
+    },
+    {
+      "item": "vandorlabs:regular_canopy_glass"
+    },
+    {
+      "item": "vandorlabs:regular_canopy_glass"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:space_visor_5x1"
+  }
+}

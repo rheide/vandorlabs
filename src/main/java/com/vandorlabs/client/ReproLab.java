@@ -535,6 +535,7 @@ public class ReproLab {
         }
 
         switch (state) {
+            case 4004: CanopyRuntimeChecks.tick(mc,outDir);break;
             case 4003: ProgrammableArmorRuntimeChecks.tick(mc,outDir);break;
             case 4002: MovedDoorRuntimeChecks.tick(mc,outDir);break;
             case 4001: RedstoneScreenRuntimeChecks.tick(mc,outDir);break;
@@ -574,6 +575,7 @@ public class ReproLab {
                     beginDocumentationScene(mc);
                     break;
                 }
+                if(Boolean.getBoolean("vandorlabs.canopyChecksOnly")){mc.gameSettings.hideGUI=false;state=4004;break;}
                 if(Boolean.getBoolean("vandorlabs.armorChecksOnly")){mc.gameSettings.hideGUI=false;state=4003;break;}
                 if(Boolean.getBoolean("vandorlabs.movedDoorChecksOnly")){mc.gameSettings.hideGUI=false;state=4002;break;}
                 if(Boolean.getBoolean("vandorlabs.redstoneScreenChecksOnly")){mc.gameSettings.hideGUI=false;state=4001;break;}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8
+
+- Add thirty canopy components using the supplied cockpit meshes and translucent materials: regular glass, two angled fronts, narrow and wide sliding/rear-hinged shells, Large Front Canopy Glass, Figher Canopy Glass, nine additional fixed shells and twelve composable visor sections.
+- Join compatible fixed glass without interior walls or perimeter rails. Support all sixteen regular neighbor masks and reciprocal angled-to-regular rear joins.
+- Animate opening shells over sixteen ticks, with server clearance checks, persistent state, synchronized client poses, moved surface collision and picking, and multiblock ownership/removal. Pair two matching closed narrow shells into one wide shell; leave third columns independent.
+- Compose visor windows from normal or Tall fronts, optional latch fronts, explicit left/right corners and straight sides. Tall sections use continuous two-high meshes without center rails; support the supplied 3-, 5- and 7-wide layouts at depths 1 and 3.
+- Add survival recipes, creative-tab items and padded inventory models, plus focused live canopy validation for all thirty designs and every supplied composition.
+
 ## 1.7
 
 - Name Thruster Lever types Standard, Twin and Grip, preserving saved types and existing controls.

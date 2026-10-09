@@ -19,6 +19,7 @@ fi
 exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" \
   env LIBGL_ALWAYS_SOFTWARE=1 \
   "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-2G}" "${CAPTURE_JVM[@]}" \
+  -Dvandorlabs.canopyChecksOnly="${VANDOR_LABS_CANOPY_CHECKS_ONLY:-false}" \
   -Dvandorlabs.armorChecksOnly="${VANDOR_LABS_ARMOR_CHECKS_ONLY:-false}" \
   -Dvandorlabs.worldBenchmark="${VANDOR_LABS_WORLD_BENCHMARK:-false}" \
   -Dvandorlabs.worldBenchmarkReload="${VANDOR_LABS_WORLD_RELOAD:-false}" \

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:space_visor_5x1"
+    },
+    {
+      "item": "vandorlabs:space_visor_5x1"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:space_visor_5x1_double_height"
+  }
+}

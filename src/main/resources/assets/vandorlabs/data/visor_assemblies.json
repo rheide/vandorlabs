@@ -1,0 +1,782 @@
+[
+  {
+    "id": "visor_assembly_3w_1h_1d",
+    "label": "Joined Visor \u00b7 3 wide \u00d7 1 high \u00d7 1 deep",
+    "width": 3,
+    "height": 1,
+    "depth": 1,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h1",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h1",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h1",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_3w_1h_3d",
+    "label": "Joined Visor \u00b7 3 wide \u00d7 1 high \u00d7 3 deep",
+    "width": 3,
+    "height": 1,
+    "depth": 3,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h1",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h1",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h1",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h1",
+        "at": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h1",
+        "at": [
+          2,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h1",
+        "at": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h1",
+        "at": [
+          2,
+          0,
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_3w_2h_1d",
+    "label": "Joined Visor \u00b7 3 wide \u00d7 2 high \u00d7 1 deep",
+    "width": 3,
+    "height": 2,
+    "depth": 1,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h2",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h2",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h2",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_3w_2h_3d",
+    "label": "Joined Visor \u00b7 3 wide \u00d7 2 high \u00d7 3 deep",
+    "width": 3,
+    "height": 2,
+    "depth": 3,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h2",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h2",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h2",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h2",
+        "at": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h2",
+        "at": [
+          2,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h2",
+        "at": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h2",
+        "at": [
+          2,
+          0,
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_5w_1h_1d",
+    "label": "Joined Visor \u00b7 5 wide \u00d7 1 high \u00d7 1 deep",
+    "width": 5,
+    "height": 1,
+    "depth": 1,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h1",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h1",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h1",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_5w_1h_3d",
+    "label": "Joined Visor \u00b7 5 wide \u00d7 1 high \u00d7 3 deep",
+    "width": 5,
+    "height": 1,
+    "depth": 3,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h1",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h1",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h1",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h1",
+        "at": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h1",
+        "at": [
+          4,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h1",
+        "at": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h1",
+        "at": [
+          4,
+          0,
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_5w_2h_1d",
+    "label": "Joined Visor \u00b7 5 wide \u00d7 2 high \u00d7 1 deep",
+    "width": 5,
+    "height": 2,
+    "depth": 1,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h2",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h2",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h2",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_5w_2h_3d",
+    "label": "Joined Visor \u00b7 5 wide \u00d7 2 high \u00d7 3 deep",
+    "width": 5,
+    "height": 2,
+    "depth": 3,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h2",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h2",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h2",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h2",
+        "at": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h2",
+        "at": [
+          4,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h2",
+        "at": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h2",
+        "at": [
+          4,
+          0,
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_7w_1h_1d",
+    "label": "Joined Visor \u00b7 7 wide \u00d7 1 high \u00d7 1 deep",
+    "width": 7,
+    "height": 1,
+    "depth": 1,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h1",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h1",
+        "at": [
+          6,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h1",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          5,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_7w_1h_3d",
+    "label": "Joined Visor \u00b7 7 wide \u00d7 1 high \u00d7 3 deep",
+    "width": 7,
+    "height": 1,
+    "depth": 3,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h1",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h1",
+        "at": [
+          6,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h1",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h1",
+        "at": [
+          5,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h1",
+        "at": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h1",
+        "at": [
+          6,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h1",
+        "at": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h1",
+        "at": [
+          6,
+          0,
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_7w_2h_1d",
+    "label": "Joined Visor \u00b7 7 wide \u00d7 2 high \u00d7 1 deep",
+    "width": 7,
+    "height": 2,
+    "depth": 1,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h2",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h2",
+        "at": [
+          6,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h2",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          5,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visor_assembly_7w_2h_3d",
+    "label": "Joined Visor \u00b7 7 wide \u00d7 2 high \u00d7 3 deep",
+    "width": 7,
+    "height": 2,
+    "depth": 3,
+    "modules": [
+      {
+        "model": "visor_module_corner_left_h2",
+        "at": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_corner_right_h2",
+        "at": [
+          6,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_latch_h2",
+        "at": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_front_h2",
+        "at": [
+          5,
+          0,
+          0
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h2",
+        "at": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h2",
+        "at": [
+          6,
+          0,
+          1
+        ]
+      },
+      {
+        "model": "visor_module_side_left_h2",
+        "at": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "model": "visor_module_side_right_h2",
+        "at": [
+          6,
+          0,
+          2
+        ]
+      }
+    ]
+  }
+]
