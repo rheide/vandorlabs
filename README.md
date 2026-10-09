@@ -229,6 +229,22 @@ each available with G32 or G64 geometry. Both tiers retain their own models
 and share the machinery controls and mounting options. G64 recipes upgrade
 the matching G32 machine with a Programmable Matter Ingot and an Iron Nugget.
 
+Exterior sensors add five hull-mounted designs from Kestrel, Aster, Vektor,
+Hadron and Rivet, each with separate G32/G64 items. Each reserves a 2×2 mounting
+area, one block outward from the support surface. Rear lugs sit flush against
+the clicked wall, floor or ceiling. These decorative sensors use yellow ON
+highlights and the shared manual, redstone and Configurizer controls. G64
+recipes upgrade the matching G32 item with a Programmable Matter Ingot and
+an Iron Nugget.
+
+Six additional Rivet Reference blocks provide separate Small/Large reactors,
+cross-flow cores and inertial dampeners with 1/64-grid armor, shafts and hardware.
+They retain authored red/green lights, world-lit conduits and transparent
+containment panes. Each crafts from its corresponding Rivet G64 machine plus
+a Programmable Matter Ingot, Iron Ingot and Quartz. Collision uses individual
+part bounds, while placement reserves the full rounded-up assembly envelope.
+They share the machinery mounting, manual switching and Configurizer controls.
+
 New machines default to **Trigger: Disabled**, initially ON, matching Programmable
 Light blocks. Normal right-click toggles the whole machine. With **Trigger:
 Redstone ON** selected, redstone power at any occupied member switches the complete

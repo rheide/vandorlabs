@@ -18,6 +18,8 @@ public final class ShipSystemMesh {
         load("ship_system_meshes.json");
         load("vh_system_meshes.json");
         load("rivet_system_meshes.json");
+        load("external_sensor_meshes.json");
+        load("rivet_reference_meshes.json");
     }
     private static void load(String resource) {
         try (InputStream in = ShipSystemMesh.class.getResourceAsStream("/assets/vandorlabs/data/" + resource)) {

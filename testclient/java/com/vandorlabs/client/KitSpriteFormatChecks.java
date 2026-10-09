@@ -29,7 +29,7 @@ public final class KitSpriteFormatChecks {
 
         Set<String> textures = new LinkedHashSet<>();
         try (ZipFile jar = new ZipFile(args[0])) {
-            String[] catalogs = {"canopy_meshes.json", "ship_system_meshes.json", "vh_system_meshes.json", "rivet_system_meshes.json"};
+            String[] catalogs = {"canopy_meshes.json", "ship_system_meshes.json", "vh_system_meshes.json", "rivet_system_meshes.json", "external_sensor_meshes.json", "rivet_reference_meshes.json"};
             for (String catalog : catalogs) {
                 String directory = catalog.equals("canopy_meshes.json") ? "canopy/" : "ship_systems/";
                 try (Reader reader = new InputStreamReader(jar.getInputStream(jar.getEntry("assets/vandorlabs/data/" + catalog)), "UTF-8")) {

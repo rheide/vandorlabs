@@ -11,7 +11,7 @@ COLORS = {
     'light_blue': (132, 191, 236),
     'yellow': (232, 198, 40),
 }
-ACTIVITY = {'cyan', 'amber', 'display_on'}
+ACTIVITY = {'cyan', 'amber', 'display_on', 'energy_sensor'}
 
 
 def accent(model):

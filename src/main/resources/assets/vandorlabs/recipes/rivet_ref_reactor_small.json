@@ -1,0 +1,1 @@
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:rivet_reactor_small_g64"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_ingot"}, {"item": "minecraft:quartz"}], "result": {"item": "vandorlabs:rivet_ref_reactor_small"}}
