@@ -1,0 +1,1 @@
+{"type": "minecraft:crafting_shapeless", "ingredients": [{"item": "vandorlabs:kestrel_phase_drive_small"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "vandorlabs:programmable_matter_ingot"}, {"item": "minecraft:iron_block"}], "result": {"item": "vandorlabs:kestrel_phase_drive_large"}}

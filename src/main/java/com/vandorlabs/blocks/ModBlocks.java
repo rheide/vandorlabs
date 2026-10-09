@@ -174,6 +174,8 @@ public class ModBlocks {
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
+        for (String id : com.vandorlabs.shipsystems.ShipSystemMesh.MODELS.keySet())
+            add(new BlockShipSystem(id));
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
@@ -411,6 +413,7 @@ public class ModBlocks {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
                         : block instanceof BlockCanopy ? new BlockCanopy.CanopyItem((BlockCanopy)block)
+                        : block instanceof BlockShipSystem ? new BlockShipSystem.SystemItem((BlockShipSystem)block)
                         : block == PROGRAMMABLE_HALF_CONSOLE
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
                         : block == PROGRAMMABLE_TRAPDOOR ? new com.vandorlabs.items.ItemProgrammableTrapdoor((BlockProgrammableTrapdoor)block)

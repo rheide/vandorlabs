@@ -197,7 +197,19 @@ limits and the selected state.
 
 ## Building
 
-Requirements: Java 8, Python 3, and the included Gradle wrapper (Gradle 4.9 +
+The decorative ship systems include nine Kestrel Systems and Aster Dynamics
+designs, each in Small and Large sizes: Hull Plate, Field Coupler, Shield
+Capacitor, Warp Cassette, Containment Core, Phase Drive, Reactor Block,
+Cross-flow Core, and Power Deck. Find them in the Vandor Labs creative tab.
+Place one item to reserve the complete machine footprint, facing toward you.
+Placement requires clear space for the entire machine. Breaking any occupied
+part dismantles it; survival harvesting returns one machine item. Small variants
+have distinct crafting recipes; Large variants upgrade the matching Small item
+with two Programmable Matter Ingots and an Iron Block. These machines currently
+provide decoration and collision only; their names do not imply working power,
+shield, or FTL mechanics.
+
+Requirements: a Java 8 JDK, Python 3 with Pillow, and the included Gradle wrapper (Gradle 4.9 +
 ForgeGradle 3).
 
 ```bash
@@ -205,11 +217,27 @@ export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64   # or equivalent JDK 8
 ./gradlew clean build --no-daemon
 ```
 
+On Windows, set `JAVA_HOME` to your Java 8 JDK and run from PowerShell:
+
+```powershell
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+.\gradlew.bat clean build --no-daemon
+```
+
+The build uses `python` on Windows and `python3` on other systems. The selected
+interpreter must have Pillow installed (`python -m pip install Pillow`). Override
+the interpreter if needed with `-PpythonExecutable="C:\path\to\python.exe"`.
+On Linux, install Pillow into the selected Python 3 environment with
+`python3 -m pip install Pillow`. Imported ship-system resources are included in
+the repository; building does not require the original model-kit folder or
+rerunning its importer. The Unix wrapper remains executable, and Git attributes
+preserve LF line endings for Unix scripts across Windows and Linux checkouts.
+
 The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.6.jar`.
+`build/libs/vandorlabs-1.8.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
