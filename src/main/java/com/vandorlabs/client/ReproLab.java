@@ -526,6 +526,10 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if (Boolean.getBoolean("vandorlabs.pilotSeatChecksOnly")) {
+            PilotSeatRuntimeChecks.tick(mc, outDir);
+            return;
+        }
         // launchIntegratedServer can install its post-load pause screen one
         // tick after the world first becomes non-null.  Keep the lab in the
         // actual game view instead of accidentally photographing that GUI.
@@ -588,6 +592,7 @@ public class ReproLab {
                     openLightPicker(mc);state=19;holdTicks=GUI_SETTLE_TICKS;break;
                 }
                 LightOcclusionChecks.run(outDir);
+                PilotSeatRuntimeChecks.check(mc);
                 if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){mc.shutdown();return;}
                 ProgrammableRenderBenchmark.run(outDir);
                 if (Boolean.getBoolean("vandorlabs.benchmarkOnly")) {

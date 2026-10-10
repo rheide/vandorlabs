@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " W ",
+    "WIW",
+    "I I"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:wool",
+      "data": 14
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:pilot_seat"
+  }
+}

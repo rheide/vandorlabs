@@ -573,3 +573,5 @@ tile.rivet_external_sensor_g64.name=Rivet Dynamics Rivet exposed receiver rack
 tile.rivet_ref_reactor_large.name=Rivet Dynamics Reference Reactor
 tile.rivet_ref_crossflow_large.name=Rivet Dynamics Reference Crossflow
 tile.rivet_ref_dampener_large.name=Rivet Dynamics Reference Dampener
+
+tile.vandorlabs.pilot_seat.name=Pilot Seat

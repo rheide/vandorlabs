@@ -47,6 +47,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_SLAB;
     public static Block PROGRAMMABLE_STAIRS;
     public static Block PROGRAMMABLE_CHAIR;
+    public static Block PILOT_SEAT;
     public static Block PROGRAMMABLE_PORTHOLE_WALL;
     public static Block PROGRAMMABLE_PORTHOLE_BLOCK;
     public static Block PROGRAMMABLE_DIAGONAL_WALL;
@@ -191,6 +192,7 @@ public class ModBlocks {
         PROGRAMMABLE_LIGHT_FRAME = add(new BlockProgrammableLightFrame());
         PROGRAMMABLE_LIGHT_SLAB = add(new BlockProgrammableLightSlab());
         PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
+        PILOT_SEAT = add(new BlockPilotSeat());
         PROGRAMMABLE_SLAB = add(new BlockProgrammableSlab());
         PROGRAMMABLE_STAIRS = add(new BlockProgrammableStairs());
         PROGRAMMABLE_PORTHOLE_WALL = add(new BlockProgrammableWall("programmable_porthole_wall",

@@ -390,9 +390,23 @@ triangular display wedge),
 and uses matching front/side/top sets from the shared texture picker. Craft it
 with a chest and a Programmable Block.
 
+The **Pilot Seat** is a low, single-block seat. Right-click to sit and press
+the sneak key to dismount. Craft it with three red wool and three iron ingots.
+It does not assemble or move a vehicle. The proposed Configurizer-driven
+conversion and ground-driving feature is described in the
+[ground vehicle analysis](docs/ground-vehicles-analysis.md).
+
 ## Testing in game
 
 For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
+
+On Windows, build with Java 8, then use `python testclient/run_windows.py`
+with a HotSpot Java 8 runtime on `PATH` (or supplied through `--java`).
+It uses the installed Forge profile and assets, runs in an isolated test world,
+hides its window and disables sound. `--focus pilot-seat` runs the seating and
+model checks; omit it to run the full client scenarios. Inspect the reported
+screenshots and run the pixel analyzers before treating a full run as passed.
+The Linux launcher is also muted and uses its existing virtual display.
 
 Copy the jar to `mods/`, or `./gradlew runClient` for dev. Report issues with
 facing, hinge side, door state, and which side was viewed — or better, a

@@ -1,0 +1,57 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "model": "vandorlabs:pilot_seat.obj",
+    "textures": {
+      "particle": "vandorlabs:blocks/pilot_seat/fabric"
+    },
+    "custom": {
+      "flip-v": false
+    }
+  },
+  "variants": {
+    "facing=north": {
+      "y": 0
+    },
+    "facing=east": {
+      "y": 90
+    },
+    "facing=south": {
+      "y": 180
+    },
+    "facing=west": {
+      "y": 270
+    },
+    "inventory": [
+      {
+        "transform": {
+          "gui": {
+            "rotation": [
+              30,
+              225,
+              0
+            ],
+            "translation": [
+              -0.0,
+              0.1343141882427533,
+              0
+            ],
+            "scale": 0.7787874356749201
+          },
+          "ground": {
+            "scale": 0.5
+          },
+          "thirdperson_righthand": {
+            "scale": 0.5
+          },
+          "firstperson_righthand": {
+            "scale": 0.5
+          },
+          "fixed": {
+            "scale": 0.75
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
+unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
@@ -10,7 +11,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = canopies ]; then
+        if [ "$TARGET" = pilot-seat ]; then
+            PREFIX=pilot_seat_
+            export VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopies ]; then
             PREFIX=canopy_
             export VANDOR_LABS_CANOPY_CHECKS_ONLY=true
         elif [ "$TARGET" = armor ] || [ "$TARGET" = armor-tools ] || [ "$TARGET" = armor-duplifier ]; then
@@ -78,6 +82,14 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = pilot-seat ]; then
+        grep -q "pilot-seat-world PASS" "$RUN_OUT/client.log"
+        grep -q "pilot-seat-model PASS" "$RUN_OUT/client.log"
+        grep -q "pilot-seat-live PASS" "$RUN_OUT/client.log"
+        for name in icons facings mounted; do test -s "$RUN_OUT/shot_pilot_seat_$name.png"; done
+        echo "Live Pilot Seat checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = canopies ]; then
         grep -q "canopy-world PASS" "$RUN_OUT/client.log"
         grep -q "canopy-composition PASS" "$RUN_OUT/client.log"
@@ -187,6 +199,8 @@ echo "PASS: Programmable Door defaults and creative pick-block settings round tr
 grep -q '\[vandorlabs\]\[reprolab\] redstone-channel-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: loaded-block redstone channel propagation and persistence"
 grep -q '\[vandorlabs\]\[reprolab\] chair-runtime PASS' "$RUN_OUT/client.log"
+grep -q '\[vandorlabs\]\[reprolab\] pilot-seat-world PASS' "$RUN_OUT/client.log"
+grep -q '\[vandorlabs\]\[reprolab\] pilot-seat-model PASS' "$RUN_OUT/client.log"
 echo "PASS: live chair mounting, seat height, and cleanup contracts"
 grep -q '\[vandorlabs\]\[reprolab\] controller-runtime PASS' "$RUN_OUT/client.log"
 echo "PASS: controller selection, redstone, obstruction and source-restoration contracts"

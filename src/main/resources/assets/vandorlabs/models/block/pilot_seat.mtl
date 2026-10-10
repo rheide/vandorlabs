@@ -1,0 +1,76 @@
+newmtl frame
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/frame
+
+newmtl shell
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/shell
+
+newmtl edge
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/edge
+
+newmtl rubber
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/rubber
+
+newmtl fabric
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/fabric
+
+newmtl bolster
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/bolster
+
+newmtl piping
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/piping
+
+newmtl stitch
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/stitch
+
+newmtl inset
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/inset
+
+newmtl steel
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/steel
+
+newmtl dark
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+map_Kd vandorlabs:blocks/pilot_seat/dark
