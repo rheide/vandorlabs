@@ -8,6 +8,50 @@ Foreign blocks and tile NBT are retained. Their rendering and collision are best
 
 The [implementation guide](ground-vehicles-analysis.md) describes compatibility and transfer guarantees. This document distinguishes code findings from hypotheses and proposes the next work; it does not claim that turning is already smooth or that maximum-size craft meet a frame-time target.
 
+Subsequent testing reports two interaction gaps: a large assembled craft can be solid yet impossible to board by clicking its Pilot Seat, and the assembly/parking dialog has no redstone channel field. Channel-triggered conversion exists, but its settings are currently exposed only through the separate placed-seat channel menu. These issues remain open; the investigation below adds follow-ups without changing gameplay code or the `t140` JAR.
+
+## New priority: large-craft boarding and channel configuration
+
+### Boarding: identified code paths and failure mechanisms
+
+The reported symptom is a solid, assembled large craft whose Pilot Seat does nothing when right-clicked. This investigation inspected the current source and the mapped Minecraft/Forge 1.12.2 bytecode; it did not reproduce the user's particular structure in a live client.
+
+1. Once assembled, the visible Pilot Seat is stored geometry, not a world block. Its `BlockPilotSeat.onBlockActivated` cannot receive ordinary block clicks. Boarding requires the vehicle entity interaction path.
+2. `EntityGroundVehicle.processInitialInteract` can mount a player, but relies on vanilla delivering an entity interaction. `VehicleClient` has no general right-click route for the captured seat. `VehicleLookup.pointed` is used by `ItemConfigurizer`, so its distant-hull fix reaches parking but not empty-hand boarding or generic door interaction.
+3. Vanilla `EntityRenderer.getMouseOver` discovers candidates through `WorldClient.getEntitiesInAABBexcluding`, which uses origin-based chunk/section indexing. A seat far from the craft origin can miss discovery despite the full collision/render bounds.
+4. Independently, vanilla `NetHandlerPlayServer.processUseEntity` requires player-to-entity **origin** distance squared to be less than 36 when visible, or 9 when not visible. Even a successful client pick can be silently rejected before `processInitialInteract` when a player is beside a distant seat. Increasing entity bounds or fixing only client picking cannot remove this server gate.
+5. Existing live checks mount by scheduling a direct server call to `processInitialInteract` (`VehicleRuntimeChecks.tick`), bypassing both discovery and packet reach validation. The distant-hull test verifies Configurizer targeting and floor/render coverage, not real mouse-click boarding. Those passing checks therefore do not cover this report.
+
+These are verified architectural gaps consistent with the symptom. After boarding is repaired, verify that actual driving input reaches the mounted vehicle before diagnosing a separate large-hull movement/collision stall. Also surface occupied-seat and unavailable-snapshot conditions instead of silently doing nothing.
+
+**Follow-up B1 — one craft interaction route, before smoothing work:**
+
+- Add shared craft-local hit testing that returns entity identity, local cell, hit point and intended action. Use actual selection shapes where available, with a bounded best-effort fallback for unknown mod blocks. Respect intervening terrain and nearer captured cells. The full enclosing hull must not act as an invisible solid target from inside a cabin.
+- Route actual client right-clicks on captured Pilot Seat cells through a dedicated vehicle interaction message. Include entity ID/UUID and bounded action/hit information. The server must independently ray-test from the player's current eyes against the current simulation pose, validate reach to the actual hit surface, same world, alive/available craft, spectator status and seat occupancy. Never trust a client-selected cell or relax global vanilla reach checks.
+- Keep the Configurizer's parking action and door action priorities explicit. Reuse the same route for distant door interaction so it does not retain the same vanilla failure. Consume each click once; prevent main/off-hand duplication and duplicate vanilla/custom packet actions. Return actionable feedback when boarding is rejected. Preserve seated conversion and independent mouse look.
+- Confirm player mounting on the server before enabling driving controls. Keep one authoritative mounting method shared with existing interaction code; reset the current driver's input history consistently. Do not change the craft origin to the seat as a shortcut: collision, persistence, parking and snapshot transforms currently use the structure minimum corner.
+
+**B1 acceptance tests:** Use genuine client clicks and network dispatch, rather than calling the mount method directly. Board seats more than six blocks from the origin, across X/Z chunks and Y sections, from inside and outside the hull, at several headings, with origin offscreen. Exercise both seat cells and the model's protruding bounds. Assert server/client riding identity, then W/S and A/D input/motion. Check an occupied seat, spectators, blocked sight, stale UUIDs, out-of-reach clicks, off-hand duplication, nearby doors and Configurizer parking. Add a dedicated-server case to expose packet reach assumptions hidden by integrated-server fixtures.
+
+### Channels: existing support versus missing dialog integration
+
+`TileEntityPilotSeat` implements `RedstoneChannelMember`, persists its channel list and polls rising edges. `BlockPilotSeat.onBlockActivated` opens `GUI_REDSTONE_CHANNEL` only on sneak-right-click of a **placed** seat (either cell resolves to the lower tile). `ItemConfigurizer.onRightClickBlock` forwards that sneaking case; ordinary Configurizer use opens assembly preview. `GuiHandler`, `GuiRedstoneChannel` and `MessageRedstoneChannel` support the placed tile and its generic channel field.
+
+The dialog in `VehicleClient.Preview` only creates Assemble/Park and Cancel buttons; it contains no channel field or settings action. There is no dedicated Pilot Seat configuration screen. In vehicle mode, the seat is a tile in `VehicleWorld`, while the existing container/message resolve the tile from the real world at a block position. They cannot safely configure an assembled seat. The channel conversion regression calls `setRedstoneChannel` directly and therefore proves pulse behavior/persistence, not discoverability or GUI editing.
+
+The user's exact screen was not captured. If it is the ordinary assembly/parking preview, the missing field is confirmed by its implementation. If it is the separate placed-seat Redstone Channels menu, the code does create a field: investigate opening the wrong screen, client tile synchronization or running an older build rather than assuming a missing widget there.
+
+**Follow-up C1 — expose channels in the Pilot Seat/vehicle dialog:**
+
+- Add a clearly labeled channel-list field or an explicit Pilot Seat settings action accessible from assembly and parking previews, including when seated/inside a craft. Show the saved list and explain that a low-to-high transition toggles mode; held high does not repeatedly toggle. Reuse `ChannelFields`/`ChannelList` parsing and existing limits rather than introducing a second channel format.
+- Define Save/Cancel separately from confirming conversion. For placed seats, retain validated container-based editing. If settings change while an assembly preview is open, invalidate/rebuild its snapshot/token: source revalidation compares tile NBT, and transferring an older preview must neither fail confusingly nor restore stale channels.
+- For assembled seats, add an authenticated vehicle settings operation keyed by entity UUID and seat identity. Validate permissions and reach against the seat/hit, or the controlling rider, in the real world. Do not send a fake-world local coordinate to `MessageRedstoneChannel` and accidentally edit an unrelated real block.
+- Update the authoritative stored seat NBT and local view together, invalidate encoded snapshot caches and synchronize channel settings to clients/previews. Mutating only the live `VehicleWorld` tile does not update immutable `VehicleStructure` persistence. Preserve owner and pulse baseline semantics; editing a powered channel must not immediately convert the craft. Do not invoke real-world block notification for a fake local tile as though it were a placed seat.
+
+**C1 acceptance tests:** Open the settings through real UI interactions on lower/upper placed seat cells and from the assembly/parking dialog; assert field visibility, saved-value display, editing, validation and Cancel behavior. Save a channel list through the actual packet, close/reopen, assemble while seated, park and reload; assert the list survives. Test fresh pulses, held-high changes, permissions, an obsolete preview and an unrelated real-world tile sharing the same coordinates as the vehicle-local seat. Do not substitute a direct setter call for these checks.
+
+These follow-ups extend the earlier verification scope. Address B1 first because a craft that cannot be boarded cannot be used to assess steering improvements, then C1 and the smoothing/performance work below.
+
 ## Corrections included in this handoff
 
 Minecraft indexes entities by their origin chunk and vertical section. A structure extending beyond that location can be absent from ordinary entity collision and targeting queries. RenderGlobal can also omit its origin section before the renderer's full-bounds frustum check runs.
