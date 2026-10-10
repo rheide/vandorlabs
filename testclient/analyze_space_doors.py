@@ -33,7 +33,9 @@ for side in ('east','west'):
         # just its center. Ignore two silhouette pixels for edge antialiasing.
         def is_backing(rgb):
             r,g,b=rgb
-            return r>60 and b>60 and g<min(r,b)*.65
+            # The backing remains purple in shade; a brightness cutoff at 60
+            # splits adjacent 60/61 pixels into false jamb islands on some GPUs.
+            return r>20 and b>20 and g<min(r,b)*.65
         pixels=image.load()
         for y in range(int(h*.15),int(h*.85)):
             # The open leaf occupies the far left of hinge-side views. This
@@ -60,7 +62,7 @@ if texture_errors:
              'textures/revolvers/revolver_einhorn.png',
              'No other errors exist for domain immersiveengineering'}
     unexpected=[line for line in texture_errors if line not in allowed
-                and not (line.startswith('mod immersiveengineering resources at ') and line.endswith('/ImmersiveEngineering-0.12-98.jar'))]
+                and not (line.startswith('mod immersiveengineering resources at ') and line.replace('\\','/').endswith('/ImmersiveEngineering-0.12-98.jar'))]
     assert not unexpected, 'Client reported texture loading errors: '+repr(unexpected)
     print('NOTE: IE optional revolver_einhorn texture is absent; all other texture errors remain fatal')
 assert 'Exception baking model' not in log, 'Client reported model baking errors'

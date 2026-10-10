@@ -32,10 +32,17 @@ public final class PilotSeatRuntimeChecks {
             p.dismountRidingEntity();
             for (EnumFacing f : EnumFacing.HORIZONTALS) {
                 IBlockState s = b.getDefaultState().withProperty(BlockPilotSeat.FACING, f);
-                w.setBlockState(POS, s, 3);
                 w.setBlockState(POS.up(), Blocks.GLASS.getDefaultState(), 3);
+                require(!b.canPlaceBlockAt(w, POS), "backrest clearance");
+                w.setBlockToAir(POS.up());
+                require(b.canPlaceBlockAt(w, POS), "clear placement");
+                w.setBlockState(POS, s, 3);
                 b.onBlockPlacedBy(w, POS, s, p, new ItemStack(b));
-                require(w.getBlockState(POS.up()).getBlock() == Blocks.GLASS, "must occupy one cell");
+                require(w.getBlockState(POS.up()).getBlock() == b && w.getBlockState(POS.up()).getValue(BlockPilotSeat.UPPER), "upper reservation");
+                require(b.getStateFromMeta(b.getMetaFromState(w.getBlockState(POS.up()))) == w.getBlockState(POS.up()), "upper state persistence");
+                AxisAlignedBB lowerBounds = s.getBoundingBox(w, POS);
+                AxisAlignedBB upperBounds = w.getBlockState(POS.up()).getBoundingBox(w, POS.up());
+                require(lowerBounds.maxY == 1 && upperBounds.maxY == .75, "full-size collision height");
                 p.setSneaking(false);
                 b.onBlockActivated(w, POS, s, p, EnumHand.MAIN_HAND, f, .5F, .3F, .5F);
                 require(p.getRidingEntity() instanceof EntityChairSeat, "mount " + f);
@@ -43,25 +50,32 @@ public final class PilotSeatRuntimeChecks {
                 require(POS.equals(seat.getChairPos()), "mount owner");
                 require(Math.abs(seat.posY - (POS.getY() + BlockPilotSeat.SEAT_HEIGHT + .35 - EntityChairSeat.RIDER_PELVIS_OFFSET)) < 1e-6, "cushion height");
                 seat.onUpdate();
-                require(!seat.isDead, "single-cell seat survives mount tick");
+                require(!seat.isDead, "seat survives mount tick");
                 b.onBlockActivated(w, POS, s, p, EnumHand.MAIN_HAND, f, .5F, .3F, .5F);
                 require(p.getRidingEntity() == seat, "repeat click keeps mount");
+                b.onBlockActivated(w, POS.up(), w.getBlockState(POS.up()), p, EnumHand.MAIN_HAND, f, .5F, .3F, .5F);
+                require(p.getRidingEntity() == seat, "upper click uses same mount");
                 p.dismountRidingEntity();
                 seat.ticksExisted = 6; seat.onUpdate();
                 require(seat.isDead, "empty mount cleanup");
                 b.onBlockActivated(w, POS, s, p, EnumHand.MAIN_HAND, f, .5F, .3F, .5F);
                 seat = (EntityChairSeat)p.getRidingEntity();
-                w.setBlockToAir(POS);
+                w.setBlockToAir(POS.up());
+                require(w.isAirBlock(POS), "breaking upper removes lower");
                 require(seat.isDead && !p.isRiding(), "breaking occupied seat cleans up");
                 w.setBlockToAir(POS.up());
             }
             p.setPositionAndUpdate(old.x, old.y, old.z);
-            System.out.println("[vandorlabs][reprolab] pilot-seat-world PASS four-facings mount dismount break single-cell");
+            System.out.println("[vandorlabs][reprolab] pilot-seat-world PASS four-facings mount dismount break upper-cell");
         }).get(); } catch(Exception e) { throw new IllegalStateException(e); }
         for (EnumFacing f : EnumFacing.HORIZONTALS) {
             IBakedModel m = mc.getBlockRendererDispatcher().getModelForState(ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING, f));
             require(m != mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(), "world OBJ " + f);
             require(m.getQuads(null, null, 0).size() > 100, "OBJ geometry " + f);
+            IBakedModel upper = mc.getBlockRendererDispatcher().getModelForState(ModBlocks.PILOT_SEAT.getDefaultState()
+                    .withProperty(BlockPilotSeat.FACING, f).withProperty(BlockPilotSeat.UPPER, true));
+            require(upper != mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(), "upper model " + f);
+            require(upper.getQuads(null, null, 0).isEmpty(), "upper must not duplicate seat mesh");
         }
         IBakedModel icon = mc.getRenderItem().getItemModelWithOverrides(new ItemStack(ModBlocks.PILOT_SEAT), mc.world, mc.player);
         require(icon.getQuads(null, null, 0).size() > 100, "inventory geometry");
@@ -73,7 +87,9 @@ public final class PilotSeatRuntimeChecks {
     public static void tick(Minecraft mc, File output) {
         try {
             if (++ticks == 1) { check(mc); mc.displayGuiScreen(new Icons()); }
+            if (ticks == 20) mc.displayGuiScreen(new Icons());
             if (ticks == 30) {
+                require(mc.currentScreen instanceof Icons, "icon screen remains open");
                 shot(mc, output, "icons");
                 mc.displayGuiScreen(null);
                 mc.getIntegratedServer().addScheduledTask(() -> {
@@ -81,8 +97,11 @@ public final class PilotSeatRuntimeChecks {
                     w.setWorldTime(6000);
                     for (BlockPos p : BlockPos.getAllInBox(POS.add(-4,-1,-4), POS.add(10,-1,5)))
                         w.setBlockState(p, Blocks.STONE.getDefaultState(), 3);
-                    for (int i=0; i<4; i++) w.setBlockState(POS.east(i*2), ModBlocks.PILOT_SEAT.getDefaultState()
-                            .withProperty(BlockPilotSeat.FACING, EnumFacing.HORIZONTALS[i]), 3);
+                    for (int i=0; i<4; i++) {
+                        IBlockState s = ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING, EnumFacing.HORIZONTALS[i]);
+                        w.setBlockState(POS.east(i*2), s, 3);
+                        w.setBlockState(POS.east(i*2).up(), s.withProperty(BlockPilotSeat.UPPER, true), 3);
+                    }
                     EntityPlayerMP p = mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                     p.capabilities.isFlying=true;
                     p.sendPlayerAbilities();

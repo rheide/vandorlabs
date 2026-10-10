@@ -23,8 +23,14 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
 
     public static TileEntityCanopy at(IBlockAccess w, BlockPos p) {
         if (w instanceof World && !((World) w).isBlockLoaded(p)) return null;
-        TileEntity t = w.getTileEntity(p);
-        return t instanceof TileEntityCanopy ? (TileEntityCanopy) t : null;
+        TileEntity t;
+        if(w instanceof World && !(w instanceof com.vandorlabs.vehicle.VehicleWorld)) {
+            // Connection masks are also serialized inside chunk packets. World#getTileEntity
+            // creates missing tiles, which would mutate the map that packet is iterating.
+            net.minecraft.world.chunk.Chunk chunk=((World)w).getChunkProvider().getLoadedChunk(p.getX()>>4,p.getZ()>>4);
+            t=chunk==null?null:chunk.getTileEntityMap().get(p);
+        }else t=w.getTileEntity(p);
+        return t instanceof TileEntityCanopy && !t.isInvalid() ? (TileEntityCanopy) t : null;
     }
 
     public BlockCanopy block() {

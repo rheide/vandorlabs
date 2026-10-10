@@ -87,6 +87,7 @@ if [ "$MODE" = focus ]; then
         grep -q "pilot-seat-model PASS" "$RUN_OUT/client.log"
         grep -q "pilot-seat-live PASS" "$RUN_OUT/client.log"
         for name in icons facings mounted; do test -s "$RUN_OUT/shot_pilot_seat_$name.png"; done
+        python3 testclient/analyze_pilot_seat.py "$RUN_OUT"
         echo "Live Pilot Seat checks passed: $RUN_OUT"
         exit 0
     fi

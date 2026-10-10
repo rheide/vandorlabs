@@ -10,18 +10,6 @@
     }
   },
   "variants": {
-    "facing=north": {
-      "y": 0
-    },
-    "facing=east": {
-      "y": 90
-    },
-    "facing=south": {
-      "y": 180
-    },
-    "facing=west": {
-      "y": 270
-    },
     "inventory": [
       {
         "transform": {
@@ -32,11 +20,11 @@
               0
             ],
             "translation": [
-              -0.0,
-              0.1343141882427533,
-              0
+              0.014621919164851609,
+              -0.12207064220717793,
+              0.0
             ],
-            "scale": 0.7787874356749201
+            "scale": 0.3308562622536994
           },
           "ground": {
             "scale": 0.5
@@ -52,6 +40,34 @@
           }
         }
       }
-    ]
+    ],
+    "facing=north,upper=false": {
+      "y": 0
+    },
+    "facing=north,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "facing=east,upper=false": {
+      "y": 90
+    },
+    "facing=east,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "facing=south,upper=false": {
+      "y": 180
+    },
+    "facing=south,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "facing=west,upper=false": {
+      "y": 270
+    },
+    "facing=west,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    }
   }
 }

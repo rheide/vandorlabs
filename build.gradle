@@ -25,7 +25,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '1.8-alpha'
+version = '2.0-alpha'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 
@@ -549,3 +549,5 @@ task testTwinPowerLevers(type: Exec) {
     commandLine pythonExecutable, 'tools/test_twin_power_levers.py'
 }
 check.dependsOn testTwinPowerLevers
+
+tasks.withType(JavaCompile) { options.encoding = "UTF-8" }

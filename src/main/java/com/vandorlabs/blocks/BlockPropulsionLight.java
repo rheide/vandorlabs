@@ -83,6 +83,10 @@ public class BlockPropulsionLight extends BlockVandor {
 
     protected IBlockState withParticleState(IBlockState state, IBlockAccess source,
             BlockPos pos) {
+        if(source instanceof com.vandorlabs.vehicle.VehicleWorld) {
+            com.vandorlabs.vehicle.VehicleWorld vehicle=(com.vandorlabs.vehicle.VehicleWorld)source;
+            return state.withProperty(POWERED,vehicle.propulsionLevel>0).withProperty(PARTICLES,false);
+        }
         TileEntity tile = source.getTileEntity(pos);
         boolean particles = state.getValue(POWERED)
                 && tile instanceof TileEntityRedstoneLight

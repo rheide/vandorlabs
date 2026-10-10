@@ -37,5 +37,7 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageProgrammableArmor.Handler.class, MessageProgrammableArmor.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageSampleArmorTexture.Handler.class, MessageSampleArmorTexture.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageShipSystem.Handler.class, MessageShipSystem.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(com.vandorlabs.vehicle.VehicleNetwork.Server.class, com.vandorlabs.vehicle.VehicleNetwork.Packet.class, id, Side.SERVER);
+        INSTANCE.registerMessage(com.vandorlabs.vehicle.VehicleNetwork.Client.class, com.vandorlabs.vehicle.VehicleNetwork.Packet.class, id++, Side.CLIENT);
     }
 }

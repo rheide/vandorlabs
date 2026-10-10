@@ -131,8 +131,13 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     }
     public String model() {
         BlockShipSystem b = block();
-        if (b.isConsole()) return b.kind + "_" + consoleWidth + (consoleDepth > 1 ? "_depth_" + consoleDepth : "") + (active ? "_on" : "_off");
-        return b.hasPowerStates() ? b.kind + (active ? "_on" : "_off") : b.itemModel();
+        if (b.isConsole()) return b.kind + "_" + consoleWidth + (consoleDepth > 1 ? "_depth_" + consoleDepth : "") + (visuallyActive() ? "_on" : "_off");
+        return b.hasPowerStates() ? b.kind + (visuallyActive() ? "_on" : "_off") : b.itemModel();
+    }
+    public boolean visuallyActive() {
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld && com.vandorlabs.vehicle.VehicleWorld.isPropulsion(block()))
+            return ((com.vandorlabs.vehicle.VehicleWorld)world).propulsionLevel>0;
+        return active;
     }
     public EnumFacing facing() { return world.getBlockState(pos).getValue(BlockShipSystem.FACING); }
     public boolean isAnchor() { return anchor == null || anchor.equals(pos); }

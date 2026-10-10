@@ -24,7 +24,10 @@ def main():
     parser.add_argument('--forge-profile', default='1.12.2-forge-14.23.5.2860')
     parser.add_argument('--compat-mods', type=Path)
     parser.add_argument('--jar', type=Path)
-    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles'])
+    parser.add_argument('--world-copy', type=Path, help='Test a workspace copy of an existing save')
+    parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
+    parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
+    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'canopies'])
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -40,6 +43,8 @@ def main():
     game.mkdir(parents=True)
     natives.mkdir()
     (game/'options.txt').write_text('soundCategory_master:0.0\npauseOnLostFocus:false\n')
+    if args.world_copy:
+        shutil.copytree(args.world_copy, game/'saves'/('repro-'+output.name))
     base = args.minecraft_dir.resolve()
     profile = json.loads((base/'versions'/args.forge_profile/(args.forge_profile+'.json')).read_text())
     profiles = [profile]
@@ -80,9 +85,17 @@ def main():
     for name in ['worldedit-forge-mc1.12.2-6.1.10-dist.jar',
                  'BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar', 'ImmersiveEngineering-0.12-98.jar']:
         shutil.copyfile(compat/name, game/'mods'/name)
+    if args.all_mods:
+        for source in args.all_mods.glob('*.jar'):
+            if not source.name.startswith('vandorlabs-'):
+                shutil.copyfile(source,game/'mods'/source.name)
     properties = ['-Dvandorlabs.reprolab='+str(output), '-Djava.library.path='+str(natives)]
+    if args.world_copy:
+        properties.append('-Dvandorlabs.existingWorldChecks=true')
+    if args.trace_chunks:
+        properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
     command = [args.java, '-Xmx3G']+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
@@ -121,10 +134,18 @@ def main():
                 proc.wait(timeout=15)
     if proc.returncode:
         raise SystemExit('Client failed; inspect '+str(output/'client.log'))
+    client_log=(output/'client.log').read_text(errors='replace')
+    if 'domain vandorlabs is missing' in client_log or 'Exception loading model' in client_log:
+        raise SystemExit('Invalid Vandor asset; inspect '+str(output/'client.log'))
+    if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
+        raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = 'pilot-seat-live PASS' if args.focus == 'pilot-seat' else 'vehicle-live PASS'
+        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'canopies':'canopy-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
+        if args.focus == 'pilot-seat':
+            import sys
+            subprocess.run([sys.executable, str(root/'testclient/analyze_pilot_seat.py'), str(output)], check=True)
     print('Client completed; validate the screenshots and full-suite assertions before reporting success.')
 
 

@@ -11,6 +11,8 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
+**2.0-alpha:** Add Configurizer-driven ground vehicles with W/S driving and A/D steering, reversible block/NBT capture, programmable materials, safe seat exits and movement-driven propulsion brightness, adjustable third-person distance, operable doors, extended ramp capture and Pilot Seat channel toggles. See the [ground vehicle guide](docs/ground-vehicles-analysis.md) and [smoothing/performance handoff](docs/ground-vehicles-handoff.md). Turning smoothness remains alpha work.
+
 **1.8-alpha:** Add canopy components and decorative ship systems, including connected Vektor console surfaces, machine-specific activity colors, and floor/wall/ceiling mounting. See the [canopy guide](docs/canopies.md).
 
 **1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, eight role designs and selectable block materials. Each piece defaults to Civilian Staff and can copy a displayed world texture with shift-right-click. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
@@ -309,7 +311,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-1.8-alpha.jar`.
+`build/libs/vandorlabs-2.0-alpha.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
@@ -390,11 +392,14 @@ triangular display wedge),
 and uses matching front/side/top sets from the shared texture picker. Craft it
 with a chest and a Programmable Block.
 
-The **Pilot Seat** is a low, single-block seat. Right-click to sit and press
+The **Pilot Seat** is a full-size chair with a reserved upper cell for its backrest.
+Its model is 1.75 blocks tall and extends 1/8 block beside and behind the anchor;
+leave clearance around the chair. Right-click to sit and press
 the sneak key to dismount. Craft it with three red wool and three iron ingots.
-It does not assemble or move a vehicle. The proposed Configurizer-driven
-conversion and ground-driving feature is described in the
-[ground vehicle analysis](docs/ground-vehicles-analysis.md).
+Use the Configurizer on the seat to preview and assemble its connected craft.
+Right-click the assembled craft to sit; W/S drives, A/D steers and Space brakes.
+Stop and use the Configurizer on any craft surface, or while seated, to park it as blocks. See the
+[ground vehicle guide](docs/ground-vehicles-analysis.md) for compatibility and limits.
 
 ## Testing in game
 

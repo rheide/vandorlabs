@@ -1,25 +1,72 @@
-# Pilot Seat ground vehicle implementation analysis
+# Ground vehicles: 2.0 design and implementation
 
-Use the Configurizer to assemble a connected craft into one persistent vehicle entity, and to park it back as blocks. Sitting in the Pilot Seat only mounts the player; it never assembles or disassembles the craft. Ground movement is translation only: the craft keeps its original orientation permanently. Support a single driver, preserved programmable appearances, and safe placement back into the world. Engines and fuel are outside the current scope.
+The Configurizer converts a connected craft into one persistent vehicle entity and parks it back as blocks. Sitting only mounts the player. The craft drives forward/backward and steers on the ground. There is no flight, engine requirement or fuel system.
 
-The Pilot Seat itself is a separate, single-cell sittable block. Vehicle assembly and movement described below are proposed work, not features of the seat-only implementation.
+## Player interaction
 
-## Recommended architecture
+1. Build a craft with exactly one Pilot Seat and at least one landing gear. Leave air between the hull and surrounding buildings or terrain; only landing gear should touch the ground.
+2. Use the Configurizer on either cell of the Pilot Seat. Inspect the highlighted selection and choose **Assemble**.
+3. Right-click the assembled craft to sit. **W/S** accelerates forward/backward along the current heading, **A/D** steers, **Space** brakes, and **Sneak** dismounts. Steering requires motion and reverses when backing up.
+4. Stop and use the Configurizer anywhere on the craft, including while seated. **Park as blocks** restores it at the highlighted grid position, with its original orientation. Obstructed destinations are rejected. A seated pilot transfers between the vehicle and the placed seat; a player inside a parked craft is seated if needed to avoid the grid snap placing blocks through them.
 
-Own the vehicle data, assembly transaction, programmable rendering adapters and ground controller in Vandor Labs. Store blocks in vehicle-local coordinates and move one entity, rather than moving world blocks every tick or creating one entity per block. This keeps ordinary driving independent of block count except for collision, rendering and explicitly supported active components.
+In third person, mouse look orbits the pilot and the mouse wheel adjusts camera distance from 4 to 96 blocks. The default distance scales with craft dimensions. Terrain shortens the camera arm.
 
-MovingWorld is the strongest candidate for a short integration experiment because it already separates mobile block storage, assembly, rendering and disassembly. Do not adopt it as a required dependency until a programmable hull, multi-cell landing gear, reload and collision experiment passes. A narrow implementation owned by Vandor Labs is the recommended default for the limited ground-driving scope; generic ticking machines and walkable moving interiors would make a mature moving-world framework more attractive.
+Sneak-right-click the placed Pilot Seat, with a bare hand or Configurizer, to set its redstone channels. Each low-to-high channel transition toggles block/vehicle mode. Holding a signal high does not repeat the action, including across conversion and save/load. Channel changes sample the current level and require a fresh pulse. The player who placed or configured the seat must be online in that dimension so permission and protection checks have an accountable player. Receivers establish a baseline after a one-second load grace period to avoid treating restored power as a fresh pulse. Failed pulses report the reason and require another pulse; moving craft must stop before parking.
 
-```mermaid
-flowchart LR
-    A[World blocks] -->|Configurizer preview and validation| B[Immutable structure snapshot]
-    B -->|Transactional assembly| C[Vehicle entity and local block storage]
-    C --> D[Cached geometry and programmable surfaces]
-    C --> E[Server ground controller and collision]
-    C -->|Configurizer parking preview| F[Validate destination]
-    F -->|Transactional placement| A
-    G[Pilot Seat interaction] -->|Mount only| C
-```
+The replacement Pilot Seat reserves a second cell for its backrest. Seats placed before that model upgrade must be replaced before assembly. Missing component messages identify the expected block and coordinates.
+
+Propulsion starts dark on assembly and ramps brighter during horizontal movement, regardless of their saved redstone/particle settings. This effect adds no particles and does not change the saved configuration. Propulsion blocks are decorative and are never required for movement.
+
+## Discovery and compatibility
+
+Discovery is a six-face flood fill starting at the seat, processed in slices of 256 queued positions. Landing gear and its owned footprint are included but terminate their own branches, preventing traversal into terrain through the wheels. Other branches continue. Gear is not a closed boundary: a hull block touching a hangar is still connected, so inspect the preview.
+
+The limits are 4,096 occupied cells, 64 cells on each axis, 4 MiB of serialized structure data, and 8,192 merged collision boxes. Unloaded boundaries, fluids, unbreakable blocks, incomplete known components and limits fail without partially assembling a craft. Moving canopies, gear and controlled ramps must settle first. Ramp controllers follow their reserved cells even when extended geometry is separated from the hull. Their current extended pose, source materials, textures and recovery journals are retained. Ramps remain fixed in vehicle mode and resume normal operation after parking.
+
+General registered blocks from other mods are accepted, including non-cube blocks and tile entities. There is no mod/block allowlist. Full block properties and persistent tile NBT are stored separately from the vehicle's presentation. Foreign tile entities do not tick while assembled; machines, inventories and networks cannot be operated in vehicle mode. The Pilot Seat receiver continues to read the real dimension's redstone channels. Vanilla and Vandor doors can be opened/closed manually in vehicle mode, including paired Vandor doors and 3x3 doors; their redstone networks and settings menus remain suspended until parking. Door clicks select actual block surfaces, update collision and preserve saved tile settings. Vanilla iron doors also allow manual vehicle-mode interaction.
+
+The local world view feeds the blocks' existing models and collision code. If a mod cannot supply a local tile/model/collision shape, presentation is best effort: unavailable tiles are skipped, failing block models use a missing-model placeholder, and failing collision shapes use their cell-sized box. Those fallbacks never replace the stored original block or tile data. Parking reconstructs original block types, properties and NBT, translating tile positions. Foreign mod-specific absolute links remain opaque; the owning mod may need to rebuild its networks or multi-block relationships after relocation. Generic machine simulation is outside scope.
+
+Known Vandor multi-cell adapters include seat backrests, doors, canopies, ship systems, trapdoor assemblies, controlled ramps and telescopic gear footprints. Absolute Vandor ownership links are translated; relative links remain unchanged. Programmable built-in, filesystem, custom-block and per-face material settings remain in full tile NBT.
+
+## Storage and transfer
+
+`VehicleStructure` is an immutable sparse collection of local cells with a registry/property palette and complete tile NBT. `EntityGroundVehicle` owns that snapshot, UUID, transfer epoch, collision geometry and local view. Ordinary driving changes one entity position and yaw rather than world blocks.
+
+Assembly and parking revalidate the server preview, held tool, reach, permissions, occupancy and source/destination state. A durable write-ahead record stores the pre-transfer owner. Bulk transfers avoid destructive block-break callbacks, restore all cells before neighbor notification, and flush chunk/entity saves before retiring the record. Startup recovery rolls an interrupted transfer back. A persistent UUID/epoch ledger rejects obsolete entities when previously saved chunks load later. Failed recovery retains its record and blocks further transfers in that dimension.
+
+The server owns capture and conversion. Clients confirm only an expiring server-generated token. Snapshots arrive in bounded fragments when first tracking or previewing a craft; small door-state patches are sent on interaction; movement packets never contain full block NBT. The client verifies entity identity before applying the completed snapshot. Missing installed registry entries retain saved entity data in an unavailable, immobile state rather than deleting it.
+
+## Ground controller and dismounting
+
+The server accepts input only from the current driver, rejects old sequence numbers, and expires missing input after ten ticks. Speed is capped at 0.28 blocks/tick; acceleration is gradual, with stronger braking. Gravity and swept collision operate on cached component boxes; matching adjacent faces are merged without filling hollow space. Horizontal oriented boxes use separating axes against terrain, and angular sweeps check the outer hull throughout a turn. A grounded half-block step requires headroom and support. Movement stops at unloaded terrain and the world border. The driver predicts the same controller locally, reconciles sequenced input against precise server states and eases small position corrections. Observers interpolate server poses.
+
+Turning still exhibits reported jitter. Position prediction checks do not prove angular smoothness; see the [smoothing and performance handoff](ground-vehicles-handoff.md) for the input acknowledgment, yaw correction and rider/camera work that remains.
+
+Craft-wide targeting and collision lookup cover cells beyond the entity's origin chunk/section. The Configurizer ray-tests captured cells within six blocks and respects intervening terrain. A rendering fallback draws visible hulls whose origin section was omitted by vanilla's entity pass; full structure bounds cover decorative cells as well as collision geometry.
+
+Safe dismount searches actual supporting collision surfaces with standing clearance, including partial blocks. It resets vertical motion and fall distance and reapplies the selected position after vanilla's final dismount placement. The same path handles placed Pilot Seats and assembled craft. Stationary interiors expose component collision rather than a solid enclosing box, so open doors allow passage. Rotated component boxes use conservative enclosing boxes for walking entities. Carrying unseated players on moving decks and additional seated passengers are outside this version.
+
+## Rendering and performance
+
+The renderer registers during Forge pre-initialization. Opaque/cutout/translucent geometry uses cached local VBOs; propulsion geometry is separate so brightness changes do not rebuild the entire hull. Programmable extended states use vehicle-local neighbors. Existing tile renderers receive a local world/camera context. Translucent block vertices are re-sorted when the local camera moves a block. Meshes are released on despawn, world change and resource reload.
+
+Current limits bound work, but they are not a measured fleet-capacity guarantee. Collision still queries terrain for each merged box; animated tile renderers and mesh rebuilds can dominate complex craft. Transfer durability currently flushes world chunks and can cause a short assembly/parking pause. Initial meshes are built on the render thread rather than uploaded in frame-budgeted sections.
+
+Further optimization should be driven by profiles:
+
+- Measure server tick time and candidate collision counts on solid and hollow craft at 128, 512, 2,048 and 4,096 blocks, then fleets of 1, 5 and 10.
+- Add a spatial index or section-level collision broad phase if merged-box terrain queries dominate.
+- Split large meshes into bounded upload batches and share immutable geometry where model identity allows it.
+- Reduce lighting rebuilds with section lighting revisions; measure translucent sorting and dynamic tile rendering separately.
+- Cache snapshot bytes across observers and measure tracking bursts independently of steady-state input traffic.
+- Exercise prediction and reconciliation under latency, packet loss and separate dedicated-server clients; keep collision decisions server-authoritative.
+
+## Validation
+
+The focused live vehicle checks exercise server-world conversion, gear boundaries, programmable materials, full snapshot/NBT round trips, non-cube and foreign blocks, a twelve-cell inertial dampener, inventory retention, movement, steering, braking, rotated geometry, wall collision, transfer cancellation/recovery and stale-entity rejection. Client checks cover renderer registration, snapshot delivery, programmable custom materials, parking preview, actual movement-key packets, propulsion ramps, doors, extended programmable ramps, channel-triggered occupied conversion, discovery of 4,096 occupied cells and rejection of 4,097, and supported dismounts after subsequent physics ticks. A chunk-packet regression verifies that serializing propulsion settings and canopy connection masks does not create neighboring tile entities in older saves. The client launcher also supports testing an isolated copy of an existing save with its installed mod set. The Pilot Seat suite checks model facings, upper-cell ownership, sitting and inventory padding.
+
+Run these together with the existing build and live client regression suite. Further compatibility testing should cover unusual mod renderers, mod-specific network links after relocation, dedicated-server observers, latency, resource reloads, large hollow hulls and power-loss behavior. Do not infer arbitrary machine functionality from successful decorative block rendering.
 
 ## Lessons from the installed reference mods
 
@@ -30,109 +77,6 @@ These findings concern the installed 1.12.2 artifacts and their class bytecode. 
 | AdvancedRocketry `1.12.2-2.0.0-257`, with LibVulpes `0.4.2-88` | `StorageChunk` implements `IBlockAccess`, holds block metadata and tile entities, exposes `copyWorldBB`, `cutWorldBB`, `pasteInWorld`, NBT and network serialization, and a `WorldDummy`. `EntityRocket` and `RendererRocket` consume the stored structure. The renderer contains display-list compilation. | Separate captured structure from entity motion. A bounding-box copy can include unrelated blocks and is not a substitute for connectivity detection. Rocket flight and renderer choices are not a ready-made ground controller. |
 | MovingWorld `1.12-6.353` | `ChunkAssembler` has bounded recursive and iterative assembly paths and an assembly interactor. `MobileChunk` implements `IBlockAccess` and exposes a `FakeWorld`. `MobileChunkRenderer` has legacy/VBO render paths, dirty marking, block rendering through the fake world, and tile rendering. `ChunkDisassembler` handles restoration. | Closest structural reference. Prefer bounded iterative discovery and reusable geometry. A fake world is a compatibility layer, not proof that arbitrary Vandor tile callbacks are safe. |
 | Davinci's Vessels `1.12-6.355` | `EntityShip` is layered over the installed MovingWorld implementation. | Ship-specific behavior is separate from the reusable moving-block layer. Study the latter first; buoyancy and flight are unnecessary here. |
-| MrCrayfish's Vehicle Mod `0.44.1-1.12.2` | `EntityPoweredVehicle.onClientUpdate` obtains acceleration and turn intent and sends dedicated messages when those values change. `EntityLandVehicle` implements ground motion, speed-dependent turning, wheel animation and drift behavior. | Borrow input responsiveness and acceleration/braking patterns. Its turning, axle and drift behavior is outside this design; it also does not solve arbitrary block capture or programmable rendering. |
+| MrCrayfish's Vehicle Mod `0.44.1-1.12.2` | `EntityPoweredVehicle.onClientUpdate` obtains acceleration and turn intent and sends dedicated messages when those values change. `EntityLandVehicle` implements ground motion, speed-dependent turning, wheel animation and drift behavior. | Borrow input responsiveness and acceleration/braking patterns. Speed-dependent steering and reverse steering inform this controller; axle simulation and drift are outside scope; it also does not solve arbitrary block capture or programmable rendering. |
 
 Project references: [Advanced Rocketry](https://github.com/Advanced-Rocketry/AdvancedRocketry), [MovingWorld](https://github.com/TridentMC/MovingWorld), [MrCrayfish's Vehicle Mod](https://github.com/MrCrayfish/MrCrayfishVehicleMod). Pin the exact compatible source revision and check its license before reusing implementation code. No dependency on these mods is necessary merely to reproduce the interaction pattern.
-
-## Configurizer interaction
-
-Right-click a placed Pilot Seat with the Configurizer to inspect the connected craft. Present block count, dimensions, included gear, unsupported components and a highlighted assembly preview. An explicit Assemble action commits that preview after server revalidation. Ordinary seat interaction continues to sit down.
-
-On an assembled craft, Configurizer interaction targets the vehicle entity and opens a Park as blocks preview. Require near-zero speed and a clear destination; preview the snapped location with the original orientation unchanged. A failed placement leaves the vehicle intact. Do not make dismounting, logout or an occupied seat automatically place blocks.
-
-`ItemConfigurizer` currently handles block interaction and configuration GUIs, plus a separate armor-stand interaction. Add the Pilot Seat case before tile-type dispatch, because the seat has no settings tile. Add a separate vehicle entity interaction path without consuming unrelated configuration actions. The server validates held tool, reach, permissions, vehicle identity, driver/occupant state and structure revision. Never trust a client-supplied block list or transform.
-
-## Finding exactly the craft
-
-Interpret connected as six face-adjacent occupied cells, starting at the Pilot Seat. Corner and edge contact alone do not connect a craft. Run discovery only on assembly requests or explicit refresh, not every tick or every mount.
-
-Landing gear is a terminal component: include the gear and its owned cells, but do not traverse from it into external neighbors, particularly the ground. Finding one gear ends that branch, not the whole search. Continue other queued hull branches so all wings, tail sections and other gear are included.
-
-This rule cannot distinguish a hull panel from an identical hangar panel touching it. Gear does not form a closed boundary. Require a detached craft except at gear contacts, provide an exclusion/separator mechanism, and show the selection before conversion. Reject a reached unsupported solid block rather than silently cutting off a possibly attached structure. Reaching configured limits is an error, never a partially assembled craft. Identical allowed blocks attached to a building still require player separation or explicit exclusions; an allowlist alone cannot infer ownership.
-
-Use an iterative queue and visited set of packed coordinates. Abort at unloaded chunks rather than loading terrain to finish the search. Bound accepted blocks, visited candidates, dimensions, allocated volume, total tile NBT bytes and elapsed work. For example, start evaluation with a 2,048-block limit and a 64-block maximum axis; these are tuning candidates, not measured safe limits. Add a separate count/byte budget for animated and unusually complex blocks.
-
-Treat multi-cell components as indivisible:
-
-- Fixed gear uses `BlockLandingGear`; telescopic gear uses `BlockTelescopicLandingGear` and `TileEntityLandingGear`. Lower/footprint cells point to an owner. Normalize these to the root, include every valid reserved cell, and suppress terrain traversal for the entire component. Reject orphaned or partial ownership.
-- Doors, connected seats, canopies and ship-system assemblies need explicit component adapters. Geometry can extend outside a block's cell, so connectivity, ownership and collision must remain distinct concepts.
-- Require exactly one active Pilot Seat initially. Freeze gear configuration and movable doors/ramps during capture. Reject a component crossing an exclusion or unloaded boundary.
-
-## Data transfer and persistence
-
-Create a versioned `VehicleStructure` with a stable UUID, local origin, palette of registry names and block properties, sparse occupied cells, complete persistent tile NBT, component ownership, seat position/facing, gear contact points, collision data and a content revision. Runtime numeric registry IDs are unsuitable as the sole persisted identity.
-
-All coordinates are local while assembled. Adapters must translate tile positions and any absolute owner/group references. Preserve relative gear owner offsets and every block's existing directional state unchanged; only absolute positions need translation. Do not assume changing NBT `x/y/z` handles every block. Keep derived neighbor state out of durable storage and recompute it from the captured neighbors.
-
-Assembly must be a recoverable transfer, not a loop that destroys blocks before it knows the entity can spawn:
-
-1. Discover and snapshot on the server thread, or in bounded server-thread slices. Revalidate states, NBT revisions, permissions, loaded chunks and occupants before committing. Prevent simultaneous overlapping assembly requests.
-2. Persist a transaction record identifying the snapshot and its authoritative owner before removal. Design recovery around independently saved chunks and entity data; an in-memory rollback is insufficient after a crash.
-3. Remove source blocks through controlled adapters that suppress inventory drops and cascading multi-cell break behavior while still unregistering tile/channel state correctly.
-4. Spawn and persist the vehicle. Commit ownership once; on failure restore from the snapshot without duplicating inventories. Recovery reconciles partial source removal and entity creation by transaction UUID.
-
-Parking reverses this process. Snap the vehicle origin to integer coordinates, preserving all block facing and local-face material data. Validate every occupied destination cell and the short alignment translation, then place base states, restore tiles, and finally release neighbor notifications. No rotation or directional remapping is needed. Failure or a crash must leave exactly one recoverable copy. Do not overwrite even replaceable blocks without an explicit placement policy.
-
-Persist stationary and moving entities across chunk unload, save/restart and driver logout. Disconnect removes throttle and applies braking. Initially stop before unloaded terrain, forbid dimension/portal transfer, and avoid unlimited chunk tickets. A long craft needs checks across its complete swept bounds, not only the chunk containing its center.
-
-## Preserving every programmable appearance
-
-Saving block ID and metadata loses the appearance. `TileEntityAnimatedScreenSelector.writeToNBT` includes housing, side and per-face materials, screen/input choices, animation settings, glass shade, shape flags and redstone display data. Subclasses add their own settings. Copy full persistent tile data through a tested codec; an item stack, pick-block result or a subset of update fields is not a reliable structure snapshot.
-
-There are three material sources to preserve: built-in catalog choices, filesystem artwork (`FilesystemTextures` stable path-derived keys), and Custom textures derived from another block's registry name and metadata (`CustomBlockMaterials` / `CustomBlockTextures`). Keep existing saved identifiers and migration rules. Reuse `ScreenHousingTextures`, component texture lookup and atlas registration instead of flattening everything to the default housing texture.
-
-An identifier does not transfer image pixels. Multiplayer clients still need matching resource packs/custom artwork. Detect missing material keys, retain their original persisted values, and render a documented fallback; do not permanently replace missing artwork with a fallback ID on save. A manifest/hash check is preferable to transmitting image files with every craft. Automatic custom asset distribution would be a separate feature.
-
-Build a vehicle-local `IBlockAccess` for baked models. `ProgrammableHousingState.extend` reads the tile and neighbors to derive material, face visibility and light. Supply actual state, extended state and neighbors from the captured craft, then use the normal block model pipeline. A panel formerly touching a hangar wall must regain its exposed face after assembly.
-
-An `IBlockAccess` alone is insufficient for all renderers. `TEAnimatedScreenSelector` reads a `World`, block state, time and neighbor groups; its porthole/light caches are keyed by world and position. Either adapt these renderers to a read-only vehicle render context or provide a deliberately constrained fake-world facade. Key caches by vehicle UUID plus local position and revision so two crafts cannot share group state accidentally.
-
-Split static housing from animated screens, emissive surfaces, moving gear and doors. Cache static geometry in vertex buffers, batch compatible surfaces, and share animation texture decoding. Transparent glass needs a separate pass and camera-dependent ordering. Resource reload must invalidate sprites, UV-dependent meshes and texture caches. Sample world lighting at transformed locations with a bounded refresh policy; do not bake the original hangar lighting forever. Emissive appearance does not automatically illuminate surrounding world blocks.
-
-Initial support should preserve and render all Vandor programmable appearances, while freezing machinery/redstone behavior during travel. `RedstoneChannels` is scoped by `World`, and tile loading can schedule registration or world changes. Do not tick reconstructed real-world tiles indiscriminately. A later vehicle-local channel network can activate selected features. Persist storage inventory without permitting moving hopper automation initially; reject unsupported third-party tile entities until an adapter exists.
-
-## Driving and collision
-
-Use ordinary remappable movement bindings: forward/backward move along the Pilot Seat's fixed facing, and left/right translate sideways. Opposite input brakes before reversing that component of movement; releasing input slows the craft to a stop. Normalize diagonal input so moving on two axes does not increase maximum speed. The normal sneak binding dismounts. Borrow MrCrayfish's responsive acceleration/braking feel, without its turning behavior.
-
-Store horizontal velocity and vertical velocity on the server. The vehicle never changes yaw, pitch or roll, including while parking. Player camera movement does not change the craft's orientation or movement axes. There are no steering angles, wheelbase calculations, engines or fuel systems. Gear contact probes establish ground support; allow gravity and bounded step climbing, with no lift or flight. Treat gear as support points rather than simulating individual wheels.
-
-Build local collision boxes from supported block/component geometry, merge adjacent compatible boxes and index them spatially. With a fixed orientation, these remain axis-aligned and need only a position offset during movement. One enclosing AABB is useful for broad rejection, but must not make empty space between wings solid. Test the smaller boxes against nearby terrain and include out-of-cell geometry and the gear footprint. Use swept translation or bounded substeps to prevent tunnelling; stop conservatively if the collision budget is exhausted. This removes the need for rotating hull tests and wing-tip rotation sweeps.
-
-Initially carry only mounted passengers; defer walking on moving decks and unrestricted block interaction while driving. Exclude riders from hull contact response, handle other entities conservatively, and find a safe world-space dismount location. A low canopy needs a separate rider/camera clearance check: fitting the seat mesh does not prove the player's head fits.
-
-## Networking and performance
-
-The server owns assembly, occupancy and motion. Clients send bounded input intent with sequence numbers, never desired positions. Validate that the sender is the current driver, clamp values, expire stale input and rate-limit messages. Send inputs on change with a modest heartbeat. Reconcile predicted driver motion against acknowledged server state; interpolate remote vehicles. This work is necessary for responsive multiplayer driving.
-
-Send a palette-compressed structure snapshot only when tracking begins or contents change. Use bounded fragments, content revision/checksum, cancellation and decompressed size limits; do not put the entire craft in ordinary spawn data or resend NBT every movement tick. New observers must receive all fragments before rendering the craft. Thereafter send position/velocity and small supported state changes. Reuse mesh and content caches by revision, with memory limits and cleanup on despawn or resource reload.
-
-| Work | Performance approach | What to measure |
-| --- | --- | --- |
-| Discovery | Iterative O(N) traversal over a fixed number of neighbors; budgeted server slices | Candidate count, duration, worst tick and NBT bytes |
-| Ordinary simulation | One entity plus bounded gear probes; no whole-structure scan | Median/p95/p99 server time per craft and for the fleet |
-| Collision | Merged shapes, spatial index, broad then narrow checks, swept motion | Candidate pairs, substeps, worst narrow-phase time |
-| Rendering | Static local VBOs, internal-face culling, separate dynamic batches | CPU frame time, draw calls, vertices, rebuild stalls and GPU time where available |
-| Lighting and glass | Coarse/revision-based light updates; sort only translucent geometry as needed | Dirty sections and sorting/light update time |
-| Networking | One bounded initial snapshot, then compact position and deltas | Join burst, bytes/second, latency correction and packet loss recovery |
-| Persistence | Dirty/revision-based snapshots with recoverable transactions | Save size, save spikes, crash recovery and duplicate prevention |
-
-Avoid allocating vectors, block positions and collections in inner collision loops. Build geometry/collision plans from immutable snapshots off-thread only where the underlying model code is thread-safe; world access stays on the server thread and GL uploads on the render thread. Break large client uploads into a frame budget. Sparse storage matters for large hollow craft: both block count and bounding volume need limits.
-
-Benchmark solid and hollow craft at 128, 512 and 2,048 blocks, with increasingly dense programmable surfaces, then fleets of 1, 5 and 10 craft. Compare against the same stationary world structures. A 20 TPS server has 50 ms for its entire tick; establish a vehicle share from measurements rather than assuming all of that time is available. No timing or capacity figures above are demonstrated performance results.
-
-## Delivery stages and acceptance
-
-| Stage | Work | Exit condition |
-| --- | --- | --- |
-| 1 | Configurizer inspection, bounded discovery, gear and component adapters | Preview identifies detached craft; ground/wall attachment, orphan components, unloaded chunks and limits fail clearly |
-| 2 | Versioned snapshot, transactions, persistence and parked restoration | Repeated assemble/park/reload cycles preserve blocks, materials, inventory and ownership; injected failures never duplicate or lose data |
-| 3 | Vehicle-local rendering and programmable adapters | All material sources, per-face choices, joined shapes, glass, screens and resource reload match stationary references |
-| 4 | Ground controller, compound collision, mount/dismount and networking | Forward/backward/sideways translation, diagonal speed limits, braking, fixed orientation, obstacles and remote tracking pass on a dedicated server |
-| 5 | Optimization and supported active components | Profiled budgets hold across test fleet sizes; only explicitly supported machinery becomes active |
-
-Stages 2–4 are substantial subsystem work. Treat this as a multi-week feature rather than a chair behavior change. The first technical experiment should combine a small textured craft, telescopic gear and one round-trip conversion; it will expose the most consequential storage/render-context assumptions before a large vehicle controller is built.
-
-Run the existing non-rendering checks and live client suite for implementation changes, extending them with assembly boundaries, all gear sizes/footprints, complete multi-cell ownership, full NBT round trips, unchanged orientation through parking for craft built facing each cardinal direction, missing custom assets, model reload, occupied-seat safety, dedicated-server classloading, malicious/stale input, overlapping conversions, join-in-progress, chunk boundaries and crash injection between transaction phases. Include low and high latency driving, narrow passages, wide hulls passing corners, partial blocks, slopes and safe recovery at unloaded terrain.
-
-Keep the initial scope explicit: no rotation, no engines or fuel, no flight, no generic mod-machine ticking, no editable hull during travel, no automatic conversion on sitting, and no implied compatibility with every installed mod. Ground movement will remain translation-only; expanding other features requires a separate scope decision.

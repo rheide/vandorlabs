@@ -50,7 +50,7 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
             }
             draw.distance = center.scale(1D / draw.v.length).squareDistanceTo(camera);
             String material = f.baseMaterial;
-            boolean glowing = tile.active && (material.equals("cyan") || material.equals("amber") || material.equals("display_on")
+            boolean glowing = tile.visuallyActive() && (material.equals("cyan") || material.equals("amber") || material.equals("display_on")
                     || material.startsWith("energy_") && !material.endsWith("_off")
                     || material.equals("red_light") || material.equals("green_light") || material.equals("hot")
                     || material.equals("energy") || material.equals("light") || material.equals("display"));
@@ -68,7 +68,8 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         draw(opaque);
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+        float boost=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld && com.vandorlabs.vehicle.VehicleWorld.isPropulsion(tile.getBlockType())?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).propulsionLevel/15F:1;
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (light & 65535)+(240-(light & 65535))*boost, (light >>> 16)+(240-(light >>> 16))*boost);
         draw(emissive);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         GlStateManager.enableBlend();

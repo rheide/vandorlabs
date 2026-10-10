@@ -20,9 +20,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void vehiclePacket(com.vandorlabs.vehicle.VehicleNetwork.Packet packet){com.vandorlabs.client.VehicleClient.receive(packet);}
     @Override public String customTexture(int choice){return com.vandorlabs.client.CustomBlockTextures.texture(choice);}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
+        RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.vehicle.EntityGroundVehicle.class, com.vandorlabs.client.RenderGroundVehicle::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class, RenderChairSeat::new);
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.DiagonalWallMeshCache.Events());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorTextures.Events());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorItemModels());
@@ -60,6 +63,9 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.VehicleClient());
+        ((net.minecraft.client.resources.IReloadableResourceManager)net.minecraft.client.Minecraft.getMinecraft().getResourceManager())
+                .registerReloadListener(manager->com.vandorlabs.client.RenderGroundVehicle.reload());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityShipSystem.class, new com.vandorlabs.client.TEShipSystem());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCanopy.class,new com.vandorlabs.client.TECanopy());
         net.minecraft.block.Block programmableDoor = net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS
@@ -70,8 +76,6 @@ public class ClientProxy extends CommonProxy {
                     net.minecraft.item.Item.getItemFromBlock(programmableDoor),
                     net.minecraft.item.Item.getItemFromBlock(net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs","large_programmable_door"))));
         }
-        RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class,
-                RenderChairSeat::new);
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityLandingGear.class, new com.vandorlabs.client.TELandingGear());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, new com.vandorlabs.client.TEProgrammableTrapdoor());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor.class,new com.vandorlabs.client.TEProgrammableTrapdoor());

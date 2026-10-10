@@ -475,6 +475,7 @@ public class ReproLab {
         enabled = prop != null && !prop.isEmpty();
         outDir = enabled ? new File(prop) : null;
         if (enabled) {
+            if(Boolean.getBoolean("vandorlabs.traceChunkTiles"))net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ChunkTileTrace());
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
@@ -528,6 +529,15 @@ public class ReproLab {
         }
         if (Boolean.getBoolean("vandorlabs.pilotSeatChecksOnly")) {
             PilotSeatRuntimeChecks.tick(mc, outDir);
+            return;
+        }
+        if (Boolean.getBoolean("vandorlabs.vehicleChecksOnly")) {
+            VehicleRuntimeChecks.tick(mc, outDir);
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.existingWorldChecks")) {
+            mc.displayGuiScreen(null);
+            if(++holdTicks==200){System.out.println("[vandorlabs][reprolab] existing-world-load PASS");mc.shutdown();}
             return;
         }
         // launchIntegratedServer can install its post-load pause screen one

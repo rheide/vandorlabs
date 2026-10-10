@@ -35,7 +35,8 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     public boolean isSignalBrightness(){return signalBrightness;}
     public int getParticleThreshold(){return particleThreshold;}
     public int getSignalLevel(){return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
-    public int getBrightness(){return signalBrightness?getSignalLevel():15;}
+    public int getBrightness(){int configured=signalBrightness?getSignalLevel():15;
+        return world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).propulsionBrightness(pos,configured):configured;}
     public void configureSignalBrightness(boolean enabled,int threshold){
         signalBrightness=enabled;particleThreshold=Math.max(0,Math.min(15,threshold));markDirty();updateVisualState();sync();
     }
@@ -345,7 +346,10 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);ChannelData.write(tag,channels);
-        new RedstoneData.Light(channel,channelSignal,manualOn,isParticleStreamSelected(),
+        // Chunk packets serialize while iterating the chunk's live tile map. Reading
+        // redstone here can lazily create a neighbour's missing tile in old saves.
+        // Persist the selection; power-dependent activation belongs to runtime only.
+        new RedstoneData.Light(channel,channelSignal,manualOn,particleLevel>0,
                 initialized).write(new NbtPrimitiveData(tag));
         tag.setInteger("ParticleLevel",particleLevel);
         tag.setInteger("ChannelLevel",channelLevel);tag.setBoolean("SignalBrightness",signalBrightness);tag.setInteger("ParticleThreshold",particleThreshold);

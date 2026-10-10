@@ -68,6 +68,15 @@ public class EntityChairSeat extends Entity {
     @Override public boolean canBeCollidedWith() { return false; }
     @Override public boolean canBePushed() { return false; }
 
+    @Override protected void removePassenger(Entity passenger) {
+        super.removePassenger(passenger);
+        if(!world.isRemote && chairPos!=null) {
+            net.minecraft.util.math.AxisAlignedBB shape=world.getBlockState(chairPos).getBoundingBox(world,chairPos);
+            net.minecraft.util.math.AxisAlignedBB bounds=shape==null?new net.minecraft.util.math.AxisAlignedBB(chairPos):shape.offset(chairPos);
+            SafeDismount.move(passenger,SafeDismount.find(world,passenger,bounds),bounds);
+        }
+    }
+
     @Override
     protected void readEntityFromNBT(NBTTagCompound compound) {
         chairPos = BlockPos.fromLong(compound.getLong("ChairPos"));

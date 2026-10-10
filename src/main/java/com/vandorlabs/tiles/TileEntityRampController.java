@@ -100,6 +100,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         // The on/off model flag must never replace the tile or discard its journal.
         return before.getBlock()!=after.getBlock();
     }
+    /** Reserved geometry and recovery sources, including disconnected extended sections. */
+    public java.util.Set<BlockPos> vehicleCells(){return java.util.Collections.unmodifiableSet(cells);}
+    public java.util.List<BlockPos> vehicleSources(){return java.util.Collections.unmodifiableList(sources);}
     public int area() { return sources.size(); }
     public boolean isOpen() { return open; }
     public boolean isMoving() { return moving; }

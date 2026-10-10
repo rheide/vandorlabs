@@ -22,9 +22,9 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "1.8-alpha";
+    public static final String VERSION = "2.0-alpha";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t132";
+    public static final String BUILD_ID = "t140";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -42,6 +42,7 @@ public class VandorLabs {
         com.vandorlabs.tiles.FilesystemTextures.initialize(event.getModConfigurationDirectory().toPath().resolve("vandorlabs/textures"));
         proxy.preInit(event);
         com.vandorlabs.tiles.DeferredTileLoad.install();
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityPilotSeat.class,"vandorlabs:pilot_seat");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, "vandorlabs:programmable_trapdoor");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor.class,"vandorlabs:programmable_diagonal_trapdoor");
@@ -63,6 +64,8 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRedstoneLight.class, "vandorlabs:redstone_light");
         EntityRegistry.registerModEntity(new ResourceLocation(MODID, "chair_seat"),
                 EntityChairSeat.class, "chair_seat", 1, this, 32, 10, false);
+        EntityRegistry.registerModEntity(new ResourceLocation(MODID, "ground_vehicle"),
+                com.vandorlabs.vehicle.EntityGroundVehicle.class, "ground_vehicle", 2, this, 128, 2, true);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCanopy.class,"vandorlabs:canopy");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityShipSystem.class,"vandorlabs:ship_system");
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new com.vandorlabs.canopy.CanopyInteractions());
