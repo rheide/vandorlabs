@@ -8,7 +8,7 @@ Foreign blocks and tile NBT are retained. Their rendering and collision are best
 
 The [implementation guide](ground-vehicles-analysis.md) describes compatibility and transfer guarantees. This document distinguishes code findings from hypotheses and proposes the next work; it does not claim that turning is already smooth or that maximum-size craft meet a frame-time target.
 
-Subsequent testing reports two interaction gaps: a large assembled craft can be solid yet impossible to board by clicking its Pilot Seat, and the assembly/parking dialog has no redstone channel field. Channel-triggered conversion exists, but its settings are currently exposed only through the separate placed-seat channel menu. These issues remain open; the investigation below adds follow-ups without changing gameplay code or the `t140` JAR.
+Subsequent testing reports three interaction gaps: a large assembled craft can be solid yet impossible to board by clicking its Pilot Seat, programmable doors do not open/close in vehicle mode, and the assembly/parking dialog has no redstone channel field. Channel-triggered conversion exists, but its settings are currently exposed only through the separate placed-seat channel menu. These issues remain open; the investigation below adds follow-ups without changing gameplay code or the `t140` JAR.
 
 ## New priority: large-craft boarding and channel configuration
 
@@ -33,6 +33,25 @@ These are verified architectural gaps consistent with the symptom. After boardin
 
 **B1 acceptance tests:** Use genuine client clicks and network dispatch, rather than calling the mount method directly. Board seats more than six blocks from the origin, across X/Z chunks and Y sections, from inside and outside the hull, at several headings, with origin offscreen. Exercise both seat cells and the model's protruding bounds. Assert server/client riding identity, then W/S and A/D input/motion. Check an occupied seat, spectators, blocked sight, stale UUIDs, out-of-reach clicks, off-hand duplication, nearby doors and Configurizer parking. Add a dedicated-server case to expose packet reach assumptions hidden by integrated-server fixtures.
 
+### Programmable doors: reported inoperative, incompletely tested
+
+The user reports that none of the programmable doors open or close after conversion. Treat this as an open gameplay defect, despite the earlier generic door-state tests. The specific craft and door designs were not reproduced during this documentation investigation.
+
+`VehicleDoors.interact` is called only by `EntityGroundVehicle.processInitialInteract`, after the Configurizer branch. It therefore shares both vanilla click-discovery and origin-distance rejection with boarding. Its local ray also uses `player.getLook(1)`, which reads `rotationYawHead` in `EntityLivingBase`; the Configurizer fix instead uses the player's current pitch/yaw. Unifying the click ray avoids a second inconsistent server targeting direction. These are concrete gaps, but do not establish that every reported failure is solely a reach issue.
+
+Programmable doors are not excluded by the door predicate: `BlockConfigurableSpaceDoor` inherits through `BlockSpaceDoor` to `BlockVandorDoor`, and `BlockLargeProgrammableDoor` derives from it. There is existing 3x3 root/group handling in `VehicleDoors.toggle`, and `apply` updates captured OPEN states and reinstalls geometry. However, the live fixture explicitly excludes both configurable and large programmable doors when selecting its Vandor test door, then calls `VehicleDoors.toggle` directly. It verifies vanilla/basic Vandor state changes; it verifies neither programmable door variants nor actual click routing, visual animation or walk-through clearance.
+
+`TESlidingDoor` derives its animation from live OPEN state and a visual clock without tile ticking. Do not enable arbitrary fake-world tile ticks as a speculative door fix. Trace whether the click arrives, selects the intended component, changes all owned cells, reaches tracking clients and updates collision/rendering before changing animation behavior.
+
+**Follow-up D1 — restore actual programmable door interaction alongside B1:**
+
+- Use the shared validated craft-local click route for doors, selecting the first actual surface and identifying the correct lower/root cell. Prioritize the door action over boarding so a failed door target does not silently mount the player. Keep Configurizer parking distinct.
+- Trace server target selection and OPEN state, the door patch, client OPEN state, renderer animation and rebuilt collision. Validate two-cell, paired and 3x3 groups; preserve private material/settings NBT. A failed/missing root must report a useful error instead of appearing to do nothing.
+- Exercise closed and open geometry, including frames/control panels and displaced/sliding leaves. Confirm a second click can close an open door when its leaf no longer occupies the original doorway. Check the documented manual vehicle-mode behavior regardless of saved redstone trigger, while restoring that trigger on parking.
+- Audit client synchronization for the controlling rider as well as other trackers. The current DOORS packet broadcasts to tracking players; verify actual receipt instead of assuming the rider is always covered. Keep patches bounded and validate every cell against the authoritative door group.
+
+**D1 acceptance tests:** Click real programmable doors through the client/network path in small and large craft, from both sides, far from the origin and after rotation. Cover normal two-cell doors, paired doors and 3x3 doors, hinged/sliding/vertical/split motions, frames, placement depths and custom/per-face materials where supported. Assert all component OPEN states on server and client, visible open/close motion, passage when open and blocking when closed, closing via an accessible leaf/frame/control surface, and unchanged settings after parking/reload. Include a remote observer, unrelated nearby doors and occluded/out-of-reach targets. Existing direct-toggle tests remain useful unit-level coverage but cannot close this report.
+
 ### Channels: existing support versus missing dialog integration
 
 `TileEntityPilotSeat` implements `RedstoneChannelMember`, persists its channel list and polls rising edges. `BlockPilotSeat.onBlockActivated` opens `GUI_REDSTONE_CHANNEL` only on sneak-right-click of a **placed** seat (either cell resolves to the lower tile). `ItemConfigurizer.onRightClickBlock` forwards that sneaking case; ordinary Configurizer use opens assembly preview. `GuiHandler`, `GuiRedstoneChannel` and `MessageRedstoneChannel` support the placed tile and its generic channel field.
@@ -50,7 +69,7 @@ The user's exact screen was not captured. If it is the ordinary assembly/parking
 
 **C1 acceptance tests:** Open the settings through real UI interactions on lower/upper placed seat cells and from the assembly/parking dialog; assert field visibility, saved-value display, editing, validation and Cancel behavior. Save a channel list through the actual packet, close/reopen, assemble while seated, park and reload; assert the list survives. Test fresh pulses, held-high changes, permissions, an obsolete preview and an unrelated real-world tile sharing the same coordinates as the vehicle-local seat. Do not substitute a direct setter call for these checks.
 
-These follow-ups extend the earlier verification scope. Address B1 first because a craft that cannot be boarded cannot be used to assess steering improvements, then C1 and the smoothing/performance work below.
+These follow-ups extend the earlier verification scope. Address B1 and D1 together through the shared interaction route, then C1 and the smoothing/performance work below. A craft that cannot be boarded cannot be used to assess steering improvements.
 
 ## Corrections included in this handoff
 
