@@ -68,6 +68,34 @@ public final class VehicleCollision {
                 if(!world.isBlockLoaded(new BlockPos(cx*16,64,cz*16)))return false;
         return true;
     }
+    private Terrain terrain;
+    public int terrainQueries,candidateBoxes;
+    public void begin(World world,net.minecraft.entity.Entity entity){terrain=new Terrain(world,entity);terrainQueries=candidateBoxes=0;}
+    public void end(){terrain=null;}
+    private final class Terrain {
+        final World world;final net.minecraft.entity.Entity entity;
+        final Map<BlockPos,List<AxisAlignedBB>> sections=new HashMap<>();
+        Terrain(World world,net.minecraft.entity.Entity entity){this.world=world;this.entity=entity;}
+        Collection<AxisAlignedBB> obstacles(AxisAlignedBB swept) {
+            Set<AxisAlignedBB> found=new HashSet<>();
+            // Query only eight-block sections touched by actual hull sweeps, never a hollow hull's full volume.
+            for(int x=MathHelper.floor(swept.minX)>>3;x<=MathHelper.floor(swept.maxX)>>3;x++)
+                for(int y=MathHelper.floor(swept.minY)>>3;y<=MathHelper.floor(swept.maxY)>>3;y++)
+                    for(int z=MathHelper.floor(swept.minZ)>>3;z<=MathHelper.floor(swept.maxZ)>>3;z++) {
+                        BlockPos key=new BlockPos(x,y,z);
+                        List<AxisAlignedBB> candidates=sections.get(key);
+                        if(candidates==null) {
+                            candidates=world.getCollisionBoxes(entity,new AxisAlignedBB(x*8,y*8,z*8,x*8+8,y*8+8,z*8+8).grow(1e-6));
+                            sections.put(key,candidates);terrainQueries++;candidateBoxes+=candidates.size();
+                        }
+                        for(AxisAlignedBB box:candidates)if(box.intersects(swept))found.add(box);
+                    }
+            return found;
+        }
+    }
+    private Collection<AxisAlignedBB> obstacles(World world,net.minecraft.entity.Entity entity,AxisAlignedBB swept) {
+        return (terrain==null?new Terrain(world,entity):terrain).obstacles(swept);
+    }
     public float turn(World world,net.minecraft.entity.Entity entity,double x,double y,double z,float from,float change) {
         if(Math.abs(change)<1e-6)return from;
         double radius=Math.hypot(bounds.maxX-pivotX,bounds.maxZ-pivotZ);
@@ -78,7 +106,7 @@ public final class VehicleCollision {
             if(!loaded(world,x,y,z,0,0,0,next))break;
             boolean blocked=false;
             for(OrientedBox box:pose(next)) {
-                for(AxisAlignedBB obstacle:world.getCollisionBoxes(entity,box.broad.offset(x,y,z).shrink(1e-6)))
+                for(AxisAlignedBB obstacle:obstacles(world,entity,box.broad.offset(x,y,z).shrink(1e-6)))
                     if(box.intersects(obstacle.offset(-x,-y,-z))){blocked=true;break;}
                 if(blocked)break;
             }
@@ -92,7 +120,7 @@ public final class VehicleCollision {
         double result=amount;
         for(OrientedBox box:pose(yaw)) {
             AxisAlignedBB swept=box.broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);
-            for(AxisAlignedBB obstacle:world.getCollisionBoxes(entity,swept))
+            for(AxisAlignedBB obstacle:obstacles(world,entity,swept))
                 result=box.clip(obstacle.offset(-x,-y,-z),result,axis);
         }
         return result;
@@ -111,8 +139,10 @@ public final class VehicleCollision {
         private double radius(double x,double z){return hx*Math.abs(cos*x+sin*z)+hz*Math.abs(-sin*x+cos*z);}
         private boolean horizontal(AxisAlignedBB b) {
             double bx=(b.minX+b.maxX)/2,bz=(b.minZ+b.maxZ)/2,bhx=(b.maxX-b.minX)/2,bhz=(b.maxZ-b.minZ)/2;
-            double[][] axes={{1,0},{0,1},{cos,sin},{-sin,cos}};
-            for(double[] a:axes)if(Math.abs((cx-bx)*a[0]+(cz-bz)*a[1])>=radius(a[0],a[1])+bhx*Math.abs(a[0])+bhz*Math.abs(a[1])-1e-7)return false;
+            for(int n=0;n<4;n++) {
+                double ax=n==0?1:n==1?0:n==2?cos:-sin,az=n==0?0:n==1?1:n==2?sin:cos;
+                if(Math.abs((cx-bx)*ax+(cz-bz)*az)>=radius(ax,az)+bhx*Math.abs(ax)+bhz*Math.abs(az)-1e-7)return false;
+            }
             return true;
         }
         public boolean intersects(AxisAlignedBB b){return maxY>b.minY+1e-7 && minY<b.maxY-1e-7 && horizontal(b);}
@@ -126,10 +156,10 @@ public final class VehicleCollision {
             if(maxY<=b.minY+1e-7 || minY>=b.maxY-1e-7)return amount;
             double bx=(b.minX+b.maxX)/2,bz=(b.minZ+b.maxZ)/2,bhx=(b.maxX-b.minX)/2,bhz=(b.maxZ-b.minZ)/2;
             double enter=Double.NEGATIVE_INFINITY,exit=Double.POSITIVE_INFINITY;
-            double[][] axes={{1,0},{0,1},{cos,sin},{-sin,cos}};
-            for(double[] a:axes) {
-                double centre=(cx-bx)*a[0]+(cz-bz)*a[1],extent=radius(a[0],a[1])+bhx*Math.abs(a[0])+bhz*Math.abs(a[1]);
-                double velocity=amount*(axis==0?a[0]:a[1]);
+            for(int n=0;n<4;n++) {
+                double ax=n==0?1:n==1?0:n==2?cos:-sin,az=n==0?0:n==1?1:n==2?sin:cos;
+                double centre=(cx-bx)*ax+(cz-bz)*az,extent=radius(ax,az)+bhx*Math.abs(ax)+bhz*Math.abs(az);
+                double velocity=amount*(axis==0?ax:az);
                 if(Math.abs(velocity)<1e-12){if(Math.abs(centre)>=extent-1e-7)return amount;continue;}
                 double t1=(-extent-centre)/velocity,t2=(extent-centre)/velocity;
                 enter=Math.max(enter,Math.min(t1,t2));exit=Math.min(exit,Math.max(t1,t2));

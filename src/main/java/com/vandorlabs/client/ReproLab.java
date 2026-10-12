@@ -531,6 +531,11 @@ public class ReproLab {
             PilotSeatRuntimeChecks.tick(mc, outDir);
             return;
         }
+        if (Boolean.getBoolean("vandorlabs.vehicleMotionChecksOnly")) {
+            try {if(VehicleMotionRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("vehicle motion live checks",failure);}
+            return;
+        }
         if (Boolean.getBoolean("vandorlabs.vehicleTaxiChecksOnly")) {
             try {if(VehicleTaxiRuntimeChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("vehicle taxi live checks",failure);}

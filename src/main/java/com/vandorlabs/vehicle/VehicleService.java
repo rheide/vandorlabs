@@ -207,12 +207,13 @@ public final class VehicleService {
         if(before!=null && now-before<1500 || requests.size()>1024)return false;requests.put(key,now);return true;
     }
     @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event) {
+        VehicleLookup.unload(event.getWorld());
         jobs.values().removeIf(job->job.world==event.getWorld());previews.values().removeIf(preview->preview.world==event.getWorld());
         signals.removeIf(signal->(signal.craft==null?signal.seat.getWorld():signal.craft.world)==event.getWorld());
     }
     @SubscribeEvent public static void collision(net.minecraftforge.event.world.GetCollisionBoxesEvent event) {
         if(event.getWorld() instanceof VehicleWorld)return;
-        for(EntityGroundVehicle craft:VehicleLookup.loaded(event.getWorld())) {
+        for(EntityGroundVehicle craft:VehicleLookup.near(event.getWorld(),event.getAabb())) {
             if(!craft.getEntityBoundingBox().intersects(event.getAabb()))continue;
             if(craft==event.getEntity() || craft.collision==null || craft.isPassenger(event.getEntity()))continue;
             for(VehicleCollision.OrientedBox box:craft.collision.pose(craft.rotationYaw)) {

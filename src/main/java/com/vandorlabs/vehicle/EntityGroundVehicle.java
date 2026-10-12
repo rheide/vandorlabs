@@ -26,7 +26,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte forward, strafe;
     private boolean brake;
     private long lastInput=-100;
-    private int inputSequence=-1, interpolation;
+    private int interpolation;
+    private final VehicleControls serverInputs=new VehicleControls();
+    private Control nextPrediction;
+    private long lastServerTick=Long.MIN_VALUE;
+    private VehiclePose previousVisual,currentVisual;
+    private float correctionYaw;
     private int lastAcknowledgement=-1;
     private double targetX,targetY,targetZ;
     private float targetYaw;
@@ -48,32 +53,43 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         double x=absolute.x-posX-px,z=absolute.z-posZ-pz;return new Vec3d(px+c*x+s*z,absolute.y-posY,pz-s*x+c*z);
     }
     public void setLocalDriver(boolean value) {
-        if(localDriver!=value){localDriver=value;pendingInputs.clear();lastAcknowledgement=-1;correctionX=correctionY=correctionZ=0;}
+        if(localDriver!=value){localDriver=value;pendingInputs.clear();lastAcknowledgement=-1;lastServerTick=Long.MIN_VALUE;nextPrediction=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;previousVisual=currentVisual=null;}
     }
     public void predict(int sequence,byte f,byte s,boolean b) {
-        if(pendingInputs.size()>=128)pendingInputs.removeFirst();pendingInputs.addLast(new Control(sequence,f,s,b));
+        nextPrediction=new Control(sequence,f,s,b);
         forward=f;strafe=s;brake=b;
     }
     public void authoritative(VehicleNetwork.Packet p) {
-        if(localDriver && p.sequence<=lastAcknowledgement)return;
+        if(p.serverTick<=lastServerTick)return;
+        lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
         if(!localDriver){driveSpeed=p.speed;steering=p.steering;motionY=p.dy;targetX=p.x;targetY=p.y;targetZ=p.z;targetYaw=p.yaw;interpolation=3;return;}
         double oldX=posX+correctionX,oldY=posY+correctionY,oldZ=posZ+correctionZ;
+        float oldYaw=rotationYaw+correctionYaw;
         pendingInputs.removeIf(c->c.sequence<=p.sequence);
         rotationYaw=p.yaw;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
         setPosition(p.x,p.y,p.z);
         for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;advance(true);}
         double error=(oldX-posX)*(oldX-posX)+(oldY-posY)*(oldY-posY)+(oldZ-posZ)*(oldZ-posZ);
         correctionX=error<16?oldX-posX:0;correctionY=error<16?oldY-posY:0;correctionZ=error<16?oldZ-posZ:0;
+        correctionYaw=error<16?MathHelper.wrapDegrees(oldYaw-rotationYaw):0;
+        if(error>=16)previousVisual=currentVisual=null;
     }
     public Vec3d renderCorrection(){return new Vec3d(correctionX,correctionY,correctionZ);}
+    public VehiclePose visualPose(float partial) {
+        if(currentVisual==null)return new VehiclePose(posX,posY,posZ,rotationYaw);
+        return previousVisual.interpolate(currentVisual,partial);
+    }
+    public Vec3d seatPosition(VehiclePose pose,Entity passenger) {
+        return pose.world(new Vec3d(structure.seat.getX()+.5,structure.seat.getY()+BlockPilotSeat.SEAT_HEIGHT+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),structure.seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
+    }
     @Override public AxisAlignedBB getRenderBoundingBox() {
         if(structure==null)return getEntityBoundingBox();
         double x=structure.bounds.maxX/2,z=structure.bounds.maxZ/2,r=Math.hypot(x,z)+2;
         AxisAlignedBB local=new AxisAlignedBB(x-r,-2,z-r,x+r,structure.bounds.maxY+2,z+r);
         return local.offset(posX+correctionX,posY+correctionY,posZ+correctionZ).union(local.offset(prevPosX,prevPosY,prevPosZ));
     }
-    public int acknowledgedInput(){return inputSequence;}
+    public int acknowledgedInput(){return serverInputs.acknowledged();}
     private byte[] encoded;
     private float propulsion;
     private NBTTagCompound unavailable;
@@ -88,10 +104,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA)VehicleNetwork.request(this);}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
     @Override protected void readEntityFromNBT(NBTTagCompound tag){transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{install(VehicleStructure.read(tag.getCompoundTag("Craft")));net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(structure.seat);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}catch(Exception e){unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;}
-    @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(collision.bounds(rotationYaw).offset(x,y,z));}
+    @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
-        if(getControllingPassenger()!=player || sequence<=inputSequence || forward< -1 || forward>1 || strafe< -1 || strafe>1)return;
-        this.inputSequence=sequence;this.forward=forward;this.strafe=strafe;this.brake=brake;lastInput=world.getTotalWorldTime();
+        if(getControllingPassenger()!=player || !serverInputs.offer(sequence,forward,strafe,brake))return;
+        lastInput=world.getTotalWorldTime();
     }
     @Override public Entity getControllingPassenger(){return getPassengers().isEmpty()?null:getPassengers().get(0);}
     // Vanilla otherwise sends client vehicle positions, overriding the server controller.
@@ -111,14 +127,23 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
                 || player.isDead || player.world!=world || !getPassengers().isEmpty())return false;
         if(!player.startRiding(this))return false;
         taxiReturnPending=false;
-        inputSequence=-1;forward=strafe=0;brake=false;lastInput=-100;
+        serverInputs.clear();forward=strafe=0;brake=false;lastInput=-100;
         pendingInputs.clear();lastAcknowledgement=-1;
         return true;
     }
+    @Override public void onAddedToWorld(){super.onAddedToWorld();VehicleLookup.update(this);}
+    @Override public void onRemovedFromWorld(){VehicleLookup.remove(this);super.onRemovedFromWorld();}
+    @Override public void setDead(){VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
-            Vec3d at=toWorld(new Vec3d(structure.seat.getX()+.5,structure.seat.getY()+BlockPilotSeat.SEAT_HEIGHT+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),structure.seat.getZ()+.5));
-            passenger.setPosition(at.x+correctionX,at.y+correctionY,at.z+correctionZ);
+            Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger);
+            passenger.setPosition(at.x,at.y,at.z);
+            if(world.isRemote) {
+                Vec3d before=seatPosition(visualPose(0),passenger);
+                passenger.prevPosX=passenger.lastTickPosX=before.x;
+                passenger.prevPosY=passenger.lastTickPosY=before.y;
+                passenger.prevPosZ=passenger.lastTickPosZ=before.z;
+            }
         }
     }
     @Override public double getMountedYOffset(){return 0;}
@@ -129,7 +154,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!transferInProgress && !isDead && passenger instanceof EntityPlayerMP && VehicleTaxiMode.enabled(structure))
             VehicleService.taxiParking((EntityPlayerMP)passenger,this);
     }
-    public void stopForParking(){forward=strafe=0;brake=true;driveSpeed=0;steering=0;motionX=motionY=motionZ=0;pendingInputs.clear();}
+    public void stopForParking(){forward=strafe=0;brake=true;driveSpeed=0;steering=0;motionX=motionY=motionZ=0;pendingInputs.clear();serverInputs.clear();nextPrediction=null;}
     @Override public boolean canBeCollidedWith(){return !isDead;}
     @Override public boolean canRiderInteract(){return true;}
     @Override public boolean canBePushed(){return false;}
@@ -137,16 +162,28 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public boolean attackEntityFrom(DamageSource source,float damage){return false;}
     @Override public void setPortal(BlockPos p){}
     @Override public void setPositionAndRotationDirect(double x,double y,double z,float yaw,float pitch,int steps,boolean teleport) {
-        if(localDriver)return;targetX=x;targetY=y;targetZ=z;targetYaw=yaw;interpolation=teleport?1:Math.max(1,steps);
+        if(localDriver)return;
+        // Custom STATE is the single observer interpolation stream after its first packet.
+        if(lastServerTick!=Long.MIN_VALUE && !teleport)return;
+        targetX=x;targetY=y;targetZ=z;targetYaw=yaw;interpolation=teleport?1:Math.max(1,steps);
+        if(teleport){previousVisual=currentVisual=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;}
     }
     public boolean stopped(){return motionX*motionX+motionY*motionY+motionZ*motionZ<.0001;}
     @Override public void onUpdate() {
         super.onUpdate();rotationPitch=prevRotationPitch=0;
         if(world.isRemote) {
-            correctionX*=.65;correctionY*=.65;correctionZ*=.65;
+            previousVisual=currentVisual==null?new VehiclePose(posX,posY,posZ,rotationYaw):currentVisual;
+            correctionX*=.65;correctionY*=.65;correctionZ*=.65;correctionYaw*=.65;
             if(structure==null && ticksExisted%40==1)VehicleNetwork.request(this);
-            if(localDriver && structure!=null)advance(true);
+            if(localDriver && structure!=null) {
+                if(nextPrediction!=null) {
+                    if(pendingInputs.size()>=VehicleControls.LIMIT)pendingInputs.removeFirst();
+                    pendingInputs.addLast(nextPrediction);forward=nextPrediction.f;strafe=nextPrediction.s;brake=nextPrediction.brake;nextPrediction=null;
+                }
+                advance(true);
+            }
             else if(interpolation>0){rotationYaw+=MathHelper.wrapDegrees(targetYaw-rotationYaw)/interpolation;setPosition(posX+(targetX-posX)/interpolation,posY+(targetY-posY)/interpolation,posZ+(targetZ-posZ)/interpolation);interpolation--;}
+            currentVisual=new VehiclePose(posX+correctionX,posY+correctionY,posZ+correctionZ,rotationYaw+correctionYaw);
             if(view!=null){view.origin=new BlockPos(posX,posY,posZ);
                 double speed=Math.hypot(posX-prevPosX,posZ-prevPosZ);
                 propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);}
@@ -164,10 +201,16 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
                 if(edge==1)VehicleService.signal(pilot,this);
             }
         }
+        VehicleControls.Command command=serverInputs.poll();
+        if(command!=null){forward=command.forward;strafe=command.strafe;brake=command.brake;}
         advance(getControllingPassenger() instanceof EntityPlayer && world.getTotalWorldTime()-lastInput<=10);
         if(ticksExisted%2==0)VehicleNetwork.state(this);
     }
     private void advance(boolean active) {
+        collision.begin(world,this);
+        try { advanceController(active); } finally { collision.end(); }
+    }
+    private void advanceController(boolean active) {
         driveSpeed=approach(driveSpeed,active&&!brake?forward*.28:0,brake||!active?.045:forward==0?.008:.018);
         steering=(float)approach(steering,active?strafe:0,.18);
         // Steering falls off with speed; reversing reverses the direction of the turn.

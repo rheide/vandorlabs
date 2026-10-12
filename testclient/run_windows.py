@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-taxi', 'canopies'])
+    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-taxi', 'vehicle-motion', 'canopies'])
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -101,7 +101,7 @@ def main():
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
     command = [args.java, '-Xmx3G']+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
@@ -148,7 +148,7 @@ def main():
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'canopies':'canopy-live PASS'}[args.focus]
+        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'canopies':'canopy-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
         if args.focus == 'pilot-seat':

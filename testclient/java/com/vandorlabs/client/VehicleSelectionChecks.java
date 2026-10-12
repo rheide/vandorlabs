@@ -14,6 +14,7 @@ public final class VehicleSelectionChecks {
     }
     public static void main(String[] args) {
         net.minecraft.init.Bootstrap.register();
+        VehicleMovementChecks.run();
         BlockPilotSeat seat = new BlockPilotSeat();
         // Headless bootstrap has no active mod container to supply the registration namespace.
         net.minecraftforge.fml.relauncher.ReflectionHelper.setPrivateValue(net.minecraftforge.registries.IForgeRegistryEntry.Impl.class,seat,null,"registryName");

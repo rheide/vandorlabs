@@ -101,6 +101,22 @@ public final class VehicleClient {
         PacketHandler.INSTANCE.sendToServer(p);
     }
     private static UUID cameraCraft;
+    @SubscribeEvent public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Pre event) {
+        if(!(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle))return;
+        EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
+        if(craft.structure==null)return;
+        float partial=event.getPartialRenderTick();
+        Vec3d at=craft.seatPosition(craft.visualPose(partial),event.getEntityPlayer());
+        Entity rider=event.getEntityPlayer();
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(at.x-(rider.lastTickPosX+(rider.posX-rider.lastTickPosX)*partial),
+                at.y-(rider.lastTickPosY+(rider.posY-rider.lastTickPosY)*partial),
+                at.z-(rider.lastTickPosZ+(rider.posZ-rider.lastTickPosZ)*partial));
+    }
+    @SubscribeEvent public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Post event) {
+        if(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle
+                && ((EntityGroundVehicle)event.getEntityPlayer().getRidingEntity()).structure!=null)GlStateManager.popMatrix();
+    }
     private static double cameraDistance=4;
     public static double cameraDistance(){return cameraDistance;}
     private static void cameraFor(EntityGroundVehicle e) {

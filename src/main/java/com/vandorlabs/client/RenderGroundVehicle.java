@@ -91,9 +91,13 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         if(e.structure==null)return;
         drawn.add(e);
         e.view.origin=new BlockPos(e.posX,e.posY,e.posZ);Mesh[] pair={mesh(e,false),mesh(e,true)};
-        net.minecraft.util.math.Vec3d correction=e.renderCorrection();x+=correction.x;y+=correction.y;z+=correction.z;
-        float angle=e.prevRotationYaw+net.minecraft.util.math.MathHelper.wrapDegrees(e.rotationYaw-e.prevRotationYaw)*partial;
-        net.minecraft.util.math.Vec3d localCamera=e.toLocal(new net.minecraft.util.math.Vec3d(e.posX-x,e.posY-y,e.posZ-z));
+        VehiclePose pose=e.visualPose(partial);
+        double cameraXWorld=e.lastTickPosX+(e.posX-e.lastTickPosX)*partial-x;
+        double cameraYWorld=e.lastTickPosY+(e.posY-e.lastTickPosY)*partial-y;
+        double cameraZWorld=e.lastTickPosZ+(e.posZ-e.lastTickPosZ)*partial-z;
+        x=pose.x-cameraXWorld;y=pose.y-cameraYWorld;z=pose.z-cameraZWorld;
+        float angle=pose.yaw;
+        net.minecraft.util.math.Vec3d localCamera=pose.local(new net.minecraft.util.math.Vec3d(cameraXWorld,cameraYWorld,cameraZWorld),e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2);
         for(Mesh mesh:pair)sortTranslucent(mesh,localCamera.x,localCamera.y,localCamera.z);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.translate(e.structure.bounds.maxX/2,0,e.structure.bounds.maxZ/2);GlStateManager.rotate(-angle,0,1,0);GlStateManager.translate(-e.structure.bounds.maxX/2,0,-e.structure.bounds.maxZ/2);GlStateManager.disableLighting();GlStateManager.enableTexture2D();bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1,1,1,1);
