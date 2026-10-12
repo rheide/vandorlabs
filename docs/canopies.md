@@ -159,3 +159,11 @@ Modular Visor Front, Front Latch, Corner and Side pieces, including Tall variant
 removed from creative and crafting. Existing assemblies remain compatible. The older
 2 × 2 Bubble Wedge is also retained only for saved-world compatibility; new Bubble
 Wedge placements use the centered 3 × 3 version.
+
+Sliding and Rear-Hinged Canopies remain usable after vehicle assembly. Right-click
+the actual canopy surface with an empty hand to open or close it, including joined
+widths of one, two and three. Clicking again during movement reverses it. The
+shell animates over 16 ticks and its collision follows its current pose. Parking,
+saving and newly tracking clients retain the current position and target; a
+partly open canopy resumes moving after loading. Other captured tile entities do
+not tick as part of canopy movement. Settled canopies do not rebuild collision.

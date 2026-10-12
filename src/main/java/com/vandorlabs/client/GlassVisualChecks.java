@@ -17,9 +17,9 @@ final class GlassVisualChecks {
                 EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                 MaterialRuntimeChecks.run(player);GlassAppearanceRuntimeChecks.run(player);
                 GlassAppearanceRuntimeChecks.buildGallery(player.world);
-                player.capabilities.isFlying=true;player.connection.setPlayerLocation(45,7,33,0,20);
+                player.capabilities.allowFlying=true;player.capabilities.isFlying=true;player.sendPlayerAbilities();player.connection.setPlayerLocation(45,7,33,0,20);
             }).get();
-            mc.player.capabilities.isFlying=true;mc.player.setPositionAndRotation(45,7,33,0,20);
+            mc.player.capabilities.allowFlying=true;mc.player.capabilities.isFlying=true;mc.player.setPositionAndRotation(45,7,33,0,20);
             mc.gameSettings.hideGUI=true;
         }
         if(ticks==140) {
@@ -51,15 +51,23 @@ final class GlassVisualChecks {
             mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(41,7,60,-35,25)).get();
             mc.player.setPositionAndRotation(41,7,60,-35,25);
         }
-        if(ticks==280){save(mc,output,"glass-w-joined-edges");System.out.println("[vandorlabs] glass-render-live PASS strengths, frames, W joins and dialogs");return true;}
+        if(ticks==280){save(mc,output,"glass-w-joined-edges");camera(mc,57.5,8,41,0,42);}
+        if(ticks==310){save(mc,output,"glass-closed-frame-top-regular-diagonal");camera(mc,57.5,3.5,41,0,-21);}
+        if(ticks==340){save(mc,output,"glass-closed-frame-bottom-regular-diagonal");camera(mc,61,6,43,67,16);}
+        if(ticks==370){save(mc,output,"glass-closed-frame-side-regular-diagonal");System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins and dialogs");return true;}
         return false;
     }
+    private static void camera(Minecraft mc,double x,double y,double z,float yaw,float pitch)throws Exception{mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x,y,z,yaw,pitch)).get();mc.player.setPositionAndRotation(x,y,z,yaw,pitch);}
     private static void openDialog(Minecraft mc,BlockPos pos,int gui) throws Exception {
-        mc.player.closeScreen();
+        // Let the server close the old window before opening its replacement. A client close
+        // packet queued here can otherwise arrive after openGui and close the new container.
+        mc.displayGuiScreen(null);
         mc.player.setPositionAndRotation(pos.getX()+.5,pos.getY(),pos.getZ()-1.5,0,10);
         mc.getIntegratedServer().addScheduledTask(()->{
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
             player.closeScreen();
+            player.capabilities.allowFlying=true;player.capabilities.isFlying=true;player.motionY=0;player.sendPlayerAbilities();
+            player.world.setBlockState(pos.add(0,-1,-2),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
             player.connection.setPlayerLocation(pos.getX()+.5,pos.getY(),pos.getZ()-1.5,0,10);
             player.openGui(com.vandorlabs.VandorLabs.instance,gui,player.world,pos.getX(),pos.getY(),pos.getZ());
         }).get();
@@ -78,7 +86,7 @@ final class GlassVisualChecks {
             boolean correct=diagonal?player.openContainer instanceof com.vandorlabs.container.ContainerAnimatedScreenSelector
                     :player.openContainer instanceof com.vandorlabs.container.ContainerProgrammableGlass;
             if(!correct || !player.openContainer.canInteractWith(player))
-                throw new IllegalStateException("Glass dialog server container is missing or out of reach");
+                throw new IllegalStateException("Glass dialog server container is missing or out of reach: container="+player.openContainer.getClass().getSimpleName()+", player="+player.getPositionVector()+", target="+pos+", distanceSq="+player.getDistanceSq(pos));
             net.minecraft.tileentity.TileEntity tile=player.world.getTileEntity(pos);
             int actualTint=diagonal?((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).getGlassTint()
                     :((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).getTint();

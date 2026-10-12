@@ -42,6 +42,7 @@ public final class VehicleInteraction {
     }
     public static boolean supported(EntityPlayer player,Target target) {
         return target!=null && (player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER
+                || target.hit.action==VehicleSelection.Action.CANOPY
                 || target.hit.action==VehicleSelection.Action.DOOR
                 || target.hit.action==VehicleSelection.Action.BOARD && !player.isSneaking());
     }
@@ -67,6 +68,10 @@ public final class VehicleInteraction {
         EntityPlayerMP server=(EntityPlayerMP)player;
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
             VehicleService.previewParking(server,craft);return true;
+        }
+        if(target.hit.action==VehicleSelection.Action.CANOPY) {
+            if(!VehicleCanopies.toggle(craft,target.hit.cell.pos))VehicleNetwork.error(server,"This canopy has an incomplete captured group.");
+            return true;
         }
         if(target.hit.action==VehicleSelection.Action.DOOR) {
             if(!VehicleDoors.toggle(craft,target.hit.cell.pos))VehicleNetwork.error(server,"This door has an incomplete captured group.");

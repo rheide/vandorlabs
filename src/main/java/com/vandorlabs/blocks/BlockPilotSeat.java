@@ -47,8 +47,7 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     public static boolean canopyAbove(IBlockAccess world,BlockPos pos) {
         net.minecraft.block.Block block=world.getBlockState(pos.up()).getBlock();
         if(!(block instanceof BlockCanopy))return false;
-        String kind=((BlockCanopy)block).kind;
-        return kind.equals("regular_canopy_glass") || kind.startsWith("space_shuttle_") || kind.startsWith("space_bubble_wedge_");
+        return ((BlockCanopy)block).supportsSeatBackrest();
     }
     @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from) {
         if(!world.isRemote && !state.getValue(UPPER) && world.isAirBlock(pos.up()))

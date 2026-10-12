@@ -61,7 +61,34 @@ final class StaticSurfaceMesh {
                         .normal(nx,ny,nz).endVertex();
             }
         }
+        // The transparent mesh already contains the exact thickness caps, including
+        // clipped corner arms. Close each exposed rim with opaque outer and inner walls.
+        for(int q=0;q<vertices.length;q+=32)if(!paneFace(q) && !hiddenCap(q,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis)) {
+            double[] inset=capInset(q,edges);if(inset==null)continue;
+            for(int side=0;side<2;side++)for(int v=0;v<4;v++) {
+                int source=q+(side==0?v:3-v)*8;float sign=side==0?1:-1;
+                result.pos(vertices[source]+(side==0?0:inset[0])+vertices[q+5]*sign*.01,
+                        vertices[source+1]+(side==0?0:inset[1])+vertices[q+6]*sign*.01,
+                        vertices[source+2]+(side==0?0:inset[2])+vertices[q+7]*sign*.01)
+                        .color(255,255,255,255).tex(sprite.getInterpolatedU(v==0 || v==3?.16:.28),sprite.getInterpolatedV(v<2?4:4.12))
+                        .normal(vertices[q+5]*sign,vertices[q+6]*sign,vertices[q+7]*sign).endVertex();
+            }
+        }
         return result.finish();
+    }
+    private boolean hiddenCap(int q,boolean left,boolean right,boolean front,boolean back,boolean lower,boolean upper,int axis) {
+        return left && capPlane(q,0,0) || right && capPlane(q,0,16) || front && capPlane(q,2,0) || back && capPlane(q,2,16) || lower && capPlane(q,axis,0) || upper && capPlane(q,axis,16);
+    }
+    private boolean capPlane(int q,int axis,float value){for(int v=0;v<4;v++)if(Math.abs(vertices[q+v*8+axis]-value)>1E-4)return false;return true;}
+    private boolean capContains(int q,int point){for(int v=0;v<4;v++){int p=q+v*8;if(Math.abs(vertices[p]-vertices[point])+Math.abs(vertices[p+1]-vertices[point+1])+Math.abs(vertices[p+2]-vertices[point+2])<1E-4)return true;}return false;}
+    private double[] capInset(int cap,java.util.Map<String,Integer> edges){
+        for(int q=0;q<vertices.length;q+=32)if(paneFace(q))for(int e=0;e<4;e++){
+            int a=q+e*8,b=q+((e+1)&3)*8;if(edges.get(edgeKey(a,b))!=1 || !capContains(cap,a) || !capContains(cap,b))continue;
+            double dx=vertices[b]-vertices[a],dy=vertices[b+1]-vertices[a+1],dz=vertices[b+2]-vertices[a+2],length=Math.sqrt(dx*dx+dy*dy+dz*dz);if(length<1E-5)continue;
+            double x=(vertices[a+6]*dz-vertices[a+7]*dy)/length,y=(vertices[a+7]*dx-vertices[a+5]*dz)/length,z=(vertices[a+5]*dy-vertices[a+6]*dx)/length;
+            double cx=0,cy=0,cz=0;for(int v=0;v<4;v++){cx+=vertices[q+v*8];cy+=vertices[q+v*8+1];cz+=vertices[q+v*8+2];}
+            if(x*(cx/4-vertices[a])+y*(cy/4-vertices[a+1])+z*(cz/4-vertices[a+2])<0){x=-x;y=-y;z=-z;}return new double[]{x,y,z};
+        }return null;
     }
     private boolean paneFace(int q) {
         // Sloping face normals distinguish pane faces from the narrow end/depth caps.

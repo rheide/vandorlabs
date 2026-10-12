@@ -58,14 +58,16 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private long beltTick;
     public boolean isEscalatorRunning() { return beltRunning; }
     public boolean isEscalatorRequested() { return beltRequested; }
+    public boolean vehicleFrozen;
     public double beltDistance(double partial) {
-        if(world!=null && !world.isRemote)return beltDistance;
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld || world!=null && !world.isRemote)return beltDistance;
         return beltDistance+(beltRunning?(world.getTotalWorldTime()-beltTick+partial)*beltDelta():0);
     }
     private double beltDelta() {
         return com.vandorlabs.ramp.EscalatorGeometry.rate(speed)*(endOffsetValue()>=0?1:-1)*(escalator==1?1:-1);
     }
     public void refreshEscalatorActivity() {
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         if(world==null || world.isRemote || escalator==0 || !attached() || moving || error)return;
         boolean near=false;
         double radius=beltRunning?40:32;
@@ -280,6 +282,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return evaluateSignal(true);
     }
     public void updatePower() {
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         if(com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
         if (!world.isRemote && !changing) {
             RedstoneChannels.inputChanged(this);
@@ -306,6 +309,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
 
     /** Public for the block event adapter and live-world regression checks. */
     public boolean request(boolean deploy) {
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
         if (world.isRemote || changing) return false;
         if(escalator!=0)deploy=true;
         if (recoveryPending && !recover(false)) return false;
@@ -561,10 +565,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                     part.move(open,startPose,startTick,duration,moving); }
         }
     }
-    private void schedule() { world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1); }
+    private void schedule() { if(!vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1); }
     @Override public void onLoad() {
         super.onLoad();
-        if (!world.isRemote) {
+        if (!world.isRemote && !vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld)) {
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
             if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
             needsLoadCheck=true;
@@ -581,6 +585,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
     /** A scheduled tick is animation work or a one-shot load recovery, never idle polling. */
     public void scheduledTick() {
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld || com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
         if (world.isRemote || changing) return;
         if (recoveryPending) {
             if (recover(false)) evaluateSignal(true);
@@ -936,6 +941,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         } finally { changing=false; markDirty(); }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
         super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
         tag.setBoolean("EscalatorRequested",beltRequested);
@@ -974,9 +980,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
         super.readFromNBT(tag);
+        vehicleFrozen=tag.getBoolean("VehicleRampFrozen");
         escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
         beltDistance=tag.getDouble("EscalatorDistance");if(!Double.isFinite(beltDistance))beltDistance=0;
-        beltRequested=tag.getBoolean("EscalatorRequested");beltRunning=world!=null && world.isRemote && tag.getBoolean("EscalatorRunning");
+        beltRequested=tag.getBoolean("EscalatorRequested");
+        // Atomic transfer rollback restores a live world snapshot, including its
+        // running clock. Ordinary chunk loads still reevaluate nearby players.
+        beltRunning=world!=null && (world.isRemote || com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))
+                && !vehicleFrozen && tag.getBoolean("EscalatorRunning");
         beltTick=tag.getLong("EscalatorTick");
         interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
         RampControllerData data=RampControllerData.read(new NbtPrimitiveData(tag));

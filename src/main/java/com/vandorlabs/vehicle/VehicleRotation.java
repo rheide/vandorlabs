@@ -51,8 +51,8 @@ public final class VehicleRotation {
         if(domain.equals("vandorlabs")) {
             if(tile instanceof TileEntityRampController){
                 TileEntityRampController ramp=(TileEntityRampController)tile;
-                return !ramp.attached() && ramp.vehicleCells().isEmpty() && !ramp.isMoving()
-                        && !cell.tileData().getBoolean("RecoveryPending");
+                return !ramp.isMoving() && !cell.tileData().getBoolean("RecoveryPending")
+                        && (cell.tileData().getBoolean("VehicleRampFrozen") || !ramp.attached() && ramp.vehicleCells().isEmpty());
             }
             return true;
         }
@@ -117,7 +117,8 @@ public final class VehicleRotation {
                     facing(data,"MountFace",rotation,false);
                     if(before.state.getBlock() instanceof BlockVandorSwitch && before.state.getValue(BlockVandorSwitch.FACING).getAxis()==EnumFacing.Axis.Y && data.hasKey("MountRotation",3))
                         data.setInteger("MountRotation",(data.getInteger("MountRotation")+turns)&3);
-                    if(view.getTileEntity(before.pos) instanceof TileEntityRampController){facing(data,"RampDirection",rotation,true);facing(data,"Facing",rotation,true);}
+                    if(view.getTileEntity(before.pos) instanceof TileEntityRampController || view.getTileEntity(before.pos) instanceof TileEntityControlledRamp)
+                        rotateRampData(data,width,depth,turns,rotation);
                     if(data.hasKey("GearOwnerX",3)){BlockPos offset=vector(new BlockPos(data.getInteger("GearOwnerX"),0,data.getInteger("GearOwnerZ")),turns);data.setInteger("GearOwnerX",offset.getX());data.setInteger("GearOwnerZ",offset.getZ());}
                 } else if(domain.equals("minecraft")) {
                     if(data.hasKey("Rot",99) && before.state.getBlock() instanceof net.minecraft.block.BlockSkull)
@@ -148,5 +149,37 @@ public final class VehicleRotation {
             catch(RuntimeException | LinkageError failure){throw new IllegalArgumentException("Cannot rotate "+before.state.getBlock().getRegistryName()+" safely. Rotate back to the original heading before parking.",failure);}
         }
         return new VehicleStructure(cells,cell(source.seat,width,depth,turns),rotation.rotate(source.facing),source.gearCount);
+    }
+    /** Rotate the retained expanded ramp and its recovery journal as one assembly. */
+    private static void rotateRampData(NBTTagCompound data,int width,int depth,int turns,Rotation rotation){
+        facing(data,"RampDirection",rotation,true);facing(data,"Facing",rotation,true);
+        for(String key:new String[]{"OriginalState","SourceState"})if(data.hasKey(key,8)){
+            IBlockState original=com.vandorlabs.persistence.LegacyBlockStates.decode(data.getString(key));
+            if(original!=null){IBlockState rotated=state(original,rotation);data.setString(key,com.vandorlabs.persistence.LegacyBlockStates.encode(rotated));data.setTag(key.equals("OriginalState")?"Original":"Source",NBTUtil.writeBlockState(new NBTTagCompound(),rotated));}
+        }
+        for(String key:new String[]{"Sources","Cells","Origins","RampSourceTiles"}){
+            NBTTagList list=data.getTagList(key,10);
+            for(int n=0;n<list.tagCount();n++){
+                NBTTagCompound entry=list.getCompoundTagAt(n);
+                BlockPos old=entry.hasKey("X",3)?new BlockPos(entry.getInteger("X"),entry.getInteger("Y"),entry.getInteger("Z")):BlockPos.fromLong(entry.getLong("Pos"));
+                BlockPos next=cell(old,width,depth,turns);
+                entry.setInteger("X",next.getX());entry.setInteger("Y",next.getY());entry.setInteger("Z",next.getZ());if(entry.hasKey("Pos",4))entry.setLong("Pos",next.toLong());
+                if(entry.hasKey("Tile",10)){
+                    NBTTagCompound saved=entry.getCompoundTag("Tile");saved.setInteger("x",next.getX());saved.setInteger("y",next.getY());saved.setInteger("z",next.getZ());
+                    for(String direction:new String[]{"DiagonalFacing","DiagonalGroupFacing"})facing(saved,direction,rotation,true);
+                    facing(saved,"MountFace",rotation,false);
+                }
+            }
+        }
+        if(data.hasKey("Controller",4)){
+            BlockPos old=data.hasKey("ControllerX",3)?new BlockPos(data.getInteger("ControllerX"),data.getInteger("ControllerY"),data.getInteger("ControllerZ")):BlockPos.fromLong(data.getLong("Controller"));
+            BlockPos next=cell(old,width,depth,turns);data.setLong("Controller",next.toLong());data.setInteger("ControllerX",next.getX());data.setInteger("ControllerY",next.getY());data.setInteger("ControllerZ",next.getZ());
+        }
+        NBTTagList sources=data.getTagList("Sources",10);
+        if(data.hasKey("MinAlong",3) && sources.tagCount()>0){
+            EnumFacing direction=EnumFacing.getHorizontal(data.getInteger("Facing"));int min=Integer.MAX_VALUE;
+            for(int n=0;n<sources.tagCount();n++){NBTTagCompound entry=sources.getCompoundTagAt(n);min=Math.min(min,entry.getInteger("X")*direction.getFrontOffsetX()+entry.getInteger("Z")*direction.getFrontOffsetZ());}
+            data.setInteger("MinAlong",min);
+        }
     }
 }

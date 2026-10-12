@@ -134,8 +134,14 @@ public final class VehicleTransfer {
             sections[section].set(p.getX()&15,p.getY()&15,p.getZ()&15,place?cell.state:Blocks.AIR.getDefaultState());
         }
         if(place)for(VehicleStructure.Cell cell:structure.cells) if(cell.tileData()!=null) {
-            BlockPos p=origin.add(cell.pos);TileEntity tile=TileEntity.create(world,VehicleTileData.translated(cell.tileData(),origin));
+            BlockPos p=origin.add(cell.pos);NBTTagCompound restoredTag=VehicleEscalators.parked(VehicleTileData.translated(cell.tileData(),origin),world.getTotalWorldTime());
+            TileEntity tile=TileEntity.create(world,restoredTag);
             if(tile==null)throw new IllegalStateException("Cannot restore component at "+p);
+            // TileEntity.create invokes readFromNBT before assigning its World.
+            // Complete the ramp's live-clock restoration in this atomic context.
+            if(tile instanceof com.vandorlabs.tiles.TileEntityRampController) {
+                tile.setWorld(world);tile.readFromNBT(restoredTag);
+            }
             world.setTileEntity(p,tile);tile.markDirty();
         }
         for(Chunk chunk:chunks){chunk.generateSkylightMap();chunk.markDirty();}

@@ -24,6 +24,13 @@ for detail in ('low', 'medium'):
         assert Image.open(TEXTURES / detail / ('clear'+suffix+'.png')).tobytes() == clear.tobytes()
 
 
+# Thickness caps sample the same fully opaque metal patch as regular glass.
+metal = Image.open(ROOT / 'texture-packs/space-doors/medium/double_frame_metal.png').convert('RGBA')
+solid = metal.crop((int(.16/16*metal.width), int(4/16*metal.width),
+                   math.ceil(.28/16*metal.width), math.ceil(4.12/16*metal.width)))
+assert solid.getchannel('A').getextrema() == (255,255), 'frame cap UV patch is not opaque'
+
+
 def load(ref):
     path = ref.removeprefix('vandorlabs:') + '.json'
     for base in ('src/main/resources', 'generated-resources'):
@@ -55,7 +62,11 @@ for file in (ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured
         assert model['textures']['frame'].endswith('/double_frame_metal')
         pane = model['elements'][0]
         assert pane['from'][:2] == [1,1] and pane['to'][:2] == [15,15]
+        assert pane['from'][2] == 7 and pane['to'][2] == 9
         for rail in model['elements'][1:]:
+            assert rail['from'][2] == 6 and rail['to'][2] == 10
+            for side in ('east','west','up','down'):
+                assert rail['faces'][side]['uv'] == [.16,4,.28,4.12], (file.name, side, 'transparent rim UV')
             assert all(face['texture'] == '#frame' for face in rail['faces'].values())
             # Rails touch the inset pane but never overlap its volume.
             assert any(rail['to'][axis] <= pane['from'][axis] or rail['from'][axis] >= pane['to'][axis]

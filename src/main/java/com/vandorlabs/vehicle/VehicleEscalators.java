@@ -11,11 +11,18 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import java.util.*;
 
-/** A preview never retracts the world. Transfers journal the expanded pose separately. */
+/** Capture owned ramp geometry in place, freezing its clock while carried. */
 public final class VehicleEscalators {
     private VehicleEscalators(){}
     public static boolean active(TileEntity tile){return tile instanceof TileEntityRampController;}
     public static NBTTagCompound paused(NBTTagCompound saved){
+        NBTTagCompound tag=saved.copy();tag.setBoolean("VehicleRampFrozen",true);
+        tag.setBoolean("EscalatorRunning",false);tag.setLong("EscalatorTick",0);
+        tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,0);
+        return tag;
+    }
+    /** Compatibility with snapshots produced by the earlier virtual-source format. */
+    public static NBTTagCompound legacyPaused(NBTTagCompound saved){
         NBTTagCompound tag=saved.copy();
         tag.setTag(SaveSchema.Ramp.SOURCES,new NBTTagList());tag.setTag(SaveSchema.Ramp.CELLS,new NBTTagList());tag.setTag("RampSourceTiles",new NBTTagList());
         for(String key:new String[]{SaveSchema.Ramp.OPEN,SaveSchema.Ramp.MOVING,SaveSchema.Ramp.ERROR,SaveSchema.Ramp.RECOVERY_PENDING,SaveSchema.Ramp.SIGNAL_KNOWN,SaveSchema.Ramp.LATCHED,"EscalatorRunning"})tag.setBoolean(key,false);
@@ -54,11 +61,21 @@ public final class VehicleEscalators {
     }
     private static VehicleStructure.Cell original(VehicleStructure craft,BlockPos origin,TileEntityRampController ramp,BlockPos p){
         VehicleStructure.Cell savedOwner=craft.at(ramp.getPos().subtract(origin));
-        if(savedOwner==null || savedOwner.tileData()==null)return null;
+        if(savedOwner==null || savedOwner.tileData()==null || savedOwner.tileData().getBoolean("VehicleRampFrozen"))return null;
         for(VehicleStructure.Cell cell:originals(ramp))if(cell.pos.equals(p))return cell;
         return null;
     }
     public static final class WorldSnapshot {public final VehicleStructure structure;public final BlockPos origin;WorldSnapshot(VehicleStructure s,BlockPos p){structure=s;origin=p;}}
+    /** Thaw only the world copy after all cells have been placed atomically. */
+    public static NBTTagCompound parked(NBTTagCompound saved,long tick){
+        NBTTagCompound tag=saved.copy();
+        if(tag.getBoolean("VehicleRampFrozen")) {
+            tag.removeTag("VehicleRampFrozen");tag.setBoolean("EscalatorRunning",false);
+            tag.setLong("EscalatorTick",tick);tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,tick);
+            tag.setBoolean(SaveSchema.Ramp.SIGNAL_KNOWN,false);
+        }
+        return tag;
+    }
     public static boolean needsExpandedSnapshot(World world,VehicleStructure craft,BlockPos origin){for(VehicleStructure.Cell cell:craft.cells){TileEntity tile=world.getTileEntity(origin.add(cell.pos));if(active(tile) && !((TileEntityRampController)tile).vehicleCells().isEmpty())return true;}return false;}
     public static WorldSnapshot expandedWorldSnapshot(World world,VehicleStructure craft,BlockPos origin) throws java.io.IOException {
         LinkedHashSet<BlockPos> positions=new LinkedHashSet<>();

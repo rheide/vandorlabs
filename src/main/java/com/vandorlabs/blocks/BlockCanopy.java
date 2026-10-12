@@ -46,13 +46,17 @@ public final class BlockCanopy extends Block {
     }
     public EnumFacing placementFacing(EntityLivingBase player){
         EnumFacing facing=player.getHorizontalFacing();
-        return opening() || kind.startsWith("angled_")?facing.getOpposite():facing;
+        return opening() || kind.startsWith("angled_") || kind.startsWith("space_shuttle_")?facing.getOpposite():facing;
     }
     public BlockPos placementAnchor(BlockPos clicked,EnumFacing facing){
         return com.vandorlabs.canopy.CanopyVariants.centered(kind)?clicked.offset(facing.rotateYCCW(),width/2).offset(facing,kind.equals("space_bubble_wedge_3x3")?length/2:0):clicked;
     }
+    public boolean supportsSeatBackrest(){
+        return kind.equals("regular_canopy_glass") || kind.startsWith("space_shuttle_")
+                || kind.startsWith("space_bubble_wedge_") || opening();
+    }
     public boolean sharesSeatBackrest(IBlockState state){
-        return (kind.equals("regular_canopy_glass") || kind.startsWith("space_shuttle_") || kind.startsWith("space_bubble_wedge_"))
+        return supportsSeatBackrest()
                 && state.getBlock() instanceof BlockPilotSeat && state.getValue(BlockPilotSeat.UPPER);
     }
 

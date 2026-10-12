@@ -26,6 +26,7 @@ for diagonal in (False, True):
                         pane = model['elements'][0]
                         pane['from'][0] = pane['from'][1] = 1
                         pane['to'][0] = pane['to'][1] = 15
+                        pane['from'][2], pane['to'][2] = 7, 9
                         for face in ('north', 'south'):
                             pane['faces'][face]['uv'] = [1, 1, 15, 15]
                         for lower, upper in (([0, 0, 6], [1, 16, 10]),
@@ -34,7 +35,7 @@ for diagonal in (False, True):
                                              ([1, 15, 6], [15, 16, 10])):
                             model['elements'].append({'from': lower, 'to': upper,
                                 'rotation': copy.deepcopy(pane['rotation']),
-                                'faces': {face: {'texture': '#frame', 'uv': [0,0,.5,8] if upper[0]-lower[0]==1 else [0,0,7,.5]} for face in
+                                'faces': {face: {'texture': '#frame', 'uv': ([0,0,.5,8] if upper[0]-lower[0]==1 else [0,0,7,.5]) if face in ('north','south') else [.16,4,.28,4.12]} for face in
                                     ('east','west','up','down','north','south')}})
                     else:
                         # Resolve the source model so Bare can remove just the metal elements.

@@ -62,7 +62,17 @@ public final class VehicleStructure {
             else {
                 if(tile==null)return false;
                 NBTTagCompound captured=tile.writeToNBT(new NBTTagCompound());
-                if(VehicleEscalators.active(tile) && cell.tile.getTagList("Sources",10).tagCount()==0)captured=VehicleEscalators.paused(captured);
+                if(cell.tile.getBoolean("VehicleRampFrozen")) {
+                    if(tile instanceof com.vandorlabs.tiles.TileEntityRampController)for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)tile).vehicleSources()) {
+                        if(!world.isBlockLoaded(source))return false;
+                        TileEntity part=world.getTileEntity(source);
+                        if(!world.isAirBlock(source) && !(part instanceof com.vandorlabs.tiles.TileEntityControlledRamp && ((com.vandorlabs.tiles.TileEntityRampController)tile).owns((com.vandorlabs.tiles.TileEntityControlledRamp)part)))return false;
+                    }
+                    captured=VehicleEscalators.paused(captured);
+                    // Live escalators may advance while the preview is open.
+                    // Configuration/ownership must match, but capture phase is fixed.
+                    captured.setDouble("EscalatorDistance",cell.tile.getDouble("EscalatorDistance"));
+                } else if(VehicleEscalators.active(tile) && cell.tile.getTagList("Sources",10).tagCount()==0)captured=VehicleEscalators.legacyPaused(captured);
                 NBTTagCompound actual=VehicleTileData.translated(captured,BlockPos.ORIGIN.subtract(origin));
                 NBTTagCompound saved=cell.tile.copy();
                 // A short pulse can fall while the bounded scan is still running.

@@ -47,6 +47,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public int interpolation;
     public int escalator;
     public boolean beltRunning;
+    public boolean vehicleFrozen;
     public double beltDistance;
     public long beltTick;
     private double cachedBeltDistance=Double.NaN;
@@ -54,6 +55,7 @@ public class TileEntityControlledRamp extends TileEntity {
     private final Map<RampGeometry.Box,Double> beltTops=new java.util.IdentityHashMap<>();
     private final Map<RampGeometry.Box,BlockPos> beltMaterials=new java.util.IdentityHashMap<>();
     public double beltDistance(double partial) {
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return beltDistance;
         if(world!=null && !world.isRemote) {
             TileEntity owner=world.getTileEntity(controller);
             if(owner instanceof TileEntityRampController)return ((TileEntityRampController)owner).beltDistance(0);
@@ -284,13 +286,14 @@ public class TileEntityControlledRamp extends TileEntity {
         if (world.getTileEntity(pos)==this) world.setBlockToAir(pos);
     }
     public void recoverOnEvent() {
+        if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld || com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
         if (world.isRemote || !world.isBlockLoaded(controller)) return;
         TileEntity owner=world.getTileEntity(controller);
         if (!(owner instanceof TileEntityRampController) || !((TileEntityRampController)owner).owns(this)) restore();
         else ((TileEntityRampController)owner).resumeAfterLoad();
     }
     @Override public void onLoad() {
-        if (!world.isRemote) {
+        if (!world.isRemote && !vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld)) {
             ControllerRecovery.register(this);
             world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1);
         }
@@ -298,6 +301,7 @@ public class TileEntityControlledRamp extends TileEntity {
     @Override public void invalidate() { ControllerRecovery.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() { ControllerRecovery.unregister(this); super.onChunkUnload(); }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
         super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setBoolean("EscalatorRunning",beltRunning);
         tag.setDouble("EscalatorDistance",beltDistance);tag.setLong("EscalatorTick",beltTick);
@@ -355,6 +359,7 @@ public class TileEntityControlledRamp extends TileEntity {
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
+        vehicleFrozen=tag.getBoolean("VehicleRampFrozen");
         super.readFromNBT(tag);cachedBeltDistance=Double.NaN;beltMaterials.clear();
         escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
         beltRunning=tag.getBoolean("EscalatorRunning");beltDistance=tag.getDouble("EscalatorDistance");

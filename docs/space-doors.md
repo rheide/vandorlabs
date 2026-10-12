@@ -111,7 +111,7 @@ Observation metal and glass use separate opaque/cutout and translucent passes.
 Programmable Glass selects Small or Large detail, a glass finish, Mild / Normal / Strong tint, and Bare / Framed edges in its settings menu. Programmable Diagonal Glass exposes the same tint and frame choices alongside its diagonal geometry controls.
 The glass shade is selected independently for each size. The thick inside faces
 use the former Observation Glass metal texture; the front and rear keep their
-original finish. Bare hides the perimeter frame. Both frame and shimmer use the selected native tier. Mixed
+original finish. Framed diagonal glass has a closed one-pixel metal rim on both faces and along exposed top, bottom and side edges; connected edges share the outer perimeter. Bare hides the perimeter frame. Both frame and shimmer use the selected native tier. Mixed
 tiers still connect, including inner corners and
 both wall orientations. Its metal frame is solid-pass geometry. A non-ticking
 tile draws the repeating glass in the translucent pass with the pack's faint

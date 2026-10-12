@@ -162,6 +162,10 @@ final class GlassAppearanceRuntimeChecks {
             world.setBlockState(slope,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);
             TileEntityAnimatedScreenSelector diagonal=(TileEntityAnimatedScreenSelector)world.getTileEntity(slope);diagonal.setGlassShade(12);diagonal.setGlassAppearance(tint,frame==1);
         }
+        BlockPos comparison=new BlockPos(56,6,44);world.setBlockState(comparison,regular.getDefaultState(),3);TileEntityProgrammableGlass comparisonRegular=(TileEntityProgrammableGlass)world.getTileEntity(comparison);comparisonRegular.setShade(12);comparisonRegular.setAppearance(1,true);
+        comparison=comparison.east(2);world.setBlockState(comparison,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);TileEntityAnimatedScreenSelector comparisonDiagonal=(TileEntityAnimatedScreenSelector)world.getTileEntity(comparison);comparisonDiagonal.setGlassShade(12);comparisonDiagonal.setGlassAppearance(1,true);
+        for(int x=54;x<=61;x++)for(int z=42;z<=47;z++)world.setBlockState(new BlockPos(x,4,z),Blocks.STONE.getDefaultState(),2);
+        for(int x=54;x<=61;x++)for(int y=5;y<=10;y++)world.setBlockState(new BlockPos(x,y,47),Blocks.QUARTZ_BLOCK.getDefaultState(),2);
         // A joined Bare strip exposes the old coplanar lateral-cap regression.
         for(int x=44;x<=46;x++) {
             BlockPos joined=new BlockPos(x,5,48);
@@ -189,7 +193,7 @@ final class GlassAppearanceRuntimeChecks {
             TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(at);tile.setGlassShade(12);tile.setGlassAppearance(1,true);
         }
     }
-    static void checkRenderMeshes(World world) {
+    static void checkRenderMeshes(World world) throws Exception {
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(GlassTextures.texture(12,1,1));
         for(int x=44;x<=46;x++) {
@@ -208,12 +212,17 @@ final class GlassAppearanceRuntimeChecks {
         net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(4096);
         net.minecraft.client.renderer.vertex.VertexFormat format=BlockSurfaceFormat.get();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,format);
         rails.draw(buffer,0,0);buffer.finishDrawing();java.nio.ByteBuffer vertices=buffer.getByteBuffer();int stride=format.getNextOffset();
+        java.lang.reflect.Field payload=StaticSurfaceMesh.class.getDeclaredField("vertices");payload.setAccessible(true);
+        float[] data=(float[])payload.get(rails);int faceRails=0,solidCaps=0;
+        net.minecraft.client.renderer.texture.TextureAtlasSprite metal=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/space_doors/medium/double_frame_metal");
         for(int v=0;v<buffer.getVertexCount();v+=4) {
-            double width=0;
+            if(Math.abs(data[v*8+6])<1E-5 || Math.abs(data[v*8+6])>.99999){solidCaps++;for(int corner=0;corner<4;corner++){float u=data[(v+corner)*8+3],t=data[(v+corner)*8+4];require(u>=metal.getInterpolatedU(.159) && u<=metal.getInterpolatedU(.281) && t>=metal.getInterpolatedV(3.999) && t<=metal.getInterpolatedV(4.121),"rim cap does not sample solid frame artwork");}continue;}
+            faceRails++;double width=0;
             for(int axis=0;axis<3;axis++){double difference=vertices.getFloat(v*stride+axis*4)-vertices.getFloat((v+3)*stride+axis*4);width+=difference*difference;}
             require(Math.abs(width-1)<1E-4,"diagonal frame rail differs from regular one-pixel width");
         }
-        System.out.println("[vandorlabs][reprolab] glass-one-pixel-frame-live PASS quads="+buffer.getVertexCount()/4);
+        require(faceRails>0 && solidCaps>=8,"frame lacks closed outer/inner top-bottom-side caps");
+        System.out.println("[vandorlabs][reprolab] glass-one-pixel-frame-live PASS faceRails="+faceRails+" solidCaps="+solidCaps);
         TileEntityAnimatedScreenSelector middle=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(44,5,64));
         StaticSurfaceMesh bridge=DiagonalWallMeshCache.get(middle,world.getBlockState(middle.getPos()),sprite,sprite);
         require(bridge.withoutPlane(2,0)==bridge && bridge.withoutPlane(2,16)==bridge,"W internal glass end caps remain");

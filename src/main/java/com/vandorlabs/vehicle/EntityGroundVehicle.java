@@ -106,6 +106,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=new VehicleCollision(view);encoded=null;
         setPosition(posX,posY,posZ);
     }
+    /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
+    public void updateCanopies(VehicleStructure snapshot,boolean moved){
+        structure=snapshot;view.structure=snapshot;encoded=null;
+        if(moved){collision=new VehicleCollision(view);setPosition(posX,posY,posZ);}
+    }
     public void updateSettings(VehicleStructure snapshot){
         NBTTagCompound oldSeat=structure.at(structure.seat).tileData(),newSeat=snapshot.at(snapshot.seat).tileData();
         boolean heightChanged=(oldSeat==null?0:oldSeat.getInteger("PilotHeight"))!=(newSeat==null?0:newSeat.getInteger("PilotHeight"));
@@ -185,6 +190,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean stopped(){return motionX*motionX+motionY*motionY+motionZ*motionZ<.0001;}
     @Override public void onUpdate() {
         super.onUpdate();rotationPitch=prevRotationPitch=0;
+        VehicleCanopies.tick(this);
         if(world.isRemote) {
             previousVisual=currentVisual==null?new VehiclePose(posX,posY,posZ,rotationYaw):currentVisual;
             correctionX*=.65;correctionY*=.65;correctionZ*=.65;correctionYaw*=.65;

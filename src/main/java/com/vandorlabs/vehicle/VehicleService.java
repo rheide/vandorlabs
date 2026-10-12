@@ -144,7 +144,12 @@ public final class VehicleService {
     /** Protection events describe the real blocks removed, including generated ramp cells.
      * Forge harvest checks read the state back from the event world. */
     public static void authorizeAssembly(EntityPlayerMP player,VehicleStructure structure,BlockPos origin)throws Exception {
-        for(VehicleStructure.Cell cell:structure.cells)permission(player,origin.add(cell.pos));
+        for(VehicleStructure.Cell cell:structure.cells){
+            BlockPos at=origin.add(cell.pos);permission(player,at);
+            net.minecraft.tileentity.TileEntity tile=player.world.getTileEntity(at);
+            if(tile instanceof com.vandorlabs.tiles.TileEntityRampController)
+                for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)tile).vehicleSources())permission(player,source);
+        }
         VehicleEscalators.WorldSnapshot actual=VehicleEscalators.expandedWorldSnapshot(player.world,structure,origin);
         for(VehicleStructure.Cell cell:actual.structure.cells){
             BlockPos at=actual.origin.add(cell.pos);permission(player,at);

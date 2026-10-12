@@ -845,15 +845,17 @@ public class TEAnimatedScreenSelector
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
             GlStateManager.disableCull();
-            GlStateManager.depthMask(false);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+            if(te.isGlassFramed()) {
+                GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
+                StaticSurfaceMesh frame=DiagonalWallMeshCache.frame(te,state,glass);
+                if(frame!=null){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);Tessellator.getInstance().draw();}
+                GlStateManager.enableBlend();GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
+            }
+            GlStateManager.depthMask(false);
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             DiagonalWallMeshCache.get(te,state,glass,glass).draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
             Tessellator.getInstance().draw();
-            if(te.isGlassFramed()) {
-                StaticSurfaceMesh frame=DiagonalWallMeshCache.frame(te,state,glass);
-                if(frame!=null){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);Tessellator.getInstance().draw();}
-            }
             GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
             GlStateManager.enableLighting();endLocalTransform();return;
         }

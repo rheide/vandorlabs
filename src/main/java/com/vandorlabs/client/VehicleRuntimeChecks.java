@@ -181,14 +181,13 @@ public final class VehicleRuntimeChecks {
         require(ramp.attached() && !ramp.isMoving() && ramp.isOpen(),"ramp fully extended before assembly");
         p.setPositionAndUpdate(4,101,8);
         VehicleScan extended=new VehicleScan(w,SEAT);for(int i=0;i<200 && !extended.step(128);i++);
-        require(extended.error==null && extended.result!=null,"extended ramp supports virtual source capture: "+extended.error);
+        require(extended.error==null && extended.result!=null,"extended ramp supports posed capture: "+extended.error);
         require(extended.result.matches(w,extended.origin) && ramp.attached() && ramp.isOpen(),"extended ramp preview preserves live geometry and matches source journal");
-        for(VehicleStructure.Cell cell:extended.result.cells)require(!(cell.state.getBlock() instanceof BlockControlledRamp),"extended ramp preview excludes generated sections");
-        for(int n=1;n<=2;n++) {
-            VehicleStructure.Cell source=extended.result.at(rampPos.south(n).subtract(extended.origin));
-            require(source!=null && source.state.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK,"extended ramp preview retains original source blocks");
-            TileEntityAnimatedScreenSelector restored=(TileEntityAnimatedScreenSelector)new VehicleWorld(w,extended.result).getTileEntity(rampPos.south(n).subtract(extended.origin));
-            require(restored!=null && restored.getHousingTexture()==CustomBlockMaterials.choice(new ItemStack(Blocks.GOLD_BLOCK)),"extended ramp preview retains source material");
+        for(BlockPos section:ramp.vehicleCells())require(extended.result.at(section.subtract(extended.origin)).state.getBlock() instanceof BlockControlledRamp,"extended ramp preview includes owned posed sections");
+        TileEntityRampController carriedRamp=(TileEntityRampController)new VehicleWorld(w,extended.result).getTileEntity(rampPos.subtract(extended.origin));
+        for(VehicleStructure.Cell source:VehicleEscalators.originals(carriedRamp)) {
+            require(source.state.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK,"extended ramp journal retains original source blocks");
+            require(source.tileData()!=null && source.tileData().getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE)==CustomBlockMaterials.choice(new ItemStack(Blocks.GOLD_BLOCK)),"extended ramp journal retains source material");
         }
         require(ramp.recover(true),"retract broad fixture after verifying extended preview");
         VehicleScan scan=scan(w,SEAT);expected=scan.result;
@@ -201,7 +200,7 @@ public final class VehicleRuntimeChecks {
         require(!local.getBlockState(new BlockPos(0,2,2)).getValue(BlockPropulsionLight.POWERED) && ((TileEntityRedstoneLight)local.getTileEntity(new BlockPos(0,2,2))).getBrightness()==0,"previously powered thruster starts dark on assembly");
         TileEntityRampController localRamp=(TileEntityRampController)local.getTileEntity(rampPos.subtract(ORIGIN));
         require(localRamp!=null && !localRamp.attached() && !localRamp.isOpen(),"retracted ramp controller travels without external reservations");
-        for(net.minecraft.tileentity.TileEntity raw:local.tiles.values())require(!(raw instanceof TileEntityControlledRamp),"generated ramp sections never enter vehicle");
+        for(net.minecraft.tileentity.TileEntity raw:local.tiles.values())require(!(raw instanceof TileEntityControlledRamp),"retracted fixture has no generated ramp sections");
         local.propulsionLevel=12;
         for(int i=0;i<4;i++) {
             BlockPos at=new BlockPos(i,2,2);IBlockState state=local.getBlockState(at);state=state.getBlock().getActualState(state,local,at);
