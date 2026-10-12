@@ -7,6 +7,14 @@ import net.minecraft.world.IBlockAccess;
 
 /** Shared wall/glass compatibility and canonical four-pixel panel coordinates. */
 public final class PanelJoins {
+    /** A placed regular panel anchors to the diagonal's actual end, avoiding a folded slope. */
+    public static int placementDepth(IBlockAccess world,BlockPos support,IBlockState state,EnumFacing side){
+        if(!diagonal(state) || BlockProgrammableWall.halfHeight(world,support) || side.getAxis()!=EnumFacing.Axis.Y)return -1;
+        double end=16*com.vandorlabs.render.DiagonalWallGeometry.near(BlockProgrammableWall.geometry(world,support),state.getValue(BlockProgrammableWall.INVERTED),side==EnumFacing.UP?1:0);
+        int best=0;double distance=Double.POSITIVE_INFINITY;
+        for(int depth=0;depth<3;depth++){double delta=Math.abs(PanelDepth.start(depth)-end);if(delta<distance){best=depth;distance=delta;}}
+        return best;
+    }
     public static boolean diagonal(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape() && !((BlockProgrammableWall)state.getBlock()).isPortholeShape();}
     public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass || state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).getShape()==BlockProgrammableWall.Shape.PLAIN;}
     public static EnumFacing facing(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass ? (state.getValue(BlockGlassWall.ROTATED)?EnumFacing.EAST:EnumFacing.NORTH):state.getValue(BlockProgrammableWall.FACING);}

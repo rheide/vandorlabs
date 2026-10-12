@@ -303,6 +303,8 @@ public class ReproLab {
                 galleryFeet + 4.0D, -24.0D, 0.0F, 24.0F));
         SHOTS.add(new Shot("gallery_lighting_controls", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
+        for(String material:new String[]{"wall","glass"})SHOTS.add(new Shot("gallery_join_mixed_"+material,GALLERY_X-3,galleryFeet+5,-29,-15,22));
+        for(int row=0;row<5;row++)SHOTS.add(new Shot("gallery_glass_finishes_"+row,GALLERY_X,galleryFeet+3,-29,0,12));
         for(String material:new String[]{"wall","glass"})for(int front=0;front<3;front++)for(int back=0;back<3;back++)for(int tails=0;tails<4;tails++)for(String order:new String[]{"forward","reverse"})
             SHOTS.add(new Shot("gallery_join_matrix_"+material+"_"+front+"_"+back+"_"+tails+"_"+order,GALLERY_X-3,galleryFeet+5,-29,-15,22));
         SHOTS.add(new Shot("gallery_joined_lights", GALLERY_X,
@@ -482,7 +484,7 @@ public class ReproLab {
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
-            if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_matrix_"));
+            if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_") && !shot.name.startsWith("gallery_glass_finishes_"));
             if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
             if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
         }
@@ -569,6 +571,20 @@ public class ReproLab {
         }
 
         switch (state) {
+            case 4100:
+                if(--holdTicks>0)break;
+                if(!(mc.currentScreen instanceof GuiProgrammableWall))throw new IllegalStateException("diagonal glass dialog failed to open");
+                GuiProgrammableWall diagonalGlassGui=(GuiProgrammableWall)mc.currentScreen;
+                diagonalGlassGui.choose(12);
+                diagonalGlassGui.actionPerformed(new net.minecraft.client.gui.GuiButton(105,0,0,"Size"));
+                diagonalGlassGui.actionPerformed(new net.minecraft.client.gui.GuiButton(112,0,0,"Join"));
+                state=4101;holdTicks=30;break;
+            case 4101:
+                if(--holdTicks>0)break;
+                TileEntityAnimatedScreenSelector checkedGlass=(TileEntityAnimatedScreenSelector)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(3,0,3));
+                if(checkedGlass.getGlassShade()!=12 || !checkedGlass.isDiagonalFullWidth() || checkedGlass.getDiagonalJoin()!=1)throw new IllegalStateException("diagonal glass GUI changes did not reach the server");
+                saveNamed(mc,"programmable_diagonal_glass_gui");
+                System.out.println("[vandorlabs][reprolab] diagonal-joins-live PASS");state=999;mc.shutdown();break;
             case 4004: CanopyRuntimeChecks.tick(mc,outDir);break;
             case 4003: ProgrammableArmorRuntimeChecks.tick(mc,outDir);break;
             case 4002: MovedDoorRuntimeChecks.tick(mc,outDir);break;
@@ -704,7 +720,16 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
-                    if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")){System.out.println("[vandorlabs][reprolab] diagonal-joins-live PASS");state=999;mc.shutdown();return;}
+                    if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")){
+                        BlockPos at=CONSOLE.add(3,0,3);mc.gameSettings.hideGUI=false;
+                        mc.world.setBlockState(at,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);
+                        mc.getIntegratedServer().addScheduledTask(()->{
+                            World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(at,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);
+                            EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                            player.connection.setPlayerLocation(at.getX(),at.getY(),at.getZ()-2,0,0);
+                            player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,w,at.getX(),at.getY(),at.getZ());
+                        });state=4100;holdTicks=30;return;
+                    }
                     if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_catalog_") || System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_close_control_")) {
                         state=999;mc.shutdown();return;
                     }
@@ -2061,7 +2086,11 @@ public class ReproLab {
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
         world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(tileDrops));
-        if(shot.startsWith("gallery_join_matrix_")) {
+        if(shot.startsWith("gallery_join_mixed_")) {
+            DiagonalJoinGallery.mixed(world,GALLERY_X,GALLERY_Y,shot.endsWith("glass"));
+        } else if(shot.startsWith("gallery_glass_finishes_")) {
+            DiagonalJoinGallery.finishes(world,GALLERY_X,GALLERY_Y,Integer.parseInt(shot.substring("gallery_glass_finishes_".length())));
+        } else if(shot.startsWith("gallery_join_matrix_")) {
             DiagonalJoinGallery.build(world,shot,GALLERY_X,GALLERY_Y);
         } else if(shot.startsWith("gallery_signal_")) {
             SignalControlAnimationCapture.build(world,shot);
@@ -2736,6 +2765,7 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        if(s.name.startsWith("gallery_join_") || s.name.startsWith("gallery_glass_finishes_"))mc.gameSettings.clouds=0;
         cameraChangedAtFrame=renderedFrames;
         EntityPlayer p = mc.player;
         EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()

@@ -29,8 +29,10 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     public static final PropertyInteger DEPTH = PropertyInteger.create("depth", 0, 2);
     private final Shape shape;
 
-    public BlockProgrammableWall(String name, Shape shape) {
-        super(name);
+    public BlockProgrammableWall(String name, Shape shape) {this(name,shape,net.minecraft.block.material.Material.IRON);}
+
+    protected BlockProgrammableWall(String name,Shape shape,net.minecraft.block.material.Material material) {
+        super(name,material);
         this.shape = shape;
         setDefaultState(blockState.getBaseState()
                 .withProperty(FACING, EnumFacing.NORTH)
@@ -71,7 +73,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         EnumFacing facing=state.getValue(FACING);
         double expected=com.vandorlabs.render.DiagonalWallGeometry.near(geometry(world,pos),
                 state.getValue(INVERTED),upper?1:0);
-        double best=Double.NaN, distance=.5000001;
+        double best=Double.NaN, distance=.1250001;
         for (int offset=-1;offset<=1;offset++) {
             BlockPos next=pos.offset(upper?EnumFacing.UP:EnumFacing.DOWN).offset(facing.getOpposite(),offset);
             if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
@@ -145,6 +147,9 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             EnumFacing side, float hitX, float hitY, float hitZ, int meta,
             EntityLivingBase placer, net.minecraft.util.EnumHand hand) {
         if (!isDiagonalShape()) {
+            BlockPos support=pos.offset(side.getOpposite());IBlockState clicked=world.getBlockState(support);
+            int joinedDepth=PanelJoins.placementDepth(world,support,clicked,side);
+            if(joinedDepth>=0)return getDefaultState().withProperty(FACING,clicked.getValue(FACING)).withProperty(DEPTH,joinedDepth);
             EnumFacing facing = placementFacing(world, pos, side, placer);
             return getDefaultState().withProperty(FACING, facing)
                     .withProperty(DEPTH, PanelDepth.fromHit(facing, hitX, hitZ));
@@ -152,7 +157,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         BlockPos support = pos.offset(side.getOpposite());
         int mode = placementGeometry(world, support, placer.getHeldItem(hand));
         IBlockState clicked = world.getBlockState(support);
-        if (PanelJoins.diagonal(clicked) && geometry(world, support) == mode) {
+        if ((clicked.getBlock() == this || (!isPortholeShape() && PanelJoins.diagonal(clicked))) && geometry(world, support) == mode) {
             // Prefer a continuation of the clicked surface, in either direction.
             for (EnumFacing facing : new EnumFacing[]{clicked.getValue(FACING),
                     clicked.getValue(FACING).getOpposite()}) {
@@ -192,7 +197,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
         if (tag != null) return tag.getBoolean("DiagonalHalfHeight") ? 2
                 : tag.getBoolean("DiagonalFullWidth") ? 1 : 0;
-        return PanelJoins.diagonal(world.getBlockState(support)) ? geometry(world, support) : 0;
+        IBlockState clicked = world.getBlockState(support);
+        return clicked.getBlock() == this || (!isPortholeShape() && PanelJoins.diagonal(clicked)) ? geometry(world, support) : 0;
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -425,7 +431,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
             return false;
         IBlockState neighbor = world.getBlockState(neighborPos);
-        if (isDiagonalShape()? !PanelJoins.diagonal(neighbor):neighbor.getBlock()!=this) return false;
+        if (neighbor.getBlock() != this && !(isDiagonalShape() && !isPortholeShape() && PanelJoins.diagonal(neighbor))) return false;
         EnumFacing facing = state.getValue(FACING);
         EnumFacing neighborFacing = neighbor.getValue(FACING);
         if (isDiagonalShape())

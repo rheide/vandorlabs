@@ -1,5 +1,5 @@
 {
-  "parent": "vandorlabs:item/low/space_glass_low",
+  "parent": "vandorlabs:item/low/space_glass_medium",
   "textures": {
     "pane": "vandorlabs:blocks/programmable_glass/low/blue"
   },

@@ -61,8 +61,8 @@ public final class DiagonalWallState {
         corner=((BlockProgrammableWall)state.getBlock()).corner(state,world,pos);
         lowerEnd=BlockProgrammableWall.flatEnd(state,world,pos,false)*16;
         upperEnd=BlockProgrammableWall.flatEnd(state,world,pos,true)*16;
-        hideLower=DiagonalPanelGeometry.coveredEnd(world,pos,state,false);
-        hideUpper=DiagonalPanelGeometry.coveredEnd(world,pos,state,true);
+        hideLower=DiagonalPanelGeometry.coveredEnd(world,pos,state,false) || !Double.isNaN(lowerEnd);
+        hideUpper=DiagonalPanelGeometry.coveredEnd(world,pos,state,true) || !Double.isNaN(upperEnd);
         clip=DiagonalNeighbourBounds.local(world,pos,state,BlockProgrammableWall.geometry(world,pos),16);
         light=world.getCombinedLight(pos,0);
     }

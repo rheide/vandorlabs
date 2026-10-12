@@ -17,7 +17,7 @@ for diagonal in (False, True):
                 model = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/models/item/programmable_diagonal_glass.json').read_text())
                 model['textures'] = {k: texture for k in model['textures']}
             else:
-                model = {'parent': f'vandorlabs:item/{detail}/space_glass_{detail}', 'textures': {'pane': texture}}
+                model = {'parent': f'vandorlabs:item/{detail}/space_glass_medium', 'textures': {'pane': texture}}
             model['display'] = {'gui': {'rotation': [30, 225, 0], 'scale': [.6, .6, .6]}}
             (out / f'glass_{"diagonal" if diagonal else "regular"}_{size}_{name}.json').write_text(json.dumps(model, indent=2) + '\n')
 print('Generated 57 padded glass item variants')

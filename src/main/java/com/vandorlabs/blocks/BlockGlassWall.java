@@ -90,6 +90,16 @@ public class BlockGlassWall extends Block {
         // Extending a panel inherits its plane, including placement against
         // the narrow edge or above/below the existing panel.
         IBlockState clicked = world.getBlockState(pos.offset(side.getOpposite()));
+        if(this instanceof BlockProgrammableGlass){
+            int joinedDepth=PanelJoins.placementDepth(world,pos.offset(side.getOpposite()),clicked,side);
+            if(joinedDepth>=0){
+                EnumFacing facing=clicked.getValue(BlockProgrammableWall.FACING);
+                boolean rotated=facing.getAxis()==EnumFacing.Axis.X;
+                // Glass uses a canonical north/east plane; mirror opposite-facing ends.
+                if(facing!=(rotated?EnumFacing.EAST:EnumFacing.NORTH))joinedDepth=joinedDepth==1?2:joinedDepth==2?1:0;
+                return getDefaultState().withProperty(ROTATED,rotated).withProperty(DEPTH,joinedDepth);
+            }
+        }
         boolean rotated;
         if (canConnectTo(clicked.getBlock())) rotated = clicked.getValue(ROTATED);
         else rotated = placer.getHorizontalFacing().getAxis() == EnumFacing.Axis.X;

@@ -563,3 +563,21 @@ task testTwinPowerLevers(type: Exec) {
 check.dependsOn testTwinPowerLevers
 
 tasks.withType(JavaCompile) { options.encoding = "UTF-8" }
+
+// Focused join checks share compilation but execute only the wall/glass matrix.
+task testDiagonalJoins(type: JavaExec) {
+    group = 'verification'
+    description = 'Check diagonal wall/glass join topologies and placement-order stability'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'diagonal-joins'
+    workingDir = file("$buildDir/diagonal-join-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
+task testGlassFinishes(type: Exec) {
+    group = 'verification'
+    commandLine pythonExecutable, 'tools/test_glass_finishes.py'
+}
+check.dependsOn testGlassFinishes

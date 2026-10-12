@@ -181,7 +181,7 @@ public class GuiProgrammableWall extends GuiContainer {
         return Math.round((float) thumbTop * maximum / travel);
     }
 
-    private void choose(int choice) {
+    void choose(int choice) {
         selected = choice;
         if(diagonalGlass){shade=choice;tile.setGlassShade(choice);sendPortholeSettings();return;}
         if(faceTarget==-2) {

@@ -507,3 +507,19 @@ Large, and old Large selections migrate to it. Physical door sizes are unchanged
 The shared Screens/Controls pickers show one design row, with Bare/Framed as an
 independent variant toggle. See [1.5 asset sizes and migration](docs/performance/1.5-assets.md)
 for texture dimensions, generated model compaction and validation.
+
+### Programmable glass and diagonal joins
+
+Programmable Glass and Programmable Diagonal Glass use a scrollable finish picker with thumbnails. Clear, Soft Cyan, and Soft Dark Grey retain their existing saved shade IDs. The 16 vanilla dye colors provide stronger translucent finishes.
+
+Diagonal glass shares the wall's tall/half-width, full-width/full-height, and wide/half-height geometry. Compatible diagonal wall and glass panels join across materials. Full-height slopes align their ends with nearby regular wall/glass planes, and perpendicular regular panels can connect through a fixed-width corner arm. Glass with Join disabled remains separate.
+
+The diagonal wall/glass dialog offers Auto, Straight, four corner presets, four T presets, and two cross presets. Front/back and left/right refer to the block's local facing. Presets apply to the tall and full-height shapes; shallow panels retain their automatic slope joins. Overrides persist with the block and copy through the Duplifier.
+
+### Focused diagonal join checks
+
+Run `python testclient/test_diagonal_joins.py` for the wall/glass geometry matrix, or add `--live` for the live client screenshot matrix and placement-order image comparison. Add `--force` to rerun unchanged inputs. Successful runs save separate geometry/live fingerprints under `build/diagonal-join-checks/`; unrelated source changes do not rerun this family. The wrapper uses the configured local Java 8 build runtime.
+
+The direct Gradle task is `testDiagonalJoins`; the direct Windows client command is `python testclient/run_windows.py --focus diagonal-joins`. These commands always run their selected checks.
+
+The geometry matrix covers all 36 front/back corner and straight-tail combinations for both diagonal materials, all four facings, both slope directions, and all three sizes. Fixed orientations are inserted in rotating orders and checked again after removing/replacing each member; emitted quads and collision boxes must match. Separate checks cover mixed flat/diagonal endpoint alignment, finish persistence, and join overrides. The visual matrix captures 72 arrangements in forward/reverse order, with the three sizes side by side, and generates labeled contact sheets. Image comparison detects placement-order changes; it does not replace visual review of the intended shape.

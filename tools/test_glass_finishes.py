@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Check glass finish opacity/color and projected padding for every inventory variant."""
+import json
+import math
+from pathlib import Path
+from PIL import Image, ImageStat
+
+ROOT = Path(__file__).resolve().parents[1]
+TEXTURES = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/programmable_glass'
+for detail in ('low', 'medium'):
+    clear = Image.open(TEXTURES / detail / 'clear.png').convert('RGBA')
+    for file in (TEXTURES / detail).glob('*.png'):
+        data = Image.open(file).convert('RGBA')
+        assert data.size == clear.size
+        if file.stem not in ('clear', 'soft_cyan', 'soft_dark_grey'):
+            assert data.getchannel('A').getextrema()[0] >= 76, file.name
+            assert ImageStat.Stat(data.getchannel('A')).mean[0] > ImageStat.Stat(clear.getchannel('A')).mean[0] + 40, file.name
+    assert len(list((TEXTURES / detail).glob('*.png'))) == 19
+
+
+def load(ref):
+    path = ref.removeprefix('vandorlabs:') + '.json'
+    for base in ('src/main/resources', 'generated-resources'):
+        file = ROOT / base / 'assets/vandorlabs/models' / path
+        if file.exists():
+            model = json.loads(file.read_text())
+            if model.get('parent', '').startswith('vandorlabs:'):
+                parent = load(model['parent'])
+                parent.update(model)
+                return parent
+            return model
+    raise AssertionError(ref)
+
+
+def rotate(point, axis, angle):
+    a, b = {'x': (1, 2), 'y': (2, 0), 'z': (0, 1)}[axis]
+    result = point.copy()
+    c, s = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+    result[a], result[b] = c * point[a] - s * point[b], s * point[a] + c * point[b]
+    return result
+
+
+count = 0
+for file in (ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured').glob('glass_*.json'):
+    model = load('vandorlabs:item/configured/' + file.stem)
+    display = model['display']['gui']
+    for element in model['elements']:
+        for x in (element['from'][0], element['to'][0]):
+            for y in (element['from'][1], element['to'][1]):
+                for z in (element['from'][2], element['to'][2]):
+                    point = [float(x), float(y), float(z)]
+                    if 'rotation' in element:
+                        rotation = element['rotation']
+                        origin = rotation['origin']
+                        point = rotate([a-b for a,b in zip(point,origin)], rotation['axis'], rotation['angle'])
+                        point = [a+b for a,b in zip(point,origin)]
+                    point = [(a-8)*b for a,b in zip(point,display['scale'])]
+                    for axis, angle in reversed(list(zip('xyz', display['rotation']))):
+                        point = rotate(point, axis, angle)
+                    assert abs(point[0]) <= 7.5 and abs(point[1]) <= 7.5, (file.name, point)
+    count += 1
+assert count == 57, count
+print('PASS: 38 glass textures, stronger color opacity, and projected slot padding for all 57 item variants')

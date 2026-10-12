@@ -55,8 +55,10 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
         this(NAME);
     }
 
-    protected BlockAnimatedScreenSelector(String name) {
-        super(Material.IRON);
+    protected BlockAnimatedScreenSelector(String name) {this(name,Material.IRON);}
+
+    protected BlockAnimatedScreenSelector(String name,Material material) {
+        super(material);
         setRegistryName(name);
         setUnlocalizedName(VandorLabs.MODID + "." + name);
         setCreativeTab(VandorLabs.VANDOR_LABS_TAB);

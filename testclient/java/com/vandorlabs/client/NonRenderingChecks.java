@@ -31,6 +31,8 @@ public final class NonRenderingChecks {
         ModBlocks.PROGRAMMABLE_BLOCK = new BlockProgrammableBlock();
         ModBlocks.PROGRAMMABLE_SLAB = new BlockProgrammableSlab();
         ModBlocks.PROGRAMMABLE_DIAGONAL_WALL = new BlockProgrammableWall("programmable_diagonal_wall", BlockProgrammableWall.Shape.DIAGONAL);
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_glass"));
+        if(args.length>0 && args[0].equals("diagonal-joins")){DiagonalJoinMatrixChecks.run();return;}
         DiagonalSurfaceChecks.run();
         placement();
         contiguous();
@@ -38,6 +40,7 @@ public final class NonRenderingChecks {
         TrapdoorChecks.run();
         DiagonalTrapdoorChecks.run();
         DiagonalAlignmentChecks.run();
+        DiagonalJoinMatrixChecks.run();
         LandingGearFootprintChecks.run();
         SurfaceLayoutChecks.run();
         DoorMaterialChecks.run();

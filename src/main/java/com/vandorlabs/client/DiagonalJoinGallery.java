@@ -10,7 +10,33 @@ import java.util.*;
 
 /** Three slope sizes per screenshot; names record the complete neighbor arrangement. */
 final class DiagonalJoinGallery {
+    static void mixed(World world,int x,int y,boolean glass){
+        world.setWorldTime(6000);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
+        for(int mode=0;mode<2;mode++)for(int material=0;material<2;material++){
+            BlockPos root=new BlockPos(x-7+mode*5+material*10,y+1,-18);
+            BlockProgrammableWall block=(BlockProgrammableWall)(glass?ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS:ModBlocks.PROGRAMMABLE_DIAGONAL_WALL);
+            world.setBlockState(root,block.getDefaultState(),3);
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(root);tile.setDiagonalGeometry(mode,0);if(glass)tile.setGlassShade(12);
+            IBlockState flat=material==0?ModBlocks.PROGRAMMABLE_WALL.getDefaultState():net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:programmable_glass")).getDefaultState();
+            int upper=PanelJoins.placementDepth(world,root,block.getDefaultState(),EnumFacing.UP),lower=PanelJoins.placementDepth(world,root,block.getDefaultState(),EnumFacing.DOWN);
+            net.minecraft.block.properties.PropertyInteger depthProperty=material==0?BlockProgrammableWall.DEPTH:BlockGlassWall.DEPTH;
+            world.setBlockState(root.up(),flat.withProperty(depthProperty,upper),3);world.setBlockState(root.down(),flat.withProperty(depthProperty,lower),3);
+            IBlockState arm=material==0?flat.withProperty(BlockProgrammableWall.FACING,EnumFacing.EAST):flat.withProperty(BlockGlassWall.ROTATED,true);
+            world.setBlockState(root.north(),arm,3);
+        }
+    }
+    static void finishes(World world,int x,int y,int row){
+        for(int i=0;i<4;i++){
+            int shade=row*4+i;if(!GlassTextures.valid(shade))break;
+            BlockPos root=new BlockPos(x-6+i*4,y+1,-18);
+            world.setBlockState(root,net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:programmable_glass")).getDefaultState(),3);
+            ((TileEntityProgrammableGlass)world.getTileEntity(root)).setShade(shade);
+            world.setBlockState(root.east(),ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(root.east());tile.setGlassShade(shade);tile.setDiagonalGeometry(1,0);
+        }
+    }
     static void build(World world,String name,int x,int y){
+        world.setWorldTime(6000);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
         String[] parts=name.substring("gallery_join_matrix_".length()).split("_");
         boolean glass=parts[0].equals("glass"),reverse=parts[4].equals("reverse");
         int front=Integer.parseInt(parts[1]),back=Integer.parseInt(parts[2]),tails=Integer.parseInt(parts[3]);

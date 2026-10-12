@@ -30,7 +30,8 @@ def main():
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies'])
+    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins'])
+    parser.add_argument('--shot-prefix', help='Restrict visual scenes to one named family or arrangement')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -96,6 +97,8 @@ def main():
             if not source.name.startswith('vandorlabs-'):
                 shutil.copyfile(source,game/'mods'/source.name)
     properties = ['-Dvandorlabs.reprolab='+str(output), '-Djava.library.path='+str(natives)]
+    if args.shot_prefix:
+        properties.append('-Dvandorlabs.reproShotPrefix='+args.shot_prefix)
     if args.vehicle_preservation_mods:
         properties.append('-Dvandorlabs.foreignVehicleChecks=true')
     if args.world_copy:
@@ -103,7 +106,7 @@ def main():
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly'}[args.focus]+'=true')
         if args.focus=='vehicle-render':properties.append('-Dvandorlabs.vehicleRenderChecksOnly=true')
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
     if args.role:
@@ -158,7 +161,7 @@ def main():
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS'}[args.focus]
+        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
         if args.focus == 'pilot-seat':
