@@ -28,3 +28,9 @@ configured channels combine using the strongest signal.
 
 The [Thruster Lever demonstration](version-1.6.md#lever-controlling-a-thruster)
 shows brightness at 0, 5, 10 and 15, with particles starting at level 10.
+
+## Activation polarity
+
+Choose **Activate on: ON** (default) or **Activate on: OFF** in the propulsion settings. With configured channels, ON activates when local redstone or any configured channel is powered; OFF activates when all those inputs are unpowered. Channel 0 retains manual activation when signal brightness is disabled. Connected assemblies share the selected polarity.
+
+With signal brightness enabled, OFF uses `15 - incoming level` for brightness and particle-threshold comparison. For example, an OFF-configured thruster at incoming level 0 has brightness 15; at incoming level 15 it is dark. Existing saved blocks default to ON.

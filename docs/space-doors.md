@@ -108,15 +108,14 @@ trimming its geometry.
 Their supplied one-model-pixel border width stays unchanged. Sliding models have no hinges.
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
-Programmable Glass is one creative block that selects Small, Medium, or Large
-detail in its right-click menu.
+Programmable Glass selects Small or Large detail, a glass finish, Mild / Normal / Strong tint, and Bare / Framed edges in its settings menu. Programmable Diagonal Glass exposes the same tint and frame choices alongside its diagonal geometry controls.
 The glass shade is selected independently for each size. The thick inside faces
 use the former Observation Glass metal texture; the front and rear keep their
-original finish. Both frame and shimmer use the selected native tier. Mixed
+original finish. Bare hides the perimeter frame. Both frame and shimmer use the selected native tier. Mixed
 tiers still connect, including inner corners and
 both wall orientations. Its metal frame is solid-pass geometry. A non-ticking
 tile draws the repeating glass in the translucent pass with the pack's faint
-alpha preserved. Glass has a per-visible-block render call but no server ticks.
+reflection alpha preserved and a separate selectable color overlay. Glass has a per-visible-block render call but no server ticks. Existing glass defaults to Normal tint, with both regular and diagonal glass Framed; saved explicit Bare choices remain Bare.
 Doors reuse existing animation and channel handling; pairing examines only
 immediate neighbors, with no world scans or added ticking logic.
 

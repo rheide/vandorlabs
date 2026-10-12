@@ -60,6 +60,7 @@ still applies settings to the crafted item.
 | --- | --- |
 | Wall Texture | Programmable block, slab, stairs, wall, porthole, trapdoor, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
 | Redstone Channel | Every configured block that implements `RedstoneChannelMember`. |
+| Frame / Glass Tint | Regular and diagonal programmable glass preserve Bare / Framed and Mild / Normal / Strong independently. |
 | Join | Portholes, Programmable Glass, Programmable Light, connected propulsion blocks, and Luxury/Military Seats. |
 | Trigger | Programmable Light, Door and Trapdoor support Disabled, Redstone ON, and Redstone OFF. Displays support Disabled and Redstone ON. |
 | Active | Manual light state, propulsion state, and switch or lever latch. |

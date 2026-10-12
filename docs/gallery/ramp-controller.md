@@ -47,6 +47,42 @@ Ramp direction can be north, east, south, or west. Small treads make a smoother 
 | Up | ![Upward smooth ramp](../images/gallery/ramp-controller/up-smooth.gif) | ![Upward stair ramp](../images/gallery/ramp-controller/up-stairs.gif) |
 | Down | ![Downward smooth ramp](../images/gallery/ramp-controller/down-smooth.gif) | ![Downward stair ramp](../images/gallery/ramp-controller/down-stairs.gif) |
 
+## Escalators
+
+**Escalator Up** and **Escalator Down** keep the ramp extended. Redstone starts
+and stops the moving steps; it never retracts the staircase in these modes.
+Each recording starts with stopped stairs, turns redstone on, then turns it off
+again with the staircase still in place.
+
+| Uphill | Downhill |
+| --- | --- |
+| ![Escalator moving uphill, then stopping while extended](../images/gallery/ramp-controller/escalator-up.gif) | ![Escalator moving downhill, then stopping while extended](../images/gallery/ramp-controller/escalator-down.gif) |
+
+For the examples, build a matching slab platform **2 blocks wide × 4 long**.
+Select **8 px** treads, **Ramp height: 3**, **Medium** speed and **Trigger:
+redstone ON**, then choose the uphill or downhill mode. Place a lever beside the
+controller or use a virtual channel to switch movement. Stand on the steps to
+ride; you can walk or jump off. Choose trigger OFF for stairs that run while
+unpowered. Negative heights are supported; Up always means uphill.
+
+Escalators need a rectangular platform and at least two treads.
+Choose **Linear**, **Curve In**, or **Curve Out** interpolation for the height profile.
+Set **Ramp height: 0** for a horizontal moving walkway: Escalator Up moves forward and Escalator Down moves backward relative to Ramp direction. Mode names stay the same at every height. The selected source texture scrolls across the top without additional stripe markings.
+
+| Horizontal walkway | Curve In escalator |
+| --- | --- |
+| ![Horizontal escalator with scrolling source texture](../images/gallery/ramp-controller/walkway.gif) | ![Escalator using Curve In interpolation](../images/gallery/ramp-controller/escalator-curve-in.gif) |
+
+For a walkway, use a 2×4 slab platform, height 0, 8 px treads and Medium speed. For a curved escalator, use height 3 and select Curve In or Curve Out.
+
+With no player within 32 blocks they stay
+asleep; running stairs stop once all players are beyond 40 blocks. Nearby players
+wake them within one second if redstone permits movement. Sleeping stairs stay
+walkable and perform no recurring controller block updates or rider scans.
+
+See the [escalator reference](../landing-ramps.md#escalators) for speeds,
+clearance, obstruction handling and save/load behavior.
+
 ## Troubleshooting
 
 The source and travel space must be clear, loaded, and within world height. Clearance accounts for slab thickness: top slabs can move down `2.5` blocks to meet the ground without overlapping it; bottom slabs can likewise meet a ceiling after moving up `2.5` blocks. Chests, machines, unbreakable blocks, and non-cuboid shapes cannot be selected. An obstruction stops motion without replacing the obstructing block. Remove it, then change a setting or toggle the signal to retry. The dialog retains validation errors. Breaking the controller restores its saved source blocks.

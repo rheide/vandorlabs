@@ -15,7 +15,8 @@ evaluates the redstone signal using the new settings:
 - **Mode:** ramp (treads travel different distances), filled ramp (the same
   tread slope with material filling from each tread's starting position),
   lift (whole platform translates), or extend (whole platform expands to its
-  destination).
+  destination). **Escalator Up** and **Escalator Down** keep a deployed slope
+  and circulate its treads uphill or downhill instead.
 - **Start / off offset** and **End / on offset:** values from -16 to +16 in half-block steps,
   measured from the original platform along the chosen travel axis. Up/down
   uses positive for up and negative for down. Use the sliders; valid edits apply
@@ -59,6 +60,59 @@ with their own platform during transport, but foreign ceilings still stop them.
 Vertical player transport uses support updates. Sideways travel uses server
 position updates. Moving collision surfaces tolerate a
 small difference between player and platform update times at block boundaries.
+
+## Escalators
+
+Choose **Escalator Up** or **Escalator Down** in the same controller. The platform
+forms a ramp at **Ramp height**, even with redstone off. Redstone controls only
+tread circulation: switching it off freezes the steps and leaves a solid,
+walkable staircase. Switching it on continues from the frozen positions.
+**Trigger: redstone OFF** reverses the signal requirement. Physical redstone
+and virtual channels both work.
+
+Escalators use vertical travel with Linear, Curve In or Curve Out height profiles.
+Start/off offset and sideways travel are disabled in these modes. Height 0
+creates a horizontal walkway; the selected platform must be rectangular with at least two treads.
+The existing 8×16-block selection limit and source material/slab rules apply.
+Different programmable finishes are retained when Match textures is Off;
+finishes travel with their source treads. Up and Down refer to physical height,
+so a negative Ramp height reverses the horizontal direction of uphill travel.
+
+| Example | Settings | Result |
+| --- | --- | --- |
+| Entrance escalator | 2 blocks wide × 4 long, height `3`, 8 px, Escalator Up, trigger ON | Redstone ON carries riders toward the raised end; OFF leaves the stairs extended. |
+| Exit escalator | Same platform, Escalator Down | Riders travel from the raised end back toward the original platform level. |
+| Descending passage | Height `-3`, Escalator Up | Riders travel back from the lower end toward the original level. |
+| Normally running stairs | Escalator Up, trigger OFF | Movement runs without power and stops when power is applied. |
+
+**Base speed** sets both formation speed and the belt's horizontal speed:
+Fast is 1 block/second, Medium is 0.5, and Slow is 0.25. Riders follow the
+vertical slope as well. Standing players and other supported entities are
+carried explicitly; walking and camera direction remain available, and jumping
+or flying detaches a rider. Riders leave at the destination rather than wrapping
+to the other end. Landing floors and side walls clip a rider's movement without
+disabling the belt. A ceiling that blocks upward rider motion stops the escalator;
+clear it and toggle the signal or edit a setting to retry.
+
+Movement also requires a nonspectator player within **32 blocks** of the ramp.
+A running escalator sleeps after every player is beyond **40 blocks**, avoiding
+repeated switching at the boundary. A shared proximity check runs once per
+second, so sleep/wake can take up to one second. Sleeping freezes the belt phase
+and stops recurring controller block ticks, rider scans and motion packets.
+Mobs and items alone do not keep it awake. The ramp stays extended, and player
+proximity does not override an inactive redstone signal. No chunks are forced
+loaded for operation.
+
+The running belt keeps a fixed set of protected cells covering every tread
+position, rather than replacing blocks each tick. These cells may include empty
+space immediately around the moving steps; that clearance remains protected
+while the escalator is stopped. Clients animate from a synchronized clock;
+state changes synchronize the belt and occupied riders receive support updates.
+The extended ramp and committed phase survive saving/loading, without catching
+up missed rider movement after unloading. Removing the controller restores the
+original platform. Changing settings uses the same guarded reset as other modes.
+
+See the [uphill and downhill live animations](gallery/ramp-controller.md#escalators).
 
 ## Automatic selection and restoration
 
@@ -115,7 +169,7 @@ do not cause repeated scans while the signal remains unchanged.
 
 Neither the controller nor its internal cells implement a ticking tile entity.
 Neighbor/redstone events and configuration saves initiate movement. Scheduled
-block updates exist only while animating or for one-shot load recovery; idle
+block updates exist only while deploying/retracting or running an awake escalator or for one-shot load recovery; idle
 controllers do not poll. Chunk-load notifications recover orphan cells or
 resume interrupted animations. Removal loads the bounded platform chunks so
 restoration is complete.
@@ -138,3 +192,21 @@ across lengths, heights, modes, anchors, speed settings and reversals.
 selection, both signal polarities, obstruction rollback, partial-install fault
 injection, preserved source variants, automatic cleanup, persistence and lift
 passengers, and captures the four mode/direction combinations and settings dialog.
+
+For focused Windows validation and the four escalator recordings:
+
+```powershell
+python testclient/run_windows.py --focus ramps
+python testclient/encode_animations.py testclient/render-run.RUN
+```
+
+The focused run exercises existing ramp contracts and escalator rider, redstone,
+proximity, persistence and restoration behavior, then records only the four
+escalator scenes. It does not regenerate the full gallery. `testRamps` also checks
+continuous tread coverage and loop boundaries for every allowed tread size.
+
+Horizontal escalators use height 0 and retain the Escalator Up/Down mode names: Up moves forward and Down moves backward relative to Ramp direction. Their original top texture scrolls with the belt; no extra stripes are drawn. Linear, Curve In and Curve Out use the same height-profile interpolation as ordinary ramps, with constant horizontal belt speed. At height 0 all three profiles are flat. Rider movement clips against landing floors and side walls; side contact holds the rider without disabling circulation. A blocked upward lift still stops to avoid pushing a rider through a ceiling. Walking against an uphill belt can step onto the fixed lower landing using normal player step height and head clearance.
+
+An escalator can assemble into a ground vehicle while extended. The transfer journals and removes its generated sections, carries the original source blocks and settings, and pauses its belt. Parking restores the source blocks and redeploys the escalator. Cancelled assembly restores the original expanded geometry and recovery data.
+
+Dropped items are supported belt passengers. While supported, the belt cancels their sideways push-out drift and sends position updates to nearby tracking clients; items keep normal gravity, pickup and despawn behavior. Item transport adds tracking traffic only while items are being carried.

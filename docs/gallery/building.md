@@ -148,9 +148,15 @@ Hull includes Light Alloy, Dark Gunmetal, and Midnight Satin. Padding includes S
 
 Clear, Pale Cyan, and Smoked Cockpit Glass are separate transparent blocks. Their recipes use eight matching vanilla glass blocks and one Industrial Alloy Ingot to make nine blocks: ordinary glass for Clear, cyan stained glass for Pale Cyan, and gray stained glass for Smoked.
 
-Programmable Glass provides selectable frame detail and glass shade in one block. Its texture detail can be Small, Medium, or Large, with the shade chosen independently for each size.
+Programmable Glass provides Small or Large detail, nineteen glass finishes, a Mild / Normal / Strong tint selector, and Bare / Framed edges. Programmable Diagonal Glass has the same finish, tint and frame choices alongside its slope, size, fill and joining controls.
+
+For example, use Cyan with Mild tint and Bare edges for a clear cockpit canopy, or Dark Grey with Strong tint and Framed edges for a screened observation wall. Tint changes the color overlay opacity while retaining the reflection artwork. Strong uses a 40.5% color overlay for dye colors (Normal 30%, Mild 12%), so the stronger finish remains translucent. Clear has no color overlay, so its three strengths look identical.
+
+Existing regular glass remains Framed with Normal tint; diagonal glass defaults to Framed with Normal tint; saved explicit Bare choices remain Bare. Creative pick-block, configured crafting and the Duplifier preserve both choices. The Duplifier's Frame and Glass Tint options can be disabled independently. These appearance settings do not tick or generate continuing world updates. Diagonal Glass inventory icons always use a visible perimeter frame so clear glass remains recognizable; the placed block still honors Bare / Framed. Joined Bare panels omit their shared internal edge faces to avoid overlapping transparent seams.
 
 ![Programmable Glass settings](../images/gallery/building/glass-config.png)
 
 Diagonal placement follows the clicked edge; the dialog can reverse the slope.
 See [placement, joining and recipes](version-1.1.md#diagonal-building-blocks).
+
+Diagonal glass uses the regular glass one-pixel perimeter artwork on its sloping faces. Perpendicular joined panes suppress internal edge frames; a middle pane joining two bends ends between its connecting arms rather than protruding past the corner. Both regular diagonal walls and glass use the same corrected corner geometry.

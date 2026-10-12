@@ -36,14 +36,14 @@ python3 testclient/encode_animations.py testclient/door-animation.RUN
 python3 testclient/encode_animations.py testclient/door-animation.RUN/door-rotating
 ```
 
-Each clip must contain synchronized closed/open/closed states, visible intermediate geometry in both transitions, a returned endpoint and a motion footprint inside the crop. The encoder checks dimensions, frame count, exact loop duration and loop settings, and writes timing/size results plus a decoded contact sheet for review. Doors and trapdoors have 2.6-second cycles; ramps have 4.6-second cycles. Signal demonstrations have six-second cycles, with real control clicks selecting 0, 5, 10, 15 and then 0; recorded consumer levels and particle thresholds are checked at each setting. See [capture validation](animation-validation.md) for the current results.
+Deployment clips must contain synchronized closed/open/closed states, visible intermediate geometry in both transitions, a returned endpoint and a motion footprint inside the crop. The encoder checks dimensions, frame count, exact loop duration and loop settings, and writes timing/size results plus a decoded contact sheet for review. Escalator clips instead verify stopped/running/stopped movement while retaining the extended staircase. Windows can capture only these two scenes with `python testclient/run_windows.py --focus ramps`. Doors and trapdoors have 2.6-second cycles; ramps have 4.6-second cycles. Signal demonstrations have six-second cycles, with real control clicks selecting 0, 5, 10, 15 and then 0; recorded consumer levels and particle thresholds are checked at each setting. See [capture validation](animation-validation.md) for the current results.
 
 ## Motion index
 
 - [Programmable Door](gallery/doors.md): four motions.
 - [Programmable Trapdoor](gallery/programmable-trapdoor.md): three in-block motions, two next-block motions and opposing mounts.
 - [Programmable Diagonal Trapdoor](gallery/programmable-diagonal-trapdoor.md): three motions, all three shapes, rectangular/staggered/partial groups and joined slope orientations.
-- [Programmable Ramp](gallery/ramp-controller.md): four modes and four slope/tread examples.
+- [Programmable Ramp](gallery/ramp-controller.md): four deployment modes, four slope/tread examples, and uphill/downhill escalators controlled by redstone.
 - [Version 1.6 signal levels](gallery/version-1.6.md): linked levers, sliders, thrusters and lights.
 - [Version 1.3 highlights](gallery/version-1.3.md): selected animations with the new features.
 
