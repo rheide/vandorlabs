@@ -331,5 +331,61 @@
       18,
       14
     ]
+  },
+  {
+    "id": "ramp-escalator-up",
+    "shot": "gallery_ramp_escalator_up",
+    "kind": "ramp",
+    "escalator": true,
+    "output": "ramp-controller/escalator-up.gif",
+    "camera": [
+      168,
+      8.38,
+      -27,
+      40,
+      18
+    ]
+  },
+  {
+    "id": "ramp-escalator-down",
+    "shot": "gallery_ramp_escalator_down",
+    "kind": "ramp",
+    "escalator": true,
+    "output": "ramp-controller/escalator-down.gif",
+    "camera": [
+      168,
+      8.38,
+      -27,
+      40,
+      18
+    ]
+  },
+  {
+    "id": "ramp-escalator-walkway",
+    "shot": "gallery_ramp_escalator_walkway",
+    "kind": "ramp",
+    "escalator": true,
+    "output": "ramp-controller/walkway.gif",
+    "camera": [
+      168,
+      8.38,
+      -27,
+      40,
+      18
+    ]
+  },
+  {
+    "id": "ramp-escalator-curve-in",
+    "shot": "gallery_ramp_escalator_curve_in_up",
+    "kind": "ramp",
+    "escalator": true,
+    "output": "ramp-controller/escalator-curve-in.gif",
+    "camera": [
+      168,
+      8.38,
+      -27,
+      40,
+      18
+    ]
   }
 ]

@@ -296,6 +296,9 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         refreshConnectedModels(world, pos, state.getValue(FACING));
     }
 
+    public void configureInversionAssembly(World world,BlockPos pos,boolean inverted){
+        for(TileEntityRedstoneLight tile:assemblyTiles(world,pos,world.getBlockState(pos)))tile.setRedstoneInverted(inverted);
+    }
     public void configureSignalAssembly(World world,BlockPos pos,boolean enabled,int threshold){
         for(TileEntityRedstoneLight tile:assemblyTiles(world,pos,world.getBlockState(pos)))tile.configureSignalBrightness(enabled,threshold);
     }

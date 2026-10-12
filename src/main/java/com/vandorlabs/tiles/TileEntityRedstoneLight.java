@@ -31,11 +31,15 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private boolean channelSignal;
     private int channelLevel;
     private boolean signalBrightness;
+    private boolean redstoneInverted;
+    public boolean isRedstoneInverted(){return redstoneInverted;}
+    public void setRedstoneInverted(boolean value){if(redstoneInverted==value)return;redstoneInverted=value;markDirty();updateVisualState();sync();}
+    public int getActivationLevel(){return redstoneInverted?15-getSignalLevel():getSignalLevel();}
     private int particleThreshold=8;
     public boolean isSignalBrightness(){return signalBrightness;}
     public int getParticleThreshold(){return particleThreshold;}
     public int getSignalLevel(){return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
-    public int getBrightness(){int configured=signalBrightness?getSignalLevel():15;
+    public int getBrightness(){int configured=signalBrightness?getActivationLevel():15;
         return world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).propulsionBrightness(pos,configured):configured;}
     public void configureSignalBrightness(boolean enabled,int threshold){
         signalBrightness=enabled;particleThreshold=Math.max(0,Math.min(15,threshold));markDirty();updateVisualState();sync();
@@ -95,7 +99,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return channel; }
     public boolean isChannelSignalPowered() { return channelSignal; }
-    public boolean isParticleStreamSelected() { return particleLevel>0 && (!signalBrightness || getSignalLevel()>=particleThreshold); }
+    public boolean isParticleStreamSelected() { return particleLevel>0 && (!signalBrightness || getActivationLevel()>=particleThreshold); }
     public int getManualMode() { return manualOn ? (particleLevel>0 ? 2 : 1) : 0; }
 
     public void setParticleStreamSelected(boolean selected) {
@@ -196,7 +200,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         IBlockState state = world.getBlockState(pos);
         if (!isLamp(state)) return;
         boolean powered = com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos) || channelSignal;
-        boolean shouldBeOn = signalBrightness?getSignalLevel()>0:channel > 0 ? powered : manualOn;
+        boolean shouldBeOn = signalBrightness?getActivationLevel()>0:channel > 0 ? powered != redstoneInverted : manualOn;
         if (state.getBlock() instanceof BlockPropulsionLight) {
             if (state.getValue(BlockPropulsionLight.POWERED) != shouldBeOn) {
                 world.setBlockState(pos,
@@ -345,7 +349,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);ChannelData.write(tag,channels);
+        super.writeToNBT(tag);tag.setBoolean("RedstoneInverted",redstoneInverted);ChannelData.write(tag,channels);
         // Chunk packets serialize while iterating the chunk's live tile map. Reading
         // redstone here can lazily create a neighbour's missing tile in old saves.
         // Persist the selection; power-dependent activation belongs to runtime only.
@@ -367,7 +371,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         channels=ChannelData.read(tag,channel);channel=channels.first();
         channelSignal=data.signal;
         channelLevel=tag.hasKey("ChannelLevel",3)?Math.max(0,Math.min(15,tag.getInteger("ChannelLevel"))):channelSignal?15:0;
-        signalBrightness=tag.getBoolean("SignalBrightness");particleThreshold=tag.hasKey("ParticleThreshold",3)?Math.max(0,Math.min(15,tag.getInteger("ParticleThreshold"))):8;
+        redstoneInverted=tag.getBoolean("RedstoneInverted");signalBrightness=tag.getBoolean("SignalBrightness");particleThreshold=tag.hasKey("ParticleThreshold",3)?Math.max(0,Math.min(15,tag.getInteger("ParticleThreshold"))):8;
         manualOn=data.manualOn;
         particleLevel=tag.hasKey("ParticleLevel",3)?Math.max(0,Math.min(3,tag.getInteger("ParticleLevel"))):data.particleStream?1:0;
         initialized=data.initialized;

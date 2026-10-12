@@ -51,6 +51,43 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public double startOffsetValue() { return startHalfSteps/2D; }
     public double endOffsetValue() { return endHalfSteps/2D; }
     public int interpolation;
+    /** 0 = ordinary modes, 1 = uphill, 2 = downhill. */
+    public int escalator;
+    private boolean beltRunning, beltRequested;
+    private double beltDistance;
+    private long beltTick;
+    public boolean isEscalatorRunning() { return beltRunning; }
+    public boolean isEscalatorRequested() { return beltRequested; }
+    public double beltDistance(double partial) {
+        if(world!=null && !world.isRemote)return beltDistance;
+        return beltDistance+(beltRunning?(world.getTotalWorldTime()-beltTick+partial)*beltDelta():0);
+    }
+    private double beltDelta() {
+        return com.vandorlabs.ramp.EscalatorGeometry.rate(speed)*(endOffsetValue()>=0?1:-1)*(escalator==1?1:-1);
+    }
+    public void refreshEscalatorActivity() {
+        if(world==null || world.isRemote || escalator==0 || !attached() || moving || error)return;
+        boolean near=false;
+        double radius=beltRunning?40:32;
+        for(EntityPlayer player:world.playerEntities) {
+            if(player.isDead || player.isSpectator())continue;
+            for(BlockPos source:sources) {
+                double along=source.getX()*facing.getFrontOffsetX()+source.getZ()*facing.getFrontOffsetZ()-minAlong;
+                double y=source.getY()+high+endOffsetValue()*along/Math.max(1,length-1);
+                double dx=player.posX-source.getX()-.5,dy=player.posY-y,dz=player.posZ-source.getZ()-.5;
+                if(dx*dx+dy*dy+dz*dz<=radius*radius){near=true;break;}
+            }
+            if(near)break;
+        }
+        setBeltRunning(beltRequested && near);
+    }
+    private void setBeltRunning(boolean run) {
+        if(run==beltRunning)return;
+        // Commit only processed motion; elapsed unloaded time never transports riders.
+        beltRunning=run;beltTick=world.getTotalWorldTime();lastStepTick=beltTick;
+        status=run?"Escalator running":beltRequested?"Escalator sleeping (no nearby player)":"Escalator stopped";
+        syncParts();sync();if(run)schedule();
+    }
     public boolean matchTextures=true;
     // Keep the legacy magnitude/sign fields for old saves and integrations.
     public int endOffset() { return top?-drop:drop; }
@@ -136,8 +173,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private void sync() {
         markDirty();
         IBlockState s=world.getBlockState(pos);
-        if (s.getBlock() instanceof BlockRampController && s.getValue(BlockRampController.ACTIVE)!=open) {
-            s=s.withProperty(BlockRampController.ACTIVE,open);
+        if (s.getBlock() instanceof BlockRampController && s.getValue(BlockRampController.ACTIVE)!=(escalator!=0?beltRequested:open)) {
+            s=s.withProperty(BlockRampController.ACTIVE,escalator!=0?beltRequested:open);
             world.setBlockState(pos,s,2);
         }
         world.notifyBlockUpdate(pos,s,s,2);
@@ -191,6 +228,15 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public boolean configureHalfOffsets(EntityPlayer player,int startHalf,int endHalf,int pixels,
             boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
             boolean extend,int selectedSpeed,boolean matchTextures,boolean connectedCopy,int interpolation) {
+        return configureHalfOffsets(player,startHalf,endHalf,pixels,powerOn,slower,lift,direction,travel,
+                extend,selectedSpeed,matchTextures,connectedCopy,interpolation,0);
+    }
+    public boolean configureHalfOffsets(EntityPlayer player,int startHalf,int endHalf,int pixels,
+            boolean powerOn,boolean slower,boolean lift,EnumFacing direction,int travel,
+            boolean extend,int selectedSpeed,boolean matchTextures,boolean connectedCopy,int interpolation,int escalator) {
+        if(escalator<0 || escalator>2)return fail("Choose a valid escalator mode");
+        if(escalator!=0 && (travel!=RampGeometry.VERTICAL || lift || extend))
+            return fail("Escalators need vertical travel without lift or fill");
         if(interpolation<0 || interpolation>2) return fail("Choose a valid interpolation style");
         boolean copyAllowed = connectedCopy && player != null && world.isBlockLoaded(pos)
                 && world.getTileEntity(pos)==this
@@ -218,19 +264,23 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if (!carryRiders(pose(0),0,false,true)) return hold("Reset blocked: a rider is obstructed");
             if (!recover(false)) return false;
         }
+        if(escalator!=0)startHalf=0;
         startHalfSteps=startHalf; endHalfSteps=endHalf;
         startOffset=startHalf/2; drop=(Math.abs(endHalf)+1)/2;
         treadPixels=pixels; segments=ControllerPlatform.treadCount(pixels); top=endHalf<0;
         activateOnPower=powerOn; slow=slower; elevator=lift;
         travelAxis=travel; extendSegments=extend; elevator=lift;
         speed=selectedSpeed; slow=speed==2;
-        this.matchTextures=matchTextures;this.interpolation=interpolation;
+        this.matchTextures=matchTextures;this.interpolation=interpolation;this.escalator=escalator;
+        beltDistance=0;beltRunning=false;beltRequested=false;
+        if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
         configuredFacing=direction;
         owner=player.getUniqueID();
         sync();
         return evaluateSignal(true);
     }
     public void updatePower() {
+        if(com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
         if (!world.isRemote && !changing) {
             RedstoneChannels.inputChanged(this);
             evaluateSignal(false);
@@ -240,12 +290,24 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         boolean desired=(hasLocalRedstoneSignal() || channelSignal)==activateOnPower;
         if (!force && signalKnown && desired==latched) return !error;
         signalKnown=true; latched=desired;
+        if(escalator!=0) {
+            beltRequested=desired;
+            if(!attached() || moving) { boolean ok=request(true); if(!ok)return false; }
+            String problem=validateParts();
+            if(problem!=null){setBeltRunning(false);return fail(problem);}
+            if(!moving && !reserveStep(1,1))return false;
+            error=false;
+            refreshEscalatorActivity();
+            if(!beltRunning){status=desired?"Escalator sleeping (no nearby player)":"Escalator stopped";sync();}
+            return true;
+        }
         return request(desired);
     }
 
     /** Public for the block event adapter and live-world regression checks. */
     public boolean request(boolean deploy) {
         if (world.isRemote || changing) return false;
+        if(escalator!=0)deploy=true;
         if (recoveryPending && !recover(false)) return false;
         if (!attached()) {
             if (!deploy && startHalfSteps==0) { open=false; moving=false; error=false; status="Retracted"; sync(); return true; }
@@ -297,6 +359,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         });
         if (!loaded[0]) return fail("Load all platform chunks first");
         if (platform.isEmpty()) return fail("No platform blocks found");
+        if(escalator!=0) {
+            int x0=Integer.MAX_VALUE,x1=Integer.MIN_VALUE,z0=x0,z1=x1;
+            for(ControllerPlatform.Cell c:platform){x0=Math.min(x0,c.x);x1=Math.max(x1,c.x);z0=Math.min(z0,c.z);z1=Math.max(z1,c.z);}
+            int span=(facing.getAxis()==EnumFacing.Axis.X?x1-x0:z1-z0)+1;
+            if(platform.size()!=(x1-x0+1)*(z1-z0+1) || span*16<=treadPixels)
+                return fail("Escalators need a rectangular platform with at least two treads");
+        }
         EntityPlayer actor=owner==null?null:world.getPlayerEntityByUUID(owner);
         int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE;
         List<BlockPos> selected=new ArrayList<>();
@@ -372,10 +441,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         te.setHalfOffsets(startHalfSteps,endHalfSteps);
         te.interpolation=interpolation; te.length=length; te.drop=drop; te.segments=segments; te.top=top; te.elevator=elevator;
         te.low=low; te.high=high; te.travelAxis=travelAxis; te.extendSegments=extendSegments;
-        te.speed=speed;
+        te.speed=speed;te.escalator=escalator;te.beltDistance=beltDistance;te.beltTick=beltTick;te.beltRunning=beltRunning;
         te.origins.clear();
         te.sourceTileTags.clear();
-        for (BlockPos source:sources) if (intersects(source,p,0,1)) {
+        for (BlockPos source:sources) if (escalator!=0?(facing.getAxis()==EnumFacing.Axis.X?source.getZ()==p.getZ():source.getX()==p.getX()):intersects(source,p,0,1)) {
             te.origins.add(source);
             NBTTagCompound saved=sourceTiles.get(source);
             if (saved!=null) te.sourceTileTags.put(source,saved.copy());
@@ -400,6 +469,17 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
 
     private RampGeometry.Box treadBox(BlockPos source,int row,int step,double from,double to) {
+        if(escalator!=0 && from>=1 && to>=1) {
+            double pitch=treadPixels/16D;
+            RampGeometry.Box fp=RampGeometry.footprintPixels(rampDirection(facing),step,treadPixels,low,high);
+            double a=com.vandorlabs.ramp.EscalatorGeometry.height(row+step*pitch,length,treadPixels,endOffsetValue(),interpolation);
+            double b=com.vandorlabs.ramp.EscalatorGeometry.height(row+(step+1)*pitch,length,treadPixels,endOffsetValue(),interpolation);
+            double extra=row==length-1 && step==ControllerPlatform.treadCount(treadPixels)-1?0:pitch;
+            return new RampGeometry.Box(source.getX()+fp.minX+(facing.getFrontOffsetX()<0?-extra:0),source.getY()+low+Math.min(a,b),
+                    source.getZ()+fp.minZ+(facing.getFrontOffsetZ()<0?-extra:0),
+                    source.getX()+fp.maxX+(facing.getFrontOffsetX()>0?extra:0),source.getY()+high+Math.max(a,b),
+                    source.getZ()+fp.maxZ+(facing.getFrontOffsetZ()>0?extra:0));
+        }
         return RampGeometry.movingTread(rampDirection(facing),source.getX(),source.getY(),source.getZ(),
                 low,high,row,length,startOffsetValue(),endOffsetValue(),treadPixels,step,from,to,elevator,
                 travelAxis,extendSegments,speed==0,interpolation);
@@ -476,7 +556,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if (!world.isBlockLoaded(p)) continue;
                 TileEntity te=world.getTileEntity(p);
                 if (te instanceof TileEntityControlledRamp && ((TileEntityControlledRamp)te).belongsTo(pos))
-                    ((TileEntityControlledRamp)te).move(open,startPose,startTick,duration,moving);
+                    { TileEntityControlledRamp part=(TileEntityControlledRamp)te;
+                    part.escalator=escalator;part.beltDistance=beltDistance;part.beltTick=beltTick;part.beltRunning=beltRunning;
+                    part.move(open,startPose,startTick,duration,moving); }
         }
     }
     private void schedule() { world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1); }
@@ -484,14 +566,18 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         super.onLoad();
         if (!world.isRemote) {
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
+            if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
             needsLoadCheck=true;
             schedule();
         }
     }
-    @Override public void invalidate() { RedstoneChannels.unregister(this); super.invalidate(); }
-    @Override public void onChunkUnload() { RedstoneChannels.unregister(this); super.onChunkUnload(); }
+    @Override public void invalidate() { RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
+    @Override public void onChunkUnload() {
+        if(world!=null && !world.isRemote && beltRunning){beltRunning=false;beltTick=world.getTotalWorldTime();syncParts();}
+        RedstoneChannels.unregister(this);com.vandorlabs.ramp.EscalatorActivity.unregister(this);super.onChunkUnload();
+    }
     public void resumeAfterLoad() {
-        if (!world.isRemote && (moving || recoveryPending || legacy)) schedule();
+        if (!world.isRemote && (moving || beltRunning || escalator!=0 || recoveryPending || legacy)) schedule();
     }
     /** A scheduled tick is animation work or a one-shot load recovery, never idle polling. */
     public void scheduledTick() {
@@ -504,9 +590,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             needsLoadCheck=false;
             if (legacy) { legacy=false; if (!recover(false)) return; }
             if (recoveryPending && !recover(false)) return;
+            if(escalator!=0){signalKnown=false;syncParts();}
             updatePower();
             // One-shot migration also releases old full-column locks on stationary saves.
             if (attached() && !moving) releaseExcept(occupied(startPose,startPose));
+        }
+        if(escalator!=0 && !moving && attached()) {
+            if(beltRunning)stepEscalator();
+            return;
         }
         if (!moving || !attached()) return;
         if (world.getTotalWorldTime()==lastStepTick) { schedule(); return; }
@@ -533,14 +624,171 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 // Completion is a single validation boundary, not a per-tick world scan.
                 String problem=validateParts();
                 if (problem!=null) { recover(false); fail(problem); }
-                else { error=false; status=open?"Deployed":"Retracted"; sync(); }
+                else {
+                    if(escalator!=0 && !reserveStep(1,1)){sync();return;}
+                    error=false; status=open?"Deployed":"Retracted"; sync();
+                    if(escalator!=0)refreshEscalatorActivity();
+                }
             }
         } else schedule();
     }
+    private boolean resetEscalatorRiders() {
+        java.util.List<AxisAlignedBB> surfaces=beltSurfaces(beltDistance);
+        AxisAlignedBB bounds=surfaces.get(0);for(AxisAlignedBB b:surfaces)bounds=bounds.union(b);
+        Map<Entity,Double> targets=new LinkedHashMap<>();
+        for(Entity entity:world.getEntitiesWithinAABB(Entity.class,bounds.grow(0,.6,0))) {
+            if(entity.isDead || entity.noClip || entity.isRiding() || entity.motionY>.1
+                    || entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.isFlying)continue;
+            AxisAlignedBB body=entity.getEntityBoundingBox();
+            if(Math.abs(body.minY-support(surfaces,body))>(entity instanceof EntityPlayer?.5:.15))continue;
+            double target=sources.get(0).getY()+high,delta=target-body.minY,allowed=delta;
+            for(AxisAlignedBB obstacle:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.expand(0,delta,0).grow(1e-7)))
+                allowed=obstacle.calculateYOffset(body,allowed);
+            if(Math.abs(allowed-delta)>1e-6)return false;
+            targets.put(entity,target);
+        }
+        for(Map.Entry<Entity,Double> entry:targets.entrySet()) {
+            Entity entity=entry.getKey();double before=entity.getEntityBoundingBox().minY;
+            entity.setPosition(entity.posX,entity.posY+entry.getValue()-before,entity.posZ);
+            entity.onGround=true;entity.motionY=0;entity.fallDistance=0;
+            if(entity instanceof net.minecraft.entity.player.EntityPlayerMP)
+                com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(new com.vandorlabs.network.MessagePlatformMotion((EntityPlayer)entity,before,entry.getValue()),
+                        (net.minecraft.entity.player.EntityPlayerMP)entity);
+        }
+        return true;
+    }
+
+    private java.util.List<AxisAlignedBB> beltSurfaces(double distance) {
+        java.util.List<AxisAlignedBB> result=new ArrayList<>();
+        for(BlockPos source:sources) {
+            int row=source.getX()*facing.getFrontOffsetX()+source.getZ()*facing.getFrontOffsetZ()-minAlong;
+            for(RampGeometry.Box b:com.vandorlabs.ramp.EscalatorGeometry.treads(rampDirection(facing),
+                    source.getX(),source.getY(),source.getZ(),low,high,row,length,treadPixels,endOffsetValue(),distance,interpolation))
+                result.add(new AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
+        }
+        return result;
+    }
+    private static double support(java.util.List<AxisAlignedBB> surfaces,AxisAlignedBB body) {
+        double top=Double.NEGATIVE_INFINITY;
+        for(AxisAlignedBB b:surfaces)
+            if(body.maxX>b.minX+1e-7 && body.minX<b.maxX-1e-7 && body.maxZ>b.minZ+1e-7 && body.minZ<b.maxZ-1e-7)
+                top=Math.max(top,b.maxY);
+        return top;
+    }
+    private final Map<java.util.UUID,net.minecraft.util.math.Vec3d> beltRiderPositions=new java.util.HashMap<>();
+    /** Let a walking passenger step onto a fixed lower landing before belt correction. */
+    private double lowerLandingStep(Entity entity,AxisAlignedBB body,AxisAlignedBB platform,double delta){
+        if(!(entity instanceof EntityPlayer) || Math.abs(endOffsetValue())<1e-7)return 0;
+        net.minecraft.util.math.Vec3d previous=beltRiderPositions.get(entity.getUniqueID());
+        double walkX=previous==null?entity.motionX:entity.posX-previous.x,walkZ=previous==null?entity.motionZ:entity.posZ-previous.z;
+        if((walkX*facing.getFrontOffsetX()+walkZ*facing.getFrontOffsetZ())*delta>=-1e-6)return 0;
+        int sign=endOffsetValue()>=0?-1:1;double x=facing.getFrontOffsetX()*sign,z=facing.getFrontOffsetZ()*sign;
+        double edge=x<0?body.getCenter().x-platform.minX:x>0?platform.maxX-body.getCenter().x:z<0?body.getCenter().z-platform.minZ:platform.maxZ-body.getCenter().z;
+        if(edge>.65)return 0;
+        AxisAlignedBB toward=body.offset(x*.2,0,z*.2);double top=body.minY;
+        for(AxisAlignedBB box:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.expand(x*.4,entity.stepHeight,z*.4)))
+            if(toward.maxX>box.minX && toward.minX<box.maxX && toward.maxZ>box.minZ && toward.minZ<box.maxZ && box.maxY>top && box.maxY-body.minY<=entity.stepHeight+1e-7)top=box.maxY;
+        double rise=top-body.minY;if(rise<=0)return 0;
+        for(AxisAlignedBB obstacle:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.offset(0,rise,0)))if(obstacle.intersects(body.offset(0,rise,0)))return 0;
+        return rise;
+    }
+    private void stepEscalator() {
+        long now=world.getTotalWorldTime();
+        if(now==lastStepTick){schedule();return;}
+        // Do not catch up unloaded or stalled world time in one large displacement.
+        for(BlockPos cell:cells)if(!world.isBlockLoaded(cell)){
+            setBeltRunning(false);fail("Escalator waits for platform chunks");return;
+        }
+        double delta=beltDelta(),next=beltDistance+delta;
+        BlockPos first=sources.get(0);
+        AxisAlignedBB bounds=new AxisAlignedBB(first);
+        for(BlockPos source:sources)bounds=bounds.union(new AxisAlignedBB(source));
+        bounds=new AxisAlignedBB(bounds.minX,first.getY()+low+Math.min(0,endOffsetValue()),bounds.minZ,
+                bounds.maxX,first.getY()+high+Math.max(0,endOffsetValue())+.6,bounds.maxZ);
+        java.util.List<Entity> riders=new ArrayList<>(world.getEntitiesWithinAABB(Entity.class,bounds));
+        riders.removeIf(entity->entity.isDead || entity.noClip && !(entity instanceof net.minecraft.entity.item.EntityItem) || entity.isRiding() || entity.motionY>.1
+                && !(entity instanceof net.minecraft.entity.item.EntityItem && beltRiderPositions.containsKey(entity.getUniqueID()))
+                || entity instanceof EntityPlayer && (((EntityPlayer)entity).capabilities.isFlying || ((EntityPlayer)entity).isSpectator()));
+        // Empty escalators advance only their clock; no tread geometry or obstacle scans.
+        java.util.List<AxisAlignedBB> before=riders.isEmpty()?java.util.Collections.emptyList():beltSurfaces(beltDistance);
+        java.util.List<AxisAlignedBB> after=riders.isEmpty()?java.util.Collections.emptyList():beltSurfaces(next);
+        Map<Entity,double[]> moves=new LinkedHashMap<>();
+        Set<java.util.UUID> present=new HashSet<>();for(Entity rider:riders)present.add(rider.getUniqueID());beltRiderPositions.keySet().retainAll(present);
+        for(Entity entity:riders) {
+            AxisAlignedBB body=entity.getEntityBoundingBox();
+            if(entity instanceof net.minecraft.entity.item.EntityItem) {
+                // Vanilla item ticks run after scheduled block ticks. Their
+                // push-out impulse can dislodge an item from the tread between
+                // belt updates, especially when a fine riser crosses its box.
+                // Restore the last supported belt pose before advancing it;
+                // never acquire airborne/thrown items through this path.
+                net.minecraft.util.math.Vec3d previous=beltRiderPositions.get(entity.getUniqueID());
+                if(previous!=null && entity.getPositionVector().squareDistanceTo(previous)<.5625) {
+                    AxisAlignedBB anchored=body.offset(previous.x-entity.posX,previous.y-entity.posY,previous.z-entity.posZ);
+                    boolean clear=true;
+                    for(AxisAlignedBB obstacle:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,anchored))if(obstacle.intersects(anchored)){clear=false;break;}
+                    if(clear && Math.abs(anchored.minY-support(before,anchored))<1e-6) {
+                        entity.setPosition(previous.x,previous.y,previous.z);
+                        body=anchored;entity.motionX=entity.motionY=entity.motionZ=0;
+                    }
+                }
+            }
+            double top=support(before,body);
+            if(Math.abs(body.minY-top)>(entity instanceof EntityPlayer?.5:.15)) {
+                beltRiderPositions.remove(entity.getUniqueID());continue;
+            }
+            double dx=facing.getFrontOffsetX()*delta,dz=facing.getFrontOffsetZ()*delta;
+            double nextTop=support(after,body.offset(dx,0,dz));
+            // Once beyond the destination, detach rather than following a wrapped tread.
+            double dy=Double.isInfinite(nextTop)?0:nextTop-body.minY;
+            double landingStep=lowerLandingStep(entity,body,bounds,delta);if(landingStep>0)dy=Math.max(dy,landingStep);
+            AxisAlignedBB moved=body;
+            double ax=dx,ay=dy,az=dz;
+            java.util.List<AxisAlignedBB> obstacles=com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(
+                    world,pos,entity,body.expand(dx,dy,dz).grow(1e-7));
+            for(AxisAlignedBB obstacle:obstacles)ay=obstacle.calculateYOffset(moved,ay);
+            // At an entrance/exit a rider can straddle a stationary landing and
+            // a lower moving tread. Keep the landing's support rather than
+            // treating its floor as an obstruction to the whole escalator.
+            if(dy<0 && ay>dy)dy=ay;
+            moved=moved.offset(0,ay,0);
+            for(AxisAlignedBB obstacle:obstacles)ax=obstacle.calculateXOffset(moved,ax);
+            moved=moved.offset(ax,0,0);
+            for(AxisAlignedBB obstacle:obstacles)az=obstacle.calculateZOffset(moved,az);
+            if(Math.abs(ay-dy)>1e-6) {
+                setBeltRunning(false);fail("Escalator stopped: a rider is obstructed");return;
+            }
+            // A side wall or the lip of a landing can hold one passenger back.
+            // Use the collision-clipped motion without disabling the belt.
+            moves.put(entity,new double[]{ax,ay,az});
+        }
+        for(Map.Entry<Entity,double[]> entry:moves.entrySet()) {
+            Entity entity=entry.getKey();double[] d=entry.getValue();
+            double feet=entity.getEntityBoundingBox().minY;
+            com.vandorlabs.network.MessagePlatformMotion packet=entity instanceof net.minecraft.entity.player.EntityPlayerMP
+                    ?new com.vandorlabs.network.MessagePlatformMotion((EntityPlayer)entity,feet,feet+d[1]).withHorizontal(d[0],d[2]):null;
+            entity.setPosition(entity.posX+d[0],entity.posY+d[1],entity.posZ+d[2]);
+            entity.onGround=true;entity.fallDistance=0;entity.motionY=0;
+            beltRiderPositions.put(entity.getUniqueID(),entity.getPositionVector());
+            if(entity instanceof net.minecraft.entity.item.EntityItem) {
+                // Item push-out impulses and its slow normal tracking interval
+                // otherwise fight the belt, especially on fine moving treads.
+                entity.noClip=false;entity.motionX=entity.motionZ=0;
+                if(world instanceof net.minecraft.world.WorldServer)((net.minecraft.world.WorldServer)world).getEntityTracker().sendToTracking(entity,
+                        new net.minecraft.network.play.server.SPacketEntityTeleport(entity));
+                entity.velocityChanged=true;
+            }
+            if(packet!=null)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)entity);
+        }
+        beltDistance=com.vandorlabs.ramp.EscalatorGeometry.phase(next,length*16);
+        beltTick=now;lastStepTick=now;markDirty();schedule();
+    }
+
     private boolean carryRiders(double previous,double current) {
         return carryRiders(previous,current,false,false);
     }
     private boolean carryRiders(double previous,double current,boolean fromOriginal,boolean toOriginal) {
+        if(escalator!=0 && !moving && toOriginal)return resetEscalatorRiders();
         if (extendSegments) return true;
         if (travelAxis!=RampGeometry.VERTICAL) return carrySideways(previous,current);
         Map<Entity,Double> targets=new LinkedHashMap<>();
@@ -649,7 +897,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if (forceLoad) world.getChunkFromBlockCoords(source);
             else if (!world.isBlockLoaded(source)) { recoveryPending=true; return fail("Recovery waits for platform chunks"); }
         }
-        changing=true; recoveryPending=true; moving=false;
+        changing=true; recoveryPending=true; moving=false;beltRunning=false;
         List<BlockPos> changed=new ArrayList<>();
         try {
             for (BlockPos p:new HashSet<>(cells)) {
@@ -680,7 +928,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         Block.spawnAsEntity(world,pos.up(),new ItemStack(saved.getBlock(),1,saved.getBlock().damageDropped(saved)));
                 }
             }
-            sources.clear(); cells.clear(); sourceTiles.clear();
+            sources.clear(); cells.clear(); sourceTiles.clear();beltRiderPositions.clear();
             recoveryPending=false; open=false; startPose=0;
             error=false; status="Retracted"; sync();
             for (BlockPos p:changed) world.notifyNeighborsOfStateChange(p,world.getBlockState(p).getBlock(),false);
@@ -688,7 +936,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         } finally { changing=false; markDirty(); }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);ChannelData.write(tag,channels);
+        super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
+        tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
+        tag.setBoolean("EscalatorRequested",beltRequested);
+        tag.setBoolean("EscalatorRunning",beltRunning);tag.setLong("EscalatorTick",beltTick);ChannelData.write(tag,channels);
         new RampControllerData(SaveSchema.Ramp.CONTROLLER_VERSION,drop,segments,status,
                 top,activateOnPower,slow,elevator,error,open,moving,startPose,startTick,
                 lastStepTick,duration,length,minAlong,facing.getHorizontalIndex(),
@@ -722,7 +973,12 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     @Override public void readFromNBT(NBTTagCompound tag) {
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
-        super.readFromNBT(tag);interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
+        super.readFromNBT(tag);
+        escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
+        beltDistance=tag.getDouble("EscalatorDistance");if(!Double.isFinite(beltDistance))beltDistance=0;
+        beltRequested=tag.getBoolean("EscalatorRequested");beltRunning=world!=null && world.isRemote && tag.getBoolean("EscalatorRunning");
+        beltTick=tag.getLong("EscalatorTick");
+        interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
         RampControllerData data=RampControllerData.read(new NbtPrimitiveData(tag));
         legacy=data.savedVersion<2; drop=data.drop; segments=data.segments;
         top=data.top; activateOnPower=data.activateOnPower; slow=data.slow;

@@ -1,0 +1,5 @@
+{
+  "conditions": {
+    "block_enabled": "com.vandorlabs.config.BlockEnabledCondition"
+  }
+}

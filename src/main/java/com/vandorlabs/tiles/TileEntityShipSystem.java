@@ -27,6 +27,12 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     public BlockPos consoleOwner;
     public int consoleWidth = 1, consoleIndex, consoleDepth = 1, consoleRow;
     private boolean firstTick = true;
+    private boolean animated;
+    public boolean isAnimated() { return animated; }
+    public void setAnimated(boolean value) {
+        if (world == null || world.isRemote) return;
+        for (TileEntityShipSystem member : configurationMembers()) { member.animated=value; member.sync(); }
+    }
     public int getRedstoneMode() { return redstoneMode; }
     @Override public TileEntity channelTile() { return this; }
     @Override public ChannelList getRedstoneChannels() { return channels; }
@@ -129,10 +135,17 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     public BlockShipSystem block() {
         return world != null && world.getBlockState(pos).getBlock() instanceof BlockShipSystem ? (BlockShipSystem)world.getBlockState(pos).getBlock() : null;
     }
+    private BlockShipSystem cachedModelBlock;
+    private int cachedModelWidth,cachedModelDepth;
+    private boolean cachedModelActive;
+    private String cachedModel;
     public String model() {
-        BlockShipSystem b = block();
-        if (b.isConsole()) return b.kind + "_" + consoleWidth + (consoleDepth > 1 ? "_depth_" + consoleDepth : "") + (visuallyActive() ? "_on" : "_off");
-        return b.hasPowerStates() ? b.kind + (visuallyActive() ? "_on" : "_off") : b.itemModel();
+        BlockShipSystem b=block();boolean on=visuallyActive();
+        if(b==cachedModelBlock && cachedModel!=null && cachedModelWidth==consoleWidth && cachedModelDepth==consoleDepth && cachedModelActive==on)return cachedModel;
+        cachedModelBlock=b;cachedModelWidth=consoleWidth;cachedModelDepth=consoleDepth;cachedModelActive=on;
+        if(b.isConsole())cachedModel=b.kind+"_"+consoleWidth+(consoleDepth>1?"_depth_"+consoleDepth:"")+(on?"_on":"_off");
+        else cachedModel=b.hasPowerStates()?b.kind+(on?"_on":"_off"):b.itemModel();
+        return cachedModel;
     }
     public boolean visuallyActive() {
         if(world instanceof com.vandorlabs.vehicle.VehicleWorld && com.vandorlabs.vehicle.VehicleWorld.isPropulsion(block()))
@@ -215,6 +228,7 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         n.setInteger("ConsoleDepth", consoleDepth);
         n.setInteger("ConsoleRow", consoleRow);
         n.setBoolean("Active", active);
+        n.setBoolean("Animated", animated);
         n.setInteger("MountFace",mount.getIndex());
         ChannelData.write(n, channels);
         n.setInteger("RedstoneMode", redstoneMode);
@@ -230,6 +244,7 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         consoleDepth = block() != null && block().kind.equals("hadron_console") ? 1 : Math.max(1, Math.min(3, n.getInteger("ConsoleDepth")));
         consoleRow = Math.max(0, Math.min(consoleDepth - 1, n.getInteger("ConsoleRow")));
         active = n.getBoolean("Active");
+        animated = n.getBoolean("Animated");
         mount=n.hasKey("MountFace")?EnumFacing.getFront(Math.max(0,Math.min(5,n.getInteger("MountFace")))):EnumFacing.UP;
         channels = ChannelData.read(n, 0);
         redstoneMode = n.hasKey("RedstoneMode") ? Math.max(DISABLED, Math.min(REDSTONE_OFF, n.getInteger("RedstoneMode"))) : DISABLED;
@@ -239,10 +254,34 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }
     public SPacketUpdateTileEntity getUpdatePacket() { return new SPacketUpdateTileEntity(pos, 0, getUpdateTag()); }
     public void onDataPacket(NetworkManager manager, SPacketUpdateTileEntity packet) { readFromNBT(packet.getNbtCompound()); }
-    public AxisAlignedBB getRenderBoundingBox() {
-        if (block() == null) return new AxisAlignedBB(pos);
-        AxisAlignedBB result = new AxisAlignedBB(pos);
-        for (AxisAlignedBB box : ShipSystemMesh.boxes(model(), facing(), mount, pos)) result = result.union(box);
-        return result;
+    private String geometryModel;
+    private EnumFacing geometryFacing,geometryMount;
+    private BlockPos geometryOwner,geometryPos;
+    private boolean geometryDraws;
+    private java.util.List<AxisAlignedBB> cachedCollision=java.util.Collections.emptyList();
+    private AxisAlignedBB cachedRenderBounds,cachedSelectionBounds,cachedCellBounds;
+    private void geometry() {
+        BlockShipSystem b=block();if(b==null){
+            geometryModel=null;geometryOwner=geometryPos=null;cachedModelBlock=null;cachedModel=null;
+            cachedCollision=java.util.Collections.emptyList();cachedCellBounds=null;
+            cachedRenderBounds=cachedSelectionBounds=new AxisAlignedBB(pos);return;
+        }
+        TileEntityShipSystem base=isAnchor()?this:at(world,anchor);
+        BlockPos owner=base==null?(anchor==null?pos:anchor):base.getPos();
+        String model=base==null?b.itemModel():base.model();
+        if(b.isConsole() && base!=null && base.consoleOwner!=null)owner=base.consoleOwner;
+        EnumFacing facing=facing();boolean drawing=draws();
+        if(model.equals(geometryModel) && facing==geometryFacing && mount==geometryMount && owner.equals(geometryOwner) && pos.equals(geometryPos) && drawing==geometryDraws)return;
+        geometryModel=model;geometryFacing=facing;geometryMount=mount;geometryOwner=owner;geometryPos=pos;geometryDraws=drawing;
+        java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
+        for(AxisAlignedBB box:ShipSystemMesh.cellBoxes(model,facing(),mount,pos.subtract(owner)))boxes.add(box.offset(owner));
+        cachedCollision=java.util.Collections.unmodifiableList(boxes);
+        cachedSelectionBounds=ShipSystemMesh.bounds(model,facing(),mount,owner);
+        cachedRenderBounds=drawing?cachedSelectionBounds:new AxisAlignedBB(pos);
+        cachedCellBounds=null;for(AxisAlignedBB box:boxes)cachedCellBounds=cachedCellBounds==null?box:cachedCellBounds.union(box);
     }
+    public java.util.List<AxisAlignedBB> collisionBoxes() { geometry();return cachedCollision; }
+    public AxisAlignedBB selectionBounds() { geometry();return cachedSelectionBounds; }
+    public AxisAlignedBB cellCollisionBounds() { geometry();return cachedCellBounds; }
+    @Override public AxisAlignedBB getRenderBoundingBox() { geometry();return cachedRenderBounds; }
 }

@@ -66,6 +66,8 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         for(int n=0;n<a.size();n++) {
             VehicleStructure.Cell x=a.get(n),y=b.get(n);if(x==y)continue;
             if(!x.pos.equals(y.pos) || x.state!=y.state)return false;
+            if(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat
+                    && (x.tileData()==null?0:x.tileData().getInteger("PilotHeight"))!=(y.tileData()==null?0:y.tileData().getInteger("PilotHeight")))return false;
             if(!(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat) && !Objects.equals(x.tileData(),y.tileData()))return false;
         }
         return true;

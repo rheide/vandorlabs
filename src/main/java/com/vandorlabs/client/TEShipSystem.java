@@ -19,6 +19,7 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
         CanopyMesh.Face source;
         Vec3d[] v;
         double distance;
+        Vec3d normal;
     }
 
     @Override
@@ -32,30 +33,14 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
             float alpha) {
         if (tile.block() == null || !tile.draws()) return;
         com.vandorlabs.shipsystems.MountFrame frame=tile.frame();
-        List<DrawFace> opaque = new ArrayList<>(), glass = new ArrayList<>(), emissive = new ArrayList<>();
-        Vec3d camera =
-                new Vec3d(
-                        rendererDispatcher.entityX - tile.getPos().getX(),
-                        rendererDispatcher.entityY - tile.getPos().getY(),
-                        rendererDispatcher.entityZ - tile.getPos().getZ());
-        for (CanopyMesh.Face f : ShipSystemMesh.MODELS.get(tile.model())) {
-            DrawFace draw = new DrawFace();
-            draw.source = f;
-            draw.v = new Vec3d[f.vertices.length];
-            Vec3d center = Vec3d.ZERO;
-            for (int i = 0; i < draw.v.length; i++) {
-                draw.v[i] =
-                        frame.point(f.vertices[i]);
-                center = center.add(draw.v[i]);
-            }
-            draw.distance = center.scale(1D / draw.v.length).squareDistanceTo(camera);
-            String material = f.baseMaterial;
-            boolean glowing = tile.visuallyActive() && (material.equals("cyan") || material.equals("amber") || material.equals("display_on")
-                    || material.startsWith("energy_") && !material.endsWith("_off")
-                    || material.equals("red_light") || material.equals("green_light") || material.equals("hot")
-                    || material.equals("energy") || material.equals("light") || material.equals("display"));
-            (material.equals("glass") ? glass : glowing ? emissive : opaque).add(draw);
-        }
+        String key=tile.model()+":"+tile.facing()+":"+tile.mount;
+        Prepared prepared=CACHE.get(key);
+        net.minecraft.client.renderer.texture.TextureAtlasSprite atlas=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/iron_block");
+        if(atlas!=lastAtlas) { for(Prepared old:CACHE.values())old.delete(); CACHE.clear(); lastAtlas=atlas; prepared=null; }
+        if(prepared==null) { prepared=prepare(tile,frame); CACHE.put(key,prepared); }
+        List<DrawFace> glass=prepared.glass;
+        Vec3d camera=new Vec3d(rendererDispatcher.entityX-tile.getPos().getX(),rendererDispatcher.entityY-tile.getPos().getY(),rendererDispatcher.entityZ-tile.getPos().getZ());
+        for(DrawFace face:glass)face.distance=face.v[0].squareDistanceTo(camera);
         glass.sort((a, b) -> Double.compare(b.distance, a.distance));
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();
@@ -67,10 +52,17 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
-        draw(opaque);
+        org.lwjgl.opengl.GL11.glCallList(prepared.opaque);
         float boost=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld && com.vandorlabs.vehicle.VehicleWorld.isPropulsion(tile.getBlockType())?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).propulsionLevel/15F:1;
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (light & 65535)+(240-(light & 65535))*boost, (light >>> 16)+(240-(light >>> 16))*boost);
-        draw(emissive);
+        if(tile.isAnimated()) { GlStateManager.enableBlend(); GlStateManager.blendFunc(org.lwjgl.opengl.GL11.GL_CONSTANT_COLOR,org.lwjgl.opengl.GL11.GL_ZERO); }
+        for(int band=0;band<prepared.emissive.length;band++) {
+            float pulse=tile.isAnimated() ? .62F+.38F*(float)Math.sin((tile.getWorld().getTotalWorldTime()+partial)*.14-band*.9) : 1F;
+            org.lwjgl.opengl.GL14.glBlendColor(pulse,pulse,pulse,1F);
+            org.lwjgl.opengl.GL11.glCallList(prepared.emissive[band]);
+        }
+        GlStateManager.disableBlend();
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(
@@ -85,6 +77,30 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
         GlStateManager.popMatrix();
     }
 
+    private static final Map<String,Prepared> CACHE=new HashMap<>();
+    private static net.minecraft.client.renderer.texture.TextureAtlasSprite lastAtlas;
+    private static final class Prepared {
+        int opaque; int[] emissive=new int[8]; List<DrawFace> glass=new ArrayList<>();
+        void delete() { org.lwjgl.opengl.GL11.glDeleteLists(opaque,1); for(int list:emissive)org.lwjgl.opengl.GL11.glDeleteLists(list,1); }
+    }
+    private Prepared prepare(TileEntityShipSystem tile,com.vandorlabs.shipsystems.MountFrame frame) {
+        Prepared p=new Prepared(); List<DrawFace> opaque=new ArrayList<>(); List<List<DrawFace>> bands=new ArrayList<>();
+        for(int i=0;i<8;i++)bands.add(new ArrayList<>());
+        for(CanopyMesh.Face f:ShipSystemMesh.MODELS.get(tile.model())) {
+            DrawFace d=new DrawFace(); d.source=f; d.v=new Vec3d[f.vertices.length];
+            for(int i=0;i<d.v.length;i++)d.v[i]=frame.point(f.vertices[i]);
+            d.normal=d.v[1].subtract(d.v[0]).crossProduct(d.v[2].subtract(d.v[0])).normalize();
+            String m=f.baseMaterial;
+            boolean glow=tile.visuallyActive() && (m.equals("cyan")||m.equals("amber")||m.equals("display_on")||m.startsWith("energy_")&&!m.endsWith("_off")||m.equals("red_light")||m.equals("green_light")||m.equals("hot")||m.equals("energy")||m.equals("light")||m.equals("display"));
+            if(m.equals("glass"))p.glass.add(d);
+            else if(glow)bands.get(Math.floorMod((int)Math.floor(f.vertices[0].x*4),8)).add(d);
+            else opaque.add(d);
+        }
+        p.opaque=compile(opaque); for(int i=0;i<8;i++)p.emissive[i]=compile(bands.get(i)); return p;
+    }
+    private int compile(List<DrawFace> faces) {
+        int id=org.lwjgl.opengl.GL11.glGenLists(1); org.lwjgl.opengl.GL11.glNewList(id,org.lwjgl.opengl.GL11.GL_COMPILE); draw(faces); org.lwjgl.opengl.GL11.glEndList(); return id;
+    }
     private void draw(List<DrawFace> faces) {
         BufferBuilder b = Tessellator.getInstance().getBuffer();
         b.begin(org.lwjgl.opengl.GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
@@ -107,18 +123,14 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
             DrawFace f,
             net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,
             int[] indices) {
-        Vec3d normal =
-                f.v[indices[1]]
-                        .subtract(f.v[indices[0]])
-                        .crossProduct(f.v[indices[2]].subtract(f.v[indices[0]]))
-                        .normalize();
+        Vec3d normal = f.normal;
         for (int index : indices) {
             Vec3d p = f.v[index];
             b.pos(p.x, p.y, p.z)
                     .tex(
                             sprite.getInterpolatedU(f.source.uv[index][0] * 16),
                             sprite.getInterpolatedV((1 - f.source.uv[index][1]) * 16))
-                    .color(1F, 1F, 1F, 1F)
+                    .color(f.source.material.startsWith("rivet/") && f.source.baseMaterial.equals("ivory") ? .49F : 1F, f.source.material.startsWith("rivet/") && f.source.baseMaterial.equals("ivory") ? .62F : 1F, f.source.material.startsWith("rivet/") && f.source.baseMaterial.equals("ivory") ? .65F : 1F, 1F)
                     .normal((float) normal.x, (float) normal.y, (float) normal.z)
                     .endVertex();
         }

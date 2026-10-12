@@ -17,6 +17,9 @@ public final class MessageProgrammableWallShade implements IMessage {
     private int shade;
     private boolean join;
     private int shape;
+    private int tint=1;
+    private boolean framed;
+    private boolean appearance;
 
     public MessageProgrammableWallShade() {}
     public MessageProgrammableWallShade(BlockPos pos, int shade, boolean join, int shape) {
@@ -25,24 +28,28 @@ public final class MessageProgrammableWallShade implements IMessage {
         this.join = join;
         this.shape = shape;
     }
+    public MessageProgrammableWallShade withAppearance(int tint,boolean framed){this.tint=tint;this.framed=framed;appearance=true;return this;}
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
         shade = buf.readInt();
         join = buf.readBoolean();
         shape = buf.readInt();
+        appearance=buf.readableBytes()>=2;
+        if(appearance){tint=buf.readUnsignedByte();framed=buf.readBoolean();}
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         buf.writeInt(shade);
         buf.writeBoolean(join);
         buf.writeInt(shape);
+        if(appearance){buf.writeByte(tint);buf.writeBoolean(framed);}
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableWallShade, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableWallShade msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.pos == null || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
+                if (!com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || msg.shape < 0 || msg.shape > 3
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector)) return;
@@ -59,6 +66,8 @@ public final class MessageProgrammableWallShade implements IMessage {
                         .getBlock()).isPortholeShape() && !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass))) return;
                 if (!(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) && msg.shade>2) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
+                if(msg.appearance && player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)
+                    ((TileEntityAnimatedScreenSelector)raw).setGlassAppearance(msg.tint,msg.framed);
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);
                 ((TileEntityAnimatedScreenSelector) raw).setPortholeShape(msg.shape);
             });

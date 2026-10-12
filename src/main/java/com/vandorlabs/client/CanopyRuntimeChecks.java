@@ -27,7 +27,7 @@ import javax.imageio.ImageIO;
 public final class CanopyRuntimeChecks {
     static final String[] IDS =
             com.vandorlabs.blocks.ModBlocks.BLOCKS.stream()
-                    .filter(b -> b instanceof BlockCanopy)
+                    .filter(b -> b instanceof BlockCanopy && !com.vandorlabs.canopy.CanopyVariants.retired(((BlockCanopy)b).kind))
                     .map(b -> ((BlockCanopy) b).kind)
                     .toArray(String[]::new);
     private static final BlockPos TEST = new BlockPos(8, 100, 8);
@@ -135,7 +135,8 @@ public final class CanopyRuntimeChecks {
                                                         .up(b.kind.contains("hinge") ? 1 : 0);
                                         w.setBlockState(obstacle, Blocks.STONE.getDefaultState());
                                         t.toggle();
-                                        require(!t.targetOpen, "blocked opening " + id);
+                                        require(t.targetOpen, "rear bodywork does not block opening " + id);
+                                        t.toggle();
                                         w.setBlockToAir(obstacle);
                                         t.toggle();
                                         require(t.targetOpen, "clear opening " + id);
@@ -175,10 +176,10 @@ public final class CanopyRuntimeChecks {
                                             right = place(w, b, TEST.offset(f.rotateY()), f),
                                             third = place(w, b, TEST.offset(f.rotateY(), 2), f);
                                     require(
-                                            a.width() == 2
+                                            a.width() == 3
                                                     && right.owner() == a
                                                     && !right.draws()
-                                                    && third.pair == null,
+                                                    && third.owner()==a,
                                             "pair lock " + mode);
                                     require(
                                             a.model().equals("opening_" + mode + "_2x2"),
@@ -325,12 +326,16 @@ public final class CanopyRuntimeChecks {
                                         require(
                                                 stack.getCount() == 1
                                                         && TileEntityCanopy.at(w, TEST).facing()
-                                                                == facing,
+                                                                == b.placementFacing(player),
                                                 "survival count and facing " + id);
+                                        if(com.vandorlabs.canopy.CanopyVariants.centered(b.kind)) {
+                                            Vec3d center=TileEntityCanopy.at(w,TEST).owner().selectionBounds().getCenter();
+                                            require(Math.abs(center.x-TEST.getX()-.5)<1e-6 && Math.abs(center.z-TEST.getZ()-.5)<1e-6,"shell centers on clicked block "+id);
+                                        }
                                         player.setHeldItem(EnumHand.MAIN_HAND, ItemStack.EMPTY);
                                         BlockPos follower =
-                                                b.cells(TEST, facing)
-                                                        .get(b.cells(TEST, facing).size() - 1);
+                                                b.cells(b.placementAnchor(TEST,b.placementFacing(player)), b.placementFacing(player))
+                                                        .get(b.cells(b.placementAnchor(TEST,b.placementFacing(player)), b.placementFacing(player)).size() - 1);
                                         require(
                                                 player.interactionManager.tryHarvestBlock(follower),
                                                 "survival harvest " + id);
@@ -348,7 +353,7 @@ public final class CanopyRuntimeChecks {
                                                 "one constituent drop " + id);
                                         for (net.minecraft.entity.item.EntityItem item : drops)
                                             item.setDead();
-                                        for (BlockPos cell : b.cells(TEST, facing))
+                                        for (BlockPos cell : b.cells(b.placementAnchor(TEST,b.placementFacing(player)), b.placementFacing(player)))
                                             require(w.isAirBlock(cell), "survival cleanup " + id);
                                     }
                             } finally {
@@ -358,6 +363,8 @@ public final class CanopyRuntimeChecks {
                                 player.sendPlayerAbilities();
                                 player.rotationYaw = yaw;
                             }
+                            CanopyAssemblyRuntimeChecks.check(w);
+                            LargeCanopyRuntimeChecks.run(mc.getIntegratedServer().getPlayerList().getPlayers().get(0));
                             clear(w);
                             place(w, block("opening_slide_1x2"), TEST, EnumFacing.NORTH);
                             System.out.println(
@@ -403,6 +410,7 @@ public final class CanopyRuntimeChecks {
             if (++ticks < 20) return;
             if (stage == 0) {
                 validate(mc);
+                LargeCanopyRuntimeChecks.icons(mc);
                 mc.player.noClip = true;
                 mc.player.capabilities.isFlying = true;
                 mc.player.setPosition(8.5, 100 - mc.player.getEyeHeight() + .6, 5);
@@ -504,9 +512,14 @@ public final class CanopyRuntimeChecks {
                 return;
             }
             if (stage == 4) {
+                TileEntityCanopy t = TileEntityCanopy.at(mc.world, TEST);
+                if (t != null && t.progress != 0 && ticks < 120) return;
                 require(
-                        TileEntityCanopy.at(mc.world, TEST).progress == 0,
-                        "client close synchronization");
+                        t != null && t.progress == 0 && !t.targetOpen,
+                        "client close synchronization progress="
+                                + (t == null ? "missing" : t.progress)
+                                + " target="
+                                + (t == null ? "missing" : t.targetOpen));
                 pending =
                         mc.getIntegratedServer()
                                 .addScheduledTask(

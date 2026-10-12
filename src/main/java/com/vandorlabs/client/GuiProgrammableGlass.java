@@ -12,12 +12,12 @@ import java.io.IOException;
 /** Glass finishes use the same scrollable thumbnail picker as programmable walls. */
 public final class GuiProgrammableGlass extends GuiContainer {
     private final TileEntityProgrammableGlass tile;
-    private int size,shade;
-    private boolean join;
+    private int size,shade,tint;
+    private boolean join,framed;
     private HousingTextureList textures;
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));this.tile=tile;
-        size=tile.getSize();shade=tile.getShade();join=tile.isJoin();
+        size=tile.getSize();shade=tile.getShade();join=tile.isJoin();tint=tile.getTint();framed=tile.isFramed();
     }
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
@@ -26,18 +26,22 @@ public final class GuiProgrammableGlass extends GuiContainer {
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT));
         buttonList.add(new GuiButton(0,layout.controlsX,guiTop+30,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Size: "+(size==0?"Small":"Large")));
         buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
+        buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
+        buttonList.add(new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare"));
         buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
     }
     void choose(int choice){shade=choice;send();}
-    private void send(){tile.setSize(size);tile.setShade(shade);tile.setJoin(join);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join));}
+    private void send(){tile.setSize(size);tile.setShade(shade);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed));}
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==2){mc.player.closeScreen();return;}
         if(button.id==0)size=GuiOptionCycle.next(size,2);
         if(button.id==3)join=!join;
+        if(button.id==4)tint=GuiOptionCycle.next(tint,3);
+        if(button.id==5)framed=!framed;
         send();initGui();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,3))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,3,4,5))return;
         if(textures.click(x,y,button)){if(textures.picked()){shade=textures.selected();send();}return;}
         super.mouseClicked(x,y,button);
     }

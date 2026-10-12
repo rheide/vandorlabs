@@ -74,7 +74,8 @@ public class ModBlocks {
                     "detail_observation_rotating_single", "detail_observation_rotating_double",
                     "detail_observation_sliding_single", "detail_observation_sliding_double",
                     "detail_split_rotating_single", "detail_split_rotating_double",
-                    "detail_split_sliding_single", "detail_split_sliding_double")));
+                    "detail_split_sliding_single", "detail_split_sliding_double",
+                    "space_observation_rotating_door_bare", "space_observation_rotating_door_framed", "space_observation_sliding_door_bare", "space_observation_sliding_door_framed", "space_airlock_rotating_door_bare", "space_airlock_rotating_door_framed", "space_airlock_sliding_door_bare", "space_airlock_sliding_door_framed", "space_standard_rotating_door_bare", "space_standard_rotating_door_framed", "space_standard_sliding_door_bare", "space_standard_sliding_door_framed", "space_security_rotating_door_bare", "space_security_rotating_door_framed", "space_security_sliding_door_bare", "space_security_sliding_door_framed", "space_reactor_service_rotating_door_bare", "space_reactor_service_rotating_door_framed", "space_reactor_service_sliding_door_bare", "space_reactor_service_sliding_door_framed", "space_rotating_door", "space_sliding_door")));
     /** Subset of display ids using the framed off-border. */
     public static final java.util.Set<String> DISPLAY_FRAMED_IDS = new java.util.HashSet<>();
     /** One entry per screen family: ids carrying a bare_/framed_ segment are
@@ -101,6 +102,9 @@ public class ModBlocks {
         }
     }
     private static final java.util.Set<Block> NO_ITEM = new java.util.HashSet<>();
+
+    private static final Map<String,BlockSpaceDoor> DOOR_MOTION_TEMPLATES=new HashMap<>();
+    public static BlockSpaceDoor doorMotionTemplate(String id){return DOOR_MOTION_TEMPLATES.get(id);}
 
     static {
         // Block list loaded from the checked-in generated resource catalog.
@@ -131,6 +135,7 @@ public class ModBlocks {
             Block block = create(cls, e, byId);
             if (e.has("hidden") && e.get("hidden").getAsBoolean()) block.setCreativeTab(null);
             byId.put(id, block);
+            if(block instanceof BlockSpaceDoor)DOOR_MOTION_TEMPLATES.put(id,(BlockSpaceDoor)block);
             // Paired detailed-door assets retain their authored geometry and
             // motion parameters without registering a redundant block/item.
             if (e.has("internal_model")
@@ -362,6 +367,7 @@ public class ModBlocks {
 
     @SubscribeEvent
     public static void onBlockRegister(RegistryEvent.Register<Block> event) {
+        for(Block block:BLOCKS)if(!com.vandorlabs.config.BlockAvailability.enabled(block))block.setCreativeTab(null);
         event.getRegistry().registerAll(BLOCKS.toArray(new Block[0]));
     }
 
@@ -377,7 +383,8 @@ public class ModBlocks {
                         new ResourceLocation(VandorLabs.MODID, replacement));
                 if (block != null) mapping.remap(block);
             } else if (isRetiredScreenId(mapping.key.getResourcePath())
-                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())) mapping.ignore();
+                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())
+                    || isRemovedMachineryId(mapping.key.getResourcePath())) mapping.ignore();
         }
     }
 
@@ -391,12 +398,23 @@ public class ModBlocks {
                         new ResourceLocation(VandorLabs.MODID, replacement));
                 if (item != null) mapping.remap(item);
             } else if (isRetiredScreenId(mapping.key.getResourcePath())
-                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())) mapping.ignore();
+                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())
+                    || isRemovedMachineryId(mapping.key.getResourcePath())) mapping.ignore();
         }
     }
 
     private static boolean isRetiredScreenId(String id) {
         return DISPLAY_SCREEN_IDS.contains(id) || RETIRED_SCREEN_IDS.contains(id);
+    }
+
+    public static boolean isRemovedMachineryId(String id) {
+        if(id.startsWith("aster_") || id.startsWith("vektor_")&&!id.equals("vektor_console"))return true;
+        return java.util.Arrays.asList("rivet_deck_large_g64","rivet_gravity_large_g64","rivet_shield_large_g64",
+                "rivet_sensor_large_g64","rivet_external_sensor_g64","rivet_ref_reactor_large","rivet_ref_crossflow_large",
+                "rivet_ref_dampener_large","hadron_tractor_large","hadron_core_large","hadron_dampener_large",
+                "hadron_gravity_large","hadron_external_sensor_g64","kestrel_hull_plate_large",
+                "kestrel_shield_capacitor_large","kestrel_external_sensor_g64","kestrel_power_deck_large",
+                "kestrel_reactor_block_large").contains(id);
     }
 
     private static String replacementBlockId(String id) {
@@ -434,8 +452,8 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
-        for(int size=0;size<2;size++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
-            event.getMap().registerSprite(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.texture(id,size)));
+        for(int size=0;size<2;size++)for(int tint=0;tint<3;tint++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
+            event.getMap().registerSprite(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.texture(id,size,tint)));
         for (String face : new String[]{"front","back","left","right","top","bottom"})
             for (String state : new String[]{"on","off"})
                 event.getMap().setTextureEntry(new com.vandorlabs.client.ControllerTextureSprite(
@@ -562,14 +580,21 @@ public class ModBlocks {
     private static void registerGlassItemModels(Block block,Item item){
         boolean diagonal=block instanceof BlockProgrammableDiagonalGlass;
         int count=com.vandorlabs.tiles.GlassTextures.IDS.length;
-        ResourceLocation[] variants=new ResourceLocation[count*(diagonal?1:2)];
-        for(int i=0;i<variants.length;i++)variants[i]=new ResourceLocation(VandorLabs.MODID,"configured/glass_"+(diagonal?"diagonal":"regular")+"_"+(i/count)+"_"+com.vandorlabs.tiles.GlassTextures.IDS[i%count]);
+        ResourceLocation[] variants=new ResourceLocation[count*(diagonal?1:2)*6];
+        for(int size=0;size<(diagonal?1:2);size++)for(int shade=0;shade<count;shade++)
+            for(int tint=0;tint<3;tint++)for(int frame=0;frame<2;frame++) {
+                int index=((size*count+shade)*3+tint)*2+frame;
+                variants[index]=new ResourceLocation(VandorLabs.MODID,"configured/glass_"+(diagonal?"diagonal":"regular")+"_"+size+"_"+com.vandorlabs.tiles.GlassTextures.IDS[shade]+"_t"+tint+"_f"+frame);
+            }
         ModelLoader.registerItemVariants(item,variants);
         ModelLoader.setCustomMeshDefinition(item,stack->{
             net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound(diagonal?"BlockEntityTag":"ProgrammableGlassSettings");
             int shade=tag==null?0:com.vandorlabs.tiles.GlassTextures.clamp(tag.getInteger(diagonal?"GlassShade":"Shade"));
             int size=diagonal?0:tag==null?1:Math.max(0,Math.min(1,tag.getInteger("Size")));
-            return new ModelResourceLocation(variants[size*count+shade],"inventory");
+            String tintKey=diagonal?"GlassTint":"Tint",frameKey=diagonal?"GlassFramed":"Framed";
+            int tint=tag==null||!tag.hasKey(tintKey,3)?1:com.vandorlabs.tiles.GlassTextures.clampTint(tag.getInteger(tintKey));
+            boolean frame=tag==null||!tag.hasKey(frameKey)||tag.getBoolean(frameKey);
+            return new ModelResourceLocation(variants[((size*count+shade)*3+tint)*2+(frame?1:0)],"inventory");
         });
     }
 

@@ -840,16 +840,21 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         if(wallBlock instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
-            TextureAtlasSprite glass=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.GlassTextures.texture(te.getGlassShade(),1));
+            TextureAtlasSprite glass=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.GlassTextures.texture(te.getGlassShade(),1,te.getGlassTint()));
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
             GlStateManager.disableCull();
+            GlStateManager.depthMask(false);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             DiagonalWallMeshCache.get(te,state,glass,glass).draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
             Tessellator.getInstance().draw();
-            GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
+            if(te.isGlassFramed()) {
+                StaticSurfaceMesh frame=DiagonalWallMeshCache.frame(te,state,glass);
+                if(frame!=null){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);Tessellator.getInstance().draw();}
+            }
+            GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
             GlStateManager.enableLighting();endLocalTransform();return;
         }
         TextureAtlasSprite wall = wallSprite(te);
@@ -958,8 +963,9 @@ public class TEAnimatedScreenSelector
             }
             sign = -sign;
         }
-        double ux=b[0]-a[0], uy=b[1]-a[1], uz=b[2]-a[2];
-        double vx=c[0]-a[0], vy=c[1]-a[1], vz=c[2]-a[2];
+        // Diagonals retain a triangle when an arm collapses at a slope end.
+        double ux=c[0]-a[0], uy=c[1]-a[1], uz=c[2]-a[2];
+        double vx=d[0]-b[0], vy=d[1]-b[1], vz=d[2]-b[2];
         double nx=sign*(uy*vz-uz*vy), ny=sign*(uz*vx-ux*vz),
                 nz=sign*(ux*vy-uy*vx);
         double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
@@ -1252,51 +1258,15 @@ public class TEAnimatedScreenSelector
 
     private static double[][] filledDiagonalOutline(double near, BlockProgrammableWall.Corner corner,
             int fill, double low, double high) {
-        if (fill == 0) return diagonalOutline(near, corner);
-        double front=(fill&1)!=0?Math.min(low,near):near, back=(fill&2)!=0?Math.max(high,near+4):near+4;
+        double front=(fill&1)!=0?Math.min(low,near):near,back=(fill&2)!=0?Math.max(high,near+4):near+4;
         double left=corner==null?0:corner.left(near),right=corner==null?16:corner.right(near);
-        java.util.List<double[]> points=new java.util.ArrayList<>();
-        points.add(new double[]{left,front});
-        if(corner!=null && corner.frontRight!=null && (fill&1)==0) {
-            double arm=corner.armLeft(near,corner.frontRight,true);
-            points.add(new double[]{arm,front});points.add(new double[]{arm,0});
-            points.add(new double[]{arm+4,0});points.add(new double[]{arm+4,front});
-        }
-        points.add(new double[]{right,front});points.add(new double[]{right,back});
-        if(corner!=null && corner.backRight!=null && (fill&2)==0) {
-            double arm=corner.armLeft(near,corner.backRight,false);
-            points.add(new double[]{arm+4,back});points.add(new double[]{arm+4,16});
-            points.add(new double[]{arm,16});points.add(new double[]{arm,back});
-        }
-        points.add(new double[]{left,back});
-        return points.toArray(new double[points.size()][]);
+        double frontArm=corner==null||corner.frontRight==null||(fill&1)!=0?Double.NaN:corner.armLeft(near,corner.frontRight,true);
+        double backArm=corner==null||corner.backRight==null||(fill&2)!=0?Double.NaN:corner.armLeft(near,corner.backRight,false);
+        return com.vandorlabs.render.DiagonalCornerOutline.polygon(left,right,front,back,frontArm,backArm);
     }
 
-    private static double[][] diagonalOutline(double near,
-            BlockProgrammableWall.Corner corner) {
-        if (corner == null) return new double[][] {
-                {0, near}, {16, near}, {16, near + 4}, {0, near + 4}};
-        double left = corner.left(near), right = corner.right(near);
-        java.util.List<double[]> points = new java.util.ArrayList<>();
-        points.add(new double[] {left, near});
-        if (corner.frontRight != null) {
-            double armX = corner.armLeft(near, corner.frontRight,true);
-            points.add(new double[] {armX, near});
-            points.add(new double[] {armX, 0});
-            points.add(new double[] {armX + 4, 0});
-            points.add(new double[] {armX + 4, near});
-        }
-        points.add(new double[] {right, near});
-        points.add(new double[] {right, near + 4});
-        if (corner.backRight != null) {
-            double armX = corner.armLeft(near, corner.backRight,false);
-            points.add(new double[] {armX + 4, near + 4});
-            points.add(new double[] {armX + 4, 16});
-            points.add(new double[] {armX, 16});
-            points.add(new double[] {armX, near + 4});
-        }
-        points.add(new double[] {left, near + 4});
-        return points.toArray(new double[points.size()][]);
+    private static double[][] diagonalOutline(double near,BlockProgrammableWall.Corner corner) {
+        return filledDiagonalOutline(near,corner,0,0,16);
     }
 
     private static void roofRect(BufferBuilder buf, TextureAtlasSprite metal,

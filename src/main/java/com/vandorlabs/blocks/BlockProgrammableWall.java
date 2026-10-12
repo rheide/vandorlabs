@@ -282,24 +282,22 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             this.straightRight = straightRight;
         }
         public double left(double near) {
-            if (straightLeft) return 0;
-            // Without a straight neighbor, the free leg ends on the same
-            // side as the perpendicular wall, rather than crossing past it.
-            if (!straightRight && (Boolean.FALSE.equals(frontRight)
-                    || Boolean.FALSE.equals(backRight))) return 0;
-            double edge = 16;
-            if (frontRight != null) edge = Math.min(edge, armLeft(near, frontRight,true));
-            if (backRight != null) edge = Math.min(edge, armLeft(near, backRight,false));
-            return edge;
+            double front=frontRight==null?Double.NaN:armLeft(near,frontRight,true);
+            double back=backRight==null?Double.NaN:armLeft(near,backRight,false);
+            double edge=16;
+            if(frontRight!=null)edge=Math.min(edge,front);
+            if(backRight!=null)edge=Math.min(edge,back);
+            if(straightLeft || !straightRight && (frontRight==null || backRight==null) && (Boolean.FALSE.equals(frontRight)||Boolean.FALSE.equals(backRight)))edge=0;
+            return com.vandorlabs.render.DiagonalCornerOutline.left(edge,near,front,back);
         }
         public double right(double near) {
-            if (straightRight) return 16;
-            if (!straightLeft && (Boolean.TRUE.equals(frontRight)
-                    || Boolean.TRUE.equals(backRight))) return 16;
-            double edge = 0;
-            if (frontRight != null) edge = Math.max(edge, armLeft(near, frontRight,true) + 4);
-            if (backRight != null) edge = Math.max(edge, armLeft(near, backRight,false) + 4);
-            return edge;
+            double front=frontRight==null?Double.NaN:armLeft(near,frontRight,true);
+            double back=backRight==null?Double.NaN:armLeft(near,backRight,false);
+            double edge=0;
+            if(frontRight!=null)edge=Math.max(edge,front+4);
+            if(backRight!=null)edge=Math.max(edge,back+4);
+            if(straightRight || !straightLeft && (frontRight==null || backRight==null) && (Boolean.TRUE.equals(frontRight)||Boolean.TRUE.equals(backRight)))edge=16;
+            return com.vandorlabs.render.DiagonalCornerOutline.right(edge,near,front,back);
         }
         public double armLeft(double near,boolean right,boolean front) {
             Double fixed=front?frontFlat:backFlat;
@@ -525,6 +523,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     private void addCornerArm(BlockPos pos, AxisAlignedBB entityBox,
             List<AxisAlignedBB> boxes, IBlockState state, boolean right,
             boolean front, int slice, double near0, double near1, IBlockAccess world) {
+        if(front?near1<=0:near0+4>=16)return;
         Corner corner=corner(state,world,pos);
         double x0 = Math.min(corner.armLeft(near0,right,front),corner.armLeft(near1,right,front));
         double x1 = Math.max(corner.armLeft(near0,right,front),corner.armLeft(near1,right,front))+4;

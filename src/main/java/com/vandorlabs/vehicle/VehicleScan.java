@@ -20,6 +20,7 @@ public final class VehicleScan {
     private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
     private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
+    private final Map<BlockPos,VehicleStructure.Cell> virtualSources=new HashMap<>();
     private int minX, minY, minZ, maxX, maxY, maxZ, seats;
     private Double gearBottomY;
     public BlockPos origin;
@@ -45,6 +46,26 @@ public final class VehicleScan {
         require(world.getBlockState(p).getBlock()==expected, "Incomplete "+expected.getLocalizedName()+": expected a matching part at "+p.getX()+", "+p.getY()+", "+p.getZ()+" but found "+world.getBlockState(p).getBlock().getLocalizedName()+". Replace or complete this component.");
         enqueue(p);
     }
+    private static boolean slab(Block block){return block instanceof net.minecraft.block.BlockSlab || block instanceof BlockProgrammableSlab || block instanceof BlockProgrammableLightSlab;}
+    /** Empty half-block faces do not bridge the craft to the hangar floor. */
+    public static boolean touches(World world,BlockPos p,IBlockState state,EnumFacing face){
+        BlockPos other=p.offset(face);if(!world.isBlockLoaded(other))return true;
+        IBlockState next=world.getBlockState(other);
+        if(next.getBlock() instanceof BlockControlledRamp)return false;
+        if(next.getBlock().isAir(next,world,other))return true;
+        // Only slabs have a guaranteed empty half-cell. Non-solid decorative components
+        // retain the existing six-neighbour attachment contract.
+        if(face.getAxis()==EnumFacing.Axis.Y && (slab(state.getBlock()) || slab(next.getBlock()))){
+            net.minecraft.util.math.AxisAlignedBB a=state.getBoundingBox(world,p).offset(p),b=next.getBoundingBox(world,other).offset(other);
+            final double e=1e-6;
+            switch(face.getAxis()){
+                case X:return Math.abs((face==EnumFacing.EAST?a.maxX:a.minX)-(face==EnumFacing.EAST?b.minX:b.maxX))<e && a.maxY>b.minY+e && a.minY<b.maxY-e && a.maxZ>b.minZ+e && a.minZ<b.maxZ-e;
+                case Y:return Math.abs((face==EnumFacing.UP?a.maxY:a.minY)-(face==EnumFacing.UP?b.minY:b.maxY))<e && a.maxX>b.minX+e && a.minX<b.maxX-e && a.maxZ>b.minZ+e && a.minZ<b.maxZ-e;
+                default:return Math.abs((face==EnumFacing.SOUTH?a.maxZ:a.minZ)-(face==EnumFacing.SOUTH?b.minZ:b.maxZ))<e && a.maxX>b.minX+e && a.minX<b.maxX-e && a.maxY>b.minY+e && a.minY<b.maxY-e;
+            }
+        }
+        return true;
+    }
     public boolean step(int budget) {
         if(error!=null || result!=null) return true;
         try {
@@ -52,11 +73,13 @@ public final class VehicleScan {
                 BlockPos p=queue.removeFirst(); if(!visited.add(p))continue;
                 require(visited.size()<=VehicleStructure.MAX_BLOCKS*7, "Discovery limit exceeded; separate the craft from its surroundings.");
                 require(world.isBlockLoaded(p), "The craft touches an unloaded chunk.");
-                IBlockState state=world.getBlockState(p); Block block=state.getBlock();
+                VehicleStructure.Cell virtual=virtualSources.get(p);
+                IBlockState state=virtual==null?world.getBlockState(p):virtual.state; Block block=state.getBlock();
+                if(block instanceof BlockControlledRamp)continue;
                 if(block.isAir(state,world,p)){airBoundary.add(p);continue;}
                 require(!state.getMaterial().isLiquid() && block!=net.minecraft.init.Blocks.BEDROCK
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
-                TileEntity tile=world.getTileEntity(p);
+                TileEntity tile=virtual==null?world.getTileEntity(p):virtual.tileData()==null?null:TileEntity.create(world,virtual.tileData());
                 require(block.getRegistryName()!=null, "Unregistered block at "+p);
                 require(!block.hasTileEntity(state) || tile!=null, "Missing component data at "+p);
                 require(cells.size()<VehicleStructure.MAX_BLOCKS, "Craft exceeds 4096 blocks; check for connections to the ground.");
@@ -64,11 +87,13 @@ public final class VehicleScan {
                 maxX=Math.max(maxX,p.getX()); maxY=Math.max(maxY,p.getY()); maxZ=Math.max(maxZ,p.getZ());
                 require(maxX-minX<64 && maxY-minY<64 && maxZ-minZ<64, "Craft exceeds 64 blocks along an axis.");
                 NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
+                if(VehicleEscalators.active(tile))data=VehicleEscalators.paused(data);
                 cells.put(p,new VehicleStructure.Cell(p,state,data));
                 if(block instanceof BlockPilotSeat) {
                     boolean upper=state.getValue(BlockPilotSeat.UPPER);
                     if(!upper)seats++;
-                    linked(upper?p.down():p.up(),block);
+                    if(!upper && BlockPilotSeat.canopyAbove(world,p))enqueue(p.up());
+                    else linked(upper?p.down():p.up(),block);
                 } else if(block instanceof BlockBridgeChair || block instanceof BlockConnectedSeat) {
                     linked(state.getValue(BlockBridgeChair.UPPER)?p.down():p.up(),block);
                 } else if(block instanceof BlockLargeProgrammableDoor) {
@@ -81,24 +106,18 @@ public final class VehicleScan {
                 if(tile instanceof TileEntityRampController) {
                     TileEntityRampController ramp=(TileEntityRampController)tile;
                     require(!ramp.isMoving(),"Wait for the ramp to stop moving before assembly.");
-                    for(BlockPos member:ramp.vehicleCells()) {
-                        linked(member,ModBlocks.CONTROLLED_RAMP);
-                        TileEntity part=world.getTileEntity(member);
-                        require(part instanceof TileEntityControlledRamp && ((TileEntityControlledRamp)part).belongsTo(p) && ramp.owns((TileEntityControlledRamp)part),"Invalid ramp component ownership.");
+                    {
+                        for(VehicleStructure.Cell source:VehicleEscalators.originals(ramp)){
+                            require(world.isBlockLoaded(source.pos),"Load all ramp source chunks before assembly.");
+                            TileEntity part=world.getTileEntity(source.pos);require(world.isAirBlock(source.pos) || part instanceof TileEntityControlledRamp && ramp.owns((TileEntityControlledRamp)part),"Ramp source changed; inspect again.");
+                            virtualSources.put(source.pos,source);visited.remove(source.pos);scheduled.add(source.pos);queue.add(source.pos);
+                        }
                     }
-                    for(BlockPos source:ramp.vehicleSources()){require(world.isBlockLoaded(source),"A ramp source crosses an unloaded chunk.");enqueue(source);}
-                }
-                if(tile instanceof TileEntityControlledRamp) {
-                    TileEntityControlledRamp ramp=(TileEntityControlledRamp)tile;
-                    require(!ramp.isMoving(),"Wait for the ramp to stop moving before assembly.");
-                    linked(ramp.controller,ModBlocks.PROGRAMMABLE_RAMP);
-                    TileEntity owner=world.getTileEntity(ramp.controller);
-                    require(owner instanceof TileEntityRampController && ((TileEntityRampController)owner).owns(ramp),"Orphaned ramp section.");
                 }
                 if(tile instanceof TileEntityCanopy) {
                     TileEntityCanopy canopy=((TileEntityCanopy)tile).constituent();
                     require(Math.abs(canopy.progress-(canopy.targetOpen?1:0))<.001, "Wait for the canopy to stop moving.");
-                    for(BlockPos member:((BlockCanopy)block).cells(canopy.getPos(),canopy.facing()))linked(member,block);
+                    for(BlockPos member:canopy.cells())linked(member,block);
                     if(canopy.pair!=null)linked(canopy.pair,block);
                 }
                 if(tile instanceof TileEntityShipSystem) {
@@ -144,7 +163,7 @@ public final class VehicleScan {
                     require(world.isBlockLoaded(gear) && world.getBlockState(gear).getBlock() instanceof BlockTelescopicLandingGear,"A landing gear cover has no gear owner.");
                     enqueue(gear);continue;
                 }
-                for(EnumFacing face:EnumFacing.values())enqueue(p.offset(face));
+                if(virtual==null)for(EnumFacing face:EnumFacing.values())if(touches(world,p,state,face))enqueue(p.offset(face));
             }
             if(queue.isEmpty()) {
                 require(seats==1, "A craft must contain exactly one Pilot Seat.");

@@ -58,7 +58,7 @@ def stage(directory, models_staged=False):
         if 'high' in file.relative_to(models).parts:
             file.unlink();removed+=1;continue
         model=redirect(json.loads(file.read_text()),aliases)
-        if model.get('elements') and 'parent' not in model:
+        if model.get('elements') and 'parent' not in model and shared not in file.parents:
             geometry={k:v for k,v in model.items() if k!='textures'}
             encoded=json.dumps(geometry,sort_keys=True,separators=(',',':'))
             name=hashlib.sha256(encoded.encode()).hexdigest()[:16]

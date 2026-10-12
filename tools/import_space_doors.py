@@ -208,7 +208,7 @@ def main(archive, detail, expansion, lift):
                     pivot_z=HINGE_Z,left_angle=90,right_angle=-90,
                     left_slide=-16 if framed else -15,right_slide=16 if framed else 15))
                 catalog.append(dict(id=id,type='space_door',**{'class':'BlockSpaceDoor'},
-                    item=True,hidden=True,internal_model=family in FAMILIES[5:],sliding=sliding,framed=framed,paired_model=paired))
+                    item=False,hidden=True,internal_model=True,sliding=sliding,framed=framed,paired_model=paired))
                 names.append((id,'Space '+('Reactor Service' if family=='reactor' else family.replace('_',' ').title())
                     +' '+motion.title()+' Door ('+('Framed' if framed else 'Bare')+')'))
                 parts=[]
@@ -310,7 +310,7 @@ def main(archive, detail, expansion, lift):
     for motion in ('rotating','sliding'):
         id='space_'+motion+'_door'
         catalog.append(dict(id=id,type='space_door',**{'class':'BlockConfigurableSpaceDoor'},
-                            item=True,hidden=True,sliding=motion=='sliding',paired_model=f'space_standard_{motion}_door_framed_paired'))
+                            item=False,hidden=True,internal_model=True,sliding=motion=='sliding',paired_model=f'space_standard_{motion}_door_framed_paired'))
         names.append((id,'Space '+motion.title()+' Door'))
         write(OUT/'blockstates'/f'{id}.json',{'multipart':[{'apply':{'model':'vandorlabs:detailed_doors/space_empty'}}]})
         write(OUT/'models/item'/f'{id}.json',{'parent':f'vandorlabs:item/space_standard_{motion}_door_framed'})

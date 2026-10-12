@@ -41,31 +41,131 @@
         }
       }
     ],
-    "facing=north,upper=false": {
+    "facing=north,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat.obj",
       "y": 0
     },
-    "facing=north,upper=true": {
+    "facing=north,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1.obj",
+      "y": 0
+    },
+    "facing=north,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2.obj",
+      "y": 0
+    },
+    "facing=north,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3.obj",
+      "y": 0
+    },
+    "facing=north,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 0
     },
-    "facing=east,upper=false": {
+    "facing=north,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "facing=north,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "facing=north,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "facing=east,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat.obj",
       "y": 90
     },
-    "facing=east,upper=true": {
+    "facing=east,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1.obj",
+      "y": 90
+    },
+    "facing=east,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2.obj",
+      "y": 90
+    },
+    "facing=east,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3.obj",
+      "y": 90
+    },
+    "facing=east,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 90
     },
-    "facing=south,upper=false": {
+    "facing=east,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "facing=east,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "facing=east,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "facing=south,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat.obj",
       "y": 180
     },
-    "facing=south,upper=true": {
+    "facing=south,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1.obj",
+      "y": 180
+    },
+    "facing=south,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2.obj",
+      "y": 180
+    },
+    "facing=south,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3.obj",
+      "y": 180
+    },
+    "facing=south,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 180
     },
-    "facing=west,upper=false": {
+    "facing=south,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "facing=south,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "facing=south,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "facing=west,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat.obj",
       "y": 270
     },
-    "facing=west,upper=true": {
+    "facing=west,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1.obj",
+      "y": 270
+    },
+    "facing=west,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2.obj",
+      "y": 270
+    },
+    "facing=west,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3.obj",
+      "y": 270
+    },
+    "facing=west,height=0,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "facing=west,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "facing=west,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "facing=west,height=3,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 270
     }

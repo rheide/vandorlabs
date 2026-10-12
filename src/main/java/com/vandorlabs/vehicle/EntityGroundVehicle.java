@@ -83,7 +83,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         return previousVisual.interpolate(currentVisual,partial);
     }
     public Vec3d seatPosition(VehiclePose pose,Entity passenger) {
-        return pose.world(new Vec3d(structure.seat.getX()+.5,structure.seat.getY()+BlockPilotSeat.SEAT_HEIGHT+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),structure.seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
+        return pose.world(new Vec3d(structure.seat.getX()+.5,structure.seat.getY()+BlockPilotSeat.seatHeight(view,structure.seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),structure.seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
     }
     @Override public AxisAlignedBB getRenderBoundingBox() {
         if(structure==null)return getEntityBoundingBox();
@@ -106,7 +106,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=new VehicleCollision(view);encoded=null;
         setPosition(posX,posY,posZ);
     }
-    public void updateSettings(VehicleStructure snapshot){structure=snapshot;view.update(snapshot);encoded=null;}
+    public void updateSettings(VehicleStructure snapshot){
+        NBTTagCompound oldSeat=structure.at(structure.seat).tileData(),newSeat=snapshot.at(snapshot.seat).tileData();
+        boolean heightChanged=(oldSeat==null?0:oldSeat.getInteger("PilotHeight"))!=(newSeat==null?0:newSeat.getInteger("PilotHeight"));
+        structure=snapshot;view.update(snapshot);encoded=null;
+        if(heightChanged){collision=new VehicleCollision(view);setPosition(posX,posY,posZ);for(Entity passenger:getPassengers())updatePassenger(passenger);}
+    }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
     @Override protected void entityInit(){}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);}

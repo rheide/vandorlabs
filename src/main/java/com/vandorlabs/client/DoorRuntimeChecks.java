@@ -30,38 +30,11 @@ final class DoorRuntimeChecks {
             require(!Block.REGISTRY.containsKey(key) && !net.minecraft.item.Item.REGISTRY.containsKey(key),
                     "removed legacy door is still registered: "+id);
         }
-        BlockVandorDoor hingedA = door("space_standard_rotating_door_framed");
-        BlockVandorDoor hingedB = hingedA;
-        BlockVandorDoor sliding = door("space_standard_sliding_door_framed");
-        BlockPos origin = new BlockPos(-8, 21, 6);
-
-        List<BlockVandorDoor> allDoors = allDoors();
-        require(allDoors.size() >= 12, "expected at least 12 registered door families");
-        for (BlockVandorDoor door : allDoors) {
-
-            checkMetadata(door);
-            checkStateParity(world, origin, door);
-            if (door instanceof BlockDetailedDoor) {
-                checkDetailedBounds(world, origin, (BlockDetailedDoor) door);
-            }
-        }
-        checkPair(world, player, origin, hingedA, hingedB, EnumFacing.NORTH, true,
-                "aligned same-motion pair");
-        checkPair(world, player, origin, hingedA, sliding, EnumFacing.NORTH, false,
-                "different motion");
-        checkPair(world, player, origin, hingedA, hingedB, EnumFacing.EAST, false,
-                "misaligned facing");
-        checkIncompletePair(world, player, origin, hingedA, hingedB);
-        checkPlacement(world, player, origin, hingedA, hingedB, sliding);
-        checkDiagonalWallSupport(world, origin.add(4, 0, 0), hingedA);
-        checkMotionPairMatrix(world, player, origin);
-        checkConnectedSpaceModels(world, origin);
-        checkSpaceDoors(world, player, origin);
+        BlockPos origin=new BlockPos(-8,21,6);
+        List<BlockVandorDoor> registered=allDoors();
+        require(registered.size()==1 && registered.get(0).getRegistryName().getResourcePath().equals("programmable_door"),"non-programmable doors remain registered");
+        checkMetadata(registered.get(0));
         SpaceDoorRuntimeChecks.run(world,player,origin);
-        checkRedstoneEdges(world, player, origin, hingedA);
-        checkBreakPair(world, origin, hingedA);
-        clear(world, origin);
-        clear(world, origin.east());
         System.out.println("[vandorlabs][reprolab] door-runtime PASS");
     }
 

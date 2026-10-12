@@ -27,6 +27,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     private int controlType;
     private final boolean thruster;
     private int particleLevel,threshold=8;private boolean signalBrightness;
+    private boolean redstoneInverted;
     private boolean connected;
     private boolean join;
     private GuiButton joinButton;
@@ -38,15 +39,28 @@ public class GuiRedstoneChannel extends GuiContainer {
     private GuiButton particleButton;
     private final boolean shipSystem;
     private int shipMode;
+    private boolean shipAnimated;
     private final boolean pilotSeat;
-    private boolean taxiMode;
+    private boolean taxiMode;private int pilotMode,pilotHeight;
+    private String inspectionStatus="";
+    public void inspection(net.minecraft.util.math.BlockPos pos,String status) {
+        if(!pilotSeat || !member.channelTile().getPos().equals(pos))return;
+        String draft=channelField==null?null:channelField.getText();inspectionStatus=status;ySize=274;initGui();if(draft!=null)channelField.setText(draft);
+    }
+    java.util.List<GuiButton> inspectionButtons(){return buttonList;}
+    public String pilotChannelsDraft(){return channelField.getText();}
+    public boolean pilotTaxiDraft(){return taxiMode;}
+    public int pilotModeDraft(){return pilotMode;}
+    public int pilotHeightDraft(){return pilotHeight;}
+
 
     public GuiRedstoneChannel(RedstoneChannelMember member) {
         super(new ContainerRedstoneChannel(member));
         this.member = member;
         pilotSeat=member instanceof com.vandorlabs.tiles.TileEntityPilotSeat;
-        if(pilotSeat)taxiMode=((com.vandorlabs.tiles.TileEntityPilotSeat)member).isTaxiMode();
+        if(pilotSeat){com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)member;taxiMode=seat.isTaxiMode();pilotMode=seat.getRedstoneMode();pilotHeight=seat.getHeight();}
         shipSystem = member instanceof com.vandorlabs.tiles.TileEntityShipSystem;
+        if (shipSystem) shipAnimated=((com.vandorlabs.tiles.TileEntityShipSystem)member).isAnimated();
         if (shipSystem) shipMode=((com.vandorlabs.tiles.TileEntityShipSystem)member).getRedstoneMode();
         powerLever=member.channelTile().getWorld()!=null && member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever;
         if(powerLever)powerLeverSize=((com.vandorlabs.tiles.TileEntityRedstoneChannel)member).getPowerLeverSize();
@@ -67,7 +81,7 @@ public class GuiRedstoneChannel extends GuiContainer {
                 && member.channelTile().getWorld().getBlockState(member.channelTile().getPos())
                         .getBlock() instanceof BlockPropulsionLight;
         this.particleLevel = thruster?((TileEntityRedstoneLight)member).getParticleLevel():0;
-        if(thruster){signalBrightness=((TileEntityRedstoneLight)member).isSignalBrightness();threshold=((TileEntityRedstoneLight)member).getParticleThreshold();}
+        if(thruster){redstoneInverted=((TileEntityRedstoneLight)member).isRedstoneInverted();signalBrightness=((TileEntityRedstoneLight)member).isSignalBrightness();threshold=((TileEntityRedstoneLight)member).getParticleThreshold();}
         BlockPropulsionLight block = thruster ? (BlockPropulsionLight) member.channelTile()
                 .getWorld().getBlockState(member.channelTile().getPos()).getBlock() : null;
         this.programmableThruster = block != null && !block.familyId().isEmpty();
@@ -76,7 +90,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         this.join = thruster && ((TileEntityRedstoneLight) member).isJoin();
         this.sideTexture = thruster ? ((TileEntityRedstoneLight) member).getSideTexture() : 0;
         xSize = thruster ? 400 : 240;
-        ySize = thruster ? 190 : shipSystem ? 128 : pilotSeat?154:adjustableBase?baseControlsY()+102:104;
+        ySize = thruster ? 190 : shipSystem ? 154 : pilotSeat?(!inspectionStatus.isEmpty()?274:202):adjustableBase?baseControlsY()+102:104;
     }
 
     @Override public void initGui() {
@@ -95,26 +109,28 @@ public class GuiRedstoneChannel extends GuiContainer {
             particleButton = layout.control(2,68,particleLabel());
             buttonList.add(particleButton);
         }
-        if (programmableThruster) buttonList.add(layout.control(4,96,shapeLabel()));
+        if (programmableThruster) buttonList.add(layout.control(4,92,shapeLabel()));
         refreshJoinButton();
-        if(thruster){buttonList.add(layout.control(5,152,brightnessLabel()));buttonList.add(layout.control(6,176,thresholdLabel()));}
+        if(thruster){buttonList.add(layout.control(16,188,redstoneInverted?"Activate on: OFF":"Activate on: ON"));buttonList.add(layout.control(5,140,brightnessLabel()));buttonList.add(layout.control(6,164,thresholdLabel()));}
         if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+66,102,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+124,guiTop+66,102,20,"High: "+highLimit));}
         if(selectableType)buttonList.add(new GuiButton(13,guiLeft+14,guiTop+122,212,20,typeLabel()));
         if(adjustableBase){int y=guiTop+baseControlsY();buttonList.add(new GuiButton(9,guiLeft+14,y,212,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,y+24,102,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+124,y+24,102,20,directionLabel()));}
         if(powerLever)buttonList.add(new GuiButton(12,guiLeft+14,guiTop+66,212,20,sizeLabel()));
         if(shipSystem)buttonList.add(new GuiButton(14,guiLeft+(xSize-ProgrammableDialogLayout.CONTROLS_WIDTH)/2,guiTop+66,ProgrammableDialogLayout.CONTROLS_WIDTH,20,shipModeLabel()));
-        if(pilotSeat)buttonList.add(new GuiButton(15,guiLeft+14,guiTop+66,212,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));
+        if(pilotSeat){buttonList.add(new GuiButton(15,guiLeft+14,guiTop+66,212,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(18,guiLeft+14,guiTop+90,212,20,pilotModeLabel()));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+114,212,20,pilotHeightLabel()));}
+        if(shipSystem)buttonList.add(new GuiButton(17,guiLeft+(xSize-ProgrammableDialogLayout.CONTROLS_WIDTH)/2,guiTop+92,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"ON animation: "+(shipAnimated?"ON":"OFF")));
+        if(pilotSeat && !inspectionStatus.isEmpty()){GuiButton assemble=new GuiButton(20,guiLeft+14,guiTop+214,212,20,"Assemble (inspection required)");assemble.enabled=false;buttonList.add(assemble);}
         int doneWidth=shipSystem?ProgrammableDialogLayout.CONTROLS_WIDTH:200;
         buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - doneWidth) / 2,
-                guiTop + (pilotSeat?122:shipSystem?96:adjustableBase?baseControlsY()+74:72),
-                doneWidth, 20, "Done"));
+                guiTop + (pilotSeat?(!inspectionStatus.isEmpty()?242:170):shipSystem?122:adjustableBase?baseControlsY()+74:72),
+                doneWidth, 20, pilotSeat?"Close":"Done"));
     }
 
     private void refreshJoinButton() {
         if (joinButton != null) buttonList.remove(joinButton);
         joinButton = null;
         if (connected) {
-            joinButton=layout.control(3,programmableThruster?124:96,joinLabel());
+            joinButton=layout.control(3,programmableThruster?116:92,joinLabel());
             buttonList.add(joinButton);
         }
     }
@@ -124,7 +140,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     protected void submit() {
         if (shipSystem) {
             com.vandorlabs.redstone.ChannelList channels=ChannelFields.parse(channelField);
-            if(channels!=null)PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageShipSystem(member.channelTile().getPos(),channels,shipMode));
+            if(channels!=null)PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageShipSystem(member.channelTile().getPos(),channels,shipMode).withAnimation(shipAnimated));
             return;
         }
         int value = channel();
@@ -132,10 +148,14 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (value >= 0) PacketHandler.INSTANCE.sendToServer(
                 new MessageRedstoneChannel(member.channelTile().getPos(), value,
                         thruster, particleLevel>0, connected, join, thruster, sideTexture,
-                        programmableThruster, shape).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,threshold).withControlLimits(signalControl,lowLimit,highLimit).withControlMount(adjustableBase,baseHeight,baseTilt,tiltDirection).withPowerLeverSize(powerLever,powerLeverSize).withControlType(selectableType,controlType));
+                        programmableThruster, shape).withPilotSettings(pilotMode,pilotHeight).withParticleLevel(particleLevel).withChannels(ChannelFields.parse(channelField)).withRedstoneInverted(redstoneInverted).withSignalBrightness(signalBrightness,threshold).withControlLimits(signalControl,lowLimit,highLimit).withControlMount(adjustableBase,baseHeight,baseTilt,tiltDirection).withPowerLeverSize(powerLever,powerLeverSize).withControlType(selectableType,controlType));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);button.displayString=pilotModeLabel();}
+        if(button.id==19){pilotHeight=GuiOptionCycle.next(pilotHeight,4);button.displayString=pilotHeightLabel();com.vandorlabs.vehicle.VehicleNetwork.Packet setting=new com.vandorlabs.vehicle.VehicleNetwork.Packet(com.vandorlabs.vehicle.VehicleNetwork.HEIGHT);setting.entity=-1;setting.origin=member.channelTile().getPos();setting.strafe=(byte)pilotHeight;PacketHandler.INSTANCE.sendToServer(setting);}
+        if(button.id==17){shipAnimated=!shipAnimated;button.displayString="ON animation: "+(shipAnimated?"ON":"OFF");submit();}
+        if(button.id==16){redstoneInverted=!redstoneInverted;button.displayString=redstoneInverted?"Activate on: OFF":"Activate on: ON";}
         if(button.id==15){taxiMode=!taxiMode;button.displayString="Taxi Mode: "+(taxiMode?"ON":"OFF");}
         if(button.id==14){shipMode=GuiOptionCycle.next(shipMode,3);button.displayString=shipModeLabel();submit();}
         if(button.id==13){controlType=GuiOptionCycle.next(controlType,3);button.displayString=typeLabel();}
@@ -168,6 +188,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
+    private String pilotModeLabel(){return new String[]{"Trigger: Disabled","Trigger: Redstone ON","Trigger: Redstone OFF"}[pilotMode];}
+    private String pilotHeightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
     private int baseControlsY(){return signalControl?selectableType?146:122:powerLever?96:66;}
     private String shipModeLabel(){return shipMode==1?"Trigger: Redstone ON":shipMode==2?"Trigger: Redstone OFF":"Trigger: Disabled";}
     private String dialogTitle(){return pilotSeat?"Pilot Seat":shipSystem?member.channelTile().getBlockType().getLocalizedName():thruster?"Programmable Thruster":"Redstone Channels";}
@@ -232,7 +254,8 @@ public class GuiRedstoneChannel extends GuiContainer {
         GlStateManager.disableLighting();
         fontRenderer.drawString(fontRenderer.trimStringToWidth(dialogTitle(),xSize-24),12,8,0xFFFFFF);
         fontRenderer.drawString(thruster||shipSystem?"Channels (0 = none)":"Channels",thruster?layout.controlsX-guiLeft:shipSystem?(xSize-ProgrammableDialogLayout.CONTROLS_WIDTH)/2:14,thruster||shipSystem?27:43,0xDAE8F0);
-        if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,96,0xDAE8F0);}
+        if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,146,0xDAE8F0);}
+        if(pilotSeat && !inspectionStatus.isEmpty()){java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(inspectionStatus,212);for(int i=0;i<Math.min(5,lines.size());i++)fontRenderer.drawString(i==4 && lines.size()>5?fontRenderer.trimStringToWidth(lines.get(i),198)+"...":lines.get(i),14,162+i*9,0xffbb88);if(mouseX-guiLeft>=14 && mouseX-guiLeft<=226 && mouseY-guiTop>=162 && mouseY-guiTop<=207)drawHoveringText(lines,mouseX-guiLeft,mouseY-guiTop);}
         if(thruster)fontRenderer.drawString("Wall texture",12,27,0xDAE8F0);
         if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,94,0xDAE8F0);fontRenderer.drawString("Click to cycle four levels",14,108,0xDAE8F0);}
     }

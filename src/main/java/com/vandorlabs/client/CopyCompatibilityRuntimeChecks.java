@@ -98,7 +98,7 @@ final class CopyCompatibilityRuntimeChecks {
 
         // Multi-cell blocks need more than metadata: BBW places only the
         // clicked cell. The adapter reconstructs both door cells exactly.
-        BlockVandorDoor door = observationDoor();
+        BlockVandorDoor door = programmableDoor();
         BlockPos doorSource = new BlockPos(13, 21, 6);
         BlockPos doorTarget = new BlockPos(14, 21, 6);
         world.setBlockState(doorSource.down(), Blocks.STONE.getDefaultState(), 2);
@@ -114,6 +114,7 @@ final class CopyCompatibilityRuntimeChecks {
                 .withProperty(BlockVandorDoor.POWERED, false);
         world.setBlockState(doorSource, lower, 2);
         world.setBlockState(doorSource.up(), upper, 2);
+        configureDoor(world, doorSource);
         captureBbw(player, doorSource);
         world.setBlockState(doorTarget, door.getDefaultState(), 2);
         setLastPlaced(wand, doorTarget);
@@ -127,6 +128,7 @@ final class CopyCompatibilityRuntimeChecks {
                         door.getActualState(world.getBlockState(
                         doorSource.up()), world, doorSource.up())),
                 "BBW did not preserve both door halves");
+        requireDoorConfigured(world, doorTarget, "BBW Programmable Door appearance");
 
         checkMixedWandSources(world, player, wand);
         player.setHeldItem(EnumHand.MAIN_HAND, oldHeld);
@@ -253,7 +255,7 @@ final class CopyCompatibilityRuntimeChecks {
             // Copy both cells, exactly as a region containing a complete door
             // does. A selection containing only half a door remains invalid by
             // vanilla/WorldEdit semantics.
-            BlockVandorDoor door = observationDoor();
+            BlockVandorDoor door = programmableDoor();
             BlockPos doorSource = new BlockPos(13, 21, -6);
             BlockPos doorTarget = new BlockPos(15, 21, -6);
             world.setBlockState(doorSource.down(),
@@ -273,6 +275,7 @@ final class CopyCompatibilityRuntimeChecks {
                     .withProperty(BlockVandorDoor.POWERED, false);
             world.setBlockState(doorSource, lower, 2);
             world.setBlockState(doorSource.up(), upper, 2);
+            configureDoor(world, doorSource);
             for (int dy = 0; dy < 2; dy++) {
                 BlockPos from = doorSource.up(dy);
                 BlockPos to = doorTarget.up(dy);
@@ -299,6 +302,7 @@ final class CopyCompatibilityRuntimeChecks {
                             + "expected " + sourceLowerActual + " / "
                             + sourceUpperActual + ", got " + targetLowerActual
                             + " / " + targetUpperActual);
+            requireDoorConfigured(world, doorTarget, "WorldEdit Programmable Door appearance");
             checkWorldEditRotation(world,forgeWorld,forgeWorldClass,vectorClass,baseBlockClass);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("WorldEdit integration failed", e);
@@ -408,7 +412,7 @@ final class CopyCompatibilityRuntimeChecks {
                 +", upper actual="+spaceDoor.getActualState(pastedUpper,world,doorTo.up()));
 
         // Representative ForgeWorld pastes verify the transformed data crosses the adapter.
-        for (Block block:new Block[]{observationDoor(),
+        for (Block block:new Block[]{programmableDoor(),
                 Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster")),
                 Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","rocket_thruster_wedge"))}) {
             IBlockState source=block.getDefaultState();
@@ -426,7 +430,7 @@ final class CopyCompatibilityRuntimeChecks {
         }
         for (int upperMeta:new int[]{8,9,10,11,12,13,14,15}) {
             Object rotatedUpper=transform.invoke(null,
-                    base.newInstance(Block.getIdFromBlock(observationDoor()),upperMeta),rotation,registry);
+                    base.newInstance(Block.getIdFromBlock(programmableDoor()),upperMeta),rotation,registry);
             require((Integer)data.invoke(rotatedUpper)==upperMeta,"WorldEdit changed upper door hinge or power metadata");
         }
     }
@@ -449,11 +453,31 @@ final class CopyCompatibilityRuntimeChecks {
         selector.setSmallInput(true);
     }
 
-    private static BlockVandorDoor observationDoor() {
+    private static void configureDoor(World world, BlockPos pos) {
+        TileEntity tile = world.getTileEntity(pos);
+        require(tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor,
+                "Programmable Door tile missing at " + pos);
+        com.vandorlabs.tiles.TileEntitySpaceDoor door =
+                (com.vandorlabs.tiles.TileEntitySpaceDoor) tile;
+        door.setPlacementDepth(2);
+        door.setFaceTexture(7);
+        door.setTileTexture(true);
+    }
+
+    private static void requireDoorConfigured(World world, BlockPos pos, String label) {
+        TileEntity tile = world.getTileEntity(pos);
+        require(tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor, label + " tile missing");
+        com.vandorlabs.tiles.TileEntitySpaceDoor door =
+                (com.vandorlabs.tiles.TileEntitySpaceDoor) tile;
+        require(door.getPlacementDepth() == 2 && door.getFaceTexture() == 7
+                && door.isTileTexture(), label + " was not preserved");
+    }
+
+    private static BlockVandorDoor programmableDoor() {
         Block block = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",
-                "space_observation_rotating_door_framed"));
+                "programmable_door"));
         require(block instanceof BlockVandorDoor,
-                "detailed observation door is unavailable");
+                "Programmable Door is unavailable");
         return (BlockVandorDoor) block;
     }
 

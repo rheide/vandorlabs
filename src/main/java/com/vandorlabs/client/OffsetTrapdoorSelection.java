@@ -51,7 +51,7 @@ public final class OffsetTrapdoorSelection {
         GlStateManager.pushMatrix();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.glLineWidth(2);GlStateManager.disableTexture2D();GlStateManager.depthMask(false);
         if(tile instanceof TileEntityCanopy) {
-            for(AxisAlignedBB box:((TileEntityCanopy)tile).owner().boxes())if(box.grow(.001).contains(selected.hitVec))RenderGlobal.drawSelectionBoundingBox(box.grow(.002).offset(-x,-y,-z),0,0,0,.4F);
+            RenderGlobal.drawSelectionBoundingBox(((TileEntityCanopy)tile).owner().selectionBounds().grow(.002).offset(-x,-y,-z),0,0,0,.4F);
         }else if(MovedDoorInteractions.isMoved(mc.world,tile.getPos())) {
             for(AxisAlignedBB box:MovedDoorInteractions.bounds(mc.world,tile.getPos()))if(box.grow(.001).contains(selected.hitVec))
                 RenderGlobal.drawSelectionBoundingBox(box.grow(.002).offset(-x,-y,-z),0,0,0,.4F);

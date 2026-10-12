@@ -45,6 +45,23 @@ public class TileEntityControlledRamp extends TileEntity {
     public int travelAxis=RampGeometry.VERTICAL;
     public int speed=1;
     public int interpolation;
+    public int escalator;
+    public boolean beltRunning;
+    public double beltDistance;
+    public long beltTick;
+    private double cachedBeltDistance=Double.NaN;
+    private List<RampGeometry.Box> cachedBeltGeometry;
+    private final Map<RampGeometry.Box,Double> beltTops=new java.util.IdentityHashMap<>();
+    private final Map<RampGeometry.Box,BlockPos> beltMaterials=new java.util.IdentityHashMap<>();
+    public double beltDistance(double partial) {
+        if(world!=null && !world.isRemote) {
+            TileEntity owner=world.getTileEntity(controller);
+            if(owner instanceof TileEntityRampController)return ((TileEntityRampController)owner).beltDistance(0);
+            return beltDistance;
+        }
+        double sign=(endOffsetValue()>=0?1:-1)*(escalator==1?1:-1);
+        return beltDistance+(beltRunning?(world.getTotalWorldTime()-beltTick+partial)*com.vandorlabs.ramp.EscalatorGeometry.rate(speed)*sign:0);
+    }
     public boolean extendSegments;
     public final List<BlockPos> origins=new ArrayList<>();
     public final Map<BlockPos,NBTTagCompound> sourceTileTags=new LinkedHashMap<>();
@@ -55,11 +72,12 @@ public class TileEntityControlledRamp extends TileEntity {
     private long startTick;
 
     public boolean isOpen() { return open; }
-    public boolean isMoving() { return moving; }
+    public boolean isMoving() { return moving || beltRunning; }
     public double pose(double partial) {
         return moving?ControllerPlatform.pose(startPose,open,world.getTotalWorldTime()-startTick+partial,duration):startPose;
     }
     public void move(boolean target,double from,long tick,int ticks,boolean animate) {
+        cachedBeltDistance=Double.NaN;
         open=target; startPose=from; startTick=tick; duration=ticks; moving=animate;
         markDirty();
         IBlockState s=world.getBlockState(pos);
@@ -76,6 +94,27 @@ public class TileEntityControlledRamp extends TileEntity {
         IBlockState state=world.getBlockState(pos);
         if (!(state.getBlock() instanceof BlockControlledRamp)) return boxes;
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
+        if(escalator!=0 && !moving && pose(partial)>=1) {
+            double distance=beltDistance(partial);
+            if(distance==cachedBeltDistance && cachedBeltGeometry!=null)return cachedBeltGeometry;
+            beltMaterials.clear();beltTops.clear();
+            for(BlockPos origin:origins) {
+                // Only the source lane matching this cell can intersect it.
+                if(face.getAxis()==EnumFacing.Axis.X?origin.getZ()!=pos.getZ():origin.getX()!=pos.getX())continue;
+                int originRow=origin.getX()*face.getFrontOffsetX()+origin.getZ()*face.getFrontOffsetZ()
+                        -(pos.getX()*face.getFrontOffsetX()+pos.getZ()*face.getFrontOffsetZ()-row);
+                double originStart=com.vandorlabs.ramp.EscalatorGeometry.phase(originRow+distance,length*16);
+                if(!(originStart<row+1 && originStart+1>row)
+                        && !(originStart-length<row+1 && originStart+1-length>row))continue;
+                for(RampGeometry.Box whole:com.vandorlabs.ramp.EscalatorGeometry.treads(direction(face),origin.getX(),origin.getY(),origin.getZ(),
+                        low,high,originRow,length,treadPixels,endOffsetValue(),distance,interpolation)) {
+                    RampGeometry.Box clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
+                    if(clipped!=null){boxes.add(clipped);beltMaterials.put(clipped,origin);beltTops.put(clipped,whole.maxY-pos.getY());}
+                }
+            }
+            cachedBeltDistance=distance;cachedBeltGeometry=boxes;
+            return boxes;
+        }
         if (origins.isEmpty() && travelAxis==RampGeometry.VERTICAL && !extendSegments)
             return RampGeometry.boxesPixels(direction(face),pos.getY(),sourceY,low,high,
                     row,length,startOffsetValue(),endOffsetValue(),treadPixels,pose(partial),elevator,speed==0,interpolation);
@@ -116,6 +155,19 @@ public class TileEntityControlledRamp extends TileEntity {
     }
     /** Map a moving slice back to its source block's top and side texture coordinates. */
     public double[] textureShift(RampGeometry.Box box,double partial) {
+        if(escalator!=0 && !moving && pose(partial)>=1) {
+            BlockPos origin=originFor(box,partial);
+            EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
+            double along=(pos.getX()+(box.minX+box.maxX)*.5)*face.getFrontOffsetX()
+                    +(pos.getZ()+(box.minZ+box.maxZ)*.5)*face.getFrontOffsetZ();
+            // Reverse-facing lanes measure their start at the far edge of the cell.
+            int min=pos.getX()*face.getFrontOffsetX()+pos.getZ()*face.getFrontOffsetZ()-row;
+            double coordinate=along-min+(face==EnumFacing.NORTH || face==EnumFacing.WEST?1:0);
+            double sourceCoordinate=com.vandorlabs.ramp.EscalatorGeometry.phase(coordinate-beltDistance(partial),length*16);
+            double displacement=coordinate-sourceCoordinate;
+            return new double[]{pos.getX()-origin.getX()-face.getFrontOffsetX()*displacement,
+                    pos.getZ()-origin.getZ()-face.getFrontOffsetZ()*displacement};
+        }
         if (travelAxis==RampGeometry.VERTICAL || extendSegments) return new double[]{0,0};
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
         EnumFacing side=travelAxis==RampGeometry.LEFT?face.rotateYCCW():face.rotateY();
@@ -147,6 +199,7 @@ public class TileEntityControlledRamp extends TileEntity {
                 box.maxX,box.maxY,box.maxZ),localY,partial);
     }
     public double sideTextureV(RampGeometry.Box box,double localY,double partial) {
+        if(escalator!=0 && !moving && pose(partial)>=1)return 1-(localY-beltTops.getOrDefault(box,box.maxY)+high);
         if (extendSegments) return 1-localY;
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
         int step=RampGeometry.segmentAtPixels(direction(face),box,treadPixels,elevator);
@@ -164,7 +217,7 @@ public class TileEntityControlledRamp extends TileEntity {
 
     /** Resolve saved source data once for the six faces of this slice. */
     public SourceMaterial sourceMaterial(RampGeometry.Box box,double partial) {
-        if (sourceTileTags.isEmpty()) return SourceMaterial.NONE;
+        if (sourceTileTags.isEmpty() || !source.getPropertyKeys().contains(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING)) return SourceMaterial.NONE;
         BlockPos origin=originFor(box,partial);
         NBTTagCompound saved=sourceTileTags.get(origin);
         if (saved==null) saved=sourceTileTags.values().iterator().next();
@@ -191,6 +244,8 @@ public class TileEntityControlledRamp extends TileEntity {
     }
 
     private BlockPos originFor(RampGeometry.Box box,double partial) {
+        BlockPos material=beltMaterials.get(box);
+        if(material!=null)return material;
         double centerX=pos.getX()+(box.minX+box.maxX)*.5;
         double centerZ=pos.getZ()+(box.minZ+box.maxZ)*.5;
         for (BlockPos origin:origins)
@@ -244,6 +299,8 @@ public class TileEntityControlledRamp extends TileEntity {
     @Override public void onChunkUnload() { ControllerRecovery.unregister(this); super.onChunkUnload(); }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
+        tag.setInteger("EscalatorMode",escalator);tag.setBoolean("EscalatorRunning",beltRunning);
+        tag.setDouble("EscalatorDistance",beltDistance);tag.setLong("EscalatorTick",beltTick);
         new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
                 elevator,open,moving,startPose,startTick,startOffset,endOffset(),treadPixels).write(new NbtPrimitiveData(tag));
         tag.setInteger(SaveSchema.Ramp.START_OFFSET_HALF_STEPS,startHalfSteps);
@@ -298,7 +355,12 @@ public class TileEntityControlledRamp extends TileEntity {
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
+        super.readFromNBT(tag);cachedBeltDistance=Double.NaN;beltMaterials.clear();
+        escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
+        beltRunning=tag.getBoolean("EscalatorRunning");beltDistance=tag.getDouble("EscalatorDistance");
+        beltTick=tag.getLong("EscalatorTick");
+        if(!Double.isFinite(beltDistance))beltDistance=0;
+        interpolation=Math.max(0,Math.min(2,tag.getInteger("RampInterpolation")));
         controller=tag.hasKey(SaveSchema.Ramp.CONTROLLER_X)
                 ?new BlockPos(tag.getInteger(SaveSchema.Ramp.CONTROLLER_X),
                         tag.getInteger(SaveSchema.Ramp.CONTROLLER_Y),

@@ -16,22 +16,26 @@ public final class MessageProgrammableGlass implements IMessage {
     private BlockPos pos;
     private int size, shade;
     private boolean join;
+    private int tint=1;
+    private boolean framed=true;
     public MessageProgrammableGlass() {}
     public MessageProgrammableGlass(BlockPos pos, int size, int shade, boolean join) {
         this.pos = pos; this.size = size; this.shade = shade; this.join = join;
     }
+    public MessageProgrammableGlass withAppearance(int tint,boolean framed){this.tint=tint;this.framed=framed;return this;}
     @Override public void fromBytes(ByteBuf b) {
         pos = BlockPos.fromLong(b.readLong()); size = b.readInt(); shade = b.readInt();
         join = b.readBoolean();
+        tint=b.isReadable()?b.readUnsignedByte():1;framed=!b.isReadable()||b.readBoolean();
     }
     @Override public void toBytes(ByteBuf b) {
-        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);
+        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.pos == null || msg.size < 0 || msg.size > 2
+                if (!com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || msg.size < 0 || msg.size > 2
                         || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerProgrammableGlass)) return;
@@ -51,6 +55,7 @@ public final class MessageProgrammableGlass implements IMessage {
                     ((TileEntityProgrammableGlass) updated).setSize(msg.size);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
                     ((TileEntityProgrammableGlass) updated).setJoin(msg.join);
+                    ((TileEntityProgrammableGlass) updated).setAppearance(msg.tint,msg.framed);
                 }
             });
             return null;

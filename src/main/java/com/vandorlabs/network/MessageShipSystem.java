@@ -14,12 +14,14 @@ public final class MessageShipSystem implements IMessage {
     private BlockPos pos;
     private ChannelList channels;
     private int mode;
+    private boolean animated;
+    public MessageShipSystem withAnimation(boolean value) { animated=value; return this; }
     public MessageShipSystem() {}
     public MessageShipSystem(BlockPos pos, ChannelList channels, int mode) { this.pos=pos; this.channels=channels; this.mode=mode; }
-    public void toBytes(ByteBuf b) { b.writeLong(pos.toLong()); b.writeByte(mode); ChannelData.write(b, channels); }
+    public void toBytes(ByteBuf b) { b.writeLong(pos.toLong()); b.writeByte(mode | (animated ? 4 : 0)); ChannelData.write(b, channels); }
     public void fromBytes(ByteBuf b) {
         if (b.readableBytes() < 10) return;
-        pos=BlockPos.fromLong(b.readLong()); mode=b.readUnsignedByte(); channels=ChannelData.read(b,0);
+        pos=BlockPos.fromLong(b.readLong()); int flags=b.readUnsignedByte(); mode=flags & 3; animated=(flags & 4)!=0; if ((flags & ~7)!=0) return; channels=ChannelData.read(b,0);
     }
     public static final class Handler implements IMessageHandler<MessageShipSystem,IMessage> {
         public IMessage onMessage(MessageShipSystem message, MessageContext context) {
@@ -32,6 +34,7 @@ public final class MessageShipSystem implements IMessage {
                 ContainerRedstoneChannel container=(ContainerRedstoneChannel)player.openContainer;
                 if(tile==null || container.member!=tile || !container.canInteractWith(player)) return;
                 tile.configure(message.channels,message.mode);
+                tile.setAnimated(message.animated);
             });
             return null;
         }

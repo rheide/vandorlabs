@@ -182,6 +182,8 @@ def main():
     for p in (TEXTURES/'ship_systems').rglob('*.png'):
         if p.relative_to(TEXTURES/'ship_systems').as_posix() not in used:p.unlink()
     print('Registered',len(items),'single-size machinery items; removed obsolete variants and textures.')
+    from curate_machinery import main as curate
+    curate()
 
 
 if __name__=='__main__':main()

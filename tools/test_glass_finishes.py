@@ -12,10 +12,16 @@ for detail in ('low', 'medium'):
     for file in (TEXTURES / detail).glob('*.png'):
         data = Image.open(file).convert('RGBA')
         assert data.size == clear.size
-        if file.stem not in ('clear', 'soft_cyan', 'soft_dark_grey'):
+        if not file.stem.startswith(('clear', 'soft_cyan', 'soft_dark_grey')) and not file.stem.endswith(('_mild','_strong')):
             assert data.getchannel('A').getextrema()[0] >= 76, file.name
             assert ImageStat.Stat(data.getchannel('A')).mean[0] > ImageStat.Stat(clear.getchannel('A')).mean[0] + 40, file.name
-    assert len(list((TEXTURES / detail).glob('*.png'))) == 19
+    assert len(list((TEXTURES / detail).glob('*.png'))) == 57
+    for name in ('soft_cyan','soft_dark_grey') + tuple(n for n in ('white','orange','magenta','light_blue','yellow','lime','pink','grey','light_grey','cyan','purple','blue','brown','green','red','black')):
+        means = [ImageStat.Stat(Image.open(TEXTURES / detail / (name + suffix + '.png')).getchannel('A')).mean[0]
+                 for suffix in ('_mild','','_strong')]
+        assert means[0] < means[1] < means[2], (name, means)
+    for suffix in ('_mild','_strong'):
+        assert Image.open(TEXTURES / detail / ('clear'+suffix+'.png')).tobytes() == clear.tobytes()
 
 
 def load(ref):
@@ -44,6 +50,16 @@ count = 0
 for file in (ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured').glob('glass_*.json'):
     model = load('vandorlabs:item/configured/' + file.stem)
     display = model['display']['gui']
+    if file.stem.startswith('glass_diagonal_'):
+        assert len(model['elements']) == 5, (file.name, 'missing visible inventory frame')
+        assert model['textures']['frame'].endswith('/double_frame_metal')
+        pane = model['elements'][0]
+        assert pane['from'][:2] == [1,1] and pane['to'][:2] == [15,15]
+        for rail in model['elements'][1:]:
+            assert all(face['texture'] == '#frame' for face in rail['faces'].values())
+            # Rails touch the inset pane but never overlap its volume.
+            assert any(rail['to'][axis] <= pane['from'][axis] or rail['from'][axis] >= pane['to'][axis]
+                       for axis in range(3)), file.name
     for element in model['elements']:
         for x in (element['from'][0], element['to'][0]):
             for y in (element['from'][1], element['to'][1]):
@@ -59,5 +75,5 @@ for file in (ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured
                         point = rotate(point, axis, angle)
                     assert abs(point[0]) <= 7.5 and abs(point[1]) <= 7.5, (file.name, point)
     count += 1
-assert count == 57, count
-print('PASS: 38 glass textures, stronger color opacity, and projected slot padding for all 57 item variants')
+assert count == 399, count
+print('PASS: 114 glass textures, three increasing tint strengths, and projected slot padding for all 399 item models')

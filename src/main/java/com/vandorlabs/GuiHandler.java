@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
 
+    public static final int GUI_LARGE_CANOPY=14;
     public static final int GUI_PROGRAMMABLE_ARMOR = 13;
     public static final int GUI_REDSTONE_SCREEN=11,GUI_REDSTONE_SCREEN_SECONDARY=12;
     public static final int GUI_ANIMATED_SCREEN_SELECTOR = 0;
@@ -54,6 +55,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_LARGE_CANOPY){com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,new BlockPos(x,y,z));if(tile!=null && tile.owner().configurable())return new com.vandorlabs.container.ContainerLargeCanopy(tile);return null;}
         if (ID == GUI_PROGRAMMABLE_ARMOR) {
             com.vandorlabs.container.ContainerProgrammableArmor armor = com.vandorlabs.container.ContainerProgrammableArmor.resolve(player,world,x,y,z);
             if (armor != null && armor.canInteractWith(player)) return armor;
@@ -131,6 +133,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_LARGE_CANOPY){com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,new BlockPos(x,y,z));if(tile!=null && tile.owner().configurable())return new com.vandorlabs.client.GuiLargeCanopy(tile);return null;}
         if (ID == GUI_PROGRAMMABLE_ARMOR) {
             com.vandorlabs.container.ContainerProgrammableArmor armor = com.vandorlabs.container.ContainerProgrammableArmor.resolve(player,world,x,y,z);
             if (armor != null && armor.canInteractWith(player)) return new com.vandorlabs.client.GuiProgrammableArmor(armor);

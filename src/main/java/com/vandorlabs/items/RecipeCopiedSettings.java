@@ -27,6 +27,8 @@ public final class RecipeCopiedSettings extends IForgeRegistryEntry.Impl<IRecipe
             else return ItemStack.EMPTY;
         }
         if (tool.isEmpty() || input.isEmpty() || !ItemDuplifier.hasCopy(tool)) return ItemStack.EMPTY;
+        if(input.getItem() instanceof net.minecraft.item.ItemBlock
+                && !com.vandorlabs.config.BlockAvailability.enabled(((net.minecraft.item.ItemBlock)input.getItem()).getBlock()))return ItemStack.EMPTY;
         net.minecraft.nbt.NBTTagCompound settings=DuplifierApplyOptions.selected(
                 tool.getSubCompound(ItemDuplifier.SETTINGS_TAG),DuplifierApplyOptions.mask(tool));
         if(input.getItem() instanceof ItemProgrammableArmor) {

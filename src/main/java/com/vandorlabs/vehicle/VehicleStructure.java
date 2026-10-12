@@ -49,12 +49,21 @@ public final class VehicleStructure {
     public boolean matches(World world,BlockPos origin) {
         for(Cell cell:cells) {
             BlockPos p=origin.add(cell.pos);
-            if(!world.isBlockLoaded(p)||world.getBlockState(p)!=cell.state)return false;
+            if(!world.isBlockLoaded(p))return false;
+            VehicleStructure.Cell original=VehicleEscalators.original(world,this,origin,p);
+            if(original!=null){
+                if(original.state!=cell.state)return false;
+                NBTTagCompound expected=cell.tileData(),actual=original.tileData()==null?null:VehicleTileData.translated(original.tileData(),BlockPos.ORIGIN.subtract(origin));
+                if(!java.util.Objects.equals(expected,actual))return false;continue;
+            }
+            if(world.getBlockState(p)!=cell.state)return false;
             TileEntity tile=world.getTileEntity(p);
             if(cell.tile==null){if(tile!=null)return false;}
             else {
                 if(tile==null)return false;
-                NBTTagCompound actual=VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin));
+                NBTTagCompound captured=tile.writeToNBT(new NBTTagCompound());
+                if(VehicleEscalators.active(tile) && cell.tile.getTagList("Sources",10).tagCount()==0)captured=VehicleEscalators.paused(captured);
+                NBTTagCompound actual=VehicleTileData.translated(captured,BlockPos.ORIGIN.subtract(origin));
                 NBTTagCompound saved=cell.tile.copy();
                 // A short pulse can fall while the bounded scan is still running.
                 if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){actual.removeTag("VehicleSignalHigh");saved.removeTag("VehicleSignalHigh");}

@@ -13,18 +13,19 @@ import net.minecraft.item.ItemStack;
 
 /** Pilot seat with an invisible upper cell reserving the backrest. */
 public final class BlockPilotSeat extends BlockVandorDirectional {
+    public static final net.minecraft.block.properties.PropertyInteger HEIGHT=net.minecraft.block.properties.PropertyInteger.create("height",0,3);
     public static final PropertyBool UPPER = BlockBridgeChair.UPPER;
-    public static final double SEAT_HEIGHT = 11D / 16D;
+    public static final double SEAT_HEIGHT = 7D / 16D;
     private static final AxisAlignedBB BOUNDS = new AxisAlignedBB(-.125, 0, 0, 1.125, 1, 1.125);
     private static final AxisAlignedBB BACK = new AxisAlignedBB(-.125, 0, 0, 1.125, .75, 1.125);
 
     public BlockPilotSeat() {
         super("pilot_seat");
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(UPPER, false));
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(UPPER, false).withProperty(HEIGHT,0));
         setLightOpacity(0);
     }
 
-    @Override protected BlockStateContainer createBlockState() { return new BlockStateContainer(this, FACING, UPPER); }
+    @Override protected BlockStateContainer createBlockState() { return new BlockStateContainer(this, FACING, UPPER,HEIGHT); }
     @Override public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta & 3)).withProperty(UPPER, (meta & 4) != 0);
     }
@@ -33,14 +34,34 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     }
     @Override public boolean hasTileEntity(IBlockState state){return !state.getValue(UPPER);}
     @Override public net.minecraft.tileentity.TileEntity createTileEntity(World world,IBlockState state){return new com.vandorlabs.tiles.TileEntityPilotSeat();}
+    public static double seatHeight(IBlockAccess world,BlockPos lower){
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(lower);
+        return tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat?((com.vandorlabs.tiles.TileEntityPilotSeat)tile).seatHeight():SEAT_HEIGHT;
+    }
+    @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(state.getValue(UPPER)?pos.down():pos);
+        return state.withProperty(HEIGHT,tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat?((com.vandorlabs.tiles.TileEntityPilotSeat)tile).getHeight():0);
+    }
     @Override public int damageDropped(IBlockState state) { return 0; }
+    /** Open-bottom shells share their lower air space with the rendered backrest. */
+    public static boolean canopyAbove(IBlockAccess world,BlockPos pos) {
+        net.minecraft.block.Block block=world.getBlockState(pos.up()).getBlock();
+        if(!(block instanceof BlockCanopy))return false;
+        String kind=((BlockCanopy)block).kind;
+        return kind.equals("regular_canopy_glass") || kind.startsWith("space_shuttle_") || kind.startsWith("space_bubble_wedge_");
+    }
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from) {
+        if(!world.isRemote && !state.getValue(UPPER) && world.isAirBlock(pos.up()))
+            world.setBlockState(pos.up(),state.withProperty(UPPER,true),3);
+        super.neighborChanged(state,world,pos,block,from);
+    }
     @Override public boolean canPlaceBlockAt(World world, BlockPos pos) {
         return pos.getY() < world.getHeight() - 1 && super.canPlaceBlockAt(world, pos)
-                && world.getBlockState(pos.up()).getBlock().isReplaceable(world, pos.up());
+                && (canopyAbove(world,pos) || world.getBlockState(pos.up()).getBlock().isReplaceable(world, pos.up()));
     }
     @Override public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
         if (!world.isRemote) {
-            world.setBlockState(pos.up(), state.withProperty(UPPER, true), 3);
+            if(!canopyAbove(world,pos))world.setBlockState(pos.up(), state.withProperty(UPPER, true), 3);
             net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
             if(raw instanceof com.vandorlabs.tiles.TileEntityPilotSeat && placer instanceof EntityPlayer){((com.vandorlabs.tiles.TileEntityPilotSeat)raw).owner=placer.getUniqueID();raw.markDirty();}
         }
@@ -49,7 +70,9 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
     @Override public boolean isFullCube(IBlockState state) { return false; }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return PanelPlacement.rotateFromNorth(state.getValue(UPPER) ? BACK : BOUNDS, state.getValue(FACING));
+        int height=getActualState(state,world,pos).getValue(HEIGHT);
+        AxisAlignedBB box=state.getValue(UPPER)?new AxisAlignedBB(-.125,0,0,1.125,.5+height/8D,1.125):new AxisAlignedBB(-.125,0,0,1.125,canopyAbove(world,pos)?1.5+height/8D:Math.min(1,.75+height/8D),1.125);
+        return PanelPlacement.rotateFromNorth(box,state.getValue(FACING));
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing face, float x, float y, float z) {
@@ -70,7 +93,7 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
             if (seat.getPassengers().isEmpty() && player.startRiding(seat, true))com.vandorlabs.vehicle.VehicleService.taxiAssembly((net.minecraft.entity.player.EntityPlayerMP)player,pos);
             return true;
         }
-        EntityChairSeat seat = new EntityChairSeat(world, pos, SEAT_HEIGHT);
+        EntityChairSeat seat = new EntityChairSeat(world, pos, seatHeight(world,pos));
         seat.rotationYaw = state.getValue(FACING).getHorizontalAngle();
         if (world.spawnEntity(seat)) {
             if(!player.startRiding(seat, true))seat.setDead();
@@ -80,6 +103,9 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     }
     @Override public void breakBlock(World world, BlockPos pos, IBlockState state) {
         BlockPos lower = state.getValue(UPPER) ? pos.down() : pos;
+        if(state.getValue(UPPER) && canopyAbove(world,lower) && world.getBlockState(lower).getBlock()==this){
+            super.breakBlock(world,pos,state);return;
+        }
         if (!world.isRemote)
             for (EntityChairSeat seat : world.getEntitiesWithinAABB(EntityChairSeat.class,
                     new AxisAlignedBB(lower).grow(.25, 1, .25)))

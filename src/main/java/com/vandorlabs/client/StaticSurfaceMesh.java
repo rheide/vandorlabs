@@ -20,6 +20,62 @@ final class StaticSurfaceMesh {
     }
     int vertexCount() { return vertices.length/8; }
 
+    /** Remove a shared cap once when caching joined transparent panel geometry. */
+    StaticSurfaceMesh withoutPlane(int axis,float plane) {
+        float[] result=new float[vertices.length];int used=0;
+        for(int offset=0;offset<vertices.length;offset+=32) {
+            boolean onPlane=true;
+            for(int v=0;v<4;v++)onPlane &= Math.abs(vertices[offset+v*8+axis]-plane)<1E-5;
+            if(!onPlane){System.arraycopy(vertices,offset,result,used,32);used+=32;}
+        }
+        return used==vertices.length?this:new StaticSurfaceMesh(Arrays.copyOf(result,used));
+    }
+
+    /** One-pixel rails on the pane faces, using the regular glass frame artwork. */
+    StaticSurfaceMesh outlineFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,
+            boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis) {
+        java.util.Map<String,Integer> edges=new java.util.HashMap<>();
+        for(int q=0;q<vertices.length;q+=32)if(paneFace(q))for(int e=0;e<4;e++) {
+            String key=edgeKey(q+e*8,q+((e+1)&3)*8);edges.put(key,edges.getOrDefault(key,0)+1);
+        }
+        Capture result=capture();
+        for(int q=0;q<vertices.length;q+=32)if(paneFace(q))for(int e=0;e<4;e++) {
+            int ai=q+e*8,bi=q+((e+1)&3)*8;
+            if(edges.get(edgeKey(ai,bi))!=1)continue;
+            if(hideLeft && edgePlane(ai,bi,0,0) || hideRight && edgePlane(ai,bi,0,16)
+                    || hideFront && edgePlane(ai,bi,2,0) || hideBack && edgePlane(ai,bi,2,16)
+                    || hideLower && edgePlane(ai,bi,rowAxis,0) || hideUpper && edgePlane(ai,bi,rowAxis,16))continue;
+            double dx=vertices[bi]-vertices[ai],dy=vertices[bi+1]-vertices[ai+1],dz=vertices[bi+2]-vertices[ai+2];
+            double length=Math.sqrt(dx*dx+dy*dy+dz*dz);if(length<1E-5)continue;
+            float nx=vertices[ai+5],ny=vertices[ai+6],nz=vertices[ai+7];
+            double ix=(ny*dz-nz*dy)/length,iy=(nz*dx-nx*dz)/length,iz=(nx*dy-ny*dx)/length;
+            double cx=0,cy=0,cz=0;
+            for(int v=0;v<4;v++){cx+=vertices[q+v*8];cy+=vertices[q+v*8+1];cz+=vertices[q+v*8+2];}
+            if(ix*(cx/4-vertices[ai])+iy*(cy/4-vertices[ai+1])+iz*(cz/4-vertices[ai+2])<0){ix=-ix;iy=-iy;iz=-iz;}
+            // A tiny outward offset keeps rails separate from the underlying transparent pane.
+            double ox=nx*.01,oy=ny*.01,oz=nz*.01;
+            for(int v=0;v<4;v++) {
+                int source=v==0 || v==3?ai:bi;boolean inset=v>=2;
+                result.pos(vertices[source]+ox+(inset?ix:0),vertices[source+1]+oy+(inset?iy:0),vertices[source+2]+oz+(inset?iz:0))
+                        .color(255,255,255,255).tex(sprite.getInterpolatedU(inset?.5:0),sprite.getInterpolatedV(v==0 || v==3?0:Math.min(8,length/2)))
+                        .normal(nx,ny,nz).endVertex();
+            }
+        }
+        return result.finish();
+    }
+    private boolean paneFace(int q) {
+        // Sloping face normals distinguish pane faces from the narrow end/depth caps.
+        return Math.abs(vertices[q+6])>1E-5 && Math.abs(vertices[q+6])<.99999;
+    }
+    private boolean edgePlane(int a,int b,int axis,float plane) {
+        return Math.abs(vertices[a+axis]-plane)<1E-4 && Math.abs(vertices[b+axis]-plane)<1E-4;
+    }
+    private String edgeKey(int a,int b) {
+        String aa=Math.round(vertices[a]*10000)+","+Math.round(vertices[a+1]*10000)+","+Math.round(vertices[a+2]*10000);
+        String bb=Math.round(vertices[b]*10000)+","+Math.round(vertices[b+1]*10000)+","+Math.round(vertices[b+2]*10000);
+        return aa.compareTo(bb)<0?aa+"/"+bb:bb+"/"+aa;
+    }
+
     void draw(BufferBuilder buffer,int lightmapA,int lightmapB) {
         for(int i=0;i<vertices.length;i+=8)
             buffer.pos(vertices[i],vertices[i+1],vertices[i+2]).color(255,255,255,255)

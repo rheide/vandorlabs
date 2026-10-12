@@ -94,14 +94,14 @@ final class DocumentationAnimationCapture {
                 BlockPos power=controller.getPos().north();
                 world.setBlockState(power,open?net.minecraft.init.Blocks.REDSTONE_BLOCK.getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),3);
                 controller.updatePower();
-                if(controller.isOpen()!=open)throw new IllegalStateException("Ramp signal did not switch: "+controller.status);
+                if((controller.escalator!=0?controller.isEscalatorRequested():controller.isOpen())!=open)throw new IllegalStateException("Ramp signal did not switch: "+controller.status);
             }
         }
     }
     private boolean active(World world) {
         boolean any=false,all=true;
         for(TileEntity member:members(world)) {
-            boolean value=member instanceof TileEntityRampController?((TileEntityRampController)member).isOpen()
+            boolean value=member instanceof TileEntityRampController?(((TileEntityRampController)member).escalator!=0?((TileEntityRampController)member).isEscalatorRequested():((TileEntityRampController)member).isOpen())
                     :world.getBlockState(member.getPos()).getValue(member instanceof TileEntityProgrammableTrapdoor?BlockTrapDoor.OPEN:BlockVandorDoor.OPEN);
             any|=value;all&=value;
         }
@@ -132,9 +132,9 @@ final class DocumentationAnimationCapture {
         times.append(name).append('\t').append(String.format(Locale.ROOT,"%.3f",elapsed)).append('\t').append(active(mc.world)).append('\n');
     }
     private void finish(Minecraft mc,int duration) {
-        if(frames.size()<25 || active(mc.world))throw new IllegalStateException("Incomplete documentation cycle");
+        if(frames.size()<25 || active(mc.world))throw new IllegalStateException("Incomplete documentation cycle: frames="+frames.size()+", active="+active(mc.world));
         if(kind().equals("ramp"))for(TileEntity tile:members(mc.world))
-            if(((TileEntityRampController)tile).isMoving())throw new IllegalStateException("Ramp did not finish retracting");
+            if(((TileEntityRampController)tile).isMoving() || ((TileEntityRampController)tile).isEscalatorRunning())throw new IllegalStateException("Ramp did not finish retracting");
         JsonObject metadata=new JsonParser().parse(spec.toString()).getAsJsonObject();metadata.addProperty("duration_ms",duration);
         metadata.addProperty("width",frames.get(0).getWidth());metadata.addProperty("height",frames.get(0).getHeight());
         try {

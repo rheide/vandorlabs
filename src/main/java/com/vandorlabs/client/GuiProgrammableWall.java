@@ -146,6 +146,11 @@ public class GuiProgrammableWall extends GuiContainer {
                 buttonList.add(new GuiButton(110,controlsX,y,controlsWidth,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
             }
         }
+        if(diagonalGlass) {
+            y+=24;
+            buttonList.add(new GuiButton(113,controlsX,y,controlsWidth/2-1,20,com.vandorlabs.tiles.GlassTextures.tintLabel(tile.getGlassTint())));
+            buttonList.add(new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare"));
+        }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
     }
 
@@ -169,7 +174,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
-                tile.getPos(), shade, join, shape));
+                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()));
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -206,7 +211,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114))return;
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
@@ -229,6 +234,11 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(diagonalGlass && (button.id==113 || button.id==114)) {
+            tile.setGlassAppearance(button.id==113?GuiOptionCycle.next(tile.getGlassTint(),3):tile.getGlassTint(),
+                    button.id==114?!tile.isGlassFramed():tile.isGlassFramed());
+            sendPortholeSettings();initGui();
+        }
         if(button.id==112){tile.setDiagonalJoin(GuiOptionCycle.next(tile.getDiagonalJoin(),JOINS.length));
             int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
             PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDiagonalGeometry(tile.getPos(),mode,tile.getDiagonalFill()).withJoin(tile.getDiagonalJoin()));initGui();}

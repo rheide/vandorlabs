@@ -20,6 +20,7 @@ import java.util.*;
 public final class NonRenderingChecks {
     public static void main(String[] args) {
         net.minecraft.init.Bootstrap.register();
+        BlockAvailabilityChecks.run();
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,
                 new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_screen"));
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityRampController.class,

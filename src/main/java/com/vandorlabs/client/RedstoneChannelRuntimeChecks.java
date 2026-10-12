@@ -50,7 +50,7 @@ final class RedstoneChannelRuntimeChecks {
         checkLinkedLatches(world,player);
         ChannelListRuntimeChecks.run(world,player);
         Block rawSwitch = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "rocker_switch"));
-        Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "space_standard_rotating_door_framed"));
+        Block rawDoor = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "programmable_door"));
         Block rawPropulsion = Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", "ion_drive"));
         require(rawSwitch instanceof BlockVandorSwitch && rawDoor instanceof BlockVandorDoor
@@ -94,6 +94,7 @@ final class RedstoneChannelRuntimeChecks {
                 world.getTileEntity(propulsionPos);
         switchTile.setRedstoneChannel(4271);
         secondSwitchTile.setRedstoneChannel(4271);
+        ((com.vandorlabs.tiles.TileEntitySpaceDoor)doorTile).configure(2,1,true,0,true,false,true,1);
         doorTile.setRedstoneChannel(4271);
         propulsionTile.setRedstoneChannel(4271);
         require(!world.getBlockState(propulsionPos).getValue(BlockPropulsionLight.POWERED),

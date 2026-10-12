@@ -16,10 +16,19 @@ import java.util.*;
 
 public final class TileEntityCanopy extends TileEntity implements ITickable {
     public BlockPos anchor, pair;
+    public boolean centeredPlacement;
+    public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();
+    public boolean configurable(){return block()!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(block().kind);}
+    public List<com.vandorlabs.canopy.CanopyMesh.Face> faces(){return block()==null?Collections.emptyList():configurable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model()));}
+    public List<BlockPos> cells(){return block()==null?Collections.emptyList():block().cells(pos,facing(),configurable()?large.length():block().length,block().kind.equals("space_visor_2x1") && centeredPlacement?3:block().width);}
+    private int joinedWidth=1;
     public boolean targetOpen, removing;
     public float previous, progress;
     private List<AxisAlignedBB> cached;
     private String cachedKey;
+    // Chunk#setBlockState installs the replacement before invoking breakBlock.
+    // Retain its supplied old state only for the synchronous teardown window.
+    private IBlockState removalState;
 
     public static TileEntityCanopy at(IBlockAccess w, BlockPos p) {
         if (w instanceof World && !((World) w).isBlockLoaded(p)) return null;
@@ -34,40 +43,53 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
     }
 
     public BlockCanopy block() {
-        return world != null && world.getBlockState(pos).getBlock() instanceof BlockCanopy
-                ? (BlockCanopy) world.getBlockState(pos).getBlock()
+        IBlockState state=removalState!=null?removalState:world==null?null:world.getBlockState(pos);
+        return state!=null && state.getBlock() instanceof BlockCanopy
+                ? (BlockCanopy) state.getBlock()
                 : null;
     }
 
     public EnumFacing facing() {
-        return world.getBlockState(pos).getValue(BlockCanopy.FACING);
+        IBlockState state=removalState!=null?removalState:world==null?null:world.getBlockState(pos);
+        return state!=null && state.getBlock() instanceof BlockCanopy?state.getValue(BlockCanopy.FACING):EnumFacing.NORTH;
     }
 
     public TileEntityCanopy constituent() {
         TileEntityCanopy t = anchor == null || anchor.equals(pos) ? this : at(world, anchor);
-        return t == null ? this : t;
+        return t == null || t.block()==null ? this : t;
     }
 
     public TileEntityCanopy owner() {
         TileEntityCanopy t = constituent();
         if (t.pair != null && !t.pair.equals(t.pos)) {
             TileEntityCanopy owner = at(world, t.pair);
-            if (owner != null) return owner;
+            if (owner != null && owner.block()!=null && owner.block()==t.block()) return owner;
         }
         return t;
     }
 
     public boolean draws() {
-        return (anchor == null || anchor.equals(pos))
+        return block()!=null && !removing && (anchor == null || anchor.equals(pos))
                 && (pair == null || pair.equals(pos))
                 && owner() == this;
     }
 
     public int width() {
-        return block().width * (pair != null && block().width == 1 ? 2 : 1);
+        TileEntityCanopy owner=owner();
+        return owner==this?(block()==null?1:block().width)*(pair==null?1:joinedWidth):owner.width();
+    }
+    private List<TileEntityCanopy> members() {
+        TileEntityCanopy owner=owner();List<TileEntityCanopy> result=new ArrayList<>();
+        for(int i=0;i<(owner.pair==null?1:owner.joinedWidth);i++) {
+            TileEntityCanopy member=at(world,owner.pos.offset(owner.facing().rotateY(),i));
+            if(member!=null && member.constituent()==member && member.block()==owner.block()
+                    && (member==owner || owner.pos.equals(member.pair)))result.add(member);
+        }
+        return result;
     }
 
     public String model() {
+        if(block()==null)return "";
         String id = block().kind;
         if (id.equals("regular_canopy_glass"))
             return String.format(java.util.Locale.ROOT, "regular_1x1_%02x", mask());
@@ -75,7 +97,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
             int mask = mask() & 11;
             return mask == 0 ? id : String.format(java.util.Locale.ROOT, "%s_%02x", id, mask);
         }
-        if (block().opening() && width() == 2) return id.replace("1x2", "2x2");
+        if (block().opening() && width() >= 2) return id.replace("1x2", "2x2");
         return id;
     }
 
@@ -90,17 +112,14 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
                             ? f.rotateYCCW()
                             : bit == 2 ? f.rotateY() : bit == 4 ? f : f.getOpposite();
             TileEntityCanopy t = at(world, pos.offset(dir, bit == 8 ? b.length : 1));
-            if (bit == 4 && b.kind.equals("regular_canopy_glass") && t != null) t = t.constituent();
-            if (t == null || t.block() == null || t.facing() != f || t.constituent() != t) continue;
-            BlockCanopy other = t.block();
-            boolean same = b.kind.equals(other.kind);
-            boolean seam =
-                    bit == 8
-                                    && b.kind.startsWith("angled_")
-                                    && other.kind.equals("regular_canopy_glass")
-                            || bit == 4
-                                    && b.kind.equals("regular_canopy_glass")
-                                    && other.kind.startsWith("angled_");
+            boolean regular=b.kind.equals("regular_canopy_glass");
+            if(regular && t!=null)t=t.constituent();
+            if(t==null || t.block()==null || t.constituent()!=t)continue;
+            BlockCanopy other=t.block();
+            boolean same=b.kind.equals(other.kind) && (regular || t.facing()==f);
+            boolean seam=bit==8 && b.kind.startsWith("angled_") && other.kind.equals("regular_canopy_glass")
+                    || regular && other.kind.startsWith("angled_")
+                    && t.getPos().offset(t.facing().getOpposite(),other.length).equals(pos);
             if (same || seam) result |= bit;
         }
         return result;
@@ -115,29 +134,21 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
     }
 
     public void tryPair() {
-        BlockCanopy b = block();
-        if (b == null
-                || !b.opening()
-                || b.width != 1
-                || pair != null
-                || targetOpen
-                || progress != 0) return;
-        for (EnumFacing dir : new EnumFacing[] {facing().rotateYCCW(), facing().rotateY()}) {
-            TileEntityCanopy t = at(world, pos.offset(dir));
-            if (t == null
-                    || t.constituent() != t
-                    || t.block() != b
-                    || t.facing() != facing()
-                    || t.pair != null
-                    || t.targetOpen
-                    || t.progress != 0) continue;
-            TileEntityCanopy left = dir == facing().rotateYCCW() ? t : this,
-                    right = left == this ? t : this;
-            left.pair = left.pos;
-            right.pair = left.pos;
-            left.sync();
-            right.sync();
-            return;
+        BlockCanopy b=block();
+        if(b==null || !b.opening() || b.width!=1 || removing || constituent()!=this)return;
+        int limit=3;
+        TileEntityCanopy owner=owner();
+        if(owner.targetOpen || owner.progress!=0)return;
+        for(EnumFacing dir:new EnumFacing[]{facing().rotateYCCW(),facing().rotateY()}) {
+            BlockPos edge=dir==facing().rotateYCCW()?owner.pos.offset(dir):owner.pos.offset(dir,owner.width());
+            TileEntityCanopy adjacent=at(world,edge);
+            if(adjacent==null || adjacent.constituent()!=adjacent || adjacent.removing || adjacent.block()!=b || adjacent.facing()!=facing())continue;
+            TileEntityCanopy other=adjacent.owner();
+            if(other==owner || other.removing || other.targetOpen || other.progress!=0 || owner.width()+other.width()>limit)continue;
+            List<TileEntityCanopy> group=owner.members();group.addAll(other.members());
+            TileEntityCanopy left=dir==facing().rotateYCCW()?other:owner;
+            for(TileEntityCanopy member:group){member.pair=left.pos;member.joinedWidth=group.size();member.sync();}
+            owner=left;
         }
     }
 
@@ -148,37 +159,18 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         sync();
     }
 
-    public boolean clearance() {
-        EnumFacing f = facing();
-        BlockCanopy b = block();
-        int w = width();
-        AxisAlignedBB local =
-                b.kind.contains("slide")
-                        ? new AxisAlignedBB(0, 0, 0, w, 1, 4)
-                        : new AxisAlignedBB(0, 0, 0, w, 3.25, 3.5);
-        Vec3d a = CanopyMesh.rotate(new Vec3d(local.minX, local.minY, local.minZ), f),
-                c = CanopyMesh.rotate(new Vec3d(local.maxX, local.maxY, local.maxZ), f);
-        AxisAlignedBB sweep = new AxisAlignedBB(a, c).offset(pos).shrink(.005);
-        for (BlockPos p :
-                BlockPos.getAllInBox(
-                        new BlockPos(sweep.minX, sweep.minY, sweep.minZ),
-                        new BlockPos(sweep.maxX, sweep.maxY, sweep.maxZ))) {
-            if (!world.isBlockLoaded(p)) return false;
-            TileEntityCanopy t = at(world, p);
-            if (t != null) {
-                if (t.owner() == this) continue;
-                return false;
-            }
-            List<AxisAlignedBB> boxes = new ArrayList<>();
-            IBlockState s = world.getBlockState(p);
-            s.addCollisionBoxToList(world, p, sweep, boxes, null, false);
-            if (!boxes.isEmpty()) return false;
-        }
-        return true;
-    }
+    /** Opening shells intentionally pass through the vehicle's rear bodywork. */
+    public boolean clearance() {return block()!=null && block().opening();}
 
     @Override
     public void update() {
+        if(world==null || removing)return;
+        if(block()==null) {
+            // A failed older teardown may have left a tile on air/another block.
+            // Remove only this orphan tile; never erase its replacement block.
+            if(!world.isRemote && at(world,pos)==this)world.removeTileEntity(pos);
+            return;
+        }
         previous = progress;
         if (!world.isRemote
                 && block() != null
@@ -205,22 +197,19 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
             }
             return false;
         }
-        if (pair != null) {
-            BlockPos other = pair.equals(pos) ? pos.offset(facing().rotateY()) : pair;
-            if (world.isBlockLoaded(other)) {
-                TileEntityCanopy member = at(world, other);
-                if (member == null
-                        || member.block() != block()
-                        || member.facing() != facing()
-                        || !pair.equals(member.pair)) {
-                    pair = null;
-                    progress = previous = 0;
-                    targetOpen = false;
-                    sync();
+        if(pair!=null) {
+            TileEntityCanopy owner=at(world,pair);
+            boolean broken=world.isBlockLoaded(pair) && (owner==null || owner.block()!=block() || owner.facing()!=facing() || !pair.equals(owner.pair));
+            if(pair.equals(pos))for(int i=1;i<joinedWidth;i++) {
+                BlockPos other=pos.offset(facing().rotateY(),i);
+                if(world.isBlockLoaded(other)) {
+                    TileEntityCanopy member=at(world,other);
+                    if(member==null || member.block()!=block() || member.facing()!=facing() || !pos.equals(member.pair))broken=true;
                 }
             }
+            if(broken){for(TileEntityCanopy member:members()){member.pair=null;member.joinedWidth=1;member.progress=member.previous=0;member.targetOpen=false;member.sync();}}
         }
-        for (BlockPos cell : block().cells(pos, facing()))
+        for (BlockPos cell : cells())
             if (world.isBlockLoaded(cell)) {
                 TileEntityCanopy member = at(world, cell);
                 if (member == null || member.block() != block() || !pos.equals(member.anchor)) {
@@ -234,11 +223,11 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
 
     public List<AxisAlignedBB> boxes() {
         if (!draws() || block() == null) return Collections.emptyList();
-        String key = model() + ":" + progress + ":" + facing();
+        String key = model() + ":" + centeredPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
         if (!key.equals(cachedKey)) {
             cached =
                     CanopyMesh.collision(
-                            model(),
+                            faces(),
                             block().kind,
                             width(),
                             block().opening() ? progress : 0,
@@ -249,38 +238,40 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         return cached;
     }
 
+    public AxisAlignedBB selectionBounds() {
+        AxisAlignedBB bounds=null;
+        for(AxisAlignedBB box:boxes())bounds=bounds==null?box:bounds.union(box);
+        return bounds==null?new AxisAlignedBB(pos):bounds;
+    }
+
     public RayTraceResult trace(Vec3d start, Vec3d end) {
-        RayTraceResult best = null;
-        for (AxisAlignedBB box : boxes()) {
-            RayTraceResult hit = box.calculateIntercept(start, end);
-            if (hit != null
-                    && (best == null
-                            || start.squareDistanceTo(hit.hitVec)
-                                    < start.squareDistanceTo(best.hitVec)))
-                best = new RayTraceResult(hit.hitVec, hit.sideHit, pos);
-        }
-        return best;
+        return !draws() || block()==null?null:CanopyMesh.trace(faces(),block().kind,width(),block().opening()?progress:0,facing(),pos,start,end);
     }
 
     public void removeAssembly() {
+        removeAssembly(world==null?null:world.getBlockState(pos));
+    }
+
+    public void removeAssembly(IBlockState oldState) {
+        IBlockState previousState=removalState;
+        removalState=oldState!=null && oldState.getBlock() instanceof BlockCanopy?oldState:null;
+        try { removeAssemblyWithState(); }
+        finally {removalState=previousState;}
+    }
+
+    private void removeAssemblyWithState() {
         TileEntityCanopy base = constituent();
         if (base.removing || base.anchor != null && !base.anchor.equals(base.pos)) return;
         base.removing = true;
         TileEntityCanopy owner = base.owner();
-        if (owner.pair != null) {
-            BlockPos right = owner.pos.offset(owner.facing().rotateY());
-            TileEntityCanopy partner = at(world, base == owner ? right : owner.pos);
-            if (partner != null) {
-                partner.pair = null;
-                partner.progress = partner.previous = 0;
-                partner.targetOpen = false;
-                partner.sync();
-            }
-            owner.pair = null;
+        if(owner.pair!=null) {
+            List<TileEntityCanopy> group=owner.members();
+            for(TileEntityCanopy member:group){member.pair=null;member.joinedWidth=1;member.progress=member.previous=0;member.targetOpen=false;member.sync();}
+            for(TileEntityCanopy member:group)if(member!=base)member.tryPair();
         }
         BlockCanopy b = base.block();
         if (b != null)
-            for (BlockPos cell : b.cells(base.pos, base.facing()))
+            for (BlockPos cell : base.cells())
                 if (!cell.equals(pos)) {
                     TileEntityCanopy t = at(world, cell);
                     if (t != null && base.pos.equals(t.anchor)) {
@@ -301,7 +292,9 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
             n.setLong("Pair", pair.toLong());
             n.setLong("PairOffset", pair.subtract(pos).toLong());
         }
-        if (block() != null) n.setInteger("CanopyMask", mask());
+        if (block() != null) {n.setInteger("CanopyMask", mask());n.setInteger("CanopyWidth",width());}
+        if(configurable())large.write(n);
+        n.setBoolean("CenteredPlacement",centeredPlacement);
         n.setBoolean("Open", targetOpen);
         n.setFloat("Progress", progress);
         return n;
@@ -310,6 +303,8 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
     @Override
     public void readFromNBT(NBTTagCompound n) {
         super.readFromNBT(n);
+        large.read(n);
+        centeredPlacement=n.getBoolean("CenteredPlacement");
         anchor =
                 n.hasKey("AnchorOffset")
                         ? pos.add(BlockPos.fromLong(n.getLong("AnchorOffset")))
@@ -318,6 +313,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
                 n.hasKey("PairOffset")
                         ? pos.add(BlockPos.fromLong(n.getLong("PairOffset")))
                         : n.hasKey("Pair") ? BlockPos.fromLong(n.getLong("Pair")) : null;
+        joinedWidth=n.hasKey("CanopyWidth",3)?Math.max(1,Math.min(3,n.getInteger("CanopyWidth"))):pair==null?1:2;
         targetOpen = n.getBoolean("Open");
         progress = previous = Math.max(0, Math.min(1, n.getFloat("Progress")));
         cachedKey = null;

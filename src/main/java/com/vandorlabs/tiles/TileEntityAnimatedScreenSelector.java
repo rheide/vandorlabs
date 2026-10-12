@@ -117,6 +117,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     private String selectedScreen = "engineering_screen";
     private boolean redstoneEnabled = false;
+    private boolean redstoneInverted;
+    public boolean isRedstoneInverted(){return redstoneInverted;}
+    public void setRedstoneInverted(boolean value){if(redstoneInverted==value)return;redstoneInverted=value;settingsChanged();}
     private int displayMode = MODE_ANIMATED;
     private boolean framed = true;
     private int animationSpeedIndex = 1;
@@ -193,6 +196,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean diagonalHalfHeight;
     private int diagonalFill;
     private int glassShade = 2;
+    private int glassTint = 1;
+    private boolean glassFramed=true;
     private boolean joinPortholes;
     private int portholeShape;
     private static long portholeRevision;
@@ -218,6 +223,16 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 world.getBlockState(pos), 3);
     }
 
+    public int getGlassTint() { return glassTint; }
+    public boolean isGlassFramed() { return glassFramed; }
+    public void setGlassAppearance(int tint,boolean framed) {
+        if(!GlassTextures.validTint(tint) || glassTint==tint && glassFramed==framed)return;
+        glassTint=tint;glassFramed=framed;settingsChanged();
+        if(world!=null) {
+            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
+            world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
+        }
+    }
     public int getGlassShade() { return glassShade; }
     public void setGlassShade(int shade) {
         if (!GlassTextures.valid(shade) || shade == glassShade) return;
@@ -455,7 +470,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         int mode = ScreenBehavior.clampMode(displayMode);
         if (!redstoneEnabled && mode != MODE_OFF) return mode;
         boolean powered = channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
-        return ScreenBehavior.effectiveMode(mode,redstoneEnabled,powered);
+        return ScreenBehavior.effectiveMode(mode,redstoneEnabled,redstoneEnabled && redstoneInverted ? !powered : powered);
     }
 
     protected boolean isTriggerPowered() {
@@ -474,7 +489,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        super.writeToNBT(compound);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -483,6 +498,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 smallInput, redstoneChannel, channelSignal, housingTexture)
                 .write(new NbtPrimitiveData(compound));
         compound.setInteger("GlassShade", glassShade);
+        compound.setInteger("GlassTint",glassTint);
+        compound.setBoolean("GlassFramed",glassFramed);
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setInteger("PortholeShape", portholeShape);
         compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
@@ -532,6 +549,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 TileEntityAnimatedScreenSelector::isValidInputPanel);
         selectedScreen = data.selectedScreen;
         redstoneEnabled = data.redstoneEnabled;
+        redstoneInverted=compound.getBoolean("RedstoneInverted");
         displayMode = data.displayMode;
         framed = data.framed;
         animationSpeedIndex = data.animationSpeedIndex;
@@ -553,6 +571,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         sideTexture=compound.hasKey("SideTexture",3) && compound.getInteger("SideTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SideTexture")):-1;
         glassShade = compound.hasKey("GlassShade", 3)
                 ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
+        glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
+        glassFramed=!compound.hasKey("GlassFramed")||compound.getBoolean("GlassFramed");
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;

@@ -15,7 +15,7 @@ import java.util.*;
 public final class CanopyInteractions {
     public static List<TileEntityCanopy> owners(World world, AxisAlignedBB region) {
         List<TileEntityCanopy> found = new ArrayList<>();
-        AxisAlignedBB query = region.grow(5);
+        AxisAlignedBB query = region.grow(6);
         for (int x = MathHelper.floor(query.minX) >> 4; x <= MathHelper.floor(query.maxX) >> 4; x++)
             for (int z = MathHelper.floor(query.minZ) >> 4;
                     z <= MathHelper.floor(query.maxZ) >> 4;

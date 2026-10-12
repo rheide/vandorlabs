@@ -138,25 +138,17 @@ public final class BlockShipSystem extends Block {
         TileEntityShipSystem t = TileEntityShipSystem.at(w, p);
         if (t == null || t.anchor == null || t.anchor.equals(p)) drops.add(new ItemStack(this));
     }
-    public AxisAlignedBB getCollisionBoundingBox(IBlockState s, IBlockAccess w, BlockPos p) { return NULL_AABB; }
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState s,IBlockAccess w,BlockPos p) {
+        TileEntityShipSystem tile=TileEntityShipSystem.at(w,p);AxisAlignedBB box=tile==null?null:tile.cellCollisionBounds();return box==null?NULL_AABB:box.offset(-p.getX(),-p.getY(),-p.getZ());
+    }
+    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
+        TileEntityShipSystem tile=TileEntityShipSystem.at(world,pos);return tile==null?FULL_BLOCK_AABB:tile.selectionBounds().offset(-pos.getX(),-pos.getY(),-pos.getZ());
+    }
     public void addCollisionBoxToList(IBlockState s, World w, BlockPos p, AxisAlignedBB query, List<AxisAlignedBB> out, Entity entity, boolean actual) {
         for (AxisAlignedBB box : localBoxes(w, p)) if (box.intersects(query)) out.add(box);
     }
-    private List<AxisAlignedBB> localBoxes(World w, BlockPos p) {
-        TileEntityShipSystem t = TileEntityShipSystem.at(w, p);
-        if (t == null) return Collections.emptyList();
-        BlockPos owner = t.anchor == null ? p : t.anchor;
-        TileEntityShipSystem base = TileEntityShipSystem.at(w, owner);
-        String model = itemModel();
-        if (base != null) {
-            model = base.model();
-            if (isConsole() && base.consoleOwner != null) owner = base.consoleOwner;
-        }
-        List<AxisAlignedBB> result = new ArrayList<>();
-        AxisAlignedBB cell = new AxisAlignedBB(p);
-        for (AxisAlignedBB box : ShipSystemMesh.boxes(model, w.getBlockState(p).getValue(FACING), t.mount, owner))
-            if (box.intersects(cell)) result.add(box.intersect(cell));
-        return result;
+    private List<AxisAlignedBB> localBoxes(World w,BlockPos p) {
+        TileEntityShipSystem tile=TileEntityShipSystem.at(w,p);return tile==null?Collections.emptyList():tile.collisionBoxes();
     }
     public RayTraceResult collisionRayTrace(IBlockState s, World w, BlockPos p, Vec3d start, Vec3d end) {
         RayTraceResult nearest = null;

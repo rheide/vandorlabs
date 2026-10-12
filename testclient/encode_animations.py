@@ -18,6 +18,8 @@ def changed(a, b):
 def encode(folder, destination):
     meta = json.loads((folder / 'capture.json').read_text())
     rows = list(csv.DictReader((folder / 'frames.tsv').open(), delimiter='\t'))
+    if meta.get('escalator'):
+        return encode_escalator(folder, destination, meta, rows)
     if meta['kind'] == 'signal':
         return encode_signal(folder, destination, meta, rows)
     assert len(rows) >= 25, f'{folder.name}: too few real frames'
@@ -73,6 +75,53 @@ def encode(folder, destination):
     gaps = [b - a for a, b in zip(times, times[1:])]
     result = dict(id=meta['id'], output=meta['output'], frames=count, captured=len(rows), duration_ms=duration, bytes=output.stat().st_size, median_gap_ms=round(statistics.median(gaps), 2), max_gap_ms=round(max(gaps), 2))
     print(f'PASS {meta["id"]}: {count} GIF frames, {duration}ms; gaps median {result["median_gap_ms"]}ms / max {result["max_gap_ms"]}ms')
+    return result
+
+
+def encode_escalator(folder, destination, meta, rows):
+    assert len(rows) >= 50, 'Too few real escalator frames'
+    times = [float(row['elapsed_ms']) for row in rows]
+    assert times[0] == 0 and all(b > a for a, b in zip(times, times[1:]))
+    assert rows[0]['open'] == rows[-1]['open'] == 'false'
+    on = next(i for i, row in enumerate(rows) if row['open'] == 'true')
+    off = next(i for i in range(on+1, len(rows)) if rows[i]['open'] == 'false')
+    frames = []
+    for row in rows:
+        with Image.open(folder/row['file']) as image:
+            assert image.size == (420, 350)
+            frames.append(image.convert('RGB'))
+    running = frames[on+2:off]
+    movement = [changed(a, b)[0] for a, b in zip(running, running[2:])]
+    assert sum(n > 40 for n in movement) >= 8, 'Treads did not visibly circulate'
+    stopped = [i for i in range(off, len(rows)) if times[i] > times[off]+400]
+    assert len(stopped) >= 8
+    assert max(changed(frames[i], frames[-1])[0] for i in stopped) < 40, 'Stopped escalator kept moving'
+    duration = meta['duration_ms']
+    chosen = [min(range(len(times)), key=lambda i: abs(times[i]-t)) for t in range(0, duration, 50)]
+    strip = Image.new('RGB', (120*len(frames), 100))
+    for i, frame in enumerate(frames):
+        strip.paste(frame.resize((120, 100), Image.Resampling.BOX), (120*i, 0))
+    palette = strip.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+    indexed = [frames[i].quantize(palette=palette, dither=Image.Dither.NONE) for i in chosen]
+    output = destination/meta['output'];output.parent.mkdir(parents=True, exist_ok=True)
+    indexed[0].save(output, save_all=True, append_images=indexed[1:], duration=50, loop=0, disposal=1, optimize=True)
+    review = Image.new('RGB', (840, 350))
+    with Image.open(output) as gif:
+        assert gif.is_animated and gif.info['loop'] == 0
+        total = 0;count = gif.n_frames
+        for i in range(count):
+            gif.seek(i);total += gif.info['duration']
+        assert total == duration
+        for slot, target in enumerate([0, 800, 1000, 1200, 1600, 2200, 3000, 4400]):
+            elapsed = 0
+            for i in range(count):
+                gif.seek(i)
+                if elapsed+gif.info['duration'] > target or i == count-1:
+                    review.paste(gif.convert('RGB').resize((210, 175)), ((slot%4)*210, (slot//4)*175));break
+                elapsed += gif.info['duration']
+    review.save(folder/'review.png')
+    result = dict(id=meta['id'], output=meta['output'], frames=count, captured=len(rows), duration_ms=duration, bytes=output.stat().st_size)
+    print(f'PASS {meta["id"]}: real tread circulation and stationary extended geometry after redstone OFF, {count} GIF frames')
     return result
 
 

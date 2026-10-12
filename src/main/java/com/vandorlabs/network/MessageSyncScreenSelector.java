@@ -22,6 +22,9 @@ public class MessageSyncScreenSelector implements IMessage {
     private BlockPos pos;
     private String selectedScreen;
     private boolean redstoneEnabled;
+    private boolean redstoneInverted;
+    public boolean isRedstoneInverted(){return redstoneInverted;}
+    public MessageSyncScreenSelector withRedstoneInverted(boolean value){redstoneInverted=value;return this;}
     private int displayMode;
     private boolean framed;
     private int animationSpeedIndex;
@@ -81,7 +84,7 @@ public class MessageSyncScreenSelector implements IMessage {
     public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
         selectedScreen = readString(buf);
-        redstoneEnabled = buf.readBoolean();
+        int activation=buf.readUnsignedByte();redstoneEnabled=activation!=0;redstoneInverted=activation==2;
         displayMode = buf.readInt();
         framed = buf.readBoolean();
         animationSpeedIndex = buf.readInt();
@@ -98,7 +101,7 @@ public class MessageSyncScreenSelector implements IMessage {
     public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         writeString(buf, selectedScreen);
-        buf.writeBoolean(redstoneEnabled);
+        buf.writeByte(!redstoneEnabled?0:redstoneInverted?2:1);
         buf.writeInt(displayMode);
         buf.writeBoolean(framed);
         buf.writeInt(animationSpeedIndex);

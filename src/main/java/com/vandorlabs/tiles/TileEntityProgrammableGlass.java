@@ -11,10 +11,22 @@ import net.minecraft.world.World;
 /** Glass tint is synchronized independently of the baked frame geometry. */
 public final class TileEntityProgrammableGlass extends TileEntity {
     private int shade;
+    private int tint = 1;
+    private boolean framed = true;
     private int size = 1;
     private boolean join = true;
     private boolean legacySize;
     private boolean restored;
+    public int getTint() { return tint; }
+    public boolean isFramed() { return framed; }
+    public void setAppearance(int tint, boolean framed) {
+        if (!GlassTextures.validTint(tint) || this.tint==tint && this.framed==framed) return;
+        this.tint=tint; this.framed=framed; markDirty();
+        if(world!=null) {
+            IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);
+            world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
+        }
+    }
     public int getShade() { return shade; }
     public int getSize() { return size; }
     public boolean isJoin() { return join; }
@@ -48,6 +60,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setInteger("GlassShade", shade);
+        tag.setInteger("GlassTint", tint);
+        tag.setBoolean("GlassFramed", framed);
         tag.setInteger("GlassSize", size);
         tag.setBoolean("GlassJoin", join);
         return tag;
@@ -55,6 +69,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
         restored = true;
+        tint=tag.hasKey("GlassTint",3)?GlassTextures.clampTint(tag.getInteger("GlassTint")):1;
+        framed=!tag.hasKey("GlassFramed") || tag.getBoolean("GlassFramed");
         shade = GlassTextures.clamp(tag.getInteger("GlassShade"));
         legacySize = !tag.hasKey("GlassSize");
         size = legacySize ? 1 : Math.max(0, Math.min(1, tag.getInteger("GlassSize")));

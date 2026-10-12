@@ -15,7 +15,7 @@ final class GuiOptionCycleRuntimeChecks {
         if(gui instanceof GuiProgrammableLight)ids=new int[]{101,102,103,104};
         else if(gui instanceof GuiSpaceDoor)ids=new int[]{10,11,12,13,15,16,17,18};
         else if(gui instanceof GuiProgrammableTrapdoor)ids=new int[]{1,3,6,9};
-        else if(gui instanceof GuiProgrammableWall)ids=new int[]{101,103,104};
+        else if(gui instanceof GuiProgrammableWall)ids=new int[]{101,103,104,113,114};
         else if(gui instanceof GuiProgrammableTrigger)ids=new int[]{101,102};
         else if(gui instanceof GuiRedstoneChannel)ids=new int[]{2,3,4,5,6,7,8};
         else if(gui instanceof GuiRedstoneScreen)ids=new int[]{7,8,9};
@@ -23,7 +23,7 @@ final class GuiOptionCycleRuntimeChecks {
         else if(gui instanceof GuiConnectedSeat)ids=new int[]{1};
         else if(gui instanceof GuiLandingGear)ids=new int[]{0,4};
         else if(gui instanceof GuiProgrammableChair)ids=new int[]{11};
-        else if(gui instanceof GuiProgrammableGlass)ids=new int[]{0,1};
+        else if(gui instanceof GuiProgrammableGlass)ids=new int[]{0,3,4,5};
         else if(gui instanceof GuiRampController)ids=new int[]{4,19};
         else if(gui instanceof GuiDuplifier)ids=java.util.stream.IntStream.concat(java.util.stream.IntStream.of(98),java.util.stream.IntStream.range(100,100+com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length)).toArray();
         else return;

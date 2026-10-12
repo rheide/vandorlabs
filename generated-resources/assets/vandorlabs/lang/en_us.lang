@@ -511,7 +511,7 @@ tile.opening_slide_1x2.name=Sliding Canopy
 tile.opening_hinge_1x2.name=Rear-Hinged Canopy
 tile.opening_slide_2x2.name=Wide Sliding Canopy
 tile.opening_hinge_2x2.name=Wide Rear-Hinged Canopy
-tile.regular_canopy_glass.name=Regular Canopy Glass
+tile.regular_canopy_glass.name=Canopy Glass
 tile.large_front_canopy_glass.name=Large Front Canopy Glass
 tile.figher_canopy_glass.name=Figher Canopy Glass
 tile.space_wedge_1x2.name=Wedge Canopy
@@ -577,3 +577,7 @@ tile.rivet_ref_dampener_large.name=Rivet Dynamics Reference Dampener
 tile.vandorlabs.pilot_seat.name=Pilot Seat
 
 tile.vandorlabs.programmable_diagonal_glass.name=Programmable Diagonal Glass
+
+tile.space_shuttle_3x3.name=Wide Shuttle Canopy
+tile.space_bubble_wedge_3x3.name=Bubble Wedge Canopy
+tile.large_front_canopy_glass_5x5.name=Large Front Canopy Glass (5 x 5)

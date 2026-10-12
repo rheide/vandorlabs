@@ -19,7 +19,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
         int size = tile.getSize();
-        bindTexture(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.fullTexture(tile.getShade(),size)));
+        bindTexture(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.fullTexture(tile.getShade(),size,tile.getTint())));
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();

@@ -42,7 +42,7 @@ public final class PilotSeatRuntimeChecks {
                 require(b.getStateFromMeta(b.getMetaFromState(w.getBlockState(POS.up()))) == w.getBlockState(POS.up()), "upper state persistence");
                 AxisAlignedBB lowerBounds = s.getBoundingBox(w, POS);
                 AxisAlignedBB upperBounds = w.getBlockState(POS.up()).getBoundingBox(w, POS.up());
-                require(lowerBounds.maxY == 1 && upperBounds.maxY == .75, "full-size collision height");
+                require(lowerBounds.maxY == .75 && upperBounds.maxY == .5, "base collision height");
                 p.setSneaking(false);
                 b.onBlockActivated(w, POS, s, p, EnumHand.MAIN_HAND, f, .5F, .3F, .5F);
                 require(p.getRidingEntity() instanceof EntityChairSeat, "mount " + f);
@@ -65,6 +65,7 @@ public final class PilotSeatRuntimeChecks {
                 require(seat.isDead && !p.isRiding(), "breaking occupied seat cleans up");
                 w.setBlockToAir(POS.up());
             }
+            PilotCanopyRuntimeChecks.run(w,p);
             p.setPositionAndUpdate(old.x, old.y, old.z);
             System.out.println("[vandorlabs][reprolab] pilot-seat-world PASS four-facings mount dismount break upper-cell");
         }).get(); } catch(Exception e) { throw new IllegalStateException(e); }
@@ -81,6 +82,11 @@ public final class PilotSeatRuntimeChecks {
         require(icon.getQuads(null, null, 0).size() > 100, "inventory geometry");
         for (BakedQuad q : icon.getQuads(null, null, 0))
             require(!q.getSprite().getIconName().contains("missingno"), "material " + q.getSprite().getIconName());
+        for(int height=0;height<4;height++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            IBakedModel variant=mc.getBlockRendererDispatcher().getModelForState(ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING,facing).withProperty(BlockPilotSeat.HEIGHT,height));
+            require(variant!=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),"height variant "+height+" "+facing);
+            require(variant.getQuads(null,null,0).size()>100,"height geometry "+height);
+        }
         require(icon.getParticleTexture() != mc.getTextureMapBlocks().getMissingSprite(), "particle texture");
         System.out.println("[vandorlabs][reprolab] pilot-seat-model PASS four-facings inventory textures");
     }
@@ -101,6 +107,7 @@ public final class PilotSeatRuntimeChecks {
                         IBlockState s = ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING, EnumFacing.HORIZONTALS[i]);
                         w.setBlockState(POS.east(i*2), s, 3);
                         w.setBlockState(POS.east(i*2).up(), s.withProperty(BlockPilotSeat.UPPER, true), 3);
+                        ((com.vandorlabs.tiles.TileEntityPilotSeat)w.getTileEntity(POS.east(i*2))).configure(0,i,w);
                     }
                     EntityPlayerMP p = mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                     p.capabilities.isFlying=true;
@@ -121,6 +128,23 @@ public final class PilotSeatRuntimeChecks {
                     p.connection.setPlayerLocation(p.posX,p.posY,p.posZ,180,0);
                 }).get();
                 mc.gameSettings.thirdPersonView=2;
+            }
+            if (ticks == 175) {
+                mc.displayGuiScreen(new GuiRedstoneChannel((com.vandorlabs.tiles.TileEntityPilotSeat)mc.world.getTileEntity(POS)));
+                net.minecraft.client.gui.GuiButton height=new net.minecraft.client.gui.GuiButton(19,0,0,"");
+                ((GuiRedstoneChannel)mc.currentScreen).actionPerformed(height);
+            }
+            if (ticks == 195) {
+                require(mc.currentScreen instanceof GuiRedstoneChannel,"height dialog remains open");
+                require(((com.vandorlabs.tiles.TileEntityPilotSeat)mc.world.getTileEntity(POS)).getHeight()==1,"live height reaches client before Close");
+                require(ModBlocks.PILOT_SEAT.getActualState(mc.world.getBlockState(POS),mc.world,POS).getValue(BlockPilotSeat.HEIGHT)==1,"live model actual state");
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getWorld(0);EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                    require(((com.vandorlabs.tiles.TileEntityPilotSeat)w.getTileEntity(POS)).getHeight()==1,"height persists before Close");
+                    EntityChairSeat mount=(EntityChairSeat)p.getRidingEntity();
+                    require(Math.abs(mount.posY-(POS.getY()+BlockPilotSeat.SEAT_HEIGHT+.125+.35-EntityChairSeat.RIDER_PELVIS_OFFSET))<1e-6,"occupied mount rises live");
+                }).get();
+                mc.displayGuiScreen(null);
             }
             if (ticks == 210) {
                 require(mc.player.isRiding(), "client receives mounted passenger");

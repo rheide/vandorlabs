@@ -37,6 +37,7 @@ public final class CanopyModels {
 
     @SubscribeEvent
     public void bake(ModelBakeEvent event) {
+        Icon.CONFIGURED.clear();
         for (net.minecraft.block.Block b : ModBlocks.BLOCKS)
             if (b instanceof BlockCanopy) {
                 String id = ((BlockCanopy) b).kind;
@@ -49,12 +50,16 @@ public final class CanopyModels {
     }
 
     public static final class Icon implements IBakedModel {
+        private final String kind;
+        private static final Map<String,IBakedModel> CONFIGURED=new LinkedHashMap<String,IBakedModel>(32,.75F,true){protected boolean removeEldestEntry(Map.Entry<String,IBakedModel> entry){return size()>64;}};
         private final List<BakedQuad> quads = new ArrayList<>();
         private final TextureAtlasSprite particle;
         private final ItemCameraTransforms transforms;
 
-        Icon(String id) {
-            for (CanopyMesh.Face f : CanopyMesh.MODELS.get(id))
+        Icon(String id){this(id,null);}
+        Icon(String id,com.vandorlabs.canopy.LargeCanopySettings settings) {
+            kind=id;List<CanopyMesh.Face> faces=settings==null?CanopyMesh.MODELS.get(id):com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings);
+            for (CanopyMesh.Face f : faces)
                 for (int triangle = 1; triangle < f.vertices.length - 1; triangle++) {
                     add(f, new int[] {0, triangle, triangle + 1, triangle + 1});
                     if (f.doubleSided) add(f, new int[] {triangle + 1, triangle, 0, 0});
@@ -62,7 +67,7 @@ public final class CanopyModels {
             particle =
                     Minecraft.getMinecraft()
                             .getTextureMapBlocks()
-                            .getAtlasSprite("vandorlabs:blocks/canopy/" + CanopyMesh.MODELS.get(id).get(0).material);
+                            .getAtlasSprite(spriteName(faces.get(0).material));
             ItemTransformVec3f gui =
                     new ItemTransformVec3f(
                             new Vector3f(25, 225, 0), new Vector3f(0, 0, 0), new Vector3f(1, 1, 1));
@@ -79,12 +84,13 @@ public final class CanopyModels {
             transforms = ControlItemPadding.fit(this, source);
         }
 
+        private static String spriteName(String material){return material.contains(":")?material:"vandorlabs:blocks/canopy/"+material;}
         private void add(CanopyMesh.Face f, int[] index) {
             int[] data = new int[28];
             TextureAtlasSprite sprite =
                     Minecraft.getMinecraft()
                             .getTextureMapBlocks()
-                            .getAtlasSprite("vandorlabs:blocks/canopy/" + f.material);
+                            .getAtlasSprite(spriteName(f.material));
             Vec3d normal =
                     f.vertices[index[1]]
                             .subtract(f.vertices[index[0]])
@@ -142,7 +148,8 @@ public final class CanopyModels {
         }
 
         public ItemOverrideList getOverrides() {
-            return ItemOverrideList.NONE;
+            if(!com.vandorlabs.canopy.LargeCanopySettings.supports(kind))return ItemOverrideList.NONE;
+            return new ItemOverrideList(Collections.emptyList()){@Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();if(stack.hasTagCompound())settings.read(stack.getTagCompound());String key=kind+":"+settings.key();IBakedModel model=CONFIGURED.get(key);if(model==null){model=new Icon(kind,settings);CONFIGURED.put(key,model);}return model;}};
         }
     }
 }

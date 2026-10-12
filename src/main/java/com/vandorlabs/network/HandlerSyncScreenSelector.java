@@ -40,6 +40,7 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             long before=te.getSettingsRevision();
             te.setSelectedScreen(message.getSelectedScreen());
             te.setRedstoneEnabled(message.isRedstoneEnabled());
+            te.setRedstoneInverted(message.isRedstoneInverted());
             te.setDisplayMode(message.getDisplayMode());
             te.setFramed(message.isFramed());
             te.setAnimationSpeedIndex(message.getAnimationSpeedIndex());

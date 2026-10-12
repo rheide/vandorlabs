@@ -499,6 +499,20 @@ processResources {
     filesMatching('mcmod.info') {
         expand 'version': project.version, 'mcversion': "1.12.2"
     }
+    // Apply availability to every authored/generated block recipe without
+    // duplicating configuration metadata in the resource generators.
+    doLast {
+        fileTree(new File(destinationDir,'assets/vandorlabs/recipes')).matching { include '*.json' }.each { recipeFile ->
+            def recipe = new groovy.json.JsonSlurper().parse(recipeFile)
+            def item = recipe.result instanceof Map ? recipe.result.item : null
+            if (item instanceof String && item.startsWith('vandorlabs:')) {
+                def conditions = recipe.conditions ?: []
+                conditions.add([type:'vandorlabs:block_enabled',block:item])
+                recipe.conditions = conditions
+                recipeFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(recipe))+'\n'
+            }
+        }
+    }
 }
 
 jar {
@@ -581,3 +595,16 @@ task testGlassFinishes(type: Exec) {
     commandLine pythonExecutable, 'tools/test_glass_finishes.py'
 }
 check.dependsOn testGlassFinishes
+
+task testMachineryModels(type: Exec) {
+    group = 'verification'
+    description = 'Check retained machinery, removed micro fasteners and tiled console UV continuity'
+    commandLine pythonExecutable, 'tools/test_machinery.py'
+}
+check.dependsOn testMachineryModels
+
+task testCompactReentry(type: Exec) {
+    group = 'verification'
+    commandLine pythonExecutable, 'tools/test_compact_reentry.py'
+}
+check.dependsOn testCompactReentry

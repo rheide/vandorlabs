@@ -235,6 +235,12 @@ final class SpaceDoorRuntimeChecks {
                 "right adjacent door placement");
         world.setBlockState(east.up(),world.getBlockState(east.up()).withProperty(
                 BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.LEFT),2);
+        // The fixture assigns its mate hinge after placement; explicitly match
+        // motion now, since placement inheritance runs before that assignment.
+        TileEntitySpaceDoor pairedTile=tile(world,east);
+        pairedTile.configure(controlled.getDesign(),controlled.getDetail(),controlled.isFramed(),
+                controlled.getSlideDirection(),controlled.isMiddle(),false,
+                controlled.hasHinges(),controlled.getTrigger(),true);
         check(block.getActualState(world.getBlockState(source),world,source).getValue(
                         com.vandorlabs.blocks.BlockConnectingDetailedDoor.PAIRED)
                         && block.getActualState(world.getBlockState(east),world,east).getValue(

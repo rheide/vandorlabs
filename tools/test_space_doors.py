@@ -35,7 +35,8 @@ visible=[e for e in catalog if (e['id'].startswith('space_') or e['id']=='progra
 assert {e['id'] for e in visible}=={'programmable_door'}
 config=[e for e in catalog if e.get('class')=='BlockConfigurableSpaceDoor']
 assert {e['id'] for e in config}=={'programmable_door','space_rotating_door','space_sliding_door'}
-assert all(e.get('hidden') for e in config if e['id']!='programmable_door')
+assert all(e.get('hidden') and e.get('internal_model') and not e.get('item') for e in config if e['id']!='programmable_door')
+assert all(e.get('internal_model') and not e.get('item') for e in doors)
 assert by_id['programmable_door']['sliding'] is True
 assert 'tile.vandorlabs.programmable_door.name=Programmable Door' in (ASSETS/'lang/en_us.lang').read_text()
 assert by_id['programmable_glass']['class']=='BlockProgrammableGlass'

@@ -7,6 +7,7 @@ import com.vandorlabs.blocks.BlockVandorDoor;
 import com.vandorlabs.blocks.BlockBridgeChair;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.TileEntitySpaceDoor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.properties.IProperty;
@@ -547,6 +548,28 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.blockCategoryChecksOnly")) {
+            if(++holdTicks==40){onServer(mc,()->BlockAvailabilityRuntimeChecks.run(mc.getIntegratedServer().getWorld(0)));mc.shutdown();}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.machineryChecksOnly")) {
+            try {if(MachineryVisualChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("machinery live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.largeCanopyChecksOnly")) {
+            try {if(LargeCanopyVisualChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("large canopy live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.pilotInspectionChecksOnly")) {
+            try {PilotInspectionChecks.tick(mc);}catch(Exception failure){throw new IllegalStateException("Pilot Seat inspection live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.glassAppearanceChecksOnly")) {
+            try {if(GlassVisualChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("glass live checks",failure);}
+            return;
+        }
         if (Boolean.getBoolean("vandorlabs.pilotSeatChecksOnly")) {
             PilotSeatRuntimeChecks.tick(mc, outDir);
             return;
@@ -593,6 +616,13 @@ public class ReproLab {
                 if(checkedGlass.getGlassShade()!=12 || !checkedGlass.isDiagonalFullWidth() || checkedGlass.getDiagonalJoin()!=1)throw new IllegalStateException("diagonal glass GUI changes did not reach the server");
                 saveNamed(mc,"programmable_diagonal_glass_gui");
                 System.out.println("[vandorlabs][reprolab] diagonal-joins-live PASS");state=999;mc.shutdown();break;
+            case 4006:
+                if(--holdTicks>0)break;
+                EscalatorRuntimeChecks.finishPlayerRide(mc);escalatorRidesDone++;state=2;holdTicks=20;break;
+            case 4005:
+                if(--holdTicks>0)break;
+                if(!EscalatorRuntimeChecks.rideReady(mc))break;
+                EscalatorRuntimeChecks.stopPlayerRide(mc);state=4006;holdTicks=20;break;
             case 4004: CanopyRuntimeChecks.tick(mc,outDir);break;
             case 4003: ProgrammableArmorRuntimeChecks.tick(mc,outDir);break;
             case 4002: MovedDoorRuntimeChecks.tick(mc,outDir);break;
@@ -624,6 +654,10 @@ public class ReproLab {
             case 2:
                 if (--holdTicks > 0) {
                     break;
+                }
+                if(Boolean.getBoolean("vandorlabs.redstoneInversionChecksOnly") || Boolean.getBoolean("vandorlabs.doorChecksOnly")){mc.shutdown();return;}
+                if(Boolean.getBoolean("vandorlabs.rampChecksOnly") && escalatorRidesDone<5){
+                    EscalatorRuntimeChecks.beginPlayerRide(mc);state=4005;holdTicks=80;break;
                 }
                 if(Boolean.getBoolean("vandorlabs.documentationDoorGif") || Boolean.getBoolean("vandorlabs.documentationAnimations")) {
                     mc.gameSettings.clouds=0;
@@ -756,6 +790,7 @@ public class ReproLab {
                 if(documentationCapture.isFinished()) {
                     if(++documentationIndex<documentationScenes.size())beginDocumentationScene(mc);
                     else {
+                        if(Boolean.getBoolean("vandorlabs.rampChecksOnly")){state=999;mc.shutdown();break;}
                         beginShot(mc,new Shot("documentation_item_camera",GALLERY_X+.7,GALLERY_Y+1D-1.62D+.75,-19.8,12,29),false);
                         mc.getIntegratedServer().addScheduledTask(()->buildGalleryStage(mc.getIntegratedServer().getWorld(0),"gallery_close_display_diagonal_up"));
                         mc.gameSettings.hideGUI=false;
@@ -1632,12 +1667,20 @@ public class ReproLab {
         mc.player.inventory.currentItem=8;
     }
 
+    private int escalatorRidesDone;
     private void build() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.getIntegratedServer() == null) {
             throw new IllegalStateException("render lab requires an integrated server");
         }
         World world = mc.getIntegratedServer().getWorld(0);
+        if(Boolean.getBoolean("vandorlabs.doorChecksOnly")){onServer(mc,()->{EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());DoorRuntimeChecks.run(world,owner);LargeDoorRuntimeChecks.run(world,owner);RedstoneChannelRuntimeChecks.run(world,owner);System.out.println("[vandorlabs] programmable-doors-live PASS");});return;}
+        if(Boolean.getBoolean("vandorlabs.redstoneInversionChecksOnly")){onServer(mc,()->RedstoneInversionRuntimeChecks.run(world));return;}
+        if(Boolean.getBoolean("vandorlabs.rampChecksOnly")) {
+            EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+            onServer(mc,()->{ControllerRuntimeChecks.run(world,owner);EscalatorRuntimeChecks.run(world,owner);});
+            return;
+        }
         IBlockState inputWall = ModBlocks.PROGRAMMABLE_INPUT.getDefaultState()
                 .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.FACING,EnumFacing.NORTH)
                 .withProperty(com.vandorlabs.blocks.BlockProgrammableInput.KEYBOARD,false)
@@ -2242,6 +2285,18 @@ public class ReproLab {
             }
         } else if (shot.startsWith("gallery_door_") || shot.startsWith("gallery_catalog_door_")) {
             buildCloseDoorGallery(world,shot);
+        } else if (shot.startsWith("gallery_ramp_escalator_") && !world.isRemote) {
+            EntityPlayerMP owner=null;for(EntityPlayer candidate:world.playerEntities)if(candidate instanceof EntityPlayerMP){owner=(EntityPlayerMP)candidate;break;}
+            if(owner==null)throw new IllegalStateException("Escalator gallery player missing");
+            double px=owner.posX,py=owner.posY,pz=owner.posZ;
+            EscalatorRuntimeChecks.fixture(world,owner,new BlockPos(GALLERY_X,GALLERY_Y,-21),shot.endsWith("up") || shot.contains("walkway")?1:2,shot.contains("walkway")?0:3,8,EnumFacing.SOUTH,shot.contains("curve_in")?1:0);
+            owner.setPosition(px,py,pz);
+            double riderAlong=shot.endsWith("up")?.25:2.25;
+            double riderY=GALLERY_Y+.5+com.vandorlabs.ramp.EscalatorGeometry.height(shot.endsWith("up")?0:2,4,8,shot.contains("walkway")?0:3,shot.contains("curve_in")?1:0);
+            net.minecraft.entity.item.EntityArmorStand rider=new net.minecraft.entity.item.EntityArmorStand(world,GALLERY_X+.5,riderY,-20+riderAlong);
+            rider.setNoGravity(true);
+            rider.setItemStackToSlot(net.minecraft.inventory.EntityEquipmentSlot.HEAD,new ItemStack(net.minecraft.init.Items.GOLDEN_HELMET));
+            world.spawnEntity(rider);
         } else if (shot.startsWith("gallery_ramp_mode_") && !world.isRemote) {
             EntityPlayerMP player=null;
             for (EntityPlayer candidate:world.playerEntities)
@@ -2901,6 +2956,8 @@ public class ReproLab {
     private static void placeDoor(World world, BlockPos pos, String id, boolean open) {
         Block block = Block.REGISTRY.getObject(
                 new ResourceLocation("vandorlabs", id));
+        String template=id;
+        if (!(block instanceof BlockVandorDoor) && ModBlocks.REMOVED_DOOR_IDS.contains(id))block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","programmable_door"));
         if (!(block instanceof BlockVandorDoor)) {
             throw new IllegalStateException("render lab door unavailable: " + id);
         }
@@ -2912,6 +2969,11 @@ public class ReproLab {
         world.setBlockState(pos, lower, 2);
         world.setBlockState(pos.up(), lower.withProperty(BlockVandorDoor.HALF,
                 BlockDoor.EnumDoorHalf.UPPER), 2);
+        if(!template.equals("programmable_door") && world.getTileEntity(pos) instanceof TileEntitySpaceDoor) {
+            TileEntitySpaceDoor tile=(TileEntitySpaceDoor)world.getTileEntity(pos);int design=2;
+            for(int i=0;i<TileEntitySpaceDoor.DESIGNS.length;i++)if(template.contains(TileEntitySpaceDoor.DESIGNS[i])){design=i;break;}
+            tile.configure(design,1,template.contains("framed"),0,true,template.contains("sliding"));
+        }
     }
 
     private static void setDoorHinge(World world, BlockPos pos,

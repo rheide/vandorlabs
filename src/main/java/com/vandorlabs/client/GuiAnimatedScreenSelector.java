@@ -62,6 +62,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private ModBlocks.ScreenOption selectedOption;
     private boolean framed;
     private boolean redstoneEnabled;
+    private boolean redstoneInverted;
     private int displayMode;
     private int speedIndex;
     private String inputPanel;
@@ -107,6 +108,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         this.xSize = 420;
         this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
+        redstoneInverted=te.isRedstoneInverted();
         this.displayMode = te.getDisplayMode();
         this.speedIndex = te.getAnimationSpeedIndex();
         this.inputPanel = te.getInputPanel();
@@ -201,9 +203,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
     private void refreshButtons() {
-        redstoneButton.displayString = I18n.format("gui.vandorlabs.selector.redstone") + ": "
-                + I18n.format(redstoneEnabled
-                        ? "gui.vandorlabs.selector.on" : "gui.vandorlabs.selector.off_state");
+        redstoneButton.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
         modeStaticButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_STATIC;
         modeAnimatedButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_ANIMATED;
@@ -219,7 +219,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(channel()<0)return;
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(pos,
                 activeId(), redstoneEnabled, displayMode, framed, speedIndex,
-                inputPanel, inputPanel, false, channel(), housingTexture).withChannels(ChannelFields.parse(channelField)));
+                inputPanel, inputPanel, false, channel(), housingTexture).withRedstoneInverted(redstoneInverted).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
@@ -238,7 +238,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.isSurfaceTileSides()));return;}
         switch (button.id) {
             case 0:
-                redstoneEnabled = !redstoneEnabled;
+                {if(!redstoneEnabled){redstoneEnabled=true;redstoneInverted=false;}else if(!redstoneInverted)redstoneInverted=true;else{redstoneEnabled=false;redstoneInverted=false;}}
                 break;
             case 1:
                 displayMode = TileEntityAnimatedScreenSelector.MODE_OFF;

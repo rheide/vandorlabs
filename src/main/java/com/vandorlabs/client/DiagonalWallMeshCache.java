@@ -34,25 +34,69 @@ public final class DiagonalWallMeshCache {
             TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice slice) {
         return entry(tile,state,wall,metal,slice).glass;
     }
+    static StaticSurfaceMesh frame(TileEntityAnimatedScreenSelector tile,IBlockState state,TextureAtlasSprite glass) {
+        return entry(tile,state,glass,glass,null).frame;
+    }
     private static Entry entry(TileEntityAnimatedScreenSelector tile,IBlockState state,
             TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice slice) {
         World world=tile.getWorld();WorldCache cache=WORLDS.get(world);
         if(cache==null) { cache=new WorldCache();WORLDS.put(world,cache);world.addEventListener(cache); }
-        int settings=(tile.isDiagonalHalfHeight()?1:0)|(tile.isDiagonalFullWidth()?2:0)|(tile.getDiagonalFill()<<2);
+        int settings=(tile.isDiagonalHalfHeight()?1:0)|(tile.isDiagonalFullWidth()?2:0)|(tile.getDiagonalFill()<<2)|(tile.isGlassFramed()?128:0);
         Entry entry=cache.entries.get(tile.getPos());
         if(entry!=null && entry.tile.get()==tile && entry.state==state && entry.settings==settings
                 && entry.wall==wall && entry.metal==metal && entry.slice==slice)return entry;
         cache.remove(tile.getPos());
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
         TEAnimatedScreenSelector.drawConfiguredWall(capture,tile,state,wall,metal,slice);
-        StaticSurfaceMesh mesh=capture.finish(),glass=null;
+        StaticSurfaceMesh mesh=capture.finish(),glass=null,frame=null;
+        boolean hideLeft=false,hideRight=false,hideFront=false,hideBack=false;
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
+            net.minecraft.util.EnumFacing right=state.getValue(com.vandorlabs.blocks.BlockProgrammableWall.FACING).rotateY();
+            for(int side=0;side<2;side++) {
+                BlockPos next=tile.getPos().offset(side==0?right.getOpposite():right);
+                if(!world.isBlockLoaded(next))continue;
+                IBlockState other=world.getBlockState(next);
+                if(other.getBlock()==state.getBlock()
+                        && com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,next)==com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,tile.getPos())
+                        && com.vandorlabs.blocks.BlockProgrammableWall.fill(world,next)==tile.getDiagonalFill()
+                        && com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(tile.getPos(),state,next,other,
+                                com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,tile.getPos())))
+                {
+                    mesh=mesh.withoutPlane(0,side==0?0:16);
+                    if(side==0)hideLeft=true;else hideRight=true;
+                }
+            }
+        }
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass && !tile.isDiagonalHalfHeight()) {
+            net.minecraft.util.EnumFacing facing=state.getValue(com.vandorlabs.blocks.BlockProgrammableWall.FACING);
+            net.minecraft.util.EnumFacing[] directions={facing.rotateYCCW(),facing.rotateY(),facing,facing.getOpposite()};
+            for(int side=0;side<4;side++) {
+                BlockPos next=tile.getPos().offset(directions[side]);if(!world.isBlockLoaded(next))continue;
+                IBlockState other=world.getBlockState(next);
+                if(other.getBlock()!=state.getBlock()
+                        || other.getValue(com.vandorlabs.blocks.BlockProgrammableWall.FACING).getAxis()==facing.getAxis()
+                        || other.getValue(com.vandorlabs.blocks.BlockProgrammableWall.INVERTED)!=state.getValue(com.vandorlabs.blocks.BlockProgrammableWall.INVERTED)
+                        || com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,next)!=com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,tile.getPos())
+                        || com.vandorlabs.blocks.BlockProgrammableWall.fill(world,next)!=tile.getDiagonalFill())continue;
+                mesh=mesh.withoutPlane(side<2?0:2,(side&1)==0?0:16);
+                if(side==0)hideLeft=true;else if(side==1)hideRight=true;else if(side==2)hideFront=true;else hideBack=true;
+            }
+        }
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass && tile.isGlassFramed()) {
+            TextureAtlasSprite rail=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks()
+                    .getAtlasSprite("vandorlabs:blocks/space_doors/medium/double_frame_metal");
+            frame=mesh.outlineFrame(rail,hideLeft,hideRight,hideFront,hideBack,
+                    com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,false),
+                    com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,true),
+                    tile.isDiagonalHalfHeight()?2:1);
+        }
         if(slice!=null) {
             capture=StaticSurfaceMesh.capture();
             TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,slice,
                     TEAnimatedScreenSelector.portholeMesh(tile,state));
             glass=capture.finish();
         }
-        Entry built=new Entry(tile,state,settings,wall,metal,mesh,glass,slice);
+        Entry built=new Entry(tile,state,settings,wall,metal,mesh,glass,frame,slice);
         if(built.vertices()<=MAX_VERTICES) {
             cache.entries.put(tile.getPos().toImmutable(),built);
             cache.vertices+=built.vertices();
@@ -80,13 +124,13 @@ public final class DiagonalWallMeshCache {
         final IBlockState state;
         final int settings;
         final TextureAtlasSprite wall,metal;
-        final StaticSurfaceMesh mesh,glass;
+        final StaticSurfaceMesh mesh,glass,frame;
         final PortholeHex.Slice slice;
-        int vertices(){return mesh.vertexCount()+(glass==null?0:glass.vertexCount());}
+        int vertices(){return mesh.vertexCount()+(glass==null?0:glass.vertexCount())+(frame==null?0:frame.vertexCount());}
         Entry(TileEntityAnimatedScreenSelector tile,IBlockState state,int settings,
-                TextureAtlasSprite wall,TextureAtlasSprite metal,StaticSurfaceMesh mesh,StaticSurfaceMesh glass,PortholeHex.Slice slice) {
+                TextureAtlasSprite wall,TextureAtlasSprite metal,StaticSurfaceMesh mesh,StaticSurfaceMesh glass,StaticSurfaceMesh frame,PortholeHex.Slice slice) {
             this.tile=new WeakReference<>(tile);this.state=state;this.settings=settings;
-            this.wall=wall;this.metal=metal;this.mesh=mesh;this.glass=glass;this.slice=slice;
+            this.wall=wall;this.metal=metal;this.mesh=mesh;this.glass=glass;this.frame=frame;this.slice=slice;
         }
     }
     private static final class WorldCache implements IWorldEventListener {

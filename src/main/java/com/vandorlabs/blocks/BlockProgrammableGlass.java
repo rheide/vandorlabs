@@ -19,7 +19,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraft.world.IBlockAccess;
 
-/** One connected wall block with two detail sizes, legacy metadata support and a fixed metal frame. */
+/** One connected wall block with two detail sizes, legacy metadata support and a configurable metal frame. */
 public final class BlockProgrammableGlass extends BlockGlassWall {
     public static final PropertyInteger SIZE = PropertyInteger.create("size", 0, 2);
 
@@ -50,6 +50,9 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             net.minecraft.world.IBlockAccess world, BlockPos pos) {
         IBlockState actual = super.getActualState(state, world, pos);
         TileEntity tile = world.getTileEntity(pos);
+        if(tile instanceof TileEntityProgrammableGlass && !((TileEntityProgrammableGlass)tile).isFramed())
+            actual=actual.withProperty(TOP,false).withProperty(BOTTOM,false).withProperty(LEFT,false).withProperty(RIGHT,false)
+                    .withProperty(INNER_TL,false).withProperty(INNER_TR,false).withProperty(INNER_BL,false).withProperty(INNER_BR,false);
         return tile instanceof TileEntityProgrammableGlass
                 ? actual.withProperty(SIZE, ((TileEntityProgrammableGlass) tile).getSize())
                 : actual.withProperty(SIZE,Math.min(actual.getValue(SIZE),1));
@@ -75,6 +78,8 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
                 ? ((TileEntityProgrammableGlass) te).getShade() : 0);
         settings.setBoolean("Join", !(te instanceof TileEntityProgrammableGlass)
                 || ((TileEntityProgrammableGlass) te).isJoin());
+        settings.setInteger("Tint",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getTint():1);
+        settings.setBoolean("Framed",!(te instanceof TileEntityProgrammableGlass)||((TileEntityProgrammableGlass)te).isFramed());
         stack.setTagInfo("ProgrammableGlassSettings", settings);
         return stack;
     }
@@ -96,6 +101,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);
             ((TileEntityProgrammableGlass)te).setJoin(join);
+            ((TileEntityProgrammableGlass)te).setAppearance(settings==null||!settings.hasKey("Tint",3)?1:settings.getInteger("Tint"),settings==null||!settings.hasKey("Framed")||settings.getBoolean("Framed"));
         }
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,

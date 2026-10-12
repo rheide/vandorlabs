@@ -75,7 +75,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         int key = (sliding ? 2 : 0) | (framed ? 1 : 0);
         BlockSpaceDoor resolved = RESOLVED_MODELS.get(key);
         if (resolved != null) return resolved;
-        resolved = (BlockSpaceDoor)Block.REGISTRY.getObject(MOTION_MODELS[key]);
+        resolved = com.vandorlabs.blocks.ModBlocks.doorMotionTemplate(MOTION_MODELS[key].getResourcePath());
         if (resolved != null) RESOLVED_MODELS.compareAndSet(key, null, resolved);
         return resolved;
     }

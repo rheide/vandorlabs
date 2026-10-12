@@ -35,6 +35,10 @@ public class MessageRedstoneChannel implements IMessage {
     public MessageRedstoneChannel withControlMount(boolean enabled,int height,int tilt,int direction){controlMount=enabled;baseHeight=height;baseTilt=tilt;tiltDirection=direction;return this;}
     private boolean controlLimits;private int lowLimit=5,highLimit=15;
     public MessageRedstoneChannel withControlLimits(boolean enabled,int low,int high){controlLimits=enabled;lowLimit=low;highLimit=high;return this;}
+    private boolean redstoneInverted;
+    private int pilotMode=1,pilotHeight;
+    public MessageRedstoneChannel withPilotSettings(int mode,int height){pilotMode=mode;pilotHeight=height;return this;}
+    public MessageRedstoneChannel withRedstoneInverted(boolean value){redstoneInverted=value;return this;}
     private boolean signalBrightness;private int threshold=8;
     public MessageRedstoneChannel withSignalBrightness(boolean enabled,int threshold){this.signalBrightness=enabled;this.threshold=threshold;return this;}
     private BlockPos pos;
@@ -92,7 +96,7 @@ public class MessageRedstoneChannel implements IMessage {
         updateShape = buf.readableBytes() > 0 && buf.readBoolean();
         shape = buf.readableBytes() >= 4 ? buf.readInt() : 0;
 
-        signalBrightness=buf.readBoolean();threshold=buf.readInt();
+        int signalFlags=buf.readUnsignedByte();signalBrightness=(signalFlags&1)!=0;redstoneInverted=(signalFlags&2)!=0;pilotMode=(signalFlags>>2)&3;pilotHeight=(signalFlags>>4)&3;threshold=buf.readInt();
         controlLimits=buf.readBoolean();lowLimit=buf.readInt();highLimit=buf.readInt();
         controlMount=buf.readBoolean();baseHeight=buf.readInt();baseTilt=buf.readInt();tiltDirection=buf.readInt();
         powerLever=buf.readBoolean();powerLeverSize=buf.readUnsignedByte();
@@ -113,7 +117,7 @@ public class MessageRedstoneChannel implements IMessage {
         buf.writeBoolean(updateShape);
         buf.writeInt(shape);
 
-        buf.writeBoolean(signalBrightness);buf.writeInt(threshold);
+        buf.writeByte((signalBrightness?1:0)|(redstoneInverted?2:0)|(pilotMode<<2)|(pilotHeight<<4));buf.writeInt(threshold);
         buf.writeBoolean(controlLimits);buf.writeInt(lowLimit);buf.writeInt(highLimit);
         buf.writeBoolean(controlMount);buf.writeInt(baseHeight);buf.writeInt(baseTilt);buf.writeInt(tiltDirection);
         buf.writeBoolean(powerLever);buf.writeByte(powerLeverSize);
@@ -138,6 +142,7 @@ public class MessageRedstoneChannel implements IMessage {
                 net.minecraft.block.Block block = player.world.getBlockState(message.pos)
                         .getBlock();
                 if (block instanceof BlockConnectedPropulsionLight) {
+                    ((BlockConnectedPropulsionLight)block).configureInversionAssembly(player.world,message.pos,message.redstoneInverted);
                     ((BlockConnectedPropulsionLight)block).configureSignalAssembly(player.world,message.pos,message.signalBrightness,message.threshold);
                     ((BlockConnectedPropulsionLight) block).configureAssembly(player.world,
                             message.pos, message.getRedstoneChannels(), message.updateParticles,
@@ -149,6 +154,7 @@ public class MessageRedstoneChannel implements IMessage {
                     if(message.controlMount && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).configureMount(message.baseHeight,message.baseTilt,message.tiltDirection);
                     ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
                     if(message.controlTypeUpdate && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureType(message.controlType);
+                    if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){if(message.pilotMode>2)return;((com.vandorlabs.tiles.TileEntityPilotSeat)tile).configure(message.pilotMode,message.pilotHeight,player.world);}
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile)
@@ -157,7 +163,7 @@ public class MessageRedstoneChannel implements IMessage {
                             && block instanceof BlockPropulsionLight)
                         ((TileEntityRedstoneLight) tile).setSideTexture(message.sideTexture);
                 }
-                if(tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight)((TileEntityRedstoneLight)tile).configureSignalBrightness(message.signalBrightness,message.threshold);
+                if(tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight){((TileEntityRedstoneLight)tile).setRedstoneInverted(message.redstoneInverted);((TileEntityRedstoneLight)tile).configureSignalBrightness(message.signalBrightness,message.threshold);}
                 if (message.updateShape && block instanceof BlockPropulsionLight
                         && !((BlockPropulsionLight) block).familyId().isEmpty()) {
                     BlockPropulsionLight.configureShape(player.world, message.pos,

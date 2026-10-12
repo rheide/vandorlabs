@@ -1030,9 +1030,9 @@ final class ScreenRuntimeChecks {
                     java.util.List<AxisAlignedBB> joinedBoxes = new java.util.ArrayList<>();
                     diagonal.addCollisionBoxToList(turn, player.world, pos, query,
                             joinedBoxes, null, false);
-                    require(joinedBoxes.size() == 32,
-                            "diagonal turn does not add only the connecting arm");
-                    AxisAlignedBB shortened = joinedBoxes.get(inverted ? 0 : 30);
+                    require(joinedBoxes.size() == (front?28:32),
+                            "diagonal turn has missing arms or an arm folded through its pane");
+                    AxisAlignedBB shortened = joinedBoxes.get(inverted ? 0 : joinedBoxes.size()-2);
                     require(turnFacing == EnumFacing.EAST
                                     ? shortened.minX > pos.getX()
                                     : shortened.maxX < pos.getX() + 1,
@@ -1055,7 +1055,8 @@ final class ScreenRuntimeChecks {
             diagonal.addCollisionBoxToList(turn, player.world, pos, query,
                     threeBoxes, null, false);
             require(both != null && both.frontRight != null
-                            && both.backRight != null && threeBoxes.size() == 48,
+                            && both.backRight != null && threeBoxes.size() == 44
+                            && both.left(6)==6 && both.right(6)==10,
                     "three diagonal walls do not retain both corner connections");
             player.world.setBlockToAir(pos.north());
             player.world.setBlockToAir(pos.south());

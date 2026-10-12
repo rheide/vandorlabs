@@ -20,8 +20,8 @@ public final class VehicleRotation {
     }
     public static int turns(float yaw) {
         int nearest=Math.round(yaw/90F);
-        if(!Float.isFinite(yaw) || Math.abs(MathHelper.wrapDegrees(yaw-nearest*90F))>5)
-            throw new IllegalArgumentException("Align the craft to a 90-degree heading before exiting Taxi Mode or parking.");
+        if(!Float.isFinite(yaw) || Math.abs(MathHelper.wrapDegrees(yaw-nearest*90F))>12)
+            throw new IllegalArgumentException("Align the craft to a 90-degree heading before parking (within 12 degrees).");
         return Math.floorMod(nearest,4);
     }
     public static Plan plan(EntityGroundVehicle craft) {
@@ -47,27 +47,14 @@ public final class VehicleRotation {
         // Malisis may replace vanilla registry entries while keeping the minecraft namespace.
         if((domain.equals("minecraft") || domain.equals("malisisdoors")) &&
                 (name.equals("net.malisis.doors.tileentity.DoorTileEntity") || name.equals("net.malisis.doors.tileentity.TrapDoorTileEntity")))return true;
-        if(domain.equals("minecraft")) {
-            String blockClass=cell.state.getBlock().getClass().getName();
-            if(!blockClass.startsWith("net.minecraft.block."))return tile==null
-                    && blockClass.equals("net.malisis.doors.block.Door")
-                    && upperDoor(cell.state);
-            if(tile==null)return true;
-            if(!name.startsWith("net.minecraft.tileentity."))return false;
-            return tile instanceof net.minecraft.tileentity.TileEntityLockable
-                    || tile instanceof net.minecraft.tileentity.TileEntityEnderChest
-                    || tile instanceof net.minecraft.tileentity.TileEntitySign
-                    || tile instanceof net.minecraft.tileentity.TileEntityBanner
-                    || tile instanceof net.minecraft.tileentity.TileEntityBeacon
-                    || tile instanceof net.minecraft.tileentity.TileEntityEnchantmentTable
-                    || tile instanceof net.minecraft.tileentity.TileEntityNote
-                    || tile instanceof net.minecraft.tileentity.TileEntityComparator
-                    || tile instanceof net.minecraft.tileentity.TileEntityDaylightDetector;
-        }
+        if(domain.equals("minecraft"))return cell.state.getBlock().getClass().getName().startsWith("net.minecraft.block.");
         if(domain.equals("vandorlabs")) {
-            if(tile==null)return cell.state.getBlock() instanceof BlockVandorDirectional || cell.state.getBlock() instanceof BlockVandorDoor;
-            return tile instanceof TileEntityPilotSeat || tile instanceof TileEntitySpaceDoor || tile instanceof TileEntityProgrammableTrapdoor
-                    || tile instanceof TileEntityAnimatedScreenSelector || tile instanceof TileEntityLandingGear || tile instanceof TileEntityShipSystem;
+            if(tile instanceof TileEntityRampController){
+                TileEntityRampController ramp=(TileEntityRampController)tile;
+                return !ramp.attached() && ramp.vehicleCells().isEmpty() && !ramp.isMoving()
+                        && !cell.tileData().getBoolean("RecoveryPending");
+            }
+            return true;
         }
         if(domain.equals("immersiveengineering"))return name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLadder")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorLV")
@@ -88,6 +75,13 @@ public final class VehicleRotation {
                 EnumFacing facing=rotation.rotate((EnumFacing)source.getValue(property));
                 if(property.getAllowedValues().contains(facing))rotated=rotated.withProperty(property,facing);
             }
+        if(source.getBlock() instanceof BlockGlassWall) {
+            boolean turned=source.getValue(BlockGlassWall.ROTATED);int depth=source.getValue(BlockGlassWall.DEPTH);
+            for(int n=0;n<rotation.ordinal();n++){if(turned)depth=depth==1?2:depth==2?1:0;turned=!turned;}
+            rotated=rotated.withProperty(BlockGlassWall.ROTATED,turned).withProperty(BlockGlassWall.DEPTH,depth);
+        }
+        if(source.getBlock() instanceof BlockVandorSwitch && source.getValue(BlockVandorSwitch.FACING).getAxis()==EnumFacing.Axis.Y)
+            rotated=rotated.withProperty(BlockVandorSwitch.ROTATION,(source.getValue(BlockVandorSwitch.ROTATION)+rotation.ordinal())&3);
         return rotated;
     }
     private static void facing(NBTTagCompound data,String key,Rotation rotation,boolean horizontal) {
@@ -121,7 +115,29 @@ public final class VehicleRotation {
                     if(data.hasKey("TrapdoorAssembly",9))data.setTag("TrapdoorAssembly",updated);
                     for(String key:new String[]{"TrapdoorCoverFacing","DiagonalFacing","DiagonalGroupFacing"})facing(data,key,rotation,true);
                     facing(data,"MountFace",rotation,false);
+                    if(before.state.getBlock() instanceof BlockVandorSwitch && before.state.getValue(BlockVandorSwitch.FACING).getAxis()==EnumFacing.Axis.Y && data.hasKey("MountRotation",3))
+                        data.setInteger("MountRotation",(data.getInteger("MountRotation")+turns)&3);
+                    if(view.getTileEntity(before.pos) instanceof TileEntityRampController){facing(data,"RampDirection",rotation,true);facing(data,"Facing",rotation,true);}
                     if(data.hasKey("GearOwnerX",3)){BlockPos offset=vector(new BlockPos(data.getInteger("GearOwnerX"),0,data.getInteger("GearOwnerZ")),turns);data.setInteger("GearOwnerX",offset.getX());data.setInteger("GearOwnerZ",offset.getZ());}
+                } else if(domain.equals("minecraft")) {
+                    if(data.hasKey("Rot",99) && before.state.getBlock() instanceof net.minecraft.block.BlockSkull)
+                        data.setByte("Rot",(byte)((data.getByte("Rot")+turns*4)&15));
+                    if(data.hasKey("facing",3) && before.state.getBlock() instanceof net.minecraft.block.BlockPistonMoving){
+                        facing(data,"facing",rotation,false);
+                        net.minecraft.block.Block carried=net.minecraft.block.Block.getBlockById(data.getInteger("blockId"));
+                        if(carried!=null)data.setInteger("blockData",carried.getMetaFromState(state(carried.getStateFromMeta(data.getInteger("blockData")),rotation)));
+                    }
+                    if(before.state.getBlock() instanceof net.minecraft.block.BlockStructure){
+                        BlockPos offset=vector(new BlockPos(data.getInteger("posX"),data.getInteger("posY"),data.getInteger("posZ")),turns);
+                        if("SAVE".equals(data.getString("mode"))){
+                            int sizeX=data.getInteger("sizeX"),sizeZ=data.getInteger("sizeZ");
+                            BlockPos opposite=vector(new BlockPos(data.getInteger("posX")+Math.max(0,sizeX-1),data.getInteger("posY"),data.getInteger("posZ")+Math.max(0,sizeZ-1)),turns);
+                            offset=new BlockPos(Math.min(offset.getX(),opposite.getX()),offset.getY(),Math.min(offset.getZ(),opposite.getZ()));
+                            if((turns&1)!=0){data.setInteger("sizeX",sizeZ);data.setInteger("sizeZ",sizeX);}
+                        }
+                        data.setInteger("posX",offset.getX());data.setInteger("posZ",offset.getZ());
+                        try{data.setString("rotation",Rotation.values()[(Rotation.valueOf(data.getString("rotation")).ordinal()+turns)&3].name());}catch(IllegalArgumentException ignored){}
+                    }
                 } else if(domain.equals("immersiveengineering")) {
                     facing(data,"facing",rotation,false);
                     NBTTagCompound old=data.copy();

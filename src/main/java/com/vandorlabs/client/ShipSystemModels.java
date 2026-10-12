@@ -104,7 +104,7 @@ public final class ShipSystemModels {
                 data[offset] = Float.floatToRawIntBits((float) (.5 + (p.x - centerX) * itemScale));
                 data[offset + 1] = Float.floatToRawIntBits((float) (.5 + (p.y - centerY) * itemScale));
                 data[offset + 2] = Float.floatToRawIntBits((float) (.5 + (p.z - centerZ) * itemScale));
-                data[offset + 3] = 0xffffffff;
+                data[offset + 3] = f.material.startsWith("rivet/") && f.baseMaterial.equals("ivory") ? 0xffa69e7d : 0xffffffff;
                 data[offset + 4] =
                         Float.floatToRawIntBits(sprite.getInterpolatedU(f.uv[v][0] * 16));
                 data[offset + 5] =

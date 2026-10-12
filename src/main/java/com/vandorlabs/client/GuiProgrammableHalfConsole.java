@@ -35,6 +35,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private int displayMode;
     private int speedIndex;
     private boolean redstoneEnabled;
+    private boolean redstoneInverted;
     private int housingTexture;
     private GuiTextField channelField;
     private HousingTextureList housingList;
@@ -49,6 +50,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         displayMode = te.getDisplayMode();
         speedIndex = te.getAnimationSpeedIndex();
         redstoneEnabled = te.isRedstoneEnabled();
+        redstoneInverted=te.isRedstoneInverted();
         housingTexture = te.getHousingTexture();
         xSize = 420;
         ySize = 240;
@@ -86,10 +88,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         for (GuiButton button : buttonList) {
             if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}
             if (button.id == 0) {
-                button.displayString = I18n.format("gui.vandorlabs.selector.redstone") + ": "
-                        + I18n.format(redstoneEnabled
-                                ? "gui.vandorlabs.selector.on"
-                                : "gui.vandorlabs.selector.off_state");
+                button.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
             }
             if (button.id >= 1 && button.id <= 3) button.enabled = displayMode != button.id - 1;
             if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
@@ -114,7 +113,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(te.getPos(),
                 te.getSelectedScreen(), redstoneEnabled, displayMode,
                 te.isFramed(), speedIndex, bottomPanel, topPanel, false, channel(),
-                housingTexture).withChannels(ChannelFields.parse(channelField)));
+                housingTexture).withRedstoneInverted(redstoneInverted).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
@@ -169,7 +168,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
         if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;if(!picker.hasPair())return;picker.setFramed(!picker.framed());chooseArtwork(picker,textureTab==1?1:0);return;}
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
-        if (button.id == 0) redstoneEnabled = !redstoneEnabled;
+        if (button.id == 0) {if(!redstoneEnabled){redstoneEnabled=true;redstoneInverted=false;}else if(!redstoneInverted)redstoneInverted=true;else{redstoneEnabled=false;redstoneInverted=false;}}
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
         else return;

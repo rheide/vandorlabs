@@ -11,10 +11,21 @@ public final class VehicleCollision {
     public VehicleCollision(VehicleWorld view) {
         pivotX=view.structure.bounds.maxX/2; pivotZ=view.structure.bounds.maxZ/2;
         List<AxisAlignedBB> all=new ArrayList<>();
+        Set<BlockPos> canopyOwners=new HashSet<>();
         AxisAlignedBB query=view.structure.bounds.grow(16);
         for(VehicleStructure.Cell c:view.structure.cells) {
             List<AxisAlignedBB> component=new ArrayList<>();
-            try {c.state.addCollisionBoxToList(view,c.pos,query,component,null,false);all.addAll(component);}
+            try {
+                if(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy) {
+                    net.minecraft.tileentity.TileEntity raw=view.getTileEntity(c.pos);
+                    if(raw instanceof com.vandorlabs.tiles.TileEntityCanopy) {
+                        com.vandorlabs.tiles.TileEntityCanopy owner=((com.vandorlabs.tiles.TileEntityCanopy)raw).owner();
+                        // Owner boxes already use VehicleWorld coordinates, including shell displacement.
+                        if(owner.draws() && canopyOwners.add(owner.getPos()))component.addAll(owner.boxes());
+                    }
+                } else c.state.addCollisionBoxToList(view,c.pos,query,component,null,false);
+                all.addAll(component);
+            }
             catch(RuntimeException | LinkageError error){
                 VehicleCompatibility.warn(c.state.getBlock(),"collision",error);
                 all.add(new AxisAlignedBB(c.pos));

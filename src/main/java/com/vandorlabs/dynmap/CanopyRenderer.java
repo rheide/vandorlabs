@@ -13,7 +13,7 @@ import java.util.*;
 public final class CanopyRenderer extends CustomRenderer {
     @Override
     public String[] getTileEntityFieldsNeeded() {
-        return new String[] {"Anchor", "Pair", "CanopyMask"};
+        return new String[] {"Anchor", "Pair", "CanopyMask", "CanopyWidth", "CenteredPlacement", "CanopyDepth", "CanopyScale", "CanopyShade", "CanopyTint"};
     }
 
     private static BlockPos position(Object value, BlockPos fallback) {
@@ -49,13 +49,18 @@ public final class CanopyRenderer extends CustomRenderer {
         else if (id.startsWith("angled_") && (bits & 11) != 0)
             id = String.format(java.util.Locale.ROOT, "%s_%02x", id, bits & 11);
         else if (pair instanceof Number && id.startsWith("opening_")) id = id.replace("1x2", "2x2");
+        Object savedWidth=context.getBlockTileEntityFieldAt("CanopyWidth",ox,oy,oz);
+        int width=savedWidth instanceof Number?((Number)savedWidth).intValue():pair instanceof Number?2:1;
         List<RenderPatch> result = new ArrayList<>();
         List<CanopyMesh.Face> mesh = CanopyMesh.MODELS.get(id);
+        Object alignment=context.getBlockTileEntityFieldAt("CenteredPlacement",ox,oy,oz);
+        mesh=com.vandorlabs.canopy.CanopyVariants.faces(Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0,id,mesh);
+        if(com.vandorlabs.canopy.LargeCanopySettings.supports(id)){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();for(String field:new String[]{"CanopyDepth","CanopyScale","CanopyShade","CanopyTint"}){Object value=context.getBlockTileEntityFieldAt(field,ox,oy,oz);if(value instanceof Number)tag.setInteger(field,((Number)value).intValue());}com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();settings.read(tag);mesh=com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings);}
         if (mesh == null) return new RenderPatch[0];
         for (CanopyMesh.Face face : mesh) {
             List<Vec3d> polygon = new ArrayList<>();
             for (Vec3d v : face.vertices)
-                polygon.add(CanopyMesh.rotate(v, facing).addVector(ox, oy, oz));
+                polygon.add(CanopyMesh.rotate(CanopyMesh.pose(v,id,width,0,false), facing).addVector(ox, oy, oz));
             for (int axis = 0; axis < 3; axis++) {
                 polygon = clip(polygon, axis, 0, true);
                 polygon = clip(polygon, axis, 1, false);

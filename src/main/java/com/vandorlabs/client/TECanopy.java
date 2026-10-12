@@ -40,7 +40,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
                         rendererDispatcher.entityX - tile.getPos().getX(),
                         rendererDispatcher.entityY - tile.getPos().getY(),
                         rendererDispatcher.entityZ - tile.getPos().getZ());
-        for (CanopyMesh.Face f : CanopyMesh.MODELS.get(tile.model())) {
+        for (CanopyMesh.Face f : tile.faces()) {
             DrawFace draw = new DrawFace();
             draw.source = f;
             draw.v = new Vec3d[f.vertices.length];
@@ -93,7 +93,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             net.minecraft.client.renderer.texture.TextureAtlasSprite sprite =
                     Minecraft.getMinecraft()
                             .getTextureMapBlocks()
-                            .getAtlasSprite("vandorlabs:blocks/canopy/" + f.material);
+                            .getAtlasSprite(f.material.contains(":")?f.material:"vandorlabs:blocks/canopy/" + f.material);
             for (int i = 1; i < f.vertices.length - 1; i++) {
                 vertices(b, draw, sprite, new int[] {0, i, i + 1, i + 1});
                 if (f.doubleSided) vertices(b, draw, sprite, new int[] {i + 1, i, 0, 0});

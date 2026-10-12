@@ -20,7 +20,7 @@ import java.util.*;
 /** Actual vanilla client clicks and custom network dispatch on distant captured cells. */
 public final class VehicleInteractionRuntimeChecks {
     private static UUID id;
-    private static int ticks,phase,doorCase;
+    private static int ticks,phase,doorCase,totalTicks;
     private static final BlockPos SEAT=new BlockPos(40,20,1),DOOR=new BlockPos(36,20,1),PAIR=new BlockPos(24,20,1),LARGE=new BlockPos(32,20,1);
     private static final BlockPos ORIGIN=new BlockPos(160,101,40);
     private static final List<BlockPos> doorCells=new ArrayList<>(),trapRoots=new ArrayList<>();
@@ -150,10 +150,12 @@ public final class VehicleInteractionRuntimeChecks {
     }
     public static boolean tick(Minecraft mc,File output) throws Exception {
         if(finished)return true;
+        require(++totalTicks<=5000,"timed out at phase="+phase+" door-case="+doorCase+" elapsed-ticks="+totalTicks);
         if(ticks++==0 && phase==0) {
             net.minecraft.entity.Entity old=mc.world.getEntityByID(-40000);if(old!=null)old.setDead();
             mc.world.removeEntityFromWorld(-40000);mc.gameSettings.hideGUI=false;mc.gameSettings.thirdPersonView=0;
             mc.getIntegratedServer().addScheduledTask(()->setup(mc)).get();
+            System.out.println("[vandorlabs][reprolab] vehicle-clicks START door-cases="+(6+trapRoots.size()*2));
         }
         if(ticks<25)return false;
         ticks=0;
@@ -185,6 +187,7 @@ public final class VehicleInteractionRuntimeChecks {
         if(phase==6){doorState(mc,root,true);doorClick(mc,root);phase++;return false;}
         if(phase==7) {
             doorState(mc,root,false);doorCase++;
+            System.out.println("[vandorlabs][reprolab] vehicle-clicks progress="+doorCase+"/"+(6+trapRoots.size()*2)+" elapsed-ticks="+totalTicks);
             if(doorCase==6+trapRoots.size()*2) {
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_clicks.png"));
                 System.out.println("[vandorlabs][reprolab] vehicle-clicks PASS distant-lower-upper-seats rotated-boarding network-driving programmable-2cell-paired-3x3-doors open-close state-sync private-settings vanilla-programmable-diagonal-trapdoors-all-positions-both-motions");

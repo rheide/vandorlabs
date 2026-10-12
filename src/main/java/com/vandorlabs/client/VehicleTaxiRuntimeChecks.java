@@ -61,7 +61,7 @@ public final class VehicleTaxiRuntimeChecks {
     }
     private static Block required(String id){Block block=Block.getBlockFromName(id);require(block!=null,"fixture installed: "+id);return block;}
     private static void setup(Minecraft mc) throws Exception {
-        WorldServer w=world(mc);EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        WorldServer w=world(mc);TaxiSettingsRuntimeChecks.run(w);EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
         p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(origin.add(-12,-1,-12),origin.add(20,-1,20)))w.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
         Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}
@@ -204,8 +204,8 @@ public final class VehicleTaxiRuntimeChecks {
             case 2:if(!(mc.currentScreen instanceof GuiRedstoneChannel)){require(++dialogWait<24,"placed pilot seat opens settings dialog");blockClick(mc,true);phase--;break;}button(mc,15);button(mc,1);break;
             case 3:mc.getIntegratedServer().addScheduledTask(()->require(!((TileEntityPilotSeat)world(mc).getTileEntity(seat)).isTaxiMode(),"OFF setting saved through UI/network")).get();blockClick(mc,false);break;
             case 4:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"manual mode sits without conversion");player(mc).dismountRidingEntity();player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewAssembly(player(mc),seat);}).get();break;
-            case 5:button(mc,3);break;
-            case 6:((GuiTextField)field(mc.currentScreen,"channels")).setText("5319");button(mc,0);break;
+            case 5:require(field(mc.currentScreen,"channels") instanceof GuiTextField,"channels integrated into assembly dialog");button(mc,5);break;
+            case 6:mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)world(mc).getTileEntity(seat)).getHeight()==1,"assembly preview height applies before Save/Close")).get();((GuiTextField)field(mc.currentScreen,"channels")).setText("5319");button(mc,3);break;
             case 7:mc.getIntegratedServer().addScheduledTask(()->{
                 TileEntityPilotSeat pilot=(TileEntityPilotSeat)world(mc).getTileEntity(seat);
                 require(pilot.getRedstoneChannel()==5319 && !player(mc).isRiding(),"assembly preview settings save placed seat without conversion on a held-high channel");
@@ -230,23 +230,25 @@ public final class VehicleTaxiRuntimeChecks {
                 List<VehicleStructure.Cell> unknown=new ArrayList<>(before.cells);BlockPos extra=new BlockPos(0,0,2);TileEntityCommandBlock command=new TileEntityCommandBlock();command.setPos(extra);
                 unknown.add(new VehicleStructure.Cell(extra,Blocks.COMMAND_BLOCK.getDefaultState(),command.writeToNBT(new NBTTagCompound())));
                 e.install(new VehicleStructure(unknown,before.seat,before.facing,before.gearCount));e.rotationYaw=90;
-                player(mc).dismountRidingEntity();require(player(mc).getRidingEntity()==e && !e.taxiReturnPending,"unknown tile rotation refuses exit and keeps driver mounted");
-                e.rotationYaw=0;require(VehicleRotation.plan(e).structure==e.structure,"unknown tiles remain returnable at original orientation");e.install(before);
-                e.rotationYaw=45;player(mc).dismountRidingEntity();require(player(mc).getRidingEntity()==e,"45-degree exit is refused without losing driver or snapshot");
+                VehicleRotation.Plan commandPlan=VehicleRotation.plan(e);
+                BlockPos rotatedCommand=VehicleRotation.cell(extra,(int)e.structure.bounds.maxX,(int)e.structure.bounds.maxZ,1);
+                require(commandPlan.structure.at(rotatedCommand).state.getBlock()==Blocks.COMMAND_BLOCK,"vanilla command block rotates with complete private data");
+                e.install(before);
+                e.rotationYaw=45;player(mc).dismountRidingEntity();require(!player(mc).isRiding() && e.taxiReturnPending,"45-degree exit allows dismount without losing snapshot");require(e.board(player(mc)),"reboard after noncardinal exit");
                 e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewParking(player(mc),e);
             }).get();break;
             case 21: {
                 Object data=field(mc.currentScreen,"data");stalePreview=((VehicleNetwork.Packet)field(data,"header")).token;
-                button(mc,3);break;
+                break;
             }
             case 22: {
-                GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("5317, 5318");button(mc,1);break;
+                GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("5317, 5318");channels.setText("5319");button(mc,5);break;
             }
-            case 23:mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().toString().equals("5319"),"channel Cancel does not mutate the craft")).get();button(mc,3);break;
+            case 23:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5319"),"live height preserves pending channel text");mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getHeight()==2,"vehicle preview height applies before Save/Close");require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().toString().equals("5319"),"unsaved channel edit does not mutate the craft");}).get();break;
             case 24: {
                 GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("1,,2");mc.currentScreen.updateScreen();
                 List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");
-                require(!controls.get(0).enabled,"invalid channel list disables Save");channels.setText("5318, 5317, 5318");mc.currentScreen.updateScreen();button(mc,0);break;
+                require(controls.stream().anyMatch(b->b.id==3 && !b.enabled),"invalid channel list disables Save");channels.setText("5318, 5317, 5318");mc.currentScreen.updateScreen();button(mc,3);break;
             }
             case 25: {
                 Object data=field(mc.currentScreen,"data");UUID currentPreview=((VehicleNetwork.Packet)field(data,"header")).token;
@@ -266,14 +268,14 @@ public final class VehicleTaxiRuntimeChecks {
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"protection rejects channel edits");
                 denied.origin=e.structure.seat.up();VehicleService.configureChannels(player(mc),denied);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"forged seat identity rejected");
-            }).get();button(mc,3);break;
+            }).get();break;
             }
-            case 26:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5317, 5318"),"reopened settings display saved list");button(mc,1);break;
-            case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"refused non-cardinal exits keep the client mounted and able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
+            case 26:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5317, 5318"),"integrated settings display saved list");break;
+            case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"reboarding after non-cardinal exits keeps client able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
             case 28:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
             case 29:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);com.vandorlabs.redstone.RedstoneChannels.unregister(powered);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
-                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS assembly-and-parking-channel-UI held-high-baseline channel-UI-save-cancel stale-preview canonical-list stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
+                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS assembly-and-parking-channel-UI held-high-baseline channel-UI-save-cancel stale-preview canonical-list stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-dismount-preserved repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
             default:throw new IllegalStateException("Taxi test phase overflow");
         }
         return false;

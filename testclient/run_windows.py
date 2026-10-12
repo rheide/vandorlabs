@@ -30,7 +30,8 @@ def main():
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins'])
+    parser.add_argument('--focus', choices=['large-canopy', 'pilot-inspection', 'pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins', 'ramps', 'redstone-inversion', 'doors', 'block-categories', 'machinery', 'glass-appearance'])
+    parser.add_argument('--disable-categories', help='Comma-separated category keys for isolated availability checks')
     parser.add_argument('--shot-prefix', help='Restrict visual scenes to one named family or arrangement')
     parser.add_argument('--start-shot', help='Resume visual scenes at this exact name, retaining later runtime checks')
     parser.add_argument('--timeout', type=int, default=1200)
@@ -46,8 +47,14 @@ def main():
     game = output/'game'
     natives = output/'natives'
     game.mkdir(parents=True)
+    if args.disable_categories:
+        categories=args.disable_categories.split(',')
+        if any(not re.fullmatch('[a-z_]+', key) for key in categories):
+            parser.error('Invalid category key')
+        (game/'config').mkdir()
+        (game/'config/vandorlabs-blocks.cfg').write_text('blocks {\n'+''.join(' B:'+key+'=false\n' for key in categories)+'}\n')
     natives.mkdir()
-    (game/'options.txt').write_text('soundCategory_master:0.0\npauseOnLostFocus:false\n')
+    (game/'options.txt').write_text('soundCategory_master:0.0\npauseOnLostFocus:false\n'+('enableVsync:false\nmaxFps:120\n' if args.focus=='ramps' else ''))
     if args.world_copy:
         shutil.copytree(args.world_copy, game/'saves'/('repro-'+output.name))
     base = args.minecraft_dir.resolve()
@@ -109,17 +116,19 @@ def main():
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'large-canopy':'largeCanopyChecksOnly', 'pilot-inspection':'pilotInspectionChecksOnly', 'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly', 'glass-appearance':'glassAppearanceChecksOnly', 'machinery':'machineryChecksOnly', 'block-categories':'blockCategoryChecksOnly', 'doors':'doorChecksOnly', 'redstone-inversion':'redstoneInversionChecksOnly', 'ramps': 'rampChecksOnly'}[args.focus]+'=true')
         if args.focus=='vehicle-render':properties.append('-Dvandorlabs.vehicleRenderChecksOnly=true')
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
+    if args.focus == 'ramps':
+        properties += ['-Dvandorlabs.documentationAnimations=true', '-Dvandorlabs.documentationAnimationFilter=ramp-escalator-up,ramp-escalator-down,ramp-escalator-walkway,ramp-escalator-curve-in']
     if args.role:
         properties.append('-Dvandorlabs.networkRole='+args.role)
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
-    command = [args.java, '-Xmx3G']+properties+['-cp', ';'.join(classpath),
+    command = [args.java, '-Xmx3G']+(['-XX:+UseG1GC', '-XX:MaxGCPauseMillis=20'] if args.focus=='ramps' else [])+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
         '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,
-        '--width', '1280', '--height', '720']
+        '--width', '896' if args.focus == 'ramps' else '1280', '--height', '504' if args.focus == 'ramps' else '720']
     if args.server:
         host,port=args.server.split(':')
         command+=['--server',host,'--port',port]
@@ -164,9 +173,20 @@ def main():
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS'}[args.focus]
+        marker = {'large-canopy':'large-canopy-live PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
+        if args.focus == 'ramps':
+            for mode in (1, 2, 3, 4, 5):
+                expected = 'escalator-player-live PASS real client/server rider transport and redstone stop, mode='+str(mode)
+                if expected not in client_log:
+                    raise SystemExit('Missing player ride check: '+expected)
+            expected_scenes = {'ramp-escalator-up', 'ramp-escalator-down', 'ramp-escalator-walkway', 'ramp-escalator-curve-in'}
+            if {path.parent.name for path in output.glob('*/capture.json')} != expected_scenes:
+                raise SystemExit('Incomplete or out-of-scope ramp animation set')
+            for scene in expected_scenes:
+                if 'documentation-animation PASS '+scene+' frames=' not in client_log:
+                    raise SystemExit('Missing escalator animation: '+scene)
         if args.focus == 'pilot-seat':
             import sys
             subprocess.run([sys.executable, str(root/'testclient/analyze_pilot_seat.py'), str(output)], check=True)

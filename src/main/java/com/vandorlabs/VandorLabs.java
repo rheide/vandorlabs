@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.0-alpha";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t140";
+    public static final String BUILD_ID = "t158";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -39,6 +39,7 @@ public class VandorLabs {
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         logger = event.getModLog();
+        com.vandorlabs.config.BlockAvailability.initialize(event.getModConfigurationDirectory());
         com.vandorlabs.tiles.FilesystemTextures.initialize(event.getModConfigurationDirectory().toPath().resolve("vandorlabs/textures"));
         proxy.preInit(event);
         com.vandorlabs.tiles.DeferredTileLoad.install();

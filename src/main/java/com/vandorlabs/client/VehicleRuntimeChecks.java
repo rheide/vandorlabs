@@ -154,13 +154,13 @@ public final class VehicleRuntimeChecks {
             net.minecraft.tileentity.TileEntity tile=w.getTileEntity(at);NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());
             tag.setInteger("facing",EnumFacing.SOUTH.getIndex());tile.readFromNBT(tag);tile.markDirty();
         }
-        BlockShipSystem dampener=(BlockShipSystem)Block.getBlockFromName("vandorlabs:vektor_dampener_large");
+        BlockShipSystem dampener=(BlockShipSystem)Block.getBlockFromName("vandorlabs:rivet_dampener_large_g64");
         require(dampener!=null,"registered inertial dampener");BlockPos dampenerPos=ORIGIN.add(0,2,4);
         IBlockState dampenerState=dampener.getDefaultState().withProperty(BlockShipSystem.FACING,EnumFacing.NORTH);
         w.setBlockState(dampenerPos,dampenerState,2);dampener.onBlockPlacedBy(w,dampenerPos,dampenerState,p,new ItemStack(dampener));
         require(dampener.cells(dampenerPos,EnumFacing.NORTH).size()==12,"dampener has a complete twelve-cell footprint");
         // Doors retain both halves and can be operated after assembly.
-        Block ownDoor=null;for(Block b:Block.REGISTRY)if(b instanceof BlockVandorDoor && !(b instanceof BlockLargeProgrammableDoor) && !(b instanceof BlockConfigurableSpaceDoor)){ownDoor=b;break;}
+        Block ownDoor=null;for(Block b:Block.REGISTRY)if(b instanceof BlockVandorDoor && !(b instanceof BlockLargeProgrammableDoor)){ownDoor=b;break;}
         require(ownDoor!=null,"registered Vandor door");
         BlockPos vanillaDoor=ORIGIN.add(0,2,0),vandorDoor=ORIGIN.add(2,2,0);
         for(BlockPos at:new BlockPos[]{vanillaDoor,vandorDoor}) {
@@ -180,6 +180,17 @@ public final class VehicleRuntimeChecks {
         ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
         require(ramp.attached() && !ramp.isMoving() && ramp.isOpen(),"ramp fully extended before assembly");
         p.setPositionAndUpdate(4,101,8);
+        VehicleScan extended=new VehicleScan(w,SEAT);for(int i=0;i<200 && !extended.step(128);i++);
+        require(extended.error==null && extended.result!=null,"extended ramp supports virtual source capture: "+extended.error);
+        require(extended.result.matches(w,extended.origin) && ramp.attached() && ramp.isOpen(),"extended ramp preview preserves live geometry and matches source journal");
+        for(VehicleStructure.Cell cell:extended.result.cells)require(!(cell.state.getBlock() instanceof BlockControlledRamp),"extended ramp preview excludes generated sections");
+        for(int n=1;n<=2;n++) {
+            VehicleStructure.Cell source=extended.result.at(rampPos.south(n).subtract(extended.origin));
+            require(source!=null && source.state.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK,"extended ramp preview retains original source blocks");
+            TileEntityAnimatedScreenSelector restored=(TileEntityAnimatedScreenSelector)new VehicleWorld(w,extended.result).getTileEntity(rampPos.south(n).subtract(extended.origin));
+            require(restored!=null && restored.getHousingTexture()==CustomBlockMaterials.choice(new ItemStack(Blocks.GOLD_BLOCK)),"extended ramp preview retains source material");
+        }
+        require(ramp.recover(true),"retract broad fixture after verifying extended preview");
         VehicleScan scan=scan(w,SEAT);expected=scan.result;
         require(expected.cells.size()>42 && expected.gearCount==4,"gear boundary excludes floor while all branches remain");
         VehicleStructure decoded=VehicleStructure.decode(expected.encode());require(decoded.write().equals(expected.write()),"snapshot state/NBT round trip");
@@ -189,14 +200,8 @@ public final class VehicleRuntimeChecks {
         require(localDampener!=null && localDampener.formed() && localDampener.draws(),"inertial dampener keeps local ownership and draw root");
         require(!local.getBlockState(new BlockPos(0,2,2)).getValue(BlockPropulsionLight.POWERED) && ((TileEntityRedstoneLight)local.getTileEntity(new BlockPos(0,2,2))).getBrightness()==0,"previously powered thruster starts dark on assembly");
         TileEntityRampController localRamp=(TileEntityRampController)local.getTileEntity(rampPos.subtract(ORIGIN));
-        require(localRamp!=null && localRamp.attached() && localRamp.isOpen(),"ramp controller keeps extended ownership");
-        boolean visibleRamp=false;
-        for(net.minecraft.tileentity.TileEntity raw:local.tiles.values())if(raw instanceof TileEntityControlledRamp) {
-            TileEntityControlledRamp part=(TileEntityControlledRamp)raw;
-            require(part.controller.equals(localRamp.getPos()) && localRamp.owns(part),"translated ramp journals and ownership");
-            visibleRamp|=!part.boxes(0).isEmpty();
-        }
-        require(visibleRamp,"extended ramp geometry survives local-world translation");
+        require(localRamp!=null && !localRamp.attached() && !localRamp.isOpen(),"retracted ramp controller travels without external reservations");
+        for(net.minecraft.tileentity.TileEntity raw:local.tiles.values())require(!(raw instanceof TileEntityControlledRamp),"generated ramp sections never enter vehicle");
         local.propulsionLevel=12;
         for(int i=0;i<4;i++) {
             BlockPos at=new BlockPos(i,2,2);IBlockState state=local.getBlockState(at);state=state.getBlock().getActualState(state,local,at);

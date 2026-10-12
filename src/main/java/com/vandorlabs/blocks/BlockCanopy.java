@@ -17,7 +17,7 @@ import net.minecraft.world.*;
 
 import java.util.*;
 
-/** Each occupied cell points to its constituent anchor, which may join one adjacent anchor. */
+/** Each occupied cell points to its constituent anchor; narrow shells can join sideways. */
 public final class BlockCanopy extends Block {
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
     public final String kind;
@@ -34,7 +34,8 @@ public final class BlockCanopy extends Block {
         height = size[2];
         setRegistryName(VandorLabs.MODID, id);
         setUnlocalizedName(id);
-        setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+        if(!com.vandorlabs.canopy.CanopyVariants.retired(id))setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+        setLightOpacity(0);
         setHardness(1.5F);
         setSoundType(SoundType.GLASS);
         setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
@@ -42,6 +43,17 @@ public final class BlockCanopy extends Block {
 
     public boolean opening() {
         return kind.startsWith("opening_");
+    }
+    public EnumFacing placementFacing(EntityLivingBase player){
+        EnumFacing facing=player.getHorizontalFacing();
+        return opening() || kind.startsWith("angled_")?facing.getOpposite():facing;
+    }
+    public BlockPos placementAnchor(BlockPos clicked,EnumFacing facing){
+        return com.vandorlabs.canopy.CanopyVariants.centered(kind)?clicked.offset(facing.rotateYCCW(),width/2).offset(facing,kind.equals("space_bubble_wedge_3x3")?length/2:0):clicked;
+    }
+    public boolean sharesSeatBackrest(IBlockState state){
+        return (kind.equals("regular_canopy_glass") || kind.startsWith("space_shuttle_") || kind.startsWith("space_bubble_wedge_"))
+                && state.getBlock() instanceof BlockPilotSeat && state.getValue(BlockPilotSeat.UPPER);
     }
 
     @Override
@@ -105,13 +117,19 @@ public final class BlockCanopy extends Block {
             float z,
             int meta,
             EntityLivingBase player) {
-        return getDefaultState().withProperty(FACING, player.getHorizontalFacing());
+        return getDefaultState().withProperty(FACING, placementFacing(player));
     }
 
     public List<BlockPos> cells(BlockPos p, EnumFacing f) {
+        return cells(p,f,length);
+    }
+    public List<BlockPos> cells(BlockPos p,EnumFacing f,int depth) {
+        return cells(p,f,depth,kind.equals("space_visor_2x1")?3:width);
+    }
+    public List<BlockPos> cells(BlockPos p,EnumFacing f,int depth,int occupiedWidth) {
         List<BlockPos> cells = new ArrayList<>();
-        for (int x = 0; x < width; x++)
-            for (int z = 0; z < length; z++)
+        for (int x = 0; x < occupiedWidth; x++)
+            for (int z = 0; z < depth; z++)
                 for (int y = 0; y < height; y++)
                     cells.add(p.offset(f.rotateY(), x).offset(f.getOpposite(), z).up(y));
         return cells;
@@ -123,7 +141,7 @@ public final class BlockCanopy extends Block {
                     || cell.getY() >= w.getHeight()
                     || !w.getWorldBorder().contains(cell)
                     || !w.isBlockLoaded(cell)
-                    || !w.getBlockState(cell).getBlock().isReplaceable(w, cell)) return false;
+                    || !(w.getBlockState(cell).getBlock().isReplaceable(w, cell) || sharesSeatBackrest(w.getBlockState(cell)))) return false;
         return true;
     }
 
@@ -131,11 +149,16 @@ public final class BlockCanopy extends Block {
     public void onBlockPlacedBy(
             World w, BlockPos p, IBlockState s, EntityLivingBase entity, ItemStack stack) {
         if (w.isRemote) return;
-        for (BlockPos cell : cells(p, s.getValue(FACING))) {
+        TileEntityCanopy root=TileEntityCanopy.at(w,p);
+        if(root!=null)root.centeredPlacement=com.vandorlabs.canopy.CanopyVariants.centered(kind);
+        if(root!=null && root.configurable() && stack.hasTagCompound())root.large.read(stack.getTagCompound());
+        for (BlockPos cell : root==null?cells(p,s.getValue(FACING)):root.cells()) {
             if (!cell.equals(p)) w.setBlockState(cell, s, 2);
             TileEntityCanopy t = TileEntityCanopy.at(w, cell);
             if (t != null) {
                 t.anchor = p;
+                if(root!=null)t.centeredPlacement=root.centeredPlacement;
+                if(root!=null && root.configurable()){net.minecraft.nbt.NBTTagCompound settings=new net.minecraft.nbt.NBTTagCompound();root.large.write(settings);t.large.read(settings);}
                 t.sync();
             }
         }
@@ -155,6 +178,10 @@ public final class BlockCanopy extends Block {
             float x,
             float y,
             float z) {
+        TileEntityCanopy selected=TileEntityCanopy.at(w,p);
+        if(selected!=null && selected.owner().configurable() && player.isSneaking()) {
+            if(!w.isRemote && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){BlockPos owner=selected.owner().getPos();player.openGui(VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LARGE_CANOPY,w,owner.getX(),owner.getY(),owner.getZ());}return true;
+        }
         if (!opening()) return false;
         if (!w.isRemote) {
             TileEntityCanopy t = TileEntityCanopy.at(w, p);
@@ -166,7 +193,7 @@ public final class BlockCanopy extends Block {
     @Override
     public void breakBlock(World w, BlockPos p, IBlockState state) {
         TileEntityCanopy t = TileEntityCanopy.at(w, p);
-        if (t != null && !w.isRemote) t.removeAssembly();
+        if (t != null && !w.isRemote) t.removeAssembly(state);
         super.breakBlock(w, p, state);
     }
 
@@ -178,7 +205,7 @@ public final class BlockCanopy extends Block {
             IBlockState s,
             TileEntity tile,
             ItemStack tool) {
-        spawnAsEntity(w, p, new ItemStack(this));
+        spawnAsEntity(w, p, configuredStack(tile instanceof TileEntityCanopy?(TileEntityCanopy)tile:null));
     }
 
     @Override
@@ -192,9 +219,11 @@ public final class BlockCanopy extends Block {
                 w.getTileEntity(p) instanceof TileEntityCanopy
                         ? (TileEntityCanopy) w.getTileEntity(p)
                         : null;
-        if (t == null || t.anchor == null || p.equals(t.anchor)) drops.add(new ItemStack(this));
+        if (t == null || t.anchor == null || p.equals(t.anchor)) drops.add(configuredStack(t));
     }
 
+    public ItemStack configuredStack(TileEntityCanopy tile){ItemStack stack=new ItemStack(this);if(tile!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(kind)){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tile.owner().large.write(tag);stack.setTagCompound(tag);}return stack;}
+    @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,World world,BlockPos pos,EntityPlayer player){return configuredStack(TileEntityCanopy.at(world,pos));}
     @Override
     public void addCollisionBoxToList(
             IBlockState s,
@@ -224,6 +253,11 @@ public final class BlockCanopy extends Block {
         return FULL_BLOCK_AABB;
     }
 
+    @Override public AxisAlignedBB getSelectedBoundingBox(IBlockState s,World world,BlockPos pos){
+        TileEntityCanopy tile=TileEntityCanopy.at(world,pos);
+        return tile==null?new AxisAlignedBB(pos):tile.owner().selectionBounds();
+    }
+
     @Override
     public RayTraceResult collisionRayTrace(
             IBlockState s, World w, BlockPos p, Vec3d start, Vec3d end) {
@@ -246,12 +280,22 @@ public final class BlockCanopy extends Block {
                 float x,
                 float y,
                 float z) {
-            BlockPos dest = w.getBlockState(p).getBlock().isReplaceable(w, p) ? p : p.offset(side);
             BlockCanopy b = (BlockCanopy) block;
-            for (BlockPos cell : b.cells(dest, player.getHorizontalFacing()))
-                if (!player.canPlayerEdit(cell, side, player.getHeldItem(hand)))
+            BlockPos dest = w.getBlockState(p).getBlock().isReplaceable(w, p) || b.sharesSeatBackrest(w.getBlockState(p)) ? p : p.offset(side);
+            dest=b.placementAnchor(dest,b.placementFacing(player));
+            for (BlockPos cell : com.vandorlabs.canopy.LargeCanopyOwnership.itemCells(b,dest,b.placementFacing(player),player.getHeldItem(hand)))
+                if (!w.isBlockModifiable(player,cell) || !player.canPlayerEdit(cell, side, player.getHeldItem(hand)))
                     return EnumActionResult.FAIL;
-            if (!b.fits(w, dest, player.getHorizontalFacing())) return EnumActionResult.FAIL;
+            if (!com.vandorlabs.canopy.LargeCanopyOwnership.fitsItem(b,w,dest,b.placementFacing(player),player.getHeldItem(hand))) return EnumActionResult.FAIL;
+            if(b.sharesSeatBackrest(w.getBlockState(dest)) || com.vandorlabs.canopy.CanopyVariants.centered(b.kind)) {
+                ItemStack stack=player.getHeldItem(hand);
+                IBlockState state=b.getStateForPlacement(w,dest,side,x,y,z,0,player);
+                if(stack.isEmpty() || !placeBlockAt(stack,player,w,dest,side,x,y,z,state))return EnumActionResult.FAIL;
+                SoundType sound=b.getSoundType(state,w,dest,player);
+                w.playSound(player,dest,sound.getPlaceSound(),SoundCategory.BLOCKS,(sound.getVolume()+1)/2,sound.getPitch()*.8F);
+                if(!player.capabilities.isCreativeMode)stack.shrink(1);
+                return EnumActionResult.SUCCESS;
+            }
             return super.onItemUse(player, w, p, hand, side, x, y, z);
         }
     }

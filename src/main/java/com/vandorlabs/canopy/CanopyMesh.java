@@ -64,12 +64,34 @@ public final class CanopyMesh {
                         });
                 MODELS.put(id, Collections.unmodifiableList(faces));
             }
+            wide("space_shuttle_2x3","space_shuttle_3x3");
+            wide("space_bubble_wedge_2x2","space_bubble_wedge_3x3");
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
+    /** Derived fixed variants retain the edge details and enlarge only the central span. */
+    private static void wide(String source,String target) {
+        List<Face> result=new ArrayList<>();
+        for(Face face:MODELS.get(source)) {
+            Face copy=new Face();copy.vertices=new Vec3d[face.vertices.length];
+            for(int i=0;i<copy.vertices.length;i++) {
+                Vec3d v=face.vertices[i];double x=v.x<=.125?v.x:v.x>=1.875?v.x+1:.125+(v.x-.125)*2.75/1.75;
+                copy.vertices[i]=new Vec3d(x,v.y,v.z);
+            }
+            copy.uv=face.uv;copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.group=face.group;copy.doubleSided=face.doubleSided;
+            result.add(copy);
+        }
+        MODELS.put(target,Collections.unmodifiableList(result));int[] size=DIMENSIONS.get(source);DIMENSIONS.put(target,new int[]{3,size[1],size[2]});
+    }
+
     public static Vec3d pose(Vec3d v, String kind, int width, double progress, boolean moving) {
+        // Three constituents share the two-wide shell, retaining the authored outer rail thickness.
+        if(width==3 && (kind.contains("slide") || kind.contains("hinge"))) {
+            double x=v.x<=.125?v.x:v.x>=1.875?v.x+1:.125+(v.x-.125)*2.75/1.75;
+            v=new Vec3d(x,v.y,v.z);
+        }
         if (!moving) return v;
         double p = progress * progress * (3 - 2 * progress);
         if (kind.contains("slide")) return v.addVector(0, 0, 2 * p);
@@ -100,8 +122,11 @@ public final class CanopyMesh {
             double progress,
             EnumFacing facing,
             BlockPos pos) {
+        return collision(MODELS.get(model),kind,width,progress,facing,pos);
+    }
+    public static List<AxisAlignedBB> collision(List<Face> faces,String kind,int width,double progress,EnumFacing facing,BlockPos pos) {
         List<AxisAlignedBB> boxes = new ArrayList<>();
-        for (Face f : MODELS.get(model))
+        for (Face f : faces)
             for (int i = 1; i < f.vertices.length - 1; i++) {
                 Vec3d
                         a =
@@ -136,6 +161,32 @@ public final class CanopyMesh {
         return boxes;
     }
 
+    /** Exact face picking avoids treating subdivided collision boxes as selectable pixels. */
+    public static RayTraceResult trace(String model,String kind,int width,double progress,EnumFacing facing,BlockPos pos,Vec3d start,Vec3d end) {
+        return trace(MODELS.get(model),kind,width,progress,facing,pos,start,end);
+    }
+    public static RayTraceResult trace(List<Face> faces,String kind,int width,double progress,EnumFacing facing,BlockPos pos,Vec3d start,Vec3d end) {
+        Vec3d direction=end.subtract(start);double nearest=Double.POSITIVE_INFINITY;RayTraceResult result=null;
+        for(Face face:faces) {
+            Vec3d[] vertices=new Vec3d[face.vertices.length];
+            for(int i=0;i<vertices.length;i++)vertices[i]=rotate(pose(face.vertices[i],kind,width,progress,face.group.equals("shell")),facing).add(new Vec3d(pos));
+            for(int i=1;i<vertices.length-1;i++) {
+                Vec3d a=vertices[0],edge1=vertices[i].subtract(a),edge2=vertices[i+1].subtract(a),cross=direction.crossProduct(edge2);
+                double determinant=edge1.dotProduct(cross);if(Math.abs(determinant)<1e-10)continue;
+                double inverse=1/determinant;Vec3d relative=start.subtract(a);
+                double u=relative.dotProduct(cross)*inverse;if(u< -1e-8 || u>1+1e-8)continue;
+                Vec3d q=relative.crossProduct(edge1);double v=direction.dotProduct(q)*inverse;
+                if(v< -1e-8 || u+v>1+1e-8)continue;
+                double distance=edge2.dotProduct(q)*inverse;
+                if(distance<0 || distance>1 || distance>=nearest)continue;
+                nearest=distance;Vec3d normal=edge1.crossProduct(edge2);
+                if(normal.dotProduct(direction)>0)normal=normal.scale(-1);
+                result=new RayTraceResult(start.add(direction.scale(distance)),EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z),pos);
+            }
+        }
+        return result;
+    }
+
     private static void subdivide(
             List<AxisAlignedBB> boxes, Vec3d a, Vec3d b, Vec3d c, int depth, BlockPos pos) {
         boolean flat =
@@ -164,5 +215,7 @@ public final class CanopyMesh {
         subdivide(boxes, ab, bc, ca, depth - 1, pos);
     }
 
+    static {DIMENSIONS.put("large_front_canopy_glass_5x5",new int[]{5,1,5});MODELS.put("large_front_canopy_glass_5x5",LargeCanopyGeometry.faces(5,new LargeCanopySettings()));}
+    static {CanopyVariants.init();}
     private CanopyMesh() {}
 }
