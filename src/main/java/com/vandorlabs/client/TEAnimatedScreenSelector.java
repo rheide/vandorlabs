@@ -839,6 +839,19 @@ public class TEAnimatedScreenSelector
         GlStateManager.disableLighting();
         bindAtlas();
         setWorldLight(te);
+        if(wallBlock instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
+            TextureAtlasSprite glass=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.GlassTextures.texture(te.getGlassShade(),1));
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
+            GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
+            GlStateManager.disableCull();
+            BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+            buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            DiagonalWallMeshCache.get(te,state,glass,glass).draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+            Tessellator.getInstance().draw();
+            GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
+            GlStateManager.enableLighting();endLocalTransform();return;
+        }
         TextureAtlasSprite wall = wallSprite(te);
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(wallBlock.isPortholeShape() && te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side");
@@ -1164,11 +1177,11 @@ public class TEAnimatedScreenSelector
                     corner == null ? 16 : corner.right(near), (fill&1)!=0?Math.min(fillLow,near):near, (fill&2)!=0?Math.max(fillHigh,near+4):near + 4, fill == 0 ? 0 : fillLow, true, halfOffset, clip);
             if (corner != null) {
                 if (corner.frontRight != null && (fill&1)==0) {
-                    double armX = corner.armLeft(near, corner.frontRight);
+                    double armX = corner.armLeft(near, corner.frontRight,true);
                     roofRect(buf, metal, y, armX, armX + 4, 0, near, 0, true, halfOffset, clip);
                 }
                 if (corner.backRight != null && (fill&2)==0) {
-                    double armX = corner.armLeft(near, corner.backRight);
+                    double armX = corner.armLeft(near, corner.backRight,false);
                     roofRect(buf, metal, y, armX, armX + 4, near + 4, 16, 0, true, halfOffset, clip);
                 }
             }
@@ -1245,13 +1258,13 @@ public class TEAnimatedScreenSelector
         java.util.List<double[]> points=new java.util.ArrayList<>();
         points.add(new double[]{left,front});
         if(corner!=null && corner.frontRight!=null && (fill&1)==0) {
-            double arm=corner.armLeft(near,corner.frontRight);
+            double arm=corner.armLeft(near,corner.frontRight,true);
             points.add(new double[]{arm,front});points.add(new double[]{arm,0});
             points.add(new double[]{arm+4,0});points.add(new double[]{arm+4,front});
         }
         points.add(new double[]{right,front});points.add(new double[]{right,back});
         if(corner!=null && corner.backRight!=null && (fill&2)==0) {
-            double arm=corner.armLeft(near,corner.backRight);
+            double arm=corner.armLeft(near,corner.backRight,false);
             points.add(new double[]{arm+4,back});points.add(new double[]{arm+4,16});
             points.add(new double[]{arm,16});points.add(new double[]{arm,back});
         }
@@ -1267,7 +1280,7 @@ public class TEAnimatedScreenSelector
         java.util.List<double[]> points = new java.util.ArrayList<>();
         points.add(new double[] {left, near});
         if (corner.frontRight != null) {
-            double armX = corner.armLeft(near, corner.frontRight);
+            double armX = corner.armLeft(near, corner.frontRight,true);
             points.add(new double[] {armX, near});
             points.add(new double[] {armX, 0});
             points.add(new double[] {armX + 4, 0});
@@ -1276,7 +1289,7 @@ public class TEAnimatedScreenSelector
         points.add(new double[] {right, near});
         points.add(new double[] {right, near + 4});
         if (corner.backRight != null) {
-            double armX = corner.armLeft(near, corner.backRight);
+            double armX = corner.armLeft(near, corner.backRight,false);
             points.add(new double[] {armX + 4, near + 4});
             points.add(new double[] {armX + 4, 16});
             points.add(new double[] {armX, 16});

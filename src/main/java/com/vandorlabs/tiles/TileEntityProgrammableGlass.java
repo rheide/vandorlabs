@@ -39,7 +39,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
                 world.getBlockState(pos), 3);
     }
     public void setShade(int shade) {
-        if (shade < 0 || shade > 2 || shade == this.shade) return;
+        if (!GlassTextures.valid(shade) || shade == this.shade) return;
         this.shade = shade;
         markDirty();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
@@ -55,7 +55,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
         restored = true;
-        shade = Math.max(0, Math.min(2, tag.getInteger("GlassShade")));
+        shade = GlassTextures.clamp(tag.getInteger("GlassShade"));
         legacySize = !tag.hasKey("GlassSize");
         size = legacySize ? 1 : Math.max(0, Math.min(1, tag.getInteger("GlassSize")));
         join = !tag.hasKey("GlassJoin") || tag.getBoolean("GlassJoin");

@@ -13,18 +13,13 @@ import org.lwjgl.opengl.GL11;
 public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityProgrammableGlass> {
     private static final double PANE_NEAR = 7D / 16D;
     private static final double PANE_FAR = 9D / 16D;
-    private static final java.util.Map<String,ResourceLocation> GLASS = new java.util.HashMap<>();
-    static {
-        for (String detail:new String[]{"low","medium"}) GLASS.put(detail,new ResourceLocation(
-                "vandorlabs", "textures/blocks/space_doors/"+detail+"/glass_tile.png"));
-    }
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null) return;
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
         int size = tile.getSize();
-        bindTexture(GLASS.get(com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[size]));
+        bindTexture(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.fullTexture(tile.getShade(),size)));
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();
@@ -50,18 +45,6 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         pane(b,PANE_NEAR,1,1,1,1);
         pane(b,PANE_FAR,1,1,1,1);
         Tessellator.getInstance().draw();
-        if (tile.getShade()!=0) {
-            GlStateManager.disableTexture2D();
-            // Both pane surfaces contribute to the tint. These per-face
-            // opacities preserve the apparent shade of the old single face.
-
-            b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            for(double paneDepth:new double[]{PANE_NEAR,PANE_FAR})
-                if(tile.getShade()==1)pane(b,paneDepth,.20F,.85F,.95F,.0513F);
-                else pane(b,paneDepth,.10F,.12F,.16F,.1754F);
-            Tessellator.getInstance().draw();
-            GlStateManager.enableTexture2D();
-        }
         GlStateManager.enableCull();
         GlStateManager.depthMask(true);
         GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);

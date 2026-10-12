@@ -106,7 +106,22 @@ public class BlockGlassWall extends Block {
     protected boolean canConnectTo(net.minecraft.block.Block other) { return other==this; }
     protected boolean joinsAt(IBlockAccess world, BlockPos pos) { return true; }
     private boolean connects(IBlockAccess world, BlockPos pos,
-            IBlockState state) {
+            IBlockState state,BlockPos owner) {
+        if(this instanceof BlockProgrammableGlass){
+            EnumFacing normal=PanelJoins.facing(state);
+            // Diagonal ends can occupy the adjacent normal cell as well.
+            for(int offset=-1;offset<=1;offset++){
+                BlockPos candidate=pos.offset(normal,offset);
+                if(PanelJoins.diagonal(world.getBlockState(candidate)) && PanelJoins.connectsFlat(world,owner,state,candidate))return true;
+            }
+            // Flat wall materials may share the same frame plane.
+            IBlockState other=world.getBlockState(pos);
+            if(PanelJoins.flat(other) && !(other.getBlock() instanceof BlockGlassWall)){
+                EnumFacing of=PanelJoins.facing(other),sf=PanelJoins.facing(state);
+                double near=PanelJoins.near(other);if(of!=sf)near=12-near;
+                return joinsAt(world,pos) && of.getAxis()==sf.getAxis() && near==PanelJoins.near(state);
+            }
+        }
         IBlockState other = world.getBlockState(pos);
         return canConnectTo(other.getBlock())
                 && joinsAt(world, pos)
@@ -128,7 +143,7 @@ public class BlockGlassWall extends Block {
         GlassConnections c=GlassConnections.calculate((horizontal,vertical)->
                 // Portable coordinates use -1 for left and +1 for right;
                 // offset(left, -horizontal) preserves that handedness.
-                connects(world,pos.offset(left,-horizontal).up(vertical),expected));
+                connects(world,pos.offset(left,-horizontal).up(vertical),expected,pos));
         return state.withProperty(TOP,c.top).withProperty(BOTTOM,c.bottom)
                 .withProperty(LEFT,c.left).withProperty(RIGHT,c.right)
                 .withProperty(INNER_TL,c.innerTopLeft).withProperty(INNER_TR,c.innerTopRight)
@@ -202,7 +217,7 @@ public class BlockGlassWall extends Block {
         EnumFacing.Axis normal = state.getValue(ROTATED)
                 ? EnumFacing.Axis.X : EnumFacing.Axis.Z;
         if (joinsAt(world, pos) && side.getAxis() != normal
-                && connects(world, pos.offset(side), state)) {
+                && connects(world, pos.offset(side), state,pos)) {
             return false;
         }
         return super.shouldSideBeRendered(state, world, pos, side);

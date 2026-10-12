@@ -51,6 +51,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_PORTHOLE_WALL;
     public static Block PROGRAMMABLE_PORTHOLE_BLOCK;
     public static Block PROGRAMMABLE_DIAGONAL_WALL;
+    public static Block PROGRAMMABLE_DIAGONAL_GLASS;
     public static Block PROGRAMMABLE_DIAGONAL_SCREEN;
     public static Block PROGRAMMABLE_INPUT;
     public static Block PROGRAMMABLE_HALF_CONSOLE;
@@ -200,6 +201,7 @@ public class ModBlocks {
         PROGRAMMABLE_PORTHOLE_BLOCK = add(new BlockProgrammablePortholeBlock());
         PROGRAMMABLE_DIAGONAL_WALL = add(new BlockProgrammableWall("programmable_diagonal_wall",
                 BlockProgrammableWall.Shape.DIAGONAL));
+        PROGRAMMABLE_DIAGONAL_GLASS = add(new BlockProgrammableDiagonalGlass());
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
         add(PROGRAMMABLE_DIAGONAL_SCREEN);
         PROGRAMMABLE_INPUT = new BlockProgrammableInput();
@@ -432,6 +434,8 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        for(int size=0;size<2;size++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
+            event.getMap().registerSprite(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.texture(id,size)));
         for (String face : new String[]{"front","back","left","right","top","bottom"})
             for (String state : new String[]{"on","off"})
                 event.getMap().setTextureEntry(new com.vandorlabs.client.ControllerTextureSprite(
@@ -474,6 +478,9 @@ public class ModBlocks {
                     registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
                     ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
                     continue;
+                }
+                if(block instanceof BlockProgrammableDiagonalGlass || block instanceof BlockProgrammableGlass){
+                    registerGlassItemModels(block,item);continue;
                 }
                 if (block == PROGRAMMABLE_STORAGE || block == PROGRAMMABLE_BLOCK || block == PROGRAMMABLE_TRAPDOOR || block == PROGRAMMABLE_DIAGONAL_TRAPDOOR || block == PROGRAMMABLE_TRIGGER_BLOCK
                         || block == PROGRAMMABLE_SLAB
@@ -549,6 +556,21 @@ public class ModBlocks {
                 }
             }
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerGlassItemModels(Block block,Item item){
+        boolean diagonal=block instanceof BlockProgrammableDiagonalGlass;
+        int count=com.vandorlabs.tiles.GlassTextures.IDS.length;
+        ResourceLocation[] variants=new ResourceLocation[count*(diagonal?1:2)];
+        for(int i=0;i<variants.length;i++)variants[i]=new ResourceLocation(VandorLabs.MODID,"configured/glass_"+(diagonal?"diagonal":"regular")+"_"+(i/count)+"_"+com.vandorlabs.tiles.GlassTextures.IDS[i%count]);
+        ModelLoader.registerItemVariants(item,variants);
+        ModelLoader.setCustomMeshDefinition(item,stack->{
+            net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound(diagonal?"BlockEntityTag":"ProgrammableGlassSettings");
+            int shade=tag==null?0:com.vandorlabs.tiles.GlassTextures.clamp(tag.getInteger(diagonal?"GlassShade":"Shade"));
+            int size=diagonal?0:tag==null?1:Math.max(0,Math.min(1,tag.getInteger("Size")));
+            return new ModelResourceLocation(variants[size*count+shade],"inventory");
+        });
     }
 
     @SideOnly(Side.CLIENT)
@@ -690,7 +712,7 @@ public class ModBlocks {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())
                     || "inventory".equals(location.getVariant())) continue;
             String path = location.getResourcePath();
-            if ("programmable_diagonal_wall".equals(path)) {
+            if ("programmable_diagonal_wall".equals(path) || "programmable_diagonal_glass".equals(path)) {
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.DiagonalWallModel(
                         event.getModelRegistry().getObject(location)));
                 continue;

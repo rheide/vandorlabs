@@ -32,7 +32,7 @@ public final class DiagonalWallState {
                 tile!=null && tile.isDiagonalHalfHeight(),tile!=null && tile.isDiagonalFullWidth());
     }
     private static boolean diagonal(net.minecraft.block.Block block) {
-        return block instanceof BlockProgrammableWall
+        return !(block instanceof BlockProgrammableDiagonalGlass) && block instanceof BlockProgrammableWall
                 && ((BlockProgrammableWall)block).getShape()==BlockProgrammableWall.Shape.DIAGONAL;
     }
     /** Numeric predicate shared by chunk construction and the per-frame tile pass. */

@@ -42,7 +42,7 @@ public final class MessageProgrammableWallShade implements IMessage {
         @Override public IMessage onMessage(MessageProgrammableWallShade msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.pos == null || msg.shade < 0 || msg.shade > 2
+                if (msg.pos == null || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || msg.shape < 0 || msg.shape > 3
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector)) return;
@@ -55,8 +55,9 @@ public final class MessageProgrammableWallShade implements IMessage {
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock()
                         instanceof BlockProgrammableWall)
-                        || !((BlockProgrammableWall) player.world.getBlockState(msg.pos)
-                        .getBlock()).isPortholeShape()) return;
+                        || (!((BlockProgrammableWall) player.world.getBlockState(msg.pos)
+                        .getBlock()).isPortholeShape() && !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass))) return;
+                if (!(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) && msg.shade>2) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);
                 ((TileEntityAnimatedScreenSelector) raw).setPortholeShape(msg.shape);

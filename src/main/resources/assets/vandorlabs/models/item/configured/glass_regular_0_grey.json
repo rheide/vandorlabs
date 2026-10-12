@@ -1,0 +1,20 @@
+{
+  "parent": "vandorlabs:item/low/space_glass_low",
+  "textures": {
+    "pane": "vandorlabs:blocks/programmable_glass/low/grey"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  }
+}

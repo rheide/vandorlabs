@@ -303,6 +303,8 @@ public class ReproLab {
                 galleryFeet + 4.0D, -24.0D, 0.0F, 24.0F));
         SHOTS.add(new Shot("gallery_lighting_controls", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
+        for(String material:new String[]{"wall","glass"})for(int front=0;front<3;front++)for(int back=0;back<3;back++)for(int tails=0;tails<4;tails++)for(String order:new String[]{"forward","reverse"})
+            SHOTS.add(new Shot("gallery_join_matrix_"+material+"_"+front+"_"+back+"_"+tails+"_"+order,GALLERY_X-3,galleryFeet+5,-29,-15,22));
         SHOTS.add(new Shot("gallery_joined_lights", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_programmable_slabs", GALLERY_X,
@@ -480,6 +482,7 @@ public class ReproLab {
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
+            if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_matrix_"));
             if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
             if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
         }
@@ -618,6 +621,7 @@ public class ReproLab {
                     mc.gameSettings.hideGUI=false;
                     openLightPicker(mc);state=19;holdTicks=GUI_SETTLE_TICKS;break;
                 }
+                if(!Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")) {
                 LightOcclusionChecks.run(outDir);
                 PilotSeatRuntimeChecks.check(mc);
                 if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){mc.shutdown();return;}
@@ -632,6 +636,7 @@ public class ReproLab {
                     state = 28;
                     holdTicks = GUI_SETTLE_TICKS;
                     break;
+                }
                 }
                 if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_close_control_")){TwinPowerLeverChecks.checkModels(mc);RockerSwitchChecks.checkModels(mc);}
                 Shot firstShot=SHOTS.get(shotIndex);
@@ -699,6 +704,7 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
+                    if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")){System.out.println("[vandorlabs][reprolab] diagonal-joins-live PASS");state=999;mc.shutdown();return;}
                     if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_catalog_") || System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_close_control_")) {
                         state=999;mc.shutdown();return;
                     }
@@ -1091,13 +1097,9 @@ public class ReproLab {
                 if (!(mc.currentScreen instanceof GuiProgrammableGlass))
                     throw new IllegalStateException("glass GUI did not open");
                 GuiProgrammableGlass glassScreen=(GuiProgrammableGlass)mc.currentScreen;
-                try {
-                    glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Size"));
-                    glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(1,0,0,"Glass"));
-                    glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Join"));
-                } catch (java.io.IOException exception) {
-                    throw new IllegalStateException("glass GUI button failed",exception);
-                }
+                glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Size"));
+                glassScreen.choose(1);
+                glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Join"));
                 state=14;
                 holdTicks=20;
                 break;
@@ -2059,7 +2061,9 @@ public class ReproLab {
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
         world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(tileDrops));
-        if(shot.startsWith("gallery_signal_")) {
+        if(shot.startsWith("gallery_join_matrix_")) {
+            DiagonalJoinGallery.build(world,shot,GALLERY_X,GALLERY_Y);
+        } else if(shot.startsWith("gallery_signal_")) {
             SignalControlAnimationCapture.build(world,shot);
         } else if(shot.equals("gallery_distant_geometry")) {
             world.setWorldTime(6000);

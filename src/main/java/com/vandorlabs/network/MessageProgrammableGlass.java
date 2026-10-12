@@ -32,7 +32,7 @@ public final class MessageProgrammableGlass implements IMessage {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
                 if (msg.pos == null || msg.size < 0 || msg.size > 2
-                        || msg.shade < 0 || msg.shade > 2
+                        || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerProgrammableGlass)) return;
                 TileEntity te = player.world.getTileEntity(msg.pos);

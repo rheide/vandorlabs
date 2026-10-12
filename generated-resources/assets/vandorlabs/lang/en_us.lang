@@ -575,3 +575,5 @@ tile.rivet_ref_crossflow_large.name=Rivet Dynamics Reference Crossflow
 tile.rivet_ref_dampener_large.name=Rivet Dynamics Reference Dampener
 
 tile.vandorlabs.pilot_seat.name=Pilot Seat
+
+tile.vandorlabs.programmable_diagonal_glass.name=Programmable Diagonal Glass

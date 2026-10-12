@@ -71,20 +71,20 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         EnumFacing facing=state.getValue(FACING);
         double expected=com.vandorlabs.render.DiagonalWallGeometry.near(geometry(world,pos),
                 state.getValue(INVERTED),upper?1:0);
+        double best=Double.NaN, distance=.5000001;
         for (int offset=-1;offset<=1;offset++) {
             BlockPos next=pos.offset(upper?EnumFacing.UP:EnumFacing.DOWN).offset(facing.getOpposite(),offset);
             if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
             IBlockState other=world.getBlockState(next);
-            if (!(other.getBlock() instanceof BlockProgrammableWall)
-                    || ((BlockProgrammableWall)other.getBlock()).isDiagonalShape()) continue;
-            EnumFacing otherFacing=other.getValue(FACING);
+            if (!PanelJoins.flat(other) || !PanelJoins.enabled(world,next)) continue;
+            EnumFacing otherFacing=PanelJoins.facing(other);
             if (otherFacing.getAxis()!=facing.getAxis()) continue;
-            double near=PanelDepth.start(other.getValue(DEPTH))/16D;
+            double near=PanelJoins.near(other)/16D;
             if (otherFacing!=facing) near=.75-near;
             near+=offset;
-            if (Math.abs(near-expected)<=.1250001) return near;
+            if (Math.abs(near-expected)<distance) {best=near;distance=Math.abs(near-expected);}
         }
-        return Double.NaN;
+        return best;
     }
 
     private static boolean sameDiagonalWidth(IBlockAccess world, BlockPos a,
@@ -152,7 +152,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         BlockPos support = pos.offset(side.getOpposite());
         int mode = placementGeometry(world, support, placer.getHeldItem(hand));
         IBlockState clicked = world.getBlockState(support);
-        if (clicked.getBlock() == this && geometry(world, support) == mode) {
+        if (PanelJoins.diagonal(clicked) && geometry(world, support) == mode) {
             // Prefer a continuation of the clicked surface, in either direction.
             for (EnumFacing facing : new EnumFacing[]{clicked.getValue(FACING),
                     clicked.getValue(FACING).getOpposite()}) {
@@ -192,7 +192,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
         if (tag != null) return tag.getBoolean("DiagonalHalfHeight") ? 2
                 : tag.getBoolean("DiagonalFullWidth") ? 1 : 0;
-        return world.getBlockState(support).getBlock() == this ? geometry(world, support) : 0;
+        return PanelJoins.diagonal(world.getBlockState(support)) ? geometry(world, support) : 0;
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -267,6 +267,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         @Nullable public final Boolean backRight;
         public final boolean straightLeft;
         public final boolean straightRight;
+        public Double frontFlat,backFlat;
         Corner(@Nullable Boolean frontRight, @Nullable Boolean backRight,
                 boolean straightLeft, boolean straightRight) {
             this.frontRight = frontRight;
@@ -281,8 +282,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             if (!straightRight && (Boolean.FALSE.equals(frontRight)
                     || Boolean.FALSE.equals(backRight))) return 0;
             double edge = 16;
-            if (frontRight != null) edge = Math.min(edge, armLeft(near, frontRight));
-            if (backRight != null) edge = Math.min(edge, armLeft(near, backRight));
+            if (frontRight != null) edge = Math.min(edge, armLeft(near, frontRight,true));
+            if (backRight != null) edge = Math.min(edge, armLeft(near, backRight,false));
             return edge;
         }
         public double right(double near) {
@@ -290,9 +291,13 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             if (!straightLeft && (Boolean.TRUE.equals(frontRight)
                     || Boolean.TRUE.equals(backRight))) return 16;
             double edge = 0;
-            if (frontRight != null) edge = Math.max(edge, armLeft(near, frontRight) + 4);
-            if (backRight != null) edge = Math.max(edge, armLeft(near, backRight) + 4);
+            if (frontRight != null) edge = Math.max(edge, armLeft(near, frontRight,true) + 4);
+            if (backRight != null) edge = Math.max(edge, armLeft(near, backRight,false) + 4);
             return edge;
+        }
+        public double armLeft(double near,boolean right,boolean front) {
+            Double fixed=front?frontFlat:backFlat;
+            return fixed==null?armLeft(near,right):fixed;
         }
         public double armLeft(double near, boolean right) {
             return right ? 12 - near : near;
@@ -346,6 +351,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         EnumFacing facing = state.getValue(FACING);
         Double frontArm = null, backArm = null;
         Boolean frontRight = null, backRight = null;
+        Double frontFlat=null,backFlat=null;
         for (boolean front : new boolean[] {true, false}) {
             BlockPos neighborPos = pos.offset(front ? facing : facing.getOpposite());
             if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
@@ -369,14 +375,33 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {
         if (!isDiagonalShape() || isPortholeShape() || halfHeight(world,pos)) return null;
+        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
+        int override=raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector?((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw).getDiagonalJoin():0;
+        if(override==1)return null;
+        if(override>1){
+            boolean right=(override&1)!=0;
+            if(override>=10)return new Corner(right,right,true,true);
+            boolean front=override<4 || override==6 || override==7;
+            return new Corner(front?right:null,front?null:right,override>=6,override>=6);
+        }
         EnumFacing facing = state.getValue(FACING);
         Boolean frontRight = null, backRight = null;
+        Double frontFlat=null,backFlat=null;
         for (boolean front : new boolean[] {true, false}) {
             BlockPos neighborPos = pos.offset(front ? facing : facing.getOpposite());
             if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
                 continue;
             IBlockState neighbor = world.getBlockState(neighborPos);
-            if (neighbor.getBlock() != this
+            if(!PanelJoins.enabled(world,neighborPos))continue;
+            if(PanelJoins.flat(neighbor)) {
+                EnumFacing nf=PanelJoins.facing(neighbor);
+                if(nf.getAxis()==facing.getAxis())continue;
+                boolean right=nf==facing.rotateY();
+                double arm=right?12-PanelJoins.near(neighbor):PanelJoins.near(neighbor);
+                if(front){frontRight=right;frontFlat=arm;}else{backRight=right;backFlat=arm;}
+                continue;
+            }
+            if (!PanelJoins.diagonal(neighbor)
                     || neighbor.getValue(INVERTED) != state.getValue(INVERTED)
                     || !sameDiagonalWidth(world, pos, neighborPos)) continue;
             EnumFacing neighborFacing = neighbor.getValue(FACING);
@@ -390,7 +415,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                 facing.rotateYCCW());
         boolean straightRight = straightNeighbor(state, world, pos,
                 facing.rotateY());
-        return new Corner(frontRight, backRight, straightLeft, straightRight);
+        Corner result=new Corner(frontRight, backRight, straightLeft, straightRight);
+        result.frontFlat=frontFlat;result.backFlat=backFlat;return result;
     }
 
     private boolean straightNeighbor(IBlockState state, IBlockAccess world,
@@ -399,7 +425,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
             return false;
         IBlockState neighbor = world.getBlockState(neighborPos);
-        if (neighbor.getBlock() != this) return false;
+        if (isDiagonalShape()? !PanelJoins.diagonal(neighbor):neighbor.getBlock()!=this) return false;
         EnumFacing facing = state.getValue(FACING);
         EnumFacing neighborFacing = neighbor.getValue(FACING);
         if (isDiagonalShape())
@@ -493,8 +519,9 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     private void addCornerArm(BlockPos pos, AxisAlignedBB entityBox,
             List<AxisAlignedBB> boxes, IBlockState state, boolean right,
             boolean front, int slice, double near0, double near1, IBlockAccess world) {
-        double x0 = right ? 12D - near1 : near0;
-        double x1 = right ? 16D - near0 : near1 + 4D;
+        Corner corner=corner(state,world,pos);
+        double x0 = Math.min(corner.armLeft(near0,right,front),corner.armLeft(near1,right,front));
+        double x1 = Math.max(corner.armLeft(near0,right,front),corner.armLeft(near1,right,front))+4;
         double z0 = front ? 0 : near0;
         double z1 = front ? near1 + 4D : 16D;
         addCollisionBoxToList(pos, entityBox, boxes,

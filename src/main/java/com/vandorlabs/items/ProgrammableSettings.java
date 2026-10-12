@@ -198,10 +198,10 @@ public final class ProgrammableSettings {
                 out.setBoolean(DIAGONAL_FULL_WIDTH, screen.isDiagonalFullWidth());
                 NBTTagCompound geometry=new NBTTagCompound();
                 geometry.setInteger("mode",screen.isDiagonalHalfHeight()?2:screen.isDiagonalFullWidth()?1:0);
-                geometry.setInteger("fill",screen.getDiagonalFill());
+                geometry.setInteger("fill",screen.getDiagonalFill());geometry.setInteger("join",screen.getDiagonalJoin());
                 out.setTag(DIAGONAL_GEOMETRY,geometry);
             }
-            if (isPorthole(block)) {
+            if (isPorthole(block) || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
                 out.setBoolean(JOIN, screen.isJoinPortholes());
                 out.setInteger(PORTHOLE_SHAPE, screen.getPortholeShape());
                 out.setInteger(GLASS_SHADE, screen.getGlassShade());
@@ -471,12 +471,13 @@ public final class ProgrammableSettings {
             if (block instanceof BlockProgrammableWall && ((BlockProgrammableWall)block).isDiagonalShape()
                     && values.hasKey(DIAGONAL_GEOMETRY,10)) {
                 NBTTagCompound geometry=values.getCompoundTag(DIAGONAL_GEOMETRY);
+                if(geometry.hasKey("join",3))screen.setDiagonalJoin(geometry.getInteger("join"));
                 int mode=Math.max(0,Math.min(2,geometry.getInteger("mode")));
                 screen.setDiagonalGeometry(mode,
                         isPorthole(block)?0:geometry.getInteger("fill"));
                 applicable=true;
             }
-            if (isPorthole(block)) {
+            if (isPorthole(block) || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
                 if (values.hasKey(JOIN, 1)) {
                     screen.setJoinPortholes(values.getBoolean(JOIN)); applicable = true;
                 }

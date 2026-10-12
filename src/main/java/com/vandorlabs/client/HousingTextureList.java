@@ -59,6 +59,13 @@ final class HousingTextureList {
         return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
     }
     /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */
+    static HousingTextureList forGlass(int detail,int x,int y,int width,int selected) {
+        List<Option> entries=new ArrayList<>();
+        for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(i,
+                com.vandorlabs.tiles.GlassTextures.LABELS[i],i<3?"Original glass":"Colored glass",
+                com.vandorlabs.tiles.GlassTextures.fullTexture(i,detail)));
+        return new HousingTextureList(x,y,width,selected,8,entries);
+    }
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {

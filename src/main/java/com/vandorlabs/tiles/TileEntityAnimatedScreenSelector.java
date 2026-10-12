@@ -51,6 +51,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override public boolean shouldRenderInPass(int pass) {
         net.minecraft.block.Block block = getBlockType();
+        if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1;
         if(world!=null && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
@@ -219,7 +220,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     public int getGlassShade() { return glassShade; }
     public void setGlassShade(int shade) {
-        if (shade < 0 || shade > 2 || shade == glassShade) return;
+        if (!GlassTextures.valid(shade) || shade == glassShade) return;
         glassShade = shade;
         settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
@@ -253,6 +254,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
     public boolean isSlabTileSides() { return slabTileSides; }
     public boolean isDiagonalHalfHeight() { return diagonalHalfHeight; }
+    private int diagonalJoin;
+    public int getDiagonalJoin(){return diagonalJoin;}
+    public void setDiagonalJoin(int choice){
+        if(choice<0 || choice>11 || choice==diagonalJoin)return;
+        diagonalJoin=choice;settingsChanged();portholeRevision++;
+        if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
+    }
     public int getDiagonalFill() { return diagonalFill; }
     public void setDiagonalGeometry(int mode, int fill) {
         boolean halfHeight=mode==2,fullWidth=mode==1 || mode==2;
@@ -485,6 +493,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
         compound.setInteger("DiagonalFill", diagonalFill);
+        compound.setInteger("DiagonalJoin",diagonalJoin);
         compound.setInteger("HousingTextureVersion", 1);
         for(int i=0;i<2;i++)if(controls[i]!=null)compound.setTag(i==0?"RedstonePrimary":"RedstoneSecondary",controls[i].writeToNBT(new NBTTagCompound()));
         return compound;
@@ -501,6 +510,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");
         boolean previousHalfHeight = diagonalHalfHeight;
         int previousFill = diagonalFill;
+        int previousJoin=diagonalJoin,previousGlassShade=glassShade;
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
@@ -542,7 +552,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         housingTexture = ScreenHousingTextures.clamp(savedHousing);
         sideTexture=compound.hasKey("SideTexture",3) && compound.getInteger("SideTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SideTexture")):-1;
         glassShade = compound.hasKey("GlassShade", 3)
-                ? Math.max(0, Math.min(2, compound.getInteger("GlassShade"))) : 2;
+                ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
@@ -552,11 +562,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             slabTileSides = compound.getBoolean("SlabTileSides");
         diagonalFullWidth = compound.getBoolean("DiagonalFullWidth");
         diagonalHalfHeight = compound.getBoolean("DiagonalHalfHeight");
+        diagonalJoin=Math.max(0,Math.min(11,compound.getInteger("DiagonalJoin")));
         diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
         if (world != null && world.isRemote
                 && (!previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
-                || previousFill != diagonalFill))
+                || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade))
         {
             if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall
                     && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).getShape()

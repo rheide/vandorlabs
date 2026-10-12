@@ -16,6 +16,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public final class MessageDiagonalGeometry implements IMessage {
     private BlockPos pos;
     private int mode, fill;
+    private int join=255;
+    public MessageDiagonalGeometry withJoin(int choice){join=choice;return this;}
     private int orientation = 255;
 
     public MessageDiagonalGeometry() { }
@@ -31,10 +33,11 @@ public final class MessageDiagonalGeometry implements IMessage {
         pos = BlockPos.fromLong(buf.readLong());
         mode = buf.readUnsignedByte(); fill = buf.readUnsignedByte();
         orientation = buf.readUnsignedByte();
+        join=buf.readUnsignedByte();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
-        buf.writeByte(mode); buf.writeByte(fill); buf.writeByte(orientation);
+        buf.writeByte(mode); buf.writeByte(fill); buf.writeByte(orientation);buf.writeByte(join);
     }
 
     public static final class Handler implements IMessageHandler<MessageDiagonalGeometry, IMessage> {
@@ -42,7 +45,7 @@ public final class MessageDiagonalGeometry implements IMessage {
                 MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.mode > 2 || msg.fill > 3 || (msg.orientation != 255 && msg.orientation > 7) || msg.pos == null || !player.world.isBlockLoaded(msg.pos)
+                if ((msg.join!=255 && msg.join>11) || msg.mode > 2 || msg.fill > 3 || (msg.orientation != 255 && msg.orientation > 7) || msg.pos == null || !player.world.isBlockLoaded(msg.pos)
                         || !ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall)
                         || !((com.vandorlabs.blocks.BlockProgrammableWall)player.world.getBlockState(msg.pos).getBlock()).isDiagonalShape()
@@ -57,6 +60,7 @@ public final class MessageDiagonalGeometry implements IMessage {
                 if (block.isPortholeShape() && msg.fill != 0) return;
                 if (msg.orientation != 255)
                     player.world.setBlockState(msg.pos, block.getStateFromMeta(msg.orientation), 3);
+                if(msg.join!=255 && !block.isPortholeShape())((TileEntityAnimatedScreenSelector)tile).setDiagonalJoin(msg.join);
                 ((TileEntityAnimatedScreenSelector) tile).setDiagonalGeometry(msg.mode, msg.fill);
             });
             return null;

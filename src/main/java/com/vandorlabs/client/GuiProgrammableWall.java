@@ -24,6 +24,7 @@ import java.io.IOException;
 
 /** Scrollable finish picker shared by programmable walls and the full block. */
 public class GuiProgrammableWall extends GuiContainer {
+    private static final String[] JOINS={"Auto","Straight","Front left corner","Front right corner","Back left corner","Back right corner","Front left T","Front right T","Back left T","Back right T","Left cross","Right cross"};
     private int rows = 8;
     private HousingTextureList textureList;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
@@ -33,6 +34,7 @@ public class GuiProgrammableWall extends GuiContainer {
     private final boolean fullBlock;
     private final boolean slab;
     private final boolean diagonal;
+    private final boolean diagonalGlass;
     private int selected;
     private int faceTarget = -1;
     private static final String[] FACE_NAMES = {"Bottom", "Top", "Front", "Back", "Left", "Right"};
@@ -62,6 +64,7 @@ public class GuiProgrammableWall extends GuiContainer {
             TileEntityAnimatedScreenSelector tile) {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
         this.tile = tile;
+        diagonalGlass=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass;
         porthole = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableWall
                 && ((BlockProgrammableWall) tile.getWorld().getBlockState(tile.getPos())
@@ -75,7 +78,7 @@ public class GuiProgrammableWall extends GuiContainer {
         fullBlock = tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof BlockProgrammableBlock
                 || slab;
-        selected = tile.getHousingTexture();
+        selected = diagonalGlass?tile.getGlassShade():tile.getHousingTexture();
         shade = tile.getGlassShade();
         shape = tile.getPortholeShape();
         join = tile.isJoinPortholes();
@@ -96,8 +99,8 @@ public class GuiProgrammableWall extends GuiContainer {
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
         rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
-        textureList=new HousingTextureList(listX,listY,controlsX-listX-19,selected)
-                .visibleRows(rows).custom(this::choose);
+        textureList=diagonalGlass?HousingTextureList.forGlass(1,listX,listY,controlsX-listX-19,selected).visibleRows(rows)
+                :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
         if(faceTabs || slab || porthole) {
             int count=faceTabs?(slab?8:7):2;
             int span=faceTabs?xSize-24:controlsX-listX-19;
@@ -137,6 +140,8 @@ public class GuiProgrammableWall extends GuiContainer {
             buttonList.add(new GuiButton(105,controlsX,y,controlsWidth,20,diagonalWidthLabel())); y+=24;
             buttonList.add(new GuiButton(111,controlsX,y,controlsWidth,20,slopeLabel())); y+=24;
             if (!porthole) {
+                GuiButton joinShape=new GuiButton(112,controlsX,y,controlsWidth,20,"Join: "+JOINS[tile.getDiagonalJoin()]);
+                joinShape.enabled=!tile.isDiagonalHalfHeight();buttonList.add(joinShape);y+=24;
                 buttonList.add(new GuiButton(109,controlsX,y,controlsWidth,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off"))); y+=24;
                 buttonList.add(new GuiButton(110,controlsX,y,controlsWidth,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
             }
@@ -178,6 +183,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     private void choose(int choice) {
         selected = choice;
+        if(diagonalGlass){shade=choice;tile.setGlassShade(choice);sendPortholeSettings();return;}
         if(faceTarget==-2) {
             tile.setSideTexture(choice);
             PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),choice));
@@ -200,7 +206,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112))return;
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
@@ -223,6 +229,10 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==112){tile.setDiagonalJoin(GuiOptionCycle.next(tile.getDiagonalJoin(),JOINS.length));
+            int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
+            PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDiagonalGeometry(tile.getPos(),mode,tile.getDiagonalFill()).withJoin(tile.getDiagonalJoin()));initGui();}
+
         if (button.id == 111 && diagonal) {
             net.minecraft.block.state.IBlockState next = com.vandorlabs.blocks.DiagonalPanelGeometry.reverseSlope(
                     tile.getWorld().getBlockState(tile.getPos()), tile.isDiagonalHalfHeight());
@@ -302,7 +312,7 @@ public class GuiProgrammableWall extends GuiContainer {
         drawDefaultBackground();
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 18, 0xFF202028);
-        fontRenderer.drawString(I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
+        fontRenderer.drawString(diagonalGlass?"Programmable Diagonal Glass":I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                         instanceof com.vandorlabs.blocks.BlockProgrammableStairs ? "gui.vandorlabs.stairs.title"
                 : tile.getBlockType() instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
                         : tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage ? "tile.vandorlabs.programmable_storage.name"
