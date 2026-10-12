@@ -67,7 +67,7 @@ public final class VehicleInteractionRuntimeChecks {
             Block trap=kind==0?ModBlocks.PROGRAMMABLE_TRAPDOOR:ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR;
             for(int part=0;part<2;part++) {
                 BlockPos pos=root.east(part);TileEntityProgrammableTrapdoor tile=kind==0?new TileEntityProgrammableTrapdoor():new TileEntityProgrammableDiagonalTrapdoor();
-                tile.setPos(pos);tile.configure(14,mode,motion==1,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,0);
+                tile.setPos(pos);tile.setTileTexture(motion==1);tile.configure(14,mode,motion==1,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED,0);
                 NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());data.setLong("TrapdoorPartner",root.east(1-part).toLong());
                 cells.add(new VehicleStructure.Cell(pos,trap.getDefaultState().withProperty(net.minecraft.block.BlockTrapDoor.FACING,EnumFacing.NORTH),data));doorCells.add(pos);
             }

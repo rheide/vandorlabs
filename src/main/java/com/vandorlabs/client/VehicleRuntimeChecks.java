@@ -383,12 +383,14 @@ public final class VehicleRuntimeChecks {
                 mc.player.setPosition(198,139,9.5);mc.player.prevPosX=mc.player.lastTickPosX=198;mc.player.prevPosY=mc.player.lastTickPosY=139;mc.player.prevPosZ=mc.player.lastTickPosZ=9.5;
                 mc.player.rotationYaw=mc.player.prevRotationYaw=mc.player.rotationYawHead=mc.player.prevRotationYawHead=-90;mc.player.rotationPitch=mc.player.prevRotationPitch=3;
             }
+            if(ticks==410)RenderGroundVehicle.reload();
             if(ticks==425) {
                 require(RenderGroundVehicle.fallbackDraws()>0,"visible hull rendered with origin section behind camera");
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_distant_hull.png"));
                 System.out.println("[vandorlabs][reprolab] vehicle-distant-render PASS hidden-origin-section visible-hull");
             }
             if(ticks>425 && VehicleInteractionRuntimeChecks.tick(mc,output) && VehicleTaxiRuntimeChecks.tick(mc,output)) {
+                System.out.println("[vandorlabs][reprolab] vehicle-render-profile "+RenderGroundVehicle.profile());
                 System.out.println("[vandorlabs][reprolab] vehicle-live PASS rendering generic-blocks network-driving propulsion safe-dismount doors ramps channel-conversion seated-conversion 4096-blocks actual-clicks");mc.shutdown();
             }
         }catch(Exception e){throw new IllegalStateException("vehicle live checks",e);}

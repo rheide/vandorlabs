@@ -19,15 +19,20 @@ public final class VehicleTransfer {
         return world.getSaveHandler().getWorldDirectory().toPath().resolve("data").resolve("vandorlabs-vehicle-"+world.provider.getDimension()+".nbt");
     }
     private static void write(WorldServer world,NBTTagCompound tag)throws Exception {
+        long began=System.nanoTime();
         if(world.disableLevelSaving)throw new IOException("World saving is disabled.");
         Path path=journal(world),temp=path.resolveSibling(path.getFileName()+".tmp");Files.createDirectories(path.getParent());
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(tag,bytes);
         try(FileOutputStream stream=new FileOutputStream(temp.toFile())) {stream.write(bytes.toByteArray());stream.getFD().sync();}
         Files.move(temp,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+        timing("journal",began);
     }
     private static void flush(WorldServer world)throws Exception {
+        long began=System.nanoTime();
         world.saveAllChunks(true,null);world.getChunkProvider().flushToDisk();
+        timing("save-flush",began);
     }
+    private static void timing(String phase,long began){if(VehicleDiagnostics.ENABLED)System.out.println("[vandorlabs] vehicle-transfer phase="+phase+" elapsed-us="+(System.nanoTime()-began)/1000);}
     public static boolean pending(WorldServer world){return Files.exists(journal(world));}
     private static NBTTagCompound record(VehicleStructure structure,BlockPos origin,EntityGroundVehicle entity,boolean park) {
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Craft",structure.write());
@@ -110,6 +115,7 @@ public final class VehicleTransfer {
         flush(world);Files.deleteIfExists(journal(world));
     }
     public static void blocks(WorldServer world,VehicleStructure structure,BlockPos origin,boolean place) {
+        long began=System.nanoTime();
         Set<Chunk> chunks=new HashSet<>();Map<BlockPos,IBlockState> previous=new LinkedHashMap<>();
         for(VehicleStructure.Cell cell:structure.cells) {
             BlockPos p=origin.add(cell.pos);previous.put(p,world.getBlockState(p));world.removeTileEntity(p);
@@ -130,5 +136,6 @@ public final class VehicleTransfer {
             BlockPos p=entry.getKey();world.checkLight(p);world.notifyBlockUpdate(p,entry.getValue(),world.getBlockState(p),3);
         }
         for(BlockPos p:previous.keySet())world.notifyNeighborsOfStateChange(p,world.getBlockState(p).getBlock(),false);
+        timing(place?"restore-blocks-light-neighbors":"remove-blocks-light-neighbors",began);
     }
 }

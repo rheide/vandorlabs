@@ -14,6 +14,7 @@ public final class VehicleMotionRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("vehicle motion: "+message);}
     public static boolean tick(Minecraft mc,File output) throws Exception {
         if(done)return true;
+        VehiclePerformanceRuntimeChecks.run(mc);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.blocks.ModBlocks.PILOT_SEAT.getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(new BlockPos(31,0,0),Blocks.STONE.getDefaultState(),null));

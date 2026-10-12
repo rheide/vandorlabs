@@ -24,14 +24,23 @@ import java.util.*;
 
 /** Real UI/network trips plus immediate placement audits before restored machines tick. */
 public final class VehicleTaxiRuntimeChecks {
-    private static int ticks,phase,placements;
+    private static int ticks,phase,placements,dialogWait;
     private static BlockPos origin=new BlockPos(240,101,80),seat=origin.up(2);
     private static UUID craftId;
     private static VehicleStructure expected,unrotated;
     private static final Audit audit=new Audit();
     private static boolean cancelOnce,rollbackSeen,done;
-    private static BlockPos blocker;
+    private static BlockPos blocker,unrelatedSeat;
     private static UUID stalePreview;
+    private static final PoweredChannels powered=new PoweredChannels();
+    private static final class PoweredChannels extends TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
+        public TileEntity channelTile(){return this;}
+        public int getRedstoneChannel(){return 5317;}
+        public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return com.vandorlabs.redstone.ChannelList.of(5317,5319);}
+        public void setRedstoneChannel(int channel){}
+        public boolean hasLocalRedstoneSignal(){return true;}
+        public void setChannelSignal(boolean signal){}
+    }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("vehicle taxi: "+message);}
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
     private static WorldServer world(Minecraft mc){return mc.getIntegratedServer().getWorld(0);}
@@ -56,7 +65,8 @@ public final class VehicleTaxiRuntimeChecks {
         p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(origin.add(-12,-1,-12),origin.add(20,-1,20)))w.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
         Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}
-        require(gear!=null,"landing gear fixture");w.setBlockState(origin,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(origin)).configure(0,0,0,0);
+        require(gear!=null,"landing gear fixture");VehicleGearRuntimeChecks.run(w,(BlockTelescopicLandingGear)gear);
+        w.setBlockState(origin,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(origin)).configure(0,0,0,0);
         for(int x=0;x<=8;x++)w.setBlockState(origin.add(x,1,0),Blocks.STONE.getDefaultState(),2);
         // Two independent roots touch vertically; the hull reaches both around either side.
         // Each root also queues itself, exercising duplicate ownership and hull paths together.
@@ -92,16 +102,45 @@ public final class VehicleTaxiRuntimeChecks {
             require(w.getTileEntity(at)!=null,"Malisis door tile installed");
             System.out.println("[vandorlabs][reprolab] vehicle-preservation fixtures IE-capacitor Mekanism-energy-cube "+door.getRegistryName());
         }
+        VehicleScan rejected=new VehicleScan(w,seat);int rejectedSlices=0;
+        Map<BlockPos,VehicleStructure.Cell> unchanged=new HashMap<>();
+        for(BlockPos at:BlockPos.getAllInBox(origin,origin.add(10,4,0))) {
+            TileEntity tile=w.getTileEntity(at);
+            unchanged.put(at.toImmutable(),new VehicleStructure.Cell(at,w.getBlockState(at),tile==null?null:tile.writeToNBT(new NBTTagCompound())));
+        }
+        while(!rejected.step(1) && ++rejectedSlices<512);
+        require(rejected.result==null && rejected.error!=null && rejected.error.contains("same Y value") && rejectedSlices<512,
+                "vertically stacked gears in a hull loop are rejected within bounded scan slices");
+        for(VehicleStructure.Cell cell:unchanged.values()) {
+            TileEntity tile=w.getTileEntity(cell.pos);
+            require(w.getBlockState(cell.pos).equals(cell.state) && Objects.equals(cell.tileData(),tile==null?null:tile.writeToNBT(new NBTTagCompound())),
+                    "misaligned gear rejection preserves every block and tile");
+        }
+        for(int y=1;y<=2;y++)w.setBlockState(origin.add(9,y,0),Blocks.STONE.getDefaultState(),2);
+        for(int x=9;x<=10;x++) {
+            BlockPos at=origin.add(x,0,0);w.setBlockState(at,gear.getDefaultState(),2);
+            require(((TileEntityLandingGear)w.getTileEntity(at)).configure(0,0,0,0),"aligned loop gear setup");
+        }
+        TileEntityLandingGear half=(TileEntityLandingGear)w.getTileEntity(origin.add(10,0,0));
+        w.setBlockToAir(half.getPos().down());
+        require(half.configure(0,0,8,0),"half-block extension setup");
+        require(((BlockTelescopicLandingGear)gear).setExtended(w,half.getPos(),true),"extend half-block gear");half.progress=half.previous=.5F;
+        VehicleScan halfScan=new VehicleScan(w,seat);int halfSlices=0;while(!halfScan.step(1) && ++halfSlices<512);
+        require(halfScan.result==null && halfScan.error!=null && halfScan.error.contains("same Y value"),"half-block difference is not rounded into the same support plane");
+        require(((BlockTelescopicLandingGear)gear).setExtended(w,half.getPos(),false),"retract half-block gear");half.progress=half.previous=0;
+        require(half.configure(0,0,0,0),"restore aligned support");
+        w.setBlockState(half.getPos().down(),Blocks.STONE.getDefaultState(),2);
         VehicleScan loop=new VehicleScan(w,seat);int slices=0;
         while(!loop.step(1) && ++slices<512);
-        require(loop.error==null && loop.result!=null && slices<512,"stacked gear/hull loop finishes within bounded one-cell scan slices: "+loop.error+", slices="+slices);
-        require(loop.result.gearCount==3,"stacked gear roots are each counted once");
+        require(loop.error==null && loop.result!=null && slices<512,"aligned gear/hull loop finishes within bounded one-cell scan slices: "+loop.error+", slices="+slices);
+        require(loop.result.gearCount==3,"aligned gear roots are each counted once");
         Set<BlockPos> unique=new HashSet<>();
         for(VehicleStructure.Cell cell:loop.result.cells) {
             require(unique.add(cell.pos),"cyclic discovery captures each cell once");
             require(loop.origin.add(cell.pos).getY()>=origin.getY(),"gear boundary excludes the supporting ground despite alternate hull paths");
         }
-        for(int y=1;y<=2;y++)require(loop.result.at(origin.add(9,y,0).subtract(loop.origin))!=null,"both vertically touching gears are captured through the hull loop");
+        for(int x=9;x<=10;x++)require(loop.result.at(origin.add(x,0,0).subtract(loop.origin))!=null,"both aligned gears are captured through the hull loop");
+        powered.setWorld(w);powered.setPos(origin.west(4));com.vandorlabs.redstone.RedstoneChannels.register(powered);
         MinecraftForge.EVENT_BUS.register(audit);p.connection.setPlayerLocation(seat.getX()+.5,seat.getY(),seat.getZ()-2,0,0);
     }
     private static void blockClick(Minecraft mc,boolean settings) throws Exception {
@@ -161,23 +200,33 @@ public final class VehicleTaxiRuntimeChecks {
         if(done)return true;if(ticks++%25!=0)return false;
         switch(phase++) {
             case 0:mc.getIntegratedServer().addScheduledTask(()->{try{setup(mc);}catch(Exception e){throw new IllegalStateException(e);}}).get();break;
-            case 1:blockClick(mc,true);break;
-            case 2:require(mc.currentScreen instanceof GuiRedstoneChannel,"placed pilot seat opens settings dialog");button(mc,15);button(mc,1);break;
+            case 1:if(mc.world.getBlockState(seat).getBlock()!=ModBlocks.PILOT_SEAT){require(++dialogWait<16,"fixture chunks reach client");phase--;break;}blockClick(mc,true);break;
+            case 2:if(!(mc.currentScreen instanceof GuiRedstoneChannel)){require(++dialogWait<24,"placed pilot seat opens settings dialog");blockClick(mc,true);phase--;break;}button(mc,15);button(mc,1);break;
             case 3:mc.getIntegratedServer().addScheduledTask(()->require(!((TileEntityPilotSeat)world(mc).getTileEntity(seat)).isTaxiMode(),"OFF setting saved through UI/network")).get();blockClick(mc,false);break;
-            case 4:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"manual mode sits without conversion");player(mc).dismountRidingEntity();}).get();break;
-            case 5:blockClick(mc,true);break;
-            case 6:button(mc,15);button(mc,1);break;
-            case 7:blockClick(mc,false);break;
-            case 8:mounted(mc);prepareExit(mc,1);mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
-            case 9:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"90-degree taxi exit restores blocks");require(placements==1,"immediate complete tile preservation audit");require(!player(mc).isRiding(),"automatic parking does not remount or loop");}).get();blockClick(mc,false);break;
-            case 10:mounted(mc);prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{world(mc).setBlockState(blocker,Blocks.STONE.getDefaultState(),2);player(mc).dismountRidingEntity();}).get();break;
-            case 11:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"obstructed taxi exit keeps full craft and retry state");require(world(mc).getBlockState(blocker).getBlock()==Blocks.STONE,"parking never overwrites obstacles");NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);require(loaded.taxiReturnPending && loaded.taxiReturnActor.equals(player(mc).getUniqueID()),"pending parking survives entity reload");world(mc).setBlockToAir(blocker);}).get();break;
-            case 12:mc.getIntegratedServer().addScheduledTask(()->require(placements==2 && (craft(mc)==null || craft(mc).isDead),"clearing obstruction automatically restores blocks")).get();blockClick(mc,false);break;
-            case 13:mounted(mc);prepareExit(mc,3);cancelOnce=true;mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
-            case 14:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(rollbackSeen && e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"cancelled rotated placement rolls back to intact returnable craft");require(!VehicleTransfer.pending(world(mc)),"rollback retires recovery journal");rollbackSeen=false;world(mc).setBlockToAir(blocker);}).get();break;
-            case 15:mc.getIntegratedServer().addScheduledTask(()->require(placements==3 && (craft(mc)==null || craft(mc).isDead),"taxi retries successfully after protection cancellation rollback")).get();blockClick(mc,false);break;
-            case 16:mounted(mc);mc.getIntegratedServer().addScheduledTask(()->{
+            case 4:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"manual mode sits without conversion");player(mc).dismountRidingEntity();player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewAssembly(player(mc),seat);}).get();break;
+            case 5:button(mc,3);break;
+            case 6:((GuiTextField)field(mc.currentScreen,"channels")).setText("5319");button(mc,0);break;
+            case 7:mc.getIntegratedServer().addScheduledTask(()->{
+                TileEntityPilotSeat pilot=(TileEntityPilotSeat)world(mc).getTileEntity(seat);
+                require(pilot.getRedstoneChannel()==5319 && !player(mc).isRiding(),"assembly preview settings save placed seat without conversion on a held-high channel");
+                player(mc).setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+            }).get();button(mc,1);break;
+            case 8:mc.getIntegratedServer().addScheduledTask(()->require(world(mc).getTileEntity(seat) instanceof TileEntityPilotSeat,"held-high edit does not queue automatic conversion")).get();break;
+            case 9:blockClick(mc,true);break;
+            case 10:button(mc,15);button(mc,1);break;
+            case 11:blockClick(mc,false);break;
+            case 12:mounted(mc);prepareExit(mc,1);mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
+            case 13:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"90-degree taxi exit restores blocks");require(placements==1,"immediate complete tile preservation audit");require(!player(mc).isRiding(),"automatic parking does not remount or loop");}).get();blockClick(mc,false);break;
+            case 14:mounted(mc);prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{world(mc).setBlockState(blocker,Blocks.STONE.getDefaultState(),2);player(mc).dismountRidingEntity();}).get();break;
+            case 15:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"obstructed taxi exit keeps full craft and retry state");require(world(mc).getBlockState(blocker).getBlock()==Blocks.STONE,"parking never overwrites obstacles");NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);require(loaded.taxiReturnPending && loaded.taxiReturnActor.equals(player(mc).getUniqueID()),"pending parking survives entity reload");world(mc).setBlockToAir(blocker);}).get();break;
+            case 16:mc.getIntegratedServer().addScheduledTask(()->require(placements==2 && (craft(mc)==null || craft(mc).isDead),"clearing obstruction automatically restores blocks")).get();blockClick(mc,false);break;
+            case 17:mounted(mc);prepareExit(mc,3);cancelOnce=true;mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
+            case 18:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(rollbackSeen && e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"cancelled rotated placement rolls back to intact returnable craft");require(!VehicleTransfer.pending(world(mc)),"rollback retires recovery journal");rollbackSeen=false;world(mc).setBlockToAir(blocker);}).get();break;
+            case 19:mc.getIntegratedServer().addScheduledTask(()->require(placements==3 && (craft(mc)==null || craft(mc).isDead),"taxi retries successfully after protection cancellation rollback")).get();blockClick(mc,false);break;
+            case 20:mounted(mc);mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle e=craft(mc);VehicleStructure before=e.structure;
+                unrelatedSeat=before.seat;world(mc).setBlockState(unrelatedSeat,ModBlocks.PILOT_SEAT.getDefaultState(),2);
+                ((TileEntityPilotSeat)world(mc).getTileEntity(unrelatedSeat)).setRedstoneChannel(777);
                 List<VehicleStructure.Cell> unknown=new ArrayList<>(before.cells);BlockPos extra=new BlockPos(0,0,2);TileEntityCommandBlock command=new TileEntityCommandBlock();command.setPos(extra);
                 unknown.add(new VehicleStructure.Cell(extra,Blocks.COMMAND_BLOCK.getDefaultState(),command.writeToNBT(new NBTTagCompound())));
                 e.install(new VehicleStructure(unknown,before.seat,before.facing,before.gearCount));e.rotationYaw=90;
@@ -186,20 +235,22 @@ public final class VehicleTaxiRuntimeChecks {
                 e.rotationYaw=45;player(mc).dismountRidingEntity();require(player(mc).getRidingEntity()==e,"45-degree exit is refused without losing driver or snapshot");
                 e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewParking(player(mc),e);
             }).get();break;
-            case 17: {
+            case 21: {
                 Object data=field(mc.currentScreen,"data");stalePreview=((VehicleNetwork.Packet)field(data,"header")).token;
                 button(mc,3);break;
             }
-            case 18: {
+            case 22: {
                 GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("5317, 5318");button(mc,1);break;
             }
-            case 19:mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().isEmpty(),"channel Cancel does not mutate the craft")).get();button(mc,3);break;
-            case 20: {
+            case 23:mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().toString().equals("5319"),"channel Cancel does not mutate the craft")).get();button(mc,3);break;
+            case 24: {
                 GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("1,,2");mc.currentScreen.updateScreen();
                 List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");
                 require(!controls.get(0).enabled,"invalid channel list disables Save");channels.setText("5318, 5317, 5318");mc.currentScreen.updateScreen();button(mc,0);break;
             }
-            case 21:mc.getIntegratedServer().addScheduledTask(()->{
+            case 25: {
+                Object data=field(mc.currentScreen,"data");UUID currentPreview=((VehicleNetwork.Packet)field(data,"header")).token;
+                mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle e=craft(mc);TileEntityPilotSeat pilot=(TileEntityPilotSeat)e.view.getTileEntity(e.structure.seat);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"actual settings packet saves canonical channel list");
                 require(com.vandorlabs.redstone.ChannelData.read(e.structure.at(e.structure.seat).tileData(),0).equals(pilot.getRedstoneChannels()),"authoritative seat snapshot and local view agree");
@@ -207,13 +258,22 @@ public final class VehicleTaxiRuntimeChecks {
                 require(loaded.structure.write().equals(e.structure.write()),"edited channels survive entity save/reload");
                 VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=e.structure.seat;stale.text="999";VehicleService.configureChannels(player(mc),stale);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"superseded preview cannot edit channels");
+                require(((TileEntityPilotSeat)world(mc).getTileEntity(unrelatedSeat)).getRedstoneChannel()==777,"assembled settings never edit a real tile at the local seat coordinates");
+                VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=currentPreview;denied.entity=e.getEntityId();denied.origin=e.structure.seat;denied.text="999";
+                player(mc).setGameType(net.minecraft.world.GameType.ADVENTURE);
+                try{VehicleService.configureChannels(player(mc),denied);}finally{player(mc).setGameType(net.minecraft.world.GameType.CREATIVE);}
+                require(e.structure==loaded.structure || e.structure.write().equals(loaded.structure.write()),"denied settings preserve the authoritative snapshot");
+                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"protection rejects channel edits");
+                denied.origin=e.structure.seat.up();VehicleService.configureChannels(player(mc),denied);
+                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"forged seat identity rejected");
             }).get();button(mc,3);break;
-            case 22:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5317, 5318"),"reopened settings display saved list");button(mc,1);break;
-            case 23:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"refused non-cardinal exits keep the client mounted and able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
-            case 24:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
-            case 25:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);}).get();
+            }
+            case 26:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5317, 5318"),"reopened settings display saved list");button(mc,1);break;
+            case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"refused non-cardinal exits keep the client mounted and able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
+            case 28:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
+            case 29:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);com.vandorlabs.redstone.RedstoneChannels.unregister(powered);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
-                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS channel-UI-save-cancel stale-preview canonical-list stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
+                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS assembly-and-parking-channel-UI held-high-baseline channel-UI-save-cancel stale-preview canonical-list stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
             default:throw new IllegalStateException("Taxi test phase overflow");
         }
         return false;
