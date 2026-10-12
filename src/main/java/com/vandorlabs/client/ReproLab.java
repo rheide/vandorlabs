@@ -53,6 +53,7 @@ import java.util.List;
  */
 @SideOnly(Side.CLIENT)
 public class ReproLab {
+    private static boolean gpuReported;
 
     /** Platform sits one block below the test blocks. */
     private static final int Y = 21;
@@ -500,7 +501,13 @@ public class ReproLab {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
+        if(!gpuReported){gpuReported=true;System.out.println("[vandorlabs][reprolab] OpenGL renderer="+org.lwjgl.opengl.GL11.glGetString(org.lwjgl.opengl.GL11.GL_RENDERER)+" vendor="+org.lwjgl.opengl.GL11.glGetString(org.lwjgl.opengl.GL11.GL_VENDOR));}
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.tick(mc,outDir);return;}
+        if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly")) {
+            try {if(VehicleNetworkRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("dedicated vehicle live checks",failure);}
+            return;
+        }
         // Xvfb has no window manager, so the client window never reports
         // focus.  Without this, vanilla reopens the pause menu every tick.
         mc.gameSettings.pauseOnLostFocus = false;

@@ -13,6 +13,7 @@ import net.minecraft.world.World;
 
 /** One persistent, ground craft. All movement decisions are server authoritative. */
 public final class EntityGroundVehicle extends Entity implements net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData {
+    public final VehicleDiagnostics diagnostics=new VehicleDiagnostics();
     public VehicleStructure structure;
     public VehicleWorld view;
     public VehicleCollision collision;
@@ -72,6 +73,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;advance(true);}
         double error=(oldX-posX)*(oldX-posX)+(oldY-posY)*(oldY-posY)+(oldZ-posZ)*(oldZ-posZ);
         correctionX=error<16?oldX-posX:0;correctionY=error<16?oldY-posY:0;correctionZ=error<16?oldZ-posZ:0;
+        diagnostics.correction(MathHelper.wrapDegrees(oldYaw-rotationYaw),pendingInputs.size());
         correctionYaw=error<16?MathHelper.wrapDegrees(oldYaw-rotationYaw):0;
         if(error>=16)previousVisual=currentVisual=null;
     }
@@ -91,6 +93,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public int acknowledgedInput(){return serverInputs.acknowledged();}
     private byte[] encoded;
+    private VehicleStructure rotationSource,rotatedSnapshot;private int rotationTurns;
+    public VehicleStructure rotatedSnapshot(int turns) {
+        if(turns==0)return structure;
+        if(rotationSource!=structure || rotationTurns!=turns){rotatedSnapshot=VehicleRotation.rotate(structure,view,turns);rotationSource=structure;rotationTurns=turns;}
+        return rotatedSnapshot;
+    }
     private float propulsion;
     private NBTTagCompound unavailable;
     public EntityGroundVehicle(World world){super(world);setSize(1,1);isImmuneToFire=true;preventEntitySpawning=true;}
@@ -208,8 +216,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(ticksExisted%2==0)VehicleNetwork.state(this);
     }
     private void advance(boolean active) {
+        long started=VehicleDiagnostics.ENABLED?System.nanoTime():0;float before=rotationYaw;
         collision.begin(world,this);
-        try { advanceController(active); } finally { collision.end(); }
+        try { advanceController(active); } finally { collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
     }
     private void advanceController(boolean active) {
         driveSpeed=approach(driveSpeed,active&&!brake?forward*.28:0,brake||!active?.045:forward==0?.008:.018);

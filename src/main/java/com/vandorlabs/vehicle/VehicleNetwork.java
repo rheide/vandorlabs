@@ -41,7 +41,7 @@ public final class VehicleNetwork {
                 Entity raw=player.world.getEntityByID(message.entity);
                 if(!(raw instanceof EntityGroundVehicle) || !raw.getUniqueID().equals(message.token))return;
                 EntityGroundVehicle vehicle=(EntityGroundVehicle)raw;
-                if(message.type==INPUT)vehicle.input(player,message.sequence,message.forward,message.strafe,message.flag);
+                if(message.type==INPUT){if(!VehicleNetworkLab.input(player,message,vehicle))vehicle.input(player,message.sequence,message.forward,message.strafe,message.flag);}
                 else if(player.getDistanceSq(vehicle)<256*256 && vehicle.structure!=null && VehicleService.allowSnapshot(player,vehicle))
                     send(player,vehicle.structure,vehicle.getEntityId(),vehicle.getUniqueID(),new BlockPos(vehicle),false,false);
             });return null;
@@ -53,13 +53,16 @@ public final class VehicleNetwork {
     public static void state(EntityGroundVehicle e) {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
         p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
+        if(VehicleNetworkLab.state(p,e))return;
         PacketHandler.INSTANCE.sendToAllTracking(p,e);
         if(e.getControllingPassenger() instanceof EntityPlayerMP)PacketHandler.INSTANCE.sendTo(p,(EntityPlayerMP)e.getControllingPassenger());
     }
     public static void request(EntityGroundVehicle entity){Packet p=new Packet(REQUEST);p.entity=entity.getEntityId();p.token=entity.getUniqueID();PacketHandler.INSTANCE.sendToServer(p);}
     public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking) {
         try {
-            byte[] bytes=snapshot.encode();
+            Entity raw=entity<0?null:player.world.getEntityByID(entity);
+            byte[] bytes=!preview && raw instanceof EntityGroundVehicle && ((EntityGroundVehicle)raw).structure==snapshot
+                    ?((EntityGroundVehicle)raw).snapshotBytes():snapshot.encode();
             for(int offset=0;offset<bytes.length;offset+=FRAGMENT) {
                 Packet p=new Packet(preview?PREVIEW:SNAPSHOT);p.entity=entity;p.token=token;p.origin=origin;p.flag=parking;p.total=bytes.length;p.offset=offset;
                 p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));PacketHandler.INSTANCE.sendTo(p,player);

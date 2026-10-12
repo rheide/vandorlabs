@@ -73,7 +73,7 @@ public final class VehicleClient {
             }
             if(p.type==VehicleNetwork.TAXI){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleTaxiMode.apply((EntityGroundVehicle)raw,p.flag);return;}
             if(p.type==VehicleNetwork.DOORS){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleDoors.apply((EntityGroundVehicle)raw,p.data);return;}
-            if(p.type==VehicleNetwork.STATE){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)((EntityGroundVehicle)raw).authoritative(p);return;}
+            if(p.type==VehicleNetwork.STATE){if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly"))VehicleNetworkRuntimeChecks.state(p);Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)((EntityGroundVehicle)raw).authoritative(p);return;}
             if(p.type!=VehicleNetwork.PREVIEW && p.type!=VehicleNetwork.SNAPSHOT)return;
             if(p.total<=0 || p.total>VehicleStructure.MAX_NBT_BYTES || p.offset<0 || p.data.length==0 || p.offset>p.total-p.data.length)return;
             incoming.values().removeIf(i->System.currentTimeMillis()-i.created>10000);
@@ -114,7 +114,7 @@ public final class VehicleClient {
         PacketHandler.INSTANCE.sendToServer(p);
     }
     private static UUID cameraCraft;
-    @SubscribeEvent public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Pre event) {
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST) public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Pre event) {
         if(!(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
         if(craft.structure==null)return;
@@ -143,10 +143,23 @@ public final class VehicleClient {
     }
     @SubscribeEvent public void camera(net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup event) {
         Minecraft mc=Minecraft.getMinecraft();
-        if(mc.player==null || mc.gameSettings.thirdPersonView==0 || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
+        if(mc.player==null || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle e=(EntityGroundVehicle)mc.player.getRidingEntity();if(e.structure==null)return;cameraFor(e);
+        float partial=(float)event.getRenderPartialTicks();
+        Vec3d at=e.seatPosition(e.visualPose(partial),mc.player);
+        Vec3d delta=at.subtract(mc.player.lastTickPosX+(mc.player.posX-mc.player.lastTickPosX)*partial,
+                mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*partial,
+                mc.player.lastTickPosZ+(mc.player.posZ-mc.player.lastTickPosZ)*partial);
+        // CameraSetup precedes vanilla's final pitch/yaw rotations. Express the world
+        // anchor correction in that camera basis, including first-person views.
+        double yaw=Math.toRadians(event.getYaw()+180),pitch=Math.toRadians(event.getPitch());
+        double dx=Math.cos(yaw)*delta.x+Math.sin(yaw)*delta.z;
+        double dz=-Math.sin(yaw)*delta.x+Math.cos(yaw)*delta.z;
+        GlStateManager.translate(-dx,-(Math.cos(pitch)*delta.y-Math.sin(pitch)*dz),
+                -(Math.sin(pitch)*delta.y+Math.cos(pitch)*dz));
+        if(mc.gameSettings.thirdPersonView==0)return;
         // Vanilla mouse look already orbits the pilot; extend its camera arm and clip it against terrain.
-        Vec3d eye=mc.player.getPositionEyes((float)event.getRenderPartialTicks());
+        Vec3d eye=at.addVector(0,mc.player.getEyeHeight(),0);
         Vec3d away=mc.player.getLook((float)event.getRenderPartialTicks()).scale(mc.gameSettings.thirdPersonView==2?1:-1);
         double distance=cameraDistance,vanilla=4;
         for(int n=0;n<8;n++) {

@@ -18,6 +18,8 @@ import zipfile
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--server')
+    parser.add_argument('--role', choices=['driver','observer'])
     parser.add_argument('--java', default=str(Path(__file__).resolve().parents[1]/'build/tooling/jdk8u504-b01/bin/java.exe'))
     parser.add_argument('--minecraft-dir', type=Path,
                         default=Path(__file__).resolve().parents[1]/'build/tooling/minecraft')
@@ -28,7 +30,7 @@ def main():
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-taxi', 'vehicle-motion', 'canopies'])
+    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies'])
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -38,7 +40,7 @@ def main():
     jar = (args.jar or root/'build/libs'/('vandorlabs-'+version+'.jar')).resolve()
     if not jar.is_file():
         parser.error('Build the standard mod JAR first: '+str(jar))
-    output = root/'testclient'/('render-run.'+time.strftime('%Y%m%d-%H%M%S'))
+    output = root/'testclient'/('render-run.'+time.strftime('%Y%m%d-%H%M%S')+('-'+args.role if args.role else ''))
     game = output/'game'
     natives = output/'natives'
     game.mkdir(parents=True)
@@ -101,12 +103,19 @@ def main():
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.vehicleDiagnostics=true')
+    if args.role:
+        properties.append('-Dvandorlabs.networkRole='+args.role)
+        properties.append('-Dvandorlabs.vehicleDiagnostics=true')
     command = [args.java, '-Xmx3G']+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
-        '--username', 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,
+        '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,
         '--width', '1280', '--height', '720']
+    if args.server:
+        host,port=args.server.split(':')
+        command+=['--server',host,'--port',port]
     # The child has no console; hide only windows belonging to its exact PID.
     user32 = ctypes.windll.user32
     user32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
@@ -148,7 +157,7 @@ def main():
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'canopies':'canopy-live PASS'}[args.focus]
+        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
         if args.focus == 'pilot-seat':

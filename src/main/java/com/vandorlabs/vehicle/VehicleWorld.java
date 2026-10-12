@@ -42,11 +42,23 @@ public final class VehicleWorld extends World {
             }
         }
     }
-    public void update(VehicleStructure next) {structure=next;}
+    public void update(VehicleStructure next) {
+        VehicleStructure before=structure;structure=next;
+        tiles.keySet().removeIf(pos->next.at(pos)==null || next.at(pos).tileData()==null);
+        for(VehicleStructure.Cell cell:next.cells)if(cell.tileData()!=null) {
+            VehicleStructure.Cell old=before.at(cell.pos);
+            if(old!=null && old.state.getBlock()==cell.state.getBlock() && Objects.equals(old.tileData(),cell.tileData()) && tiles.containsKey(cell.pos))continue;
+            tiles.remove(cell.pos);
+            try {
+                TileEntity tile=TileEntity.create(null,cell.tileData());
+                if(tile!=null){tile.setWorld(this);tiles.put(cell.pos,tile);}
+            }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"local tile update",error);}
+        }
+    }
     @Override protected IChunkProvider createChunkProvider() {
         return new IChunkProvider() {
             public Chunk getLoadedChunk(int x,int z){return provideChunk(x,z);}
-            public Chunk provideChunk(int x,int z){return chunks.computeIfAbsent(((long)x<<32)^(z&0xffffffffL),k->new EmptyChunk(VehicleWorld.this,x,z));}
+            public Chunk provideChunk(int x,int z){return chunks.computeIfAbsent(((long)x<<32)^(z&0xffffffffL),k->new Chunk(VehicleWorld.this,x,z));}
             public boolean tick(){return false;}
             public String makeString(){return "Vehicle local storage";}
             public boolean isChunkGeneratedAt(int x,int z){return true;}

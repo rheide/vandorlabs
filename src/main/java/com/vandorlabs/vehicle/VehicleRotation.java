@@ -25,7 +25,7 @@ public final class VehicleRotation {
         return Math.floorMod(nearest,4);
     }
     public static Plan plan(EntityGroundVehicle craft) {
-        int turns=turns(craft.rotationYaw);VehicleStructure placed=rotate(craft.structure,craft.view,turns);
+        int turns=turns(craft.rotationYaw);VehicleStructure placed=craft.rotatedSnapshot(turns);
         double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
         return new Plan(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
     }

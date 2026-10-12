@@ -94,6 +94,7 @@ public final class VehicleCollision {
         }
     }
     private Collection<AxisAlignedBB> obstacles(World world,net.minecraft.entity.Entity entity,AxisAlignedBB swept) {
+        if(boxes.size()<=8){terrainQueries++;List<AxisAlignedBB> result=world.getCollisionBoxes(entity,swept);candidateBoxes+=result.size();return result;}
         return (terrain==null?new Terrain(world,entity):terrain).obstacles(swept);
     }
     public float turn(World world,net.minecraft.entity.Entity entity,double x,double y,double z,float from,float change) {
