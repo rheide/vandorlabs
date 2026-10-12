@@ -468,6 +468,7 @@ public class ReproLab {
     private int state = 0; // 0 menu, 1 wait, 2 build, 3 shots, 4-7 GUIs, 8 hotbar, 9 done
     private int tick = 0;
     private static Shot pendingGallery;
+    private static java.util.concurrent.Future<?> pendingGalleryBuild;
     private static int pendingGalleryTicks;
     private int holdTicks = 0;
     private static long renderedFrames, cameraChangedAtFrame;
@@ -674,12 +675,13 @@ public class ReproLab {
                 break;
             case 3:
                 if(pendingGallery!=null) {
-                    if(!galleryChunksReady(mc.world)) {
+                    if(!pendingGalleryBuild.isDone() || !galleryChunksReady(mc.world)) {
                         if(++pendingGalleryTicks>400)throw new IllegalStateException("Gallery chunks did not arrive after teleport");
                         break;
                     }
-                    buildGalleryStage(mc.world,pendingGallery.name);pendingGallery=null;
-                    holdTicks=Math.max(holdTicks,CAPTURE_SETTLE_TICKS);
+                    try {pendingGalleryBuild.get();} catch(Exception e) {throw new IllegalStateException("Server gallery construction failed",e);}
+                    pendingGallery=null;
+                    holdTicks=Math.max(holdTicks,60);
                     System.out.println("[vandorlabs][reprolab] focused-gallery-chunks PASS");
                 }
                 if (--holdTicks > 0) {
@@ -2790,10 +2792,11 @@ public class ReproLab {
         p.setAir(300);
         mc.setRenderViewEntity(p);
         if (s.name.startsWith("gallery_")) {
-            mc.getIntegratedServer().addScheduledTask(() ->
+            pendingGalleryBuild=mc.getIntegratedServer().addScheduledTask(() ->
                     buildGalleryStage(mc.getIntegratedServer().getWorld(0), s.name));
-            if(galleryChunksReady(mc.world))buildGalleryStage(mc.world,s.name);
-            else {pendingGallery=s;pendingGalleryTicks=0;}
+            // Group membership is assembled on the server and arrives in tile updates.
+            // Rebuilding locally would replace those tiles with ungrouped client placements.
+            pendingGallery=s;pendingGalleryTicks=0;
         }
         if (s.name.equals("wide_ship_pair")) {
             // Runtime checks mutate nearby blocks. In a reused integrated
