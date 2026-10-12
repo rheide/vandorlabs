@@ -32,7 +32,8 @@ final class TextureTierChecks {
             }
         }
         require(hatchFamilies==8 && legacyAliases==29,"tier family/alias count");
-        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:glass_tier_check"));
+        if(net.minecraft.tileentity.TileEntity.getKey(TileEntityProgrammableGlass.class)==null)
+            net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:glass_tier_check"));
         TileEntityProgrammableGlass glass=new TileEntityProgrammableGlass();glass.setShade(1);glass.setJoin(false);glass.setSize(2);
         require(glass.getSize()==1,"legacy glass setter");
         NBTTagCompound old=glass.writeToNBT(new NBTTagCompound());old.setInteger("GlassSize",2);glass.readFromNBT(old);

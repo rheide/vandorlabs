@@ -53,6 +53,22 @@ public final class NonRenderingChecks {
         ModBlocks.PROGRAMMABLE_LIGHT=new BlockProgrammableLight();ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK=new BlockProgrammableTrigger();
         SignalLevelRuntimeChecks.run(new MemoryWorld(false));
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntitySignalControl.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_control"));
+        net.minecraftforge.registries.ForgeRegistry<Block> controlBlocks=(net.minecraftforge.registries.ForgeRegistry<Block>)net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS;
+        net.minecraftforge.registries.ForgeRegistry<Item> controlItems=(net.minecraftforge.registries.ForgeRegistry<Item>)net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS;
+        boolean blocksLocked=controlBlocks.isLocked(),itemsLocked=controlItems.isLocked();
+        controlBlocks.unfreeze();controlItems.unfreeze();
+        for(String id:SignalControlRuntimeChecks.IDS){
+            BlockSignalControl block=new BlockSignalControl("vandorlabs:"+id,id,32);
+            net.minecraft.util.ResourceLocation key=new net.minecraft.util.ResourceLocation("vandorlabs",id);
+            controlBlocks.register(block);
+            ItemBlock item=new ItemBlock(block);
+            item.setRegistryName(key);controlItems.register(item);
+            try {
+                java.lang.reflect.Field map=Item.class.getDeclaredField("BLOCK_TO_ITEM");map.setAccessible(true);
+                ((java.util.Map<Block,Item>)map.get(null)).put(block,item);
+            } catch(ReflectiveOperationException e){throw new IllegalStateException("Cannot register fixture block item",e);}
+        }
+        if(blocksLocked)controlBlocks.freeze();if(itemsLocked)controlItems.freeze();
         SignalControlRuntimeChecks.run(new MemoryWorld(false));
         ChannelReconciliationChecks.run();
         ChannelListChecks.run();
@@ -212,6 +228,9 @@ public final class NonRenderingChecks {
         @Override public void notifyNeighborsOfStateChange(BlockPos p,Block block,boolean observers){}
         @Override public <T extends net.minecraft.entity.Entity> List<T> getEntitiesWithinAABB(Class<? extends T> type,
                 net.minecraft.util.math.AxisAlignedBB box){return Collections.emptyList();}
+        @Override public List<net.minecraft.entity.Entity> getEntitiesWithinAABBExcludingEntity(net.minecraft.entity.Entity entity,
+                net.minecraft.util.math.AxisAlignedBB box){return Collections.emptyList();}
+        @Override public boolean spawnEntity(net.minecraft.entity.Entity entity){loadedEntityList.add(entity);return true;}
         @Override public BlockPos getSpawnPoint(){return new BlockPos(0,64,0);}
         @Override protected net.minecraft.world.chunk.IChunkProvider createChunkProvider(){return null;}
         @Override protected boolean isChunkLoaded(int x,int z,boolean empty){return !chunkLimit || x==0&&z==0;}
@@ -222,7 +241,8 @@ public final class NonRenderingChecks {
         @Override public TileEntity getTileEntity(BlockPos p){loaded(p);return tiles.get(p);}
         @Override public boolean setBlockState(BlockPos p,IBlockState state,int flags) {
             loaded(p);IBlockState before=states.put(p.toImmutable(),state);
-            if(before!=null && before.getBlock()==state.getBlock() && tiles.containsKey(p))return true;
+            TileEntity previous=tiles.get(p);
+            if(before!=null && previous!=null && !previous.shouldRefresh(this,p,before,state))return true;
             TileEntity tile=state.getBlock().createTileEntity(this,state);
             if(tile!=null){tile.setWorld(this);tile.setPos(p.toImmutable());tiles.put(p.toImmutable(),tile);}else tiles.remove(p);
             return true;

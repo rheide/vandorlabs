@@ -60,7 +60,10 @@ public final class SignalControlRuntimeChecks {
                 net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> drops=net.minecraft.util.NonNullList.create();block.getDrops(drops,world,pos,world.getBlockState(pos),0);
                 require(drops.size()==1 && drops.get(0).getSubCompound("RedstoneChannelSettings")!=null,"configured control drop");
                 world.setBlockToAir(copy);world.setBlockState(copy,block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),2);
-                ((BlockSignalControl)block).onBlockPlacedBy(world,copy,world.getBlockState(copy),net.minecraftforge.common.util.FakePlayerFactory.getMinecraft((net.minecraft.world.WorldServer)world),drops.get(0));
+                net.minecraft.entity.EntityLivingBase placer=world instanceof net.minecraft.world.WorldServer
+                        ?net.minecraftforge.common.util.FakePlayerFactory.getMinecraft((net.minecraft.world.WorldServer)world)
+                        :new net.minecraft.entity.item.EntityArmorStand(world);
+                ((BlockSignalControl)block).onBlockPlacedBy(world,copy,world.getBlockState(copy),placer,drops.get(0));
                 TileEntitySignalControl placed=(TileEntitySignalControl)world.getTileEntity(copy);
                 require(placed.getLowLimit()==3 && placed.getHighLimit()==11,"configured drop limits on placement");
                 if(((BlockSignalControl)block).hasAdjustableBase())require(placed.getBaseHeight()==3 && placed.getBaseTilt()==3 && placed.getTiltDirection()==1,"configured drop mount on placement");

@@ -57,13 +57,14 @@ final class RedstoneScreenChecks {
     }
     private static void copyMasks(NonRenderingChecks.MemoryWorld world,BlockPos source,BlockPos target){
         net.minecraft.item.ItemStack tool=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DUPLIFIER);
-        long rowBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-3);
-        long signalBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-1);
-        long interpolationBit=1L<<(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-2);
+        long rowBit=optionBit(com.vandorlabs.items.ProgrammableSettings.REDSTONE_ROWS);
+        long signalBit=optionBit(com.vandorlabs.items.ProgrammableSettings.SIGNAL_SETTINGS);
+        long interpolationBit=optionBit(com.vandorlabs.items.ProgrammableSettings.RAMP_INTERPOLATION);
+        long armorBit=optionBit(com.vandorlabs.items.DuplifierArmorTextures.KEY);
         net.minecraft.nbt.NBTTagCompound root=new net.minecraft.nbt.NBTTagCompound();root.setLong(com.vandorlabs.items.DuplifierApplyOptions.TAG,0);tool.setTagCompound(root);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(rowBit|interpolationBit|signalBit),"legacy mask did not enable new options");
-        root.setInteger("DuplifierApplyOptionCount",com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length-2);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(interpolationBit|signalBit),"counted screen-era mask changed existing choices");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(rowBit|interpolationBit|signalBit|armorBit),"legacy mask did not enable new options");
+        root.setInteger("DuplifierApplyOptionCount",Long.numberOfTrailingZeros(rowBit)+1);
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(interpolationBit|signalBit|armorBit),"counted screen-era mask changed existing choices");
         root.removeTag("DuplifierApplyOptionCount");
         require(com.vandorlabs.items.ItemDuplifier.copyFrom(world,source,tool)!=null,"actual tool did not capture screen");
         require(com.vandorlabs.items.ItemDuplifier.applyTo(world,target,tool,null),"actual tool did not apply old-mask screen");
@@ -75,6 +76,11 @@ final class RedstoneScreenChecks {
         require(!filtered.hasKey(com.vandorlabs.items.ProgrammableSettings.REDSTONE_ROWS),"screen exclusion retained title or rows");
         RedstoneScreenContents restored=new RedstoneScreenContents(new TileEntityAnimatedScreenSelector(),0);restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(restored.title().equals("Bridge"),"title lost in NBT");
         require(!tile.configure("Bad\nheader",Collections.emptyList(),Collections.emptyList(),0) && tile.title().equals("Bridge"),"invalid header accepted or changed configuration");
+    }
+    private static long optionBit(String key){
+        for(int i=0;i<com.vandorlabs.items.DuplifierApplyOptions.OPTIONS.length;i++)
+            if(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS[i].key.equals(key))return 1L<<i;
+        throw new IllegalStateException("Missing Duplifier option "+key);
     }
     private static void updates(){
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(0,100,0);
