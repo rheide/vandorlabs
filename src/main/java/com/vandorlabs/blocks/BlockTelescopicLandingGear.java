@@ -118,6 +118,14 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
             setExtended(world,pos,!world.getBlockState(pos).getValue(EXTENDED));
         return true;
     }
+    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos) {
+        TileEntityLandingGear tile=root(world,pos);
+        if(tile==null)return Double.NaN;
+        double bottom=Double.POSITIVE_INFINITY;
+        for(int group=0;group<3;group++)for(AxisAlignedBB part:geometry.get(tile.getSize()).get(group))
+            bottom=Math.min(bottom,part.minY-(group==0?0:tile.progress));
+        return tile.getPos().getY()+bottom;
+    }
     protected List<AxisAlignedBB> boxes(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntityLandingGear tile=root(world,pos);double t=tile==null?0:tile.progress;
         int offset=tile==null?0:tile.getPos().getY()-pos.getY();

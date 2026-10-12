@@ -18,23 +18,32 @@ public final class VehicleScan {
     private final World world;
     private final BlockPos start;
     private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
-    private final Set<BlockPos> visited = new HashSet<>(), gears = new HashSet<>();
+    private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
     private int minX, minY, minZ, maxX, maxY, maxZ, seats;
+    private Double gearBottomY;
     public BlockPos origin;
     public VehicleStructure result;
     public final Set<BlockPos> airBoundary=new HashSet<>();
     public String error;
     public VehicleScan(World world, BlockPos start) {
-        this.world=world; this.start=start.toImmutable(); queue.add(this.start);
+        this.world=world; this.start=start.toImmutable(); enqueue(this.start);
         minX=maxX=start.getX(); minY=maxY=start.getY(); minZ=maxZ=start.getZ();
     }
+    private void enqueue(BlockPos pos){BlockPos key=pos.toImmutable();if(scheduled.add(key))queue.add(key);}
     public BlockPos startPosition(){return start;}
     private void require(boolean test, String reason) { if(!test) throw new IllegalArgumentException(reason); }
+    private void support(BlockLandingGear block,BlockPos root) {
+        double bottom=block.vehicleBottomY(world,root);
+        require(Double.isFinite(bottom),"Cannot determine landing gear bottom.");
+        require(gearBottomY==null || Math.abs(gearBottomY-bottom)<.001,
+                "Landing gear bottoms must have the same Y value. Adjust their mounting height or extension before assembly.");
+        gearBottomY=bottom;
+    }
     private void linked(BlockPos p, Block expected) {
         require(world.isBlockLoaded(p), "A component crosses an unloaded chunk.");
         require(world.getBlockState(p).getBlock()==expected, "Incomplete "+expected.getLocalizedName()+": expected a matching part at "+p.getX()+", "+p.getY()+", "+p.getZ()+" but found "+world.getBlockState(p).getBlock().getLocalizedName()+". Replace or complete this component.");
-        queue.add(p.toImmutable());
+        enqueue(p);
     }
     public boolean step(int budget) {
         if(error!=null || result!=null) return true;
@@ -77,7 +86,7 @@ public final class VehicleScan {
                         TileEntity part=world.getTileEntity(member);
                         require(part instanceof TileEntityControlledRamp && ((TileEntityControlledRamp)part).belongsTo(p) && ramp.owns((TileEntityControlledRamp)part),"Invalid ramp component ownership.");
                     }
-                    for(BlockPos source:ramp.vehicleSources()){require(world.isBlockLoaded(source),"A ramp source crosses an unloaded chunk.");queue.add(source);}
+                    for(BlockPos source:ramp.vehicleSources()){require(world.isBlockLoaded(source),"A ramp source crosses an unloaded chunk.");enqueue(source);}
                 }
                 if(tile instanceof TileEntityControlledRamp) {
                     TileEntityControlledRamp ramp=(TileEntityControlledRamp)tile;
@@ -111,6 +120,7 @@ public final class VehicleScan {
                         boolean extended=world.getBlockState(root.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED);
                         float target=extended?root.getExtensionPixels()/16F:0;
                         require(Math.abs(root.progress-target)<.001, "Wait for landing gear to stop moving.");
+                        support((BlockLandingGear)block,root.getPos());
                         linked(root.getPos(),block);
                         int size=root.getSize(), radius=size>=3?1:0, count=(int)Math.ceil(target)+(size>=3?1:0);
                         for(int y=0;y<=count;y++)for(int x=size==4?0:-radius;x<=radius;x++)for(int z=size==4?0:-radius;z<=radius;z++) {
@@ -122,19 +132,19 @@ public final class VehicleScan {
                                 if(!world.isBlockLoaded(coverPos))continue;
                                 TileEntity cover=world.getTileEntity(coverPos);
                                 if(cover instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)cover).isCover()
-                                        && coverPos.offset(world.getBlockState(coverPos).getValue(BlockProgrammableTrapdoor.FACING)).equals(member))queue.add(coverPos);
+                                        && coverPos.offset(world.getBlockState(coverPos).getValue(BlockProgrammableTrapdoor.FACING)).equals(member))enqueue(coverPos);
                             }
                         }
                     }
                     continue;
                 }
-                if(block instanceof BlockLandingGear) { gears.add(p); continue; }
+                if(block instanceof BlockLandingGear) { if(gears.add(p))support((BlockLandingGear)block,p); continue; }
                 if(tile instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)tile).isCover()) {
                     BlockPos gear=p.offset(state.getValue(BlockProgrammableTrapdoor.FACING));
                     require(world.isBlockLoaded(gear) && world.getBlockState(gear).getBlock() instanceof BlockTelescopicLandingGear,"A landing gear cover has no gear owner.");
-                    queue.add(gear);continue;
+                    enqueue(gear);continue;
                 }
-                for(EnumFacing face:EnumFacing.values())queue.add(p.offset(face));
+                for(EnumFacing face:EnumFacing.values())enqueue(p.offset(face));
             }
             if(queue.isEmpty()) {
                 require(seats==1, "A craft must contain exactly one Pilot Seat.");

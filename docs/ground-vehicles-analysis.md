@@ -20,7 +20,7 @@ Propulsion starts dark on assembly and ramps brighter during horizontal movement
 
 ## Discovery and compatibility
 
-Discovery is a six-face flood fill starting at the seat, processed in slices of 256 queued positions. Landing gear and its owned footprint are included but terminate their own branches, preventing traversal into terrain through the wheels. Other branches continue. Gear is not a closed boundary: a hull block touching a hangar is still connected, so inspect the preview.
+Discovery is an iterative six-face flood fill starting at the seat, processed in slices of 256 unique queued positions. Landing gear and its owned footprint are included but terminate their own branches, preventing traversal into terrain through the wheels. Other branches continue. Gear is not a closed boundary: a hull block touching a hangar is still connected, so inspect the preview. Every captured gear's physical bottom must share the same Y value, accounting for size and fractional extension. Different mounting heights are allowed if their feet align. Moving or misaligned gears fail before any block changes.
 
 The limits are 4,096 occupied cells, 64 cells on each axis, 4 MiB of serialized structure data, and 8,192 merged collision boxes. Unloaded boundaries, fluids, unbreakable blocks, incomplete known components and limits fail without partially assembling a craft. Moving canopies, gear and controlled ramps must settle first. Ramp controllers follow their reserved cells even when extended geometry is separated from the hull. Their current extended pose, source materials, textures and recovery journals are retained. Ramps remain fixed in vehicle mode and resume normal operation after parking.
 

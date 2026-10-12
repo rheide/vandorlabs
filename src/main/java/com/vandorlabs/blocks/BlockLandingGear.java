@@ -40,6 +40,12 @@ public class BlockLandingGear extends BlockVandorDirectional {
     public boolean isOpaqueCube(IBlockState state) { return false; }
     public boolean isFullCube(IBlockState state) { return false; }
     protected List<AxisAlignedBB> boxes(IBlockState state, IBlockAccess world, BlockPos pos) { return parts; }
+    /** Absolute support plane, before clipping multi-cell geometry to individual cells. */
+    public double vehicleBottomY(IBlockAccess world, BlockPos pos) {
+        double bottom=Double.POSITIVE_INFINITY;
+        for(AxisAlignedBB part:parts)bottom=Math.min(bottom,part.minY);
+        return pos.getY()+bottom;
+    }
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
         AxisAlignedBB box = null;
         for (AxisAlignedBB part : boxes(state,world,pos)) box = box == null ? part : box.union(part);
