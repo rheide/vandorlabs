@@ -100,6 +100,15 @@ task testFilesystemTextureNames(type: JavaExec) {
 }
 check.dependsOn testFilesystemTextureNames
 
+task testVehicleSelection(type: JavaExec) {
+    group = 'verification'
+    description = 'Check craft-local selection geometry without a renderer'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.VehicleSelectionChecks'
+}
+check.dependsOn testVehicleSelection
+
 task benchmarkHousingState(type: JavaExec) {
     group = 'verification'
     description = 'Compare programmable chunk-state CPU cost and allocations against 1.3'

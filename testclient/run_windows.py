@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run an isolated, muted Forge client in the background using installed libraries.
 
-Requires a HotSpot Java 8 runtime and an installed Forge 1.12.2 profile.
+Requires the ignored build/tooling Java 8 runtime, Forge profile and compatibility fixtures.
 The built mod stays in build/libs; only external test fixtures are copied.
 """
 import argparse
@@ -18,16 +18,17 @@ import zipfile
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--java', default='java')
+    parser.add_argument('--java', default=str(Path(__file__).resolve().parents[1]/'build/tooling/jdk8u504-b01/bin/java.exe'))
     parser.add_argument('--minecraft-dir', type=Path,
-                        default=Path(os.environ.get('APPDATA', '.')) / '.minecraft')
+                        default=Path(__file__).resolve().parents[1]/'build/tooling/minecraft')
     parser.add_argument('--forge-profile', default='1.12.2-forge-14.23.5.2860')
     parser.add_argument('--compat-mods', type=Path)
     parser.add_argument('--jar', type=Path)
     parser.add_argument('--world-copy', type=Path, help='Test a workspace copy of an existing save')
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
+    parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'canopies'])
+    parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-taxi', 'canopies'])
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -80,22 +81,27 @@ def main():
                     if name.lower().endswith('.dll'):
                         (natives/Path(name).name).write_bytes(archive.read(name))
     classpath += [str(base/'versions/1.12.2/1.12.2.jar'), str(jar)]
-    compat = args.compat_mods or Path(os.environ.get('VANDOR_LABS_COMPAT_MODS', str(base/'mods')))
+    compat = args.compat_mods or Path(os.environ.get('VANDOR_LABS_COMPAT_MODS', str(root/'build/tooling/compat-mods')))
     (game/'mods').mkdir()
     for name in ['worldedit-forge-mc1.12.2-6.1.10-dist.jar',
                  'BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar', 'ImmersiveEngineering-0.12-98.jar']:
         shutil.copyfile(compat/name, game/'mods'/name)
+    if args.vehicle_preservation_mods:
+        for name in ['Mekanism-1.12.2-9.8.2.389.jar','malisiscore-1.12.2-6.5.1.jar','malisisdoors-1.12.2-7.3.0.jar']:
+            shutil.copyfile(args.vehicle_preservation_mods/name,game/'mods'/name)
     if args.all_mods:
         for source in args.all_mods.glob('*.jar'):
             if not source.name.startswith('vandorlabs-'):
                 shutil.copyfile(source,game/'mods'/source.name)
     properties = ['-Dvandorlabs.reprolab='+str(output), '-Djava.library.path='+str(natives)]
+    if args.vehicle_preservation_mods:
+        properties.append('-Dvandorlabs.foreignVehicleChecks=true')
     if args.world_copy:
         properties.append('-Dvandorlabs.existingWorldChecks=true')
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'canopies': 'canopyChecksOnly'}[args.focus]+'=true')
     command = [args.java, '-Xmx3G']+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
@@ -137,10 +143,12 @@ def main():
     client_log=(output/'client.log').read_text(errors='replace')
     if 'domain vandorlabs is missing' in client_log or 'Exception loading model' in client_log:
         raise SystemExit('Invalid Vandor asset; inspect '+str(output/'client.log'))
+    if 'Exception caught during firing event' in client_log or 'A severe problem occurred during the spawning of an entity' in client_log:
+        raise SystemExit('Asynchronous gameplay exception; inspect '+str(output/'client.log'))
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'canopies':'canopy-live PASS'}[args.focus]
+        marker = {'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'canopies':'canopy-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
         if args.focus == 'pilot-seat':

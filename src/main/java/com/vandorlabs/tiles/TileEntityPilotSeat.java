@@ -15,6 +15,9 @@ public final class TileEntityPilotSeat extends TileEntity implements RedstoneCha
     private ChannelList channels=ChannelList.EMPTY;
     private boolean high,baselineAfterLoad;
     private long readyAt;
+    private boolean taxiMode=true;
+    public boolean isTaxiMode(){return taxiMode;}
+    public void setTaxiMode(boolean value){taxiMode=value;markDirty();sync();}
     public UUID owner;
     public TileEntity channelTile(){return this;}
     public int getRedstoneChannel(){return channels.first();}
@@ -30,8 +33,8 @@ public final class TileEntityPilotSeat extends TileEntity implements RedstoneCha
     public int poll(World real) {if(real.getTotalWorldTime()<readyAt)return -1;boolean next=powered(real);if(baselineAfterLoad){baselineAfterLoad=false;high=next;markDirty();return -1;}if(next==high)return -1;high=next;markDirty();return next?1:0;}
     public void update(){if(world!=null && !world.isRemote && poll(world)==1)VehicleService.signal(this,null);}
     private void sync(){if(world!=null && !world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
-    public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setBoolean("VehicleSignalHigh",high);if(owner!=null)tag.setUniqueId("VehicleOwner",owner);return tag;}
-    public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);channels=ChannelData.read(tag,0);high=tag.getBoolean("VehicleSignalHigh");owner=tag.hasUniqueId("VehicleOwner")?tag.getUniqueId("VehicleOwner"):null;}
+    public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setBoolean("TaxiMode",taxiMode);tag.setBoolean("VehicleSignalHigh",high);if(owner!=null)tag.setUniqueId("VehicleOwner",owner);return tag;}
+    public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);channels=ChannelData.read(tag,0);taxiMode=!tag.hasKey("TaxiMode",1) || tag.getBoolean("TaxiMode");high=tag.getBoolean("VehicleSignalHigh");owner=tag.hasUniqueId("VehicleOwner")?tag.getUniqueId("VehicleOwner"):null;}
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}

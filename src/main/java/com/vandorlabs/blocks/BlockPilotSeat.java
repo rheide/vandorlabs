@@ -67,12 +67,15 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
         for (EntityChairSeat seat : world.getEntitiesWithinAABB(EntityChairSeat.class,
                 new AxisAlignedBB(pos).grow(.25, 1, .25))) {
             if (seat.isDead || !pos.equals(seat.getChairPos())) continue;
-            if (seat.getPassengers().isEmpty()) player.startRiding(seat, true);
+            if (seat.getPassengers().isEmpty() && player.startRiding(seat, true))com.vandorlabs.vehicle.VehicleService.taxiAssembly((net.minecraft.entity.player.EntityPlayerMP)player,pos);
             return true;
         }
         EntityChairSeat seat = new EntityChairSeat(world, pos, SEAT_HEIGHT);
         seat.rotationYaw = state.getValue(FACING).getHorizontalAngle();
-        if (world.spawnEntity(seat) && !player.startRiding(seat, true)) seat.setDead();
+        if (world.spawnEntity(seat)) {
+            if(!player.startRiding(seat, true))seat.setDead();
+            else com.vandorlabs.vehicle.VehicleService.taxiAssembly((net.minecraft.entity.player.EntityPlayerMP)player,pos);
+        }
         return true;
     }
     @Override public void breakBlock(World world, BlockPos pos, IBlockState state) {

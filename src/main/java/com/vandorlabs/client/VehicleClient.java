@@ -18,6 +18,37 @@ public final class VehicleClient {
     private static final Map<UUID,Incoming> completed=new HashMap<>();
     private static Preview preview;
     private static int sequence,ticks;
+    private static boolean sendInteraction() {
+        Minecraft mc=Minecraft.getMinecraft();
+        if(mc.currentScreen!=null || mc.player==null || mc.world==null || mc.player.isSpectator())return false;
+        VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);
+        if(!VehicleInteraction.supported(mc.player,target))return false;
+        VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.INTERACT);
+        packet.entity=target.craft.getEntityId();packet.token=target.craft.getUniqueID();packet.origin=target.hit.cell.pos;
+        PacketHandler.INSTANCE.sendToServer(packet);return true;
+    }
+    /** Consume the physical click before vanilla can emit duplicate main/offhand use packets. */
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST)
+    public void interact(net.minecraftforge.client.event.MouseEvent event) {
+        Minecraft mc=Minecraft.getMinecraft();
+        if(!event.isButtonstate() || event.getButton()!=mc.gameSettings.keyBindUseItem.getKeyCode()+100
+                || mc.currentScreen!=null || mc.player==null || mc.world==null || mc.player.isSpectator())return;
+        if(sendInteraction())event.setCanceled(true);
+    }
+    /** Keyboard bindings and controller-generated clicks use Forge's ordinary use events. */
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST)
+    public void use(net.minecraftforge.event.entity.player.PlayerInteractEvent event) {
+        if(!(event instanceof net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty
+                || event instanceof net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem
+                || event instanceof net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock
+                || event instanceof net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract
+                || event instanceof net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific))return;
+        if(!event.getWorld().isRemote || event.getHand()!=net.minecraft.util.EnumHand.MAIN_HAND
+                || event.getEntityPlayer()!=Minecraft.getMinecraft().player)return;
+        if(sendInteraction() && event.isCancelable()) {
+            event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);
+        }
+    }
     private static Object lastWorld;
     private static final class Incoming {
         final VehicleNetwork.Packet header;final byte[] bytes;final long created=System.currentTimeMillis();int next;VehicleStructure structure;
@@ -27,6 +58,7 @@ public final class VehicleClient {
         Minecraft mc=Minecraft.getMinecraft();mc.addScheduledTask(()->{
             if(mc.world==null)return;
             if(p.type==VehicleNetwork.ERROR){mc.player.sendMessage(new net.minecraft.util.text.TextComponentString(p.text));return;}
+            if(p.type==VehicleNetwork.TAXI){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleTaxiMode.apply((EntityGroundVehicle)raw,p.flag);return;}
             if(p.type==VehicleNetwork.DOORS){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleDoors.apply((EntityGroundVehicle)raw,p.data);return;}
             if(p.type==VehicleNetwork.STATE){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)((EntityGroundVehicle)raw).authoritative(p);return;}
             if(p.type!=VehicleNetwork.PREVIEW && p.type!=VehicleNetwork.SNAPSHOT)return;
@@ -109,18 +141,19 @@ public final class VehicleClient {
     private static final class Preview extends GuiScreen {
         final Incoming data;
         Preview(Incoming data){this.data=data;}
-        @Override public void initGui(){buttonList.add(new GuiButton(0,width/2-105,height-45,100,20,data.header.flag?"Park as blocks":"Assemble"));buttonList.add(new GuiButton(1,width/2+5,height-45,100,20,"Cancel"));}
+        @Override public void initGui(){buttonList.add(new GuiButton(0,width/2-105,height-45,100,20,data.header.flag?"Park as blocks":"Assemble"));buttonList.add(new GuiButton(1,width/2+5,height-45,100,20,"Cancel"));buttonList.add(new GuiButton(2,width/2-105,height-99,210,20,"Taxi Mode: "+(VehicleTaxiMode.enabled(data.structure)?"ON":"OFF")));}
         @Override public boolean doesGuiPauseGame(){return false;}
         @Override public void drawScreen(int x,int y,float partial) {
-            drawRect(0,0,width,75,0xb0101820);drawRect(0,height-78,width,height,0xb0101820);
+            drawRect(0,0,width,75,0xb0101820);drawRect(0,height-126,width,height,0xb0101820);
             VehicleStructure s=data.structure;
-            drawCenteredString(fontRenderer,data.header.flag?"Park craft - original orientation":"Assemble connected craft",width/2,12,0xffffff);
+            drawCenteredString(fontRenderer,data.header.flag?"Park craft - cardinal orientation":"Assemble connected craft",width/2,12,0xffffff);
             drawCenteredString(fontRenderer,s.cells.size()+" blocks / "+(int)s.bounds.maxX+" x "+(int)s.bounds.maxY+" x "+(int)s.bounds.maxZ+" / "+s.gearCount+" landing gear",width/2,29,0xffffff);
             drawCenteredString(fontRenderer,"Check the highlighted cells. Attached hangar blocks are included.",width/2,47,0xffdd88);
+            drawCenteredString(fontRenderer,VehicleTaxiMode.enabled(s)?"Sit to assemble; exit to restore blocks.":"Use the Configurizer to assemble and park.",width/2,height-119,0xffffff);
             drawCenteredString(fontRenderer,"W/S: drive   A/D: steer   Space: brake   Sneak: dismount",width/2,height-68,0xffffff);
             super.drawScreen(x,y,partial);
         }
-        @Override protected void actionPerformed(GuiButton button){if(button.id==0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.CONFIRM);p.token=data.header.token;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}
+        @Override protected void actionPerformed(GuiButton button){if(button.id==2){VehicleNetwork.Packet setting=new VehicleNetwork.Packet(VehicleNetwork.TAXI);setting.token=data.header.token;setting.flag=!VehicleTaxiMode.enabled(data.structure);PacketHandler.INSTANCE.sendToServer(setting);for(GuiButton control:buttonList)control.enabled=false;return;}if(button.id==0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.CONFIRM);p.token=data.header.token;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}
         @Override public void onGuiClosed(){if(preview==this)preview=null;}
     }
 }

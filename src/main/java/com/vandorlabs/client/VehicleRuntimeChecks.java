@@ -47,6 +47,7 @@ public final class VehicleRuntimeChecks {
         world.setBlockState(base,gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(base)).configure(0,0,0,0);
         world.setBlockState(base.up(),Blocks.STONE.getDefaultState(),2);
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();world.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,state,player,new ItemStack(ModBlocks.PILOT_SEAT));
+        ((TileEntityPilotSeat)world.getTileEntity(seat)).setTaxiMode(false);
         SignalSource source=new SignalSource();source.setWorld(world);source.setPos(base.west(3));com.vandorlabs.redstone.RedstoneChannels.register(source);
         try {
             TileEntityPilotSeat pilot=(TileEntityPilotSeat)world.getTileEntity(seat);pilot.setRedstoneChannel(5317);
@@ -139,7 +140,7 @@ public final class VehicleRuntimeChecks {
             if(x!=1 && z!=1){BlockPos root=ORIGIN.add(x,0,z);w.setBlockState(root,gear.getDefaultState(),3);((TileEntityLandingGear)w.getTileEntity(root)).configure(0,0,0,0);}
         }
         IBlockState seat=ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING,EnumFacing.EAST);
-        w.setBlockState(SEAT,seat,3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,SEAT,seat,p,new ItemStack(ModBlocks.PILOT_SEAT));
+        w.setBlockState(SEAT,seat,3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,SEAT,seat,p,new ItemStack(ModBlocks.PILOT_SEAT));((TileEntityPilotSeat)w.getTileEntity(SEAT)).setTaxiMode(false);
         String[] engines={"rocket_thruster","ion_drive","plasma_vent","impulse_engine"};
         for(int i=0;i<engines.length;i++) {
             Block engine=Block.getBlockFromName("vandorlabs:"+engines[i]);require(engine instanceof BlockPropulsionLight,"propulsion fixture "+engines[i]);
@@ -328,7 +329,7 @@ public final class VehicleRuntimeChecks {
                     EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                     EntityGroundVehicle e=(EntityGroundVehicle)((WorldServer)p.world).getEntityFromUuid(vehicleUUID);
                     p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);p.capabilities.isFlying=false;p.sendPlayerAbilities();
-                    e.processInitialInteract(p,EnumHand.MAIN_HAND);drivenFrom=e.posX;
+                    require(e.board(p),"driving fixture boards pilot");drivenFrom=e.posX;
                 }).get();
             }
             if(ticks==240) {
@@ -362,7 +363,7 @@ public final class VehicleRuntimeChecks {
                 mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);safeExit(p,"vehicle");
                     BlockPos pos=new BlockPos(4,101,16);IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();
-                    p.world.setBlockState(pos,state,3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(p.world,pos,state,p,new ItemStack(ModBlocks.PILOT_SEAT));
+                    p.world.setBlockState(pos,state,3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(p.world,pos,state,p,new ItemStack(ModBlocks.PILOT_SEAT));((TileEntityPilotSeat)p.world.getTileEntity(pos)).setTaxiMode(false);
                     ModBlocks.PILOT_SEAT.onBlockActivated(p.world,pos,state,p,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F);
                     require(p.isRiding(),"placed Pilot Seat mounts");
                 }).get();
@@ -376,7 +377,7 @@ public final class VehicleRuntimeChecks {
                 distantRender=new EntityGroundVehicle(mc.world);distantRender.install(new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1));distantRender.setPosition(160,120,8);
                 mc.world.addEntityToWorld(-40000,distantRender);mc.gameSettings.thirdPersonView=0;
             }
-            if(ticks>=380) {
+            if(ticks>=380 && ticks<=425) {
                 // Origin section is behind/below the camera; only the far gold hull is visible.
                 distantRender.setPosition(160,120,8);distantRender.prevPosX=distantRender.lastTickPosX=160;distantRender.prevPosY=distantRender.lastTickPosY=120;distantRender.prevPosZ=distantRender.lastTickPosZ=8;
                 mc.player.setPosition(198,139,9.5);mc.player.prevPosX=mc.player.lastTickPosX=198;mc.player.prevPosY=mc.player.lastTickPosY=139;mc.player.prevPosZ=mc.player.lastTickPosZ=9.5;
@@ -386,7 +387,9 @@ public final class VehicleRuntimeChecks {
                 require(RenderGroundVehicle.fallbackDraws()>0,"visible hull rendered with origin section behind camera");
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_distant_hull.png"));
                 System.out.println("[vandorlabs][reprolab] vehicle-distant-render PASS hidden-origin-section visible-hull");
-                System.out.println("[vandorlabs][reprolab] vehicle-live PASS rendering generic-blocks network-driving propulsion safe-dismount doors ramps channel-conversion seated-conversion 4096-blocks");mc.shutdown();
+            }
+            if(ticks>425 && VehicleInteractionRuntimeChecks.tick(mc,output) && VehicleTaxiRuntimeChecks.tick(mc,output)) {
+                System.out.println("[vandorlabs][reprolab] vehicle-live PASS rendering generic-blocks network-driving propulsion safe-dismount doors ramps channel-conversion seated-conversion 4096-blocks actual-clicks");mc.shutdown();
             }
         }catch(Exception e){throw new IllegalStateException("vehicle live checks",e);}
     }

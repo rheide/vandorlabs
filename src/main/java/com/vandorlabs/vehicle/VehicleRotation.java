@@ -1,0 +1,136 @@
+package com.vandorlabs.vehicle;
+
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.*;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.*;
+import net.minecraft.util.math.*;
+import java.util.*;
+
+/** Explicit cardinal restoration adapters. Unknown components are accepted only at zero rotation. */
+public final class VehicleRotation {
+    private VehicleRotation(){}
+    public static final class Plan {
+        public final VehicleStructure structure;
+        public final BlockPos origin;
+        Plan(VehicleStructure s,BlockPos p){structure=s;origin=p;}
+    }
+    public static int turns(float yaw) {
+        int nearest=Math.round(yaw/90F);
+        if(!Float.isFinite(yaw) || Math.abs(MathHelper.wrapDegrees(yaw-nearest*90F))>5)
+            throw new IllegalArgumentException("Align the craft to a 90-degree heading before exiting Taxi Mode or parking.");
+        return Math.floorMod(nearest,4);
+    }
+    public static Plan plan(EntityGroundVehicle craft) {
+        int turns=turns(craft.rotationYaw);VehicleStructure placed=rotate(craft.structure,craft.view,turns);
+        double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
+        return new Plan(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
+    }
+    public static BlockPos cell(BlockPos p,int width,int depth,int turns) {
+        switch(Math.floorMod(turns,4)) {
+            case 1:return new BlockPos(depth-1-p.getZ(),p.getY(),p.getX());
+            case 2:return new BlockPos(width-1-p.getX(),p.getY(),depth-1-p.getZ());
+            case 3:return new BlockPos(p.getZ(),p.getY(),width-1-p.getX());
+            default:return p;
+        }
+    }
+    private static BlockPos vector(BlockPos p,int turns) {
+        switch(turns){case 1:return new BlockPos(-p.getZ(),p.getY(),p.getX());case 2:return new BlockPos(-p.getX(),p.getY(),-p.getZ());case 3:return new BlockPos(p.getZ(),p.getY(),-p.getX());default:return p;}
+    }
+    private static boolean supported(VehicleStructure.Cell cell,TileEntity tile) {
+        if(cell.tileData()!=null && tile==null)return false;
+        String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
+        String name=tile==null?"":tile.getClass().getName();
+        // Malisis may replace vanilla registry entries while keeping the minecraft namespace.
+        if((domain.equals("minecraft") || domain.equals("malisisdoors")) &&
+                (name.equals("net.malisis.doors.tileentity.DoorTileEntity") || name.equals("net.malisis.doors.tileentity.TrapDoorTileEntity")))return true;
+        if(domain.equals("minecraft")) {
+            String blockClass=cell.state.getBlock().getClass().getName();
+            if(!blockClass.startsWith("net.minecraft.block."))return tile==null
+                    && blockClass.equals("net.malisis.doors.block.Door")
+                    && upperDoor(cell.state);
+            if(tile==null)return true;
+            if(!name.startsWith("net.minecraft.tileentity."))return false;
+            return tile instanceof net.minecraft.tileentity.TileEntityLockable
+                    || tile instanceof net.minecraft.tileentity.TileEntityEnderChest
+                    || tile instanceof net.minecraft.tileentity.TileEntitySign
+                    || tile instanceof net.minecraft.tileentity.TileEntityBanner
+                    || tile instanceof net.minecraft.tileentity.TileEntityBeacon
+                    || tile instanceof net.minecraft.tileentity.TileEntityEnchantmentTable
+                    || tile instanceof net.minecraft.tileentity.TileEntityNote
+                    || tile instanceof net.minecraft.tileentity.TileEntityComparator
+                    || tile instanceof net.minecraft.tileentity.TileEntityDaylightDetector;
+        }
+        if(domain.equals("vandorlabs")) {
+            if(tile==null)return cell.state.getBlock() instanceof BlockVandorDirectional || cell.state.getBlock() instanceof BlockVandorDoor;
+            return tile instanceof TileEntityPilotSeat || tile instanceof TileEntitySpaceDoor || tile instanceof TileEntityProgrammableTrapdoor
+                    || tile instanceof TileEntityAnimatedScreenSelector || tile instanceof TileEntityLandingGear || tile instanceof TileEntityShipSystem;
+        }
+        if(domain.equals("immersiveengineering"))return name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLadder")
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorLV")
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorMV")
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorHV");
+        if(domain.equals("mekanism"))return name.equals("mekanism.common.tile.TileEntityEnergyCube");
+        return domain.equals("malisisdoors") && tile==null && upperDoor(cell.state);
+    }
+    private static boolean upperDoor(IBlockState state) {
+        return state.getBlock() instanceof net.minecraft.block.BlockDoor
+                && state.getValue(net.minecraft.block.BlockDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER;
+    }
+    @SuppressWarnings({"rawtypes","unchecked"}) private static IBlockState state(IBlockState source,Rotation rotation) {
+        IBlockState rotated=source.withRotation(rotation);
+        // Vandor families also include directional blocks whose base class does not override withRotation.
+        if(source.getBlock().getRegistryName().getResourceDomain().equals("vandorlabs"))
+            for(IProperty property:source.getPropertyKeys())if(source.getValue(property) instanceof EnumFacing) {
+                EnumFacing facing=rotation.rotate((EnumFacing)source.getValue(property));
+                if(property.getAllowedValues().contains(facing))rotated=rotated.withProperty(property,facing);
+            }
+        return rotated;
+    }
+    private static void facing(NBTTagCompound data,String key,Rotation rotation,boolean horizontal) {
+        if(!data.hasKey(key,3))return;
+        EnumFacing before=horizontal?EnumFacing.getHorizontal(data.getInteger(key)):EnumFacing.getFront(data.getInteger(key));
+        EnumFacing after=rotation.rotate(before);data.setInteger(key,horizontal?after.getHorizontalIndex():after.getIndex());
+    }
+    public static VehicleStructure rotate(VehicleStructure source,VehicleWorld view,int turns) {
+        turns=Math.floorMod(turns,4);if(turns==0)return source;
+        int width=(int)source.bounds.maxX,depth=(int)source.bounds.maxZ;
+        Rotation rotation=Rotation.values()[turns]; // NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90
+        List<VehicleStructure.Cell> cells=new ArrayList<>();
+        for(VehicleStructure.Cell before:source.cells) {
+            if(!supported(before,view.getTileEntity(before.pos)))throw new IllegalArgumentException("Rotation is not supported for "+before.state.getBlock().getRegistryName()+". Rotate the craft back to its original heading before exiting Taxi Mode.");
+            BlockPos pos=cell(before.pos,width,depth,turns);NBTTagCompound data=before.tileData();
+            if(data!=null) {
+                data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());
+                String domain=before.state.getBlock().getRegistryName().getResourceDomain();
+                if(domain.equals("vandorlabs")) {
+                    for(String key:new String[]{"Anchor","Pair","TrapdoorPartner","TrapdoorSquare"})if(data.hasKey(key,4)) {
+                        BlockPos link=BlockPos.fromLong(data.getLong(key));
+                        if(key.equals("TrapdoorSquare") && !(view.getTileEntity(before.pos) instanceof TileEntityProgrammableDiagonalTrapdoor)) {
+                            BlockPos min=cell(link,width,depth,turns);
+                            for(BlockPos corner:new BlockPos[]{link.east(),link.south(),link.east().south()}){BlockPos p=cell(corner,width,depth,turns);min=new BlockPos(Math.min(min.getX(),p.getX()),min.getY(),Math.min(min.getZ(),p.getZ()));}
+                            data.setLong(key,min.toLong());
+                        } else data.setLong(key,cell(link,width,depth,turns).toLong());
+                    }
+                    for(String key:new String[]{"OwnerOffset","ConsoleOwnerOffset","AnchorOffset","PairOffset"})if(data.hasKey(key,4))data.setLong(key,vector(BlockPos.fromLong(data.getLong(key)),turns).toLong());
+                    NBTTagList list=data.getTagList("TrapdoorAssembly",4),updated=new NBTTagList();
+                    for(int n=0;n<list.tagCount();n++)updated.appendTag(new NBTTagLong(cell(BlockPos.fromLong(((NBTTagLong)list.get(n)).getLong()),width,depth,turns).toLong()));
+                    if(data.hasKey("TrapdoorAssembly",9))data.setTag("TrapdoorAssembly",updated);
+                    for(String key:new String[]{"TrapdoorCoverFacing","DiagonalFacing","DiagonalGroupFacing"})facing(data,key,rotation,true);
+                    facing(data,"MountFace",rotation,false);
+                    if(data.hasKey("GearOwnerX",3)){BlockPos offset=vector(new BlockPos(data.getInteger("GearOwnerX"),0,data.getInteger("GearOwnerZ")),turns);data.setInteger("GearOwnerX",offset.getX());data.setInteger("GearOwnerZ",offset.getZ());}
+                } else if(domain.equals("immersiveengineering")) {
+                    facing(data,"facing",rotation,false);
+                    NBTTagCompound old=data.copy();
+                    for(EnumFacing side:EnumFacing.values())if(old.hasKey("sideConfig_"+side.getIndex(),3))data.setInteger("sideConfig_"+rotation.rotate(side).getIndex(),old.getInteger("sideConfig_"+side.getIndex()));
+                } else if(domain.equals("mekanism"))facing(data,"facing",rotation,false);
+            }
+            try{cells.add(new VehicleStructure.Cell(pos,state(before.state,rotation),data));}
+            catch(RuntimeException | LinkageError failure){throw new IllegalArgumentException("Cannot rotate "+before.state.getBlock().getRegistryName()+" safely. Rotate back to the original heading before parking.",failure);}
+        }
+        return new VehicleStructure(cells,cell(source.seat,width,depth,turns),rotation.rotate(source.facing),source.gearCount);
+    }
+}
