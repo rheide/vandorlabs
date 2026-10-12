@@ -11,7 +11,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
-**2.0-alpha:** Add Configurizer-driven ground vehicles with W/S driving and A/D steering, reversible block/NBT capture, programmable materials, safe seat exits and movement-driven propulsion brightness, adjustable third-person distance, operable doors, extended ramp capture and Pilot Seat channel toggles. See the [ground vehicle guide](docs/ground-vehicles-analysis.md) and [smoothing/performance handoff](docs/ground-vehicles-handoff.md). Turning smoothness remains alpha work.
+**2.0-alpha:** Add Taxi Mode ground vehicles: sit to assemble and exit to park, or disable Taxi Mode for manual Configurizer conversion. Includes W/S driving and A/D steering, reversible block/NBT capture, programmable materials, safe seat exits, movement-driven propulsion brightness, adjustable third-person distance, operable doors and normal/diagonal trapdoors, guarded cardinal parking, extended ramp capture and Pilot Seat channel toggles. See the [ground vehicle guide](docs/ground-vehicles-analysis.md) and [smoothing/performance handoff](docs/ground-vehicles-handoff.md). Turning smoothness remains alpha work.
 
 **1.8-alpha:** Add canopy components and decorative ship systems, including connected Vektor console surfaces, machine-specific activity colors, and floor/wall/ceiling mounting. See the [canopy guide](docs/canopies.md).
 
@@ -286,6 +286,8 @@ meshes have hidden/coplanar overlaps removed to prevent coincident surfaces.
 Requirements: a Java 8 JDK, Python 3 with Pillow, and the included Gradle wrapper (Gradle 4.9 +
 ForgeGradle 3).
 
+Local runtimes, dependency caches and compatibility fixtures can be kept under the ignored `build/tooling/` directory. `clean` preserves this directory. If the local Windows build helper is installed, run `.\build\tooling\build-local.ps1` to select those runtimes and caches automatically.
+
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64   # or equivalent JDK 8
 ./gradlew clean build --no-daemon
@@ -297,6 +299,12 @@ On Windows, set `JAVA_HOME` to your Java 8 JDK and run from PowerShell:
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 .\gradlew.bat clean build --no-daemon
 ```
+
+For subsequent builds, omit `clean` to reuse compiled classes and processed
+assets. Resource copying, texture installation and model compaction share one
+tracked task, so unchanged assets are skipped. Changes to source assets,
+texture packs, compaction/pruning scripts or texture-retirement definitions
+invalidate that task automatically.
 
 The build uses `python` on Windows and `python3` on other systems. The selected
 interpreter must have Pillow installed (`python -m pip install Pillow`). Override
@@ -405,11 +413,11 @@ Stop and use the Configurizer on any craft surface, or while seated, to park it 
 
 For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
 
-On Windows, build with Java 8, then use `python testclient/run_windows.py`
-with a HotSpot Java 8 runtime on `PATH` (or supplied through `--java`).
-It uses the installed Forge profile and assets, runs in an isolated test world,
+On Windows, build with Java 8, then use `build/tooling/python-runtime/python.exe testclient/run_windows.py`
+with the repository-local runtime, or another Python interpreter.
+The launcher defaults to Java 8, Forge profiles, libraries, assets and compatibility fixtures under `build/tooling/`; `--java` and `--minecraft-dir` override these locations. It runs in an isolated test world,
 hides its window and disables sound. `--focus pilot-seat` runs the seating and
-model checks; omit it to run the full client scenarios. Inspect the reported
+model checks; `--focus vehicles` runs vehicle checks, while `--focus vehicle-taxi` runs only Taxi Mode UI, preservation and recovery checks. For foreign block preservation coverage, add `--vehicle-preservation-mods build/tooling/vehicle-compat`, containing Mekanism 9.8.2.389, MalisisCore 6.5.1 and MalisisDoors 7.3.0. Omit the focus option to run the full client scenarios. Inspect the reported
 screenshots and run the pixel analyzers before treating a full run as passed.
 The Linux launcher is also muted and uses its existing virtual display.
 

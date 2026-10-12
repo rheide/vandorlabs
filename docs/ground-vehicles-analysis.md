@@ -1,13 +1,14 @@
 # Ground vehicles: 2.0 design and implementation
 
-The Configurizer converts a connected craft into one persistent vehicle entity and parks it back as blocks. Sitting only mounts the player. The craft drives forward/backward and steers on the ground. There is no flight, engine requirement or fuel system.
+Taxi Mode converts a connected craft into one persistent vehicle entity when its Pilot Seat is occupied and restores blocks on exit. The Configurizer provides manual assembly and parking when Taxi Mode is disabled. The craft drives forward/backward and steers on the ground. There is no flight, engine requirement or fuel system.
 
 ## Player interaction
 
 1. Build a craft with exactly one Pilot Seat and at least one landing gear. Leave air between the hull and surrounding buildings or terrain; only landing gear should touch the ground.
-2. Use the Configurizer on either cell of the Pilot Seat. Inspect the highlighted selection and choose **Assemble**.
-3. Right-click the assembled craft to sit. **W/S** accelerates forward/backward along the current heading, **A/D** steers, **Space** brakes, and **Sneak** dismounts. Steering requires motion and reverses when backing up.
-4. Stop and use the Configurizer anywhere on the craft, including while seated. **Park as blocks** restores it at the highlighted grid position, with its original orientation. Obstructed destinations are rejected. A seated pilot transfers between the vehicle and the placed seat; a player inside a parked craft is seated if needed to avoid the grid snap placing blocks through them.
+2. Right-click either Pilot Seat cell to sit and assemble in Taxi Mode. If Taxi Mode is off, use the Configurizer on the seat, inspect the highlighted selection and choose **Assemble**.
+3. **W/S** accelerates forward/backward along the current heading, **A/D** steers, and **Space** brakes. Steering requires motion and reverses when backing up.
+4. Align to a cardinal heading and **Sneak** to exit. Taxi Mode restores blocks automatically; an unknown rotation adapter keeps the pilot seated and requests the original heading. An obstructed destination preserves the craft and retries. In manual mode, stop and use the Configurizer on the craft, including while seated, then choose **Park as blocks**. The preview highlights the actual restored cells. Manual parking transfers a seated pilot to the placed seat.
+
 
 In third person, mouse look orbits the pilot and the mouse wheel adjusts camera distance from 4 to 96 blocks. The default distance scales with craft dimensions. Terrain shortens the camera arm.
 
@@ -23,11 +24,19 @@ Discovery is a six-face flood fill starting at the seat, processed in slices of 
 
 The limits are 4,096 occupied cells, 64 cells on each axis, 4 MiB of serialized structure data, and 8,192 merged collision boxes. Unloaded boundaries, fluids, unbreakable blocks, incomplete known components and limits fail without partially assembling a craft. Moving canopies, gear and controlled ramps must settle first. Ramp controllers follow their reserved cells even when extended geometry is separated from the hull. Their current extended pose, source materials, textures and recovery journals are retained. Ramps remain fixed in vehicle mode and resume normal operation after parking.
 
-General registered blocks from other mods are accepted, including non-cube blocks and tile entities. There is no mod/block allowlist. Full block properties and persistent tile NBT are stored separately from the vehicle's presentation. Foreign tile entities do not tick while assembled; machines, inventories and networks cannot be operated in vehicle mode. The Pilot Seat receiver continues to read the real dimension's redstone channels. Vanilla and Vandor doors can be opened/closed manually in vehicle mode, including paired Vandor doors and 3x3 doors; their redstone networks and settings menus remain suspended until parking. Door clicks select actual block surfaces, update collision and preserve saved tile settings. Vanilla iron doors also allow manual vehicle-mode interaction.
+General registered blocks from other mods are accepted, including non-cube blocks and tile entities. There is no mod/block allowlist. Full block properties and persistent tile NBT are stored separately from the vehicle's presentation. Foreign tile entities do not tick while assembled; machines, inventories and networks cannot be operated in vehicle mode. The Pilot Seat receiver continues to read the real dimension's redstone channels. Vanilla and Vandor doors and trapdoors can be opened/closed manually in vehicle mode, including paired Vandor doors, 3x3 doors, and programmable normal/diagonal trapdoor groups; their redstone networks and settings menus remain suspended until parking. Door clicks select actual block surfaces, update collision and preserve saved tile settings. Vanilla iron doors also allow manual vehicle-mode interaction.
 
 The local world view feeds the blocks' existing models and collision code. If a mod cannot supply a local tile/model/collision shape, presentation is best effort: unavailable tiles are skipped, failing block models use a missing-model placeholder, and failing collision shapes use their cell-sized box. Those fallbacks never replace the stored original block or tile data. Parking reconstructs original block types, properties and NBT, translating tile positions. Foreign mod-specific absolute links remain opaque; the owning mod may need to rebuild its networks or multi-block relationships after relocation. Generic machine simulation is outside scope.
 
 Known Vandor multi-cell adapters include seat backrests, doors, canopies, ship systems, trapdoor assemblies, controlled ramps and telescopic gear footprints. Absolute Vandor ownership links are translated; relative links remain unchanged. Programmable built-in, filesystem, custom-block and per-face material settings remain in full tile NBT.
+
+## Taxi Mode and parking orientation
+
+Pilot Seats default to Taxi Mode: sitting assembles the connected craft and exiting restores blocks. Disable Taxi Mode in the placed seat's sneak-right-click dialog or the Configurizer preview for manual conversion. Taxi Mode preserves the same capture limits, landing-gear boundary and permission checks as manual assembly.
+
+Parking accepts headings within five degrees of a 90-degree step and rotates supported block states and saved settings together. Unknown rotation adapters refuse conversion before mutation, keep the driver seated, and request the original heading. Zero rotation remains available for opaque foreign data. Rotation support is deliberately per family; it does not imply support for arbitrary mod machines or multi-block networks.
+
+A blocked automatic return retains the complete stopped vehicle and a saved retry request. Clear the obstruction for an automatic retry, or reboard to cancel the pending return and move the craft. Conversion never overwrites occupied cells or bypasses protection rules. Retry requires the initiating player online in the same dimension.
 
 ## Storage and transfer
 

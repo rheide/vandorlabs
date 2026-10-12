@@ -2,63 +2,39 @@
 
 ## Current state
 
-The 2.0 alpha implements reversible Configurizer assembly/parking, a sittable Pilot Seat, W/S acceleration, A/D steering, braking, safe exits, adjustable third-person distance, programmable materials, movement-driven propulsion brightness, manual vanilla/Vandor doors, extended ramp capture and channel-triggered conversion. Limits are 4,096 occupied cells, 64 cells per axis, 4 MiB serialized data and 8,192 merged collision boxes. There is no flight, engine requirement or fuel system. Parking restores the original orientation at a grid position, rather than rotating block states into the current driving heading.
+The 2.0 alpha implements reversible Configurizer assembly/parking, a sittable Pilot Seat, W/S acceleration, A/D steering, braking, safe exits, adjustable third-person distance, programmable materials, movement-driven propulsion brightness, manual vanilla/Vandor doors, extended ramp capture and channel-triggered conversion. Limits are 4,096 occupied cells, 64 cells per axis, 4 MiB serialized data and 8,192 merged collision boxes. There is no flight, engine requirement or fuel system. Parking restores blocks at a nearby grid position in 90-degree steps. Non-cardinal headings and unrecognized rotation adapters are refused; unknown components remain restorable at the original heading.
 
 Foreign blocks and tile NBT are retained. Their rendering and collision are best effort; arbitrary machines do not tick or operate while assembled. Known Vandor multi-block ownership and ramp coordinates are translated. Inertial dampeners retain their complete component geometry and settings; this does not add inertial simulation. Ramps retain their captured pose. Walking on a stationary craft is supported; carrying unseated players on moving or rotating decks is not implemented.
 
 The [implementation guide](ground-vehicles-analysis.md) describes compatibility and transfer guarantees. This document distinguishes code findings from hypotheses and proposes the next work; it does not claim that turning is already smooth or that maximum-size craft meet a frame-time target.
 
-Subsequent testing reports three interaction gaps: a large assembled craft can be solid yet impossible to board by clicking its Pilot Seat, programmable doors do not open/close in vehicle mode, and the assembly/parking dialog has no redstone channel field. Channel-triggered conversion exists, but its settings are currently exposed only through the separate placed-seat channel menu. These issues remain open; the investigation below adds follow-ups without changing gameplay code or the `t140` JAR.
+## Taxi Mode and cardinal parking
 
-## New priority: large-craft boarding and channel configuration
+Pilot Seats default to **Taxi Mode: ON**, including older seats without a saved setting. Sitting starts a bounded connected-craft scan and transfers the seated player to the assembled craft. Exiting stops the craft and restores its blocks without remounting the player. Turn Taxi Mode off in the placed seat's sneak-right-click settings or the Configurizer preview to keep conversion manual. The preview toggle saves immediately; Done saves the placed-seat settings.
 
-### Boarding: identified code paths and failure mechanisms
+Parking supports cardinal headings only, with a five-degree alignment tolerance. Unknown rotation adapters prevent exit while keeping the driver seated; return to the original heading before exiting. The rotation preflight runs before any blocks change. The preview highlights the actual rotated cells. Supported adapters cover native block states, common vanilla inventory tiles, Vandor seats/programmable doors/trapdoors/material selectors/landing gear/ship systems, IE ladders and LV/MV/HV capacitors, Mekanism energy cubes, and standard Malisis door/trapdoor tiles, including vanilla registry replacements. Other machines and multi-block systems require individual adapters. Their full saved state can still return at zero rotation.
 
-The reported symptom is a solid, assembled large craft whose Pilot Seat does nothing when right-clicked. This investigation inspected the current source and the mapped Minecraft/Forge 1.12.2 bytecode; it did not reproduce the user's particular structure in a live client.
+An obstructed automatic return preserves a stopped craft and retries once per second. Reboarding cancels that pending return. Pending status and actor identity survive entity saves and transfer rollback. No parking operation overwrites an obstruction or bypasses protection events. Automatic retry requires the initiating player to be online in the same dimension with permission to place the blocks. Manual Configurizer parking remains available.
 
-1. Once assembled, the visible Pilot Seat is stored geometry, not a world block. Its `BlockPilotSeat.onBlockActivated` cannot receive ordinary block clicks. Boarding requires the vehicle entity interaction path.
-2. `EntityGroundVehicle.processInitialInteract` can mount a player, but relies on vanilla delivering an entity interaction. `VehicleClient` has no general right-click route for the captured seat. `VehicleLookup.pointed` is used by `ItemConfigurizer`, so its distant-hull fix reaches parking but not empty-hand boarding or generic door interaction.
-3. Vanilla `EntityRenderer.getMouseOver` discovers candidates through `WorldClient.getEntitiesInAABBexcluding`, which uses origin-based chunk/section indexing. A seat far from the craft origin can miss discovery despite the full collision/render bounds.
-4. Independently, vanilla `NetHandlerPlayServer.processUseEntity` requires player-to-entity **origin** distance squared to be less than 36 when visible, or 9 when not visible. Even a successful client pick can be silently rejected before `processInitialInteract` when a player is beside a distant seat. Increasing entity bounds or fixing only client picking cannot remove this server gate.
-5. Existing live checks mount by scheduling a direct server call to `processInitialInteract` (`VehicleRuntimeChecks.tick`), bypassing both discovery and packet reach validation. The distant-hull test verifies Configurizer targeting and floor/render coverage, not real mouse-click boarding. Those passing checks therefore do not cover this report.
+## Boarding and programmable door corrections
 
-These are verified architectural gaps consistent with the symptom. After boarding is repaired, verify that actual driving input reaches the mounted vehicle before diagnosing a separate large-hull movement/collision stall. Also surface occupied-seat and unavailable-snapshot conditions instead of silently doing nothing.
+Captured Pilot Seat cells and doors now share a surface-based right-click route. Client selection searches loaded craft independently of vanilla's origin-chunk entity index. A dedicated interaction packet carries the entity ID, UUID and selected local cell; the server independently selects the nearest actual surface from the player's current eyes and simulation pose. Reach, terrain, nearer captured geometry, ordinary entity occlusion, spectator status and craft availability are checked before dispatch through Forge's normal entity interaction hook.
 
-**Follow-up B1 — one craft interaction route, before smoothing work:**
+This removes vanilla's entity-origin distance gate for supported craft interactions without increasing global interaction reach. Configurizer parking takes priority, followed by door interaction and explicit Pilot Seat boarding. Arbitrary hull clicks do not board the craft. Mouse clicks are consumed before duplicate vanilla/off-hand dispatch; keyboard use also has a Forge event fallback. Boarding resets the driver's pending input history and reports an occupied seat.
 
-- Add shared craft-local hit testing that returns entity identity, local cell, hit point and intended action. Use actual selection shapes where available, with a bounded best-effort fallback for unknown mod blocks. Respect intervening terrain and nearer captured cells. The full enclosing hull must not act as an invisible solid target from inside a cabin.
-- Route actual client right-clicks on captured Pilot Seat cells through a dedicated vehicle interaction message. Include entity ID/UUID and bounded action/hit information. The server must independently ray-test from the player's current eyes against the current simulation pose, validate reach to the actual hit surface, same world, alive/available craft, spectator status and seat occupancy. Never trust a client-selected cell or relax global vanilla reach checks.
-- Keep the Configurizer's parking action and door action priorities explicit. Reuse the same route for distant door interaction so it does not retain the same vanilla failure. Consume each click once; prevent main/off-hand duplication and duplicate vanilla/custom packet actions. Return actionable feedback when boarding is rejected. Preserve seated conversion and independent mouse look.
-- Confirm player mounting on the server before enabling driving controls. Keep one authoritative mounting method shared with existing interaction code; reset the current driver's input history consistently. Do not change the craft origin to the seat as a shortcut: collision, persistence, parking and snapshot transforms currently use the structure minimum corner.
+Door selection uses block ray callbacks, including open leaves and programmable door geometry, rather than an unrelated head-yaw ray. Door changes validate complete two-cell, paired four-cell and large nine-cell groups, plus vanilla and programmable trapdoor groups of up to 64 cells before replacing captured OPEN states. Patches preserve tile settings and reach both tracking clients and the controlling rider. Arbitrary tile ticking remains disabled.
 
-**B1 acceptance tests:** Use genuine client clicks and network dispatch, rather than calling the mount method directly. Board seats more than six blocks from the origin, across X/Z chunks and Y sections, from inside and outside the hull, at several headings, with origin offscreen. Exercise both seat cells and the model's protruding bounds. Assert server/client riding identity, then W/S and A/D input/motion. Check an occupied seat, spectators, blocked sight, stale UUIDs, out-of-reach clicks, off-hand duplication, nearby doors and Configurizer parking. Add a dedicated-server case to expose packet reach assumptions hidden by integrated-server fixtures.
+The focused live client suite uses real vanilla right-click dispatch and network messages for lower/upper seats more than six blocks from the craft origin, rotated boarding, subsequent steering/propulsion input, and open/close cycles for normal, paired and 3x3 programmable doors at two headings. Normal and diagonal trapdoors cover all three placement positions, hinged/sliding motion and transformed partner links. It checks component states on client/server and retained material settings. Taxi checks exercise both settings dialogs, repeated quarter-turn parking, blocked/cancelled return and retry, saved pending state, and unsupported-heading exit refusal. With the optional foreign fixtures installed, immediate placement audits compare every captured state and complete tile NBT, including furnace/chest inventories, nonzero IE/Mekanism energy, IE side configuration and Malisis descriptors. The launcher rejects asynchronous event/spawn exceptions as well as missing completion markers.
 
-### Programmable doors: reported inoperative, incompletely tested
-
-The user reports that none of the programmable doors open or close after conversion. Treat this as an open gameplay defect, despite the earlier generic door-state tests. The specific craft and door designs were not reproduced during this documentation investigation.
-
-`VehicleDoors.interact` is called only by `EntityGroundVehicle.processInitialInteract`, after the Configurizer branch. It therefore shares both vanilla click-discovery and origin-distance rejection with boarding. Its local ray also uses `player.getLook(1)`, which reads `rotationYawHead` in `EntityLivingBase`; the Configurizer fix instead uses the player's current pitch/yaw. Unifying the click ray avoids a second inconsistent server targeting direction. These are concrete gaps, but do not establish that every reported failure is solely a reach issue.
-
-Programmable doors are not excluded by the door predicate: `BlockConfigurableSpaceDoor` inherits through `BlockSpaceDoor` to `BlockVandorDoor`, and `BlockLargeProgrammableDoor` derives from it. There is existing 3x3 root/group handling in `VehicleDoors.toggle`, and `apply` updates captured OPEN states and reinstalls geometry. However, the live fixture explicitly excludes both configurable and large programmable doors when selecting its Vandor test door, then calls `VehicleDoors.toggle` directly. It verifies vanilla/basic Vandor state changes; it verifies neither programmable door variants nor actual click routing, visual animation or walk-through clearance.
-
-`TESlidingDoor` derives its animation from live OPEN state and a visual clock without tile ticking. Do not enable arbitrary fake-world tile ticks as a speculative door fix. Trace whether the click arrives, selects the intended component, changes all owned cells, reaches tracking clients and updates collision/rendering before changing animation behavior.
-
-**Follow-up D1 — restore actual programmable door interaction alongside B1:**
-
-- Use the shared validated craft-local click route for doors, selecting the first actual surface and identifying the correct lower/root cell. Prioritize the door action over boarding so a failed door target does not silently mount the player. Keep Configurizer parking distinct.
-- Trace server target selection and OPEN state, the door patch, client OPEN state, renderer animation and rebuilt collision. Validate two-cell, paired and 3x3 groups; preserve private material/settings NBT. A failed/missing root must report a useful error instead of appearing to do nothing.
-- Exercise closed and open geometry, including frames/control panels and displaced/sliding leaves. Confirm a second click can close an open door when its leaf no longer occupies the original doorway. Check the documented manual vehicle-mode behavior regardless of saved redstone trigger, while restoring that trigger on parking.
-- Audit client synchronization for the controlling rider as well as other trackers. The current DOORS packet broadcasts to tracking players; verify actual receipt instead of assuming the rider is always covered. Keep patches bounded and validate every cell against the authoritative door group.
-
-**D1 acceptance tests:** Click real programmable doors through the client/network path in small and large craft, from both sides, far from the origin and after rotation. Cover normal two-cell doors, paired doors and 3x3 doors, hinged/sliding/vertical/split motions, frames, placement depths and custom/per-face materials where supported. Assert all component OPEN states on server and client, visible open/close motion, passage when open and blocking when closed, closing via an accessible leaf/frame/control surface, and unchanged settings after parking/reload. Include a remote observer, unrelated nearby doors and occluded/out-of-reach targets. Existing direct-toggle tests remain useful unit-level coverage but cannot close this report.
+Remaining validation limits include dedicated-server/multiple-observer coverage and the complete matrix of programmable door motions, frames, placement depths and per-face materials. The live click fixture is representative coverage, not a claim that every foreign block interaction works.
 
 ### Channels: existing support versus missing dialog integration
 
 `TileEntityPilotSeat` implements `RedstoneChannelMember`, persists its channel list and polls rising edges. `BlockPilotSeat.onBlockActivated` opens `GUI_REDSTONE_CHANNEL` only on sneak-right-click of a **placed** seat (either cell resolves to the lower tile). `ItemConfigurizer.onRightClickBlock` forwards that sneaking case; ordinary Configurizer use opens assembly preview. `GuiHandler`, `GuiRedstoneChannel` and `MessageRedstoneChannel` support the placed tile and its generic channel field.
 
-The dialog in `VehicleClient.Preview` only creates Assemble/Park and Cancel buttons; it contains no channel field or settings action. There is no dedicated Pilot Seat configuration screen. In vehicle mode, the seat is a tile in `VehicleWorld`, while the existing container/message resolve the tile from the real world at a block position. They cannot safely configure an assembled seat. The channel conversion regression calls `setRedstoneChannel` directly and therefore proves pulse behavior/persistence, not discoverability or GUI editing.
+The Configurizer preview provides Assemble/Park, Cancel and Taxi Mode controls, but contains no channel field. The placed Pilot Seat settings dialog combines channel entry and Taxi Mode. In vehicle mode, the seat is a tile in `VehicleWorld`, while the channel container/message resolve the tile from the real world at a block position. They cannot configure an assembled seat's channels. The channel conversion regression calls `setRedstoneChannel` directly and therefore proves pulse behavior/persistence, not assembled channel editing.
 
-The user's exact screen was not captured. If it is the ordinary assembly/parking preview, the missing field is confirmed by its implementation. If it is the separate placed-seat Redstone Channels menu, the code does create a field: investigate opening the wrong screen, client tile synchronization or running an older build rather than assuming a missing widget there.
+The separate placed-seat Redstone Channels menu already contains a channel field. Missing fields there require checking screen selection, client tile synchronization and build version independently of assembly/parking dialog integration.
 
 **Follow-up C1 — expose channels in the Pilot Seat/vehicle dialog:**
 
@@ -69,7 +45,55 @@ The user's exact screen was not captured. If it is the ordinary assembly/parking
 
 **C1 acceptance tests:** Open the settings through real UI interactions on lower/upper placed seat cells and from the assembly/parking dialog; assert field visibility, saved-value display, editing, validation and Cancel behavior. Save a channel list through the actual packet, close/reopen, assemble while seated, park and reload; assert the list survives. Test fresh pulses, held-high changes, permissions, an obsolete preview and an unrelated real-world tile sharing the same coordinates as the vehicle-local seat. Do not substitute a direct setter call for these checks.
 
-These follow-ups extend the earlier verification scope. Address B1 and D1 together through the shared interaction route, then C1 and the smoothing/performance work below. A craft that cannot be boarded cannot be used to assess steering improvements.
+Channel dialog integration and smoothing/performance changes remain deferred. The current scope keeps vehicle mode simple and fixes boarding and manual door interaction.
+
+### Shared selection foundation
+
+`VehicleSelection` provides simulation-pose surface selection and classifies the nearest captured cell as a seat, door or other surface. It uses block selection callbacks, including protruding seat bounds and partial blocks; unknown callbacks that fail use a bounded cell fallback. Callers supply the nearest terrain or other-craft distance, with ties occluded. Empty space inside a hull is not a target.
+
+`testVehicleSelection` checks distant lower/upper seat cells, protruding bounds, cabin gaps, slab/door shapes, occlusion, invalid rays, rotated transforms and interaction packet identity without a renderer. Production client/server interactions use this selector; the live suite covers actual click dispatch separately.
+
+## Deferred interactive onboard systems
+
+Working inventories and configurable blocks require more than forwarding a click.
+`VehicleWorld` is currently read-only and reports `isRemote=true` on both sides;
+block mutations and update notifications are discarded. Its tiles do not tick.
+Entity saves and parking serialize `VehicleStructure`, rather than the mutable
+tile instances in the local view. Existing GUIs, container reach checks and
+settings packets address real-world block positions. Calling their activation
+callbacks unchanged is therefore insufficient and can lose onboard edits.
+
+If this feature is resumed, use explicit adapters for vanilla chests and Vandor storage, screens, lights and
+controls. Preserve unsupported blocks and NBT without activating arbitrary mod
+machines. Do not enable unrestricted tile ticking in the presentation world.
+
+Implementation dependencies and acceptance boundaries:
+
+1. Complete shared interaction routing and independent server selection for
+   boarding, doors and supported onboard blocks. Identify targets by craft UUID
+   and local cell; authorize using actual transformed reach and current ownership.
+2. Establish one authoritative mutable onboard state with bounded revisions.
+   Save, unload/reload, parking, transfer journals and rollback must all use its
+   current contents. Door and settings patches must preserve inventory changes.
+3. Add craft-aware container sessions. Reuse slot-transfer logic, but validate
+   transformed distance and tile identity; close sessions on conversion, removal
+   or loss of access. Keep inventory payloads out of public appearance snapshots.
+   Test shift-clicks, simultaneous viewers, disconnects and parking during use
+   before claiming protection against item loss or duplication.
+4. Adapt screen and light configuration messages to authenticated onboard
+   sessions. Synchronize appearance revisions and invalidate affected meshes.
+   Distinguish emissive fixture rendering from actual illumination of terrain:
+   the current view has no moving-world light propagation.
+5. Define whether channel signals are isolated per craft or connected to world
+   channels before enabling onboard controls. Separate this from physical vanilla
+   redstone wiring, scheduled block updates, automation and foreign machine ticks.
+6. Run real client and dedicated-server tests for interaction, GUI synchronization,
+   persistence and multiple players. Headless selection and NBT tests alone do not
+   validate these features.
+
+This is a staged feature rather than a generic compatibility switch. Full
+foreign-machine behavior would require ongoing integration work for world,
+chunk, ticking, capability, networking and relocation assumptions.
 
 ## Corrections included in this handoff
 
