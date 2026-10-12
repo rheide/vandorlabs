@@ -16,8 +16,8 @@ for path in pairs:
     channels=ImageChops.difference(a,b).split()
     difference=ImageChops.lighter(ImageChops.lighter(channels[0],channels[1]),channels[2])
     histogram=difference.histogram()
-    fraction=sum(histogram[25:])/(a.width*a.height)
-    assert fraction < .015, f'Placement-order render difference {fraction:.2%}: {path.name}'
+    fraction=sum(histogram[9:])/(a.width*a.height)
+    assert fraction < .0001, f'Placement-order render difference {fraction:.2%}: {path.name}'
     tile = Image.new('RGB', (320, 112), '#17232d')
     # Keep the fixtures large enough to inspect instead of filling the index with sky.
     tile.paste(Image.open(path).convert('RGB').crop((260,260,1040,480)).resize((320,90)), (0,22))
