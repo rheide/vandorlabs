@@ -13,6 +13,9 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
+// Local runtimes and dependency caches survive clean; only generated outputs are removed.
+clean.setDelete({ file(buildDir).listFiles()?.findAll { it.name != 'tooling' } ?: [] })
+
 // Windows Python installations normally provide python.exe rather than python3.
 def pythonExecutable = project.findProperty('pythonExecutable') ?: (
         System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
@@ -344,12 +347,15 @@ processResources.dependsOn testCopyCompatibility
 // Install the chosen runtime texture tree after static resources are copied.
 // Exact path matching against the archived original set prevents an incomplete
 // default pack from silently dropping textures.
-task installDefaultTextures {
-    dependsOn processResources
+// Keep copying and transformation in one task: a later task modifying this
+// output would invalidate processResources on every subsequent build.
+processResources {
     inputs.dir('texture-packs/additional/assets/vandorlabs/textures')
     inputs.dir('texture-packs/default/assets/vandorlabs/textures')
     inputs.dir('texture-packs/original/assets/vandorlabs/textures')
-    outputs.upToDateWhen { false }
+    inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py')
+    inputs.file('src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java')
+    inputs.property('pythonExecutable', pythonExecutable)
     doLast {
         def target = file("$buildDir/resources/main/assets/vandorlabs/textures")
         def replacement = file('texture-packs/default/assets/vandorlabs/textures')
@@ -379,13 +385,17 @@ task installDefaultTextures {
             into target
         }
         exec {
-            commandLine pythonExecutable, 'tools/compact_runtime_assets.py', '--stage', target.parentFile
+            commandLine pythonExecutable, 'tools/compact_runtime_assets.py', '--stage', target.parentFile, '--models-staged'
         }
         exec {
             commandLine pythonExecutable, 'tools/prune_retired_textures.py', '--stage', target.parentFile
         }
         logger.lifecycle("Installed ${supplied.size()} default runtime textures")
     }
+}
+
+task installDefaultTextures {
+    dependsOn processResources
 }
 
 jar.dependsOn installDefaultTextures
@@ -475,17 +485,10 @@ processResources {
     inputs.property "version", project.version
     inputs.property "mcversion", "1.12.2"
 
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-
-        // replace version and mcversion
+    // The Java plugin already copies sourceSets.main.resources. Filter that
+    // existing copy instead of adding the entire resource tree a second time.
+    filesMatching('mcmod.info') {
         expand 'version': project.version, 'mcversion': "1.12.2"
-    }
-
-    // copy everything else except the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
     }
 }
 

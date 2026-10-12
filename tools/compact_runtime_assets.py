@@ -23,11 +23,12 @@ def redirect(value,texture_aliases):
     if isinstance(value,dict):return {k:redirect(v,texture_aliases) for k,v in value.items()}
     return value
 
-def stage(directory):
+def stage(directory, models_staged=False):
     textures=directory/'textures';models=directory/'models'
-    shutil.rmtree(models,ignore_errors=True)
-    for source in [ROOT/'src/main/resources/assets/vandorlabs/models',ROOT/'generated-resources/assets/vandorlabs/models']:
-        shutil.copytree(source,models,dirs_exist_ok=True)
+    if not models_staged:
+        shutil.rmtree(models,ignore_errors=True)
+        for source in [ROOT/'src/main/resources/assets/vandorlabs/models',ROOT/'generated-resources/assets/vandorlabs/models']:
+            shutil.copytree(source,models,dirs_exist_ok=True)
     before_models=list(models.rglob('*.json'))
     before_bytes=sum(p.stat().st_size for p in before_models)
     # Drop actual old High artwork and legacy root copies; redirect references first.
@@ -51,10 +52,21 @@ def stage(directory):
         if entry.get('alias'):
             aliases['vandorlabs:blocks/unified/'+entry['id']]='vandorlabs:blocks/unified/'+entry['alias']
     removed=0
+    templates={};reused=0
+    shared=models/'block/runtime_shared';shared.mkdir(parents=True,exist_ok=True)
     for file in before_models:
         if 'high' in file.relative_to(models).parts:
             file.unlink();removed+=1;continue
         model=redirect(json.loads(file.read_text()),aliases)
+        if model.get('elements') and 'parent' not in model:
+            geometry={k:v for k,v in model.items() if k!='textures'}
+            encoded=json.dumps(geometry,sort_keys=True,separators=(',',':'))
+            name=hashlib.sha256(encoded.encode()).hexdigest()[:16]
+            if name not in templates:
+                (shared/(name+'.json')).write_text(encoded+'\n');templates[name]=encoded
+            elif templates[name]!=encoded:raise AssertionError('Geometry hash collision')
+            model=dict(parent='vandorlabs:block/runtime_shared/'+name,textures=model.get('textures',{}))
+            reused+=1
         file.write_text(json.dumps(model,separators=(',',':'))+'\n')
     for path in sorted(models.rglob('high'),reverse=True):
         if path.is_dir():shutil.rmtree(path)
@@ -65,22 +77,11 @@ def stage(directory):
         import re
         text=re.sub(r'filename=blocks/space_doors/([^/\s,]+\.png)',r'filename=blocks/space_doors/medium/\1',text)
         file.write_text(text)
-    # Existing asset names remain small children of shared geometry templates.
-    templates={};reused=0
-    for file in list(models.rglob('*.json')):
-        model=json.loads(file.read_text())
-        if model.get('elements') and 'parent' not in model:
-            geometry={k:v for k,v in model.items() if k!='textures'}
-            encoded=json.dumps(geometry,sort_keys=True,separators=(',',':'))
-            name=hashlib.sha256(encoded.encode()).hexdigest()[:16]
-            if name not in templates:
-                target=models/'block/runtime_shared'/(name+'.json');target.parent.mkdir(parents=True,exist_ok=True)
-                target.write_text(encoded+'\n');templates[name]=encoded
-            elif templates[name]!=encoded:raise AssertionError('Geometry hash collision')
-            file.write_text(json.dumps(dict(parent='vandorlabs:block/runtime_shared/'+name,textures=model.get('textures',{})),separators=(',',':'))+'\n')
-            reused+=1
     after_models=list(models.rglob('*.json'))
     print('Runtime assets: removed',removed,'High models;',reused,'geometry models share',len(templates),'templates;',len(after_models),'models;',before_bytes,'->',sum(p.stat().st_size for p in after_models),'JSON bytes')
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--stage',type=Path,required=True);stage(parser.parse_args().stage)
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--stage',type=Path,required=True)
+    parser.add_argument('--models-staged',action='store_true',help='Use models already copied by resource processing')
+    args=parser.parse_args();stage(args.stage,args.models_staged)
