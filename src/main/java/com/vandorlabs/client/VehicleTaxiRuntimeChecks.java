@@ -57,6 +57,15 @@ public final class VehicleTaxiRuntimeChecks {
         Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}
         require(gear!=null,"landing gear fixture");w.setBlockState(origin,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(origin)).configure(0,0,0,0);
         for(int x=0;x<=8;x++)w.setBlockState(origin.add(x,1,0),Blocks.STONE.getDefaultState(),2);
+        // Two independent roots touch vertically; the hull reaches both around either side.
+        // Each root also queues itself, exercising duplicate ownership and hull paths together.
+        for(BlockPos offset:new BlockPos[]{new BlockPos(8,2,0),new BlockPos(8,3,0),new BlockPos(9,3,0),
+                new BlockPos(10,1,0),new BlockPos(10,2,0),new BlockPos(10,3,0)})
+            w.setBlockState(origin.add(offset),Blocks.STONE.getDefaultState(),2);
+        for(int y=1;y<=2;y++) {
+            BlockPos at=origin.add(9,y,0);w.setBlockState(at,gear.getDefaultState(),2);
+            ((TileEntityLandingGear)w.getTileEntity(at)).configure(0,0,0,0);
+        }
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();w.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,seat,state,p,new ItemStack(ModBlocks.PILOT_SEAT));
         require(((TileEntityPilotSeat)w.getTileEntity(seat)).isTaxiMode(),"new seats default to Taxi Mode");
         TileEntityPilotSeat legacy=new TileEntityPilotSeat();legacy.readFromNBT(new NBTTagCompound());require(legacy.isTaxiMode(),"legacy seats default to Taxi Mode");
@@ -82,6 +91,16 @@ public final class VehicleTaxiRuntimeChecks {
             require(w.getTileEntity(at)!=null,"Malisis door tile installed");
             System.out.println("[vandorlabs][reprolab] vehicle-preservation fixtures IE-capacitor Mekanism-energy-cube "+door.getRegistryName());
         }
+        VehicleScan loop=new VehicleScan(w,seat);int slices=0;
+        while(!loop.step(1) && ++slices<512);
+        require(loop.error==null && loop.result!=null && slices<512,"stacked gear/hull loop finishes within bounded one-cell scan slices: "+loop.error+", slices="+slices);
+        require(loop.result.gearCount==3,"stacked gear roots are each counted once");
+        Set<BlockPos> unique=new HashSet<>();
+        for(VehicleStructure.Cell cell:loop.result.cells) {
+            require(unique.add(cell.pos),"cyclic discovery captures each cell once");
+            require(loop.origin.add(cell.pos).getY()>=origin.getY(),"gear boundary excludes the supporting ground despite alternate hull paths");
+        }
+        for(int y=1;y<=2;y++)require(loop.result.at(origin.add(9,y,0).subtract(loop.origin))!=null,"both vertically touching gears are captured through the hull loop");
         MinecraftForge.EVENT_BUS.register(audit);p.connection.setPlayerLocation(seat.getX()+.5,seat.getY(),seat.getZ()-2,0,0);
     }
     private static void blockClick(Minecraft mc,boolean settings) throws Exception {
@@ -169,7 +188,7 @@ public final class VehicleTaxiRuntimeChecks {
             case 18:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
             case 19:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
-                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
+                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
             default:throw new IllegalStateException("Taxi test phase overflow");
         }
         return false;
