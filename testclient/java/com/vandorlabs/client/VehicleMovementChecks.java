@@ -23,6 +23,15 @@ final class VehicleMovementChecks {
         require(Math.abs(middle.yaw-180)<.001,"yaw wrap takes shortest arc");
         Vec3d farSeat=new Vec3d(31.5,2,.5),absolute=middle.world(farSeat,16,4);
         require(middle.local(absolute,16,4).distanceTo(farSeat)<1e-8,"far seat and camera share invertible visual transform");
+        net.minecraft.util.math.AxisAlignedBB localBox=new net.minecraft.util.math.AxisAlignedBB(-2,-1,3,32,8,9);
+        for(float yaw:new float[]{0,45,90,179,-179,270}) {
+            VehiclePose pose=new VehiclePose(-64,100,16,yaw);
+            net.minecraft.util.math.AxisAlignedBB box=pose.world(localBox,16,4);
+            for(double x:new double[]{localBox.minX,localBox.maxX})for(double y:new double[]{localBox.minY,localBox.maxY})for(double z:new double[]{localBox.minZ,localBox.maxZ}) {
+                Vec3d point=pose.world(new Vec3d(x,y,z),16,4);
+                require(point.x>=box.minX-1e-8 && point.x<=box.maxX+1e-8 && point.y>=box.minY-1e-8 && point.y<=box.maxY+1e-8 && point.z>=box.minZ-1e-8 && point.z<=box.maxZ+1e-8,"tile visibility bounds contain every transformed corner");
+            }
+        }
         VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.STATE);packet.serverTick=123456789;packet.sequence=17;packet.yaw=-179;
         io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();packet.toBytes(bytes);
         VehicleNetwork.Packet decoded=new VehicleNetwork.Packet();decoded.fromBytes(bytes);bytes.release();

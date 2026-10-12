@@ -373,21 +373,28 @@ public final class VehicleRuntimeChecks {
                 mc.getIntegratedServer().addScheduledTask(()->safeExit(mc.getIntegratedServer().getPlayerList().getPlayers().get(0),"placed seat")).get();
                 List<VehicleStructure.Cell> cells=new ArrayList<>();
                 cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
-                cells.add(new VehicleStructure.Cell(new BlockPos(40,20,1),Blocks.GOLD_BLOCK.getDefaultState(),null));
+                cells.add(new VehicleStructure.Cell(new BlockPos(63,20,0),Blocks.GOLD_BLOCK.getDefaultState(),null));
+                net.minecraft.tileentity.TileEntityChest farChest=new net.minecraft.tileentity.TileEntityChest();farChest.setPos(new BlockPos(63,20,1));
+                cells.add(new VehicleStructure.Cell(farChest.getPos(),Blocks.CHEST.getDefaultState(),farChest.writeToNBT(new NBTTagCompound())));
                 distantRender=new EntityGroundVehicle(mc.world);distantRender.install(new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1));distantRender.setPosition(160,120,8);
                 mc.world.addEntityToWorld(-40000,distantRender);mc.gameSettings.thirdPersonView=0;
             }
             if(ticks>=380 && ticks<=425) {
                 // Origin section is behind/below the camera; only the far gold hull is visible.
                 distantRender.setPosition(160,120,8);distantRender.prevPosX=distantRender.lastTickPosX=160;distantRender.prevPosY=distantRender.lastTickPosY=120;distantRender.prevPosZ=distantRender.lastTickPosZ=8;
-                mc.player.setPosition(198,139,9.5);mc.player.prevPosX=mc.player.lastTickPosX=198;mc.player.prevPosY=mc.player.lastTickPosY=139;mc.player.prevPosZ=mc.player.lastTickPosZ=9.5;
+                mc.player.setPosition(221,139,9.5);mc.player.prevPosX=mc.player.lastTickPosX=221;mc.player.prevPosY=mc.player.lastTickPosY=139;mc.player.prevPosZ=mc.player.lastTickPosZ=9.5;
                 mc.player.rotationYaw=mc.player.prevRotationYaw=mc.player.rotationYawHead=mc.player.prevRotationYawHead=-90;mc.player.rotationPitch=mc.player.prevRotationPitch=3;
             }
             if(ticks==410)RenderGroundVehicle.reload();
             if(ticks==425) {
                 require(RenderGroundVehicle.fallbackDraws()>0,"visible hull rendered with origin section behind camera");
+                require(RenderGroundVehicle.tileDraws()>0,"visible far chest renderer survives culling with Pilot Seat and origin out of view");
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_distant_hull.png"));
                 System.out.println("[vandorlabs][reprolab] vehicle-distant-render PASS hidden-origin-section visible-hull");
+                if(Boolean.getBoolean("vandorlabs.vehicleRenderChecksOnly")) {
+                    System.out.println("[vandorlabs][reprolab] vehicle-render-profile "+RenderGroundVehicle.profile());
+                    System.out.println("[vandorlabs][reprolab] vehicle-render-live PASS snapshots materials driving mesh-reload hidden-origin");mc.shutdown();return;
+                }
             }
             if(ticks>425 && VehicleInteractionRuntimeChecks.tick(mc,output) && VehicleTaxiRuntimeChecks.tick(mc,output)) {
                 System.out.println("[vandorlabs][reprolab] vehicle-render-profile "+RenderGroundVehicle.profile());

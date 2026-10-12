@@ -25,6 +25,8 @@ final class VehiclePerformanceRuntimeChecks {
                 }
                 VehicleStructure hull=new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1);
                 EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(hull);craft.setPosition(-8,101,-8);
+                List<VehicleCollision.OrientedBox> accepted=craft.collision.pose(0);craft.collision.pose(45);craft.collision.pose(90);
+                require(craft.collision.pose(0)==accepted,"accepted hull geometry survives angular trial queries");
                 long[] samples=new long[24];int queries=0;
                 for(int n=0;n<samples.length;n++) {
                     long start=System.nanoTime();craft.collision.begin(world,craft);

@@ -46,15 +46,21 @@ public final class VehicleCollision {
     private float posedYaw=Float.NaN;
     private List<OrientedBox> posed;
     private AxisAlignedBB posedBounds;
+    private final LinkedHashMap<Float,Posed> recentPoses=new LinkedHashMap<Float,Posed>(4,.75F,true);
+    private static final class Posed {final List<OrientedBox> boxes;final AxisAlignedBB bounds;Posed(List<OrientedBox> boxes,AxisAlignedBB bounds){this.boxes=boxes;this.bounds=bounds;}}
     private double pivotX,pivotZ;
     public List<OrientedBox> pose(float yaw) {
         if(posed!=null && yaw==posedYaw)return posed;
+        Posed cached=recentPoses.get(yaw);
+        if(cached!=null){posedYaw=yaw;posed=cached.boxes;posedBounds=cached.bounds;return posed;}
         posedYaw=yaw;posed=new ArrayList<>();posedBounds=null;
         double radians=Math.toRadians(yaw),cos=Math.cos(radians),sin=Math.sin(radians);
         for(AxisAlignedBB box:boxes) {
             OrientedBox b=new OrientedBox(box,pivotX,pivotZ,cos,sin);posed.add(b);
             posedBounds=posedBounds==null?b.broad:posedBounds.union(b.broad);
         }
+        recentPoses.put(yaw,new Posed(posed,posedBounds));
+        if(recentPoses.size()>3)recentPoses.remove(recentPoses.keySet().iterator().next());
         return posed;
     }
     public AxisAlignedBB bounds(float yaw){pose(yaw);return posedBounds;}

@@ -18,13 +18,14 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     private static final Map<EntityGroundVehicle,Regions> meshes=new HashMap<>();
     private static int generation;
     private static final Set<EntityGroundVehicle> drawn=Collections.newSetFromMap(new IdentityHashMap<>());
-    private static int fallbackDraws;
+    private static int fallbackDraws,tileDraws;
+    public static int tileDraws(){return tileDraws;}
     private static final long[] frameSamples=VehicleDiagnostics.ENABLED?new long[256]:null,meshSamples=VehicleDiagnostics.ENABLED?new long[256]:null,uploadSamples=VehicleDiagnostics.ENABLED?new long[256]:null;
     private static int frameCount,meshCount,uploadCount;private static long lastFrame;
     private static String percentile(String label,long[] samples,int count){if(count==0)return label+"=none";long[] sorted=Arrays.copyOf(samples,Math.min(count,samples.length));Arrays.sort(sorted);return label+"-us[p50/p95/p99]="+sorted[sorted.length/2]/1000+"/"+sorted[(sorted.length-1)*95/100]/1000+"/"+sorted[(sorted.length-1)*99/100]/1000;}
     public static String profile(){return !VehicleDiagnostics.ENABLED?"disabled":percentile("frame-interval",frameSamples,frameCount)+" "+percentile("mesh-work",meshSamples,meshCount)+" "+percentile("upload",uploadSamples,uploadCount);}
     public static int fallbackDraws(){return fallbackDraws;}
-    public static void beginFrame(){if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=0;buildNanos=2000000;buildCells=512;}
+    public static void beginFrame(){if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=tileDraws=0;buildNanos=2000000;buildCells=512;}
     private static long buildNanos;private static int buildCells;
     public static void renderMissing(float partial) {
         Minecraft mc=Minecraft.getMinecraft();
@@ -166,6 +167,9 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         float angle=pose.yaw;
         net.minecraft.util.math.Vec3d localCamera=pose.local(new net.minecraft.util.math.Vec3d(cameraXWorld,cameraYWorld,cameraZWorld),e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2);
         for(Mesh mesh:pair)sortTranslucent(mesh,localCamera.x,localCamera.y,localCamera.z);
+        // Capture the camera planes before applying the craft's model transform.
+        net.minecraft.client.renderer.culling.Frustum tileFrustum=new net.minecraft.client.renderer.culling.Frustum();
+        tileFrustum.setPosition(cameraXWorld,cameraYWorld,cameraZWorld);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.translate(e.structure.bounds.maxX/2,0,e.structure.bounds.maxZ/2);GlStateManager.rotate(-angle,0,1,0);GlStateManager.translate(-e.structure.bounds.maxX/2,0,-e.structure.bounds.maxZ/2);GlStateManager.disableLighting();GlStateManager.enableTexture2D();bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1,1,1,1);
         pair.sort(Comparator.comparingDouble((Mesh mesh)->mesh.cells.isEmpty()?0:-localCamera.squareDistanceTo(new net.minecraft.util.math.Vec3d(section(mesh.cells.get(0).pos)).scale(8).addVector(4,4,4))));
@@ -188,9 +192,15 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         net.minecraft.world.World previousWorld=dispatcher.world;
         dispatcher.world=e.view;dispatcher.entityX=localCamera.x;dispatcher.entityY=localCamera.y;dispatcher.entityZ=localCamera.z;
         try {for(TileEntity tile:e.view.tiles.values()) {
+            try {
+                net.minecraft.util.math.AxisAlignedBB box=tile.getRenderBoundingBox();
+                if(box!=null && Double.isFinite(box.minX) && Double.isFinite(box.minY) && Double.isFinite(box.minZ)
+                        && Double.isFinite(box.maxX) && Double.isFinite(box.maxY) && Double.isFinite(box.maxZ)
+                        && !tileFrustum.isBoundingBoxInFrustum(pose.world(box,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;
+            }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile visibility",error);}
             TileEntitySpecialRenderer<TileEntity> renderer=TileEntityRendererDispatcher.instance.getRenderer(tile);
             if(renderer!=null){BlockPos p=tile.getPos();GlStateManager.pushMatrix();
-                try{renderer.render(tile,p.getX(),p.getY(),p.getZ(),partial,-1,1);}
+                try{renderer.render(tile,p.getX(),p.getY(),p.getZ(),partial,-1,1);tileDraws++;}
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile renderer",error);}
                 finally{GlStateManager.popMatrix();}
             }

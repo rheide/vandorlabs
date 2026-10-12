@@ -20,4 +20,11 @@ public final class VehiclePose {
         double c=Math.cos(Math.toRadians(yaw)),s=Math.sin(Math.toRadians(yaw)),lx=absolute.x-x-px,lz=absolute.z-z-pz;
         return new Vec3d(px+c*lx+s*lz,absolute.y-y,pz-s*lx+c*lz);
     }
+    public net.minecraft.util.math.AxisAlignedBB world(net.minecraft.util.math.AxisAlignedBB local,double px,double pz) {
+        Vec3d center=world(new Vec3d((local.minX+local.maxX)/2,(local.minY+local.maxY)/2,(local.minZ+local.maxZ)/2),px,pz);
+        double c=Math.abs(Math.cos(Math.toRadians(yaw))),s=Math.abs(Math.sin(Math.toRadians(yaw)));
+        double dx=(c*(local.maxX-local.minX)+s*(local.maxZ-local.minZ))/2,dy=(local.maxY-local.minY)/2,
+                dz=(s*(local.maxX-local.minX)+c*(local.maxZ-local.minZ))/2;
+        return new net.minecraft.util.math.AxisAlignedBB(center.x-dx,center.y-dy,center.z-dz,center.x+dx,center.y+dy,center.z+dz);
+    }
 }
