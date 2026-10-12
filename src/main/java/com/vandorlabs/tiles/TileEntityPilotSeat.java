@@ -23,7 +23,8 @@ public final class TileEntityPilotSeat extends TileEntity implements RedstoneCha
     public int getRedstoneChannel(){return channels.first();}
     public ChannelList getRedstoneChannels(){return channels;}
     public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
-    public void setRedstoneChannels(ChannelList next){channels=next;readyAt=0;baselineAfterLoad=false;high=powered(world);markDirty();sync();}
+    public void setRedstoneChannels(ChannelList next){setVehicleChannels(next,world);}
+    public void setVehicleChannels(ChannelList next,World real){channels=next;readyAt=0;baselineAfterLoad=false;high=powered(real);markDirty();sync();}
     public boolean hasLocalRedstoneSignal(){return false;}
     public void setChannelSignal(boolean signal){} // Polled against the real world, including in vehicle mode.
     private boolean powered(World real){if(real==null)return false;for(int n=0;n<channels.size();n++)if(RedstoneChannels.level(real,channels.get(n))>0)return true;return false;}

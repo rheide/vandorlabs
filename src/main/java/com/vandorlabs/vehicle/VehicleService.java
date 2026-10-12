@@ -174,6 +174,43 @@ public final class VehicleService {
             VehicleNetwork.send(player,next.entity==null?next.structure:VehicleRotation.plan(next.entity).structure,next.entity==null?-1:next.entity.getEntityId(),next.token,next.origin,true,next.entity!=null);
         }catch(Exception failure){VehicleNetwork.error(player,failure.getMessage());}
     }
+    public static void configureChannels(EntityPlayerMP player,VehicleNetwork.Packet packet) {
+        Preview preview=previews.get(player.getUniqueID());
+        if(preview==null || !preview.token.equals(packet.token))return;
+        try {
+            com.vandorlabs.redstone.ChannelList channels=com.vandorlabs.redstone.ChannelList.parse(packet.text);
+            require(channels!=null,"Invalid channel list.");
+            require(tool(player) && !player.isDead && preview.world==player.world && preview.expires>=player.world.getTotalWorldTime(),"Preview expired; inspect again.");
+            require(packet.entity==(preview.entity==null?-1:preview.entity.getEntityId()) && packet.origin.equals(preview.entity==null?preview.structure.seat:VehicleRotation.plan(preview.entity).structure.seat),"Pilot Seat identity changed.");
+            VehicleStructure changed;
+            if(preview.entity==null) {
+                BlockPos at=preview.origin.add(preview.structure.seat);
+                require(player.getDistanceSqToCenter(at)<=64 && preview.structure.matches(player.world,preview.origin),"Craft changed; inspect again.");
+                permission(player,at);
+                net.minecraft.tileentity.TileEntity raw=player.world.getTileEntity(at);
+                require(raw instanceof com.vandorlabs.tiles.TileEntityPilotSeat,"Pilot Seat missing.");
+                com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)raw;
+                seat.setVehicleChannels(channels,player.world);
+                changed=VehicleSeatSettings.replace(preview.structure,seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN.subtract(preview.origin));
+            } else {
+                EntityGroundVehicle craft=preview.entity;
+                require(!craft.isDead && !craft.ownershipBlocked && craft.structure==preview.structure && craft.world==player.world,"Craft changed; inspect again.");
+                Vec3d at=craft.toWorld(new Vec3d(craft.structure.seat).addVector(.5,.5,.5));
+                require(craft.getControllingPassenger()==player || player.getDistanceSq(at.x,at.y,at.z)<=64,"Move closer to the Pilot Seat.");
+                permission(player,new BlockPos(at));
+                require(craft.view.getTileEntity(craft.structure.seat) instanceof com.vandorlabs.tiles.TileEntityPilotSeat,"Pilot Seat data missing.");
+                com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)craft.view.getTileEntity(craft.structure.seat);
+                seat.setVehicleChannels(channels,player.world);
+                changed=VehicleSeatSettings.replace(craft.structure,seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN);
+                craft.updateSettings(changed);
+                VehicleNetwork.Packet update=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);update.entity=craft.getEntityId();update.token=craft.getUniqueID();update.text=channels.toString();
+                com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(update,craft);
+                if(craft.getControllingPassenger() instanceof EntityPlayerMP)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(update,(EntityPlayerMP)craft.getControllingPassenger());
+            }
+            Preview next=new Preview(preview.world,changed,preview.origin,preview.entity);next.airBoundary.addAll(preview.airBoundary);previews.put(player.getUniqueID(),next);
+            VehicleNetwork.send(player,next.entity==null?changed:VehicleRotation.plan(next.entity).structure,next.entity==null?-1:next.entity.getEntityId(),next.token,next.origin,true,next.entity!=null);
+        }catch(Exception failure){VehicleNetwork.error(player,failure.getMessage());}
+    }
     public static void permission(EntityPlayerMP player,BlockPos p) {
         require(player.world.isBlockLoaded(p) && player.world.getWorldBorder().contains(p) && p.getY()>=0 && p.getY()<player.world.getHeight(),"A target cell is outside the loaded world.");
         require(player.world.isBlockModifiable(player,p) && player.canPlayerEdit(p,EnumFacing.UP,player.getHeldItemMainhand()),"You cannot modify a target block.");

@@ -58,6 +58,19 @@ public final class VehicleClient {
         Minecraft mc=Minecraft.getMinecraft();mc.addScheduledTask(()->{
             if(mc.world==null)return;
             if(p.type==VehicleNetwork.ERROR){mc.player.sendMessage(new net.minecraft.util.text.TextComponentString(p.text));return;}
+            if(p.type==VehicleNetwork.SETTINGS){
+                Entity raw=mc.world.getEntityByID(p.entity);
+                com.vandorlabs.redstone.ChannelList channels=com.vandorlabs.redstone.ChannelList.parse(p.text);
+                if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && channels!=null) {
+                    EntityGroundVehicle craft=(EntityGroundVehicle)raw;
+                    if(craft.structure!=null && craft.view.getTileEntity(craft.structure.seat) instanceof com.vandorlabs.tiles.TileEntityPilotSeat) {
+                        com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)craft.view.getTileEntity(craft.structure.seat);
+                        seat.setVehicleChannels(channels,mc.world);
+                        craft.updateSettings(VehicleSeatSettings.replace(craft.structure,seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN));
+                    }
+                }
+                return;
+            }
             if(p.type==VehicleNetwork.TAXI){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleTaxiMode.apply((EntityGroundVehicle)raw,p.flag);return;}
             if(p.type==VehicleNetwork.DOORS){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleDoors.apply((EntityGroundVehicle)raw,p.data);return;}
             if(p.type==VehicleNetwork.STATE){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)((EntityGroundVehicle)raw).authoritative(p);return;}
@@ -146,7 +159,7 @@ public final class VehicleClient {
     @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START)RenderGroundVehicle.beginFrame();}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {
         RenderGroundVehicle.renderMissing(event.getPartialTicks());
-        Minecraft mc=Minecraft.getMinecraft();if(preview==null || mc.currentScreen!=preview)return;
+        Minecraft mc=Minecraft.getMinecraft();if(preview==null || mc.currentScreen!=preview && !(mc.currentScreen instanceof SeatSettings))return;
         Entity camera=mc.getRenderViewEntity();if(camera==null)return;
         double x=camera.lastTickPosX+(camera.posX-camera.lastTickPosX)*event.getPartialTicks(),y=camera.lastTickPosY+(camera.posY-camera.lastTickPosY)*event.getPartialTicks(),z=camera.lastTickPosZ+(camera.posZ-camera.lastTickPosZ)*event.getPartialTicks();
         GlStateManager.pushMatrix();GlStateManager.translate(-x,-y,-z);GlStateManager.disableTexture2D();GlStateManager.disableDepth();GlStateManager.depthMask(false);
@@ -157,10 +170,10 @@ public final class VehicleClient {
     private static final class Preview extends GuiScreen {
         final Incoming data;
         Preview(Incoming data){this.data=data;}
-        @Override public void initGui(){buttonList.add(new GuiButton(0,width/2-105,height-45,100,20,data.header.flag?"Park as blocks":"Assemble"));buttonList.add(new GuiButton(1,width/2+5,height-45,100,20,"Cancel"));buttonList.add(new GuiButton(2,width/2-105,height-99,210,20,"Taxi Mode: "+(VehicleTaxiMode.enabled(data.structure)?"ON":"OFF")));}
+        @Override public void initGui(){buttonList.add(new GuiButton(0,width/2-105,height-45,100,20,data.header.flag?"Park as blocks":"Assemble"));buttonList.add(new GuiButton(1,width/2+5,height-45,100,20,"Cancel"));buttonList.add(new GuiButton(2,width/2-105,height-99,210,20,"Taxi Mode: "+(VehicleTaxiMode.enabled(data.structure)?"ON":"OFF")));buttonList.add(new GuiButton(3,width/2-105,height-153,210,20,"Pilot Seat settings..."));}
         @Override public boolean doesGuiPauseGame(){return false;}
         @Override public void drawScreen(int x,int y,float partial) {
-            drawRect(0,0,width,75,0xb0101820);drawRect(0,height-126,width,height,0xb0101820);
+            drawRect(0,0,width,75,0xb0101820);drawRect(0,height-160,width,height,0xb0101820);
             VehicleStructure s=data.structure;
             drawCenteredString(fontRenderer,data.header.flag?"Park craft - cardinal orientation":"Assemble connected craft",width/2,12,0xffffff);
             drawCenteredString(fontRenderer,s.cells.size()+" blocks / "+(int)s.bounds.maxX+" x "+(int)s.bounds.maxY+" x "+(int)s.bounds.maxZ+" / "+s.gearCount+" landing gear",width/2,29,0xffffff);
@@ -169,7 +182,35 @@ public final class VehicleClient {
             drawCenteredString(fontRenderer,"W/S: drive   A/D: steer   Space: brake   Sneak: dismount",width/2,height-68,0xffffff);
             super.drawScreen(x,y,partial);
         }
-        @Override protected void actionPerformed(GuiButton button){if(button.id==2){VehicleNetwork.Packet setting=new VehicleNetwork.Packet(VehicleNetwork.TAXI);setting.token=data.header.token;setting.flag=!VehicleTaxiMode.enabled(data.structure);PacketHandler.INSTANCE.sendToServer(setting);for(GuiButton control:buttonList)control.enabled=false;return;}if(button.id==0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.CONFIRM);p.token=data.header.token;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}
+        @Override protected void actionPerformed(GuiButton button){if(button.id==3){mc.displayGuiScreen(new SeatSettings(this));preview=this;return;}if(button.id==2){VehicleNetwork.Packet setting=new VehicleNetwork.Packet(VehicleNetwork.TAXI);setting.token=data.header.token;setting.flag=!VehicleTaxiMode.enabled(data.structure);PacketHandler.INSTANCE.sendToServer(setting);for(GuiButton control:buttonList)control.enabled=false;return;}if(button.id==0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.CONFIRM);p.token=data.header.token;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}
         @Override public void onGuiClosed(){if(preview==this)preview=null;}
     }
+    private static final class SeatSettings extends GuiScreen {
+        final Preview parent;private GuiTextField channels;
+        SeatSettings(Preview parent){this.parent=parent;}
+        @Override public boolean doesGuiPauseGame(){return false;}
+        @Override public void initGui(){
+            channels=new GuiTextField(0,fontRenderer,width/2-130,height/2-30,260,20);ChannelFields.configure(channels);
+            net.minecraft.nbt.NBTTagCompound data=parent.data.structure.at(parent.data.structure.seat).tileData();
+            channels.setText(data==null?"0":com.vandorlabs.redstone.ChannelData.read(data,0).toString());channels.setFocused(true);
+            buttonList.add(new GuiButton(0,width/2-105,height/2+45,100,20,"Save"));
+            buttonList.add(new GuiButton(1,width/2+5,height/2+45,100,20,"Cancel"));
+        }
+        @Override public void updateScreen(){channels.updateCursorCounter();buttonList.get(0).enabled=ChannelFields.parse(channels)!=null;}
+        @Override public void drawScreen(int x,int y,float partial){
+            drawDefaultBackground();drawCenteredString(fontRenderer,"Pilot Seat channels (0 = none)",width/2,height/2-55,0xffffff);
+            channels.drawTextBox();drawCenteredString(fontRenderer,"A fresh rising pulse toggles block / vehicle mode.",width/2,height/2,0xffffff);
+            drawCenteredString(fontRenderer,"Saving channels does not convert the craft.",width/2,height/2+16,0xffdd88);super.drawScreen(x,y,partial);
+        }
+        @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException{super.mouseClicked(x,y,button);channels.mouseClicked(x,y,button);}
+        @Override protected void keyTyped(char key,int code)throws java.io.IOException{if(code==1){actionPerformed(buttonList.get(1));return;}if(!channels.textboxKeyTyped(key,code))super.keyTyped(key,code);}
+        @Override protected void actionPerformed(GuiButton button){
+            if(button.id==1){mc.displayGuiScreen(parent);preview=parent;return;}
+            com.vandorlabs.redstone.ChannelList list=ChannelFields.parse(channels);if(list==null)return;
+            VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);packet.token=parent.data.header.token;
+            packet.entity=parent.data.header.entity;packet.origin=parent.data.structure.seat;packet.text=list.toString();PacketHandler.INSTANCE.sendToServer(packet);
+            for(GuiButton control:buttonList)control.enabled=false;
+        }
+    }
+
 }

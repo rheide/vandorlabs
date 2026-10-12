@@ -31,6 +31,7 @@ public final class VehicleTaxiRuntimeChecks {
     private static final Audit audit=new Audit();
     private static boolean cancelOnce,rollbackSeen,done;
     private static BlockPos blocker;
+    private static UUID stalePreview;
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("vehicle taxi: "+message);}
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
     private static WorldServer world(Minecraft mc){return mc.getIntegratedServer().getWorld(0);}
@@ -112,6 +113,7 @@ public final class VehicleTaxiRuntimeChecks {
         mc.objectMouseOver=new RayTraceResult(at,EnumFacing.NORTH,seat);
         net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag").invoke(mc);
     }
+    private static Object field(Object object,String name)throws Exception {java.lang.reflect.Field field=object.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(object);}
     private static void button(Minecraft mc,int id) throws Exception {
         GuiScreen screen=mc.currentScreen;require(screen!=null,"settings dialog open");
         List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,screen,"buttonList","field_146292_n");
@@ -184,11 +186,34 @@ public final class VehicleTaxiRuntimeChecks {
                 e.rotationYaw=45;player(mc).dismountRidingEntity();require(player(mc).getRidingEntity()==e,"45-degree exit is refused without losing driver or snapshot");
                 e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewParking(player(mc),e);
             }).get();break;
-            case 17:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"refused non-cardinal exits keep the client mounted and able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
-            case 18:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
-            case 19:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);}).get();
+            case 17: {
+                Object data=field(mc.currentScreen,"data");stalePreview=((VehicleNetwork.Packet)field(data,"header")).token;
+                button(mc,3);break;
+            }
+            case 18: {
+                GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("5317, 5318");button(mc,1);break;
+            }
+            case 19:mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().isEmpty(),"channel Cancel does not mutate the craft")).get();button(mc,3);break;
+            case 20: {
+                GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("1,,2");mc.currentScreen.updateScreen();
+                List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");
+                require(!controls.get(0).enabled,"invalid channel list disables Save");channels.setText("5318, 5317, 5318");mc.currentScreen.updateScreen();button(mc,0);break;
+            }
+            case 21:mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle e=craft(mc);TileEntityPilotSeat pilot=(TileEntityPilotSeat)e.view.getTileEntity(e.structure.seat);
+                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"actual settings packet saves canonical channel list");
+                require(com.vandorlabs.redstone.ChannelData.read(e.structure.at(e.structure.seat).tileData(),0).equals(pilot.getRedstoneChannels()),"authoritative seat snapshot and local view agree");
+                NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);
+                require(loaded.structure.write().equals(e.structure.write()),"edited channels survive entity save/reload");
+                VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=e.structure.seat;stale.text="999";VehicleService.configureChannels(player(mc),stale);
+                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"superseded preview cannot edit channels");
+            }).get();button(mc,3);break;
+            case 22:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5317, 5318"),"reopened settings display saved list");button(mc,1);break;
+            case 23:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"refused non-cardinal exits keep the client mounted and able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
+            case 24:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
+            case 25:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
-                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
+                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS channel-UI-save-cancel stale-preview canonical-list stacked-gear-loop bounded-discovery default-on UI-save manual-off actual-boarding 90-270-parking 45-refused repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
             default:throw new IllegalStateException("Taxi test phase overflow");
         }
         return false;

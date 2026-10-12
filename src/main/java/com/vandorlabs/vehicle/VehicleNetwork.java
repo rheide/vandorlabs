@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /** Bounded fragments are sent only for previews and newly tracked vehicles. */
 public final class VehicleNetwork {
-    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9;
+    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10;
     public static final int FRAGMENT=28000;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
@@ -27,13 +27,14 @@ public final class VehicleNetwork {
         public Packet(){}
         public Packet(int type){this.type=type;}
         public void toBytes(ByteBuf b){b.writeByte(type);b.writeInt(entity);b.writeLong(token.getMostSignificantBits());b.writeLong(token.getLeastSignificantBits());b.writeInt(sequence);b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);if(type==STATE){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);}}
-        public void fromBytes(ByteBuf b){try{type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())throw new IllegalArgumentException();data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);valid=text.length()<=512 && type<=TAXI;if(type==STATE){serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();valid=valid && Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z) && Double.isFinite(dy) && Double.isFinite(speed) && Float.isFinite(yaw) && Float.isFinite(steering);}}catch(Exception e){valid=false;}}
+        public void fromBytes(ByteBuf b){try{type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())throw new IllegalArgumentException();data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);valid=text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH && type<=SETTINGS;if(type==STATE){serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();valid=valid && Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z) && Double.isFinite(dy) && Double.isFinite(speed) && Float.isFinite(yaw) && Float.isFinite(steering);}}catch(Exception e){valid=false;}}
     }
     public static final class Server implements IMessageHandler<Packet,IMessage> {
         public IMessage onMessage(Packet message,MessageContext ctx) {
-            if(!message.valid || message.data.length!=0 || message.type>CONFIRM && message.type!=INTERACT && message.type!=TAXI)return null;
+            if(!message.valid || message.data.length!=0 || message.type>CONFIRM && message.type!=INTERACT && message.type!=TAXI && message.type!=SETTINGS)return null;
             EntityPlayerMP player=ctx.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
+                if(message.type==SETTINGS){VehicleService.configureChannels(player,message);return;}
                 if(message.type==TAXI){VehicleService.configureTaxi(player,message);return;}
                 if(message.type==INTERACT){VehicleInteraction.receive(player,message);return;}
                 if(message.type==CONFIRM){VehicleService.confirm(player,message.token);return;}

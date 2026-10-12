@@ -98,6 +98,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=new VehicleCollision(view);encoded=null;
         setPosition(posX,posY,posZ);
     }
+    public void updateSettings(VehicleStructure snapshot){structure=snapshot;view.update(snapshot);encoded=null;}
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
     @Override protected void entityInit(){}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);}

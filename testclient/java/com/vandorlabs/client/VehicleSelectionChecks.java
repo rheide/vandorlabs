@@ -100,7 +100,7 @@ public final class VehicleSelectionChecks {
             sent.toBytes(buffer);VehicleNetwork.Packet received=new VehicleNetwork.Packet();received.fromBytes(buffer);
             require(received.valid && received.type==VehicleNetwork.INTERACT && received.entity==42
                     && received.token.equals(sent.token) && received.origin.equals(position),"interaction identity and cell codec");
-            buffer.clear();sent.type=VehicleNetwork.TAXI+1;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
+            buffer.clear();sent.type=VehicleNetwork.SETTINGS+1;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
             require(!received.valid,"unknown interaction packet type rejected");
         } finally {buffer.release();}
         System.out.println("PASS: distant seat cells, protruding selection, cabin gaps, slab/door shapes, captured/terrain occlusion and invalid rays");
