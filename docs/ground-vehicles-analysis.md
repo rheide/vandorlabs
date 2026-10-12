@@ -40,6 +40,8 @@ A blocked automatic return retains the complete stopped vehicle and a saved retr
 
 ## Storage and transfer
 
+Pilot Seat settings are also available from the assembly and parking previews, including while seated in a vehicle. Channel Save/Cancel is separate from confirming conversion. Saving refreshes the preview; edits to an assembled seat update its authoritative saved data and require transformed reach or the controlling rider. An already powered channel establishes a baseline instead of immediately converting the craft.
+
 `VehicleStructure` is an immutable sparse collection of local cells with a registry/property palette and complete tile NBT. `EntityGroundVehicle` owns that snapshot, UUID, transfer epoch, collision geometry and local view. Ordinary driving changes one entity position and yaw rather than world blocks.
 
 Assembly and parking revalidate the server preview, held tool, reach, permissions, occupancy and source/destination state. A durable write-ahead record stores the pre-transfer owner. Bulk transfers avoid destructive block-break callbacks, restore all cells before neighbor notification, and flush chunk/entity saves before retiring the record. Startup recovery rolls an interrupted transfer back. A persistent UUID/epoch ledger rejects obsolete entities when previously saved chunks load later. Failed recovery retains its record and blocks further transfers in that dimension.
@@ -50,7 +52,7 @@ The server owns capture and conversion. Clients confirm only an expiring server-
 
 The server accepts input only from the current driver, rejects old sequence numbers, and expires missing input after ten ticks. Speed is capped at 0.28 blocks/tick; acceleration is gradual, with stronger braking. Gravity and swept collision operate on cached component boxes; matching adjacent faces are merged without filling hollow space. Horizontal oriented boxes use separating axes against terrain, and angular sweeps check the outer hull throughout a turn. A grounded half-block step requires headroom and support. Movement stops at unloaded terrain and the world border. The driver predicts the same controller locally, reconciles sequenced input against precise server states and eases small position corrections. Observers interpolate server poses.
 
-Turning still exhibits reported jitter. Position prediction checks do not prove angular smoothness; see the [smoothing and performance handoff](ground-vehicles-handoff.md) for the input acknowledgment, yaw correction and rider/camera work that remains.
+Input acknowledgments now identify commands actually simulated, and small position and wrapped yaw corrections ease through one visual pose shared by the hull, rider and camera. Observers use one custom state stream. Dedicated driver/observer checks exercise delay, jitter and dropped application messages; see the [smoothing and performance handoff](ground-vehicles-handoff.md) for implementation details and validation limits.
 
 Craft-wide targeting and collision lookup cover cells beyond the entity's origin chunk/section. The Configurizer ray-tests captured cells within six blocks and respects intervening terrain. A rendering fallback draws visible hulls whose origin section was omitted by vanilla's entity pass; full structure bounds cover decorative cells as well as collision geometry.
 
