@@ -20,6 +20,7 @@ PATTERNS = [
     'src/main/java/**/client/WorldSurface.java', 'src/main/java/**/client/BlockSurfaceFormat.java',
     'src/main/java/**/client/HousingTextureList.java', 'src/main/java/**/client/GuiProgrammableWall.java',
     'src/main/java/**/client/ProgrammableDialogLayout.java', 'src/main/java/**/client/GuiOptionCycle.java',
+    'src/main/java/**/client/ProgrammableDialogRuntimeChecks.java', 'src/main/java/**/client/GuiOptionCycleRuntimeChecks.java',
     'src/main/java/**/GuiHandler.java', 'src/main/java/**/client/ReproLab.java', 'src/main/java/**/network/Message*Diagonal*.java',
     'src/main/java/**/network/Message*Glass*.java', 'src/main/java/**/network/MessageProgrammableWallShade.java',
     'src/main/java/**/items/ProgrammableSettings.java', 'src/main/java/**/items/ItemConfigurizer.java',

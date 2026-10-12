@@ -16,7 +16,7 @@ final class ProgrammableDialogRuntimeChecks {
                 || gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableLight
                 || gui instanceof GuiAnimatedScreenSelector || gui instanceof GuiProgrammableInput
                 || gui instanceof GuiProgrammableHalfConsole || gui instanceof GuiProgrammableTrigger
-                || gui instanceof GuiRedstoneChannel))return;
+                || gui instanceof GuiRedstoneChannel || gui instanceof GuiProgrammableGlass))return;
         int width=gui.width,height=gui.height;
         try {
             for(int[] size:new int[][]{{320,240},{460,340},{width,height}}) {
@@ -138,8 +138,18 @@ final class ProgrammableDialogRuntimeChecks {
     }
     private static void checkList(HousingTextureList list,List<GuiButton> buttons)throws ReflectiveOperationException {
         Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);
-        for(Object entry:((java.util.Map<?,?>)options.get(list)).values())
-            require(com.vandorlabs.tiles.ScreenHousingTextures.visible(((HousingTextureList.Option)entry).choice),"hidden texture in picker");
+        Field nativeOptions=HousingTextureList.class.getDeclaredField("nativeOptions");nativeOptions.setAccessible(true);
+        int glass=0;
+        for(Object entry:((java.util.Map<?,?>)options.get(list)).values()) {
+            HousingTextureList.Option item=(HousingTextureList.Option)entry;
+            if(!nativeOptions.getBoolean(list))require(com.vandorlabs.tiles.ScreenHousingTextures.visible(item.choice),"hidden texture in picker");
+            if(item.category.equals("Original glass") || item.category.equals("Colored glass")) {
+                require(com.vandorlabs.tiles.GlassTextures.valid(item.choice),"invalid glass finish in picker");glass++;
+                net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
+                require(atlas.getAtlasSprite(item.texture)!=atlas.getMissingSprite(),"missing glass thumbnail: "+item.label);
+            }
+        }
+        if(glass>0)require(glass==com.vandorlabs.tiles.GlassTextures.IDS.length,"glass picker missing finishes");
         int x=integer(list,"x"),y=integer(list,"y"),width=integer(list,"width"),count=integer(list,"count");
         require(count>=7,"texture list has fewer than seven rows");
         for(GuiButton b:buttons)if(b.visible)require(!overlaps(x-1,y-1,width+9,count*HousingTextureList.ROW_HEIGHT+2,b.x,b.y,b.width,b.height),"texture list overlaps button "+b.id);

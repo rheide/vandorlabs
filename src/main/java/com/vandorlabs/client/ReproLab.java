@@ -487,6 +487,13 @@ public class ReproLab {
             if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_") && !shot.name.startsWith("gallery_glass_finishes_"));
             if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
             if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
+            String start=System.getProperty("vandorlabs.reproStartShot","");
+            if(!start.isEmpty()){
+                int index=-1;
+                for(int i=0;i<SHOTS.size();i++)if(SHOTS.get(i).name.equals(start)){index=i;break;}
+                if(index<0)throw new IllegalArgumentException("Unknown start shot: "+start);
+                SHOTS.subList(0,index).clear();
+            }
         }
     }
 
@@ -581,7 +588,7 @@ public class ReproLab {
                 state=4101;holdTicks=30;break;
             case 4101:
                 if(--holdTicks>0)break;
-                TileEntityAnimatedScreenSelector checkedGlass=(TileEntityAnimatedScreenSelector)mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE.add(3,0,3));
+                TileEntityAnimatedScreenSelector checkedGlass=(TileEntityAnimatedScreenSelector)mc.getIntegratedServer().getWorld(0).getTileEntity(new BlockPos(GALLERY_X,GALLERY_Y+1,-18));
                 if(checkedGlass.getGlassShade()!=12 || !checkedGlass.isDiagonalFullWidth() || checkedGlass.getDiagonalJoin()!=1)throw new IllegalStateException("diagonal glass GUI changes did not reach the server");
                 saveNamed(mc,"programmable_diagonal_glass_gui");
                 System.out.println("[vandorlabs][reprolab] diagonal-joins-live PASS");state=999;mc.shutdown();break;
@@ -721,7 +728,7 @@ public class ReproLab {
                 } else {
                     writeManifest();
                     if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")){
-                        BlockPos at=CONSOLE.add(3,0,3);mc.gameSettings.hideGUI=false;
+                        BlockPos at=new BlockPos(GALLERY_X,GALLERY_Y+1,-18);mc.gameSettings.hideGUI=false;
                         mc.world.setBlockState(at,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);
                         mc.getIntegratedServer().addScheduledTask(()->{
                             World w=mc.getIntegratedServer().getWorld(0);w.setBlockState(at,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);

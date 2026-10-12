@@ -514,6 +514,8 @@ Programmable Glass and Programmable Diagonal Glass use a scrollable finish picke
 
 Diagonal glass shares the wall's tall/half-width, full-width/full-height, and wide/half-height geometry. Compatible diagonal wall and glass panels join across materials. Full-height slopes align their ends with nearby regular wall/glass planes, and perpendicular regular panels can connect through a fixed-width corner arm. Glass with Join disabled remains separate.
 
+Craft one Programmable Diagonal Glass from one Programmable Glass and one Industrial Alloy Ingot.
+
 The diagonal wall/glass dialog offers Auto, Straight, four corner presets, four T presets, and two cross presets. Front/back and left/right refer to the block's local facing. Presets apply to the tall and full-height shapes; shallow panels retain their automatic slope joins. Overrides persist with the block and copy through the Duplifier.
 
 ### Focused diagonal join checks
@@ -523,3 +525,7 @@ Run `python testclient/test_diagonal_joins.py` for the wall/glass geometry matri
 The direct Gradle task is `testDiagonalJoins`; the direct Windows client command is `python testclient/run_windows.py --focus diagonal-joins`. These commands always run their selected checks.
 
 The geometry matrix covers all 36 front/back corner and straight-tail combinations for both diagonal materials, all four facings, both slope directions, and all three sizes. Fixed orientations are inserted in rotating orders and checked again after removing/replacing each member; emitted quads and collision boxes must match. Separate checks cover mixed flat/diagonal endpoint alignment, finish persistence, and join overrides. The visual matrix captures 72 arrangements in forward/reverse order, with the three sizes side by side, and generates labeled contact sheets. Image comparison detects placement-order changes; it does not replace visual review of the intended shape.
+
+Contact-sheet labels use F/B for front/back neighbors, L/R for their turn, and tails for straight left/right neighbors; a dash means absent. Each capture shows tall, full-width, and shallow panels from left to right. Screenshot filenames retain the numeric arrangement so a broken join can be reported precisely.
+
+The Windows launcher accepts `--shot-prefix` for one visual family and `--start-shot` to resume at an exact scene while retaining later runtime checks. Keep the standard JAR unchanged until a live client exits; it loads classes directly from `build/libs/`.

@@ -63,7 +63,7 @@ final class HousingTextureList {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(i,
                 com.vandorlabs.tiles.GlassTextures.LABELS[i],i<3?"Original glass":"Colored glass",
-                com.vandorlabs.tiles.GlassTextures.fullTexture(i,detail)));
+                com.vandorlabs.tiles.GlassTextures.texture(i,detail)));
         return new HousingTextureList(x,y,width,selected,8,entries);
     }
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {

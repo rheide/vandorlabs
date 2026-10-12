@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
     parser.add_argument('--focus', choices=['pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins'])
     parser.add_argument('--shot-prefix', help='Restrict visual scenes to one named family or arrangement')
+    parser.add_argument('--start-shot', help='Resume visual scenes at this exact name, retaining later runtime checks')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -99,6 +100,8 @@ def main():
     properties = ['-Dvandorlabs.reprolab='+str(output), '-Djava.library.path='+str(natives)]
     if args.shot_prefix:
         properties.append('-Dvandorlabs.reproShotPrefix='+args.shot_prefix)
+    if args.start_shot:
+        properties.append('-Dvandorlabs.reproStartShot='+args.start_shot)
     if args.vehicle_preservation_mods:
         properties.append('-Dvandorlabs.foreignVehicleChecks=true')
     if args.world_copy:

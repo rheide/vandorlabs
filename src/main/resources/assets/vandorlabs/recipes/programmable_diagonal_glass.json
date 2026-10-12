@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "vandorlabs:programmable_glass"},
+    {"item": "vandorlabs:industrial_alloy_ingot"}
+  ],
+  "result": {"item": "vandorlabs:programmable_diagonal_glass", "count": 1}
+}
