@@ -18,10 +18,10 @@ public final class OpeningCanopyGeometry {
                 append(result,regular(sides|4|(rear?8:0)),x,1);
             }
         }
-        String mounts=width==1?"opening_slide_1x2":"opening_slide_2x2";
+        String mounts=width==1?"canopy":"canopy_mounts_double";
         for(CanopyMesh.Face source:CanopyMesh.MODELS.get(mounts))if(source.group.equals("mount")) {
             CanopyMesh.Face face=copy(source);face.vertices=new Vec3d[source.vertices.length];
-            for(int i=0;i<face.vertices.length;i++)face.vertices[i]=CanopyMesh.pose(source.vertices[i],"opening_slide",width,0,false);
+            for(int i=0;i<face.vertices.length;i++)face.vertices[i]=CanopyMesh.pose(source.vertices[i],"slide",width,0,false);
             result.add(face);
         }
         cached=Collections.unmodifiableList(result);CACHE.put(key,cached);return cached;

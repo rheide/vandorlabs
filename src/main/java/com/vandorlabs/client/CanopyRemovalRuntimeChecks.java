@@ -20,12 +20,12 @@ final class CanopyRemovalRuntimeChecks {
     private static void clear(World world){for(BlockPos p:BlockPos.getAllInBox(BASE.add(-5,-1,-5),BASE.add(6,4,6)))world.setBlockToAir(p);}
     static void check(World world) {
         EntityPlayerMP player=(EntityPlayerMP)world.playerEntities.stream().filter(p->p instanceof EntityPlayerMP).findFirst().get();
-        for(String kind:new String[]{"opening_slide_1x2","opening_hinge_1x2"})
+        for(int motion=0;motion<2;motion++)
         for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int width=1;width<=3;width++)for(int removed=0;removed<width;removed++)for(boolean follower:new boolean[]{false,true}) {
-            clear(world);BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+kind);
+            clear(world);BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
             IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);
             for(int column=0;column<width;column++) {
-                BlockPos p=BASE.offset(facing.rotateY(),column);world.setBlockState(p,state,2);block.onBlockPlacedBy(world,p,state,null,new ItemStack(block));
+                BlockPos p=BASE.offset(facing.rotateY(),column);world.setBlockState(p,state,2);ItemStack configured=new ItemStack(block);NBTTagCompound settings=new NBTTagCompound();settings.setInteger("CanopyMotion",motion);configured.setTagCompound(settings);block.onBlockPlacedBy(world,p,state,null,configured);
             }
             List<TileEntityCanopy> originals=new ArrayList<>();
             for(int column=0;column<width;column++)for(BlockPos p:block.cells(BASE.offset(facing.rotateY(),column),facing))originals.add(TileEntityCanopy.at(world,p));
@@ -40,13 +40,13 @@ final class CanopyRemovalRuntimeChecks {
             for(TileEntityCanopy old:originals){old.writeToNBT(new NBTTagCompound());old.update();}
         }
         clear(world);
-        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:opening_slide_2x2");
+        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
         IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,EnumFacing.WEST);
         world.setBlockState(BASE,state,2);block.onBlockPlacedBy(world,BASE,state,null,new ItemStack(block));
         List<BlockPos> footprint=block.cells(BASE,EnumFacing.WEST);
         world.setBlockState(BASE,Blocks.STONE.getDefaultState(),3);
         require(world.getBlockState(BASE).getBlock()==Blocks.STONE,"replacement block survives old-state teardown");
-        for(BlockPos p:footprint)if(!p.equals(BASE))require(world.isAirBlock(p),"legacy wide followers removed");
+        for(BlockPos p:footprint)if(!p.equals(BASE))require(world.isAirBlock(p),"canopy followers removed");
         // Model a tile left behind by an older failed removal. Persisting and
         // ticking its former follower must not dereference the air owner's state.
         TileEntityCanopy orphan=new TileEntityCanopy();orphan.anchor=BASE;orphan.pair=BASE;
@@ -55,6 +55,6 @@ final class CanopyRemovalRuntimeChecks {
         orphan.writeToNBT(new NBTTagCompound());orphan.update();
         require(world.getTileEntity(stale)==null && world.getBlockState(BASE).getBlock()==Blocks.STONE,"orphan tile cleanup preserves foreign replacement");
         clear(world);
-        System.out.println("[vandorlabs][reprolab] canopy-removal PASS real-harvest root/follower widths=1,2,3 facings=4 legacy-wide replacement old-tiles orphan-persistence");
+        System.out.println("[vandorlabs][reprolab] canopy-removal PASS real-harvest root/follower widths=1,2,3 facings=4 replacement old-tiles orphan-persistence");
     }
 }

@@ -8,8 +8,7 @@ import java.util.*;
 public final class CanopyVariants {
     private static List<CanopyMesh.Face> centeredVisor;
     public static boolean visor(String kind){return kind.equals("space_visor_2x1") || kind.equals("space_visor_3x1") || kind.equals("space_visor_5x1") || kind.equals("space_visor_5x1_double_height");}
-    public static boolean centered(String kind){return LargeCanopySettings.supports(kind) || visor(kind) || kind.equals("space_bubble_wedge_3x3");}
-    public static boolean retired(String kind){return kind.startsWith("visor_module_") || Arrays.asList("opening_slide_2x2","opening_hinge_2x2","space_wedge_1x2","space_longnose_1x3","figher_canopy_glass","space_bubble_wedge_2x2","space_bubble_wedge_3x3","space_crystal_2x2","space_shuttle_2x3","space_shuttle_3x3","opening_hinge_1x2").contains(kind);}
+    public static boolean centered(String kind){return LargeCanopySettings.supports(kind) || visor(kind);}
     public static List<CanopyMesh.Face> faces(TileEntityCanopy tile,List<CanopyMesh.Face> original){return faces(tile.centeredPlacement,tile.block().kind,original);}
     public static List<CanopyMesh.Face> faces(boolean centered,String kind,List<CanopyMesh.Face> original){return centered && kind.equals("space_visor_2x1")?centeredVisor:original;}
     public static void init() {
@@ -24,13 +23,7 @@ public final class CanopyVariants {
             CanopyMesh.MODELS.put(id,Collections.unmodifiableList(faces));
         }
         centeredVisor=shift(CanopyMesh.MODELS.get("space_visor_2x1"),.5,0);
-        List<CanopyMesh.Face> bubble=new ArrayList<>();
-        for(CanopyMesh.Face face:CanopyMesh.MODELS.get("space_bubble_wedge_3x3")) {
-            CanopyMesh.Face copy=copy(face);copy.vertices=new Vec3d[face.vertices.length];
-            for(int i=0;i<copy.vertices.length;i++){Vec3d v=face.vertices[i];double z=v.z<=.125?v.z:v.z>=1.875?v.z+1:.125+(v.z-.125)*2.75/1.75;copy.vertices[i]=new Vec3d(v.x,v.y,z);}
-            bubble.add(copy);
-        }
-        CanopyMesh.MODELS.put("space_bubble_wedge_3x3",Collections.unmodifiableList(bubble));CanopyMesh.DIMENSIONS.put("space_bubble_wedge_3x3",new int[]{3,3,2});
+
     }
     private static CanopyMesh.Face copy(CanopyMesh.Face source){CanopyMesh.Face face=new CanopyMesh.Face();face.material=source.material;face.baseMaterial=source.baseMaterial;face.group=source.group;face.doubleSided=source.doubleSided;face.uv=source.uv;return face;}
     private static List<CanopyMesh.Face> shift(List<CanopyMesh.Face> source,double x,double z){List<CanopyMesh.Face> result=new ArrayList<>();for(CanopyMesh.Face original:source){CanopyMesh.Face face=copy(original);face.vertices=new Vec3d[original.vertices.length];for(int i=0;i<face.vertices.length;i++)face.vertices[i]=original.vertices[i].addVector(x,0,z);result.add(face);}return Collections.unmodifiableList(result);}

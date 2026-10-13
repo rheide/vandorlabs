@@ -19,6 +19,9 @@ public final class VehicleCanopyRuntimeChecks {
         return fixture(block,facing,constituents,progress,16,71);
     }
     private static VehicleStructure fixture(BlockCanopy block,EnumFacing facing,int constituents,float progress,int depth,int scale) {
+        return fixture(block,facing,constituents,progress,depth,scale,false);
+    }
+    private static VehicleStructure fixture(BlockCanopy block,EnumFacing facing,int constituents,float progress,int depth,int scale,boolean forward) {
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);
@@ -29,7 +32,7 @@ public final class VehicleCanopyRuntimeChecks {
                 TileEntityCanopy tile=new TileEntityCanopy();tile.setPos(pos);tile.anchor=part;
                 if(constituents>1)tile.pair=ANCHOR;
                 tile.progress=tile.previous=progress;tile.targetOpen=progress>0;
-                NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tag.setInteger("CanopyWidth",constituents>1?constituents:block.width);
+                NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tag.setInteger("CanopyWidth",constituents>1?constituents:block.width);tag.setBoolean("CanopySlideForward",forward);tag.setBoolean("CanopyTileMaterial",forward);if(forward)tag.setInteger("CanopyMaterial",8);
                 if(configurable){tag.setInteger("CanopyDepth",depth);tag.setInteger("CanopyScale",scale);}
                 cells.add(new VehicleStructure.Cell(pos,state,tag));
             }
@@ -38,7 +41,7 @@ public final class VehicleCanopyRuntimeChecks {
     }
     public static void check(World world) {
         int max=0;
-        for(String id:new String[]{"regular_canopy_glass","opening_slide_1x2","opening_hinge_1x2","space_shuttle_3x3","space_bubble_wedge_3x3","large_front_canopy_glass"}) {
+        for(String id:new String[]{"regular_canopy_glass","canopy","front_canopy_glass"}) {
             BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+id);
             for(EnumFacing facing:EnumFacing.HORIZONTALS) {
                 VehicleStructure structure=fixture(block,facing,block.opening()?3:1,0);
@@ -68,7 +71,19 @@ public final class VehicleCanopyRuntimeChecks {
                 }
             }
         }
-        BlockCanopy largest=(BlockCanopy)Block.getBlockFromName("vandorlabs:large_front_canopy_glass_5x5");
+        BlockCanopy sliding=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
+        for(boolean forward:new boolean[]{false,true}){
+            VehicleStructure snapshot=fixture(sliding,EnumFacing.NORTH,3,0,16,71,forward),rotated=snapshot;
+            VehicleCanopyMotionRuntimeChecks.run(world,snapshot,ANCHOR);
+            for(int turn=0;turn<4;turn++){
+                VehicleWorld view=new VehicleWorld(world,rotated);
+                // The anchor moves under rotation; inspect every serialized canopy instead.
+                for(VehicleStructure.Cell cell:rotated.cells)if(cell.state.getBlock()==sliding)require(cell.tileData().getBoolean("CanopySlideForward")==forward && cell.tileData().getBoolean("CanopyTileMaterial")==forward,"parking rotation keeps slide direction");
+                rotated=VehicleRotation.rotate(rotated,view,1);
+            }
+            require(rotated.write().equals(snapshot.write()),"direction and canopy snapshot survive four parking rotations");
+        }
+        BlockCanopy largest=(BlockCanopy)Block.getBlockFromName("vandorlabs:large_front_canopy_glass");
         require(largest!=null,"configurable five-wide block registered");
         for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int depth:new int[]{0,80})for(int scale:new int[]{10,71,100}) {
             VehicleStructure structure=fixture(largest,facing,1,0,depth,scale);VehicleWorld view=new VehicleWorld(world,structure);
@@ -77,6 +92,6 @@ public final class VehicleCanopyRuntimeChecks {
             TileEntityCanopy owner=(TileEntityCanopy)view.getTileEntity(ANCHOR);
             require(hull.boxes.stream().anyMatch(box->box.intersects(owner.boxes().get(0).grow(1e-6))),"configurable large surfaces join vehicle hull");
         }
-        System.out.println("[vandorlabs][reprolab] vehicle-canopy-hull PASS local-surfaces hollow-interior proxy-dedup rotated-poses max-merged-boxes="+max);
+        System.out.println("[vandorlabs][reprolab] vehicle-canopy-hull PASS local-surfaces hollow-interior proxy-dedup rotated-poses sliding-directions taxi-motion max-merged-boxes="+max);
     }
 }

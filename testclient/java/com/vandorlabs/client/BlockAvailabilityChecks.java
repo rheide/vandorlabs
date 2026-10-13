@@ -27,7 +27,6 @@ final class BlockAvailabilityChecks {
                 check(!enabled("programmable_ramp")&&!enabled("controlled_ramp"),"ramp category split");
                 check(enabled("programmable_door")&&enabled("pilot_seat"),"unrelated category disabled");
                 check(BlockAvailability.enabled(new ResourceLocation("minecraft","glass")),"vanilla affected");
-                check(com.vandorlabs.blocks.ModBlocks.isRemovedMachineryId("hadron_analysis_large"),"Hadron retirement");
                 check(BlockCategories.of("space_visor_5x1").equals("canopies"),"canopy classification");
                 Files.write(file,defaults.getBytes(StandardCharsets.UTF_8));
                 BlockAvailability.load(file.toFile());

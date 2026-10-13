@@ -48,7 +48,6 @@ public final class CanopyRenderer extends CustomRenderer {
             id = String.format(java.util.Locale.ROOT, "regular_1x1_%02x", bits & 15);
         else if (id.startsWith("angled_") && (bits & 11) != 0)
             id = String.format(java.util.Locale.ROOT, "%s_%02x", id, bits & 11);
-        else if (pair instanceof Number && id.startsWith("opening_")) id = id.replace("1x2", "2x2");
         Object savedWidth=context.getBlockTileEntityFieldAt("CanopyWidth",ox,oy,oz);
         int width=savedWidth instanceof Number?((Number)savedWidth).intValue():pair instanceof Number?2:1;
         List<RenderPatch> result = new ArrayList<>();
@@ -58,8 +57,8 @@ public final class CanopyRenderer extends CustomRenderer {
         net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();
         for(String field:new String[]{"CanopyDepth","CanopyScale","CanopyShade","CanopyTint","CanopyMount","CanopyAngle","CanopyMotion"}){Object value=context.getBlockTileEntityFieldAt(field,ox,oy,oz);if(value instanceof Number)tag.setInteger(field,((Number)value).intValue());}
         com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();settings.read(tag);
-        if(com.vandorlabs.canopy.LargeCanopySettings.supports(id))mesh=com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings,Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0);
-        if(id.startsWith("opening_"))mesh=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,settings.angle,(bits&8)!=0);
+        if(com.vandorlabs.canopy.LargeCanopySettings.supports(id))mesh=com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.equals("large_front_canopy_glass")?5:3,settings,Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0);
+        if(id.equals("canopy"))mesh=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,settings.angle,(bits&8)!=0);
         mesh=com.vandorlabs.canopy.CanopyPose.faces(mesh,id,width,settings,0);
         if (mesh == null) return new RenderPatch[0];
         Object savedShade=context.getBlockTileEntityFieldAt("CanopyShade",ox,oy,oz),savedTint=context.getBlockTileEntityFieldAt("CanopyTint",ox,oy,oz);

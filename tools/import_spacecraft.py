@@ -17,6 +17,16 @@ def main():
     parser.add_argument('collection', type=Path)
     source = parser.parse_args().collection/'canopy-kit'
     models = json.loads((source/'model_catalog.json').read_text())
+    # Imported kit names are authoring keys, never registry compatibility aliases.
+    ids={'opening_slide_1x2':'canopy','large_front_canopy_glass':'front_canopy_glass',
+         'opening_slide_2x2':'canopy_mounts_double'}
+    retained={'angled_front_1x1','angled_front_1x2','regular_canopy_glass',
+              'space_visor_2x1','space_visor_3x1','space_visor_5x1','space_visor_5x1_double_height'}
+    models=[model for model in models if model['id'] in retained or model['id'] in ids
+            or model['id'].startswith(('regular_1x1_','angled_front_1x1_','angled_front_1x2_'))]
+    for model in models:
+        model['id']=ids.get(model['id'],model['id'])
+        if model['id']=='canopy_mounts_double':model['faces']=[face for face in model['faces'] if face['group']=='mount']
     clipped = clean(models)
     assert overlap_count(models) == 0
     target = (TEXTURES/'canopy').resolve()

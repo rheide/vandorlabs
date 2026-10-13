@@ -110,7 +110,7 @@ public final class VehicleRotation {
                         } else data.setLong(key,cell(link,width,depth,turns).toLong());
                     }
                     if(data.hasKey("CanopyFootprint",11)){int[] offsets=data.getIntArray("CanopyFootprint");for(int i=0;i+2<offsets.length;i+=3){BlockPos delta=vector(new BlockPos(offsets[i],offsets[i+1],offsets[i+2]),turns);offsets[i]=delta.getX();offsets[i+1]=delta.getY();offsets[i+2]=delta.getZ();}data.setIntArray("CanopyFootprint",offsets);}
-                    for(String key:new String[]{"OwnerOffset","ConsoleOwnerOffset","AnchorOffset","PairOffset"})if(data.hasKey(key,4))data.setLong(key,vector(BlockPos.fromLong(data.getLong(key)),turns).toLong());
+                    for(String key:new String[]{"OwnerOffset","AnchorOffset","PairOffset"})if(data.hasKey(key,4))data.setLong(key,vector(BlockPos.fromLong(data.getLong(key)),turns).toLong());
                     NBTTagList list=data.getTagList("TrapdoorAssembly",4),updated=new NBTTagList();
                     for(int n=0;n<list.tagCount();n++)updated.appendTag(new NBTTagLong(cell(BlockPos.fromLong(((NBTTagLong)list.get(n)).getLong()),width,depth,turns).toLong()));
                     if(data.hasKey("TrapdoorAssembly",9))data.setTag("TrapdoorAssembly",updated);

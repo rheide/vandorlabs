@@ -22,10 +22,7 @@ public final class VehicleWorld extends World {
         return block instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)block).hasSelectableType();
     }
     public static boolean isPropulsion(net.minecraft.block.Block block) {
-        if(block instanceof com.vandorlabs.blocks.BlockPropulsionLight)return true;
-        if(!(block instanceof com.vandorlabs.blocks.BlockShipSystem))return false;
-        String kind=((com.vandorlabs.blocks.BlockShipSystem)block).kind;
-        return kind.contains("drive") || kind.contains("engine") || kind.contains("thruster");
+        return block instanceof com.vandorlabs.blocks.BlockPropulsionLight;
     }
     public int propulsionBrightness(BlockPos pos,int configured) {
         VehicleStructure.Cell cell=structure.at(pos);

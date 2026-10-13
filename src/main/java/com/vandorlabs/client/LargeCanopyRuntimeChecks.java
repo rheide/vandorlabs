@@ -15,14 +15,15 @@ import java.util.*;
 public final class LargeCanopyRuntimeChecks {
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("large-canopy: "+text);}
     public static void run(EntityPlayerMP player){
+        materialUvs();
         for(int width:new int[]{3,5})for(int depth:new int[]{0,1,15,16,17,79,80})for(int scale:new int[]{10,71,100}){
             LargeCanopySettings settings=new LargeCanopySettings();settings.depth=depth;settings.scale=scale;List<CanopyMesh.Face> faces=LargeCanopyGeometry.faces(width,settings);require(!faces.isEmpty(),"empty shape");
             for(CanopyMesh.Face face:faces)for(Vec3d v:face.vertices)require(Double.isFinite(v.x) && Double.isFinite(v.y) && Double.isFinite(v.z) && v.x>=0 && v.x<=width && v.y>=0 && v.y<=width && v.z>=0 && v.z<=Math.max(1D/64,depth/16D),"shape bounds");
-            for(EnumFacing facing:EnumFacing.HORIZONTALS){List<AxisAlignedBB> boxes=CanopyMesh.collision(faces,"large_front_canopy_glass",width,0,facing,BlockPos.ORIGIN);require(!boxes.isEmpty(),"empty collision");for(AxisAlignedBB box:boxes)require(box.maxX>box.minX && box.maxY>box.minY && box.maxZ>box.minZ,"zero-volume collision");
-                Vec3d start=CanopyMesh.rotate(new Vec3d(width/2D,width/2D,-1),facing),end=CanopyMesh.rotate(new Vec3d(width/2D,width/2D,6),facing);require(CanopyMesh.trace(faces,"large_front_canopy_glass",width,0,facing,BlockPos.ORIGIN,start,end)!=null,"center ray missed");}
+            for(EnumFacing facing:EnumFacing.HORIZONTALS){List<AxisAlignedBB> boxes=CanopyMesh.collision(faces,"front_canopy_glass",width,0,facing,BlockPos.ORIGIN);require(!boxes.isEmpty(),"empty collision");for(AxisAlignedBB box:boxes)require(box.maxX>box.minX && box.maxY>box.minY && box.maxZ>box.minZ,"zero-volume collision");
+                Vec3d start=CanopyMesh.rotate(new Vec3d(width/2D,width/2D,-1),facing),end=CanopyMesh.rotate(new Vec3d(width/2D,width/2D,6),facing);require(CanopyMesh.trace(faces,"front_canopy_glass",width,0,facing,BlockPos.ORIGIN,start,end)!=null,"center ray missed");}
         }
         for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){LargeCanopySettings settings=new LargeCanopySettings();settings.shade=shade;settings.tint=tint;NBTTagCompound tag=new NBTTagCompound();settings.write(tag);LargeCanopySettings restored=new LargeCanopySettings();restored.read(tag);require(settings.key().equals(restored.key()),"settings NBT");}
-        BlockCanopy block=(BlockCanopy)com.vandorlabs.blocks.ModBlocks.BLOCKS.stream().filter(b->b.getRegistryName().getResourcePath().equals("large_front_canopy_glass_5x5")).findFirst().get();
+        BlockCanopy block=(BlockCanopy)com.vandorlabs.blocks.ModBlocks.BLOCKS.stream().filter(b->b.getRegistryName().getResourcePath().equals("large_front_canopy_glass")).findFirst().get();
         BlockPos pos=new BlockPos(40,20,40);for(int x=0;x<5;x++)for(int y=0;y<5;y++)for(int z=0;z<5;z++)player.world.setBlockToAir(pos.add(x,y,z));
         player.world.setBlockState(pos,block.getDefaultState(),3);block.onBlockPlacedBy(player.world,pos,player.world.getBlockState(pos),player,new ItemStack(block));TileEntityCanopy tile=TileEntityCanopy.at(player.world,pos);require(tile.cells().contains(pos),"default anchor footprint");int originalCells=tile.cells().size();
         TileEntityCanopy altered=TileEntityCanopy.at(player.world,pos.east());altered.anchor=pos.add(20,0,0);require(!LargeCanopyOwnership.apply(tile,player,80,10,12,2) && tile.large.depth==16,"foreign member was accepted");altered.anchor=pos;
@@ -42,16 +43,34 @@ public final class LargeCanopyRuntimeChecks {
         }
         System.out.println("[vandorlabs][reprolab] large-canopy-runtime PASS shapes=42 poses=168 palette=57 resize-protection NBT configured-items");
     }
+    private static double area(List<CanopyMesh.Face> faces){double result=0;for(CanopyMesh.Face face:faces)for(int i=1;i<face.vertices.length-1;i++)result+=face.vertices[i].subtract(face.vertices[0]).crossProduct(face.vertices[i+1].subtract(face.vertices[0])).lengthVector()/2;return result;}
+    static void materialUvs(){
+        List<List<CanopyMesh.Face>> models=new ArrayList<>();
+        for(int width:new int[]{1,2,3})for(int angle=0;angle<3;angle++)models.add(OpeningCanopyGeometry.faces(width,angle,false));
+        for(int width:new int[]{3,5}){LargeCanopySettings settings=new LargeCanopySettings();settings.depth=80;models.add(LargeCanopyGeometry.faces(width,settings,true));}
+        for(List<CanopyMesh.Face> source:models)for(boolean tiled:new boolean[]{false,true}){
+            List<CanopyMesh.Face> material=CanopyFinishes.faces(source,0,1,8,tiled),draw=CanopyMaterialUv.drawable(material);
+            require(Math.abs(area(draw)-area(source))<1e-7*Math.max(1,area(source)),"tiling preserves complete panel area model="+models.indexOf(source)+" tiled="+tiled+" before="+area(source)+" after="+area(draw));
+            for(CanopyMesh.Face face:draw)for(double[] uv:face.uv)if(face.baseMaterial.equals("panel"))require(uv[0]>=-1e-8 && uv[0]<=1+1e-8 && uv[1]>=-1e-8 && uv[1]<=1+1e-8,"material UV stays within atlas sprite");
+            if(!tiled)for(CanopyMesh.Face face:material)if(face.baseMaterial.equals("panel"))for(int axis=0;axis<2;axis++){
+                double min=1,max=0;for(double[] uv:face.uv){min=Math.min(min,uv[axis]);max=Math.max(max,uv[axis]);}require(min<1e-8 && max>1-1e-8,"Fit shows complete artwork on each panel");
+            }
+        }
+        CanopyMesh.Face panel=new CanopyMesh.Face();panel.vertices=new Vec3d[]{new Vec3d(0,0,0),new Vec3d(3,0,0),new Vec3d(3,2,0),new Vec3d(0,2,0)};panel.uv=new double[4][2];panel.material=panel.baseMaterial="glass";panel.group="shell";
+        List<CanopyMesh.Face> tiles=CanopyMaterialUv.drawable(CanopyFinishes.faces(Collections.singletonList(panel),0,1,8,true));
+        require(tiles.size()==6,"Tile repeats a 3x2 panel exactly six times at block scale");
+        System.out.println("[vandorlabs][reprolab] canopy-material-uv PASS Fit-full-artwork Tile-block-scale atlas-clipping area-preserved profiles=3 widths=1,2,3 front-frames=3,5");
+    }
     public static void icons(Minecraft mc){
         for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockCanopy && LargeCanopySettings.supports(((BlockCanopy)block).kind))for(int depth:new int[]{0,16,80})for(int scale:new int[]{10,71,100})for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){
             LargeCanopySettings settings=new LargeCanopySettings();settings.depth=depth;settings.scale=scale;settings.shade=shade;settings.tint=tint;checkIcon(mc,block,settings);
         }
-        net.minecraft.block.Block canopy=net.minecraft.block.Block.getBlockFromName("vandorlabs:opening_slide_1x2");
+        net.minecraft.block.Block canopy=net.minecraft.block.Block.getBlockFromName("vandorlabs:canopy");
         for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++){
             for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){
                 LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.shade=shade;settings.tint=tint;checkIcon(mc,canopy,settings);
             }
-            LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.material=9;checkIcon(mc,canopy,settings);
+            LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.material=9;checkIcon(mc,canopy,settings);settings.tileMaterial=true;checkIcon(mc,canopy,settings);
         }
         System.out.println("[vandorlabs][reprolab] large-canopy-icons PASS large-variants=1026 opening-variants=348 projected-padding");
     }

@@ -4,15 +4,11 @@ package com.vandorlabs.config;
 public final class BlockCategories {
     public static final String[] IDS={"screens","consoles_inputs","programmable_solids","diagonals",
             "glass","doors","ramps","lighting","seating","vehicle_controls","propulsion",
-            "canopies","redstone_controls","machinery","decoration"};
+            "canopies","redstone_controls","decoration"};
     private BlockCategories() {}
     public static String of(String id) {
-        if(id.startsWith("hadron_"))return "machinery";
         if(id.contains("diagonal"))return "diagonals";
-        if(id.contains("canopy")||id.startsWith("space_visor")||id.startsWith("space_wedge")
-                ||id.startsWith("space_longnose")||id.startsWith("space_crystal")||id.startsWith("space_shuttle")
-                ||id.startsWith("space_bubble")||id.startsWith("visor_module")
-                ||id.startsWith("angled_front")||id.startsWith("opening_"))return "canopies";
+        if(id.contains("canopy")||id.startsWith("space_visor")||id.startsWith("angled_front"))return "canopies";
         if(id.contains("glass"))return "glass";
         if(id.contains("door"))return "doors";
         if(id.contains("ramp"))return "ramps";

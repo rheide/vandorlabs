@@ -34,7 +34,7 @@ public final class BlockCanopy extends Block {
         height = size[2];
         setRegistryName(VandorLabs.MODID, id);
         setUnlocalizedName(id);
-        if(!com.vandorlabs.canopy.CanopyVariants.retired(id))setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+        setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
         setLightOpacity(0);
         setHardness(1.5F);
         setSoundType(SoundType.GLASS);
@@ -42,19 +42,18 @@ public final class BlockCanopy extends Block {
     }
 
     public boolean opening() {
-        return kind.startsWith("opening_");
+        return kind.equals("canopy");
     }
     public EnumFacing placementFacing(EntityLivingBase player){
         EnumFacing facing=player.getHorizontalFacing();
-        return opening() || kind.startsWith("angled_") || kind.startsWith("space_shuttle_")?facing.getOpposite():facing;
+        return opening() || kind.startsWith("angled_")?facing.getOpposite():facing;
     }
     public BlockPos placementAnchor(BlockPos clicked,EnumFacing facing){
         if(com.vandorlabs.canopy.LargeCanopySettings.supports(kind))return clicked.offset(facing.rotateYCCW(),width/2).down(height/2);
-        return com.vandorlabs.canopy.CanopyVariants.centered(kind)?clicked.offset(facing.rotateYCCW(),width/2).offset(facing,kind.equals("space_bubble_wedge_3x3")?length/2:0):clicked;
+        return com.vandorlabs.canopy.CanopyVariants.centered(kind)?clicked.offset(facing.rotateYCCW(),width/2):clicked;
     }
     public boolean supportsSeatBackrest(){
-        return kind.equals("regular_canopy_glass") || kind.startsWith("space_shuttle_")
-                || kind.startsWith("space_bubble_wedge_") || opening();
+        return kind.equals("regular_canopy_glass") || opening();
     }
     public boolean sharesSeatBackrest(IBlockState state){
         return supportsSeatBackrest()
@@ -157,7 +156,6 @@ public final class BlockCanopy extends Block {
         TileEntityCanopy root=TileEntityCanopy.at(w,p);
         if(root!=null){root.centeredPlacement=com.vandorlabs.canopy.CanopyVariants.centered(kind);root.hollowPlacement=root.resizable();}
         if(root!=null && root.configurable() && stack.hasTagCompound())root.large.read(stack.getTagCompound());
-        if(root!=null && kind.contains("hinge") && (!stack.hasTagCompound() || !stack.getTagCompound().hasKey("CanopyMotion")))root.large.motion=1;
         List<BlockPos> footprint=root==null?cells(p,s.getValue(FACING)):root.cells();
         if(root!=null)root.setFootprint(footprint);
         for (BlockPos cell : footprint) {
@@ -295,7 +293,6 @@ public final class BlockCanopy extends Block {
             ItemStack held=player.getHeldItem(hand),configured=held.copy();
             com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();
             if(held.hasTagCompound())settings.read(held.getTagCompound());
-            if(b.kind.contains("hinge") && (!held.hasTagCompound() || !held.getTagCompound().hasKey("CanopyMotion")))settings.motion=1;
             boolean large=com.vandorlabs.canopy.LargeCanopySettings.supports(b.kind);
             settings.mount=large?(side==EnumFacing.UP?2:side==EnumFacing.DOWN?3:0):side==EnumFacing.DOWN?1:0;
             net.minecraft.nbt.NBTTagCompound tag=configured.hasTagCompound()?configured.getTagCompound():new net.minecraft.nbt.NBTTagCompound();settings.write(tag);configured.setTagCompound(tag);

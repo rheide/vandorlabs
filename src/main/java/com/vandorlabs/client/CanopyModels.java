@@ -59,9 +59,10 @@ public final class CanopyModels {
 
         Icon(String id){this(id,null);}
         Icon(String id,com.vandorlabs.canopy.LargeCanopySettings settings) {
-            kind=id;List<CanopyMesh.Face> faces=settings!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(id)?com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings,true):CanopyMesh.MODELS.get(id);
-            if(settings!=null && id.startsWith("opening_"))faces=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(CanopyMesh.DIMENSIONS.get(id)[0],settings.angle,false);
-            if(settings!=null)faces=com.vandorlabs.canopy.CanopyFinishes.faces(faces,settings.shade,settings.tint,settings.material);
+            kind=id;List<CanopyMesh.Face> faces=settings!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(id)?com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.equals("large_front_canopy_glass")?5:3,settings,true):CanopyMesh.MODELS.get(id);
+            if(settings!=null && id.equals("canopy"))faces=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(CanopyMesh.DIMENSIONS.get(id)[0],settings.angle,false);
+            if(settings!=null)faces=com.vandorlabs.canopy.CanopyFinishes.faces(faces,settings.shade,settings.tint,settings.material,settings.tileMaterial);
+            faces=com.vandorlabs.canopy.CanopyMaterialUv.drawable(faces);
             for (CanopyMesh.Face f : faces)
                 for (int triangle = 1; triangle < f.vertices.length - 1; triangle++) {
                     add(f, new int[] {0, triangle, triangle + 1, triangle + 1});

@@ -30,7 +30,6 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorTextures.Events());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorItemModels());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.CanopyModels());
-        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ShipSystemModels());
         OBJLoader.INSTANCE.addDomain(VandorLabs.MODID);
         net.minecraftforge.client.model.ModelLoaderRegistry.registerLoader(new com.vandorlabs.client.UnifiedItemModels());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.SpaceDoorTextures());
@@ -66,7 +65,6 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.VehicleClient());
         ((net.minecraft.client.resources.IReloadableResourceManager)net.minecraft.client.Minecraft.getMinecraft().getResourceManager())
                 .registerReloadListener(manager->com.vandorlabs.client.RenderGroundVehicle.reload());
-        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityShipSystem.class, new com.vandorlabs.client.TEShipSystem());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCanopy.class,new com.vandorlabs.client.TECanopy());
         net.minecraft.block.Block programmableDoor = net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS
                 .getValue(new net.minecraft.util.ResourceLocation(VandorLabs.MODID, "programmable_door"));

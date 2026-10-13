@@ -27,7 +27,7 @@ import javax.imageio.ImageIO;
 public final class CanopyRuntimeChecks {
     static final String[] IDS =
             com.vandorlabs.blocks.ModBlocks.BLOCKS.stream()
-                    .filter(b -> b instanceof BlockCanopy && !com.vandorlabs.canopy.CanopyVariants.retired(((BlockCanopy)b).kind))
+                    .filter(b -> b instanceof BlockCanopy)
                     .map(b -> ((BlockCanopy) b).kind)
                     .toArray(String[]::new);
     private static final BlockPos TEST = new BlockPos(8, 100, 8);
@@ -48,55 +48,14 @@ public final class CanopyRuntimeChecks {
     }
 
     private static TileEntityCanopy place(World w, BlockCanopy b, BlockPos p, EnumFacing f) {
+        return place(w,b,p,f,0);
+    }
+    private static TileEntityCanopy place(World w,BlockCanopy b,BlockPos p,EnumFacing f,int motion) {
         IBlockState s = b.getDefaultState().withProperty(BlockCanopy.FACING, f);
         require(b.fits(w, p, f), "fixture fit " + b.kind);
         w.setBlockState(p, s, 2);
-        b.onBlockPlacedBy(w, p, s, null, new ItemStack(b));
+        ItemStack stack=new ItemStack(b);NBTTagCompound settings=new NBTTagCompound();settings.setInteger("CanopyMotion",motion);stack.setTagCompound(settings);b.onBlockPlacedBy(w,p,s,null,stack);
         return TileEntityCanopy.at(w, p);
-    }
-
-    private static com.google.gson.JsonArray assemblies() {
-        try (java.io.InputStream in =
-                CanopyRuntimeChecks.class.getResourceAsStream(
-                        "/assets/vandorlabs/data/visor_assemblies.json")) {
-            return new com.google.gson.JsonParser()
-                    .parse(new java.io.InputStreamReader(in, "UTF-8"))
-                    .getAsJsonArray();
-        } catch (java.io.IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static void buildAssembly(
-            World world, com.google.gson.JsonObject assembly, EnumFacing facing) {
-        java.util.Set<BlockPos> occupied = new java.util.HashSet<>();
-        for (com.google.gson.JsonElement entry : assembly.getAsJsonArray("modules")) {
-            com.google.gson.JsonObject module = entry.getAsJsonObject();
-            com.google.gson.JsonArray offset = module.getAsJsonArray("at");
-            BlockPos cell =
-                    TEST.offset(facing.rotateY(), offset.get(0).getAsInt())
-                            .offset(facing.getOpposite(), offset.get(2).getAsInt())
-                            .up(offset.get(1).getAsInt());
-            BlockCanopy block = block(module.get("model").getAsString());
-            TileEntityCanopy tile = place(world, block, cell, facing);
-            require(block.height == assembly.get("height").getAsInt(), "module height");
-            for (BlockPos member : block.cells(cell, facing)) {
-                require(occupied.add(member), "overlapping module cells");
-                require(
-                        TileEntityCanopy.at(world, member).owner() == tile,
-                        "module follower ownership");
-            }
-        }
-        int sections =
-                assembly.get("width").getAsInt() + 2 * (assembly.get("depth").getAsInt() - 1);
-        require(
-                occupied.size() == sections * assembly.get("height").getAsInt(),
-                "assembly occupancy");
-    }
-
-    private static void clearBoard(World world) {
-        for (BlockPos p : BlockPos.getAllInBox(TEST.add(-1, -1, -1), TEST.add(45, 5, 30)))
-            world.setBlockToAir(p);
     }
 
     private static void lookAt(Minecraft mc, Vec3d target) {
@@ -171,10 +130,10 @@ public final class CanopyRuntimeChecks {
                             for (EnumFacing f : EnumFacing.HORIZONTALS)
                                 for (String mode : new String[] {"slide", "hinge"}) {
                                     clear(w);
-                                    BlockCanopy b = block("opening_" + mode + "_1x2");
-                                    TileEntityCanopy a = place(w, b, TEST, f),
-                                            right = place(w, b, TEST.offset(f.rotateY()), f),
-                                            third = place(w, b, TEST.offset(f.rotateY(), 2), f);
+                                    BlockCanopy b = block("canopy");
+                                    TileEntityCanopy a = place(w,b,TEST,f,mode.equals("slide")?0:1),
+                                            right=place(w,b,TEST.offset(f.rotateY()),f,mode.equals("slide")?0:1),
+                                            third=place(w,b,TEST.offset(f.rotateY(),2),f,mode.equals("slide")?0:1);
                                     require(
                                             a.width() == 3
                                                     && right.owner() == a
@@ -182,7 +141,7 @@ public final class CanopyRuntimeChecks {
                                                     && third.owner()==a,
                                             "pair lock " + mode);
                                     require(
-                                            a.model().equals("opening_" + mode + "_2x2"),
+                                            a.model().equals("canopy"),
                                             "wide asset " + mode);
                                     NBTTagCompound saved = right.writeToNBT(new NBTTagCompound());
                                     TileEntityCanopy reloaded = new TileEntityCanopy();
@@ -271,24 +230,6 @@ public final class CanopyRuntimeChecks {
                                             (front.mask() & 8) != 0 && (rear.mask() & 4) != 0,
                                             "angled rear join " + id);
                                 }
-                            for (com.google.gson.JsonElement layout : assemblies())
-                                for (EnumFacing facing : EnumFacing.HORIZONTALS) {
-                                    clear(w);
-                                    buildAssembly(w, layout.getAsJsonObject(), facing);
-                                }
-                            for (CanopyMesh.Face face :
-                                    CanopyMesh.MODELS.get("visor_module_front_h2"))
-                                if (face.baseMaterial.equals("metal")) {
-                                    boolean low = true, high = true;
-                                    for (Vec3d v : face.vertices) {
-                                        low &= v.y <= .125 + 1E-8;
-                                        high &= v.y >= 1.875 - 1E-8;
-                                    }
-                                    require(low || high, "tall front has center rail or join post");
-                                }
-                            System.out.println(
-                                    "[vandorlabs][reprolab] canopy-composition PASS layouts=12"
-                                            + " facings=4 heights=2 depths=2 widths=3,5,7");
                             EntityPlayerMP player =
                                     mc.getIntegratedServer()
                                             .getPlayerList()
@@ -372,7 +313,7 @@ public final class CanopyRuntimeChecks {
                             CanopyReleaseRuntimeChecks.run((EntityPlayerMP)w.playerEntities.get(0));
                             LargeCanopyRuntimeChecks.run(mc.getIntegratedServer().getPlayerList().getPlayers().get(0));
                             clear(w);
-                            place(w, block("opening_slide_1x2"), TEST, EnumFacing.NORTH);
+                            place(w, block("canopy"), TEST, EnumFacing.NORTH);
                             System.out.println(
                                     "[vandorlabs][reprolab] canopy-world PASS designs="
                                             + IDS.length
@@ -567,36 +508,8 @@ public final class CanopyRuntimeChecks {
             if (stage == 6) {
                 shot(mc, output, "canopy_icons");
                 mc.displayGuiScreen(null);
-                pending =
-                        mc.getIntegratedServer()
-                                .addScheduledTask(
-                                        () -> {
-                                            World w = mc.getIntegratedServer().getEntityWorld();
-                                            clearBoard(w);
-                                            for (com.google.gson.JsonElement entry : assemblies()) {
-                                                com.google.gson.JsonObject layout =
-                                                        entry.getAsJsonObject();
-                                                if (layout.get("width").getAsInt() == 7
-                                                        && layout.get("height").getAsInt() == 2
-                                                        && layout.get("depth").getAsInt() == 3) {
-                                                    buildAssembly(w, layout, EnumFacing.NORTH);
-                                                    break;
-                                                }
-                                            }
-                                        });
-                mc.player.setPosition(17, 106, 3);
-                lookAt(mc, new Vec3d(11.5, 101, 10));
-                stage = 7;
-                ticks = 0;
-                return;
-            }
-            if (stage == 7) {
-                shot(mc, output, "canopy_composable");
-                System.out.println(
-                        "[vandorlabs][reprolab] canopy-live PASS open-close-packets"
-                                + " offset-selection screenshots=5");
-                stage = 8;
-                mc.shutdown();
+                System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection screenshots=5");
+                stage=7;mc.shutdown();
             }
         } catch (Exception e) {
             throw new IllegalStateException("canopy live stage=" + stage, e);

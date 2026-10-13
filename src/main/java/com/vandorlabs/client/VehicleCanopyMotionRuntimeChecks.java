@@ -48,7 +48,7 @@ final class VehicleCanopyMotionRuntimeChecks {
             VehicleStructure mid=VehicleStructure.read(craft.structure.write());
             EntityGroundVehicle late=new EntityGroundVehicle(world);late.install(mid);
             TileEntityCanopy resumed=((TileEntityCanopy)late.view.getTileEntity(hit)).owner();
-            require(resumed.progress==owner.progress && resumed.targetOpen,"save and late tracker retain current and target pose");
+            require(resumed.progress==owner.progress && resumed.targetOpen && resumed.large.slideForward==owner.large.slideForward && resumed.large.tileMaterial==owner.large.tileMaterial,"save and late tracker retain current and target pose");
             require(VehicleCanopies.toggle(craft,hit),"mid-animation reversal");
             for(int tick=0;tick<5;tick++)VehicleCanopies.tick(craft);
             require(owner.progress==0 && !owner.targetOpen,"reversal closes in five ticks");

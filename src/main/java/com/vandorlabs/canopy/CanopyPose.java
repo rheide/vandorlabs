@@ -13,12 +13,12 @@ public final class CanopyPose {
             CanopyMesh.Face face=new CanopyMesh.Face();
             face.vertices=new Vec3d[original.vertices.length];face.uv=original.uv;
             face.glazing=original.glazing || original.baseMaterial.equals("glass");face.baseMaterial=original.baseMaterial;face.material=original.material;
-            face.doubleSided=original.doubleSided;face.group="posed";
+            face.tiled=original.tiled;face.doubleSided=original.doubleSided;face.group="posed";
             for(int i=0;i<face.vertices.length;i++) {
                 Vec3d v=original.vertices[i];
                 if(large && settings.openable) v=hinge(v,width,settings.hinge,progress);
-                else if(kind.startsWith("opening_"))
-                    v=CanopyMesh.pose(v,settings.motion==0?"opening_slide_1x2":"opening_hinge_1x2",1,progress,original.group.equals("shell"));
+                else if(kind.equals("canopy"))
+                    v=CanopyMesh.pose(v,settings.motion==0?"slide":"hinge",1,progress,original.group.equals("shell"),settings.slideForward);
                 if(settings.mount==1) v=new Vec3d(v.x,1-v.y,v.z);
                 else if(settings.mount==2) v=new Vec3d(v.x,v.z,width-v.y);
                 else if(settings.mount==3) v=new Vec3d(v.x,1-v.z,v.y);

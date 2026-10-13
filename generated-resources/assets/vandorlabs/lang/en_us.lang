@@ -507,43 +507,16 @@ tile.vandorlabs.large_power_lever.name=Power Lever
 
 tile.angled_front_1x1.name=Angled Front Canopy Glass
 tile.angled_front_1x2.name=Long Angled Front Canopy Glass
-tile.opening_slide_1x2.name=Canopy
-tile.opening_hinge_1x2.name=Rear-Hinged Canopy
-tile.opening_slide_2x2.name=Wide Sliding Canopy
-tile.opening_hinge_2x2.name=Wide Rear-Hinged Canopy
+tile.canopy.name=Canopy
 tile.regular_canopy_glass.name=Canopy Glass
-tile.large_front_canopy_glass.name=Large Front Canopy Glass
-tile.figher_canopy_glass.name=Figher Canopy Glass
-tile.space_wedge_1x2.name=Wedge Canopy
-tile.space_longnose_1x3.name=Longnose Canopy
-tile.space_crystal_2x2.name=Crystal Canopy
-tile.space_shuttle_2x3.name=Shuttle Canopy
+tile.front_canopy_glass.name=Front Canopy Glass
 tile.space_visor_2x1.name=Visor Canopy
 tile.space_visor_3x1.name=Wide Visor Canopy
 tile.space_visor_5x1.name=Extra-Wide Visor Canopy
-tile.space_bubble_wedge_2x2.name=Bubble Wedge Canopy
 tile.space_visor_5x1_double_height.name=Tall Extra-Wide Visor Canopy
-tile.visor_module_front_h1.name=Visor Front
-tile.visor_module_front_latch_h1.name=Visor Front Latch
-tile.visor_module_corner_left_h1.name=Visor Corner Left
-tile.visor_module_corner_right_h1.name=Visor Corner Right
-tile.visor_module_side_left_h1.name=Visor Side Left
-tile.visor_module_side_right_h1.name=Visor Side Right
-tile.visor_module_front_h2.name=Tall Visor Front
-tile.visor_module_front_latch_h2.name=Tall Visor Front Latch
-tile.visor_module_corner_left_h2.name=Tall Visor Corner Left
-tile.visor_module_corner_right_h2.name=Tall Visor Corner Right
-tile.visor_module_side_left_h2.name=Tall Visor Side Left
-tile.visor_module_side_right_h2.name=Tall Visor Side Right
-tile.aster_field_coupler_large.name=Aster Field Coupler
-tile.aster_containment_core_large.name=Aster Containment Core
-tile.aster_cross_flow_core_large.name=Aster Cross-flow Core
-tile.aster_external_sensor_g64.name=Aster split interferometer
 
 tile.vandorlabs.pilot_seat.name=Pilot Seat
 
 tile.vandorlabs.programmable_diagonal_glass.name=Programmable Diagonal Glass
 
-tile.space_shuttle_3x3.name=Wide Shuttle Canopy
-tile.space_bubble_wedge_3x3.name=Bubble Wedge Canopy
-tile.large_front_canopy_glass_5x5.name=Large Front Canopy Glass (5 x 5)
+tile.large_front_canopy_glass.name=Large Front Canopy Glass

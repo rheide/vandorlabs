@@ -6,7 +6,7 @@ For example:
 
 ```text
 blocks {
-    B:machinery=false
+    B:decoration=false
     B:ramps=true
     B:screens=true
 }
@@ -20,16 +20,15 @@ Edit the generated file rather than replacing it with this partial example. The 
 | `consoles_inputs` | Regular programmable consoles and inputs |
 | `programmable_solids` | Programmable blocks, walls, slabs, stairs, storage and portholes |
 | `diagonals` | All diagonal variants, including diagonal glass, screens, consoles and trapdoors |
-| `glass` | Regular programmable glass and cockpit glass |
+| `glass` | Regular programmable glass |
 | `doors` | Programmable doors and regular trapdoors |
 | `ramps` | Programmable Ramp and its generated segments |
 | `lighting` | Programmable lights, frames and light slabs |
 | `seating` | Programmable chairs and connected seats |
 | `vehicle_controls` | Pilot Seat and landing gear |
 | `propulsion` | Thrusters, drives and hover propulsion |
-| `canopies` | Canopies and modular visors |
+| `canopies` | Canopies and fixed visors |
 | `redstone_controls` | Buttons, switches, levers, throttles and Programmable Trigger Block |
-| `machinery` | Reserved category; imported machinery families have been removed |
 | `decoration` | Remaining decorative blocks, including the industrial table |
 
 Each block belongs to one category. Diagonal variants belong to `diagonals` regardless of their material or function. Items such as the Configurizer, Duplifier, armor and crafting ingots are unaffected.

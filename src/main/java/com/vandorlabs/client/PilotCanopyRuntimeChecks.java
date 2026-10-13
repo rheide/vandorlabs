@@ -15,42 +15,11 @@ import net.minecraft.world.World;
 /** Shared canopy/backrest space must preserve both blocks and vehicle ownership. */
 final class PilotCanopyRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("pilot canopy: "+message);}
-    private static void checkShuttlePlacement(World world,EntityPlayerMP player){
-        float oldYaw=player.rotationYaw;
-        ItemStack oldHeld=player.getHeldItemMainhand().copy();
-        int checked=0;
-        try{
-            for(Block raw:Block.REGISTRY)if(raw instanceof BlockCanopy && ((BlockCanopy)raw).kind.startsWith("space_shuttle_")){
-                BlockCanopy canopy=(BlockCanopy)raw;
-                for(EnumFacing playerFacing:EnumFacing.HORIZONTALS){
-                    BlockPos ground=new BlockPos(430,111,430);
-                    for(BlockPos at:BlockPos.getAllInBox(ground.add(-6,0,-6),ground.add(6,5,6)))world.setBlockToAir(at);
-                    world.setBlockState(ground,Blocks.STONE.getDefaultState(),2);
-                    player.rotationYaw=playerFacing.getHorizontalAngle();
-                    require(player.getHorizontalFacing()==playerFacing,"placement player yaw fixture");
-                    ItemStack held=new ItemStack(canopy);
-                    player.setHeldItem(EnumHand.MAIN_HAND,held);
-                    require(held.getItem().onItemUse(player,world,ground,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS,
-                            "Shuttle item placement succeeds "+canopy.kind);
-                    EnumFacing expected=playerFacing.getOpposite();
-                    require(world.getBlockState(ground.up()).getBlock()==canopy
-                            && world.getBlockState(ground.up()).getValue(BlockCanopy.FACING)==expected,
-                            "Shuttle opens away from player "+canopy.kind+" player="+playerFacing);
-                    checked++;
-                }
-            }
-            require(checked>=8,"both Shuttle widths tested in four directions");
-        }finally{
-            player.rotationYaw=oldYaw;player.setHeldItem(EnumHand.MAIN_HAND,oldHeld);
-            for(BlockPos at:BlockPos.getAllInBox(new BlockPos(424,111,424),new BlockPos(436,116,436)))world.setBlockToAir(at);
-        }
-    }
     static void run(World world,EntityPlayerMP player){
         BlockPilotSeat seat=(BlockPilotSeat)ModBlocks.PILOT_SEAT;
         BlockTelescopicLandingGear gear=null;
         for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
         require(gear!=null,"registered landing gear");
-        checkShuttlePlacement(world,player);
         int count=0;
         for(Block raw:Block.REGISTRY)if(raw instanceof BlockCanopy){
             BlockCanopy canopy=(BlockCanopy)raw;

@@ -12,6 +12,7 @@ import java.util.*;
 /** One categorized, scrollable artwork picker with atlas thumbnails. */
 final class HousingTextureList {
     static final int ROW_HEIGHT=22;
+    static final int CANOPY_GLASS_BASE=0x10000000;
     private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001;
     private Runnable redstoneAction;
     HousingTextureList redstone(Runnable action){redstoneAction=action;setSelected(selected());return this;}
@@ -62,9 +63,24 @@ final class HousingTextureList {
     static HousingTextureList forGlass(int detail,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(i,
-                com.vandorlabs.tiles.GlassTextures.LABELS[i],i<3?"Original glass":"Colored glass",
+                com.vandorlabs.tiles.GlassTextures.LABELS[i],"Glass",
                 com.vandorlabs.tiles.GlassTextures.texture(i,detail)));
         return new HousingTextureList(x,y,width,selected,8,entries);
+    }
+    /** UI-only glass choices coexist with stable saved material IDs in one picker. */
+    static HousingTextureList forCanopy(int x,int y,int width,int shade,int material) {
+        List<Option> entries=new ArrayList<>();
+        for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(CANOPY_GLASS_BASE+i,
+                com.vandorlabs.tiles.GlassTextures.LABELS[i],"Glass",com.vandorlabs.tiles.GlassTextures.texture(i,1)));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && generalTexture(i)){
+            int choice=ScreenHousingTextures.choiceAt(i);
+            entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+        }
+        return new HousingTextureList(x,y,width,material<0?CANOPY_GLASS_BASE+shade:material,8,entries);
+    }
+    HousingTextureList keepView(HousingTextureList previous){
+        if(previous!=null){expanded.addAll(previous.expanded);rebuild();scroll=Math.min(maxScroll(),previous.scroll);}
+        return this;
     }
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();

@@ -36,7 +36,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageRedstoneScreen.Handler.class,MessageRedstoneScreen.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableArmor.Handler.class, MessageProgrammableArmor.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageSampleArmorTexture.Handler.class, MessageSampleArmorTexture.class, id++, Side.SERVER);
-        INSTANCE.registerMessage(MessageShipSystem.Handler.class, MessageShipSystem.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageLargeCanopy.Handler.class,MessageLargeCanopy.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageCanopyUse.Handler.class,MessageCanopyUse.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageCanopySettingsResult.Handler.class,MessageCanopySettingsResult.class,id++,Side.CLIENT);

@@ -19,7 +19,7 @@ public final class CanopyMesh {
         public double[][] uv;
         public String material, baseMaterial, group;
         public boolean doubleSided;
-        public boolean glazing;
+        public boolean glazing,tiled;
     }
 
     static {
@@ -65,29 +65,16 @@ public final class CanopyMesh {
                         });
                 MODELS.put(id, Collections.unmodifiableList(faces));
             }
-            wide("space_shuttle_2x3","space_shuttle_3x3");
-            wide("space_bubble_wedge_2x2","space_bubble_wedge_3x3");
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
-    /** Derived fixed variants retain the edge details and enlarge only the central span. */
-    private static void wide(String source,String target) {
-        List<Face> result=new ArrayList<>();
-        for(Face face:MODELS.get(source)) {
-            Face copy=new Face();copy.vertices=new Vec3d[face.vertices.length];
-            for(int i=0;i<copy.vertices.length;i++) {
-                Vec3d v=face.vertices[i];double x=v.x<=.125?v.x:v.x>=1.875?v.x+1:.125+(v.x-.125)*2.75/1.75;
-                copy.vertices[i]=new Vec3d(x,v.y,v.z);
-            }
-            copy.uv=face.uv;copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.group=face.group;copy.doubleSided=face.doubleSided;
-            result.add(copy);
-        }
-        MODELS.put(target,Collections.unmodifiableList(result));int[] size=DIMENSIONS.get(source);DIMENSIONS.put(target,new int[]{3,size[1],size[2]});
+    public static Vec3d pose(Vec3d v, String kind, int width, double progress, boolean moving) {
+        return pose(v,kind,width,progress,moving,false);
     }
 
-    public static Vec3d pose(Vec3d v, String kind, int width, double progress, boolean moving) {
+    public static Vec3d pose(Vec3d v, String kind, int width, double progress, boolean moving, boolean slideForward) {
         // Three constituents share the two-wide shell, retaining the authored outer rail thickness.
         if(width==3 && (kind.contains("slide") || kind.contains("hinge"))) {
             double x=v.x<=.125?v.x:v.x>=1.875?v.x+1:.125+(v.x-.125)*2.75/1.75;
@@ -95,7 +82,7 @@ public final class CanopyMesh {
         }
         if (!moving) return v;
         double p = progress * progress * (3 - 2 * progress);
-        if (kind.contains("slide")) return v.addVector(0, Math.min(1,p*8)/16D, 2 * p);
+        if (kind.contains("slide")) return v.addVector(0, Math.min(1,p*8)/16D, (slideForward?-2:2) * p);
         double a = Math.toRadians(105 * p), y = v.y - 1, z = v.z - 2;
         return new Vec3d(
                 v.x, 1 + y * Math.cos(a) - z * Math.sin(a), 2 + y * Math.sin(a) + z * Math.cos(a));
@@ -237,7 +224,7 @@ public final class CanopyMesh {
         subdivide(boxes, ab, bc, ca, depth - 1, pos);
     }
 
-    static {DIMENSIONS.put("large_front_canopy_glass_5x5",new int[]{5,1,5});MODELS.put("large_front_canopy_glass_5x5",LargeCanopyGeometry.faces(5,new LargeCanopySettings()));}
+    static {DIMENSIONS.put("large_front_canopy_glass",new int[]{5,1,5});MODELS.put("large_front_canopy_glass",LargeCanopyGeometry.faces(5,new LargeCanopySettings()));}
     static {CanopyVariants.init();}
     private CanopyMesh() {}
 }

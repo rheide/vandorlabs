@@ -68,7 +68,6 @@ public class VandorLabs {
         EntityRegistry.registerModEntity(new ResourceLocation(MODID, "ground_vehicle"),
                 com.vandorlabs.vehicle.EntityGroundVehicle.class, "ground_vehicle", 2, this, 128, 2, true);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCanopy.class,"vandorlabs:canopy");
-        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityShipSystem.class,"vandorlabs:ship_system");
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new com.vandorlabs.canopy.CanopyInteractions());
         PacketHandler.register();
         logger.info("Vandor Labs pre-initialization: engaging warp drive...");

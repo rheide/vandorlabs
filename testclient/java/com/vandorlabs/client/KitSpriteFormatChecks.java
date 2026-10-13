@@ -32,17 +32,12 @@ public final class KitSpriteFormatChecks {
             String[] catalogs = {"canopy_meshes.json"};
             for(java.util.Enumeration<? extends ZipEntry> entries=jar.entries();entries.hasMoreElements();) {
                 String name=entries.nextElement().getName();
-                if(name.matches(".*(?:^|/)(?:rivet_|vektor_|kestrel_|hadron_).*"))throw new AssertionError("Removed machinery asset packaged: "+name);
+                if(name.matches(".*(?:^|/)(?:aster_|rivet_|vektor_|kestrel_|hadron_).*"))throw new AssertionError("Removed machinery asset packaged: "+name);
             }
             for (String catalog : catalogs) {
-                String directory = catalog.equals("canopy_meshes.json") ? "canopy/" : "ship_systems/";
+                String directory = "canopy/";
                 try (Reader reader = new InputStreamReader(jar.getInputStream(jar.getEntry("assets/vandorlabs/data/" + catalog)), "UTF-8")) {
                     JsonArray models=new JsonParser().parse(reader).getAsJsonArray();
-                    if(catalog.equals("vh_system_meshes.json")){
-                        if(models.size()!=8)throw new AssertionError("Retained Hadron mesh variants differ");
-                        for(JsonElement model:models)if(!model.getAsJsonObject().get("id").getAsString().startsWith("hadron_"))
-                            throw new AssertionError("Removed machinery model packaged");
-                    }
                     for (JsonElement model : models)
                         for (JsonElement face : model.getAsJsonObject().getAsJsonArray("faces"))
                             textures.add("assets/vandorlabs/textures/blocks/" + directory

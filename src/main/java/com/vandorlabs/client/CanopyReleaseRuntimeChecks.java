@@ -33,8 +33,8 @@ final class CanopyReleaseRuntimeChecks {
             player.setSneaking(false);farUses=0;
             CanopyMesh.Face probe=new CanopyMesh.Face();probe.vertices=new Vec3d[]{new Vec3d(1.5,3,1)};probe.uv=new double[][]{{0,0}};probe.material=probe.baseMaterial="glass";probe.group="shell";
             LargeCanopySettings top=new LargeCanopySettings();top.openable=true;top.hinge=2;
-            require(CanopyPose.faces(Collections.singletonList(probe),"large_front_canopy_glass",3,top,.5).get(0).vertices[0].y>3,"top hinge lifts the projecting front away from the cabin");
-            for(String kind:new String[]{"large_front_canopy_glass","large_front_canopy_glass_5x5"})for(EnumFacing side:EnumFacing.values()) {
+            require(CanopyPose.faces(Collections.singletonList(probe),"front_canopy_glass",3,top,.5).get(0).vertices[0].y>3,"top hinge lifts the projecting front away from the cabin");
+            for(String kind:new String[]{"front_canopy_glass","large_front_canopy_glass"})for(EnumFacing side:EnumFacing.values()) {
                 clear(world);BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+kind);
                 world.setBlockState(BASE,Blocks.STONE.getDefaultState(),3);
                 player.rotationYaw=(side.getAxis().isHorizontal()?side.getOpposite():EnumFacing.NORTH).getHorizontalAngle();
@@ -88,11 +88,10 @@ final class CanopyReleaseRuntimeChecks {
                 require(world.getBlockState(inside).getBlock()==Blocks.IRON_BLOCK,"removal preserves cabin block");
             }
             require(farUses>0,"opened tips beyond the anchor interaction limit are exercised");
-            clear(world);BlockCanopy legacy=(BlockCanopy)Block.getBlockFromName("vandorlabs:opening_hinge_1x2");world.setBlockState(BASE,legacy.getDefaultState(),2);legacy.onBlockPlacedBy(world,BASE,legacy.getDefaultState(),player,new ItemStack(legacy));
-            NBTTagCompound old=world.getTileEntity(BASE).writeToNBT(new NBTTagCompound());old.removeTag("CanopyMotion");TileEntityCanopy oldTile=new TileEntityCanopy();oldTile.readFromNBT(old);oldTile.setWorld(world);oldTile.faces();require(oldTile.large.motion==1,"legacy rear hinge resolves after its world is assigned");
+            require(!new LargeCanopySettings().slideForward,"direction defaults backward");
             opening(world,player);copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
         }finally{clear(world);player.setHeldItem(EnumHand.MAIN_HAND,held);player.setSneaking(sneak);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);}
-        System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 outside-placement exact-footprint removal opening-modes angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
+        System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 outside-placement exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
     }
     private static boolean useFarSurface(TileEntityCanopy tile,EntityPlayerMP player){
         for(CanopyMesh.Face face:tile.faces())for(int i=1;i<face.vertices.length-1;i++){
@@ -115,16 +114,34 @@ final class CanopyReleaseRuntimeChecks {
         return false;
     }
     private static void opening(World world,EntityPlayerMP player){
-        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:opening_slide_1x2"),glass=(BlockCanopy)Block.getBlockFromName("vandorlabs:regular_canopy_glass");
-        for(int mount=0;mount<2;mount++)for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++)for(int width=1;width<=3;width++) {
-            clear(world);LargeCanopySettings settings=new LargeCanopySettings();settings.mount=mount;settings.angle=angle;settings.motion=motion;
+        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy"),glass=(BlockCanopy)Block.getBlockFromName("vandorlabs:regular_canopy_glass");
+        for(int mount=0;mount<2;mount++)for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++)for(int width=1;width<=3;width++)for(int direction=0;direction<(motion==0?2:1);direction++) {
+            clear(world);LargeCanopySettings settings=new LargeCanopySettings();settings.mount=mount;settings.angle=angle;settings.motion=motion;settings.slideForward=direction==1;
             ItemStack stack=new ItemStack(block);NBTTagCompound tag=new NBTTagCompound();settings.write(tag);stack.setTagCompound(tag);
             for(int column=0;column<width;column++){BlockPos pos=BASE.east(column);world.setBlockState(pos,block.getDefaultState(),2);block.onBlockPlacedBy(world,pos,block.getDefaultState(),player,stack);}
             TileEntityCanopy tile=TileEntityCanopy.at(world,BASE);require(tile.width()==width,"configured shells join");
             BlockPos rear=BASE.south(2);ItemStack rearStack=new ItemStack(glass);rearStack.setTagCompound(tag.copy());world.setBlockState(rear,glass.getDefaultState(),2);glass.onBlockPlacedBy(world,rear,glass.getDefaultState(),player,rearStack);
             require((tile.mask()&8)!=0 && TileEntityCanopy.at(world,rear).mask()!=0,"rear glass joins opening shell");
+            List<CanopyMesh.Face> closedFaces=tile.faces(0);
             tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==1,"configured shell opens");
+            if(motion==0){
+                List<CanopyMesh.Face> openFaces=tile.faces();boolean moved=false,stationary=false;
+                for(int f=0;f<closedFaces.size();f++)for(int v=0;v<closedFaces.get(f).vertices.length;v++){
+                    Vec3d delta=openFaces.get(f).vertices[v].subtract(closedFaces.get(f).vertices[v]);
+                    if(delta.lengthSquared()<1e-12){stationary=true;continue;}
+                    require(Math.abs(delta.z-(settings.slideForward?-2:2))<1e-8 && Math.abs(delta.y-(mount==0?1:-1)/16D)<1e-8,"shell moves selected direction with one-pixel mounted lift");moved=true;
+                }
+                require(moved && stationary,"shell moves while mounts stay fixed");
+                LargeCanopySettings changed=copy(settings);changed.slideForward=!changed.slideForward;
+                require(!LargeCanopyOwnership.apply(tile,player,changed),"direction cannot change while open");
+                TileEntityCanopy saved=new TileEntityCanopy();saved.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(saved.large.slideForward==settings.slideForward,"direction survives tile save");
+                for(EnumFacing facing:EnumFacing.HORIZONTALS){
+                    Vec3d center=CanopyMesh.rotate(new Vec3d(.5,.5,1.5+(settings.slideForward?-2:2)),facing).add(new Vec3d(BASE));
+                    require(CanopyMesh.trace(openFaces,"posed",width,0,facing,BASE,center.addVector(0,3,0),center.addVector(0,-3,0))!=null,"moved roof remains selectable in every facing");
+                }
+            }
             tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==0,"configured shell closes");
+            if(motion==0){LargeCanopySettings changed=copy(settings);changed.slideForward=!changed.slideForward;require(LargeCanopyOwnership.apply(tile,player,changed),"closed joined direction changes together mount="+mount+" angle="+angle+" width="+width+" direction="+direction+" actual="+tile.large.key()+" progress="+tile.progress+" draws="+tile.draws());for(int column=0;column<width;column++)require(TileEntityCanopy.at(world,BASE.east(column)).large.slideForward==changed.slideForward,"joined constituent direction synchronized");require(LargeCanopyOwnership.apply(tile,player,settings),"restore chosen direction");}
             settings.redstone=true;settings.channels=com.vandorlabs.redstone.ChannelList.of(29020);
             require(LargeCanopyOwnership.apply(tile,player,settings),"redstone settings apply");
             world.setBlockState(BASE.north(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);tile.refreshPower();require(tile.targetOpen,"physical signal opens");
@@ -138,7 +155,7 @@ final class CanopyReleaseRuntimeChecks {
             require(ProgrammableSettings.apply(world,BASE,values,player) && tile.large.shade==13 && tile.large.tint==2,"copy applies canopy glass finish");
             require(ProgrammableSettings.capture(world,BASE).getInteger(ProgrammableSettings.GLASS_TINT)==2,"copy captures canopy intensity");
         }
-        for(String kind:new String[]{"angled_front_1x1","angled_front_1x2","opening_slide_1x2"})for(EnumFacing facing:EnumFacing.HORIZONTALS) {
+        for(String kind:new String[]{"angled_front_1x1","angled_front_1x2","canopy"})for(EnumFacing facing:EnumFacing.HORIZONTALS) {
             clear(world);BlockCanopy nose=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+kind);world.setBlockState(BASE,Blocks.STONE.getDefaultState(),3);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(nose));
             require(player.getHeldItemMainhand().getItem().onItemUse(player,world,BASE,EnumHand.MAIN_HAND,facing,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"long nose can mount against a wall");
         }

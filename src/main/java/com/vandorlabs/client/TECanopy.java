@@ -47,7 +47,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         Prepared prepared=CACHE.get(tile);
         if(prepared==null || prepared.source!=source || prepared.facing!=tile.facing() || prepared.width!=tile.width() || prepared.progress!=progress){
             prepared=new Prepared();prepared.source=source;prepared.facing=tile.facing();prepared.width=tile.width();prepared.progress=progress;
-            for(CanopyMesh.Face f:source){
+            for(CanopyMesh.Face f:com.vandorlabs.canopy.CanopyMaterialUv.drawable(source)){
                 DrawFace draw=new DrawFace();draw.source=f;draw.v=new Vec3d[f.vertices.length];Vec3d center=Vec3d.ZERO;
                 for(int i=0;i<draw.v.length;i++){draw.v[i]=CanopyMesh.rotate(f.vertices[i],prepared.facing);center=center.add(draw.v[i]);}
                 draw.center=center.scale(1D/draw.v.length);

@@ -32,11 +32,11 @@ def main():
    if removed(p.stem):p.unlink()
  textures=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/ship_systems'
  for p in textures.rglob('*.png'):
-  if any(part.startswith(RETIRED_PREFIXES) for part in p.relative_to(textures).parts):p.unlink()
+  if any(part.startswith(('aster_',)+RETIRED_PREFIXES) for part in p.relative_to(textures).parts):p.unlink()
  for langroot in (ASSETS, ROOT/'generated-resources/assets/vandorlabs'):
   for p in (langroot/'lang').glob('*.lang'):
    lines=p.read_text(encoding='utf-8').splitlines()
-   keep=[line for line in lines if not line.startswith(tuple('tile.'+prefix for prefix in RETIRED_PREFIXES))]
+   keep=[line for line in lines if not line.startswith(tuple('tile.'+prefix for prefix in ('aster_',)+RETIRED_PREFIXES))]
    if keep!=lines:p.write_text('\n'.join(keep)+'\n',encoding='utf-8')
  catalog=ROOT/'generated-resources/assets/vandorlabs/data/blocks.json';data=json.loads(catalog.read_text())
  print(type(data),len(data),len(removed_ids))

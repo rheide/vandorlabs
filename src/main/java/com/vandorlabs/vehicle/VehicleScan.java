@@ -129,12 +129,6 @@ public final class VehicleScan {
                     for(BlockPos member:canopy.cells())linked(member,block);
                     if(canopy.pair!=null)linked(canopy.pair,block);
                 }
-                if(tile instanceof TileEntityShipSystem) {
-                    TileEntityShipSystem system=(TileEntityShipSystem)tile;
-                    BlockPos root=system.anchor==null?p:system.anchor;
-                    for(BlockPos member:((BlockShipSystem)block).cells(root,state.getValue(BlockShipSystem.FACING),system.mount))linked(member,block);
-                    if(system.consoleOwner!=null)linked(system.consoleOwner,block);
-                }
                 if(tile instanceof TileEntityProgrammableTrapdoor && data!=null) {
                     for(String key:new String[]{"TrapdoorPartner","TrapdoorSquare"})
                         if(data.hasKey(key,4))linked(BlockPos.fromLong(data.getLong(key)),block);

@@ -43,7 +43,7 @@ task compileKitSpriteChecks(type: JavaCompile) {
 
 task testKitSpriteFormats(type: JavaExec) {
     group = 'verification'
-    description = 'Validate packaged canopy and machinery textures with the Minecraft sprite loader'
+    description = 'Validate packaged canopy textures and removed machinery assets with the Minecraft sprite loader'
     dependsOn compileKitSpriteChecks, jar
     classpath = sourceSets.main.runtimeClasspath + files(compileKitSpriteChecks.destinationDir)
     main = 'com.vandorlabs.client.KitSpriteFormatChecks'
@@ -63,7 +63,7 @@ task compileConsoleChecks(type: JavaCompile) {
 
 task testConsoleRectangles(type: JavaExec) {
     group = 'verification'
-    description = 'Check Vektor console rectangle grouping, gaps, rotations and saved membership'
+    description = 'Check that retired machinery families have no registered blocks'
     dependsOn compileConsoleChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileConsoleChecks.destinationDir)
     main = 'com.vandorlabs.client.ConsoleRectangleChecks'
@@ -305,6 +305,21 @@ task testDynmapSupport(type: Exec) {
     outputs.upToDateWhen { false }
 }
 check.dependsOn testDynmapSupport
+
+task testCanopyCatalog(type: Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/test_canopy_catalog.py'
+}
+check.dependsOn testCanopyCatalog
+
+task testCanopyMaterialUvs(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyMaterialUvChecks'
+}
+check.dependsOn testCanopyMaterialUvs
+
+
 
 task testSpaceDoors(type: Exec) {
     workingDir projectDir

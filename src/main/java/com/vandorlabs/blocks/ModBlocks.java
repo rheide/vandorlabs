@@ -181,8 +181,6 @@ public class ModBlocks {
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
-        for (String id : com.vandorlabs.shipsystems.ShipSystemMesh.BLOCK_MODELS.keySet())
-            if(!isRemovedMachineryId(id))add(new BlockShipSystem(id));
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
@@ -383,8 +381,7 @@ public class ModBlocks {
                         new ResourceLocation(VandorLabs.MODID, replacement));
                 if (block != null) mapping.remap(block);
             } else if (isRetiredScreenId(mapping.key.getResourcePath())
-                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())
-                    || isRemovedMachineryId(mapping.key.getResourcePath())) mapping.ignore();
+                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())) mapping.ignore();
         }
     }
 
@@ -398,18 +395,12 @@ public class ModBlocks {
                         new ResourceLocation(VandorLabs.MODID, replacement));
                 if (item != null) mapping.remap(item);
             } else if (isRetiredScreenId(mapping.key.getResourcePath())
-                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())
-                    || isRemovedMachineryId(mapping.key.getResourcePath())) mapping.ignore();
+                    || REMOVED_DOOR_IDS.contains(mapping.key.getResourcePath())) mapping.ignore();
         }
     }
 
     private static boolean isRetiredScreenId(String id) {
         return DISPLAY_SCREEN_IDS.contains(id) || RETIRED_SCREEN_IDS.contains(id);
-    }
-
-    public static boolean isRemovedMachineryId(String id) {
-        return id.startsWith("aster_") || id.startsWith("rivet_") || id.startsWith("vektor_")
-                || id.startsWith("kestrel_") || id.startsWith("hadron_");
     }
 
     private static String replacementBlockId(String id) {
@@ -430,7 +421,6 @@ public class ModBlocks {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
                         : block instanceof BlockCanopy ? new BlockCanopy.CanopyItem((BlockCanopy)block)
-                        : block instanceof BlockShipSystem ? new BlockShipSystem.SystemItem((BlockShipSystem)block)
                         : block == PROGRAMMABLE_HALF_CONSOLE
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
                         : block == PROGRAMMABLE_TRAPDOOR ? new com.vandorlabs.items.ItemProgrammableTrapdoor((BlockProgrammableTrapdoor)block)

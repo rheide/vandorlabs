@@ -20,17 +20,15 @@ final class CanopyAssemblyRuntimeChecks {
     private static void require(boolean value,String what){if(!value)throw new IllegalStateException("canopy assembly: "+what);}
     private static void clear(World world){for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-5,-1,-5),BASE.add(6,5,6)))world.setBlockToAir(pos);}
     static void check(World world) {
-        BlockCanopy legacy=(BlockCanopy)Block.getBlockFromName("vandorlabs:opening_slide_2x2");
-        require(legacy!=null && legacy.getCreativeTabToDisplayOn()==null,"wide item remains loadable but hidden");
         int[][] orders={{0,1,2},{0,2,1},{1,0,2},{1,2,0},{2,0,1},{2,1,0}};
         for(String mode:new String[]{"slide","hinge"}) {
-        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:opening_"+mode+"_1x2");
+        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
         for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int[] order:orders) {
-            clear(world);IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);
+            clear(world);ItemStack configured=new ItemStack(block);NBTTagCompound settings=new NBTTagCompound();settings.setInteger("CanopyMotion",mode.equals("slide")?0:1);configured.setTagCompound(settings);IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);
             for(int index:order) {
                 BlockPos pos=BASE.offset(facing.rotateY(),index);
                 require(block.fits(world,pos,facing),"constituent fits");world.setBlockState(pos,state,2);
-                block.onBlockPlacedBy(world,pos,state,null,new ItemStack(block));
+                block.onBlockPlacedBy(world,pos,state,null,configured);
             }
             TileEntityCanopy owner=TileEntityCanopy.at(world,BASE);
             require(owner.draws() && owner.width()==3,"three constituents merge in every placement order");
@@ -93,17 +91,6 @@ final class CanopyAssemblyRuntimeChecks {
             require(left.trace(below,above)!=null && left.trace(above,below)!=null,"roof picks from above and below in every direction");
             for(CanopyMesh.Face face:CanopyMesh.MODELS.get(left.model()))if(face.baseMaterial.equals("glass"))require(face.doubleSided,"glass remains transparent and visible from below");
             require(glass.getLightOpacity(glass.getDefaultState())==0,"glass transmits light");
-        }
-        for(String id:new String[]{"space_shuttle_3x3","space_bubble_wedge_3x3"}) {
-            BlockCanopy wide=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+id);
-            require(wide!=null && wide.width==3,"center-seat fixed canopy registered "+id);
-            for(EnumFacing facing:EnumFacing.HORIZONTALS) {
-                clear(world);IBlockState state=wide.getDefaultState().withProperty(BlockCanopy.FACING,facing);
-                require(wide.fits(world,BASE,facing),"wide fixed fixture fits");world.setBlockState(BASE,state,2);wide.onBlockPlacedBy(world,BASE,state,null,new ItemStack(wide));
-                TileEntityCanopy tile=TileEntityCanopy.at(world,BASE);
-                require(tile.width()==3 && !tile.boxes().isEmpty(),"wide fixed model and collision "+id);
-                for(BlockPos cell:wide.cells(BASE,facing))require(TileEntityCanopy.at(world,cell).owner()==tile,"wide fixed followers belong to one owner");
-            }
         }
         for(String id:new String[]{"space_visor_2x1","space_visor_3x1","space_visor_5x1","space_visor_5x1_double_height"}) {
             int strips=0;double height=CanopyMesh.DIMENSIONS.get(id)[2];

@@ -9,7 +9,7 @@ public final class LargeCanopyGeometry {
     public static synchronized List<CanopyMesh.Face> faces(int width,LargeCanopySettings settings,boolean backAnchored){
         String key=width+":"+backAnchored+":"+settings.key();List<CanopyMesh.Face> cached=CACHE.get(key);if(cached!=null)return cached;
         List<CanopyMesh.Face> result=new ArrayList<>();Set<String> seen=new HashSet<>();
-        for(CanopyMesh.Face original:CanopyMesh.MODELS.get("large_front_canopy_glass")){
+        for(CanopyMesh.Face original:CanopyMesh.MODELS.get("front_canopy_glass")){
             CanopyMesh.Face face=new CanopyMesh.Face();face.vertices=new Vec3d[original.vertices.length];face.uv=original.uv;face.baseMaterial=original.baseMaterial;face.material=face.baseMaterial.equals("glass")?GlassTextures.texture(settings.shade,1,settings.tint):original.material;face.group=original.group;face.doubleSided=original.doubleSided;
             List<String> points=new ArrayList<>();
             for(int i=0;i<face.vertices.length;i++){

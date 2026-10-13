@@ -16,12 +16,13 @@ final class ProgrammableDialogRuntimeChecks {
                 || gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableLight
                 || gui instanceof GuiAnimatedScreenSelector || gui instanceof GuiProgrammableInput
                 || gui instanceof GuiProgrammableHalfConsole || gui instanceof GuiProgrammableTrigger
-                || gui instanceof GuiRedstoneChannel || gui instanceof GuiProgrammableGlass))return;
+                || gui instanceof GuiRedstoneChannel || gui instanceof GuiProgrammableGlass || gui instanceof GuiLargeCanopy))return;
         int width=gui.width,height=gui.height;
         try {
             for(int[] size:new int[][]{{320,240},{460,340},{width,height}}) {
                 gui.setWorldAndResolution(mc,size[0],size[1]);
                 List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
+                if(gui instanceof GuiLargeCanopy)require(buttons.stream().noneMatch(button->button.id==9 || button.id==10),"canopy dialog still has texture/page toggles");
                 for(GuiButton a:buttons) {
                     if(!a.visible)continue;
                     require(a.width<=200,"button exceeds Minecraft texture width");
@@ -143,8 +144,8 @@ final class ProgrammableDialogRuntimeChecks {
         for(Object entry:((java.util.Map<?,?>)options.get(list)).values()) {
             HousingTextureList.Option item=(HousingTextureList.Option)entry;
             if(!nativeOptions.getBoolean(list))require(com.vandorlabs.tiles.ScreenHousingTextures.visible(item.choice),"hidden texture in picker");
-            if(item.category.equals("Original glass") || item.category.equals("Colored glass")) {
-                require(com.vandorlabs.tiles.GlassTextures.valid(item.choice),"invalid glass finish in picker");glass++;
+            if(item.category.equals("Glass")) {
+                require(com.vandorlabs.tiles.GlassTextures.valid(item.choice>=HousingTextureList.CANOPY_GLASS_BASE && item.choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length?item.choice-HousingTextureList.CANOPY_GLASS_BASE:item.choice),"invalid glass finish in picker");glass++;
                 net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
                 require(atlas.getAtlasSprite(item.texture)!=atlas.getMissingSprite(),"missing glass thumbnail: "+item.label);
             }
@@ -156,7 +157,8 @@ final class ProgrammableDialogRuntimeChecks {
     }
     private static int integer(Object object,String name)throws ReflectiveOperationException {Field f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.getInt(object);}
     private static void click(GuiScreen gui,int x,int y)throws java.io.IOException {
-        if(gui instanceof GuiProgrammableTrapdoor)((GuiProgrammableTrapdoor)gui).mouseClicked(x,y,0);
+        if(gui instanceof GuiLargeCanopy)((GuiLargeCanopy)gui).mouseClicked(x,y,0);
+        else if(gui instanceof GuiProgrammableTrapdoor)((GuiProgrammableTrapdoor)gui).mouseClicked(x,y,0);
         else if(gui instanceof GuiSpaceDoor)((GuiSpaceDoor)gui).mouseClicked(x,y,0);
         else if(gui instanceof GuiProgrammableWall)((GuiProgrammableWall)gui).mouseClicked(x,y,0);
         else if(gui instanceof GuiProgrammableLight)((GuiProgrammableLight)gui).mouseClicked(x,y,0);

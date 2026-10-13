@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 from curate_machinery import removed
 ROOT=Path(__file__).resolve().parents[1]
-PREFIXES=('rivet_','vektor_','kestrel_','hadron_')
+PREFIXES=('aster_','rivet_','vektor_','kestrel_','hadron_')
 class MachineryTests(unittest.TestCase):
  def test_curation_rejects_all_families(self):
   for prefix in PREFIXES:
