@@ -18,4 +18,16 @@ final class OffsetTrapdoorController extends PlayerControllerMP {
     @Override public void updateController() {
         super.updateController();OffsetTrapdoorSelection.updateTarget(1);
     }
+    @Override public net.minecraft.util.EnumActionResult processRightClickBlock(
+            net.minecraft.client.entity.EntityPlayerSP player,net.minecraft.client.multiplayer.WorldClient world,
+            net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side,
+            net.minecraft.util.math.Vec3d hit,net.minecraft.util.EnumHand hand) {
+        com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,pos);
+        if(tile!=null && player.getDistanceSqToCenter(tile.owner().getPos())>49){
+            super.updateController();
+            com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCanopyUse(tile.owner().getPos(),hand,hit));
+            return net.minecraft.util.EnumActionResult.SUCCESS;
+        }
+        return super.processRightClickBlock(player,world,pos,side,hit,hand);
+    }
 }

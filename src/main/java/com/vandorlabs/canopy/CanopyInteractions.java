@@ -16,6 +16,7 @@ public final class CanopyInteractions {
     /** Place into an empty cabin cell when aiming through the front glazing with a block. */
     @SubscribeEvent
     public void placeInside(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) {
+        if(event.getUseItem()==net.minecraftforge.fml.common.eventhandler.Event.Result.DENY)return;
         net.minecraft.item.ItemStack stack=event.getItemStack();
         if(!(stack.getItem() instanceof net.minecraft.item.ItemBlock) || stack.getItem() instanceof com.vandorlabs.blocks.BlockCanopy.CanopyItem)return;
         TileEntityCanopy selected=TileEntityCanopy.at(event.getWorld(),event.getPos());
@@ -26,7 +27,11 @@ public final class CanopyInteractions {
         if(target==null)return;
         net.minecraft.entity.player.EntityPlayer player=event.getEntityPlayer();
         if(!event.getWorld().isBlockModifiable(player,target) || !player.canPlayerEdit(target,event.getFace(),stack))return;
-        net.minecraft.util.EnumActionResult result=stack.getItem().onItemUse(player,event.getWorld(),target,event.getHand(),event.getFace(),.5F,.5F,.5F);
+        int count=stack.getCount(),damage=stack.getItemDamage();
+        net.minecraft.util.EnumActionResult result=event.getWorld().isRemote
+                ?stack.getItem().onItemUse(player,event.getWorld(),target,event.getHand(),event.getFace(),.5F,.5F,.5F)
+                :net.minecraftforge.common.ForgeHooks.onPlaceItemIntoWorld(stack,player,event.getWorld(),target,event.getFace(),.5F,.5F,.5F,event.getHand());
+        if(player.capabilities.isCreativeMode){stack.setCount(count);stack.setItemDamage(damage);}
         event.setCanceled(true);event.setCancellationResult(result);
     }
 
@@ -44,6 +49,8 @@ public final class CanopyInteractions {
         }
         return null;
     }
+
+    public static double distanceSq(Vec3d point,AxisAlignedBB box){double x=MathHelper.clamp(point.x,box.minX,box.maxX),y=MathHelper.clamp(point.y,box.minY,box.maxY),z=MathHelper.clamp(point.z,box.minZ,box.maxZ);return point.squareDistanceTo(new Vec3d(x,y,z));}
 
     public static List<TileEntityCanopy> owners(World world, AxisAlignedBB region) {
         List<TileEntityCanopy> found = new ArrayList<>();
