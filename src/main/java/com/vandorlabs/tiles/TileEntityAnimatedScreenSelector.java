@@ -50,6 +50,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
 
     @Override public boolean shouldRenderInPass(int pass) {
+        if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
         if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1;
         if(world!=null && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;

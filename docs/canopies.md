@@ -15,7 +15,7 @@ that component; survival harvesting returns one item. Pistons cannot move these 
 | Sliding Canopy | 1 × 2 × 1 | Canopy Glass + 3 iron nuggets |
 | Rear-Hinged Canopy | 1 × 2 × 1 | Canopy Glass + 4 iron nuggets |
 | Wide Sliding Canopy | 2 × 2 × 1 | Canopy Glass + 5 iron nuggets |
-| Wide Rear-Hinged Canopy | 2 × 2 × 1 | Canopy Glass + 6 iron nuggets |
+| Wide Rear-Hinged Canopy | 2 × 2 × 1 | Retired; join narrow canopies |
 | Large Front Canopy Glass | 3 × 1 × 3 | Canopy Glass + 8 iron nuggets |
 | Figher Canopy Glass | 2 × 1 × 2 | Canopy Glass + 1 gold nugget |
 
@@ -23,6 +23,11 @@ The conversion recipes are shapeless. The base recipe uses three glass blocks ac
 the top, Programmable Matter Ingots at both middle edges, and three more ingots across
 the bottom. Figher Canopy Glass retains the kit's spelling. Its glass is only 1/16 block
 deep, with a one-block-deep placement footprint.
+
+All canopy glass supports Clear, the Vandor soft shades, all sixteen Minecraft
+colors, and Mild, Normal or Strong intensity. Use the Configurizer, or sneak-use
+with configuration permission, to change a canopy's glass. Joined opening shells
+share the chosen finish. Pick-block and harvested items retain the finish.
 
 ## Fixed glass
 
@@ -49,7 +54,7 @@ height is only 1.25 blocks.
 Visor, Wide Visor, Extra-Wide Visor, and Tall Extra-Wide Visor are fixed front windows,
 respectively 2 × 1 × 1, 3 × 1 × 1, 5 × 1 × 1, and 5 × 1 × 2 blocks.
 They have no roof, rear or bottom. Each has a one-pixel-thick border along its complete
-upper outline. Standalone Visor sizes and the 3 � 3 Bubble Wedge center on the clicked
+upper outline. Standalone Visor sizes and the 3 × 3 Bubble Wedge center on the clicked
 block, including the two-wide Visor's half-block alignment. New two-wide Visors reserve
 three cells for that centered outline; older placed Visors retain their original two-cell
 footprint and alignment. All standalone sizes occupy their complete footprint
@@ -98,11 +103,14 @@ rounded rear shells do not match the modular front/glass join height. Existing b
 and saved items remain compatible; use Long Angled Front Canopy Glass for a joined nose.
 Figher Canopy Glass is likewise removed from creative and crafting, with existing
 worlds and items preserved.
-The Wide Rear-Hinged Canopy remains available.
+The separate Wide Rear-Hinged Canopy is also retired from creative and crafting;
+existing blocks and saved items remain compatible. Join narrow canopies for new assemblies.
 
-Canopy Glass and both widths of Shuttle and Bubble Wedge can share the upper
+Canopy Glass, Shuttle, Bubble Wedge, Sliding and Rear-Hinged Canopies can share the upper
 backrest space of a Pilot Seat placed directly below them. Both placement orders
-are supported; the canopy remains intact when the seat is removed.
+are supported, including one-, two- and three-wide opening shells. Holding a Pilot
+Seat lets its placement click pass through the canopy controls; the canopy remains
+intact when the seat is removed.
 
 The opening shells are one block high. Provide a footwell at least one block below the canopy
 for a standing player; there is no bottom panel.
@@ -114,7 +122,15 @@ the fixed joins and connected widths; opening animation remains an in-game featu
 
 The kit's authored face, UV and material data are stored in `canopy_meshes.json`.
 The renderer draws stationary mounts and transformed shells once, with opaque framing
-before sorted translucent glazing. Collision uses thin subdivided surface boxes, cached
+before sorted translucent glazing. Prepared vertices, face centers and normals are
+cached per owner and rebuilt when the model, settings, facing, joined width or pose
+changes. Closed and fully open shells reuse that preparation while the camera moves;
+only glass distances and sorting are updated each frame. Atlas sprites are cached
+until resource reload. Palette variants share immutable vertices and UV data, and
+large-canopy surface footprints are cached until the dimensions or facing change.
+Moving shells still rebuild posed vertices during animation. Detailed meshes and
+per-owner draw calls remain the principal rendering costs; these changes reduce CPU
+allocation and repeated transforms without claiming a measured frame-rate increase. Collision uses thin subdivided surface boxes, cached
 by model, facing and pose. Picking tests the actual posed triangles; highlights enclose the complete owner geometry.
 Collision and picking inspect loaded chunks only. Item models
 are rebuilt on resource reload and fitted after GUI rotation to retain slot padding.
@@ -137,17 +153,25 @@ has a 5 x 5 outer frame. Both preserve the kit's chamfered frame, mullions, rubb
 metal trim and connecting glass sides. Use the Configurizer on any occupied cell
 (or sneak-use with configuration permission) to open the owner settings.
 
-- Inner frame depth: 0�80 Minecraft pixels, where 16 pixels equals one block.
-- Inner frame size: 10�100% of the outer frame, centered within it.
+- Inner frame depth: 0–80 Minecraft pixels, where 16 pixels equals one block.
+- Inner frame size: 10–100% of the outer frame, centered within it.
 - Glass: Clear, the Vandor soft shades, all sixteen Minecraft colors, and Mild,
   Normal or Strong intensity.
 
 The default depth is 16 pixels and the inner frame size is 71%, matching the
 original outer extent of the detailed inner frame. A zero-depth setting retains
-a thin physical frame so collision and selection remain usable. Save applies all
-four options together; Close discards pending edits. Increasing depth checks the
-entire added footprint for obstructions and editing permission before changing
-any cells. Reducing depth removes only cells owned by that canopy.
+a thin physical frame so collision and selection remain usable. Controls apply
+changes immediately. New placements center the rear frame on the clicked block
+in both width and height, with the nose extending away from the player. Changing
+depth keeps the rear frame fixed and moves the front. Existing saved placements
+retain their previous anchor and orientation, and release unused interior reservation
+cells the next time their settings are successfully changed.
+
+New large canopies reserve only cells intersecting their surfaces. Clear interior
+cells can contain ordinary blocks. Changing depth or inner size checks the new
+surface footprint and editing permission before changing any cells; an obstructed
+change preserves the complete existing assembly. Shrinking removes only cells owned
+by that canopy and preserves blocks in the hollow area.
 
 For example, use a 5 x 5 frame at depth 64 pixels and 40% inner size for a deep
 nose window, or depth 0 and 100% size for a flat broad window. Cyan with Mild
@@ -157,8 +181,8 @@ glass. Captured craft retain the complete owned footprint and settings.
 
 Modular Visor Front, Front Latch, Corner and Side pieces, including Tall variants, are
 removed from creative and crafting. Existing assemblies remain compatible. The older
-2 � 2 Bubble Wedge is also retained only for saved-world compatibility; new Bubble
-Wedge placements use the centered 3 � 3 version.
+2 × 2 Bubble Wedge is also retained only for saved-world compatibility; new Bubble
+Wedge placements use the centered 3 × 3 version.
 
 Sliding and Rear-Hinged Canopies remain usable after vehicle assembly. Right-click
 the actual canopy surface with an empty hand to open or close it, including joined

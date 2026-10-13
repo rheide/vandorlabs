@@ -63,20 +63,45 @@ public final class ConsoleConnections {
                 if(matches(w,next,seed) && cells.add(next))pending.add(next);
             }
         }
-        EnumFacing facing=seed.facing();
-        for(Rectangle rectangle:rectangles(cells,facing,seed.mount)) {
-            boolean powered=false;
-            for(int z=0;z<rectangle.depth;z++)for(int x=0;x<rectangle.width;x++)
-                powered |= TileEntityShipSystem.at(w,rectangle.cell(facing,x,z)).inputPowered();
-            powered=TileEntityShipSystem.at(w,rectangle.owner).evaluatePower(powered);
-            for(int z=0;z<rectangle.depth;z++)for(int x=0;x<rectangle.width;x++)
-                TileEntityShipSystem.at(w,rectangle.cell(facing,x,z)).applyConsole(rectangle.owner,x,z,rectangle.width,rectangle.depth,powered);
+        // Pair back-to-back rows before partitioning the remaining same-facing cells.
+        // A fixed orientation makes ownership independent of which member refreshed.
+        EnumFacing canonical=seed.facing().getAxis()==EnumFacing.Axis.Z?EnumFacing.NORTH:EnumFacing.EAST;
+        MountFrame canonicalFrame=new MountFrame(canonical,seed.mount);
+        if(seed.mount.getAxis()==EnumFacing.Axis.Y) {
+            List<BlockPos> ordered=new ArrayList<>(cells);
+            ordered.sort(Comparator.comparingInt((BlockPos p)->along(p,canonicalFrame.back)).thenComparingInt(p->along(p,canonicalFrame.right)));
+            for(BlockPos owner:ordered) {
+                if(!opposedPair(w,cells,owner,canonical,canonicalFrame))continue;
+                int width=1;
+                while(width<3 && opposedPair(w,cells,owner.offset(canonicalFrame.right,width),canonical,canonicalFrame))width++;
+                apply(w,new Rectangle(owner,width,2,seed.mount),canonical,true);
+                for(int x=0;x<width;x++)for(int z=0;z<2;z++)cells.remove(canonicalFrame.cell(owner,x,0,z));
+            }
+        }
+        for(EnumFacing facing:new EnumFacing[]{seed.facing(),seed.facing().getOpposite()}) {
+            Set<BlockPos> aligned=new HashSet<>();
+            for(BlockPos cell:cells)if(TileEntityShipSystem.at(w,cell).facing()==facing)aligned.add(cell);
+            for(Rectangle rectangle:rectangles(aligned,facing,seed.mount))apply(w,rectangle,facing,false);
         }
         return true;
     }
+    private static boolean opposedPair(World w,Set<BlockPos> cells,BlockPos front,EnumFacing facing,MountFrame frame) {
+        BlockPos back=front.offset(frame.back);
+        return cells.contains(front) && cells.contains(back) && TileEntityShipSystem.at(w,front).facing()==facing
+                && TileEntityShipSystem.at(w,back).facing()==facing.getOpposite();
+    }
+    private static void apply(World w,Rectangle rectangle,EnumFacing facing,boolean opposed) {
+        boolean powered=false;
+        for(int z=0;z<rectangle.depth;z++)for(int x=0;x<rectangle.width;x++)
+            powered |= TileEntityShipSystem.at(w,rectangle.cell(facing,x,z)).inputPowered();
+        powered=TileEntityShipSystem.at(w,rectangle.owner).evaluatePower(powered);
+        for(int z=0;z<rectangle.depth;z++)for(int x=0;x<rectangle.width;x++)
+            TileEntityShipSystem.at(w,rectangle.cell(facing,x,z)).applyConsole(rectangle.owner,x,z,rectangle.width,rectangle.depth,powered,opposed);
+    }
     private static boolean matches(World w, BlockPos p, TileEntityShipSystem seed) {
         TileEntityShipSystem tile = TileEntityShipSystem.at(w, p);
-        return tile != null && tile.isAnchor() && tile.block() == seed.block() && tile.facing() == seed.facing() && tile.mount == seed.mount;
+        return tile != null && tile.isAnchor() && tile.block() == seed.block() && tile.mount == seed.mount
+                && (tile.facing() == seed.facing() || seed.block().kind.equals("vektor_console") && seed.mount.getAxis()==EnumFacing.Axis.Y && tile.facing()==seed.facing().getOpposite());
     }
     public static boolean refresh(World w, BlockPos seedPos) {
         if (w.isRemote) return false;

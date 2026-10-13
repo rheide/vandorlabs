@@ -1,0 +1,2110 @@
+{
+  "schema": "vandorlabs-connection-baseline-v1",
+  "source_capture_id": "render-run.regular-x-frame-fixed-20261013",
+  "acceptance": "Reviewer status ok only; defaultStatus honored when explicitly present",
+  "comparison": {
+    "roi": [
+      480,
+      216,
+      1440,
+      918
+    ],
+    "sample_scale": 2,
+    "mask_dilation_pixels": 2,
+    "channel_tolerance": 12,
+    "max_changed_fraction": 0.003,
+    "max_mean_error": 2.0,
+    "max_lighting_bias": 6
+  },
+  "cases": [
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_25_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_25_0.png",
+      "sha256": "d4adaa81fe6909a4a7b219f08bf32388d6ebd3262a34e7624e3975529817f7d0",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_76_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_76_0.png",
+      "sha256": "0ef59a164232089a001e6c2eda31556425dc58b849f3d7670bf8756a532eb2bd",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_88_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_88_0.png",
+      "sha256": "74aa6077c9fd773c1b8fedc4b375826833991b52b654e98167d9f1e9d54fe6f6",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_109_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_109_0.png",
+      "sha256": "def8facb7415bdac2dd5584be230d42be0a53742b4edb177213a270924aba1a1",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_121_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_121_0.png",
+      "sha256": "411e3ad5bc1af26ecd34dde7ec4bd4054aebf1bbd585d5a8f43cc0e4a75857e5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_139_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_139_0.png",
+      "sha256": "a3aa308c12e60c6eb121a0467abfc35824cd36ec0a1d8a906e0e21e09afbd331",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_178_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_178_0.png",
+      "sha256": "9dfb470f0b6154c4398def9828d0dcb8d71ab686504e00567f1fc046eb96ee80",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_199_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_199_0.png",
+      "sha256": "9c6298b02c2b76566d1fdfedb8e47393519840ec78b2cd14ff7648ed510fb45a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_229_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_229_0.png",
+      "sha256": "c0d758d4055b9d83ed2dae3f2311f3098da477ef5a55620be55a6efd971d243f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_0_0.png",
+      "sha256": "569a04447047020c21d5cc9cf26fca0c7c79ad23261eefe245fa5b378616280d",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_14_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_14_0.png",
+      "sha256": "9bf8d55e9c0aff2471b191b6f730579b67581222847a5e9071d61c97bc1ba2e5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_30_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_30_0.png",
+      "sha256": "2f260ef5584a61f1d265cde3b6c518c578c117b46958c0a52b1f4e48ba26dfdb",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_44_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_44_0.png",
+      "sha256": "ab7af8a7b47bebcd3b1828e0900e99265a9873a4c46698faf671ec96905c6499",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_46_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_46_0.png",
+      "sha256": "a5f7c653a550ef09b72312ea053427629c05a87a90e7f57f5a28d8ab1a837a8a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_60_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_60_0.png",
+      "sha256": "97d29ffd7a27b2340db90c80e14d201fc126f05465c5b926bb72bbcb77fbd16d",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_65_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_65_0.png",
+      "sha256": "89c085f392d2eabcdffbf8391cdb30ff45716770283aba230d973fa0bd3577f4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_90_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_90_0.png",
+      "sha256": "7a61395fea1197e6f7b760d12d26e1286f88f2b110b142b8aedf28ef29fb6706",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_104_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_104_0.png",
+      "sha256": "9c28338002a1c8ba4b056735e83f7c3aa71d9cb5e32c636b52b82d11137fc8ec",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_120_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_120_0.png",
+      "sha256": "360928fce7aebb9edf85f833a462e9505b276573d0c4dc65004ec07e6ce0be75",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_134_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_134_0.png",
+      "sha256": "99401d906dff6a54a8aa9868b9d09353c90c8b01cc40b46d3669ed98b142b45e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_150_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_150_0.png",
+      "sha256": "4e9d44141bfd2cf011d244702c5de52631d871662e01178e60a4b162e12fed49",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_155_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_155_0.png",
+      "sha256": "818c0a2e519bbdfd87a39ba8891dc347f7d23cd01b1e0e12e1aecc6321d4143f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_167_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_167_0.png",
+      "sha256": "1dd75a6316f690d3c7e2f0dde2b52df6dd3014ad033acbc64c944db6c2134e90",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_180_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_180_0.png",
+      "sha256": "4d11a542420cb8d889dfbc4a420704732d27007e329ddab93ddc786584960316",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_197_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_197_0.png",
+      "sha256": "84d31f8ad70c90e13c07ec7cd3ee68c612750d67d9507ffb6dc82fc7fae5a3c5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_210_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_210_0.png",
+      "sha256": "bc6d73af80a7d987beaaed8f07fa9277232f5f4af87fae446084958f2eb5827a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_218_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_218_0.png",
+      "sha256": "0e439eb67e20e83200630b518d8079b241709b4101001fb5eec294c28918a925",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_240_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_240_0.png",
+      "sha256": "10ccf964adb8182a736b21b02af9cbf8c7817179ad9ffede067981f0e5fdd260",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_2_0_242_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_2_0_242_0.png",
+      "sha256": "89f54f40340c2a523f750b152a666a96868e527afde561d93ae0c6ec2fb89690",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "Four-way junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    }
+  ],
+  "excluded_status_counts": {}
+}

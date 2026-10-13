@@ -1,0 +1,8 @@
+{
+  "schema": "vandorlabs-active-connection-baselines-v1",
+  "baselines": {
+    "l": "regular-wall-connections-v2",
+    "t": "regular-wall-connections-t-v2",
+    "x": "regular-wall-connections-x-v2"
+  }
+}

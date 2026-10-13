@@ -58,7 +58,14 @@ public final class VehicleClient {
         Minecraft mc=Minecraft.getMinecraft();mc.addScheduledTask(()->{
             if(mc.world==null)return;
             if(p.type==VehicleNetwork.INSPECTION){if(mc.currentScreen instanceof GuiRedstoneChannel)((GuiRedstoneChannel)mc.currentScreen).inspection(p.origin,p.text);return;}
-            if(p.type==VehicleNetwork.ERROR){mc.player.sendMessage(new net.minecraft.util.text.TextComponentString(p.text));return;}
+            if(p.type==VehicleNetwork.ERROR){
+                String summary=p.text;int sentence=summary.indexOf(". ");
+                if(sentence>=0)summary=summary.substring(0,sentence+1);
+                if(summary.length()>110)summary=summary.substring(0,107)+"...";
+                net.minecraft.util.text.TextComponentString message=new net.minecraft.util.text.TextComponentString(summary);
+                message.getStyle().setHoverEvent(new net.minecraft.util.text.event.HoverEvent(net.minecraft.util.text.event.HoverEvent.Action.SHOW_TEXT,new net.minecraft.util.text.TextComponentString(p.text)));
+                mc.player.sendMessage(message);return;
+            }
             if(p.type==VehicleNetwork.HEIGHT){if(preview!=null && preview.data.header.token.equals(p.token)){net.minecraft.nbt.NBTTagCompound tag=preview.data.structure.at(preview.data.structure.seat).tileData();tag.setInteger("PilotHeight",p.strafe);preview.data.structure=VehicleSeatSettings.replace(preview.data.structure,tag,BlockPos.ORIGIN); }return;}
             if(p.type==VehicleNetwork.SETTINGS){
                 Entity raw=mc.world.getEntityByID(p.entity);

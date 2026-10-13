@@ -18,6 +18,9 @@ public final class VehicleWorld extends World {
     private final Map<Long,Chunk> chunks=new HashMap<>();
     public BlockPos origin=BlockPos.ORIGIN;
     public int propulsionLevel;
+    public static boolean isMovingControl(net.minecraft.block.Block block) {
+        return block instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)block).hasSelectableType();
+    }
     public static boolean isPropulsion(net.minecraft.block.Block block) {
         if(block instanceof com.vandorlabs.blocks.BlockPropulsionLight)return true;
         if(!(block instanceof com.vandorlabs.blocks.BlockShipSystem))return false;

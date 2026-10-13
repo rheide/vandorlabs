@@ -52,18 +52,22 @@ final class DiagonalJoinMatrixChecks {
             TileEntityProgrammableGlass restored=new TileEntityProgrammableGlass();restored.readFromNBT(tile.getUpdateTag());require(restored.getShade()==id,"glass finish did not persist");
         }
         mixed(blocks);
+        flatFrames();
+        actualPlanes();
         System.out.println("PASS: "+cases+" diagonal wall/glass join topologies, orientations, slopes, placement rotations and remove/replace cycles; all glass finish IDs persist");
     }
     private static void mixed(BlockProgrammableWall[] diagonals){
         BlockProgrammableWall flatWall=new BlockProgrammableWall("mixed_join_wall",BlockProgrammableWall.Shape.PLAIN);
         BlockProgrammableGlass flatGlass=new BlockProgrammableGlass("mixed_join_glass");
+        BlockProgrammableWall flatPorthole=new BlockProgrammableWall("mixed_join_porthole",BlockProgrammableWall.Shape.PORTHOLE);
         BlockPos root=new BlockPos(8,88,8);
-        for(BlockProgrammableWall diagonal:diagonals)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(int mode=0;mode<2;mode++)for(int depth=0;depth<3;depth++)for(boolean glass:new boolean[]{false,true}){
+        for(BlockProgrammableWall diagonal:diagonals)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(int mode=0;mode<2;mode++)for(int depth=0;depth<3;depth++)for(int material=0;material<3;material++){
+            boolean glass=material==1;
             NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
             IBlockState state=diagonal.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.INVERTED,inverted);
             put(world,root,state,mode);
             EnumFacing flatFacing=glass?(facing.getAxis()==EnumFacing.Axis.X?EnumFacing.EAST:EnumFacing.NORTH):facing;
-            IBlockState flat=glass?flatGlass.getDefaultState().withProperty(BlockGlassWall.ROTATED,facing.getAxis()==EnumFacing.Axis.X).withProperty(BlockGlassWall.DEPTH,depth):flatWall.getDefaultState().withProperty(BlockProgrammableWall.FACING,flatFacing).withProperty(BlockProgrammableWall.DEPTH,depth);
+            IBlockState flat=glass?flatGlass.getDefaultState().withProperty(BlockGlassWall.ROTATED,facing.getAxis()==EnumFacing.Axis.X).withProperty(BlockGlassWall.DEPTH,depth):(material==2?flatPorthole:flatWall).getDefaultState().withProperty(BlockProgrammableWall.FACING,flatFacing).withProperty(BlockProgrammableWall.DEPTH,depth);
             for(boolean upper:new boolean[]{false,true}){
                 double expected=com.vandorlabs.render.DiagonalWallGeometry.near(mode,inverted,upper?1:0);
                 double near=PanelJoins.near(flat)/16;if(flatFacing!=facing)near=.75-near;
@@ -84,6 +88,55 @@ final class DiagonalJoinMatrixChecks {
                 TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(tile.getUpdateTag());require(restored.getDiagonalJoin()==choice,"join override lost in NBT");
                 require((diagonal.corner(state,world,root)!=null)==(choice>=2),"join override geometry missing");
             }
+        }
+    }
+    /** Assert world-space seam sides instead of merely comparing repeated meshes. */
+    private static void flatFrames(){
+        BlockProgrammableGlass glass=new BlockProgrammableGlass("matrix_flat_glass");
+        BlockProgrammableWall wall=new BlockProgrammableWall("matrix_flat_wall",BlockProgrammableWall.Shape.PLAIN);
+        BlockProgrammableWall porthole=new BlockProgrammableWall("matrix_flat_porthole",BlockProgrammableWall.Shape.PORTHOLE);
+        BlockPos root=new BlockPos(17,91,-23);
+        for(boolean rotated:new boolean[]{false,true})for(int depth=0;depth<3;depth++)for(int material=0;material<3;material++)for(boolean opposite:new boolean[]{false,true}){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+            IBlockState state=glass.getDefaultState().withProperty(BlockGlassWall.ROTATED,rotated).withProperty(BlockGlassWall.DEPTH,depth);
+            world.setBlockState(root,state,2);
+            EnumFacing facing=rotated?EnumFacing.EAST:EnumFacing.NORTH;
+            EnumFacing left=rotated?EnumFacing.NORTH:EnumFacing.WEST;
+            BlockPos neighbor=root.offset(left);
+            int mirrored=depth==0?0:3-depth;
+            IBlockState next=material==0?state:(material==1?wall:porthole).getDefaultState().withProperty(BlockProgrammableWall.FACING,opposite?facing.getOpposite():facing).withProperty(BlockProgrammableWall.DEPTH,opposite?mirrored:depth);
+            world.setBlockState(neighbor,next,2);
+            IBlockState actual=glass.getActualState(state,world,root);
+            require(!actual.getValue(BlockGlassWall.LEFT) && actual.getValue(BlockGlassWall.RIGHT),"world-left mixed seam was framed on the wrong side");
+            require(PanelJoins.connectsFlat(world,root,state,neighbor),"coplanar wall/glass/porthole mismatch");
+            world.setBlockState(neighbor,net.minecraft.init.Blocks.AIR.getDefaultState(),2);
+            actual=glass.getActualState(state,world,root);
+            require(actual.getValue(BlockGlassWall.LEFT) && actual.getValue(BlockGlassWall.RIGHT),"removed neighbor leaves a missing frame");
+            world.setBlockState(neighbor,next,2);
+            ((TileEntityProgrammableGlass)world.getTileEntity(root)).setJoin(false);
+            require(glass.getActualState(state,world,root).getValue(BlockGlassWall.LEFT),"owner Join Off hides a mixed seam");
+            ((TileEntityProgrammableGlass)world.getTileEntity(root)).setJoin(true);
+            if(material==0){((TileEntityProgrammableGlass)world.getTileEntity(neighbor)).setJoin(false);require(glass.getActualState(state,world,root).getValue(BlockGlassWall.LEFT),"neighbor Join Off hides seam");}
+            else {
+                IBlockState shifted=next.withProperty(BlockProgrammableWall.DEPTH,(next.getValue(BlockProgrammableWall.DEPTH)+1)%3);
+                world.setBlockState(neighbor,shifted,2);
+                require(glass.getActualState(state,world,root).getValue(BlockGlassWall.LEFT),"different-depth material hides a frame");
+            }
+            world.setBlockState(neighbor,next,2);
+            BlockPos displaced=neighbor.offset(facing.getOpposite());world.setBlockState(displaced,next,2);
+            require(!PanelJoins.connectsFlat(world,root,state,displaced),"parallel panel in another normal cell falsely connects");
+        }
+    }
+    private static void actualPlanes(){
+        BlockProgrammableWall diagonal=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+        BlockPos root=new BlockPos(31,111,-47);
+        for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(int mode=0;mode<3;mode++){
+            IBlockState state=diagonal.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.INVERTED,inverted);
+            BlockPos side=root.offset(facing.rotateY());
+            require(DiagonalPanelGeometry.samePlane(root,state,side,state,mode),"side-by-side porthole planes must align");
+            require(!DiagonalPanelGeometry.samePlane(root,state,side.offset(facing.getOpposite()),state,mode),"displaced porthole plane accepted by state alone");
+            BlockPos shift=new BlockPos(-53,7,29);
+            require(DiagonalPanelGeometry.samePlane(root.add(shift),state,side.add(shift),state,mode),"porthole plane matching depends on world origin");
         }
     }
     private static void put(NonRenderingChecks.MemoryWorld world,BlockPos pos,IBlockState state,int mode){world.setBlockState(pos,state,2);((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).setDiagonalGeometry(mode,0);}

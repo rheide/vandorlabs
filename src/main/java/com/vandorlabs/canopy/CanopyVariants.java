@@ -8,8 +8,8 @@ import java.util.*;
 public final class CanopyVariants {
     private static List<CanopyMesh.Face> centeredVisor;
     public static boolean visor(String kind){return kind.equals("space_visor_2x1") || kind.equals("space_visor_3x1") || kind.equals("space_visor_5x1") || kind.equals("space_visor_5x1_double_height");}
-    public static boolean centered(String kind){return visor(kind) || kind.equals("space_bubble_wedge_3x3");}
-    public static boolean retired(String kind){return kind.startsWith("visor_module_") || Arrays.asList("opening_slide_2x2","space_wedge_1x2","space_longnose_1x3","figher_canopy_glass","space_bubble_wedge_2x2").contains(kind);}
+    public static boolean centered(String kind){return LargeCanopySettings.supports(kind) || visor(kind) || kind.equals("space_bubble_wedge_3x3");}
+    public static boolean retired(String kind){return kind.startsWith("visor_module_") || Arrays.asList("opening_slide_2x2","opening_hinge_2x2","space_wedge_1x2","space_longnose_1x3","figher_canopy_glass","space_bubble_wedge_2x2").contains(kind);}
     public static List<CanopyMesh.Face> faces(TileEntityCanopy tile,List<CanopyMesh.Face> original){return faces(tile.centeredPlacement,tile.block().kind,original);}
     public static List<CanopyMesh.Face> faces(boolean centered,String kind,List<CanopyMesh.Face> original){return centered && kind.equals("space_visor_2x1")?centeredVisor:original;}
     public static void init() {

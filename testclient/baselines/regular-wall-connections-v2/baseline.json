@@ -1,0 +1,3046 @@
+{
+  "schema": "vandorlabs-connection-baseline-v1",
+  "source_capture_id": "render-run.regular-l-fixed-20261013",
+  "acceptance": "Reviewer status ok only; defaultStatus honored when explicitly present",
+  "comparison": {
+    "roi": [
+      480,
+      216,
+      1440,
+      918
+    ],
+    "sample_scale": 2,
+    "mask_dilation_pixels": 2,
+    "channel_tolerance": 12,
+    "max_changed_fraction": 0.003,
+    "max_mean_error": 2.0,
+    "max_lighting_bias": 6
+  },
+  "cases": [
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_0_0.png",
+      "sha256": "35e210df55f951bfea72892391d283d7ac903eab58a589ab839ff68991953d0b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_0_1.png",
+      "sha256": "3565d0a7f086cdf790a6d087af0b94ae507dc750b04ef71f8cc223d770a45364",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_1_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_1_0.png",
+      "sha256": "2335ee011893828d4e09c013698483128022a8e3b504f15e97d00a5c6f57092a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_1_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_1_1.png",
+      "sha256": "dc5c9e6d111c313b0d3f58b3417b2dd2a63367c58234c45231bf0f1236c081b7",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_2_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_2_0.png",
+      "sha256": "fc1f660d70c3fc85afb7e2cf7062cf16024b112d9253f6bac7cf7ea762366f75",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_2_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_2_1.png",
+      "sha256": "64a6c8db58f40ed455d6378dd43816f23141cd5758a0967fe4396cb9a59950c2",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_3_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_3_0.png",
+      "sha256": "8af81811869b830abb97450ba5430c4281fd60527e5409b6d9a3f7b49ae345bf",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_3_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_3_1.png",
+      "sha256": "fb104bfe4e0a1976ffaafec3f0b7d5ae887649ce5ea7040084fe7be8e77aa199",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_4_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_4_0.png",
+      "sha256": "19d89e61d6282db83d815e3d41ed05463a807bbc6f7f4fe53f0c1d5794abc50a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_4_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_4_1.png",
+      "sha256": "9cdeb17d42ee943ae051cbbe48e6ecf3aeab74e64cb5db85326a48cd7d4c9b43",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_5_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_5_0.png",
+      "sha256": "64b20f0f6a8f63ef81ad3039775511140c42408e1539eaca345653cce77fbacf",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_5_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_5_1.png",
+      "sha256": "eab41156ea2fc7b9129c11e3445888b3f0f80b0c2721056c1abdbe572beecec5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_6_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_6_0.png",
+      "sha256": "27c5358faafbae72766bbd4f3c2e7a418e6d1f9da6dcc737c9da135b3158693c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_6_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_6_1.png",
+      "sha256": "508f1a9a71f8c5052946605528d4d4b892322a54ee11727c671508ef92738515",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_7_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_7_0.png",
+      "sha256": "8233ba5afdaad9aa12432cd63157d5bb82b83add86d89b14e3623d291d2181cb",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_7_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_7_1.png",
+      "sha256": "8233ba5afdaad9aa12432cd63157d5bb82b83add86d89b14e3623d291d2181cb",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_8_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_8_0.png",
+      "sha256": "08bd556ac749749387014271d67110bc0a0220397addf586c48ca3f69e530f6f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_8_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_8_1.png",
+      "sha256": "08bd556ac749749387014271d67110bc0a0220397addf586c48ca3f69e530f6f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_0_0.png",
+      "sha256": "63bba9d660e98b4e1430fb5d2688caf00bcc8a9b6e3a3da0a8c7ca1369e49df4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_0_1.png",
+      "sha256": "63bba9d660e98b4e1430fb5d2688caf00bcc8a9b6e3a3da0a8c7ca1369e49df4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_1_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_1_0.png",
+      "sha256": "cf4d2333659c21028fe4037a3b50248976c646039b212b53964cd6f733cf86a8",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_1_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_1_1.png",
+      "sha256": "cf4d2333659c21028fe4037a3b50248976c646039b212b53964cd6f733cf86a8",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_2_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_2_0.png",
+      "sha256": "11979e2278172392b0124b8040a27f1b3972b9ec14c93fca814f9f9ac9f0b55c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_2_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_2_1.png",
+      "sha256": "11979e2278172392b0124b8040a27f1b3972b9ec14c93fca814f9f9ac9f0b55c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_3_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_3_0.png",
+      "sha256": "dc78af2847b1308015ce0f8838c29b5fc279dc4f26148e69fcf641ff81860ff9",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_3_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_3_1.png",
+      "sha256": "dc78af2847b1308015ce0f8838c29b5fc279dc4f26148e69fcf641ff81860ff9",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_4_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_4_0.png",
+      "sha256": "2a542412c25be6f65bd5bde842bc17b606c6a4e92d22375b2d315267442858bf",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_4_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_4_1.png",
+      "sha256": "2a542412c25be6f65bd5bde842bc17b606c6a4e92d22375b2d315267442858bf",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_5_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_5_0.png",
+      "sha256": "4415c473501d2d10461c3bc2b388f6a278540d0c07efa9d15ed115f0c4acd183",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_5_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_5_1.png",
+      "sha256": "4415c473501d2d10461c3bc2b388f6a278540d0c07efa9d15ed115f0c4acd183",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_6_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_6_0.png",
+      "sha256": "10a05751022a96c147e96af04a31324c41ce409e5ede8737c3c5123511d1c37b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_6_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_6_1.png",
+      "sha256": "10a05751022a96c147e96af04a31324c41ce409e5ede8737c3c5123511d1c37b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_7_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_7_0.png",
+      "sha256": "6b550b99536eda3ad53c29beff425156b3ddda3b2cd1aa36a0dff78f0856738e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_7_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_7_1.png",
+      "sha256": "6b550b99536eda3ad53c29beff425156b3ddda3b2cd1aa36a0dff78f0856738e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_8_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_8_0.png",
+      "sha256": "ca72b660af58fe9f625d84b85336164bae19f283e8942ff0ac7e11a13dae7e68",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_8_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_8_1.png",
+      "sha256": "ca72b660af58fe9f625d84b85336164bae19f283e8942ff0ac7e11a13dae7e68",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_0_0.png",
+      "sha256": "c80a7351b7de96618e2e36cc90c060711c9ff9a44c89aaddb5cbb61d46f7cfe3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_0_1.png",
+      "sha256": "c80a7351b7de96618e2e36cc90c060711c9ff9a44c89aaddb5cbb61d46f7cfe3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_1_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_1_0.png",
+      "sha256": "d430010a362301acc6b6b462b7e8b7e031b832ee9c5b4c299c67d23e132d0829",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_1_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_1_1.png",
+      "sha256": "d430010a362301acc6b6b462b7e8b7e031b832ee9c5b4c299c67d23e132d0829",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_2_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_2_0.png",
+      "sha256": "adfee9bd8f7588906a33db7e9e72556eed849e00df7727e5f34f8e9880e8fc69",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_2_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_2_1.png",
+      "sha256": "adfee9bd8f7588906a33db7e9e72556eed849e00df7727e5f34f8e9880e8fc69",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_3_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_3_0.png",
+      "sha256": "edbf0f35deb72f3a55b1d0f18668c81a69886b8b89e50c8873c65edaee2beba5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_3_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_3_1.png",
+      "sha256": "edbf0f35deb72f3a55b1d0f18668c81a69886b8b89e50c8873c65edaee2beba5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_4_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_4_0.png",
+      "sha256": "9b2a5c860f41ab87769ddb47fb1138eadcbd9e01efdffd558537c88133141615",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_4_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_4_1.png",
+      "sha256": "9b2a5c860f41ab87769ddb47fb1138eadcbd9e01efdffd558537c88133141615",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_5_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_5_0.png",
+      "sha256": "d6f6a684d25ae8d4a99268824486ddef54e3f82f8051ec87225773927f3f944b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_5_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_5_1.png",
+      "sha256": "d6f6a684d25ae8d4a99268824486ddef54e3f82f8051ec87225773927f3f944b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_6_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_6_0.png",
+      "sha256": "621a217ef67cddd31f1fe36cfa91bd4ca49d899a64039b93defce39e14bfdc9e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_6_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_6_1.png",
+      "sha256": "621a217ef67cddd31f1fe36cfa91bd4ca49d899a64039b93defce39e14bfdc9e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_7_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_7_0.png",
+      "sha256": "0756155ebde71edc4c6ad9be39be5e74e042ff0382eb48b368440892c2bd2ac1",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_7_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_7_1.png",
+      "sha256": "0756155ebde71edc4c6ad9be39be5e74e042ff0382eb48b368440892c2bd2ac1",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_8_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_8_0.png",
+      "sha256": "61565b411225ca030191ee3a089fee95d59b9ebfadad0698f14aeff06de8e6f6",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_8_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_8_1.png",
+      "sha256": "61565b411225ca030191ee3a089fee95d59b9ebfadad0698f14aeff06de8e6f6",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_0_0.png",
+      "sha256": "46b706622b16775695800ac31f9d66d44dff4cd2d0c4ddeb44fe7f8dcfda5851",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_0_1.png",
+      "sha256": "46b706622b16775695800ac31f9d66d44dff4cd2d0c4ddeb44fe7f8dcfda5851",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_1_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_1_0.png",
+      "sha256": "d8e5004e89af827496217d3af49c221367252e1210ad58fbd3bef65ac61546d5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_1_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_1_1.png",
+      "sha256": "d8e5004e89af827496217d3af49c221367252e1210ad58fbd3bef65ac61546d5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_2_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_2_0.png",
+      "sha256": "bcf38924933d1248a109f243b4373b138c189f35607d614283404a4f33f4c057",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_2_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_2_1.png",
+      "sha256": "bcf38924933d1248a109f243b4373b138c189f35607d614283404a4f33f4c057",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_3_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_3_0.png",
+      "sha256": "5b76875c0d00b35d7767888b859ba76d21574e48ffd6ac42cc9b057865c0a478",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_3_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_3_1.png",
+      "sha256": "5b76875c0d00b35d7767888b859ba76d21574e48ffd6ac42cc9b057865c0a478",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_4_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_4_0.png",
+      "sha256": "d2c0de1393c2b0fe3a22d90a5cffa3801f82d35e5ff5c2ac401c24a29dcfa14f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_4_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_4_1.png",
+      "sha256": "d2c0de1393c2b0fe3a22d90a5cffa3801f82d35e5ff5c2ac401c24a29dcfa14f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_5_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_5_0.png",
+      "sha256": "9b83fac4fb0ccff5f5248e09065636c4bf6ace18bd60dce61403fd7cb55eaa76",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_5_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_5_1.png",
+      "sha256": "9b83fac4fb0ccff5f5248e09065636c4bf6ace18bd60dce61403fd7cb55eaa76",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_6_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_6_0.png",
+      "sha256": "74e79b375dfaa1579f1d60fc82cbda3377c64417757e924bd2411348127d1a9a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_6_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_6_1.png",
+      "sha256": "74e79b375dfaa1579f1d60fc82cbda3377c64417757e924bd2411348127d1a9a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_7_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_7_0.png",
+      "sha256": "8fa76ea48f78a95af7574d936b17ccd37ab7891f23d019570c1fa706ee297dae",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_7_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_7_1.png",
+      "sha256": "8fa76ea48f78a95af7574d936b17ccd37ab7891f23d019570c1fa706ee297dae",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_8_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_8_0.png",
+      "sha256": "962030319a7e5029d71f1f18babc0ad05cd44461e545958bd895d247e03575f3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_8_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_8_1.png",
+      "sha256": "962030319a7e5029d71f1f18babc0ad05cd44461e545958bd895d247e03575f3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    }
+  ],
+  "excluded_status_counts": {}
+}

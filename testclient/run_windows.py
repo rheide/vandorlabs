@@ -6,12 +6,14 @@ The built mod stays in build/libs; only external test fixtures are copied.
 """
 import argparse
 import ctypes
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import time
 import zipfile
 
@@ -30,10 +32,16 @@ def main():
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['large-canopy', 'pilot-inspection', 'pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins', 'ramps', 'redstone-inversion', 'doors', 'block-categories', 'machinery', 'glass-appearance'])
+    parser.add_argument('--focus', choices=['connection-acceptance', 'large-canopy', 'pilot-inspection', 'pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins', 'ramps', 'redstone-inversion', 'doors', 'block-categories', 'machinery', 'glass-appearance'])
     parser.add_argument('--disable-categories', help='Comma-separated category keys for isolated availability checks')
     parser.add_argument('--shot-prefix', help='Restrict visual scenes to one named family or arrangement')
     parser.add_argument('--start-shot', help='Resume visual scenes at this exact name, retaining later runtime checks')
+    parser.add_argument('--shot-shards', type=int, default=1, help='Partition the visual matrix across independent clients')
+    parser.add_argument('--shot-shard', type=int, default=0, help='Zero-based partition to capture')
+    parser.add_argument('--shot-limit', type=int, default=0, help='Limit scenes for a capture smoke check')
+    parser.add_argument('--acceptance-pilot', action='store_true', help='Capture only the junction layout pilot')
+    parser.add_argument('--connection-topology', choices=['l', 't', 'x'], default='l', help='Regular-wall acceptance page to capture')
+    parser.add_argument('--connection-baseline', type=Path, help='Accepted screenshot baseline (defaults to the regular-wall baseline)')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if os.name != 'nt':
@@ -43,10 +51,16 @@ def main():
     jar = (args.jar or root/'build/libs'/('vandorlabs-'+version+'.jar')).resolve()
     if not jar.is_file():
         parser.error('Build the standard mod JAR first: '+str(jar))
-    output = root/'testclient'/('render-run.'+time.strftime('%Y%m%d-%H%M%S')+('-'+args.role if args.role else ''))
+    output = root/'testclient'/('render-run.'+time.strftime('%Y%m%d-%H%M%S')+'-'+str(os.getpid())+('-'+args.role if args.role else ''))
     game = output/'game'
     natives = output/'natives'
     game.mkdir(parents=True)
+    if args.focus == 'connection-acceptance':
+        (output/'capture-metadata.json').write_text(json.dumps({
+            'schema': 'vandorlabs-connection-capture-v1', 'jar': jar.name,
+            'jar_sha256': hashlib.sha256(jar.read_bytes()).hexdigest(),
+            'topology': args.connection_topology, 'image_size': [1920, 1080],
+        }, indent=2), encoding='utf-8')
     if args.disable_categories:
         categories=args.disable_categories.split(',')
         if any(not re.fullmatch('[a-z_]+', key) for key in categories):
@@ -105,6 +119,10 @@ def main():
             if not source.name.startswith('vandorlabs-'):
                 shutil.copyfile(source,game/'mods'/source.name)
     properties = ['-Dvandorlabs.reprolab='+str(output), '-Djava.library.path='+str(natives)]
+    properties.append('-Dvandorlabs.connectionAcceptanceTopology='+args.connection_topology)
+    properties += ['-Dvandorlabs.reproShotShards='+str(args.shot_shards), '-Dvandorlabs.reproShotShard='+str(args.shot_shard), '-Dvandorlabs.reproShotLimit='+str(args.shot_limit)]
+    if args.acceptance_pilot:
+        properties.append('-Dvandorlabs.connectionAcceptancePilot=true')
     if args.shot_prefix:
         properties.append('-Dvandorlabs.reproShotPrefix='+args.shot_prefix)
     if args.start_shot:
@@ -116,7 +134,7 @@ def main():
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'large-canopy':'largeCanopyChecksOnly', 'pilot-inspection':'pilotInspectionChecksOnly', 'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly', 'glass-appearance':'glassAppearanceChecksOnly', 'machinery':'machineryChecksOnly', 'block-categories':'blockCategoryChecksOnly', 'doors':'doorChecksOnly', 'redstone-inversion':'redstoneInversionChecksOnly', 'ramps': 'rampChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'connection-acceptance':'connectionAcceptanceOnly', 'large-canopy':'largeCanopyChecksOnly', 'pilot-inspection':'pilotInspectionChecksOnly', 'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly', 'glass-appearance':'glassAppearanceChecksOnly', 'machinery':'machineryChecksOnly', 'block-categories':'blockCategoryChecksOnly', 'doors':'doorChecksOnly', 'redstone-inversion':'redstoneInversionChecksOnly', 'ramps': 'rampChecksOnly'}[args.focus]+'=true')
         if args.focus=='vehicle-render':properties.append('-Dvandorlabs.vehicleRenderChecksOnly=true')
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
     if args.focus == 'ramps':
@@ -128,7 +146,7 @@ def main():
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
         '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,
-        '--width', '896' if args.focus == 'ramps' else '1280', '--height', '504' if args.focus == 'ramps' else '720']
+        '--width', '1920' if args.focus == 'connection-acceptance' else '896' if args.focus == 'ramps' else '1280', '--height', '1080' if args.focus == 'connection-acceptance' else '504' if args.focus == 'ramps' else '720']
     if args.server:
         host,port=args.server.split(':')
         command+=['--server',host,'--port',port]
@@ -173,7 +191,7 @@ def main():
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'large-canopy':'large-canopy-live PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
+        marker = {'connection-acceptance':'connection-acceptance PASS', 'large-canopy':'large-canopy-live PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
         if args.focus == 'ramps':
@@ -188,8 +206,29 @@ def main():
                 if 'documentation-animation PASS '+scene+' frames=' not in client_log:
                     raise SystemExit('Missing escalator animation: '+scene)
         if args.focus == 'pilot-seat':
-            import sys
             subprocess.run([sys.executable, str(root/'testclient/analyze_pilot_seat.py'), str(output)], check=True)
+        if args.focus == 'connection-acceptance':
+            if 'flat-panel-material-L PASS 72 ordered fixtures' not in client_log:
+                raise SystemExit('Missing regular wall material-join runtime checks.')
+            if 'flat-panel-material-T PASS 864 material/direction/hand/tail fixtures' not in client_log:
+                raise SystemExit('Missing regular T material-ownership runtime checks.')
+            if 'flat-glass-cross-frame PASS 1296 material/facing fixtures' not in client_log:
+                raise SystemExit('Missing glass cross-junction frame runtime checks.')
+            scope = 'regular-'+args.connection_topology
+            if not args.acceptance_pilot:
+                subprocess.run([sys.executable, str(root/'testclient/review_connections.py'), str(output), '--scope', scope, '--no-contact-sheet'] + (['--compact'] if args.connection_topology in ('t', 'x') else []), check=True)
+            from connection_baseline import default_baseline
+            baseline = args.connection_baseline or default_baseline(args.connection_topology)
+            complete_capture = (not args.acceptance_pilot and not args.shot_prefix and not args.start_shot
+                                and not args.shot_limit and args.shot_shards == 1)
+            if complete_capture and (baseline/'baseline.json').is_file():
+                checked = subprocess.run([sys.executable, str(root/'testclient/connection_baseline.py'), 'compare',
+                                          '--baseline', str(baseline), '--capture', str(output),
+                                          '--output', str(output/'connection-regression')])
+                if checked.returncode:
+                    raise SystemExit('Accepted connection screenshots need review: '+str(output/'connection-regression/index.html'))
+            elif args.connection_baseline:
+                raise SystemExit('Baseline comparison requires an existing baseline and a complete capture.')
     print('Client completed; validate the screenshots and full-suite assertions before reporting success.')
 
 

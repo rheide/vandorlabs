@@ -50,7 +50,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             net.minecraft.world.IBlockAccess world, BlockPos pos) {
         IBlockState actual = super.getActualState(state, world, pos);
         TileEntity tile = world.getTileEntity(pos);
-        if(tile instanceof TileEntityProgrammableGlass && !((TileEntityProgrammableGlass)tile).isFramed())
+        if(PanelJoins.flatCorner(state,world,pos)!=null || tile instanceof TileEntityProgrammableGlass && !((TileEntityProgrammableGlass)tile).isFramed())
             actual=actual.withProperty(TOP,false).withProperty(BOTTOM,false).withProperty(LEFT,false).withProperty(RIGHT,false)
                     .withProperty(INNER_TL,false).withProperty(INNER_TR,false).withProperty(INNER_BL,false).withProperty(INNER_BR,false);
         return tile instanceof TileEntityProgrammableGlass
@@ -98,6 +98,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             world.setBlockState(pos, state.withProperty(SIZE, size), 3);
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof TileEntityProgrammableGlass) {
+            ((TileEntityProgrammableGlass)te).setPanelFacing(placer.getHorizontalFacing().getOpposite());
             ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);
             ((TileEntityProgrammableGlass)te).setJoin(join);

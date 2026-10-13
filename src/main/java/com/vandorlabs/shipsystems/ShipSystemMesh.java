@@ -27,6 +27,36 @@ public final class ShipSystemMesh {
         load("rivet_system_meshes.json");
         load("external_sensor_meshes.json");
         load("rivet_reference_meshes.json");
+        opposedConsoles();
+    }
+    private static double opposedDepth(double z) {
+        // Preserve the front keyboard and extend each screen half to the common center.
+        return z<=.25?z:Math.min(1,.25+(z-.25)*(.75/.546875));
+    }
+    private static void opposedConsoles() {
+        for(int width=1;width<=3;width++)for(String power:new String[]{"_off","_on"}) {
+            String source="vektor_console_"+width+power,id="vektor_console_"+width+"_opposed"+power;
+            List<CanopyMesh.Face> faces=new ArrayList<>();List<AxisAlignedBB> boxes=new ArrayList<>();
+            for(int row=0;row<2;row++) {
+                for(CanopyMesh.Face original:MODELS.get(source)) {
+                    CanopyMesh.Face face=new CanopyMesh.Face();face.vertices=new Vec3d[original.vertices.length];
+                    for(int i=0;i<face.vertices.length;i++) {
+                        Vec3d v=original.vertices[i];double z=opposedDepth(v.z);
+                        face.vertices[i]=new Vec3d(row==0?v.x:width-v.x,v.y,row==0?z:2-z);
+                    }
+                    if(face.vertices[1].subtract(face.vertices[0]).crossProduct(face.vertices[2].subtract(face.vertices[0])).lengthSquared()<1e-14)continue;
+                    face.uv=original.uv;face.material=original.material;face.baseMaterial=original.baseMaterial;
+                    face.group=original.group;face.doubleSided=original.doubleSided;faces.add(face);
+                }
+                for(AxisAlignedBB box:BOXES.get(source)) {
+                    double a=opposedDepth(box.minZ),b=opposedDepth(box.maxZ);
+                    if(b-a<1e-9)continue;
+                    boxes.add(row==0?new AxisAlignedBB(box.minX,box.minY,a,box.maxX,box.maxY,b)
+                            :new AxisAlignedBB(width-box.maxX,box.minY,2-b,width-box.minX,box.maxY,2-a));
+                }
+            }
+            MODELS.put(id,Collections.unmodifiableList(faces));BOXES.put(id,Collections.unmodifiableList(boxes));DIMENSIONS.put(id,new int[]{width,2,1});
+        }
     }
     private static void load(String resource) {
         try (InputStream in = ShipSystemMesh.class.getResourceAsStream("/assets/vandorlabs/data/" + resource)) {

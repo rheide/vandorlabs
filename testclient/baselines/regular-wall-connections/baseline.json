@@ -1,0 +1,360 @@
+{
+  "schema": "vandorlabs-connection-baseline-v1",
+  "source_capture_id": "render-run.regular-l-20261013",
+  "acceptance": "Reviewer status ok only; defaultStatus honored when explicitly present",
+  "comparison": {
+    "roi": [
+      480,
+      216,
+      1440,
+      918
+    ],
+    "sample_scale": 2,
+    "mask_dilation_pixels": 2,
+    "channel_tolerance": 12,
+    "max_changed_fraction": 0.003,
+    "max_mean_error": 2.0,
+    "max_lighting_bias": 6
+  },
+  "cases": [
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_0_0.png",
+      "sha256": "e993af8c6e541c4490b38f64f7856906cbfc629be6f1b6e89fb6f3de1a74c183",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_0_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_0_0_1.png",
+      "sha256": "aa619028e0abb8831c70aa9741769e49412aa5923ee1de8e831b8113d0a5746e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_0_0.png",
+      "sha256": "56f0be52d6a797a7b66a46c73fa79e76478774c9859d1a711adf430169b640ca",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_1_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_1_0_1.png",
+      "sha256": "b9b77430a74d0c9cdf6549c554c160dd1b81f21a6a28ed29ef8eb1b4440ed1d3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_0_0.png",
+      "sha256": "488086bcfc4590caf201acc363d7c951fa72c1424ab7883d5184a12538366d9d",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_2_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_2_0_1.png",
+      "sha256": "67b5716493b244751dcdc893f33db2243fe7b4c13b2b7bd478ee982dc770a684",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_0_0.png",
+      "sha256": "46b706622b16775695800ac31f9d66d44dff4cd2d0c4ddeb44fe7f8dcfda5851",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_0_3_0_1",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_0_3_0_1.png",
+      "sha256": "46b706622b16775695800ac31f9d66d44dff4cd2d0c4ddeb44fe7f8dcfda5851",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "L corner \u00b7 flat \u00b7 facing north \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        }
+      ]
+    }
+  ],
+  "excluded_status_counts": {
+    "wrong": 64
+  }
+}

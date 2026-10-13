@@ -10,7 +10,11 @@ The original authored structural struts remain. The additional dynamic connectin
 
 Vektor consoles combine into complete rectangles up to 3 by 3. The top display uses a continuous texture mapping across both triangles, including 2 by 3 assemblies.
 
+Two Vektor rows facing away from their shared center join into a single console up to three blocks wide. Both outer edges retain their keyboard controls, and the displays meet in the middle. Configuration, redstone power, selection and animation apply to the complete assembly from either row. Removing a member repartitions the remaining filled cells.
+
 Rendering reuses compiled static geometry for each model and mounting direction, rebuilding it after the texture atlas reloads. It performs no per-frame transformation or normal generation for opaque/emissive machinery. Transparent surfaces remain sorted. Animation changes light intensity without rebuilding geometry.
+
+Steady emissive geometry uses one combined draw call instead of eight spatial bands; animated models retain the bands. Empty bands and absent transparent surfaces issue no draw calls. Inactive opaque machinery therefore draws one compiled list, and active machinery with animation disabled draws at most two, before any glass. Authored quadrilaterals use four vertices instead of two degenerate triangle quads (eight vertices). These changes reduce CPU submission and vertex traffic without simplifying the visible machinery. The additional combined emissive list increases cached GPU geometry for active model orientations; the cache is rebuilt on an atlas reload.
 
 The curated mesh catalogs contain 51,226 faces, down from 182,618. For retained Rivet OFF models, removal of micro fasteners reduces Reactor faces from 3,887 to 1,647 and Cross-flow Core faces from 3,357 to 1,636. These counts measure geometry reduction; frame rates depend on hardware, view distance and scene contents.
 

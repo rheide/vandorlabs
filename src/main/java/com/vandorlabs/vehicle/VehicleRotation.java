@@ -113,7 +113,7 @@ public final class VehicleRotation {
                     NBTTagList list=data.getTagList("TrapdoorAssembly",4),updated=new NBTTagList();
                     for(int n=0;n<list.tagCount();n++)updated.appendTag(new NBTTagLong(cell(BlockPos.fromLong(((NBTTagLong)list.get(n)).getLong()),width,depth,turns).toLong()));
                     if(data.hasKey("TrapdoorAssembly",9))data.setTag("TrapdoorAssembly",updated);
-                    for(String key:new String[]{"TrapdoorCoverFacing","DiagonalFacing","DiagonalGroupFacing"})facing(data,key,rotation,true);
+                    for(String key:new String[]{"TrapdoorCoverFacing","DiagonalFacing","DiagonalGroupFacing","GlassPanelFacing"})facing(data,key,rotation,true);
                     facing(data,"MountFace",rotation,false);
                     if(before.state.getBlock() instanceof BlockVandorSwitch && before.state.getValue(BlockVandorSwitch.FACING).getAxis()==EnumFacing.Axis.Y && data.hasKey("MountRotation",3))
                         data.setInteger("MountRotation",(data.getInteger("MountRotation")+turns)&3);
@@ -166,7 +166,7 @@ public final class VehicleRotation {
                 entry.setInteger("X",next.getX());entry.setInteger("Y",next.getY());entry.setInteger("Z",next.getZ());if(entry.hasKey("Pos",4))entry.setLong("Pos",next.toLong());
                 if(entry.hasKey("Tile",10)){
                     NBTTagCompound saved=entry.getCompoundTag("Tile");saved.setInteger("x",next.getX());saved.setInteger("y",next.getY());saved.setInteger("z",next.getZ());
-                    for(String direction:new String[]{"DiagonalFacing","DiagonalGroupFacing"})facing(saved,direction,rotation,true);
+                    for(String direction:new String[]{"DiagonalFacing","DiagonalGroupFacing","GlassPanelFacing"})facing(saved,direction,rotation,true);
                     facing(saved,"MountFace",rotation,false);
                 }
             }

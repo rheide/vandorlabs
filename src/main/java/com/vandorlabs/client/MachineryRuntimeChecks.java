@@ -36,7 +36,38 @@ public final class MachineryRuntimeChecks {
         ConsoleConnections.refresh(world,consoleOrigin);
         TileEntityShipSystem owner=TileEntityShipSystem.at(world,consoleOrigin);require(owner.consoleWidth==2 && owner.consoleDepth==3,"2x3 grouping");
         require(owner.model().equals("vektor_console_2_depth_3_on"),"2x3 model");owner.setAnimated(true);
+        checkOpposed(world,console,origin.add(28,0,0));
         System.out.println("[vandorlabs][reprolab] machinery-live PASS retained=10 rectangle=2x3 animation=persisted collision=cached");
+    }
+    private static void checkOpposed(World world,BlockShipSystem console,BlockPos origin) {
+        for(EnumFacing facing:new EnumFacing[]{EnumFacing.NORTH,EnumFacing.EAST})for(int width=1;width<=3;width++) {
+            BlockPos pos=origin.add(width*5,0,facing==EnumFacing.NORTH?0:7);MountFrame frame=new MountFrame(facing,EnumFacing.UP);
+            for(int x=0;x<width;x++)for(int row=0;row<2;row++) {
+                BlockPos cell=frame.cell(pos,x,0,row);world.setBlockState(cell.down(),Blocks.STONE.getDefaultState(),2);
+                world.setBlockState(cell,console.getDefaultState().withProperty(BlockShipSystem.FACING,row==0?facing:facing.getOpposite()),2);
+                TileEntityShipSystem tile=TileEntityShipSystem.at(world,cell);tile.anchor=cell;tile.mount=EnumFacing.UP;
+            }
+            require(ConsoleConnections.refresh(world,frame.cell(pos,width-1,0,1)),"opposed refresh from reversed row");
+            TileEntityShipSystem owner=TileEntityShipSystem.at(world,pos);
+            require(owner.consoleOpposed && owner.consoleWidth==width && owner.consoleDepth==2,"opposed dimensions");
+            require(owner.model().equals("vektor_console_"+width+"_opposed_on"),"opposed render model");
+            int drawn=0;
+            for(int x=0;x<width;x++)for(int row=0;row<2;row++) {
+                TileEntityShipSystem member=TileEntityShipSystem.at(world,frame.cell(pos,x,0,row));
+                require(member.configurationOwner()==owner,"opposed configuration owner");
+                require(!member.collisionBoxes().isEmpty(),"opposed cell collision");
+                require(member.selectionBounds().equals(owner.selectionBounds()),"opposed shared selection");
+                if(member.draws())drawn++;
+                NBTTagCompound saved=member.writeToNBT(new NBTTagCompound());TileEntityShipSystem restored=new TileEntityShipSystem();restored.setPos(member.getPos());restored.readFromNBT(saved);
+                require(restored.consoleOpposed,"opposed persisted");
+            }
+            require(drawn==1,"opposed renders once");
+            owner.setAnimated(true);
+            require(TileEntityShipSystem.at(world,frame.cell(pos,width-1,0,1)).isAnimated(),"opposed animation configuration propagates");
+            world.setBlockToAir(frame.cell(pos,width-1,0,1));ConsoleConnections.refresh(world,pos);
+            if(width==1)require(!owner.consoleOpposed && owner.consoleDepth==1,"removed reverse row splits assembly");
+        }
+        System.out.println("[vandorlabs][reprolab] machinery-opposed PASS widths=1,2,3 axes=NS,EW persistence=shared collision=all-cells");
     }
     private static void checkReactor(World world,BlockPos pos) {
         TileEntityShipSystem reactor=TileEntityShipSystem.at(world,pos);BlockShipSystem block=reactor.block();

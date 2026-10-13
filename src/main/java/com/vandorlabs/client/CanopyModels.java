@@ -38,6 +38,7 @@ public final class CanopyModels {
     @SubscribeEvent
     public void bake(ModelBakeEvent event) {
         Icon.CONFIGURED.clear();
+        TECanopy.invalidate();
         for (net.minecraft.block.Block b : ModBlocks.BLOCKS)
             if (b instanceof BlockCanopy) {
                 String id = ((BlockCanopy) b).kind;
@@ -58,7 +59,8 @@ public final class CanopyModels {
 
         Icon(String id){this(id,null);}
         Icon(String id,com.vandorlabs.canopy.LargeCanopySettings settings) {
-            kind=id;List<CanopyMesh.Face> faces=settings==null?CanopyMesh.MODELS.get(id):com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings);
+            kind=id;List<CanopyMesh.Face> faces=settings!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(id)?com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings,true):CanopyMesh.MODELS.get(id);
+            if(settings!=null)faces=com.vandorlabs.canopy.CanopyFinishes.faces(faces,settings.shade,settings.tint);
             for (CanopyMesh.Face f : faces)
                 for (int triangle = 1; triangle < f.vertices.length - 1; triangle++) {
                     add(f, new int[] {0, triangle, triangle + 1, triangle + 1});
@@ -148,7 +150,6 @@ public final class CanopyModels {
         }
 
         public ItemOverrideList getOverrides() {
-            if(!com.vandorlabs.canopy.LargeCanopySettings.supports(kind))return ItemOverrideList.NONE;
             return new ItemOverrideList(Collections.emptyList()){@Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();if(stack.hasTagCompound())settings.read(stack.getTagCompound());String key=kind+":"+settings.key();IBakedModel model=CONFIGURED.get(key);if(model==null){model=new Icon(kind,settings);CONFIGURED.put(key,model);}return model;}};
         }
     }

@@ -43,6 +43,11 @@ public final class TaxiSettingsRuntimeChecks {
         com.vandorlabs.tiles.TileEntityLandingGear gearTile=(com.vandorlabs.tiles.TileEntityLandingGear)world.getTileEntity(gearPos);
         require(gearTile!=null && gearTile.configure(0,0,0,0),"small retracted gear configures");gearTile.progress=gearTile.previous=0;
         require(gearTile.owner()==null && gear.root(world,gearPos)==gearTile,"retracted mount owns its root");
+        for(EnumFacing side:new EnumFacing[]{EnumFacing.NORTH,EnumFacing.SOUTH}){
+            BlockPos extra=at.down().offset(side);world.setBlockState(extra,gear.getDefaultState().withProperty(BlockTelescopicLandingGear.LOWER,false).withProperty(BlockTelescopicLandingGear.EXTENDED,false),2);
+            com.vandorlabs.tiles.TileEntityLandingGear extraTile=(com.vandorlabs.tiles.TileEntityLandingGear)world.getTileEntity(extra);
+            require(extraTile!=null && extraTile.configure(0,0,0,0),"additional retracted support configures");extraTile.progress=extraTile.previous=0;
+        }
         world.setBlockState(at.down().west(),ModBlocks.CONTROLLED_RAMP.getDefaultState(),2);world.setBlockState(at.down().west(2),Blocks.STONE.getDefaultState(),2);
         net.minecraft.block.state.IBlockState[] topSlabs={
             Blocks.STONE_SLAB.getDefaultState().withProperty(BlockSlab.HALF,BlockSlab.EnumBlockHalf.TOP),
@@ -54,7 +59,7 @@ public final class TaxiSettingsRuntimeChecks {
             require(VehicleScan.touches(world,at,world.getBlockState(at),EnumFacing.DOWN),"pilot touches top slab");
             VehicleScan scan=new VehicleScan(world,at);for(int n=0;n<100 && !scan.step(64);n++);
             require(scan.error==null && scan.result!=null,"top slab craft captures without floor: "+scan.error);
-            require(scan.result.cells.size()==4,"only seat, upper, top slab and gear captured");
+            require(scan.result.cells.size()==6 && scan.result.gearCount==3,"only seat, upper, top slab and three gear roots captured");
             require(scan.result.at(at.down().west().subtract(scan.origin))==null && scan.result.at(at.down().west(2).subtract(scan.origin))==null,"ramp boundary excludes sections and blocks beyond");
             world.setBlockState(at.down(),top.getBlock().getDefaultState(),2);
             require(VehicleScan.touches(world,at.down(),world.getBlockState(at.down()),EnumFacing.DOWN),"bottom slab still touches floor: "+top.getBlock().getRegistryName());

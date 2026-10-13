@@ -55,8 +55,11 @@ public final class CanopyRenderer extends CustomRenderer {
         List<CanopyMesh.Face> mesh = CanopyMesh.MODELS.get(id);
         Object alignment=context.getBlockTileEntityFieldAt("CenteredPlacement",ox,oy,oz);
         mesh=com.vandorlabs.canopy.CanopyVariants.faces(Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0,id,mesh);
-        if(com.vandorlabs.canopy.LargeCanopySettings.supports(id)){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();for(String field:new String[]{"CanopyDepth","CanopyScale","CanopyShade","CanopyTint"}){Object value=context.getBlockTileEntityFieldAt(field,ox,oy,oz);if(value instanceof Number)tag.setInteger(field,((Number)value).intValue());}com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();settings.read(tag);mesh=com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings);}
+        if(com.vandorlabs.canopy.LargeCanopySettings.supports(id)){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();for(String field:new String[]{"CanopyDepth","CanopyScale","CanopyShade","CanopyTint"}){Object value=context.getBlockTileEntityFieldAt(field,ox,oy,oz);if(value instanceof Number)tag.setInteger(field,((Number)value).intValue());}com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();settings.read(tag);mesh=com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.endsWith("5x5")?5:3,settings,Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0);}
         if (mesh == null) return new RenderPatch[0];
+        Object savedShade=context.getBlockTileEntityFieldAt("CanopyShade",ox,oy,oz),savedTint=context.getBlockTileEntityFieldAt("CanopyTint",ox,oy,oz);
+        int shade=savedShade instanceof Number?com.vandorlabs.tiles.GlassTextures.clamp(((Number)savedShade).intValue()):0;
+        int tint=savedTint instanceof Number?com.vandorlabs.tiles.GlassTextures.clampTint(((Number)savedTint).intValue()):1;
         for (CanopyMesh.Face face : mesh) {
             List<Vec3d> polygon = new ArrayList<>();
             for (Vec3d v : face.vertices)
@@ -67,7 +70,7 @@ public final class CanopyRenderer extends CustomRenderer {
             }
             int texture =
                     face.baseMaterial.equals("glass")
-                            ? 1
+                            ? 4+shade*3+tint
                             : face.baseMaterial.equals("amber")
                                     ? 2
                                     : face.baseMaterial.equals("light") ? 3 : 0;

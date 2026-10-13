@@ -485,6 +485,11 @@ public class ReproLab {
             if(Boolean.getBoolean("vandorlabs.traceChunkTiles"))net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ChunkTileTrace());
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
+            if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
+                SHOTS.clear();
+                for(String name:ConnectionAcceptance.names())
+                    SHOTS.add(new Shot(name,GALLERY_X+5,GALLERY_Y+4.5D,-23,40.6F,30F));
+            }
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
             if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_") && !shot.name.startsWith("gallery_glass_finishes_"));
             if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
@@ -496,6 +501,12 @@ public class ReproLab {
                 if(index<0)throw new IllegalArgumentException("Unknown start shot: "+start);
                 SHOTS.subList(0,index).clear();
             }
+            int shards=Integer.getInteger("vandorlabs.reproShotShards",1);
+            int shard=Integer.getInteger("vandorlabs.reproShotShard",0);
+            if(shards<1 || shard<0 || shard>=shards)throw new IllegalArgumentException("Invalid capture shard");
+            if(shards>1)for(int i=SHOTS.size()-1;i>=0;i--)if(i%shards!=shard)SHOTS.remove(i);
+            int limit=Integer.getInteger("vandorlabs.reproShotLimit",0);
+            if(limit>0 && SHOTS.size()>limit)SHOTS.subList(limit,SHOTS.size()).clear();
         }
     }
 
@@ -637,6 +648,15 @@ public class ReproLab {
                 mc.gameSettings.hideGUI = true;
                 mc.gameSettings.thirdPersonView = 0;
                 mc.gameSettings.renderDistanceChunks = 6;
+                if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
+                    mc.gameSettings.fovSetting=30;
+                    mc.gameSettings.renderDistanceChunks=2;
+                    mc.gameSettings.clouds=0;
+                    mc.gameSettings.enableVsync=false;
+                    mc.gameSettings.limitFramerate=60;
+                    mc.setIngameNotInFocus();
+                    mc.player.movementInput=new net.minecraft.util.MovementInput();
+                }
                 mc.getTutorial().setStep(TutorialSteps.NONE);
                 EntityPlayer p = mc.player;
                 p.capabilities.isFlying = true;
@@ -679,7 +699,7 @@ public class ReproLab {
                     mc.gameSettings.hideGUI=false;
                     openLightPicker(mc);state=19;holdTicks=GUI_SETTLE_TICKS;break;
                 }
-                if(!Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")) {
+                if(!Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly") && !Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
                 LightOcclusionChecks.run(outDir);
                 PilotSeatRuntimeChecks.check(mc);
                 if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){mc.shutdown();return;}
@@ -696,6 +716,7 @@ public class ReproLab {
                     break;
                 }
                 }
+                if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly"))FlatPanelJoinRuntimeChecks.check(mc.player);
                 if(System.getProperty("vandorlabs.reproShotPrefix","").startsWith("gallery_close_control_")){TwinPowerLeverChecks.checkModels(mc);RockerSwitchChecks.checkModels(mc);}
                 Shot firstShot=SHOTS.get(shotIndex);
                 if(firstShot.name.equals("gallery_distant_geometry")) {
@@ -715,7 +736,8 @@ public class ReproLab {
                     }
                     try {pendingGalleryBuild.get();} catch(Exception e) {throw new IllegalStateException("Server gallery construction failed",e);}
                     pendingGallery=null;
-                    holdTicks=Math.max(holdTicks,60);
+                    cameraChangedAtFrame=renderedFrames;
+                    holdTicks=Math.max(holdTicks,Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")?4:60);
                     System.out.println("[vandorlabs][reprolab] focused-gallery-chunks PASS");
                 }
                 if (--holdTicks > 0) {
@@ -725,6 +747,10 @@ public class ReproLab {
                 // Never save the previous camera's framebuffer under this shot's name.
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.startsWith("gallery_acceptance_") && !ConnectionAcceptance.ready(mc.world,s.name,GALLERY_X,GALLERY_Y)) {
+                    if(++pendingGalleryTicks>400)throw new IllegalStateException("Acceptance fixture did not synchronize: "+s.name);
+                    break;
+                }
                 if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1 && !distantReady) {
                     saveNamed(mc,"distant_geometry_near");
                     beginShot(mc,new Shot("distance_camera",s.x,s.y,s.z,s.yaw,s.pitch),false);
@@ -759,10 +785,15 @@ public class ReproLab {
                     beginShot(mc, next, false);
                     holdTicks = next.name.equals("gallery_v12_gear_four") ? 100
                             : next.name.endsWith("opening_mid") ? 4
+                            : Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly") ? 4
                             : next.name.startsWith("gallery_") ? 60
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
+                    if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
+                        System.out.println("[vandorlabs][reprolab] connection-acceptance PASS "+SHOTS.size()+" pages");
+                        state=999;mc.shutdown();return;
+                    }
                     if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly")){
                         BlockPos at=new BlockPos(GALLERY_X,GALLERY_Y+1,-18);mc.gameSettings.hideGUI=false;
                         mc.world.setBlockState(at,ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState(),3);
@@ -1674,6 +1705,7 @@ public class ReproLab {
             throw new IllegalStateException("render lab requires an integrated server");
         }
         World world = mc.getIntegratedServer().getWorld(0);
+        if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly"))return;
         if(Boolean.getBoolean("vandorlabs.doorChecksOnly")){onServer(mc,()->{EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());DoorRuntimeChecks.run(world,owner);LargeDoorRuntimeChecks.run(world,owner);RedstoneChannelRuntimeChecks.run(world,owner);System.out.println("[vandorlabs] programmable-doors-live PASS");});return;}
         if(Boolean.getBoolean("vandorlabs.redstoneInversionChecksOnly")){onServer(mc,()->RedstoneInversionRuntimeChecks.run(world));return;}
         if(Boolean.getBoolean("vandorlabs.rampChecksOnly")) {
@@ -2104,6 +2136,19 @@ public class ReproLab {
         // Ramp cells are created by their server controller. A client-side clear
         // after chunk arrival would erase them without generating new packets.
         if(world.isRemote && shot.equals("gallery_distant_geometry"))return;
+        if(shot.startsWith("gallery_acceptance_")) {
+            world.getGameRules().setOrCreateGameRule("doMobSpawning","false");
+            boolean drops=world.getGameRules().getBoolean("doTileDrops");
+            world.getGameRules().setOrCreateGameRule("doTileDrops","false");
+            try {
+                BlockPos.getAllInBox(new BlockPos(GALLERY_X-2,GALLERY_Y+1,-20),
+                        new BlockPos(GALLERY_X+2,GALLERY_Y+3,-16)).forEach(world::setBlockToAir);
+                ConnectionAcceptance.build(world,shot,GALLERY_X,GALLERY_Y);
+            } finally {
+                world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(drops));
+            }
+            return;
+        }
         world.getGameRules().setOrCreateGameRule("doMobSpawning", "false");
         boolean tileDrops=world.getGameRules().getBoolean("doTileDrops");
         world.getGameRules().setOrCreateGameRule("doTileDrops","false");
@@ -2138,7 +2183,11 @@ public class ReproLab {
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
         world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(tileDrops));
-        if(shot.startsWith("gallery_join_mixed_")) {
+        if(shot.startsWith("gallery_acceptance_")) {
+            BlockPos.getAllInBox(new BlockPos(GALLERY_X-14,GALLERY_Y,-23),
+                    new BlockPos(GALLERY_X+14,GALLERY_Y+16,-13)).forEach(world::setBlockToAir);
+            ConnectionAcceptance.build(world,shot,GALLERY_X,GALLERY_Y);
+        } else if(shot.startsWith("gallery_join_mixed_")) {
             DiagonalJoinGallery.mixed(world,GALLERY_X,GALLERY_Y,shot.endsWith("glass"));
         } else if(shot.startsWith("gallery_glass_finishes_")) {
             DiagonalJoinGallery.finishes(world,GALLERY_X,GALLERY_Y,Integer.parseInt(shot.substring("gallery_glass_finishes_".length())));
@@ -2829,7 +2878,12 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
-        if(s.name.startsWith("gallery_join_") || s.name.startsWith("gallery_glass_finishes_"))mc.gameSettings.clouds=0;
+        if(s.name.startsWith("gallery_acceptance_")) {
+            mc.setIngameNotInFocus();
+            mc.world.setWorldTime(6000);
+            mc.world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
+        }
+        if(s.name.startsWith("gallery_acceptance_") || s.name.startsWith("gallery_join_") || s.name.startsWith("gallery_glass_finishes_"))mc.gameSettings.clouds=0;
         cameraChangedAtFrame=renderedFrames;
         EntityPlayer p = mc.player;
         EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()
@@ -2996,6 +3050,16 @@ public class ReproLab {
     }
 
     private void save(Minecraft mc, Shot s) {
+        if(s.name.startsWith("gallery_acceptance_")) {
+            EntityPlayer p=mc.player;
+            if(Math.abs(p.posX-s.x)>.01 || Math.abs(p.posY-s.y)>.01 || Math.abs(p.posZ-s.z)>.01
+                    || Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(p.rotationYaw-s.yaw))>.1
+                    || Math.abs(p.rotationPitch-s.pitch)>.1)
+                throw new IllegalStateException("Acceptance camera drifted before capture: "+s.name);
+            System.out.println("[vandorlabs][reprolab] acceptance camera actual="+p.posX+","+p.posY+","+p.posZ
+                    +" yaw="+p.rotationYaw+" pitch="+p.rotationPitch+" fov="+mc.gameSettings.fovSetting
+                    +" previous="+p.prevPosX+","+p.prevPosY+","+p.prevPosZ+" eye="+p.getEyeHeight());
+        }
         saveNamed(mc, s.name);
     }
 
@@ -3031,6 +3095,7 @@ public class ReproLab {
     }
 
     private static BlockPos blockForShot(String name) {
+        if(name.startsWith("gallery_acceptance_"))return new BlockPos(GALLERY_X,GALLERY_Y+2,-18);
         if (name.equals("programmable_walls") || name.equals("programmable_wall_side")
                 || name.startsWith("programmable_porthole")
                 || name.equals("programmable_porthole_joined")

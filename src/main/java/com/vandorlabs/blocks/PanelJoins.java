@@ -7,6 +7,47 @@ import net.minecraft.world.IBlockAccess;
 
 /** Shared wall/glass compatibility and canonical four-pixel panel coordinates. */
 public final class PanelJoins {
+    public static BlockProgrammableWall.FlatCorner flatCorner(IBlockState state,IBlockAccess world,BlockPos pos) {
+        return BlockProgrammableWall.findFlatCorner(state,world,pos);
+    }
+    /** Identify an aligned full-width T bar; L and cross junctions retain their geometry. */
+    public static BlockProgrammableWall.FlatCorner flatBar(IBlockState state,IBlockAccess world,BlockPos pos) {
+        if(!cornerPanel(state))return null;
+        BlockProgrammableWall.FlatCorner c=flatCorner(state,world,pos);
+        return c!=null && c.frontArm!=null && c.backArm!=null
+                && Math.abs(c.frontArm-c.backArm)<1E-7 && c.straightLeft!=c.straightRight?c:null;
+    }
+    public static EnumFacing flatFacing(IBlockState state,IBlockAccess world,BlockPos pos) {
+        EnumFacing canonical=facing(state);
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass
+                ?((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).getPanelFacing(canonical):canonical;
+    }
+    public static double flatNear(IBlockState state,IBlockAccess world,BlockPos pos) {
+        return flatFacing(state,world,pos)==facing(state)?near(state):12-near(state);
+    }
+    static boolean flatEnabled(IBlockAccess world,BlockPos pos) {
+        if(!enabled(world,pos))return false;
+        IBlockState state=world.getBlockState(pos);
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
+        return !(state.getBlock() instanceof BlockProgrammableWall)
+                || !((BlockProgrammableWall)state.getBlock()).isPortholeShape()
+                || !(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)
+                || ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isJoinPortholes();
+    }
+    static boolean cornerPanel(IBlockState state) {
+        return flat(state) && !(state.getBlock() instanceof BlockProgrammablePortholeBlock);
+    }
+    public static java.util.List<net.minecraft.util.math.AxisAlignedBB> flatBoxes(IBlockState state,IBlockAccess world,BlockPos pos) {
+        BlockProgrammableWall.FlatCorner c=flatCorner(state,world,pos);
+        double n=flatNear(state,world,pos);
+        EnumFacing orientation=flatFacing(state,world,pos);
+        java.util.List<net.minecraft.util.math.AxisAlignedBB> result=new java.util.ArrayList<>();
+        result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB((c==null?0:c.left())/16,0,n/16,(c==null?16:c.right())/16,1,(n+4)/16),orientation));
+        if(c!=null && c.frontArm!=null)result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(c.frontArm/16,0,0,(c.frontArm+4)/16,1,n/16),orientation));
+        if(c!=null && c.backArm!=null)result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(c.backArm/16,0,(n+4)/16,(c.backArm+4)/16,1,1),orientation));
+        return result;
+    }
     /** A placed regular panel anchors to the diagonal's actual end, avoiding a folded slope. */
     public static int placementDepth(IBlockAccess world,BlockPos support,IBlockState state,EnumFacing side){
         if(!diagonal(state) || BlockProgrammableWall.halfHeight(world,support) || side.getAxis()!=EnumFacing.Axis.Y)return -1;
@@ -16,12 +57,13 @@ public final class PanelJoins {
         return best;
     }
     public static boolean diagonal(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape() && !((BlockProgrammableWall)state.getBlock()).isPortholeShape();}
-    public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass || state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).getShape()==BlockProgrammableWall.Shape.PLAIN;}
+    public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass || state.getBlock() instanceof BlockProgrammableWall && !((BlockProgrammableWall)state.getBlock()).isDiagonalShape();}
     public static EnumFacing facing(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass ? (state.getValue(BlockGlassWall.ROTATED)?EnumFacing.EAST:EnumFacing.NORTH):state.getValue(BlockProgrammableWall.FACING);}
     public static double near(IBlockState state){return PanelDepth.start(state.getValue(state.getBlock() instanceof BlockProgrammableGlass?BlockGlassWall.DEPTH:BlockProgrammableWall.DEPTH));}
     public static boolean enabled(IBlockAccess world,BlockPos pos){net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);return !(tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass) || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).isJoin();}
     /** Match a flat panel's edge to an aligned flat face or a diagonal endpoint. */
     public static boolean connectsFlat(IBlockAccess world,BlockPos flatPos,IBlockState flatState,BlockPos next){
+        if(world instanceof net.minecraft.world.World && (!((net.minecraft.world.World)world).isBlockLoaded(flatPos) || !((net.minecraft.world.World)world).isBlockLoaded(next)))return false;
         if(!enabled(world,flatPos) || !enabled(world,next))return false;
         IBlockState other=world.getBlockState(next);
         EnumFacing facing=facing(flatState);
@@ -29,6 +71,9 @@ public final class PanelJoins {
             EnumFacing of=facing(other);
             if(of.getAxis()!=facing.getAxis())return false;
             double n=near(other);if(of!=facing)n=12-n;
+            EnumFacing normal=facing.getOpposite();
+            BlockPos delta=next.subtract(flatPos);
+            n+=16D*PanelPlane.axis(delta,normal);
             return n==near(flatState);
         }
         if(!diagonal(other) || BlockProgrammableWall.halfHeight(world,next)

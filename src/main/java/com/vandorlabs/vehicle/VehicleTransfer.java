@@ -45,6 +45,7 @@ public final class VehicleTransfer {
     }
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
+        if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear blocks.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         EntityGroundVehicle entity=new EntityGroundVehicle(world);entity.install(structure);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
         net.minecraft.entity.Entity seated=null;com.vandorlabs.entity.EntityChairSeat oldSeat=null;

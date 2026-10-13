@@ -46,6 +46,7 @@ public final class VehicleRuntimeChecks {
         BlockPos base=new BlockPos(40,101,12),seat=base.up(2);
         world.setBlockState(base,gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(base)).configure(0,0,0,0);
         world.setBlockState(base.up(),Blocks.STONE.getDefaultState(),2);
+        for(int x=1;x<=2;x++){BlockPos at=base.east(x);world.setBlockState(at,gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0);world.setBlockState(at.up(),Blocks.STONE.getDefaultState(),2);}
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();world.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,state,player,new ItemStack(ModBlocks.PILOT_SEAT));
         ((TileEntityPilotSeat)world.getTileEntity(seat)).setTaxiMode(false);
         SignalSource source=new SignalSource();source.setWorld(world);source.setPos(base.west(3));com.vandorlabs.redstone.RedstoneChannels.register(source);
@@ -207,6 +208,15 @@ public final class VehicleRuntimeChecks {
             require(state.getValue(BlockPropulsionLight.POWERED) && !state.getValue(BlockPropulsionLight.PARTICLES),"driving overrides redstone without particle stream");
             require(((TileEntityRedstoneLight)local.getTileEntity(at)).getBrightness()==12,"propulsion brightness ramp ignores signal settings");
         }
+        // Render detents are an overlay: saved control settings and channel latches survive parking.
+        for(String id:BlockSignalControl.TYPES){
+            BlockSignalControl control=(BlockSignalControl)Block.getBlockFromName("vandorlabs:"+id);
+            IBlockState state=control.getDefaultState();BlockPos at=new BlockPos(31,31,31);
+            TileEntitySignalControl tile=new TileEntitySignalControl();NBTTagCompound tag=new NBTTagCompound();tag.setInteger("ControlStep",3);tile.readFromNBT(tag);tile.setWorld(local);tile.setPos(at);local.tiles.put(at,tile);
+            local.propulsionLevel=0;require(control.getActualState(state,local,at).getValue(BlockSignalControl.LEVEL)==0,"vehicle throttle idle detent: "+id);
+            local.propulsionLevel=5;require(control.getActualState(state,local,at).getValue(BlockSignalControl.LEVEL)==1,"vehicle throttle low detent: "+id);
+            require(tile.writeToNBT(new NBTTagCompound()).getInteger("ControlStep")==3,"vehicle throttle preserves configured detent: "+id);local.tiles.remove(at);
+        }
         require(decoded.write().equals(expected.write()),"brightness overlay leaves stored settings unchanged");
         BlockPos chestPos=ORIGIN.add(3,1,1);w.setBlockState(chestPos,Blocks.CHEST.getDefaultState(),3);
         ((net.minecraft.tileentity.TileEntityChest)w.getTileEntity(chestPos)).setInventorySlotContents(0,new ItemStack(Blocks.DIAMOND_BLOCK,7));
@@ -225,7 +235,7 @@ public final class VehicleRuntimeChecks {
         for(int cx=3;cx<=5;cx++)for(int cz=-1;cz<=1;cz++)w.getChunkFromChunkCoords(cx,cz);
         for(int x=0;x<16;x++)for(int y=0;y<16;y++)for(int z=0;z<16;z++)w.setBlockState(bigOrigin.add(x,y,z),Blocks.STONE.getDefaultState(),2);
         w.setBlockState(bigOrigin,seat,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,bigOrigin,seat,p,new ItemStack(ModBlocks.PILOT_SEAT));
-        BlockPos bigGear=bigOrigin.add(15,0,15);w.setBlockState(bigGear,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(bigGear)).configure(0,0,0,0);
+        for(int x=13;x<=15;x++){BlockPos bigGear=bigOrigin.add(x,0,15);w.setBlockState(bigGear,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(bigGear)).configure(0,0,0,0);}
         require(scan(w,bigOrigin).result.cells.size()==4096,"4096 occupied blocks discovered across bounded scan slices");
         w.setBlockState(bigOrigin.add(16,0,0),Blocks.STONE.getDefaultState(),2);
         VehicleScan rejected=new VehicleScan(w,bigOrigin);for(int n=0;n<200 && !rejected.step(256);n++);
@@ -233,12 +243,17 @@ public final class VehicleRuntimeChecks {
         for(BlockPos at:BlockPos.getAllInBox(bigOrigin,bigOrigin.add(16,15,15)))w.setBlockToAir(at);
 
         channelConversion(w,p,gear);
+        require(expected.matches(w,scan.origin),"spawn cancellation fixture matches before transfer");
+        NBTTagCompound originalRetractedRamp=w.getTileEntity(rampPos).writeToNBT(new NBTTagCompound());
         CancelSpawn cancel=new CancelSpawn();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cancel);
         boolean denied=false;try{VehicleTransfer.assemble(w,expected,scan.origin);}catch(Exception expectedFailure){denied=true;}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancel);}
+        require(originalRetractedRamp.equals(w.getTileEntity(rampPos).writeToNBT(new NBTTagCompound())),"spawn cancellation restores exact retracted ramp NBT, including live clocks and signal baseline");
         require(denied && expected.matches(w,scan.origin) && !VehicleTransfer.pending(w),"spawn cancellation rolls blocks back intact");
         // Simulate an interrupted removal with a durable journal and a stale entity.
         EntityGroundVehicle ghost=new EntityGroundVehicle(w);ghost.install(expected);ghost.setPosition(scan.origin.getX(),scan.origin.getY(),scan.origin.getZ());w.spawnEntity(ghost);
         NBTTagCompound journal=new NBTTagCompound();journal.setInteger("Schema",1);journal.setTag("Craft",expected.write());journal.setLong("Origin",scan.origin.toLong());journal.setUniqueId("Entity",ghost.getUniqueID());journal.setDouble("X",ghost.posX);journal.setDouble("Y",ghost.posY);journal.setDouble("Z",ghost.posZ);
+        VehicleEscalators.WorldSnapshot journalOriginal=VehicleEscalators.expandedWorldSnapshot(w,expected,scan.origin);
+        journal.setTag("AssemblyOriginal",journalOriginal.structure.write());journal.setLong("AssemblyOriginalOrigin",journalOriginal.origin.toLong());
         File journalFile=new File(w.getSaveHandler().getWorldDirectory(),"data/vandorlabs-vehicle-0.nbt");
         try(java.io.FileOutputStream out=new java.io.FileOutputStream(journalFile)){net.minecraft.nbt.CompressedStreamTools.writeCompressed(journal,out);}
         w.setBlockToAir(ORIGIN.add(1,1,1));VehicleTransfer.recover(w);

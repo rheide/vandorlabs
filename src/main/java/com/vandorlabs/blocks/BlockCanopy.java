@@ -46,9 +46,10 @@ public final class BlockCanopy extends Block {
     }
     public EnumFacing placementFacing(EntityLivingBase player){
         EnumFacing facing=player.getHorizontalFacing();
-        return opening() || kind.startsWith("angled_") || kind.startsWith("space_shuttle_")?facing.getOpposite():facing;
+        return com.vandorlabs.canopy.LargeCanopySettings.supports(kind) || opening() || kind.startsWith("angled_") || kind.startsWith("space_shuttle_")?facing.getOpposite():facing;
     }
     public BlockPos placementAnchor(BlockPos clicked,EnumFacing facing){
+        if(com.vandorlabs.canopy.LargeCanopySettings.supports(kind))return clicked.offset(facing.rotateYCCW(),width/2).down(height/2);
         return com.vandorlabs.canopy.CanopyVariants.centered(kind)?clicked.offset(facing.rotateYCCW(),width/2).offset(facing,kind.equals("space_bubble_wedge_3x3")?length/2:0):clicked;
     }
     public boolean supportsSeatBackrest(){
@@ -154,14 +155,14 @@ public final class BlockCanopy extends Block {
             World w, BlockPos p, IBlockState s, EntityLivingBase entity, ItemStack stack) {
         if (w.isRemote) return;
         TileEntityCanopy root=TileEntityCanopy.at(w,p);
-        if(root!=null)root.centeredPlacement=com.vandorlabs.canopy.CanopyVariants.centered(kind);
+        if(root!=null){root.centeredPlacement=com.vandorlabs.canopy.CanopyVariants.centered(kind);root.hollowPlacement=root.resizable();}
         if(root!=null && root.configurable() && stack.hasTagCompound())root.large.read(stack.getTagCompound());
         for (BlockPos cell : root==null?cells(p,s.getValue(FACING)):root.cells()) {
             if (!cell.equals(p)) w.setBlockState(cell, s, 2);
             TileEntityCanopy t = TileEntityCanopy.at(w, cell);
             if (t != null) {
                 t.anchor = p;
-                if(root!=null)t.centeredPlacement=root.centeredPlacement;
+                if(root!=null){t.centeredPlacement=root.centeredPlacement;t.hollowPlacement=root.hollowPlacement;}
                 if(root!=null && root.configurable()){net.minecraft.nbt.NBTTagCompound settings=new net.minecraft.nbt.NBTTagCompound();root.large.write(settings);t.large.read(settings);}
                 t.sync();
             }
@@ -182,8 +183,9 @@ public final class BlockCanopy extends Block {
             float x,
             float y,
             float z) {
+        if (player != null && supportsSeatBackrest() && player.getHeldItem(hand).getItem() == Item.getItemFromBlock(com.vandorlabs.blocks.ModBlocks.PILOT_SEAT)) return false;
         TileEntityCanopy selected=TileEntityCanopy.at(w,p);
-        if(selected!=null && selected.owner().configurable() && player.isSneaking()) {
+        if(player!=null && selected!=null && selected.owner().configurable() && player.isSneaking()) {
             if(!w.isRemote && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){BlockPos owner=selected.owner().getPos();player.openGui(VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LARGE_CANOPY,w,owner.getX(),owner.getY(),owner.getZ());}return true;
         }
         if (!opening()) return false;
@@ -226,7 +228,7 @@ public final class BlockCanopy extends Block {
         if (t == null || t.anchor == null || p.equals(t.anchor)) drops.add(configuredStack(t));
     }
 
-    public ItemStack configuredStack(TileEntityCanopy tile){ItemStack stack=new ItemStack(this);if(tile!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(kind)){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tile.owner().large.write(tag);stack.setTagCompound(tag);}return stack;}
+    public ItemStack configuredStack(TileEntityCanopy tile){ItemStack stack=new ItemStack(this);if(tile!=null){net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tile.owner().large.write(tag);stack.setTagCompound(tag);}return stack;}
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult target,World world,BlockPos pos,EntityPlayer player){return configuredStack(TileEntityCanopy.at(world,pos));}
     @Override
     public void addCollisionBoxToList(

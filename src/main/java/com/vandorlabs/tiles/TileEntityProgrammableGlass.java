@@ -15,6 +15,19 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     private boolean framed = true;
     private int size = 1;
     private boolean join = true;
+    private int panelFacing = -1;
+    public net.minecraft.util.EnumFacing getPanelFacing(net.minecraft.util.EnumFacing fallback) {
+        net.minecraft.util.EnumFacing facing=panelFacing<0?fallback:net.minecraft.util.EnumFacing.getHorizontal(panelFacing);
+        return facing.getAxis()==fallback.getAxis()?facing:fallback;
+    }
+    public void setPanelFacing(net.minecraft.util.EnumFacing facing) {
+        if(!facing.getAxis().isHorizontal() || panelFacing==facing.getHorizontalIndex())return;
+        panelFacing=facing.getHorizontalIndex();markDirty();
+        if(world!=null) {
+            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
+            world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
+        }
+    }
     private boolean legacySize;
     private boolean restored;
     public int getTint() { return tint; }
@@ -64,6 +77,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         tag.setBoolean("GlassFramed", framed);
         tag.setInteger("GlassSize", size);
         tag.setBoolean("GlassJoin", join);
+        if(panelFacing>=0)tag.setInteger("GlassPanelFacing",panelFacing);
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
@@ -75,6 +89,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         legacySize = !tag.hasKey("GlassSize");
         size = legacySize ? 1 : Math.max(0, Math.min(1, tag.getInteger("GlassSize")));
         join = !tag.hasKey("GlassJoin") || tag.getBoolean("GlassJoin");
+        panelFacing=tag.hasKey("GlassPanelFacing",3)?Math.floorMod(tag.getInteger("GlassPanelFacing"),4):-1;
     }
     @Override public void onLoad() {
         super.onLoad();
@@ -89,7 +104,10 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return new SPacketUpdateTileEntity(pos, 0, getUpdateTag());
     }
     @Override public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
-        readFromNBT(packet.getNbtCompound());
+        handleUpdateTag(packet.getNbtCompound());
+    }
+    @Override public void handleUpdateTag(NBTTagCompound tag) {
+        readFromNBT(tag);
         if (world != null) world.markBlockRangeForRenderUpdate(
                 pos.add(-1, -1, -1), pos.add(1, 1, 1));
     }
@@ -97,5 +115,6 @@ public final class TileEntityProgrammableGlass extends TileEntity {
             IBlockState oldState, IBlockState newState) {
         return oldState.getBlock() != newState.getBlock();
     }
-    @Override public boolean shouldRenderInPass(int pass) { return pass == 1; }
+    @Override public boolean shouldRenderInPass(int pass) {
+        if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1; return pass == 1; }
 }

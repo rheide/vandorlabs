@@ -87,7 +87,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())dirty.add(section(cell.pos.offset(side)));
         for(VehicleStructure.Cell cell:e.structure.cells) {
             List<VehicleStructure.Cell>[] lists=groups.computeIfAbsent(section(cell.pos),k->new List[]{new ArrayList<>(),new ArrayList<>()});
-            lists[cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight?1:0].add(cell);
+            lists[cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight || VehicleWorld.isMovingControl(cell.state.getBlock())?1:0].add(cell);
         }
         Iterator<Map.Entry<BlockPos,Mesh[]>> removed=regions.sections.entrySet().iterator();
         while(removed.hasNext()){Map.Entry<BlockPos,Mesh[]> entry=removed.next();if(!groups.containsKey(entry.getKey())){for(Mesh mesh:entry.getValue())mesh.delete();removed.remove();}}

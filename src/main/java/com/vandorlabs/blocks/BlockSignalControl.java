@@ -36,7 +36,10 @@ public class BlockSignalControl extends BlockVandorSwitch {
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntitySignalControl();}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         state=super.getActualState(state,world,pos);TileEntity tile=world.getTileEntity(pos);
-        return state.withProperty(LEVEL,tile instanceof TileEntitySignalControl?((TileEntitySignalControl)tile).getStep():0);
+        int step=world instanceof com.vandorlabs.vehicle.VehicleWorld && hasSelectableType()
+                ?(((com.vandorlabs.vehicle.VehicleWorld)world).propulsionLevel>0?1:0)
+                :tile instanceof TileEntitySignalControl?((TileEntitySignalControl)tile).getStep():0;
+        return state.withProperty(LEVEL,step);
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing facing,float x,float y,float z){
         if(player.isSneaking())return super.onBlockActivated(world,pos,state,player,hand,facing,x,y,z);

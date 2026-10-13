@@ -58,7 +58,7 @@ public final class VehicleEscalatorRuntimeChecks {
         net.minecraft.util.math.Vec3d originalPosition=player.getPositionVector();boolean originallyFlying=player.capabilities.isFlying;
         player.capabilities.isFlying=true;player.setPosition(rampPos.getX()-2,rampPos.getY()+2,rampPos.getZ()+.5);
         BlockTelescopicLandingGear gear=null;for(net.minecraft.block.Block block:net.minecraft.block.Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
-        require(gear!=null,"registered gear");world.setBlockState(base,gear.getDefaultState(),2);require(((TileEntityLandingGear)world.getTileEntity(base)).configure(0,0,0,0),"retracted gear");
+        require(gear!=null,"registered gear");for(int x=0;x<3;x++){BlockPos at=base.east(x);world.setBlockState(at,gear.getDefaultState(),2);require(((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0),"retracted gear");}
         for(BlockPos p:BlockPos.getAllInBox(base.up(),base.add(3,1,2)))world.setBlockState(p,Blocks.STONE.getDefaultState(),2);
         world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),2);world.setBlockState(seat.up(),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.UPPER,true),2);
         world.setBlockState(rampPos,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockRampController.FACING,EnumFacing.SOUTH),2);
@@ -93,12 +93,14 @@ public final class VehicleEscalatorRuntimeChecks {
         TileEntityRampController previewRamp=(TileEntityRampController)previewWorld.getTileEntity(rampPos.subtract(scan.origin));
         for(VehicleStructure.Cell source:VehicleEscalators.originals(previewRamp))require(source.state==sourceState && java.util.Objects.equals(source.tileData(),originalTiles.get(source.pos.add(scan.origin))==null?null:VehicleTileData.translated(originalTiles.get(source.pos.add(scan.origin)),BlockPos.ORIGIN.subtract(scan.origin))),"original source material and NBT retained in recovery journal");
         VehicleEscalators.WorldSnapshot expanded=VehicleEscalators.expandedWorldSnapshot(world,craft,scan.origin);
+        require(VehicleStructure.read(craft.write()).write().equals(craft.write()),"frozen ramp snapshot survives recovery codec");
+        require(VehicleStructure.read(expanded.structure.write()).write().equals(expanded.structure.write()),"live ramp source snapshot survives recovery codec");
         VehicleAuthorizationRuntimeChecks.check(player,craft,scan.origin,expanded,sections,rampPos.getY());
         boolean expandedRotationRejected=false;try{VehicleRotation.rotate(expanded.structure,new VehicleWorld(world,expanded.structure),1);}catch(IllegalArgumentException expected){expandedRotationRejected=true;}
         require(expandedRotationRejected,"expanded recovery journals cannot rotate as vehicle cells");
-        Cancel cancel=new Cancel();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cancel);boolean rejected=false;
-        try{VehicleTransfer.assemble(world,craft,scan.origin);}catch(Exception expected){rejected=true;}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancel);}
-        require(world.getTileEntity(rampPos) instanceof TileEntityRampController,"cancelled assembly restores controller before refreshing activity");
+        Cancel cancel=new Cancel();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cancel);boolean rejected=false;Exception cancellation=null;
+        try{VehicleTransfer.assemble(world,craft,scan.origin);}catch(Exception expected){rejected=true;cancellation=expected;}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancel);}
+        if(!(world.getTileEntity(rampPos) instanceof TileEntityRampController))throw new IllegalStateException("cancelled assembly failed to restore controller, mode="+mode+", vanilla="+vanilla+", "+difference(world,expanded),cancellation);
         require(rejected && !VehicleTransfer.pending(world) && expanded.structure.matches(world,expanded.origin),"cancelled assembly restores exact live snapshot before activity refresh, mode="+mode+", vanilla="+vanilla+", "+difference(world,expanded));
         ((TileEntityRampController)world.getTileEntity(rampPos)).refreshEscalatorActivity();
         require(rejected && !VehicleTransfer.pending(world) && expanded.structure.matches(world,expanded.origin),"cancelled assembly restores exact controller, sections and source journals");

@@ -16,11 +16,27 @@ import java.util.*;
 
 public final class TileEntityCanopy extends TileEntity implements ITickable {
     public BlockPos anchor, pair;
-    public boolean centeredPlacement;
+    public boolean centeredPlacement,hollowPlacement;
     public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();
-    public boolean configurable(){return block()!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(block().kind);}
-    public List<com.vandorlabs.canopy.CanopyMesh.Face> faces(){return block()==null?Collections.emptyList():configurable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model()));}
-    public List<BlockPos> cells(){return block()==null?Collections.emptyList():block().cells(pos,facing(),configurable()?large.length():block().length,block().kind.equals("space_visor_2x1") && centeredPlacement?3:block().width);}
+    public boolean configurable(){return block()!=null;}
+    public boolean resizable(){return block()!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(block().kind);}
+    public List<CanopyMesh.Face> faces(){
+        if(block()==null)return Collections.emptyList();
+        List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model()));
+        return com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint);
+    }
+    public List<BlockPos> cells(){return cells(large);}
+    public List<BlockPos> cells(com.vandorlabs.canopy.LargeCanopySettings settings){
+        if(block()==null)return Collections.emptyList();
+        if(resizable() && hollowPlacement){
+            String key=pos+":"+facing()+":"+centeredPlacement+":"+settings.depth+":"+settings.scale;
+            if(!key.equals(cachedCellsKey)){cachedCells=com.vandorlabs.canopy.LargeCanopyOwnership.shellCells(block(),pos,facing(),settings,centeredPlacement);cachedCellsKey=key;}
+            return cachedCells;
+        }
+        return block().cells(pos,facing(),resizable()?settings.length():block().length,block().kind.equals("space_visor_2x1") && centeredPlacement?3:block().width);
+    }
+    private List<BlockPos> cachedCells;
+    private String cachedCellsKey;
     private int joinedWidth=1;
     public boolean targetOpen, removing;
     public float previous, progress;
@@ -295,6 +311,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         if (block() != null) {n.setInteger("CanopyMask", mask());n.setInteger("CanopyWidth",width());}
         if(configurable())large.write(n);
         n.setBoolean("CenteredPlacement",centeredPlacement);
+        n.setBoolean("HollowPlacement",hollowPlacement);
         n.setBoolean("Open", targetOpen);
         n.setFloat("Progress", progress);
         return n;
@@ -305,6 +322,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         super.readFromNBT(n);
         large.read(n);
         centeredPlacement=n.getBoolean("CenteredPlacement");
+        hollowPlacement=n.getBoolean("HollowPlacement");
         anchor =
                 n.hasKey("AnchorOffset")
                         ? pos.add(BlockPos.fromLong(n.getLong("AnchorOffset")))

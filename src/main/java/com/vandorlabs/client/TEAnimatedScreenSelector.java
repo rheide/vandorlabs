@@ -825,10 +825,9 @@ public class TEAnimatedScreenSelector
 
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
             IBlockState state, double x, double y, double z) {
+        if(FlatPanelBarRenderer.render(te,state,x,y,z))return;
         BlockProgrammableWall wallBlock = (BlockProgrammableWall) state.getBlock();
-        BlockProgrammableWall.FlatCorner flat = wallBlock.getShape()
-                == BlockProgrammableWall.Shape.PLAIN
-                ? wallBlock.flatCorner(state, te.getWorld(), te.getPos()) : null;
+        BlockProgrammableWall.FlatCorner flat = wallBlock.flatCorner(state, te.getWorld(), te.getPos());
         beginLocalTransform(x, y, z, state.getValue(BlockProgrammableWall.FACING));
         if (wallBlock instanceof BlockProgrammablePortholeBlock) {
             GlStateManager.translate(0, 0, -24);
@@ -869,17 +868,36 @@ public class TEAnimatedScreenSelector
         // Draw glass after all opaque tile housings, so adjacent blocks cannot
         // overwrite an earlier tile's transparent surface at oblique angles.
         if (net.minecraftforge.client.MinecraftForgeClient.getRenderPass() == 1) {
-            if (porthole != null) renderPortholeGlass(te.getGlassShade(),
-                    DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
+            if (porthole != null) {
+                GlStateManager.pushMatrix();
+                if(flat!=null) {
+                    GlStateManager.translate(flat.left(),0,com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH)));
+                    GlStateManager.scale((flat.right()-flat.left())/16,1,1);
+                }
+                renderPortholeGlass(te.getGlassShade(),DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
+                GlStateManager.popMatrix();
+            }
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
         }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
+        boolean bentPorthole=flat!=null && wallBlock.isPortholeShape();
+        if(bentPorthole) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(flat.left(),0,com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH)));
+            GlStateManager.scale((flat.right()-flat.left())/16,1,1);
+        }
         buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         DiagonalWallMeshCache.get(te,state,wall,metal,porthole).draw(buf,
                 (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
         Tessellator.getInstance().draw();
+        if(bentPorthole) {
+            GlStateManager.popMatrix();
+            double near=com.vandorlabs.blocks.PanelDepth.start(state.getValue(BlockProgrammableWall.DEPTH));
+            if(flat.frontArm!=null)renderWallBox(wall,metal,false,flat.frontArm,0,0,flat.frontArm+4,16,near,false);
+            if(flat.backArm!=null)renderWallBox(wall,metal,false,flat.backArm,0,near+4,flat.backArm+4,16,16,false);
+        }
         GlStateManager.enableLighting();
         endLocalTransform();
     }
@@ -902,7 +920,7 @@ public class TEAnimatedScreenSelector
         double rimDepthUv=wallBlock instanceof BlockProgrammablePortholeBlock?16:4;
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
             drawConfiguredDiagonalWall(buf,te,state,wall,metal);
-        } else if (flat != null) {
+        } else if (flat != null && !wallBlock.isPortholeShape()) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
                             state.getValue(BlockProgrammableWall.DEPTH)),
@@ -919,6 +937,15 @@ public class TEAnimatedScreenSelector
             }
             panelOuterRim(buf, metal, mesh, porthole, te, state, rimDepthUv);
         }
+    }
+
+    /** Straight local source for the center-owned bar of a T; the opening spans that whole bar. */
+    static void drawFlatBar(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice opening) {
+        if(opening==null) {renderFlatWall(buf,wall,metal,6,null);return;}
+        for(double[] q:opening.frameQuads)panelQuad(buf,wall,null,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
+        for(double[] edge:opening.hexEdges)rimSegment(buf,metal,null,edge[0],edge[1],edge[2],edge[3],4);
+        for(int y:new int[]{0,16})topRim(buf,metal,null,y,0,16,4);
+        for(int x:new int[]{0,16})sideRim(buf,metal,null,x,0,16,4);
     }
 
     /** Build only when this wall or its immediate neighbors change. */
@@ -1203,10 +1230,10 @@ public class TEAnimatedScreenSelector
         return near;
     }
 
-    private static void renderFlatWall(BufferBuilder buf,
+    static void renderFlatWall(BufferBuilder buf,
             TextureAtlasSprite wall, TextureAtlasSprite metal, double near,
             BlockProgrammableWall.FlatCorner corner) {
-        double[][] outline = flatOutline(near, corner);
+        double[][] outline = corner==null?new double[][]{{0,near},{16,near},{16,near+4},{0,near+4}}:flatOutline(near, corner);
         for (int i = 0; i < outline.length; i++) {
             double[] a = outline[i], b = outline[(i + 1) % outline.length];
             if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) < 1.0E-7) continue;
@@ -1215,7 +1242,7 @@ public class TEAnimatedScreenSelector
             // Exposed ends of a connecting arm are also four-pixel metal caps.
             endCap |= Math.abs(a[1] - b[1]) < 1.0E-7
                     && Math.abs(Math.abs(a[0] - b[0]) - 4) < 1.0E-7
-                    && ((corner.frontArm != null && near > 0 && a[1] == 0)
+                    && corner!=null && ((corner.frontArm != null && near > 0 && a[1] == 0)
                     || (corner.backArm != null && near + 4 < 16 && a[1] == 16));
             TextureAtlasSprite sprite = endCap ? metal : wall;
             boolean acrossX = Math.abs(a[0] - b[0]) > Math.abs(a[1] - b[1]);
@@ -1226,11 +1253,11 @@ public class TEAnimatedScreenSelector
                     new double[]{b[0],16,b[1],u1,0},new double[]{a[0],16,a[1],u0,0});
         }
         for (int y : new int[] {0, 16}) {
-            roofRect(buf, metal, y, corner.left(), corner.right(), near, near + 4);
-            if (corner.frontArm != null)
+            roofRect(buf, metal, y, corner==null?0:corner.left(), corner==null?16:corner.right(), near, near + 4);
+            if (corner!=null && corner.frontArm != null)
                 roofRect(buf, metal, y, corner.frontArm,
                         corner.frontArm + 4, 0, near);
-            if (corner.backArm != null)
+            if (corner!=null && corner.backArm != null)
                 roofRect(buf, metal, y, corner.backArm,
                         corner.backArm + 4, near + 4, 16);
         }

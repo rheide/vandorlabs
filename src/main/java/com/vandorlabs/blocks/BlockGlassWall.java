@@ -127,9 +127,7 @@ public class BlockGlassWall extends Block {
             // Flat wall materials may share the same frame plane.
             IBlockState other=world.getBlockState(pos);
             if(PanelJoins.flat(other) && !(other.getBlock() instanceof BlockGlassWall)){
-                EnumFacing of=PanelJoins.facing(other),sf=PanelJoins.facing(state);
-                double near=PanelJoins.near(other);if(of!=sf)near=12-near;
-                return joinsAt(world,pos) && of.getAxis()==sf.getAxis() && near==PanelJoins.near(state);
+                return PanelJoins.connectsFlat(world,owner,state,pos);
             }
         }
         IBlockState other = world.getBlockState(pos);
@@ -196,6 +194,11 @@ public class BlockGlassWall extends Block {
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
             BlockPos pos) {
+        if(this instanceof BlockProgrammableGlass && PanelJoins.flatCorner(state,world,pos)!=null) {
+            AxisAlignedBB bounds=null;
+            for(AxisAlignedBB box:PanelJoins.flatBoxes(state,world,pos))bounds=bounds==null?box:bounds.union(box);
+            return bounds;
+        }
         double start = PanelDepth.start(state.getValue(DEPTH)) / 16D;
         return state.getValue(ROTATED)
                 ? new AxisAlignedBB(1D - start - .25D, 0, 0, 1D - start, 1, 1)
@@ -206,6 +209,25 @@ public class BlockGlassWall extends Block {
     public AxisAlignedBB getCollisionBoundingBox(IBlockState state,
             IBlockAccess world, BlockPos pos) {
         return getBoundingBox(state, world, pos);
+    }
+
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,
+            AxisAlignedBB entityBox,java.util.List<AxisAlignedBB> boxes,
+            @javax.annotation.Nullable net.minecraft.entity.Entity entity,boolean actual) {
+        if(this instanceof BlockProgrammableGlass) {
+            for(AxisAlignedBB box:PanelJoins.flatBoxes(state,world,pos))addCollisionBoxToList(pos,entityBox,boxes,box);
+        } else super.addCollisionBoxToList(state,world,pos,entityBox,boxes,entity,actual);
+    }
+
+    @Override public net.minecraft.util.math.RayTraceResult collisionRayTrace(IBlockState state,World world,
+            BlockPos pos,net.minecraft.util.math.Vec3d start,net.minecraft.util.math.Vec3d end) {
+        if(!(this instanceof BlockProgrammableGlass))return super.collisionRayTrace(state,world,pos,start,end);
+        net.minecraft.util.math.RayTraceResult nearest=null;
+        for(AxisAlignedBB box:PanelJoins.flatBoxes(state,world,pos)) {
+            net.minecraft.util.math.RayTraceResult hit=rayTrace(pos,start,end,box);
+            if(hit!=null && (nearest==null || start.squareDistanceTo(hit.hitVec)<start.squareDistanceTo(nearest.hitVec)))nearest=hit;
+        }
+        return nearest;
     }
 
     @Override

@@ -72,7 +72,13 @@ final class PilotCanopyRuntimeChecks {
                 }
                 require(((TileEntityCanopy)world.getTileEntity(anchor)).owner().width()==canopy.width*joined,
                         "opening canopy joined width "+joined);
-                if(!seatFirst){require(seat.canPlaceBlockAt(world,lower),"seat fits below "+canopy.kind);world.setBlockState(lower,seatState,3);seat.onBlockPlacedBy(world,lower,seatState,player,new ItemStack(seat));}
+                if(!seatFirst){
+                    require(seat.canPlaceBlockAt(world,lower),"seat fits below "+canopy.kind);
+                    ItemStack held=player.getHeldItemMainhand().copy();player.setSneaking(false);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(seat));
+                    require(!canopy.onBlockActivated(world,lower.up(),world.getBlockState(lower.up()),player,EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,0,.5F),"canopy must pass seat item click through "+canopy.kind);
+                    require(player.getHeldItemMainhand().getItem().onItemUse(player,world,lower.up(),EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,0,.5F)==EnumActionResult.SUCCESS,"seat item fits below "+canopy.kind+" width="+joined);
+                    player.setHeldItem(EnumHand.MAIN_HAND,held);
+                }
                 require(world.getBlockState(lower).getBlock()==seat && world.getBlockState(lower.up()).getBlock()==canopy,"both blocks survive either placement order");
                 TileEntityPilotSeat tile=(TileEntityPilotSeat)world.getTileEntity(lower);tile.setTaxiMode(false);
                 for(int height=0;height<4;height++){tile.setHeight(height);require(seatState.getBoundingBox(world,lower).maxY==1.5+height/8D,"full shared backrest collision");}
@@ -80,6 +86,11 @@ final class PilotCanopyRuntimeChecks {
                 require(player.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"boarding below canopy");player.dismountRidingEntity();
                 world.setBlockState(lower.down(),Blocks.STONE.getDefaultState(),3);world.setBlockState(lower.down(2),gear.getDefaultState(),3);
                 require(((TileEntityLandingGear)world.getTileEntity(lower.down(2))).configure(0,0,0,0),"settled gear");
+                for(EnumFacing extra:new EnumFacing[]{facing.rotateY(),facing.rotateYCCW()}){
+                    world.setBlockState(lower.down().offset(extra),Blocks.STONE.getDefaultState(),3);
+                    world.setBlockState(lower.down(2).offset(extra),gear.getDefaultState(),3);
+                    require(((TileEntityLandingGear)world.getTileEntity(lower.down(2).offset(extra))).configure(0,0,0,0),"extra settled gear");
+                }
                 VehicleScan scan=new VehicleScan(world,lower);for(int n=0;n<100 && !scan.step(64);n++);
                 require(scan.result!=null && scan.error==null,"shared backrest vehicle scan "+canopy.kind+": "+scan.error);
                 require(scan.result.at(lower.up().subtract(scan.origin)).state.getBlock()==canopy,"canopy captured without replacing it with seat marker");

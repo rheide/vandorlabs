@@ -305,9 +305,13 @@ public final class CanopyRuntimeChecks {
                                     for (String id : IDS) {
                                         clear(w);
                                         BlockCanopy b = block(id);
-                                        w.setBlockState(
-                                                TEST.down(), Blocks.STONE.getDefaultState());
                                         player.rotationYaw = facing.getHorizontalAngle();
+                                        // Centered vertical windows extend below their clicked center.
+                                        // Support them from the rear so the clicked block is outside the shell.
+                                        boolean large=com.vandorlabs.canopy.LargeCanopySettings.supports(b.kind);
+                                        EnumFacing clickSide=large?b.placementFacing(player).getOpposite():EnumFacing.UP;
+                                        BlockPos clicked=large?TEST.offset(b.placementFacing(player)):TEST.down();
+                                        w.setBlockState(clicked,Blocks.STONE.getDefaultState());
                                         player.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(b, 2));
                                         ItemStack stack = player.getHeldItem(EnumHand.MAIN_HAND);
                                         require(
@@ -315,9 +319,9 @@ public final class CanopyRuntimeChecks {
                                                                 .onItemUse(
                                                                         player,
                                                                         w,
-                                                                        TEST.down(),
+                                                                        clicked,
                                                                         EnumHand.MAIN_HAND,
-                                                                        EnumFacing.UP,
+                                                                        clickSide,
                                                                         .5F,
                                                                         1,
                                                                         .5F)
@@ -328,7 +332,7 @@ public final class CanopyRuntimeChecks {
                                                         && TileEntityCanopy.at(w, TEST).facing()
                                                                 == b.placementFacing(player),
                                                 "survival count and facing " + id);
-                                        if(com.vandorlabs.canopy.CanopyVariants.centered(b.kind)) {
+                                        if(com.vandorlabs.canopy.CanopyVariants.centered(b.kind) && !com.vandorlabs.canopy.LargeCanopySettings.supports(b.kind)) {
                                             Vec3d center=TileEntityCanopy.at(w,TEST).owner().selectionBounds().getCenter();
                                             require(Math.abs(center.x-TEST.getX()-.5)<1e-6 && Math.abs(center.z-TEST.getZ()-.5)<1e-6,"shell centers on clicked block "+id);
                                         }
@@ -351,6 +355,7 @@ public final class CanopyRuntimeChecks {
                                                                 == net.minecraft.item.Item
                                                                         .getItemFromBlock(b),
                                                 "one constituent drop " + id);
+                                        require(w.getBlockState(clicked).getBlock()==Blocks.STONE,"placement and harvest preserve support "+id);
                                         for (net.minecraft.entity.item.EntityItem item : drops)
                                             item.setDead();
                                         for (BlockPos cell : b.cells(b.placementAnchor(TEST,b.placementFacing(player)), b.placementFacing(player)))

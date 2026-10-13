@@ -24,12 +24,22 @@ public final class LargeCanopyRuntimeChecks {
         for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){LargeCanopySettings settings=new LargeCanopySettings();settings.shade=shade;settings.tint=tint;NBTTagCompound tag=new NBTTagCompound();settings.write(tag);LargeCanopySettings restored=new LargeCanopySettings();restored.read(tag);require(settings.key().equals(restored.key()),"settings NBT");}
         BlockCanopy block=(BlockCanopy)com.vandorlabs.blocks.ModBlocks.BLOCKS.stream().filter(b->b.getRegistryName().getResourcePath().equals("large_front_canopy_glass_5x5")).findFirst().get();
         BlockPos pos=new BlockPos(40,20,40);for(int x=0;x<5;x++)for(int y=0;y<5;y++)for(int z=0;z<5;z++)player.world.setBlockToAir(pos.add(x,y,z));
-        player.world.setBlockState(pos,block.getDefaultState(),3);block.onBlockPlacedBy(player.world,pos,player.world.getBlockState(pos),player,new ItemStack(block));TileEntityCanopy tile=TileEntityCanopy.at(player.world,pos);require(tile.cells().size()==25,"default footprint");
+        player.world.setBlockState(pos,block.getDefaultState(),3);block.onBlockPlacedBy(player.world,pos,player.world.getBlockState(pos),player,new ItemStack(block));TileEntityCanopy tile=TileEntityCanopy.at(player.world,pos);require(tile.cells().contains(pos),"default anchor footprint");int originalCells=tile.cells().size();
         TileEntityCanopy altered=TileEntityCanopy.at(player.world,pos.east());altered.anchor=pos.add(20,0,0);require(!LargeCanopyOwnership.apply(tile,player,80,10,12,2) && tile.large.depth==16,"foreign member was accepted");altered.anchor=pos;
-        BlockPos obstruct=pos.add(0,0,2);player.world.setBlockState(obstruct,Blocks.IRON_BLOCK.getDefaultState(),3);require(!LargeCanopyOwnership.apply(tile,player,80,10,12,2) && tile.cells().size()==25 && tile.large.depth==16,"blocked expansion mutated assembly");player.world.setBlockToAir(obstruct);
-        require(LargeCanopyOwnership.apply(tile,player,80,10,12,2) && tile.cells().size()==125,"maximum depth footprint");for(BlockPos cell:tile.cells())require(TileEntityCanopy.at(player.world,cell).owner()==tile,"member ownership");
+        LargeCanopySettings expanded=new LargeCanopySettings();expanded.depth=80;expanded.scale=10;BlockPos obstruct=tile.cells(expanded).stream().filter(cell->!tile.cells().contains(cell)).findFirst().get();player.world.setBlockState(obstruct,Blocks.IRON_BLOCK.getDefaultState(),3);require(!LargeCanopyOwnership.apply(tile,player,80,10,12,2) && tile.cells().size()==originalCells && tile.large.depth==16,"blocked expansion mutated assembly");player.world.setBlockToAir(obstruct);
+        require(LargeCanopyOwnership.apply(tile,player,80,10,12,2) && tile.cells().size()<125 && tile.cells().size()>originalCells,"hollow maximum depth footprint");for(BlockPos cell:tile.cells())require(TileEntityCanopy.at(player.world,cell).owner()==tile,"member ownership");
+        LargeCanopySettings wider=new LargeCanopySettings();wider.depth=80;wider.scale=100;BlockPos interior=tile.cells(wider).stream().filter(cell->!tile.cells().contains(cell)).findFirst().get();
+        player.world.setBlockState(interior,Blocks.IRON_BLOCK.getDefaultState(),3);
+        require(LargeCanopyOwnership.apply(tile,player,80,10,13,1) && player.world.getBlockState(interior).getBlock()==Blocks.IRON_BLOCK,"interior block survives palette edit");
+        require(!LargeCanopyOwnership.apply(tile,player,80,100,13,1) && tile.large.scale==10,"resize through interior block accepted");
+        player.world.setBlockToAir(interior);
         ItemStack item=block.configuredStack(tile);require(item.hasTagCompound() && item.getTagCompound().getInteger("CanopyDepth")==80,"configured item settings");
-        require(LargeCanopyOwnership.apply(tile,player,0,100,0,0) && tile.cells().size()==25 && player.world.isAirBlock(pos.add(0,0,4)),"shrinking leaves stale cells");
+        require(LargeCanopyOwnership.apply(tile,player,0,100,0,0) && tile.cells().size()<=25 && player.world.isAirBlock(pos.add(0,0,4)),"shrinking leaves stale cells");
+        for(net.minecraft.block.Block raw:ModBlocks.BLOCKS)if(raw instanceof BlockCanopy){
+            BlockCanopy canopy=(BlockCanopy)raw;List<CanopyMesh.Face> base=CanopyMesh.MODELS.get(canopy.kind.equals("regular_canopy_glass")?"regular_1x1_00":canopy.kind);
+            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++)for(CanopyMesh.Face face:CanopyFinishes.faces(base,shade,tint))if(face.baseMaterial.equals("glass"))require(face.material.equals(GlassTextures.texture(shade,1,tint)),"canopy palette "+canopy.kind);
+            if(LargeCanopySettings.supports(canopy.kind))for(EnumFacing facing:EnumFacing.HORIZONTALS){BlockPos clicked=new BlockPos(10,80,10);BlockPos placed=canopy.placementAnchor(clicked,facing);require(placed.offset(facing.rotateY(),canopy.width/2).up(canopy.height/2).equals(clicked),"large canopy centered placement");}
+        }
         System.out.println("[vandorlabs][reprolab] large-canopy-runtime PASS shapes=42 poses=168 palette=57 resize-protection NBT configured-items");
     }
     public static void icons(Minecraft mc){

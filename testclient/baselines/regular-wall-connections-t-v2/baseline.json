@@ -1,0 +1,3618 @@
+{
+  "schema": "vandorlabs-connection-baseline-v1",
+  "source_capture_id": "render-run.regular-t-center-fixed-20261013",
+  "acceptance": "Reviewer status ok only; defaultStatus honored when explicitly present",
+  "comparison": {
+    "roi": [
+      480,
+      216,
+      1440,
+      918
+    ],
+    "sample_scale": 2,
+    "mask_dilation_pixels": 2,
+    "channel_tolerance": 12,
+    "max_changed_fraction": 0.003,
+    "max_mean_error": 2.0,
+    "max_lighting_bias": 6
+  },
+  "cases": [
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_4_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_4_0.png",
+      "sha256": "56289b5116d17a85a74e583dbf0b5041d4e7fc405249feae840f9ed040d75349",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_5_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_5_0.png",
+      "sha256": "c2a6468e4e5f7d5f2c1db35c017856198526dcfa1a0112c607217cb5f16fa4f1",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_6_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_6_0.png",
+      "sha256": "cb706b347dbcfff8bb7ade62ce8a93ae060fd5e4f5e3f0252fea4f07e45ea311",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_7_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_7_0.png",
+      "sha256": "3d1d3ffeef3c63c95f42d6a4a285471503ceee8aa4df76ec0fd6d24cd174301c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_11_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_11_0.png",
+      "sha256": "92a41a90c87d666e3c6b6c645669d1b0c153448db2cd02cd914b234732758a79",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_15_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_15_0.png",
+      "sha256": "dd4e7a21df55f7e90e8fddea43cd4fa452fdd805037c0f75dbbaa71c45782181",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_19_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_19_0.png",
+      "sha256": "f6afcb49b8028b97bcedbcd45c14a54f8f9b6c824748e3a2c39e50eb312a83b0",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_21_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_21_0.png",
+      "sha256": "0b29575423ad7b804d2ab1b316949868a62316bfa20d5b014c49e0e278a9c92a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_30_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_30_0.png",
+      "sha256": "719e0ea0925b6ccc2c595d2d43221fd9b18e40808c82f31a27aad48e3442e456",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_35_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_35_0.png",
+      "sha256": "19fa264e2effa53bc58a97c338d5e9c8134770d0ed0cd2232fcece940c3b97b3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_36_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_36_0.png",
+      "sha256": "0dcfb255f0998004aceabc488b269e97f7f0b002d4ca8de8033eb4ce02de8706",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_43_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_43_0.png",
+      "sha256": "cba637fe6347735bccf00e9562b62214bba3648033cbec0df08f4495f72ad346",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_47_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_47_0.png",
+      "sha256": "b7801fb22b3e1e732bddef6f76d6879587d48c2b7b8eafbbf747fd1e997e467e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_49_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_49_0.png",
+      "sha256": "66da0f3e8c8208a1340fffaf7237491c199ea20c9494ea1cc4b7c9574d7c0e9d",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_58_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_58_0.png",
+      "sha256": "d94d8ed998ef73a37392a262024b5ca31c77011fae79083b835498bec2a66e72",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_60_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_60_0.png",
+      "sha256": "02475a50cf547620b4e20a838f11d5d804caff856c22365b717a59b5fccb891b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_64_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_64_0.png",
+      "sha256": "4f6ac3028c7b915a589375d5b8f515c8073c4e47a7cc8c3a3120f050abbd6d61",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_71_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_71_0.png",
+      "sha256": "96a5f1055e749d661bcca9a6fb770b18ee1d3ba0503e4fa3c694f588a11da36a",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_72_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_72_0.png",
+      "sha256": "775f935fb8a9de7dff3594b3a97a96c651cd291284901d322d54a0f732182e07",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_77_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_77_0.png",
+      "sha256": "49d395765d6136ff3eea4dc1df1ff5e75f4c201e0d9870b21306748027e8f6b8",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_17_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_17_0.png",
+      "sha256": "a029ec74753c72fedc1be565ee89d00304ebb133417ef42d53f3d0e27cf26c41",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_22_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_22_0.png",
+      "sha256": "fa7609b285b9519c42403982eef2144f9ce1b7e03aeb3178af9baf403e411171",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_32_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_32_0.png",
+      "sha256": "9df408c1c492861c5c3549620e66c6b7dc8f79338bfa3758ae2eeb8e15a18712",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_37_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_37_0.png",
+      "sha256": "b2183c033813c6f6ee1e0c9257a9469e01aa6e3ad76ee95a0680779f039070b0",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_0_0.png",
+      "sha256": "cfae8337ce24e6d85e2e27e0c343ca50a8094edfee9729063d0a2d50ae1bc4bb",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_17_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_17_0.png",
+      "sha256": "4e9aaa838eba7b5ea7ece7f5a807a0010a80bb71a385b4ab71f9adfa7f873abc",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_22_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_22_0.png",
+      "sha256": "aa1b9c48086e9fcbc0357051e9f9972d324294540a7c49e78506404c8aa99644",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_32_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_32_0.png",
+      "sha256": "e7f42e121320668c04780e8fc72509d0f4ff8b720fbcd2849d791f2fbeb812a2",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_37_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_37_0.png",
+      "sha256": "571f0c9d05c84fa8c617530d6145c0bbd0397a8e6cd61d5a537369c8e1587669",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_51_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_51_0.png",
+      "sha256": "4ff8c5737cc289555bfbddd672e1974771a3024142fbfdff53f999b559bfb7a3",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_61_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_61_0.png",
+      "sha256": "54f483dbad9db90e654159d274acf17be5c0d47c82abda480460fbc45dceb929",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_66_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_66_0.png",
+      "sha256": "2a2351d2bb7558587752c25037d74450de82c73123a15668714a138e780473a1",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_0_74_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_0_74_0.png",
+      "sha256": "8b582757251644579ff5283fb845d0d66a3aa5cf42b01aeb597a74499b214f29",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_0_0.png",
+      "sha256": "742e0b375b44e55f71c444b8f145700201768d3f10ccd7b2df9b72c647845623",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_17_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_17_0.png",
+      "sha256": "340f116adef387b1cf81952c71fefd63628de4ec5c0fb48b49e4d9b535960434",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_22_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_22_0.png",
+      "sha256": "089ca69c902e2be40710508dd91759e7b6d176c8372f81bc5068727c29c448a5",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_32_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_32_0.png",
+      "sha256": "156355a9d51c0c662c3be460f88a2f846d4d68c6585d65e580dc7b20cccd6585",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_37_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_37_0.png",
+      "sha256": "b21223d23313c20caf05570635cd5780dfcb5917652b47176237464f2030f9bf",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_51_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_51_0.png",
+      "sha256": "fd495f7c024b7ec19d222b57dc4ea858a4004483afaa9c097d4bf6b2641092ac",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_61_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_61_0.png",
+      "sha256": "b72ff1fdce7377b16d976e5b8c36703f8f5138a8185406964f3917505590e708",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_66_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_66_0.png",
+      "sha256": "299b31553d0d065a5e882cc76232b8aff4bb59ff35c20baaab1aedd539af9b92",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_2_74_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_2_74_0.png",
+      "sha256": "88f7f1658761a1df6a40fb35c5dda717704e155d839d8ae0e0c3e1f541bfe804",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_0_0.png",
+      "sha256": "0dcde0f047bb16681e5a6f3912888d98aefe44e5c8e06628f7d2377671e24eef",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_13_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_13_0.png",
+      "sha256": "a3f2825748b7c9a0bd601d1dd7fd731236c23145083cdfe08f4ac60396af7f9e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_26_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_26_0.png",
+      "sha256": "954bc2839548a36f26953cac0e5185002a3b59229b7f260c259e12d9aa2ef229",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_28_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_28_0.png",
+      "sha256": "2ea65812490cd4ba081dfb1d93b76bf3f52de3eb7c1fc34b0819058997543aec",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_40_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_40_0.png",
+      "sha256": "448d3049e9fbf055d74037e3c694872243d9bbee850cb6582d7fd3a08325afcb",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_41_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_41_0.png",
+      "sha256": "9dc1db967e26465498c9487cfe17b21a6e31cdeae6e259f4047d9fd74708a1a4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_51_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_51_0.png",
+      "sha256": "c6ae35c3b38271392082c33d26bbb3e35a4dc85d6858e71f4eec361d91993297",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_56_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_56_0.png",
+      "sha256": "844c5742e1497a910c7b519ea5bc61712b182809ffa6f640db41c9fc867e921c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_66_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_66_0.png",
+      "sha256": "72494868b8f554998e9e69303b7feaab69e0deeac3ffe26c0565df07ab9c9a2f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_79_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_79_0.png",
+      "sha256": "c648e0c8b9da8ffc0226c4e4853b9b6162c1a30cfc826b175f8a8e2688b8ba88",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_4_80_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_4_80_0.png",
+      "sha256": "36176a9be5b38df5670cd64bb24cad736c891497874dc083049f57bccda338dd",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_0_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_0_0.png",
+      "sha256": "8fd94f7467fc99f7259849900769525a819a907b01269e74455788af6e98abf4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_51_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_51_0.png",
+      "sha256": "e27f1bbb693a1888e29f68eba7897c188fd7f7f1983bae69f4d4f4785a324333",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_61_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_61_0.png",
+      "sha256": "95c63ca91bf47fd7cac4369e8792e4646a278258ca96b6a5b43c1abbe5d36ce2",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_66_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_66_0.png",
+      "sha256": "aa68e67be50c29ead95e75869cac905008fc130742433906f761543cda0f7889",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_0_0_0_0_1_5_74_0",
+      "file": "shot_gallery_acceptance_horizontal_0_0_0_0_1_5_74_0.png",
+      "sha256": "7e1c3be072bf42f6759eb33a9897ed25d9ec8666ef3978e8b07b20051ebb9881",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 165.0,
+        "camY": 8.5,
+        "camZ": -23.0,
+        "yaw": 40.6,
+        "pitch": 30.0
+      },
+      "title": "T junction \u00b7 flat \u00b7 facing north \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    }
+  ],
+  "excluded_status_counts": {}
+}

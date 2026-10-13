@@ -26,6 +26,7 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     public boolean active;
     public BlockPos consoleOwner;
     public int consoleWidth = 1, consoleIndex, consoleDepth = 1, consoleRow;
+    public boolean consoleOpposed;
     private boolean firstTick = true;
     private boolean animated;
     public boolean isAnimated() { return animated; }
@@ -45,9 +46,9 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         if (base == null || base.block() != block() || !base.isAnchor() || base.facing() != facing() || base.mount != mount) return null;
         if (!block().isConsole() || base.consoleOwner == null) return base;
         TileEntityShipSystem owner = at(world, base.consoleOwner);
-        return owner != null && owner.isAnchor() && owner.block() == block() && owner.facing() == facing() && owner.mount == mount
+        return owner != null && owner.isAnchor() && owner.block() == block() && (owner.facing() == facing() || base.consoleOpposed && owner.facing()==facing().getOpposite()) && owner.mount == mount
                 && owner.consoleIndex == 0 && owner.consoleRow == 0 && owner.consoleWidth == base.consoleWidth
-                && owner.consoleDepth == base.consoleDepth
+                && owner.consoleDepth == base.consoleDepth && owner.consoleOpposed == base.consoleOpposed
                 && owner.frame().cell(owner.getPos(),base.consoleIndex,0,base.consoleRow).equals(base.getPos()) ? owner : null;
     }
     private java.util.List<TileEntityShipSystem> configurationMembers() {
@@ -138,12 +139,14 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     private BlockShipSystem cachedModelBlock;
     private int cachedModelWidth,cachedModelDepth;
     private boolean cachedModelActive;
+    private boolean cachedModelOpposed;
     private String cachedModel;
     public String model() {
         BlockShipSystem b=block();boolean on=visuallyActive();
-        if(b==cachedModelBlock && cachedModel!=null && cachedModelWidth==consoleWidth && cachedModelDepth==consoleDepth && cachedModelActive==on)return cachedModel;
+        if(b==cachedModelBlock && cachedModel!=null && cachedModelWidth==consoleWidth && cachedModelDepth==consoleDepth && cachedModelActive==on && cachedModelOpposed==consoleOpposed)return cachedModel;
+        cachedModelOpposed=consoleOpposed;
         cachedModelBlock=b;cachedModelWidth=consoleWidth;cachedModelDepth=consoleDepth;cachedModelActive=on;
-        if(b.isConsole())cachedModel=b.kind+"_"+consoleWidth+(consoleDepth>1?"_depth_"+consoleDepth:"")+(on?"_on":"_off");
+        if(b.isConsole())cachedModel=b.kind+"_"+consoleWidth+(consoleOpposed?"_opposed":consoleDepth>1?"_depth_"+consoleDepth:"")+(on?"_on":"_off");
         else cachedModel=b.hasPowerStates()?b.kind+(on?"_on":"_off"):b.itemModel();
         return cachedModel;
     }
@@ -160,8 +163,12 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         applyConsole(owner, index, 0, width, 1, powered);
     }
     public void applyConsole(BlockPos owner, int index, int row, int width, int depth, boolean powered) {
+        applyConsole(owner,index,row,width,depth,powered,false);
+    }
+    public void applyConsole(BlockPos owner, int index, int row, int width, int depth, boolean powered,boolean opposed) {
         if (owner.equals(consoleOwner) && index == consoleIndex && row == consoleRow
-                && width == consoleWidth && depth == consoleDepth && active == powered) return;
+                && width == consoleWidth && depth == consoleDepth && active == powered && consoleOpposed==opposed) return;
+        consoleOpposed=opposed;
         consoleOwner = owner; consoleIndex = index; consoleRow = row;
         consoleWidth = width; consoleDepth = depth; active = powered;
         sync();
@@ -227,6 +234,7 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         n.setInteger("ConsoleIndex", consoleIndex);
         n.setInteger("ConsoleDepth", consoleDepth);
         n.setInteger("ConsoleRow", consoleRow);
+        n.setBoolean("ConsoleOpposed",consoleOpposed);
         n.setBoolean("Active", active);
         n.setBoolean("Animated", animated);
         n.setInteger("MountFace",mount.getIndex());
@@ -243,6 +251,7 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         consoleIndex = Math.max(0, Math.min(consoleWidth - 1, n.getInteger("ConsoleIndex")));
         consoleDepth = block() != null && block().kind.equals("hadron_console") ? 1 : Math.max(1, Math.min(3, n.getInteger("ConsoleDepth")));
         consoleRow = Math.max(0, Math.min(consoleDepth - 1, n.getInteger("ConsoleRow")));
+        consoleOpposed=n.getBoolean("ConsoleOpposed");
         active = n.getBoolean("Active");
         animated = n.getBoolean("Animated");
         mount=n.hasKey("MountFace")?EnumFacing.getFront(Math.max(0,Math.min(5,n.getInteger("MountFace")))):EnumFacing.UP;
@@ -270,13 +279,14 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         BlockPos owner=base==null?(anchor==null?pos:anchor):base.getPos();
         String model=base==null?b.itemModel():base.model();
         if(b.isConsole() && base!=null && base.consoleOwner!=null)owner=base.consoleOwner;
-        EnumFacing facing=facing();boolean drawing=draws();
+        TileEntityShipSystem console=b.isConsole()?at(world,owner):null;
+        EnumFacing facing=console!=null?console.facing():facing();boolean drawing=draws();
         if(model.equals(geometryModel) && facing==geometryFacing && mount==geometryMount && owner.equals(geometryOwner) && pos.equals(geometryPos) && drawing==geometryDraws)return;
         geometryModel=model;geometryFacing=facing;geometryMount=mount;geometryOwner=owner;geometryPos=pos;geometryDraws=drawing;
         java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
-        for(AxisAlignedBB box:ShipSystemMesh.cellBoxes(model,facing(),mount,pos.subtract(owner)))boxes.add(box.offset(owner));
+        for(AxisAlignedBB box:ShipSystemMesh.cellBoxes(model,facing,mount,pos.subtract(owner)))boxes.add(box.offset(owner));
         cachedCollision=java.util.Collections.unmodifiableList(boxes);
-        cachedSelectionBounds=ShipSystemMesh.bounds(model,facing(),mount,owner);
+        cachedSelectionBounds=ShipSystemMesh.bounds(model,facing,mount,owner);
         cachedRenderBounds=drawing?cachedSelectionBounds:new AxisAlignedBB(pos);
         cachedCellBounds=null;for(AxisAlignedBB box:boxes)cachedCellBounds=cachedCellBounds==null?box:cachedCellBounds.union(box);
     }

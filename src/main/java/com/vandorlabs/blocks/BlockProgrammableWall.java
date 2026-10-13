@@ -351,8 +351,12 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     @Nullable public FlatCorner flatCorner(IBlockState state, IBlockAccess world,
             BlockPos pos) {
-        if (shape != Shape.PLAIN) return null;
-        EnumFacing facing = state.getValue(FACING);
+        return PanelJoins.flatCorner(state, world, pos);
+    }
+
+    @Nullable static FlatCorner findFlatCorner(IBlockState state, IBlockAccess world, BlockPos pos) {
+        if (!PanelJoins.cornerPanel(state) || !PanelJoins.flatEnabled(world,pos)) return null;
+        EnumFacing facing = PanelJoins.flatFacing(state,world,pos);
         Double frontArm = null, backArm = null;
         Boolean frontRight = null, backRight = null;
         Double frontFlat=null,backFlat=null;
@@ -361,20 +365,20 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
                 continue;
             IBlockState neighbor = world.getBlockState(neighborPos);
-            if (neighbor.getBlock() != this) continue;
-            EnumFacing neighborFacing = neighbor.getValue(FACING);
+            if (!PanelJoins.cornerPanel(neighbor) || !PanelJoins.flatEnabled(world,neighborPos)) continue;
+            EnumFacing neighborFacing = PanelJoins.flatFacing(neighbor,world,neighborPos);
             Boolean right = neighborFacing == facing.rotateY() ? Boolean.TRUE
                     : neighborFacing == facing.rotateYCCW() ? Boolean.FALSE : null;
             if (right == null) continue;
-            double neighborNear = PanelDepth.start(neighbor.getValue(DEPTH));
+            double neighborNear = PanelJoins.flatNear(neighbor,world,neighborPos);
             double arm = right ? 12 - neighborNear : neighborNear;
             if (front) { frontArm = arm; frontRight = right; }
             else { backArm = arm; backRight = right; }
         }
         if (frontArm == null && backArm == null) return null;
         return new FlatCorner(frontArm, backArm, frontRight, backRight,
-                straightNeighbor(state, world, pos, facing.rotateYCCW()),
-                straightNeighbor(state, world, pos, facing.rotateY()));
+                PanelJoins.connectsFlat(world,pos,state,pos.offset(facing.rotateYCCW())),
+                PanelJoins.connectsFlat(world,pos,state,pos.offset(facing.rotateY())));
     }
 
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {

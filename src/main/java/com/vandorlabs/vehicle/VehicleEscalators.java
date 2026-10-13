@@ -72,11 +72,15 @@ public final class VehicleEscalators {
         if(tag.getBoolean("VehicleRampFrozen")) {
             tag.removeTag("VehicleRampFrozen");tag.setBoolean("EscalatorRunning",false);
             tag.setLong("EscalatorTick",tick);tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,tick);
-            tag.setBoolean(SaveSchema.Ramp.SIGNAL_KNOWN,false);
+            // Preserve the ramp's captured signal baseline. Its one-shot load
+            // check already reevaluates local power, and unchanged power must
+            // not issue another request or replace the captured ramp pose.
         }
         return tag;
     }
-    public static boolean needsExpandedSnapshot(World world,VehicleStructure craft,BlockPos origin){for(VehicleStructure.Cell cell:craft.cells){TileEntity tile=world.getTileEntity(origin.add(cell.pos));if(active(tile) && !((TileEntityRampController)tile).vehicleCells().isEmpty())return true;}return false;}
+    /** The carry snapshot freezes clocks even for retracted ramps. Journal their
+     * original live NBT as well, so a cancelled assembly restores every field. */
+    public static boolean needsExpandedSnapshot(World world,VehicleStructure craft,BlockPos origin){for(VehicleStructure.Cell cell:craft.cells){TileEntity tile=world.getTileEntity(origin.add(cell.pos));if(active(tile))return true;}return false;}
     public static WorldSnapshot expandedWorldSnapshot(World world,VehicleStructure craft,BlockPos origin) throws java.io.IOException {
         LinkedHashSet<BlockPos> positions=new LinkedHashSet<>();
         for(VehicleStructure.Cell cell:craft.cells){BlockPos p=origin.add(cell.pos);positions.add(p);TileEntity tile=world.getTileEntity(p);if(active(tile))for(BlockPos section:((TileEntityRampController)tile).vehicleCells()){
