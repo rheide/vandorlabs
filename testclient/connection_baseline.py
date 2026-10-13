@@ -11,14 +11,15 @@ except ImportError:
 SCHEMA='vandorlabs-connection-baseline-v1'
 DEFAULT=ROOT/'testclient/baselines/regular-wall-connections'
 ACTIVE=ROOT/'testclient/baselines/active.json'
+DIAGONAL_SCOPES=('diagonal-half-width-full-height','diagonal-full-width-full-height','diagonal-full-width-half-height')
 CAMERA=['posX','posY','posZ','camX','camY','camZ','yaw','pitch']
 ROI=(480,216,1440,918)
 SETTINGS={'roi':list(ROI),'sample_scale':2,'mask_dilation_pixels':2,'channel_tolerance':12,'max_changed_fraction':.003,'max_mean_error':2.0,'max_lighting_bias':6}
 GRASS_LIGHTING={'min_samples':1000,'min_channel_std':3,'min_r_squared':.985,'max_mean_residual':1.5,'max_p95_residual':3,'min_gain':.65,'max_gain':1.55,'max_offset':6}
 
 def default_baseline(topology='l',config=ACTIVE):
-    if topology not in ('l','t','x'):raise ValueError('Unknown connection topology')
-    fallback='regular-wall-connections'+('' if topology=='l' else '-'+topology)
+    if topology not in ('l','t','x')+DIAGONAL_SCOPES:raise ValueError('Unknown connection topology')
+    fallback=topology if topology in DIAGONAL_SCOPES else 'regular-wall-connections'+('' if topology=='l' else '-'+topology)
     if not config.is_file():return config.parent/fallback
     active=json.loads(config.read_text(encoding='utf-8'))
     if active.get('schema')!='vandorlabs-active-connection-baselines-v1':raise ValueError('Unknown active baseline schema')

@@ -41,9 +41,17 @@ def main():
     parser.add_argument('--shot-limit', type=int, default=0, help='Limit scenes for a capture smoke check')
     parser.add_argument('--acceptance-pilot', action='store_true', help='Capture only the junction layout pilot')
     parser.add_argument('--connection-topology', choices=['l', 't', 'x'], default='l', help='Regular-wall acceptance page to capture')
+    parser.add_argument('--connection-family', choices=['regular', 'diagonal'], default='regular', help='Regular topology or sampled diagonal size page')
+    parser.add_argument('--connection-mode', type=int, choices=[0, 1, 2], default=0,
+                        help='Diagonal size: 0 half-width/full-height; 1 full-width/full-height; 2 full-width/half-height')
     parser.add_argument('--connection-baseline', type=Path, help='Accepted screenshot baseline (defaults to the regular-wall baseline)')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
+    if args.connection_family == 'regular' and args.connection_mode != 0:
+        parser.error('--connection-mode requires --connection-family diagonal')
+    diagonal_scopes = ['diagonal-half-width-full-height', 'diagonal-full-width-full-height', 'diagonal-full-width-half-height']
+    connection_scope = (diagonal_scopes[args.connection_mode] if args.connection_family == 'diagonal'
+                        else 'regular-'+args.connection_topology)
     if os.name != 'nt':
         parser.error('Use run.sh on Linux; this launcher hides native Windows client windows.')
     root = Path(__file__).resolve().parents[1]
@@ -59,7 +67,9 @@ def main():
         (output/'capture-metadata.json').write_text(json.dumps({
             'schema': 'vandorlabs-connection-capture-v1', 'jar': jar.name,
             'jar_sha256': hashlib.sha256(jar.read_bytes()).hexdigest(),
-            'topology': args.connection_topology, 'image_size': [1920, 1080],
+            'topology': 'l-t-x' if args.connection_family == 'diagonal' else args.connection_topology,
+            'image_size': [1920, 1080],
+            'family': args.connection_family, 'mode': args.connection_mode, 'scope': connection_scope,
         }, indent=2), encoding='utf-8')
     if args.disable_categories:
         categories=args.disable_categories.split(',')
@@ -120,6 +130,8 @@ def main():
                 shutil.copyfile(source,game/'mods'/source.name)
     properties = ['-Dvandorlabs.reprolab='+str(output), '-Djava.library.path='+str(natives)]
     properties.append('-Dvandorlabs.connectionAcceptanceTopology='+args.connection_topology)
+    properties.append('-Dvandorlabs.connectionAcceptanceFamily='+args.connection_family)
+    properties.append('-Dvandorlabs.connectionAcceptanceMode='+str(args.connection_mode))
     properties += ['-Dvandorlabs.reproShotShards='+str(args.shot_shards), '-Dvandorlabs.reproShotShard='+str(args.shot_shard), '-Dvandorlabs.reproShotLimit='+str(args.shot_limit)]
     if args.acceptance_pilot:
         properties.append('-Dvandorlabs.connectionAcceptancePilot=true')
@@ -208,17 +220,21 @@ def main():
         if args.focus == 'pilot-seat':
             subprocess.run([sys.executable, str(root/'testclient/analyze_pilot_seat.py'), str(output)], check=True)
         if args.focus == 'connection-acceptance':
+            if args.connection_family == 'diagonal':
+                marker = 'acceptance fixture coverage PASS 60 diagonal mode='+str(args.connection_mode)+' L18 T24 X18'
+                if marker not in client_log:
+                    raise SystemExit('Missing diagonal sample coverage checks.')
             if 'flat-panel-material-L PASS 72 ordered fixtures' not in client_log:
                 raise SystemExit('Missing regular wall material-join runtime checks.')
             if 'flat-panel-material-T PASS 864 material/direction/hand/tail fixtures' not in client_log:
                 raise SystemExit('Missing regular T material-ownership runtime checks.')
             if 'flat-glass-cross-frame PASS 1296 material/facing fixtures' not in client_log:
                 raise SystemExit('Missing glass cross-junction frame runtime checks.')
-            scope = 'regular-'+args.connection_topology
+            scope = connection_scope
             if not args.acceptance_pilot:
-                subprocess.run([sys.executable, str(root/'testclient/review_connections.py'), str(output), '--scope', scope, '--no-contact-sheet'] + (['--compact'] if args.connection_topology in ('t', 'x') else []), check=True)
+                subprocess.run([sys.executable, str(root/'testclient/review_connections.py'), str(output), '--scope', scope, '--no-contact-sheet'] + (['--compact'] if args.connection_family == 'regular' and args.connection_topology in ('t', 'x') else []), check=True)
             from connection_baseline import default_baseline
-            baseline = args.connection_baseline or default_baseline(args.connection_topology)
+            baseline = args.connection_baseline or default_baseline(scope if args.connection_family == 'diagonal' else args.connection_topology)
             complete_capture = (not args.acceptance_pilot and not args.shot_prefix and not args.start_shot
                                 and not args.shot_limit and args.shot_shards == 1)
             if complete_capture and (baseline/'baseline.json').is_file():

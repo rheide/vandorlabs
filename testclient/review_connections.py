@@ -9,10 +9,11 @@ import argparse
 import csv
 import html
 import json
+import math
 from pathlib import Path
 import re
 
-GEOMETRIES = ["Tall / half width", "Full width / height", "Wide / half height"]
+GEOMETRIES = ["Half width / full height", "Full width / full height", "Full width / half height"]
 TOPOLOGIES = ["L corner · C then N", "L corner · N then C", "T junction", "Four-way junction"]
 EXPECTED = {"junction": 12, "horizontal": 24192}
 MATERIALS = ["wall", "glass", "porthole"]
@@ -52,12 +53,53 @@ REGULAR_SCOPES = {
                   "count": 243, "label": "four-way junctions", "title": "Regular wall four-way connection review",
                   "coverage": "243 regular four-way junctions: one canonical cross arrangement × every wall/glass/porthole assignment across center, north, south, west and east positions."},
 }
+DIAGONAL_SCOPES = {
+    "diagonal-half-width-full-height": {"mode": 0},
+    "diagonal-full-width-full-height": {"mode": 1},
+    "diagonal-full-width-half-height": {"mode": 2},
+}
+for diagonal_config in DIAGONAL_SCOPES.values():
+    diagonal_config.update(count=60, label="diagonal junctions",
+                           title="Diagonal wall review — " + GEOMETRIES[diagonal_config["mode"]],
+                           coverage="60 selected test placements: 18 L, 24 T and 18 four-way. Directions, uniform upper/lower placement and materials are sampled together. Material-pair coverage is pooled across poses, not exhaustive at every pose; mixed upper/lower junctions are not included. Mark gaps, incorrect joins or misplaced textures wrong.")
 
 
 def regular_scene_names(scope):
     config = REGULAR_SCOPES[scope]
     return [f"gallery_acceptance_horizontal_0_0_0_0_{config['kind']}_{variant}_{assignment}_{order}"
             for variant in config["variants"] for assignment in range(config["assignments"]) for order in range(config["orders"])]
+
+
+def diagonal_scene_names(scope):
+    """Mirror the deliberately sampled Java fixture plan in world-role order."""
+    mode = DIAGONAL_SCOPES[scope]["mode"]
+    names = []
+    def add(index, kind, variant, relative, order=0):
+        facing, inverted = (index % 4 + index // 4) % 4, (index // 4) % 2
+        prefix = f"gallery_acceptance_horizontal_1_{mode}_{facing}_{inverted}_{kind}_{variant}_"
+        zero = horizontal_case(prefix + f"0_{order}")
+        directions = {"F": facing, "B": (facing+2) % 4, "L": (facing-1) % 4, "R": (facing+1) % 4}
+        material_at = {(0, 0): relative["C"]}
+        material_at.update({OFFSETS[directions[role]]: material for role, material in relative.items() if role != "C"})
+        assignment = sum(material_at[tuple(role["position"])] * 3**i for i, role in enumerate(zero["roles"]))
+        names.append(prefix + f"{assignment}_{order}")
+    for i in range(9):
+        variant = i % 4
+        for order in range(2):
+            add(i, 0, variant, {"C": i//3, "F" if variant < 2 else "B": i % 3}, order)
+    t_rows = "B0110 D1122 A2012 D0101 B2121 D2200 A1000 C0022 A0202 A1211 C2110 B1022 B2201 A2120 D1011 B1210 C2101 D2212 C2000 C2222 A1111 B1111 C1111 D1111".split()
+    groups = {"A": ("CFLR", [0, 1]), "B": ("CBLR", [2, 3]), "C": ("CFBL", [4, 6, 8, 10]), "D": ("CFBR", [5, 7, 9, 11])}
+    counters = dict.fromkeys(groups, 0)
+    for i, entry in enumerate(t_rows):
+        group = entry[0]
+        roles, variants = groups[group]
+        variant = variants[counters[group] % len(variants)]
+        counters[group] += 1
+        add(i, 1, variant, dict(zip(roles, map(int, entry[1:]))))
+    x_rows = "00000 01111 02222 10012 11120 12201 20021 21102 22210 00100 00200 01000 01200 02000 02100 11111 22222 00000".split()
+    for i, entry in enumerate(x_rows):
+        add(i, 2, i % 4, dict(zip("CFBLR", map(int, entry))))
+    return names
 
 
 def compact_scene_names(scope):
@@ -103,12 +145,43 @@ def feedback_order(rows, feedback):
     return sorted(rows, key=lambda row: row["file"] not in wrong)
 
 
+def diagonal_preview(row, camera=None):
+    """CSS focal point and safe zoom; original screenshot pixels stay unchanged."""
+    camera = camera or {}
+    get = lambda key, default: float(camera.get(key, default))
+    yaw, pitch = math.radians(get("yaw", 40.6)), math.radians(get("pitch", 70))
+    eye = (get("camX", 162.84), get("camY", 14.75) + 1.62, get("camZ", -20.23))
+    root = (get("posX", 160), get("posY", 6), get("posZ", -18))
+    forward = (-math.sin(yaw)*math.cos(pitch), -math.sin(pitch), math.cos(yaw)*math.cos(pitch))
+    right = (-math.cos(yaw), 0, -math.sin(yaw))
+    up = (-math.sin(yaw)*math.sin(pitch), math.cos(pitch), math.cos(yaw)*math.sin(pitch))
+    tangent = math.tan(math.radians(30)/2)
+    def project(x, y, z):
+        delta = (x-eye[0], y-eye[1], z-eye[2])
+        dot = lambda axis: sum(a*b for a, b in zip(delta, axis))
+        depth = max(.1, dot(forward))
+        return (.5 + dot(right)/(2*depth*tangent*16/9), .5 - dot(up)/(2*depth*tangent))
+    half = row["geometry"] == "2"
+    low = .5 if half and row["upper_lower"] == "upper" else 0
+    high = low + (.5 if half else 1)
+    centers, bounds = [], []
+    for role in row["roles"]:
+        x, z = root[0]+role["position"][0], root[2]+role["position"][1]
+        centers.append(project(x+.5, root[1]+(low+high)/2, z+.5))
+        bounds.extend(project(x+dx, root[1]+dy, z+dz) for dx in (0, 1) for dy in (low, high) for dz in (0, 1))
+    focal = [max(0, min(1, sum(p[i] for p in centers)/len(centers))) for i in (0, 1)]
+    span = [max(abs(p[i]-focal[i]) for p in bounds)*2 for i in (0, 1)]
+    requested = 2.5 if row["topology"] == "l" else 1.75
+    zoom = max(1, min(requested, .86/max(.01, span[0]), .80/max(.01, .9*span[1])))
+    return {"width": f"{zoom*100:.3f}%", "transform": f"translate(-{focal[0]*100:.3f}%, -{focal[1]*100:.3f}%)"}
+
+
 def horizontal_case(name):
     match = re.fullmatch(r"gallery_acceptance_horizontal_([0-9]+(?:_[0-9]+){7})", name)
     if not match:
         return None
     family, mode, facing, inverted, kind, variant, assignment, order = map(int, match.group(1).split("_"))
-    if family not in (0, 1) or mode != 0 or facing not in range(4) or inverted not in range(2) or family == 0 and inverted != 0:
+    if family not in (0, 1) or mode not in range(3 if family == 1 else 1) or facing not in range(4) or inverted not in range(2) or family == 0 and inverted != 0:
         raise ValueError("Invalid horizontal family, orientation or canonical geometry: " + name)
     if kind not in range(3) or variant not in range((4, 12, 4)[kind]) or order not in range(2 if kind == 0 else 1):
         raise ValueError("Invalid horizontal topology, variant or order: " + name)
@@ -152,12 +225,14 @@ def horizontal_case(name):
     family_label = "diagonal" if family else "flat"
     upper_lower = ("upper" if inverted else "lower") if family else "na"
     cells = [f"{role['id']}: {role['location']}, facing {role['facing']} · {role['material']}" for role in roles]
-    title = ["L corner", "T junction", "Four-way junction"][kind] + " · " + family_label + " · facing " + FACINGS[facing]
+    topology_label = (["L cell arrangement", "T cell arrangement", "Four-way cell arrangement"] if family else
+                      ["L corner", "T junction", "Four-way junction"])[kind]
+    title = topology_label + " · " + family_label + " · facing " + FACINGS[facing]
     if family:
         title += " · " + upper_lower + " placement"
     title += " · " + variant_label
     return {"name": name, "kind": "horizontal", "family": family_label, "topology": ["l", "t", "cross"][kind],
-            "geometry": "0", "geometry_label": "Canonical", "facing": FACINGS[facing], "upper_lower": upper_lower,
+            "geometry": str(mode), "geometry_label": GEOMETRIES[mode] if family else "Canonical", "facing": FACINGS[facing], "upper_lower": upper_lower,
             "materials": [role["material"] for role in roles], "placement_order": placement,
             "roles": roles, "cells": cells, "title": title, "file": "shot_" + name + ".png"}
 
@@ -219,42 +294,48 @@ def main():
     parser.add_argument("--no-contact-sheet", action="store_true")
     parser.add_argument("--compact", action="store_true", help="Show a representative regular T/X sample; preserve a separate full reviewer")
     parser.add_argument("--feedback-order", type=Path, help="Put previously wrong displayed cases first, without importing review marks or adding cases")
-    parser.add_argument("--scope", choices=["full", *REGULAR_SCOPES], default="full")
+    parser.add_argument("--scope", choices=["full", *REGULAR_SCOPES, *DIAGONAL_SCOPES], default="full")
     args = parser.parse_args()
     folder = args.capture_directory.resolve()
     if args.compact and args.scope not in ("regular-t", "regular-x"):
         parser.error("--compact requires --scope regular-t or regular-x")
     rows = []
     manifest = folder / "manifest.tsv"
+    cameras = {}
     if manifest.exists():
         with manifest.open(encoding="utf-8-sig", newline="") as stream:
-            names = [row["name"] for row in csv.DictReader(stream, delimiter="\t")]
+            manifest_rows = list(csv.DictReader(stream, delimiter="\t"))
+            names = [row["name"] for row in manifest_rows]
+            cameras = {row["name"]: row for row in manifest_rows}
     else:
         names = []
     # Resumed captures can retain earlier PNGs beside a manifest listing only the
     # resumed scenes. Include both sources so those screenshots remain reviewable.
     names.extend(path.stem.removeprefix("shot_") for path in folder.glob("shot_gallery_acceptance_*.png"))
-    selected_names = set(regular_scene_names(args.scope)) if args.scope in REGULAR_SCOPES else None
+    selected_names = (set(regular_scene_names(args.scope)) if args.scope in REGULAR_SCOPES else
+                      set(diagonal_scene_names(args.scope)) if args.scope in DIAGONAL_SCOPES else None)
     if selected_names is not None:
         names.extend(selected_names)
     for name in dict.fromkeys(names):
         row = case(name)
         if row and (selected_names is None or name in selected_names):
             row["exists"] = (folder / row["file"]).is_file()
+            if row["family"] == "diagonal":
+                row["preview_style"] = diagonal_preview(row, cameras.get(name))
             rows.append(row)
     rows.sort(key=lambda row: (list(EXPECTED).index(row["kind"]),
                               tuple(int(value) for value in row["name"].removeprefix("gallery_acceptance_").split("_")[1:])))
     if not rows:
         parser.error("No connection-acceptance cases found in manifest.tsv or screenshots")
     expected_pages = {kind: expected for kind, expected in EXPECTED.items() if any(row["kind"] == kind for row in rows)}
-    config = REGULAR_SCOPES.get(args.scope)
+    config = REGULAR_SCOPES.get(args.scope) or DIAGONAL_SCOPES.get(args.scope)
     if config:
         expected_pages = {"horizontal": config["count"]}
     counts = {kind: sum(r["exists"] for r in rows if r["kind"] == kind) for kind in expected_pages}
     summary = "; ".join(f"{kind}: {counts[kind]}/{expected} pages" for kind, expected in expected_pages.items())
     coverage = HORIZONTAL_COVERAGE if "horizontal" in counts else PILOT_COVERAGE
     if config:
-        coverage = config["coverage"] + " All scenes use regular panels, a north-facing root, centered depth, Auto joins and no fill. There are no diagonal or vertical fixtures. Click any wrong image; unmarked images are assumed correct."
+        coverage = config["coverage"] + (" All scenes use regular panels, a north-facing root, centered depth, Auto joins and no fill. There are no diagonal or vertical fixtures. Click any wrong image; unmarked images are assumed correct." if args.scope in REGULAR_SCOPES else " Only these 60 captured scenes are reviewed; no hidden Cartesian matrix is implied.")
     title = config["title"] if config else "Horizontal junction review"
     missing = [row["file"] for row in rows if not row["exists"]]
     if config and missing:
@@ -286,6 +367,8 @@ def main():
     output = output.replace("__TITLE_JSON__", json.dumps(title).replace("<", "\\u003c"))
     output = output.replace("__CASE_COUNT__", str(len(rows)))
     intro = (html.escape(coverage) + ' <a href="full.html">Inspect all captured cases</a>.' if args.compact else f"All {len(rows)} {html.escape(config['label'])} are on this page." if config else "")
+    if args.scope in DIAGONAL_SCOPES:
+        intro = html.escape(coverage)
     output = output.replace("__REVIEW_INTRO__", intro)
     output = output.replace("__REPORT_SCOPE__", json.dumps(f"Displayed sample only: {len(rows)} of {len(full_rows)} captured cases. Hidden cases are not reviewed." if args.compact else f"All {len(rows)} displayed cases."))
     output = output.replace("__TOPOLOGY_LABEL__", html.escape(config["label"] if config else "junctions"))

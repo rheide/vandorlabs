@@ -43,3 +43,19 @@ python testclient/test_connection_baseline.py
 ```
 
 Pillow is required. The script can use the live harness's local `build/tooling/python-packages` installation when Pillow is not installed in the selected Python runtime.
+
+## Diagonal acceptance pages
+
+Capture one size mode at a time:
+
+```text
+python testclient/run_windows.py --focus connection-acceptance --connection-family diagonal --connection-mode 1
+python testclient/run_windows.py --focus connection-acceptance --connection-family diagonal --connection-mode 0
+python testclient/run_windows.py --focus connection-acceptance --connection-family diagonal --connection-mode 2
+```
+
+Mode 1 is full width and full height; mode 0 is half width and full height; mode 2 is full width and half height. Each page contains 60 horizontal test placements: 18 L arrangements, 24 T arrangements and 18 four-way arrangements. L cases include every ordered material pair in both placement orders. T and four-way cases cover material pairs across active relative positions. Each topology samples all four directions, both uniform upper/lower placements and its branch handedness. This is pooled coverage, not every combination of pose, placement, handedness and materials. There are no vertical, straight-only, mixed-size or mixed-upper/lower fixtures, manual join overrides or fill sweeps.
+
+The size modes require separate visual review. Full-height modes use different slope spans; half-height geometry exchanges the height and horizontal slope axes. Half-height and diagonal porthole geometry currently bypass automatic corner folding. A fixture's L/T/four-way label identifies its cell arrangement, not an assertion that the resulting surfaces connect correctly.
+
+Preserve diagonal screenshots only after review using the same `create` command above. Active keys are `diagonal-full-width-full-height`, `diagonal-half-width-full-height` and `diagonal-full-width-half-height`; their conventional fallback directories use those same names. No unreviewed diagonal capture is selected as a baseline automatically.

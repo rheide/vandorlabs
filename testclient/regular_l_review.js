@@ -60,10 +60,12 @@ function updateCard(row) {
 rows.forEach((row, index) => {
     const card = el('article'); card.id = row.name;
     card.append(el('h2', `${index + 1}. ${row.roles.map(role => role.material).join(' + ')}`));
-    const caption = el('p', row.title.split(' · ').at(-1) + ' · place ' + row.placement_order.join(' → '));
+    const description = row.family === 'diagonal' ? row.title : row.title.split(' · ').at(-1);
+    const caption = el('p', description + ' · place ' + row.placement_order.join(' → '));
     caption.className = 'caption'; card.append(caption);
     const toggle = el('button'); toggle.type = 'button'; toggle.className = 'image-toggle';
     const image = el('img'); image.src = row.file; image.alt = row.title + ' · ' + row.cells.join(' / '); image.loading = 'lazy';
+    if (row.preview_style) { image.style.width = row.preview_style.width; image.style.transform = row.preview_style.transform; }
     const badge = el('span'); badge.className = 'badge'; toggle.append(image, badge);
     toggle.onclick = () => {
         if (reviews[row.file]) delete reviews[row.file];

@@ -487,8 +487,11 @@ public class ReproLab {
             outDir.mkdirs();
             if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
                 SHOTS.clear();
+                boolean diagonal="diagonal".equals(System.getProperty("vandorlabs.connectionAcceptanceFamily"));
                 for(String name:ConnectionAcceptance.names())
-                    SHOTS.add(new Shot(name,GALLERY_X+5,GALLERY_Y+4.5D,-23,40.6F,30F));
+                    SHOTS.add(diagonal
+                            ? new Shot(name,GALLERY_X+2.84D,GALLERY_Y+10.75D,-20.23D,40.6F,70F)
+                            : new Shot(name,GALLERY_X+5,GALLERY_Y+4.5D,-23,40.6F,30F));
             }
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
             if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_") && !shot.name.startsWith("gallery_glass_finishes_"));

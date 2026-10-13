@@ -76,6 +76,11 @@ class ComparisonTests(unittest.TestCase):
             self.assertEqual(baseline.default_baseline('l',config),selected)
             self.assertEqual(baseline.default_baseline('t',config),root/'regular-wall-connections-t')
             self.assertEqual(baseline.default_baseline('x',config),root/'regular-wall-connections-x')
+            for scope in baseline.DIAGONAL_SCOPES:
+                self.assertEqual(baseline.default_baseline(scope,config),root/scope)
+            config.write_text(json.dumps({'schema':'vandorlabs-active-connection-baselines-v1',
+                                          'baselines':{'l':'approved-v2',baseline.DIAGONAL_SCOPES[0]:'approved-v2'}}),encoding='utf-8')
+            self.assertEqual(baseline.default_baseline(baseline.DIAGONAL_SCOPES[0],config),selected)
             (selected/'baseline.json').unlink()
             with self.assertRaises(ValueError):baseline.default_baseline('l',config)
     def test_compact_review_approves_only_displayed_files(self):

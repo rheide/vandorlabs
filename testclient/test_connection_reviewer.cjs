@@ -1,7 +1,7 @@
 // Tiny DOM adapter exercises the generated offline page without a browser/network.
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
 class Element {
-    constructor() { this.children = []; this.dataset = {}; this.value = ''; }
+    constructor() { this.children = []; this.dataset = {}; this.style = {}; this.value = ''; }
     append(...children) { this.children.push(...children); }
     setAttribute(key, value) { this[key] = value; }
     focus() {} select() { this.selected = true; } click() {} remove() {}
@@ -20,10 +20,14 @@ function boot() {
 (async () => {
     let page = boot();
     assert.equal(page.query('cards.size'), count);
+    if (count === 60) {
+        assert(page.query('cards.get(rows[0].file).toggle.children[0].style.width === rows[0].preview_style.width'));
+        assert(page.query('cards.get(rows[0].file).toggle.children[0].style.transform === rows[0].preview_style.transform'));
+    }
     assert.equal(page.query('Object.keys(reviews).length'), 0);
     assert.equal(page.query('payload().displayedFiles.length'), count);
     assert.equal(page.query('payload().defaultStatus'), 'ok');
-    assert(page.query('reportText()').includes('Hidden cases are not reviewed.'));
+    assert(page.query('reportText()').includes(count === 60 ? 'All 60 displayed cases.' : 'Hidden cases are not reviewed.'));
     page.query('cards.get(rows[0].file).toggle.onclick()');
     page.query("cards.get(rows[0].file).notes.value = 'junction seam'; cards.get(rows[0].file).notes.oninput()");
     assert(page.query('reportText()').includes('junction seam'));
