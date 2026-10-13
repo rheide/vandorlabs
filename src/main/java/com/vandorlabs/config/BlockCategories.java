@@ -7,8 +7,7 @@ public final class BlockCategories {
             "canopies","redstone_controls","machinery","decoration"};
     private BlockCategories() {}
     public static String of(String id) {
-        if(id.startsWith("hadron_")||id.startsWith("kestrel_")||id.startsWith("vektor_")
-                ||id.startsWith("aster_")||id.startsWith("rivet_"))return "machinery";
+        if(id.startsWith("hadron_"))return "machinery";
         if(id.contains("diagonal"))return "diagonals";
         if(id.contains("canopy")||id.startsWith("space_visor")||id.startsWith("space_wedge")
                 ||id.startsWith("space_longnose")||id.startsWith("space_crystal")||id.startsWith("space_shuttle")

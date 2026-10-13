@@ -1,5 +1,7 @@
 # Accepted connection screenshots
 
+For a restart guide covering the remaining diagonal size modes, capture commands, local review/export and opposite-side views, see [connection acceptance workflow](../CONNECTION_ACCEPTANCE.md).
+
 `regular-wall-connections-t-v2` contains all 58 reviewed T scenes after the center-material corrections. `regular-wall-connections-x-v2` contains all 29 reviewed four-way scenes after the glass-frame corrections. These displayed samples were approved together; other images in the full capture catalogs remain outside the accepted sets. `active.json` selects these versions for T and four-way regression checks.
 
 `regular-wall-connections-t-v1` preserves the earlier 34 unmarked cases from the reviewed 58-case T sample. `regular-wall-connections-x-v1` preserves the earlier 20 unmarked cases from the reviewed 29-case four-way sample. The 24 marked T cases and nine marked four-way cases were excluded. Hidden cases outside each displayed sample were not approved. These earlier immutable versions remain available. Later renderer changes, including intentional changes to accepted junctions, require review of comparison reports; they do not update baselines automatically.

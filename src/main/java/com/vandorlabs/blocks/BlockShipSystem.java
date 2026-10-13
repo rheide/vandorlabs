@@ -36,7 +36,7 @@ public final class BlockShipSystem extends Block {
         setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
     }
     public String itemModel() { return ShipSystemMesh.BLOCK_MODELS.get(kind); }
-    public boolean isConsole() { return kind.equals("vektor_console") || kind.equals("hadron_console"); }
+    public boolean isConsole() { return kind.equals("hadron_console"); }
     public boolean hasPowerStates() { return itemModel().endsWith("_off"); }
     protected BlockStateContainer createBlockState() { return new BlockStateContainer(this, FACING); }
     public IBlockState getStateFromMeta(int meta) { return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta & 3)); }

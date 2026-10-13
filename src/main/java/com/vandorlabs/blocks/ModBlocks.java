@@ -182,7 +182,7 @@ public class ModBlocks {
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
         for (String id : com.vandorlabs.shipsystems.ShipSystemMesh.BLOCK_MODELS.keySet())
-            add(new BlockShipSystem(id));
+            if(!isRemovedMachineryId(id))add(new BlockShipSystem(id));
         ANIMATED_SCREEN_SELECTOR = new BlockAnimatedScreenSelector();
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
@@ -408,13 +408,8 @@ public class ModBlocks {
     }
 
     public static boolean isRemovedMachineryId(String id) {
-        if(id.startsWith("aster_") || id.startsWith("vektor_")&&!id.equals("vektor_console"))return true;
-        return java.util.Arrays.asList("rivet_deck_large_g64","rivet_gravity_large_g64","rivet_shield_large_g64",
-                "rivet_sensor_large_g64","rivet_external_sensor_g64","rivet_ref_reactor_large","rivet_ref_crossflow_large",
-                "rivet_ref_dampener_large","hadron_tractor_large","hadron_core_large","hadron_dampener_large",
-                "hadron_gravity_large","hadron_external_sensor_g64","kestrel_hull_plate_large",
-                "kestrel_shield_capacitor_large","kestrel_external_sensor_g64","kestrel_power_deck_large",
-                "kestrel_reactor_block_large").contains(id);
+        return id.startsWith("aster_") || id.startsWith("rivet_") || id.startsWith("vektor_")
+                || id.startsWith("kestrel_") || id.startsWith("hadron_");
     }
 
     private static String replacementBlockId(String id) {

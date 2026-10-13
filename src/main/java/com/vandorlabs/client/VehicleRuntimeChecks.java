@@ -22,6 +22,7 @@ import javax.imageio.ImageIO;
 public final class VehicleRuntimeChecks {
     private static int ticks,vehicleId;
     private static UUID vehicleUUID;
+    private static final BlockPos CARGO_LOCAL=new BlockPos(4,2,3);
     private static final BlockPos ORIGIN=new BlockPos(8,101,8), SEAT=ORIGIN.add(1,2,1);
     private static VehicleStructure expected;
     private static double drivenFrom,lastRenderedX;
@@ -155,11 +156,10 @@ public final class VehicleRuntimeChecks {
             net.minecraft.tileentity.TileEntity tile=w.getTileEntity(at);NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());
             tag.setInteger("facing",EnumFacing.SOUTH.getIndex());tile.readFromNBT(tag);tile.markDirty();
         }
-        BlockShipSystem dampener=(BlockShipSystem)Block.getBlockFromName("vandorlabs:rivet_dampener_large_g64");
-        require(dampener!=null,"registered inertial dampener");BlockPos dampenerPos=ORIGIN.add(0,2,4);
-        IBlockState dampenerState=dampener.getDefaultState().withProperty(BlockShipSystem.FACING,EnumFacing.NORTH);
-        w.setBlockState(dampenerPos,dampenerState,2);dampener.onBlockPlacedBy(w,dampenerPos,dampenerState,p,new ItemStack(dampener));
-        require(dampener.cells(dampenerPos,EnumFacing.NORTH).size()==12,"dampener has a complete twelve-cell footprint");
+        for(int z=4;z<=5;z++)w.setBlockState(ORIGIN.add(0,2,z),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        w.setBlockState(ORIGIN.add(3,2,3),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        for(BlockPos cell:BlockPos.getAllInBox(CARGO_LOCAL,CARGO_LOCAL.add(2,2,3)))
+            w.setBlockState(ORIGIN.add(cell),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
         // Doors retain both halves and can be operated after assembly.
         Block ownDoor=null;for(Block b:Block.REGISTRY)if(b instanceof BlockVandorDoor && !(b instanceof BlockLargeProgrammableDoor)){ownDoor=b;break;}
         require(ownDoor!=null,"registered Vandor door");
@@ -196,8 +196,7 @@ public final class VehicleRuntimeChecks {
         VehicleStructure decoded=VehicleStructure.decode(expected.encode());require(decoded.write().equals(expected.write()),"snapshot state/NBT round trip");
         VehicleWorld local=new VehicleWorld(w,decoded);
         require(((TileEntityAnimatedScreenSelector)local.getTileEntity(new BlockPos(0,1,1))).getHousingTexture()==FilesystemTextures.identifier("Example/sample_panel.png"),"filesystem texture identifier");
-        TileEntityShipSystem localDampener=(TileEntityShipSystem)local.getTileEntity(new BlockPos(0,2,4));
-        require(localDampener!=null && localDampener.formed() && localDampener.draws(),"inertial dampener keeps local ownership and draw root");
+        require(local.getBlockState(CARGO_LOCAL).getBlock()==ModBlocks.PROGRAMMABLE_BLOCK,"cargo survives the vehicle snapshot");
         require(!local.getBlockState(new BlockPos(0,2,2)).getValue(BlockPropulsionLight.POWERED) && ((TileEntityRedstoneLight)local.getTileEntity(new BlockPos(0,2,2))).getBrightness()==0,"previously powered thruster starts dark on assembly");
         TileEntityRampController localRamp=(TileEntityRampController)local.getTileEntity(rampPos.subtract(ORIGIN));
         require(localRamp!=null && !localRamp.attached() && !localRamp.isOpen(),"retracted ramp controller travels without external reservations");
@@ -283,9 +282,13 @@ public final class VehicleRuntimeChecks {
         NBTTagCompound saved=new NBTTagCompound();entity.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(w);loaded.readFromNBT(saved);
         require(loaded.structure.write().equals(expected.write()) && loaded.stopped(),"entity save/reload retains textures and stops inputs");
         entity.rotationYaw=0;entity.steering=0;entity.setPosition(entity.posX,entity.posY,ORIGIN.getZ());
-        for(BlockPos at:BlockPos.getAllInBox(new BlockPos(32,101,0),new BlockPos(32,106,32)))w.setBlockState(at,Blocks.STONE.getDefaultState(),2);
+        // Keep the obstacle outside the complete fixture, including large machinery.
+        int wallX=(int)Math.ceil(entity.getEntityBoundingBox().maxX)+8;
+        double approachStart=entity.posX;
+        for(BlockPos at:BlockPos.getAllInBox(new BlockPos(wallX,101,0),new BlockPos(wallX,106,32)))w.setBlockState(at,Blocks.STONE.getDefaultState(),2);
         for(int n=75;n<175;n++){entity.input(p,n,(byte)1,(byte)0,false);entity.onUpdate();entity.updatePassenger(p);}
-        require(entity.getEntityBoundingBox().maxX<=32.000001 && entity.posX>25,"compound wall collision without tunnelling");
+        require(entity.getEntityBoundingBox().maxX<=wallX+.000001 && entity.getEntityBoundingBox().maxX>=wallX-.1 && entity.posX>approachStart+1,
+                "compound wall collision without tunnelling: wall="+wallX+", leading="+entity.getEntityBoundingBox().maxX+", from="+approachStart+", x="+entity.posX);
         for(int n=175;n<190;n++){entity.input(p,n,(byte)0,(byte)0,true);entity.onUpdate();}
         p.dismountRidingEntity();p.setPositionAndUpdate(4,101,8);
         BlockPos parked=new BlockPos(ORIGIN.getX()+10,ORIGIN.getY(),ORIGIN.getZ());
@@ -325,8 +328,7 @@ public final class VehicleRuntimeChecks {
                 require(entity!=null && entity.structure!=null,"client tracking snapshot received (id="+vehicleId+", entity="+entity+", ticks="+(entity==null?-1:entity.ticksExisted)+")");
                 require(entity.structure.write().equals(expected.write()),"client exact snapshot");
                 require(mc.getRenderManager().getEntityRenderObject(entity).getClass()==RenderGroundVehicle.class,"vehicle uses registered craft renderer, not fallback rectangle");
-                TileEntityShipSystem dampener=(TileEntityShipSystem)entity.view.getTileEntity(new BlockPos(0,2,4));
-                require(dampener!=null && dampener.formed() && dampener.draws() && net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.getRenderer(dampener).getClass()==TEShipSystem.class,"client inertial dampener uses complete machinery renderer");
+                require(entity.view.getBlockState(CARGO_LOCAL).getBlock()==ModBlocks.PROGRAMMABLE_BLOCK,"client cargo snapshot received");
                 IBlockState s=entity.view.getBlockState(new BlockPos(1,1,1));
                 net.minecraft.client.renderer.block.model.IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(s);
                 s=s.getBlock().getActualState(s,entity.view,new BlockPos(1,1,1));s=s.getBlock().getExtendedState(s,entity.view,new BlockPos(1,1,1));

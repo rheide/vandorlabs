@@ -365,6 +365,15 @@ processResources {
     inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py')
     inputs.file('src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java')
     inputs.property('pythonExecutable', pythonExecutable)
+    doFirst {
+        // Removed source assets must not survive in an incremental JAR build.
+        def stagedResources = file("$buildDir/resources/main").canonicalFile
+        if (destinationDir.canonicalFile != stagedResources
+                || !stagedResources.toPath().startsWith(buildDir.canonicalFile.toPath())) {
+            throw new GradleException('Unexpected resource staging directory')
+        }
+        delete stagedResources
+    }
     doLast {
         def target = file("$buildDir/resources/main/assets/vandorlabs/textures")
         def replacement = file('texture-packs/default/assets/vandorlabs/textures')
@@ -408,6 +417,8 @@ task installDefaultTextures {
 }
 
 jar.dependsOn installDefaultTextures
+// Empty directories left by removed asset families are not runtime resources.
+jar.includeEmptyDirs = false
 
 task testPackagedTexturePruning(type: Exec) {
     dependsOn jar

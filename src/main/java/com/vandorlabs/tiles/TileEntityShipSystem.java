@@ -25,8 +25,7 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     public boolean removing;
     public boolean active;
     public BlockPos consoleOwner;
-    public int consoleWidth = 1, consoleIndex, consoleDepth = 1, consoleRow;
-    public boolean consoleOpposed;
+    public int consoleWidth = 1, consoleIndex;
     private boolean firstTick = true;
     private boolean animated;
     public boolean isAnimated() { return animated; }
@@ -46,18 +45,16 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         if (base == null || base.block() != block() || !base.isAnchor() || base.facing() != facing() || base.mount != mount) return null;
         if (!block().isConsole() || base.consoleOwner == null) return base;
         TileEntityShipSystem owner = at(world, base.consoleOwner);
-        return owner != null && owner.isAnchor() && owner.block() == block() && (owner.facing() == facing() || base.consoleOpposed && owner.facing()==facing().getOpposite()) && owner.mount == mount
-                && owner.consoleIndex == 0 && owner.consoleRow == 0 && owner.consoleWidth == base.consoleWidth
-                && owner.consoleDepth == base.consoleDepth && owner.consoleOpposed == base.consoleOpposed
-                && owner.frame().cell(owner.getPos(),base.consoleIndex,0,base.consoleRow).equals(base.getPos()) ? owner : null;
+        return owner != null && owner.isAnchor() && owner.block() == block() && owner.facing() == facing() && owner.mount == mount
+                && owner.consoleIndex == 0 && owner.consoleWidth == base.consoleWidth
+                && owner.frame().cell(owner.getPos(),base.consoleIndex,0,0).equals(base.getPos()) ? owner : null;
     }
     private java.util.List<TileEntityShipSystem> configurationMembers() {
         java.util.List<TileEntityShipSystem> result = new java.util.ArrayList<>();
         if (configurationOwner() != this) return result;
         int width = block().isConsole() ? consoleWidth : 1;
-        int depth = block().isConsole() ? consoleDepth : 1;
-        for (int row = 0; row < depth; row++) for (int i = 0; i < width; i++) {
-            TileEntityShipSystem member = at(world, frame().cell(pos,i,0,row));
+        for (int i = 0; i < width; i++) {
+            TileEntityShipSystem member = at(world, frame().cell(pos,i,0,0));
             if (member == null || member.configurationOwner() != this || !member.formed()) return java.util.Collections.emptyList();
             result.add(member);
         }
@@ -137,16 +134,14 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         return world != null && world.getBlockState(pos).getBlock() instanceof BlockShipSystem ? (BlockShipSystem)world.getBlockState(pos).getBlock() : null;
     }
     private BlockShipSystem cachedModelBlock;
-    private int cachedModelWidth,cachedModelDepth;
+    private int cachedModelWidth;
     private boolean cachedModelActive;
-    private boolean cachedModelOpposed;
     private String cachedModel;
     public String model() {
         BlockShipSystem b=block();boolean on=visuallyActive();
-        if(b==cachedModelBlock && cachedModel!=null && cachedModelWidth==consoleWidth && cachedModelDepth==consoleDepth && cachedModelActive==on && cachedModelOpposed==consoleOpposed)return cachedModel;
-        cachedModelOpposed=consoleOpposed;
-        cachedModelBlock=b;cachedModelWidth=consoleWidth;cachedModelDepth=consoleDepth;cachedModelActive=on;
-        if(b.isConsole())cachedModel=b.kind+"_"+consoleWidth+(consoleOpposed?"_opposed":consoleDepth>1?"_depth_"+consoleDepth:"")+(on?"_on":"_off");
+        if(b==cachedModelBlock && cachedModel!=null && cachedModelWidth==consoleWidth && cachedModelActive==on)return cachedModel;
+        cachedModelBlock=b;cachedModelWidth=consoleWidth;cachedModelActive=on;
+        if(b.isConsole())cachedModel=b.kind+"_"+consoleWidth+(on?"_on":"_off");
         else cachedModel=b.hasPowerStates()?b.kind+(on?"_on":"_off"):b.itemModel();
         return cachedModel;
     }
@@ -157,21 +152,11 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
     }
     public EnumFacing facing() { return world.getBlockState(pos).getValue(BlockShipSystem.FACING); }
     public boolean isAnchor() { return anchor == null || anchor.equals(pos); }
-    public boolean draws() { return isAnchor() && (block() == null || !block().isConsole() || consoleIndex == 0 && consoleRow == 0); }
+    public boolean draws() { return isAnchor() && (block() == null || !block().isConsole() || consoleIndex == 0); }
     public void sync() { markDirty(); IBlockState s = world.getBlockState(pos); world.notifyBlockUpdate(pos, s, s, 2); }
     public void applyConsole(BlockPos owner, int index, int width, boolean powered) {
-        applyConsole(owner, index, 0, width, 1, powered);
-    }
-    public void applyConsole(BlockPos owner, int index, int row, int width, int depth, boolean powered) {
-        applyConsole(owner,index,row,width,depth,powered,false);
-    }
-    public void applyConsole(BlockPos owner, int index, int row, int width, int depth, boolean powered,boolean opposed) {
-        if (owner.equals(consoleOwner) && index == consoleIndex && row == consoleRow
-                && width == consoleWidth && depth == consoleDepth && active == powered && consoleOpposed==opposed) return;
-        consoleOpposed=opposed;
-        consoleOwner = owner; consoleIndex = index; consoleRow = row;
-        consoleWidth = width; consoleDepth = depth; active = powered;
-        sync();
+        if(owner.equals(consoleOwner) && index==consoleIndex && width==consoleWidth && active==powered)return;
+        consoleOwner=owner;consoleIndex=index;consoleWidth=width;active=powered;sync();
     }
     public void refreshAppearance() {
         if (world.isRemote || block() == null || !isAnchor()) return;
@@ -232,9 +217,6 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         if (consoleOwner != null) n.setLong("ConsoleOwnerOffset", consoleOwner.subtract(pos).toLong());
         n.setInteger("ConsoleWidth", consoleWidth);
         n.setInteger("ConsoleIndex", consoleIndex);
-        n.setInteger("ConsoleDepth", consoleDepth);
-        n.setInteger("ConsoleRow", consoleRow);
-        n.setBoolean("ConsoleOpposed",consoleOpposed);
         n.setBoolean("Active", active);
         n.setBoolean("Animated", animated);
         n.setInteger("MountFace",mount.getIndex());
@@ -249,9 +231,6 @@ public final class TileEntityShipSystem extends TileEntity implements ITickable,
         consoleOwner = n.hasKey("ConsoleOwnerOffset") ? pos.add(BlockPos.fromLong(n.getLong("ConsoleOwnerOffset"))) : null;
         consoleWidth = Math.max(1, Math.min(3, n.getInteger("ConsoleWidth")));
         consoleIndex = Math.max(0, Math.min(consoleWidth - 1, n.getInteger("ConsoleIndex")));
-        consoleDepth = block() != null && block().kind.equals("hadron_console") ? 1 : Math.max(1, Math.min(3, n.getInteger("ConsoleDepth")));
-        consoleRow = Math.max(0, Math.min(consoleDepth - 1, n.getInteger("ConsoleRow")));
-        consoleOpposed=n.getBoolean("ConsoleOpposed");
         active = n.getBoolean("Active");
         animated = n.getBoolean("Animated");
         mount=n.hasKey("MountFace")?EnumFacing.getFront(Math.max(0,Math.min(5,n.getInteger("MountFace")))):EnumFacing.UP;

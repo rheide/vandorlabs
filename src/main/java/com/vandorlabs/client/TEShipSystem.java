@@ -140,7 +140,7 @@ public final class TEShipSystem extends TileEntitySpecialRenderer<TileEntityShip
                     .tex(
                             sprite.getInterpolatedU(f.source.uv[index][0] * 16),
                             sprite.getInterpolatedV((1 - f.source.uv[index][1]) * 16))
-                    .color(f.source.material.startsWith("rivet/") && f.source.baseMaterial.equals("ivory") ? .49F : 1F, f.source.material.startsWith("rivet/") && f.source.baseMaterial.equals("ivory") ? .62F : 1F, f.source.material.startsWith("rivet/") && f.source.baseMaterial.equals("ivory") ? .65F : 1F, 1F)
+                    .color(1F, 1F, 1F, 1F)
                     .normal((float) normal.x, (float) normal.y, (float) normal.z)
                     .endVertex();
         }

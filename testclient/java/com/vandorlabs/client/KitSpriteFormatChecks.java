@@ -29,11 +29,21 @@ public final class KitSpriteFormatChecks {
 
         Set<String> textures = new LinkedHashSet<>();
         try (ZipFile jar = new ZipFile(args[0])) {
-            String[] catalogs = {"canopy_meshes.json", "ship_system_meshes.json", "vh_system_meshes.json", "rivet_system_meshes.json", "external_sensor_meshes.json", "rivet_reference_meshes.json"};
+            String[] catalogs = {"canopy_meshes.json"};
+            for(java.util.Enumeration<? extends ZipEntry> entries=jar.entries();entries.hasMoreElements();) {
+                String name=entries.nextElement().getName();
+                if(name.matches(".*(?:^|/)(?:rivet_|vektor_|kestrel_|hadron_).*"))throw new AssertionError("Removed machinery asset packaged: "+name);
+            }
             for (String catalog : catalogs) {
                 String directory = catalog.equals("canopy_meshes.json") ? "canopy/" : "ship_systems/";
                 try (Reader reader = new InputStreamReader(jar.getInputStream(jar.getEntry("assets/vandorlabs/data/" + catalog)), "UTF-8")) {
-                    for (JsonElement model : new JsonParser().parse(reader).getAsJsonArray())
+                    JsonArray models=new JsonParser().parse(reader).getAsJsonArray();
+                    if(catalog.equals("vh_system_meshes.json")){
+                        if(models.size()!=8)throw new AssertionError("Retained Hadron mesh variants differ");
+                        for(JsonElement model:models)if(!model.getAsJsonObject().get("id").getAsString().startsWith("hadron_"))
+                            throw new AssertionError("Removed machinery model packaged");
+                    }
+                    for (JsonElement model : models)
                         for (JsonElement face : model.getAsJsonObject().getAsJsonArray("faces"))
                             textures.add("assets/vandorlabs/textures/blocks/" + directory
                                     + face.getAsJsonObject().get("material").getAsString() + ".png");

@@ -29,7 +29,7 @@ Edit the generated file rather than replacing it with this partial example. The 
 | `propulsion` | Thrusters, drives and hover propulsion |
 | `canopies` | Canopies and modular visors |
 | `redstone_controls` | Buttons, switches, levers, throttles and Programmable Trigger Block |
-| `machinery` | Rivet Dynamics, Hadron, Kestrel and Vektor machinery |
+| `machinery` | Reserved category; imported machinery families have been removed |
 | `decoration` | Remaining decorative blocks, including the industrial table |
 
 Each block belongs to one category. Diagonal variants belong to `diagonals` regardless of their material or function. Items such as the Configurizer, Duplifier, armor and crafting ingots are unaffected.
