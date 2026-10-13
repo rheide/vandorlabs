@@ -1,9 +1,9 @@
 # Unified materials and Custom textures
 
-Programmable storage, blocks, slabs, stairs, walls, trapdoors, doors, lights and static screen/control surfaces share a texture picker. Categories expand and collapse, and each texture has a larger thumbnail with its original aspect ratio. Categories and texture names are sorted alphabetically, and the current category heading stays visible while scrolling within it. The category containing the selected material opens automatically. Options are grouped and sorted once per dialog; expanding a category reuses those groups. Only visible rows draw thumbnails, using the already-loaded Minecraft atlas. PNGs are not loaded on demand, so large catalogs still increase startup time and atlas memory use.
+Canopies, visors, programmable storage, blocks, slabs, stairs, walls, trapdoors, doors, lights and static screen/control surfaces share a texture picker. Categories expand and collapse, and each texture has a larger thumbnail with its original aspect ratio. Categories and texture names are sorted alphabetically, and the current category heading stays visible while scrolling within it. The category containing the selected material opens automatically. Options are grouped and sorted once per dialog; expanding a category reuses those groups. Only visible rows draw thumbnails, using the already-loaded Minecraft atlas. PNGs are not loaded on demand, so large catalogs still increase startup time and atlas memory use.
 
 Built-in categories include Materials, Panels, Tech, Hull, Industrial, Lights, Doors,
-Screens, Trapdoors, Windows and Storage. Dark Hull 1–12 replace the old
+Screens, Trapdoors, Windows, Storage and Glass. Dark Hull 1–12 replace the old
 coordinate labels; moved texture-pack choices no longer carry T1/T2 prefixes.
 The sixteen retired built-in finishes are omitted from both the picker and
 runtime JAR/atlas. Their saved identifiers remain valid and render with Dark
@@ -25,6 +25,8 @@ Shift-right-click in Creative mode, or open the block's menu with the Configuriz
 For screens, inputs and consoles, open **Surface textures** to choose a static front surface. Consoles also have a second surface choice. **Use screen / animation** restores the original configured screen or control panel. The native screen/control lists now use the same categorized thumbnail presentation, containing their original options. They still select the original animated screen or control family: Off/Static/Animated, speed and frame controls retain their behavior. Selecting a native option restores that surface from a static override. Housing lists use the shared material catalog.
 
 Door presets retain the existing frame, motion and hardware options. Selecting a different material replaces the door's front/back leaf artwork while keeping the native edge textures and hinge hardware. **Face texture: Fit/Tile** fits a block image once over the complete leaf or repeats it at one-block scale; door artwork retains its upper/lower mapping. The layout survives saving, configured items and Duplifier copying. Ordinary programmable blocks use the lower square half of built-in door artwork, avoiding a stretched two-high image. Trapdoors offer **Texture: Tile / mirror** and **Fit**. Tile repeats one-block-wide, two-block-long door artwork, mirroring alternating columns; Fit maps one image across the complete group. Single-row door surfaces use the lower half. Custom `BlockDoor` artwork retains its upper/lower atlas sprites. The standard programmable door’s metal side artwork covers the four thin leaf edges in either layout.
+
+Canopy and both front-window sizes put all settings beside the same large categorized list, without settings pages or separate glass/material lists. **Glass** combines the three original shades and sixteen dye colors. Selecting a normal material replaces the glazing; **Texture layout: Fit/Tile** shows complete artwork on each panel or repeats it at one-block surface scale. See [canopy settings and examples](canopies.md).
 
 ## Custom block and door artwork
 

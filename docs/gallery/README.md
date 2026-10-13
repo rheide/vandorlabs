@@ -21,6 +21,8 @@ at full size to inspect its texture and model.
 
 ## Blocks and systems
 
+- [Canopies, Front Canopy Glass and Large Front Canopy Glass](../canopies.md)
+- [Pilot Seat and Taxi Mode](../pilot-seat-taxi.md)
 - [Programmable displays and consoles](programmable.md)
 - [Programmable Storage](../programmable-storage.md)
 - [Programmable Door](doors.md)

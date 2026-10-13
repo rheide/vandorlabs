@@ -10,7 +10,7 @@ Seat height offers **Base**, **+2 px**, **+4 px** and **+6 px**. Base is the def
 
 A Pilot Seat fits one block directly below Canopy Glass or an upright Canopy, including joined widths of one, two and three. Place either block first. The open-bottom canopy shares the backrest space without replacing the glass, and both blocks remain part of the vehicle. Removing the canopy preserves the seat and restores its ordinary backrest reservation. Each armrest hides independently when a full solid block is directly beside the seat, including in the captured vehicle view.
 
-Canopy and optionally openable Large Front Canopy Glass remain operable aboard the craft. Click their actual surface with an empty hand to open, close or reverse the motion. Their selected sliding/hinged motion, front profile, mount, large-window hinge and material settings survive assembly and parking.
+Canopy and optionally openable Front Canopy Glass / Large Front Canopy Glass remain operable aboard the craft. Click their actual surface with an empty hand to open, close or reverse the motion. Their selected sliding/hinged motion, front profile, mount, large-window hinge and material settings survive assembly and parking.
 
 Parking accepts headings within **12 degrees** of a multiple of 90 degrees. Successful parking aligns the restored blocks to that cardinal heading and checks the complete placement area before writing any blocks. At an unsupported angle, leaving Taxi Mode still dismounts the player and shows a warning that the craft was not converted back. The vehicle and its contents remain intact. Reboard to adjust its heading, or use the Configurizer when aligned. Obstructed parking also preserves the craft and retries automatically after the obstruction is removed.
 

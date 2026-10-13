@@ -14,24 +14,26 @@ See [Pilot Seat and Taxi Mode](../pilot-seat-taxi.md) and the [ground vehicle gu
 
 ## A cockpit that opens your way
 
-**Canopy** combines sliding and rear-hinged opening in one configurable block. Choose a vertical **Flat**, short **Angled** or **Long Angled** front, then place matching neighbors for a single, double or triple shell. Ceiling mounts invert the complete mechanism. Sliding lifts the shell one pixel to clear the roof behind it; physical redstone and channel lists can operate either motion.
+**Canopy** combines sliding and rear-hinged opening in one configurable block. Choose a vertical **Flat**, short **Angled** or **Long Angled** front, then place matching neighbors for a single, double or triple shell. Ceiling mounts invert the complete mechanism. Sliding can move forward or backward, lifting the shell one pixel to clear surrounding bodywork; physical redstone and channel lists can operate either motion.
 
 | Single / Flat | Double / Angled | Triple / Long Angled |
 | --- | --- | --- |
 | ![Single sliding Canopy](../images/gallery/canopies/slide-1.gif) | ![Double sliding Canopy](../images/gallery/canopies/slide-2.gif) | ![Triple sliding Canopy](../images/gallery/canopies/slide-3.gif) |
 | ![Single rear-hinged Canopy](../images/gallery/canopies/hinge-1.gif) | ![Double rear-hinged Canopy](../images/gallery/canopies/hinge-2.gif) | ![Triple rear-hinged Canopy](../images/gallery/canopies/hinge-3.gif) |
 
-**Large Front Canopy Glass** comes with 3 × 3 or 5 × 5 outer frames. Keep the broad back exactly where you click, adjust the nose from flat to five blocks deep, and choose an inner frame from 10–100% size. Mount it against a wall, floor or ceiling. Enable opening and select a left, right, top or bottom hinge, with optional redstone/channel control.
+**Front Canopy Glass** has a 3 × 3 outer frame; **Large Front Canopy Glass** expands it to 5 × 5. Keep the broad back exactly where you click, adjust the nose from flat to five blocks deep, and choose an inner frame from 10–100% size. Mount it against a wall, floor or ceiling. Enable opening and select a left, right, top or bottom hinge, with optional redstone/channel control.
 
 ![Five-wide front canopy opening on its left hinge](../images/gallery/canopies/large-left.gif)
 
-Only the shell reserves space. Build in the empty cabin by aiming through the outside glazing with a block in hand. The smaller live dialog leaves the world visible while changing depth, frame size and finish. Exact saved ownership and stale-follower cleanup keep removal and resizing from leaving invisible reservations behind.
+Only the shell reserves space. Build in the empty cabin by aiming through the outside glazing with a block in hand. The live dialog puts every setting beside a large texture list, with glass shades and ordinary materials in one picker. Exact saved ownership and stale-follower cleanup keep removal and resizing from leaving invisible reservations behind.
 
 Regular Canopy Glass connects to the rear of opening Canopies. Both angled fixed noses mount against walls and upside down beneath ceilings. Visors retain their thin framed outlines and centered placement. See the [complete canopy guide](../canopies.md).
 
 ## Glass or hull: the same shapes, more finishes
 
-Canopies and visors offer clear glass, soft Vandor shades, all sixteen Minecraft colors and three tint strengths. Their **Materials** picker also accepts normal Programmable Block textures, including trapdoor artwork, so the same geometry can become an opaque hull shell.
+Canopies and visors offer clear glass, soft Vandor shades, all sixteen Minecraft colors and three tint strengths. Their shared texture picker also accepts normal Programmable Block textures, including trapdoor artwork, so the same geometry can become an opaque hull shell. Choose **Fit** for complete panel artwork or **Tile** for repeats at block scale.
+
+![Canopy settings with forward sliding and a unified texture list](../images/gallery/canopies/settings.png)
 
 The **Duplifier** transfers glass shade and intensity between canopy pieces, visors, regular programmable glass and diagonal glass walls. Programmable Diagonal Glass adds half-width/full-height, full-width/full-height and full-width/half-height shapes, with optional frames and the same color system. Regular and diagonal wall/glass junctions have reciprocal seams and improved corner and intersection geometry.
 

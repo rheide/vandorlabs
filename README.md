@@ -13,7 +13,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
-**2.0:** Build a ground craft and drive it with Taxi Mode. Configure one-, two- or three-wide sliding/hinged Canopies, six-direction large front windows, shared glass/material finishes and redstone escalators. See the [2.0 features and live canopy animations](docs/gallery/version-2.0.md), [canopy guide](docs/canopies.md) and [Pilot Seat settings](docs/pilot-seat-taxi.md).
+**[Explore Vandor Labs 2.0: features and live animations](docs/gallery/version-2.0.md).** Drive a ground craft with Taxi Mode; build single, double or triple Canopies with forward/backward sliding or rear hinges; mount adjustable Front Canopy Glass (3 × 3) and Large Front Canopy Glass (5 × 5) on any face. One-screen dialogs combine Glass and normal materials in a large texture list, with Fit/Tile layout and redstone/channel controls. See the [canopy guide](docs/canopies.md) and [Pilot Seat settings](docs/pilot-seat-taxi.md).
 
 Programmable Ramp also offers redstone-controlled **Escalator Up/Down** modes: the stairs stay extended, carry riders, and sleep when players leave the area. See the [settings and live animations](docs/gallery/ramp-controller.md#escalators).
 
@@ -203,7 +203,7 @@ limits and the selected state.
 
 ## Building
 
-Rivet Dynamics, Vektor, Kestrel and Hadron machinery blocks, items and recipes have been removed. Their old registry IDs are ignored when loading existing worlds. Canopies and the other programmable block families remain available.
+Aster, Rivet Dynamics, Vektor, Kestrel and Hadron machinery and their unused runtime code have been removed. Canopies and the other programmable block families remain available.
 
 Requirements: a Java 8 JDK, Python 3 with Pillow, and the included Gradle wrapper (Gradle 4.9 +
 ForgeGradle 3).
@@ -326,10 +326,7 @@ The **Pilot Seat** is a full-size chair with a reserved upper cell for its backr
 Its model is 1.75 blocks tall and extends 1/8 block beside and behind the anchor;
 leave clearance around the chair. Right-click to sit and press
 the sneak key to dismount. Craft it with three red wool and three iron ingots.
-Use the Configurizer on the seat to preview and assemble its connected craft.
-Right-click the assembled craft to sit; W/S drives, A/D steers and Space brakes.
-Stop and use the Configurizer on any craft surface, or while seated, to park it as blocks. See the
-[ground vehicle guide](docs/ground-vehicles-analysis.md) for compatibility and limits.
+Taxi Mode is enabled by default: sit down to assemble the connected craft, then use W/S to drive, A/D to steer and Space to brake. Dismount to park it as blocks; a blocked parking area preserves the vehicle for recovery. Disable Taxi Mode to use manual Configurizer conversion with an assembly/parking preview. Seat settings include cushion height and redstone polarity; armrests hide beside solid walls. See [Pilot Seat and Taxi Mode](docs/pilot-seat-taxi.md) and the [ground vehicle guide](docs/ground-vehicles-analysis.md) for compatibility and limits.
 
 ## Testing in game
 
