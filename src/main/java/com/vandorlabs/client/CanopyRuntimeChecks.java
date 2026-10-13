@@ -369,6 +369,7 @@ public final class CanopyRuntimeChecks {
                                 player.rotationYaw = yaw;
                             }
                             CanopyAssemblyRuntimeChecks.check(w);
+                            CanopyReleaseRuntimeChecks.run((EntityPlayerMP)w.playerEntities.get(0));
                             LargeCanopyRuntimeChecks.run(mc.getIntegratedServer().getPlayerList().getPlayers().get(0));
                             clear(w);
                             place(w, block("opening_slide_1x2"), TEST, EnumFacing.NORTH);

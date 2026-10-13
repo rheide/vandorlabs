@@ -507,7 +507,7 @@ tile.vandorlabs.large_power_lever.name=Power Lever
 
 tile.angled_front_1x1.name=Angled Front Canopy Glass
 tile.angled_front_1x2.name=Long Angled Front Canopy Glass
-tile.opening_slide_1x2.name=Sliding Canopy
+tile.opening_slide_1x2.name=Canopy
 tile.opening_hinge_1x2.name=Rear-Hinged Canopy
 tile.opening_slide_2x2.name=Wide Sliding Canopy
 tile.opening_hinge_2x2.name=Wide Rear-Hinged Canopy

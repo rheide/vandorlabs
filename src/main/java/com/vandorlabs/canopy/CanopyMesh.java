@@ -19,6 +19,7 @@ public final class CanopyMesh {
         public double[][] uv;
         public String material, baseMaterial, group;
         public boolean doubleSided;
+        public boolean glazing;
     }
 
     static {
@@ -94,7 +95,7 @@ public final class CanopyMesh {
         }
         if (!moving) return v;
         double p = progress * progress * (3 - 2 * progress);
-        if (kind.contains("slide")) return v.addVector(0, 0, 2 * p);
+        if (kind.contains("slide")) return v.addVector(0, Math.min(1,p*8)/16D, 2 * p);
         double a = Math.toRadians(105 * p), y = v.y - 1, z = v.z - 2;
         return new Vec3d(
                 v.x, 1 + y * Math.cos(a) - z * Math.sin(a), 2 + y * Math.sin(a) + z * Math.cos(a));
@@ -159,6 +160,27 @@ public final class CanopyMesh {
                 subdivide(boxes, a, b, c, 3, pos);
             }
         return boxes;
+    }
+
+    /** Glazing and two-pixel edge rails provide hollow collision without bevel micro-boxes. */
+    public static List<AxisAlignedBB> windowCollision(List<Face> faces,EnumFacing facing,BlockPos pos) {
+        List<AxisAlignedBB> boxes=new ArrayList<>();
+        Set<AxisAlignedBB> rails=new HashSet<>();
+        for(Face face:faces)if(face.glazing || face.baseMaterial.equals("glass")) {
+            Vec3d[] vertices=new Vec3d[face.vertices.length];
+            for(int i=0;i<vertices.length;i++)vertices[i]=rotate(face.vertices[i],facing);
+            for(int i=1;i<vertices.length-1;i++)subdivide(boxes,vertices[0],vertices[i],vertices[i+1],3,pos);
+            for(int i=0;i<vertices.length;i++) {
+                Vec3d a=vertices[i],b=vertices[(i+1)%vertices.length];
+                int steps=Math.max(1,(int)Math.ceil(a.distanceTo(b)*8));
+                for(int step=0;step<steps;step++) {
+                    Vec3d from=a.add(b.subtract(a).scale(step/(double)steps));
+                    Vec3d to=a.add(b.subtract(a).scale((step+1D)/steps));
+                    rails.add(new AxisAlignedBB(from,to).grow(1D/16+.002).offset(pos));
+                }
+            }
+        }
+        boxes.addAll(rails);return boxes;
     }
 
     /** Exact face picking avoids treating subdivided collision boxes as selectable pixels. */

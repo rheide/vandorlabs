@@ -44,9 +44,19 @@ public final class LargeCanopyRuntimeChecks {
     }
     public static void icons(Minecraft mc){
         for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockCanopy && LargeCanopySettings.supports(((BlockCanopy)block).kind))for(int depth:new int[]{0,16,80})for(int scale:new int[]{10,71,100})for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){
-            LargeCanopySettings settings=new LargeCanopySettings();settings.depth=depth;settings.scale=scale;settings.shade=shade;settings.tint=tint;ItemStack stack=new ItemStack(block);NBTTagCompound tag=new NBTTagCompound();settings.write(tag);stack.setTagCompound(tag);IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);ItemTransformVec3f gui=model.getItemCameraTransforms().gui;
-            for(BakedQuad quad:model.getQuads(null,null,0)){int[] data=quad.getVertexData();int stride=data.length/4;for(int i=0;i<4;i++){Vec3d point=ControlItemPadding.project(new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2])),gui).addVector(gui.translation.x,gui.translation.y,0);require(Math.abs(point.x)<.49 && Math.abs(point.y)<.49,"icon lacks padding "+settings.key());}}
+            LargeCanopySettings settings=new LargeCanopySettings();settings.depth=depth;settings.scale=scale;settings.shade=shade;settings.tint=tint;checkIcon(mc,block,settings);
         }
-        System.out.println("[vandorlabs][reprolab] large-canopy-icons PASS variants=1026 projected-padding");
+        net.minecraft.block.Block canopy=net.minecraft.block.Block.getBlockFromName("vandorlabs:opening_slide_1x2");
+        for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++){
+            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){
+                LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.shade=shade;settings.tint=tint;checkIcon(mc,canopy,settings);
+            }
+            LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.material=9;checkIcon(mc,canopy,settings);
+        }
+        System.out.println("[vandorlabs][reprolab] large-canopy-icons PASS large-variants=1026 opening-variants=348 projected-padding");
+    }
+    private static void checkIcon(Minecraft mc,net.minecraft.block.Block block,LargeCanopySettings settings){
+        ItemStack stack=new ItemStack(block);NBTTagCompound tag=new NBTTagCompound();settings.write(tag);stack.setTagCompound(tag);IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);ItemTransformVec3f gui=model.getItemCameraTransforms().gui;
+        for(BakedQuad quad:model.getQuads(null,null,0)){int[] data=quad.getVertexData();int stride=data.length/4;for(int i=0;i<4;i++){Vec3d point=ControlItemPadding.project(new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2])),gui).addVector(gui.translation.x,gui.translation.y,0);require(Math.abs(point.x)<.49 && Math.abs(point.y)<.49,"icon lacks padding "+settings.key());}}
     }
 }

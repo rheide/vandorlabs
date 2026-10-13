@@ -24,7 +24,7 @@ import java.util.*;
 
 /** Real UI/network trips plus immediate placement audits before restored machines tick. */
 public final class VehicleTaxiRuntimeChecks {
-    private static int ticks,phase,placements,dialogWait;
+    private static int ticks,phase,placements,dialogWait,parkingWait;
     private static BlockPos origin=new BlockPos(240,101,80),seat=origin.up(2);
     private static UUID craftId;
     private static VehicleStructure expected,unrotated;
@@ -219,10 +219,10 @@ public final class VehicleTaxiRuntimeChecks {
             case 13:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"90-degree taxi exit restores blocks");require(placements==1,"immediate complete tile preservation audit");require(!player(mc).isRiding(),"automatic parking does not remount or loop");}).get();blockClick(mc,false);break;
             case 14:mounted(mc);prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{world(mc).setBlockState(blocker,Blocks.STONE.getDefaultState(),2);player(mc).dismountRidingEntity();}).get();break;
             case 15:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"obstructed taxi exit keeps full craft and retry state");require(world(mc).getBlockState(blocker).getBlock()==Blocks.STONE,"parking never overwrites obstacles");NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);require(loaded.taxiReturnPending && loaded.taxiReturnActor.equals(player(mc).getUniqueID()),"pending parking survives entity reload");world(mc).setBlockToAir(blocker);}).get();break;
-            case 16:mc.getIntegratedServer().addScheduledTask(()->require(placements==2 && (craft(mc)==null || craft(mc).isDead),"clearing obstruction automatically restores blocks")).get();blockClick(mc,false);break;
+            case 16:if(!mc.getIntegratedServer().callFromMainThread(()->placements==2 && (craft(mc)==null || craft(mc).isDead)).get()){require(++parkingWait<40,"clearing obstruction automatically restores blocks");phase--;break;}parkingWait=0;blockClick(mc,false);break;
             case 17:mounted(mc);prepareExit(mc,3);cancelOnce=true;mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
             case 18:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(rollbackSeen && e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"cancelled rotated placement rolls back to intact returnable craft");require(!VehicleTransfer.pending(world(mc)),"rollback retires recovery journal");rollbackSeen=false;world(mc).setBlockToAir(blocker);}).get();break;
-            case 19:mc.getIntegratedServer().addScheduledTask(()->require(placements==3 && (craft(mc)==null || craft(mc).isDead),"taxi retries successfully after protection cancellation rollback")).get();blockClick(mc,false);break;
+            case 19:if(!mc.getIntegratedServer().callFromMainThread(()->placements==3 && (craft(mc)==null || craft(mc).isDead)).get()){require(++parkingWait<40,"taxi retries successfully after protection cancellation rollback");phase--;break;}parkingWait=0;blockClick(mc,false);break;
             case 20:mounted(mc);mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle e=craft(mc);VehicleStructure before=e.structure;
                 unrelatedSeat=before.seat;world(mc).setBlockState(unrelatedSeat,ModBlocks.PILOT_SEAT.getDefaultState(),2);

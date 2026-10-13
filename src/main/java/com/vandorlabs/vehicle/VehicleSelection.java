@@ -33,22 +33,30 @@ public final class VehicleSelection {
         if (structure == null || view == null || !finite(start) || !finite(end)
                 || !Double.isFinite(limitSq) || limitSq < 0) return null;
         Hit nearest = null;
+        java.util.Set<BlockPos> canopies=new java.util.HashSet<>();
         for (VehicleStructure.Cell cell : structure.cells) {
+            VehicleStructure.Cell selected=cell;
             IBlockState state = view.getBlockState(cell.pos);
+            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy){
+                com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(view,cell.pos);
+                if(tile==null)continue;tile=tile.owner();
+                if(!tile.draws() || !canopies.add(tile.getPos()))continue;
+                selected=structure.at(tile.getPos());if(selected==null)continue;state=view.getBlockState(selected.pos);
+            }
             RayTraceResult hit;
             try {
-                hit = state.collisionRayTrace(view, cell.pos, start, end);
+                hit = state.collisionRayTrace(view, selected.pos, start, end);
             } catch (RuntimeException | LinkageError error) {
                 VehicleCompatibility.warn(state.getBlock(), "selection", error);
                 // Unknown blocks with unavailable selection callbacks retain bounded cell targeting.
-                hit = new AxisAlignedBB(cell.pos).calculateIntercept(start, end);
-                if (hit != null) hit = new RayTraceResult(hit.hitVec, hit.sideHit, cell.pos);
+                hit = new AxisAlignedBB(selected.pos).calculateIntercept(start, end);
+                if (hit != null) hit = new RayTraceResult(hit.hitVec, hit.sideHit, selected.pos);
             }
             if (hit == null || !finite(hit.hitVec)) continue;
             double distance = start.squareDistanceTo(hit.hitVec);
             // Terrain at the same distance wins, preventing clicks through a touching wall.
             if (distance < limitSq && (nearest == null || distance < nearest.distanceSq))
-                nearest = new Hit(cell, hit, distance);
+                nearest = new Hit(selected, hit, distance);
         }
         return nearest;
     }

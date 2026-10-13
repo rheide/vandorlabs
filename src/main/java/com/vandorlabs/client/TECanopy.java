@@ -40,16 +40,16 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             float alpha) {
         if (tile.block() == null || !tile.draws()) return;
         double progress =
-                tile.block().opening()
+                tile.opening()
                         ? tile.previous + (tile.progress - tile.previous) * partial
                         : 0;
-        List<CanopyMesh.Face> source=tile.faces();
+        List<CanopyMesh.Face> source=tile.faces(progress);
         Prepared prepared=CACHE.get(tile);
         if(prepared==null || prepared.source!=source || prepared.facing!=tile.facing() || prepared.width!=tile.width() || prepared.progress!=progress){
             prepared=new Prepared();prepared.source=source;prepared.facing=tile.facing();prepared.width=tile.width();prepared.progress=progress;
             for(CanopyMesh.Face f:source){
                 DrawFace draw=new DrawFace();draw.source=f;draw.v=new Vec3d[f.vertices.length];Vec3d center=Vec3d.ZERO;
-                for(int i=0;i<draw.v.length;i++){draw.v[i]=CanopyMesh.rotate(CanopyMesh.pose(f.vertices[i],tile.block().kind,prepared.width,progress,tile.block().opening() && f.group.equals("shell")),prepared.facing);center=center.add(draw.v[i]);}
+                for(int i=0;i<draw.v.length;i++){draw.v[i]=CanopyMesh.rotate(f.vertices[i],prepared.facing);center=center.add(draw.v[i]);}
                 draw.center=center.scale(1D/draw.v.length);
                 draw.normal=Vec3d.ZERO;for(int i=1;i<draw.v.length-1;i++){Vec3d normal=draw.v[i].subtract(draw.v[0]).crossProduct(draw.v[i+1].subtract(draw.v[0]));if(normal.lengthSquared()>1e-16){draw.normal=normal.normalize();break;}}
                 (f.baseMaterial.equals("glass")?prepared.glass:prepared.opaque).add(draw);
@@ -92,6 +92,11 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             CanopyMesh.Face f = draw.source;
             net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=SPRITES.get(f.material);
             if(sprite==null){sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(f.material.contains(":")?f.material:"vandorlabs:blocks/canopy/"+f.material);SPRITES.put(f.material,sprite);}
+            if(f.vertices.length==4){
+                for(int i=0;i<4;i++)vertex(b,draw,sprite,i,1);
+                if(f.doubleSided)for(int i=3;i>=0;i--)vertex(b,draw,sprite,i,-1);
+                continue;
+            }
             for(int i=1;i<f.vertices.length-1;i++){
                 vertex(b,draw,sprite,0,1);vertex(b,draw,sprite,i,1);vertex(b,draw,sprite,i+1,1);vertex(b,draw,sprite,i+1,1);
                 if(f.doubleSided){vertex(b,draw,sprite,i+1,-1);vertex(b,draw,sprite,i,-1);vertex(b,draw,sprite,0,-1);vertex(b,draw,sprite,0,-1);}

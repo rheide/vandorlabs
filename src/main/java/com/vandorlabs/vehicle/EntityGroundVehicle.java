@@ -89,7 +89,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(structure==null)return getEntityBoundingBox();
         double x=structure.bounds.maxX/2,z=structure.bounds.maxZ/2,r=Math.hypot(x,z)+2;
         AxisAlignedBB local=new AxisAlignedBB(x-r,-2,z-r,x+r,structure.bounds.maxY+2,z+r);
-        return local.offset(posX+correctionX,posY+correctionY,posZ+correctionZ).union(local.offset(prevPosX,prevPosY,prevPosZ));
+        return local.offset(posX+correctionX,posY+correctionY,posZ+correctionZ).union(local.offset(prevPosX,prevPosY,prevPosZ)).union(getEntityBoundingBox().grow(1));
     }
     public int acknowledgedInput(){return serverInputs.acknowledged();}
     private byte[] encoded;

@@ -14,22 +14,38 @@ import net.minecraft.world.*;
 
 import java.util.*;
 
-public final class TileEntityCanopy extends TileEntity implements ITickable {
+public final class TileEntityCanopy extends TileEntity implements ITickable, com.vandorlabs.redstone.RedstoneChannelMember {
     public BlockPos anchor, pair;
     public boolean centeredPlacement,hollowPlacement;
     public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();
     public boolean configurable(){return block()!=null;}
     public boolean resizable(){return block()!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(block().kind);}
-    public List<CanopyMesh.Face> faces(){
+    private List<CanopyMesh.Face> posedFaces;
+    private String posedKey;
+    private boolean legacyMotionPending;
+    private void resolveLegacyMotion(){if(legacyMotionPending && block()!=null){large.motion=block().kind.contains("hinge")?1:0;legacyMotionPending=false;}}
+    public boolean opening(){return block()!=null && (block().opening() || resizable() && large.openable);}
+    public List<CanopyMesh.Face> faces(){return faces(progress);}
+    public List<CanopyMesh.Face> faces(double pose){
+        resolveLegacyMotion();
         if(block()==null)return Collections.emptyList();
-        List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model()));
-        return com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint);
+        String key=model()+":"+large.key()+":"+centeredPlacement+":"+width()+":"+mask()+":"+pose;
+        if(!key.equals(posedKey)){
+            List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model()));
+            if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width(),large.angle,(mask()&8)!=0);
+            source=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material);
+            posedFaces=com.vandorlabs.canopy.CanopyPose.faces(source,block().kind,width(),large,opening()?pose:0);posedKey=key;
+        }
+        return posedFaces;
     }
+    private List<BlockPos> ownedCells;
+    public void setFootprint(List<BlockPos> cells){ownedCells=new ArrayList<>(cells);markDirty();}
     public List<BlockPos> cells(){return cells(large);}
     public List<BlockPos> cells(com.vandorlabs.canopy.LargeCanopySettings settings){
         if(block()==null)return Collections.emptyList();
+        if(settings==large && ownedCells!=null)return Collections.unmodifiableList(ownedCells);
         if(resizable() && hollowPlacement){
-            String key=pos+":"+facing()+":"+centeredPlacement+":"+settings.depth+":"+settings.scale;
+            String key=pos+":"+facing()+":"+centeredPlacement+":"+settings.depth+":"+settings.scale+":"+settings.mount;
             if(!key.equals(cachedCellsKey)){cachedCells=com.vandorlabs.canopy.LargeCanopyOwnership.shellCells(block(),pos,facing(),settings,centeredPlacement);cachedCellsKey=key;}
             return cachedCells;
         }
@@ -136,7 +152,9 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
             boolean seam=bit==8 && b.kind.startsWith("angled_") && other.kind.equals("regular_canopy_glass")
                     || regular && other.kind.startsWith("angled_")
                     && t.getPos().offset(t.facing().getOpposite(),other.length).equals(pos);
-            if (same || seam) result |= bit;
+            seam |= regular && other.opening() && t.getPos().offset(t.facing().getOpposite(),other.length).equals(pos)
+                    || b.opening() && bit==8 && other.kind.equals("regular_canopy_glass");
+            if (large.mount==t.large.mount && (same || seam)) result |= bit;
         }
         return result;
     }
@@ -158,7 +176,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         for(EnumFacing dir:new EnumFacing[]{facing().rotateYCCW(),facing().rotateY()}) {
             BlockPos edge=dir==facing().rotateYCCW()?owner.pos.offset(dir):owner.pos.offset(dir,owner.width());
             TileEntityCanopy adjacent=at(world,edge);
-            if(adjacent==null || adjacent.constituent()!=adjacent || adjacent.removing || adjacent.block()!=b || adjacent.facing()!=facing())continue;
+            if(adjacent==null || adjacent.constituent()!=adjacent || adjacent.removing || adjacent.block()!=b || adjacent.facing()!=facing() || adjacent.large.mount!=large.mount || adjacent.large.motion!=large.motion || adjacent.large.angle!=large.angle)continue;
             TileEntityCanopy other=adjacent.owner();
             if(other==owner || other.removing || other.targetOpen || other.progress!=0 || owner.width()+other.width()>limit)continue;
             List<TileEntityCanopy> group=owner.members();group.addAll(other.members());
@@ -169,14 +187,14 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
     }
 
     public void toggle() {
-        if (!draws() || !block().opening()) return;
+        if (!draws() || !opening()) return;
         if (!targetOpen && !clearance()) return;
         targetOpen = !targetOpen;
         sync();
     }
 
     /** Opening shells intentionally pass through the vehicle's rear bodywork. */
-    public boolean clearance() {return block()!=null && block().opening();}
+    public boolean clearance() {return opening();}
 
     @Override
     public void update() {
@@ -188,11 +206,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
             return;
         }
         previous = progress;
+        if(!world.isRemote && draws() && opening() && large.redstone && !powerInitialized){powerInitialized=true;com.vandorlabs.redstone.RedstoneChannels.register(this);refreshPower();}
         if (!world.isRemote
                 && block() != null
                 && world.getTotalWorldTime() % 20 == 0
                 && repairMembership()) return;
-        if (!draws() || block() == null || !block().opening()) return;
+        if (!draws() || block() == null || !opening()) return;
         float next = Math.max(0, Math.min(1, progress + (targetOpen ? 1 : -1) / 16F));
         if (next != progress) {
             progress = next;
@@ -205,7 +224,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         if (anchor != null && !anchor.equals(pos)) {
             if (world.isBlockLoaded(anchor)) {
                 TileEntityCanopy parent = at(world, anchor);
-                if (parent == null || parent.block() != block() || !anchor.equals(parent.anchor)) {
+                if (parent == null || parent.block() != block() || !anchor.equals(parent.anchor) || !parent.cells().contains(pos)) {
                     removing = true;
                     world.setBlockToAir(pos);
                     return true;
@@ -239,12 +258,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
 
     public List<AxisAlignedBB> boxes() {
         if (!draws() || block() == null) return Collections.emptyList();
-        String key = model() + ":" + centeredPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
+        String key = model() + ":" + mask() + ":" + centeredPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
         if (!key.equals(cachedKey)) {
-            cached =
+            cached = resizable()?CanopyMesh.windowCollision(faces(),facing(),pos):
                     CanopyMesh.collision(
                             faces(),
-                            block().kind,
+                            "posed",
                             width(),
                             block().opening() ? progress : 0,
                             facing(),
@@ -261,7 +280,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
     }
 
     public RayTraceResult trace(Vec3d start, Vec3d end) {
-        return !draws() || block()==null?null:CanopyMesh.trace(faces(),block().kind,width(),block().opening()?progress:0,facing(),pos,start,end);
+        return !draws() || block()==null?null:CanopyMesh.trace(faces(),"posed",width(),block().opening()?progress:0,facing(),pos,start,end);
     }
 
     public void removeAssembly() {
@@ -297,9 +316,29 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
                 }
     }
 
+    private boolean channelPowered,powerInitialized;
+    public TileEntity channelTile(){return this;}
+    public int getRedstoneChannel(){return large.channels.first();}
+    public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return draws() && opening() && large.redstone?large.channels:com.vandorlabs.redstone.ChannelList.EMPTY;}
+    public void setRedstoneChannel(int channel){setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(Math.max(0,channel)));}
+    public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList channels){large.channels=channels;com.vandorlabs.redstone.RedstoneChannels.register(this);sync();}
+    public boolean hasLocalRedstoneSignal(){
+        if(!draws() || !opening() || !large.redstone)return false;
+        for(TileEntityCanopy member:members())for(BlockPos cell:member.cells())if(com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,cell))return true;
+        return false;
+    }
+    public void setChannelSignal(boolean powered){channelPowered=powered;refreshPower();}
+    public void refreshPower(){
+        if(world==null || world.isRemote || !draws() || !opening() || !large.redstone)return;
+        com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);
+        boolean next=channelPowered || hasLocalRedstoneSignal();if(next!=targetOpen){targetOpen=next;sync();}
+    }
+    @Override public void onLoad(){super.onLoad();resolveLegacyMotion();com.vandorlabs.redstone.RedstoneChannels.register(this);}
+    @Override public void invalidate(){com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
+    @Override public void onChunkUnload(){com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound n) {
-        super.writeToNBT(n);
+        super.writeToNBT(n);resolveLegacyMotion();
         if (anchor != null) {
             n.setLong("Anchor", anchor.toLong());
             n.setLong("AnchorOffset", anchor.subtract(pos).toLong());
@@ -310,6 +349,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
         }
         if (block() != null) {n.setInteger("CanopyMask", mask());n.setInteger("CanopyWidth",width());}
         if(configurable())large.write(n);
+        if(ownedCells!=null){int[] offsets=new int[ownedCells.size()*3];int i=0;for(BlockPos cell:ownedCells){BlockPos delta=cell.subtract(pos);offsets[i++]=delta.getX();offsets[i++]=delta.getY();offsets[i++]=delta.getZ();}n.setIntArray("CanopyFootprint",offsets);}
         n.setBoolean("CenteredPlacement",centeredPlacement);
         n.setBoolean("HollowPlacement",hollowPlacement);
         n.setBoolean("Open", targetOpen);
@@ -321,6 +361,9 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
     public void readFromNBT(NBTTagCompound n) {
         super.readFromNBT(n);
         large.read(n);
+        legacyMotionPending=!n.hasKey("CanopyMotion");resolveLegacyMotion();
+        ownedCells=null;
+        if(n.hasKey("CanopyFootprint",11)){int[] offsets=n.getIntArray("CanopyFootprint");if(offsets.length>0 && offsets.length<=3000 && offsets.length%3==0){ownedCells=new ArrayList<>();for(int i=0;i<offsets.length;i+=3)if(Math.abs(offsets[i])<=8 && Math.abs(offsets[i+1])<=8 && Math.abs(offsets[i+2])<=8)ownedCells.add(pos.add(offsets[i],offsets[i+1],offsets[i+2]));}}
         centeredPlacement=n.getBoolean("CenteredPlacement");
         hollowPlacement=n.getBoolean("HollowPlacement");
         anchor =
@@ -354,7 +397,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable {
 
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        return new AxisAlignedBB(pos).grow(5);
+        return new AxisAlignedBB(pos).grow(resizable()?block().width+large.length()+2:5);
     }
 
     @Override

@@ -12,14 +12,14 @@ import java.util.*;
 public final class VehicleCanopies {
     private VehicleCanopies() {}
     public static boolean supports(Block block) {
-        return block instanceof BlockCanopy && ((BlockCanopy) block).opening();
+        return block instanceof BlockCanopy && (((BlockCanopy) block).opening() || com.vandorlabs.canopy.LargeCanopySettings.supports(((BlockCanopy)block).kind));
     }
     private static TileEntityCanopy owner(EntityGroundVehicle craft, BlockPos hit) {
         if(craft.view==null || craft.structure==null)return null;
         TileEntity tile=craft.view.getTileEntity(hit);
         if(!(tile instanceof TileEntityCanopy))return null;
         TileEntityCanopy owner=((TileEntityCanopy)tile).owner();
-        if(owner.block()==null || !supports(owner.block()) || !owner.draws())return null;
+        if(owner.block()==null || !owner.opening() || !owner.draws())return null;
         // Require every constituent and occupied proxy, including all joined leaves.
         int width=owner.block().width;
         for(int x=0;x<owner.width();x+=width){
@@ -74,7 +74,7 @@ public final class VehicleCanopies {
         List<TileEntityCanopy> settled=new ArrayList<>();
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityCanopy){
             TileEntityCanopy tile=(TileEntityCanopy)raw;
-            if(!tile.draws() || tile.block()==null || !supports(tile.block()))continue;
+            if(!tile.draws() || tile.block()==null || !tile.opening())continue;
             tile.previous=tile.progress;
             float next=Math.max(0,Math.min(1,tile.progress+(tile.targetOpen?1:-1)/16F));
             if(next==tile.progress)continue;
