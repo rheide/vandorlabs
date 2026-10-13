@@ -529,6 +529,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousHalfHeight = diagonalHalfHeight;
         int previousFill = diagonalFill;
         int previousJoin=diagonalJoin,previousGlassShade=glassShade;
+        boolean previousPortholeJoin=joinPortholes;
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);
@@ -588,11 +589,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (world != null && world.isRemote
                 && (!previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
-                || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade))
+                || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade || previousPortholeJoin!=joinPortholes))
         {
             if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall
-                    && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).getShape()
-                            == com.vandorlabs.blocks.BlockProgrammableWall.Shape.DIAGONAL)
+                    && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).isDiagonalShape())
                 world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
             else world.markBlockRangeForRenderUpdate(pos,pos);
         }

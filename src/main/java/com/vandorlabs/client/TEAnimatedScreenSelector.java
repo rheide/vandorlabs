@@ -861,7 +861,7 @@ public class TEAnimatedScreenSelector
         TextureAtlasSprite wall = wallSprite(te);
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(wallBlock.isPortholeShape() && te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side");
-        PortholeHex.Slice porthole = wallBlock.isPortholeShape()
+        PortholeHex.Slice porthole = wallBlock.isPortholeShape() && !solidDiagonalPortholeJunction(te,state)
                 ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),
                         wallBlock.isDiagonalShape() && te.isDiagonalHalfHeight()
                                 ? state.getValue(BlockProgrammableWall.FACING).getOpposite() : EnumFacing.UP) : null;
@@ -909,12 +909,17 @@ public class TEAnimatedScreenSelector
                         state.getValue(BlockProgrammableWall.INVERTED),
                         BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false),
                         BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true),
-                        com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16)) : null;
+                        com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16),
+                        BlockProgrammableWall.geometry(te.getWorld(),te.getPos())==1?wallBlock.corner(state,te.getWorld(),te.getPos()):null) : null;
     }
 
     static void drawConfiguredWall(BufferBuilder buf,TileEntityAnimatedScreenSelector te,IBlockState state,
             TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice porthole) {
         BlockProgrammableWall wallBlock=(BlockProgrammableWall)state.getBlock();
+        if(solidDiagonalPortholeJunction(te,state)) {
+            drawConfiguredDiagonalWall(buf,te,state,wall,metal);
+            return;
+        }
         BlockProgrammableWall.FlatCorner flat=wallBlock.flatCorner(state,te.getWorld(),te.getPos());
         DiagonalPortholeMesh mesh=portholeMesh(te,state);
         double rimDepthUv=wallBlock instanceof BlockProgrammablePortholeBlock?16:4;
@@ -936,6 +941,14 @@ public class TEAnimatedScreenSelector
                 panelRect(buf, wall, mesh, 0, 0, 16, 16);
             }
             panelOuterRim(buf, metal, mesh, porthole, te, state, rimDepthUv);
+            if(mesh!=null && mesh.corner!=null) {
+                // Reuse the joined solid outline for the arms, but never overlay
+                // its solid center across the porthole aperture and pane.
+                StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.independentCapture();
+                drawConfiguredDiagonalWall(capture,te,state,wall,metal);
+                capture.finish().diagonalArms(mesh.mode,mesh.inverted,mesh.lower,mesh.upper).draw(buf,
+                        (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+            }
         }
     }
 
@@ -1059,6 +1072,17 @@ public class TEAnimatedScreenSelector
         }
     }
 
+    /** Compound crossing slopes need a solid center rather than an internal window. */
+    static boolean solidDiagonalPortholeJunction(TileEntityAnimatedScreenSelector tile,IBlockState state) {
+        if(!(state.getBlock() instanceof BlockProgrammableWall) || tile.getWorld()==null
+                || ((BlockProgrammableWall)state.getBlock()).getShape()!=BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE
+                || BlockProgrammableWall.geometry(tile.getWorld(),tile.getPos())!=1 || tile.getDiagonalJoin()!=0)return false;
+        BlockProgrammableWall.Corner corner=((BlockProgrammableWall)state.getBlock()).corner(state,tile.getWorld(),tile.getPos());
+        // Crossing slopes form a compound solid node, not a single aperture-bearing pane.
+        return corner!=null && corner.frontRight!=null && corner.backRight!=null
+                && !corner.frontRight.equals(corner.backRight) && corner.straightLeft!=corner.straightRight;
+    }
+
     /** Compare actual planes, including reversed upper half-width pieces. */
     private static boolean compatiblePorthole(World world,BlockPos root,BlockPos next) {
         if(!world.isBlockLoaded(next))return false;
@@ -1068,6 +1092,7 @@ public class TEAnimatedScreenSelector
         if(!(ar instanceof TileEntityAnimatedScreenSelector)||!(br instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector at=(TileEntityAnimatedScreenSelector)ar,bt=(TileEntityAnimatedScreenSelector)br;
         if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
+        if(solidDiagonalPortholeJunction(at,a) || solidDiagonalPortholeJunction(bt,b))return false;
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
         if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
         if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
@@ -1172,7 +1197,11 @@ public class TEAnimatedScreenSelector
             BlockProgrammableWall.Corner corner, double span, int fill, double fillLow, double fillHigh,
             double halfOffset, double lowerEnd, double upperEnd, boolean hideLower, boolean hideUpper, double[] clip) {
         double bottom = (inverted ? span : 0)-2, top = (inverted ? 0 : span)-2;
-        double[] heights={0,2,4,12,14,16};
+        // Opposite-handed arms exchange the outer bridge edge at mid-height.
+        // Interpolating across that kink adds a phantom triangular face.
+        boolean crossingArms=span==16 && Double.isNaN(halfOffset) && corner!=null && corner.frontRight!=null && corner.backRight!=null
+                && !corner.frontRight.equals(corner.backRight);
+        double[] heights=crossingArms?new double[]{0,2,4,8,12,14,16}:new double[]{0,2,4,12,14,16};
         for(int segment=0;segment<heights.length-1;segment++) {
             double y0=heights[segment],y1=heights[segment+1];
             double near0=diagonalSection(bottom,top,y0,lowerEnd,upperEnd);

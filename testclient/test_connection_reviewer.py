@@ -17,6 +17,76 @@ import review_connections as reviewer
 
 
 class ConnectionReviewerChecks(unittest.TestCase):
+    def test_six_opposite_views_preserve_cases_and_export_ids(self):
+        scope = "diagonal-full-width-full-height"
+        names = reviewer.diagonal_scene_names(scope)
+        rows = [reviewer.case(name) for name in names]
+        scratch = Path(__file__).resolve().parents[1] / "build" / "reviewer-tests"
+        scratch.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as directory:
+            folder = Path(directory); source = folder/"secondary"; source.mkdir()
+            feedback = folder/"feedback.json"
+            payload = {"schema": "vandorlabs-connection-review-v1", "displayedFiles": [row["file"] for row in rows],
+                       "reviews": {row["file"]: {"status": "wrong"} for row in rows[:6]}}
+            feedback.write_text(json.dumps(payload))
+            self.assertEqual(reviewer.secondary_scene_names(feedback, scope), sorted(names[:6]))
+            bad = dict(payload, reviews={rows[0]["file"]: {"status": "wrong"}})
+            feedback.write_text(json.dumps(bad))
+            self.assertEqual(reviewer.secondary_scene_names(feedback, scope), [names[0]])
+            bad = dict(payload, reviews={})
+            feedback.write_text(json.dumps(bad))
+            with self.assertRaises(ValueError): reviewer.secondary_scene_names(feedback, scope)
+            bad = dict(payload, reviews=dict(payload["reviews"], **{"shot_unknown.png": {"status": "wrong"}}))
+            feedback.write_text(json.dumps(bad))
+            with self.assertRaises(ValueError): reviewer.secondary_scene_names(feedback, scope)
+            feedback.write_text(json.dumps(payload))
+            def chunk(kind, data):
+                return reviewer.struct.pack(">I", len(data))+kind+data+reviewer.struct.pack(">I", reviewer.zlib.crc32(kind+data)&0xffffffff)
+            png = b"\x89PNG\r\n\x1a\n"+chunk(b"IHDR", reviewer.struct.pack(">IIBBBBB",1920,1080,8,2,0,0,0))+chunk(b"IDAT", reviewer.zlib.compress(b"\0"*(1080*(1920*3+1))))+chunk(b"IEND",b"")
+            metadata = {"schema": "vandorlabs-connection-capture-v1", "jar_sha256": "a"*64, "family": "diagonal", "mode": 1, "scope": scope, "image_size": [1920,1080]}
+            (folder/"capture-metadata.json").write_text(json.dumps(metadata))
+            (source/"capture-metadata.json").write_text(json.dumps(dict(metadata, view="opposite lower oblique", selected_cases=names[:6])))
+            columns = ["name","posX","posY","posZ","camX","camY","camZ","yaw","pitch"]
+            (source/"manifest.tsv").write_text("\t".join(columns)+"\n"+"".join("\t".join(map(str,[name,160,6,-18,155.82,9,-12.04,220.6,29.8]))+"\n" for name in names[:6]))
+            for row in rows:
+                (folder/row["file"]).write_bytes(b"primary fixture")
+            for row in rows[:6]: (source/row["file"]).write_bytes(png)
+            changed={rows[i]["name"] for i in (8,15,30)}
+            report=folder/"comparison.json"
+            comparisons=[{"name":r["name"],"file":r["file"],"passed":r["name"] not in changed} for r in rows[6:]]
+            report.write_text(json.dumps({"schema":"vandorlabs-connection-regression-v1","cases":comparisons}))
+            argv = ["review_connections.py", str(folder), "--scope", scope, "--no-contact-sheet", "--feedback-order", str(feedback), "--secondary-capture", str(source), "--regression-report",str(report)]
+            with patch.object(sys,"argv",argv), contextlib.redirect_stdout(io.StringIO()): reviewer.main()
+            catalog=json.loads((folder/"connection-review.json").read_text())["cases"]
+            self.assertEqual(len(catalog),60)
+            self.assertEqual(sum("secondary_file" in row for row in catalog),6)
+            self.assertEqual({row["name"] for row in catalog[:6]},set(names[:6]))
+            self.assertEqual({row["name"] for row in catalog[6:9]},changed)
+            self.assertEqual(sum(row.get("changed_since_accepted",False) for row in catalog),3)
+            self.assertEqual({row["file"] for row in catalog},{row["file"] for row in rows})
+            provenance=json.loads((folder/"secondary-provenance.json").read_text())
+            self.assertEqual(provenance["jar_sha256"],metadata["jar_sha256"])
+            self.assertTrue(all((folder/row["secondary_file"]).read_bytes()==png for row in catalog if "secondary_file" in row))
+            node=os.environ.get("NODE") or shutil.which("node")
+            if node: subprocess.run([node,str(Path(__file__).with_suffix(".cjs")),str(folder/"index.html"),"60"],check=True)
+            report.write_text(json.dumps({"schema":"wrong","cases":comparisons}))
+            with self.assertRaises(ValueError): reviewer.regression_annotations(rows,report)
+            report.write_text(json.dumps({"schema":"vandorlabs-connection-regression-v1","cases":[comparisons[0],comparisons[0]]}))
+            with self.assertRaises(ValueError): reviewer.regression_annotations(rows,report)
+            report.write_text(json.dumps({"schema":"vandorlabs-connection-regression-v1","cases":[{"name":"unknown","file":"shot_unknown.png","passed":False}]}))
+            with self.assertRaises(ValueError): reviewer.regression_annotations(rows,report)
+            broken=source/rows[0]["file"];broken.write_bytes(png[:-1]+b"x")
+            with self.assertRaises(ValueError): reviewer.secondary_png_digest(broken)
+            broken.write_bytes(png)
+            (source/"capture-metadata.json").write_text(json.dumps(dict(metadata,jar_sha256="b"*64,view="opposite lower oblique",selected_cases=names[:6])))
+            with self.assertRaises(ValueError): reviewer.attach_secondary(rows,folder,source,names[:6])
+            manifest=(source/"manifest.tsv").read_text().splitlines()
+            (source/"manifest.tsv").write_text("\n".join(manifest[:2])+"\n")
+            (source/"capture-metadata.json").write_text(json.dumps(dict(metadata,view="opposite lower oblique",selected_cases=names[:1])))
+            reviewer.attach_secondary(rows,folder,source,names[:1])
+            self.assertEqual(sum("secondary_file" in row for row in rows),1)
+            self.assertEqual(len(json.loads((folder/"secondary-provenance.json").read_text())["cases"]),1)
+
     def test_diagonal_preview_projection_and_clamping(self):
         row = reviewer.case(reviewer.diagonal_scene_names("diagonal-half-width-full-height")[0])
         style = reviewer.diagonal_preview(dict(row, roles=[row["roles"][0]]),

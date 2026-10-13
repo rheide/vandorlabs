@@ -56,6 +56,23 @@ public final class PanelJoins {
         for(int depth=0;depth<3;depth++){double delta=Math.abs(PanelDepth.start(depth)-end);if(delta<distance){best=depth;distance=delta;}}
         return best;
     }
+    /** Full-height corner participants; full-width portholes share the wall/glass topology. */
+    public static boolean cornerDiagonal(IBlockState state,IBlockAccess world,BlockPos pos) {
+        if(!(state.getBlock() instanceof BlockProgrammableWall))return false;
+        BlockProgrammableWall block=(BlockProgrammableWall)state.getBlock();
+        return block.isDiagonalShape() && !BlockProgrammableWall.halfHeight(world,pos)
+                && (!block.isPortholeShape() || BlockProgrammableWall.geometry(world,pos)==1);
+    }
+    public static boolean cornerDiagonalEnabled(IBlockAccess world,BlockPos pos) {
+        if(!enabled(world,pos))return false;
+        if(BlockProgrammableWall.geometry(world,pos)!=1)return true;
+        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
+        if(!(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector))return true;
+        com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw;
+        IBlockState state=world.getBlockState(pos);
+        return tile.getDiagonalJoin()!=1 && (!(state.getBlock() instanceof BlockProgrammableWall)
+                || !((BlockProgrammableWall)state.getBlock()).isPortholeShape() || tile.isJoinPortholes());
+    }
     public static boolean diagonal(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape() && !((BlockProgrammableWall)state.getBlock()).isPortholeShape();}
     public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass || state.getBlock() instanceof BlockProgrammableWall && !((BlockProgrammableWall)state.getBlock()).isDiagonalShape();}
     public static EnumFacing facing(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass ? (state.getValue(BlockGlassWall.ROTATED)?EnumFacing.EAST:EnumFacing.NORTH):state.getValue(BlockProgrammableWall.FACING);}

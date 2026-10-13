@@ -54,6 +54,9 @@ final class DiagonalJoinMatrixChecks {
         mixed(blocks);
         flatFrames();
         actualPlanes();
+        fullWidthMixedCorners();
+        crossedArmSections();
+        DiagonalPortholeJoinChecks.run();
         System.out.println("PASS: "+cases+" diagonal wall/glass join topologies, orientations, slopes, placement rotations and remove/replace cycles; all glass finish IDs persist");
     }
     private static void mixed(BlockProgrammableWall[] diagonals){
@@ -138,6 +141,146 @@ final class DiagonalJoinMatrixChecks {
             BlockPos shift=new BlockPos(-53,7,29);
             require(DiagonalPanelGeometry.samePlane(root.add(shift),state,side.add(shift),state,mode),"porthole plane matching depends on world origin");
         }
+    }
+    /** Mixed materials must retain the same joined footprint as an all-wall fixture. */
+    private static void fullWidthMixedCorners(){
+        BlockProgrammableWall[] materials={new BlockProgrammableWall("matrix_diagonal_wall",BlockProgrammableWall.Shape.DIAGONAL),
+                new BlockProgrammableDiagonalGlass(),new BlockProgrammableWall("matrix_diagonal_porthole",BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE)};
+        BlockPos root=new BlockPos(41,96,-31);int checked=0;
+        for(int kind=0;kind<3;kind++)for(int variant=0;variant<(kind==1?12:4);variant++)
+            for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})
+                for(int assignment=0;assignment<9;assignment++)for(int order=0;order<(kind==0?2:1);order++){
+            List<BlockPos> positions=new ArrayList<>();List<EnumFacing> directions=new ArrayList<>();
+            positions.add(root);directions.add(facing);
+            if(kind==0 || kind==1 && variant<4){
+                positions.add(root.offset(variant<2?facing:facing.getOpposite()));directions.add((variant&1)==0?facing.rotateYCCW():facing.rotateY());
+                if(kind==1){positions.add(root.offset(facing.rotateYCCW()));directions.add(facing);positions.add(root.offset(facing.rotateY()));directions.add(facing);}
+            }else{
+                int hands=kind==2?variant:(variant-4)/2;
+                positions.add(root.offset(facing));directions.add((hands&1)==0?facing.rotateYCCW():facing.rotateY());
+                positions.add(root.offset(facing.getOpposite()));directions.add((hands&2)==0?facing.rotateYCCW():facing.rotateY());
+                if(kind==2 || (variant-4)%2==0){positions.add(root.offset(facing.rotateYCCW()));directions.add(facing);}
+                if(kind==2 || (variant-4)%2!=0){positions.add(root.offset(facing.rotateY()));directions.add(facing);}
+            }
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true),reference=new NonRenderingChecks.MemoryWorld(true);
+            int a=assignment/3,b=assignment%3;int[] choices={a,b,(a+b)%3,(a+2*b)%3,(a+b+1)%3};
+            for(int step=0;step<positions.size();step++){
+                int i=order==0?step:positions.size()-1-step;
+                put(world,positions.get(i),diagonalState(materials[choices[i]],directions.get(i),inverted),1);
+                ((TileEntityAnimatedScreenSelector)world.getTileEntity(positions.get(i))).setJoinPortholes(true);
+                put(reference,positions.get(i),diagonalState(materials[0],directions.get(i),inverted),1);
+            }
+            for(BlockPos pos:positions){
+                IBlockState actual=world.getBlockState(pos),expected=reference.getBlockState(pos);
+                BlockProgrammableWall.Corner c=((BlockProgrammableWall)actual.getBlock()).corner(actual,world,pos),r=materials[0].corner(expected,reference,pos);
+                require(PanelJoins.cornerDiagonal(actual,world,pos),"full-width mixed diagonal excluded from corner eligibility");
+                require((c==null)==(r==null),"mixed diagonal corner absent relative to wall reference");
+                if(c!=null)require(Objects.equals(c.frontRight,r.frontRight)&&Objects.equals(c.backRight,r.backRight)&&c.straightLeft==r.straightLeft&&c.straightRight==r.straightRight,"mixed diagonal arm/tail topology differs from wall reference");
+                require(collision(world,pos).equals(collision(reference,pos)),"mixed diagonal collision differs from wall reference");
+            }
+            BlockProgrammableWall.Corner c=((BlockProgrammableWall)world.getBlockState(root).getBlock()).corner(world.getBlockState(root),world,root);
+            require(c!=null,"full-width fixture root has no corner");
+            int frontIndex=positions.indexOf(root.offset(facing)),backIndex=positions.indexOf(root.offset(facing.getOpposite()));
+            Boolean expectedFront=frontIndex<0?null:directions.get(frontIndex)==facing.rotateY();
+            Boolean expectedBack=backIndex<0?null:directions.get(backIndex)==facing.rotateY();
+            require(Objects.equals(c.frontRight,expectedFront)&&Objects.equals(c.backRight,expectedBack),"full-width mixed root handedness differs from placed directions");
+            require(c.straightLeft==positions.contains(root.offset(facing.rotateYCCW()))&&c.straightRight==positions.contains(root.offset(facing.rotateY())),"full-width mixed root loses a placed straight tail");
+            for(boolean front:new boolean[]{true,false}){
+                Boolean right=front?c.frontRight:c.backRight;if(right==null)continue;
+                BlockPos neighbor=root.offset(front?facing:facing.getOpposite());
+                for(double y:new double[]{.25,.75}){
+                    double near=16*com.vandorlabs.render.DiagonalWallGeometry.near(1,inverted,y);
+                    double x=((right?12-near:near)+2)/16;
+                    String fixture=" kind="+kind+" variant="+variant+" facing="+facing+" inverted="+inverted+" materials="+Arrays.toString(choices)+" order="+order+" front="+front+" right="+right+" y="+y+" x="+x;
+                    require(contains(world,root,localPoint(root,facing,x,y,front?.001:.999)),"root connector does not reach seam"+fixture);
+                    require(contains(world,neighbor,localPoint(root,facing,x,y,front?-.001:1.001)),"neighbor connector does not reach reciprocal seam"+fixture);
+                }
+            }
+            if(kind==0){
+                BlockPos neighbor=positions.get(1);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(neighbor);
+                tile.setDiagonalJoin(1);require(((BlockProgrammableWall)world.getBlockState(root).getBlock()).corner(world.getBlockState(root),world,root)==null,"neighbor Join Off still bends mixed root");tile.setDiagonalJoin(0);
+                if(choices[1]==2){tile.setJoinPortholes(false);require(((BlockProgrammableWall)world.getBlockState(root).getBlock()).corner(world.getBlockState(root),world,root)==null,"disabled porthole still bends mixed root");tile.setJoinPortholes(true);}
+                tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(root);tile.setDiagonalJoin(1);
+                require(((BlockProgrammableWall)world.getBlockState(root).getBlock()).corner(world.getBlockState(root),world,root)==null,"owner Join Off still forms mixed corner");
+                tile.setDiagonalJoin(0);
+                if(choices[0]==2){tile.setJoinPortholes(false);require(((BlockProgrammableWall)world.getBlockState(root).getBlock()).corner(world.getBlockState(root),world,root)==null,"owner porthole Join Off still forms corner");}
+            }
+            checked++;
+        }
+        for(int mode:new int[]{0,2})for(BlockProgrammableWall block:materials){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+            IBlockState state=diagonalState(block,EnumFacing.NORTH,false);put(world,root,state,mode);
+            require(PanelJoins.cornerDiagonal(state,world,root)==(mode==0&&!block.isPortholeShape()),"full-width fix changed half-width/half-height eligibility");
+        }
+        System.out.println("PASS: "+checked+" full-width mixed diagonal L/T/X footprints, reciprocal seams and Join Off cases");
+    }
+    /** Crossing arms change the bridge envelope at mid-height; a single interpolated strip is wrong. */
+    private static void crossedArmSections() {
+        BlockProgrammableWall[] blocks={new BlockProgrammableWall("section_wall",BlockProgrammableWall.Shape.DIAGONAL),
+                new BlockProgrammableDiagonalGlass(),new BlockProgrammableWall("section_porthole",BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE)};
+        BlockPos root=new BlockPos(41,96,-31);int sections=0;
+        for(BlockProgrammableWall block:blocks)for(EnumFacing facing:EnumFacing.HORIZONTALS)
+            for(boolean inverted:new boolean[]{false,true})for(int hands=0;hands<2;hands++)for(int tails=0;tails<4;tails++) {
+                NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+                IBlockState state=diagonalState(block,facing,inverted);put(world,root,state,1);
+                ((TileEntityAnimatedScreenSelector)world.getTileEntity(root)).setJoinPortholes(true);
+                put(world,root.offset(facing),diagonalState(block,hands==0?facing.rotateY():facing.rotateYCCW(),inverted),1);
+                put(world,root.offset(facing.getOpposite()),diagonalState(block,hands==0?facing.rotateYCCW():facing.rotateY(),inverted),1);
+                for(int side=0;side<2;side++)if((tails&(1<<side))!=0)put(world,root.offset(side==0?facing.rotateYCCW():facing.rotateY()),state,1);
+                BlockProgrammableWall.Corner corner=block.corner(state,world,root);
+                require(corner!=null,"crossed arms lost their core descriptor");
+                SectionCapture capture=new SectionCapture();
+                TEAnimatedScreenSelector.drawConfiguredDiagonalWall(capture,(TileEntityAnimatedScreenSelector)world.getTileEntity(root),state,SPRITE,SPRITE);
+                List<AxisAlignedBB> collision=new ArrayList<>();block.addCollisionBoxToList(state,world,root,new AxisAlignedBB(root).grow(3),collision,null,false);
+                EnumFacing inverse=facing==EnumFacing.EAST?EnumFacing.WEST:facing==EnumFacing.WEST?EnumFacing.EAST:facing;
+                for(double y:new double[]{6,8,10}) {
+                    double near=16*com.vandorlabs.render.DiagonalWallGeometry.near(1,inverted,y/16),left=corner.left(near),right=corner.right(near);
+                    double[] mesh=capture.section(y);String fixture=" block="+block.getShape()+" facing="+facing+" inv="+inverted+" hands="+hands+" tails="+tails+" y="+y;
+                    require(Math.abs(mesh[0]-left)<1E-5 && Math.abs(mesh[1]-right)<1E-5,"rendered crossed-arm section disagrees with core outline"+fixture+" mesh="+Arrays.toString(mesh)+" expected="+left+".."+right);
+                    double min=Double.POSITIVE_INFINITY,max=Double.NEGATIVE_INFINITY;
+                    for(AxisAlignedBB box:collision) {
+                        AxisAlignedBB local=PanelPlacement.rotateFromNorth(box.offset(-root.getX(),-root.getY(),-root.getZ()),inverse);
+                        if(local.minY<=y/16+1E-9 && local.maxY>=y/16-1E-9){min=Math.min(min,16*local.minX);max=Math.max(max,16*local.maxX);}
+                    }
+                    // Collision conservatively encloses each one-pixel-height slab.
+                    require(min<=left+1E-5 && min>=left-1.00001 && max>=right-1E-5 && max<=right+1.00001,"collision section disagrees with exact bridge envelope"+fixture);
+                    sections++;
+                }
+            }
+        System.out.println("PASS: "+sections+" crossed-arm mesh/core/collision cross-sections at y6/y8/y10");
+    }
+    private static final class SectionCapture extends net.minecraft.client.renderer.BufferBuilder {
+        final List<double[][]> quads=new ArrayList<>();double[][] current=new double[4][3];int used;
+        SectionCapture(){super(16);}
+        @Override public net.minecraft.client.renderer.BufferBuilder pos(double x,double y,double z){current[used]=new double[]{x,y,z};return this;}
+        @Override public net.minecraft.client.renderer.BufferBuilder tex(double u,double v){return this;}
+        @Override public net.minecraft.client.renderer.BufferBuilder color(int r,int g,int b,int a){return this;}
+        @Override public net.minecraft.client.renderer.BufferBuilder lightmap(int sky,int block){return this;}
+        @Override public net.minecraft.client.renderer.BufferBuilder normal(float x,float y,float z){return this;}
+        @Override public void endVertex(){if(++used==4){quads.add(current);current=new double[4][3];used=0;}}
+        double[] section(double y) {
+            double min=Double.POSITIVE_INFINITY,max=Double.NEGATIVE_INFINITY;
+            for(double[][] quad:quads)for(int[] triangle:new int[][]{{0,1,2},{0,2,3}})for(int edge=0;edge<3;edge++) {
+                double[] a=quad[triangle[edge]],b=quad[triangle[(edge+1)%3]];
+                if(Math.abs(a[1]-y)<1E-8){min=Math.min(min,a[0]);max=Math.max(max,a[0]);}
+                if((a[1]-y)*(b[1]-y)<0){double x=a[0]+(y-a[1])/(b[1]-a[1])*(b[0]-a[0]);min=Math.min(min,x);max=Math.max(max,x);}
+            }
+            return new double[]{min,max};
+        }
+    }
+    private static IBlockState diagonalState(BlockProgrammableWall block,EnumFacing facing,boolean inverted){return block.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.INVERTED,inverted);}
+    private static List<String> collision(NonRenderingChecks.MemoryWorld world,BlockPos pos){
+        List<AxisAlignedBB> boxes=new ArrayList<>();IBlockState state=world.getBlockState(pos);((BlockProgrammableWall)state.getBlock()).addCollisionBoxToList(state,world,pos,new AxisAlignedBB(pos).grow(3),boxes,null,false);
+        List<String> result=new ArrayList<>();for(AxisAlignedBB box:boxes)result.add(box.toString());Collections.sort(result);return result;
+    }
+    private static Vec3d localPoint(BlockPos root,EnumFacing facing,double x,double y,double z){
+        AxisAlignedBB point=PanelPlacement.rotateFromNorth(new AxisAlignedBB(x,y,z,x,y,z),facing);
+        return new Vec3d(root.getX()+point.minX,root.getY()+point.minY,root.getZ()+point.minZ);
+    }
+    private static boolean contains(NonRenderingChecks.MemoryWorld world,BlockPos pos,Vec3d point){
+        List<AxisAlignedBB> boxes=new ArrayList<>();IBlockState state=world.getBlockState(pos);((BlockProgrammableWall)state.getBlock()).addCollisionBoxToList(state,world,pos,new AxisAlignedBB(pos).grow(3),boxes,null,false);
+        // Quarter-height probes sit exactly on slice boundaries; test the closed solid union.
+        for(AxisAlignedBB box:boxes)if(box.grow(1E-9).contains(point))return true;return false;
     }
     private static void put(NonRenderingChecks.MemoryWorld world,BlockPos pos,IBlockState state,int mode){world.setBlockState(pos,state,2);((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).setDiagonalGeometry(mode,0);}
     private static List<String> shape(NonRenderingChecks.MemoryWorld world,List<BlockPos> positions){

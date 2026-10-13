@@ -10,6 +10,10 @@ import csv
 import html
 import json
 import math
+import hashlib
+import shutil
+import struct
+import zlib
 from pathlib import Path
 import re
 
@@ -143,6 +147,116 @@ def feedback_order(rows, feedback):
     wrong = {file for file, entry in review.get("reviews", {}).items()
              if isinstance(entry, dict) and entry.get("status") == "wrong" and (displayed is None or file in displayed)}
     return sorted(rows, key=lambda row: row["file"] not in wrong)
+
+
+def regression_annotations(rows, report, feedback=None):
+    data = json.loads(report.read_text(encoding="utf-8"))
+    if data.get("schema") != "vandorlabs-connection-regression-v1" or not isinstance(data.get("cases"), list):
+        raise ValueError("Unknown connection regression report schema")
+    known = {row["name"]: row for row in rows}
+    seen, changed = set(), set()
+    for case in data["cases"]:
+        if not isinstance(case, dict) or case.get("name") not in known or case["name"] in seen:
+            raise ValueError("Regression report contains unknown or duplicate case IDs")
+        seen.add(case["name"])
+        if case.get("file") != known[case["name"]]["file"] or not isinstance(case.get("passed"), bool):
+            raise ValueError("Regression report file/status differs from the known case")
+        if not case["passed"]:
+            changed.add(case["file"])
+    wrong = set()
+    if feedback:
+        review = json.loads(feedback.read_text(encoding="utf-8"))
+        displayed = review.get("displayedFiles")
+        wrong = {file for file, entry in review.get("reviews", {}).items() if isinstance(entry, dict)
+                 and entry.get("status") == "wrong" and (displayed is None or file in displayed)}
+    for row in rows:
+        if row["file"] in changed:
+            row["changed_since_accepted"] = True
+            row["regression_link"] = "connection-regression/index.html"
+    return sorted(rows, key=lambda row: 0 if row["file"] in wrong else 1 if row["file"] in changed else 2)
+
+
+def secondary_scene_names(feedback, scope):
+    if scope not in DIAGONAL_SCOPES:
+        raise ValueError("Opposite views require a diagonal scope")
+    review = json.loads(feedback.read_text(encoding="utf-8"))
+    if review.get("schema") != "vandorlabs-connection-review-v1":
+        raise ValueError("Unknown feedback schema for opposite views")
+    known = {"shot_"+name+".png": name for name in diagonal_scene_names(scope)}
+    displayed = review.get("displayedFiles")
+    if not isinstance(displayed, list) or len(set(displayed)) != len(displayed) or any(file not in known for file in displayed):
+        raise ValueError("Opposite feedback must list known, unique displayed files for this scope")
+    selected = []
+    for file, entry in review.get("reviews", {}).items():
+        if not isinstance(entry, dict):
+            raise ValueError("Malformed review entry")
+        if entry.get("status") != "wrong":
+            continue
+        if file not in known or file not in displayed:
+            raise ValueError("Wrong case is outside the displayed diagonal scope")
+        selected.append(known[file])
+    if not 1 <= len(selected) <= 60:
+        raise ValueError("Opposite diagnostic capture requires one to sixty marked Wrong cases")
+    return sorted(selected)
+
+
+def secondary_png_digest(path):
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("Secondary screenshot is not PNG")
+    offset, chunks = 8, []
+    while offset+12 <= len(data):
+        length = struct.unpack(">I", data[offset:offset+4])[0]
+        kind = data[offset+4:offset+8]
+        payload = data[offset+8:offset+8+length]
+        end = offset+12+length
+        if end > len(data) or zlib.crc32(kind+payload) & 0xffffffff != struct.unpack(">I", data[end-4:end])[0]:
+            raise ValueError("Secondary PNG chunk CRC/length is invalid")
+        if not chunks and (kind != b"IHDR" or len(payload) != 13 or struct.unpack(">II", payload[:8]) != (1920, 1080)):
+            raise ValueError("Secondary PNG must be 1920x1080")
+        chunks.append(kind)
+        offset = end
+        if kind == b"IEND":
+            break
+    if not chunks or chunks[-1] != b"IEND" or b"IDAT" not in chunks or offset != len(data):
+        raise ValueError("Secondary PNG is incomplete")
+    return hashlib.sha256(data).hexdigest()
+
+
+def attach_secondary(rows, folder, source, expected_names):
+    with (source/"manifest.tsv").open(encoding="utf-8-sig", newline="") as stream:
+        captures = list(csv.DictReader(stream, delimiter="\t"))
+    known = {row["name"]: row for row in rows}
+    names = [camera["name"] for camera in captures]
+    if not 1 <= len(expected_names) <= 60 or len(names) != len(expected_names) or len(set(names)) != len(names) or set(names)-known.keys() or set(names) != set(expected_names):
+        raise ValueError("Secondary manifest must contain exactly the requested unique cases from this review")
+    metadata = json.loads((source/"capture-metadata.json").read_text(encoding="utf-8"))
+    primary = json.loads((folder/"capture-metadata.json").read_text(encoding="utf-8"))
+    if metadata.get("schema") != "vandorlabs-connection-capture-v1" or metadata.get("family") != "diagonal" or metadata.get("scope") not in DIAGONAL_SCOPES or metadata.get("mode") != int(rows[0]["geometry"]) or DIAGONAL_SCOPES[metadata["scope"]]["mode"] != metadata["mode"] or metadata.get("image_size") != [1920,1080]:
+        raise ValueError("Secondary capture metadata has an invalid diagonal scope")
+    if any(metadata.get(key) != primary.get(key) for key in ("schema", "jar_sha256", "family", "mode", "scope", "image_size")) or not re.fullmatch(r"[0-9a-f]{64}", metadata.get("jar_sha256", "")):
+        raise ValueError("Secondary capture metadata/JAR hash differs from primary")
+    if metadata.get("view") != "opposite lower oblique" or set(metadata.get("selected_cases", [])) != set(names):
+        raise ValueError("Secondary capture provenance does not match selected cases")
+    provenance = {"source_capture_id": source.name, "view": "opposite lower oblique", "jar_sha256": metadata["jar_sha256"], "cases": []}
+    expected = {"posX": 160, "posY": 6, "posZ": -18, "camX": 155.82, "camY": 9, "camZ": -12.04, "yaw": 220.6, "pitch": 29.8}
+    verified = []
+    for camera in captures:
+        if any(not math.isfinite(float(camera[key])) or abs(float(camera[key])-value) > 1E-4 for key, value in expected.items()):
+            raise ValueError("Secondary camera differs from the diagnostic opposite view")
+        row = known[camera["name"]]
+        original = source/row["file"]
+        if not original.is_file():
+            raise ValueError("Missing secondary screenshot: "+row["file"])
+        digest = secondary_png_digest(original)
+        verified.append((camera, row, original, digest))
+    for camera, row, original, digest in verified:
+        file = "shot_"+row["name"]+"__opposite.png"
+        shutil.copyfile(original, folder/file)
+        row["secondary_file"] = file
+        row["secondary_preview_style"] = diagonal_preview(row, camera)
+        provenance["cases"].append({"name": row["name"], "file": file, "sha256": digest, "camera": camera})
+    (folder/"secondary-provenance.json").write_text(json.dumps(provenance, indent=2), encoding="utf-8")
 
 
 def diagonal_preview(row, camera=None):
@@ -294,11 +408,17 @@ def main():
     parser.add_argument("--no-contact-sheet", action="store_true")
     parser.add_argument("--compact", action="store_true", help="Show a representative regular T/X sample; preserve a separate full reviewer")
     parser.add_argument("--feedback-order", type=Path, help="Put previously wrong displayed cases first, without importing review marks or adding cases")
+    parser.add_argument("--secondary-capture", type=Path, help="Attach flagged-case diagnostic opposite views inside existing diagonal cards")
+    parser.add_argument("--regression-report", type=Path, help="Annotate accepted cases that need review, preserving current review marks")
     parser.add_argument("--scope", choices=["full", *REGULAR_SCOPES, *DIAGONAL_SCOPES], default="full")
     args = parser.parse_args()
     folder = args.capture_directory.resolve()
     if args.compact and args.scope not in ("regular-t", "regular-x"):
         parser.error("--compact requires --scope regular-t or regular-x")
+    if args.secondary_capture and args.scope not in DIAGONAL_SCOPES:
+        parser.error("--secondary-capture requires a diagonal scope")
+    if args.secondary_capture and not args.feedback_order:
+        parser.error("--secondary-capture requires --feedback-order with the requested Wrong cases")
     rows = []
     manifest = folder / "manifest.tsv"
     cameras = {}
@@ -356,6 +476,16 @@ def main():
         try:
             rows = feedback_order(rows, args.feedback_order)
         except (OSError, ValueError, TypeError) as error:
+            parser.error(str(error))
+    if args.regression_report:
+        try:
+            rows = regression_annotations(rows, args.regression_report, args.feedback_order)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            parser.error(str(error))
+    if args.secondary_capture:
+        try:
+            attach_secondary(rows, folder, args.secondary_capture.resolve(), secondary_scene_names(args.feedback_order, args.scope))
+        except (OSError, ValueError, KeyError) as error:
             parser.error(str(error))
     sheet = None if args.no_contact_sheet else contact_sheet(folder, rows)
     data = json.dumps(rows, ensure_ascii=True).replace("<", "\\u003c")

@@ -13,8 +13,14 @@ final class DiagonalPortholeMesh {
     final boolean inverted;
     final double lower, upper;
     final double[] bounds;
+    final com.vandorlabs.blocks.BlockProgrammableWall.Corner corner;
     DiagonalPortholeMesh(int mode, boolean inverted, double lower, double upper, double[] bounds) {
+        this(mode,inverted,lower,upper,bounds,null);
+    }
+    DiagonalPortholeMesh(int mode, boolean inverted, double lower, double upper, double[] bounds,
+            com.vandorlabs.blocks.BlockProgrammableWall.Corner corner) {
         this.mode=mode; this.inverted=inverted; this.lower=lower; this.upper=upper; this.bounds=bounds;
+        this.corner=corner;
     }
 
     static void quad(BufferBuilder buf, TextureAtlasSprite sprite, boolean textured,
@@ -29,7 +35,7 @@ final class DiagonalPortholeMesh {
             return;
         }
         if (mesh==null) { emit(buf,sprite,textured,null,reverse,Arrays.asList(vertices)); return; }
-        double[] cuts=Double.isNaN(mesh.lower) && Double.isNaN(mesh.upper)
+        double[] cuts=mesh.corner!=null?new double[]{0,2,4,8,12,14,16}:Double.isNaN(mesh.lower) && Double.isNaN(mesh.upper)
                 ? new double[]{0,16} : new double[]{0,4,12,16};
         // Horizontal rims belong to exactly one band.
         boolean horizontal=true;
@@ -65,7 +71,12 @@ final class DiagonalPortholeMesh {
             double[] v=source.clone();
             if(mesh!=null) {
                 double y=v[1];
-                v[2]=16*DiagonalWallGeometry.near(mesh.mode,mesh.inverted,y/16,mesh.lower,mesh.upper)+v[2]-6;
+                double near=16*DiagonalWallGeometry.near(mesh.mode,mesh.inverted,y/16,mesh.lower,mesh.upper);
+                if(mesh.corner!=null) {
+                    double left=mesh.corner.left(near),right=mesh.corner.right(near);
+                    v[0]=left+v[0]*(right-left)/16;
+                }
+                v[2]=near+v[2]-6;
                 if(mesh.mode==2) { v[1]=v[2]+16*DiagonalWallGeometry.band(mesh.mode,mesh.inverted);v[2]=y; }
             }
             transformed.add(v);

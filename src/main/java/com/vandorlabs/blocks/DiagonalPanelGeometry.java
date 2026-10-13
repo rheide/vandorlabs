@@ -31,7 +31,10 @@ public final class DiagonalPanelGeometry {
         for(BlockPos next:rowCandidates(pos,state,mode,upper)) {
             if(world instanceof net.minecraft.world.World && !((net.minecraft.world.World)world).isBlockLoaded(next))continue;
             IBlockState other=world.getBlockState(next);
-            if(!(other.getBlock()==state.getBlock() || (PanelJoins.diagonal(state) && PanelJoins.diagonal(other))) || BlockProgrammableWall.geometry(world,next)!=mode
+            if(mode==1 && (!PanelJoins.cornerDiagonalEnabled(world,pos) || !PanelJoins.cornerDiagonalEnabled(world,next)))continue;
+            boolean compatible=other.getBlock()==state.getBlock() || PanelJoins.diagonal(state) && PanelJoins.diagonal(other)
+                    || mode==1 && PanelJoins.cornerDiagonal(state,world,pos) && PanelJoins.cornerDiagonal(other,world,next);
+            if(!compatible || BlockProgrammableWall.geometry(world,next)!=mode
                     || BlockProgrammableWall.fill(world,pos)!=BlockProgrammableWall.fill(world,next))continue;
             if(endsMeet(pos,state,next,other,mode,upper))return true;
         }

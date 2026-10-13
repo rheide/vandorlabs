@@ -63,6 +63,11 @@ rows.forEach((row, index) => {
     const description = row.family === 'diagonal' ? row.title : row.title.split(' · ').at(-1);
     const caption = el('p', description + ' · place ' + row.placement_order.join(' → '));
     caption.className = 'caption'; card.append(caption);
+    if (row.changed_since_accepted) {
+        const marker = el('p'); marker.className = 'caption change-marker';
+        const link = el('a', 'Changed since accepted — compare'); link.href = row.regression_link;
+        marker.append(link); card.append(marker);
+    }
     const toggle = el('button'); toggle.type = 'button'; toggle.className = 'image-toggle';
     const image = el('img'); image.src = row.file; image.alt = row.title + ' · ' + row.cells.join(' / '); image.loading = 'lazy';
     if (row.preview_style) { image.style.width = row.preview_style.width; image.style.transform = row.preview_style.transform; }
@@ -76,6 +81,20 @@ rows.forEach((row, index) => {
     const footer = el('div'); footer.className = 'card-footer';
     footer.append(el('span', row.roles.map(role => role.id + '=' + role.material).join(' / ')));
     const raw = el('a', 'Full size'); raw.href = row.file; raw.target = '_blank'; raw.rel = 'noopener'; footer.append(raw); card.append(footer);
+    if (row.secondary_file) {
+        let opposite = false;
+        const view = el('button', 'View opposite side'); view.type = 'button'; view.className = 'view-switch';
+        view.onclick = () => {
+            opposite = !opposite;
+            image.src = opposite ? row.secondary_file : row.file;
+            const style = opposite ? row.secondary_preview_style : row.preview_style;
+            image.style.width = style ? style.width : '150%';
+            image.style.transform = style ? style.transform : 'translate(-50%, -50%)';
+            image.alt = row.title + (opposite ? ' · opposite lower oblique view' : ' · primary view');
+            raw.href = image.src; view.textContent = opposite ? 'View primary side' : 'View opposite side';
+        };
+        footer.append(view);
+    }
     const notesLabel = el('label', 'Optional note'), notes = el('textarea'); notesLabel.className = 'notes';
     notes.maxLength = 20000; notes.setAttribute('aria-label', 'Note for case ' + (index + 1));
     notes.oninput = () => { if (reviews[row.file]) { reviews[row.file].notes = notes.value; save(); } };

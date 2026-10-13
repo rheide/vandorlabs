@@ -90,7 +90,7 @@ public final class DiagonalWallMeshCache {
                     com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,true),
                     tile.isDiagonalHalfHeight()?2:1);
         }
-        if(slice!=null) {
+        if(slice!=null && !TEAnimatedScreenSelector.solidDiagonalPortholeJunction(tile,state)) {
             capture=StaticSurfaceMesh.capture();
             TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,slice,
                     TEAnimatedScreenSelector.portholeMesh(tile,state));

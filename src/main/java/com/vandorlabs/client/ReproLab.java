@@ -488,10 +488,20 @@ public class ReproLab {
             if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
                 SHOTS.clear();
                 boolean diagonal="diagonal".equals(System.getProperty("vandorlabs.connectionAcceptanceFamily"));
+                boolean opposite=Boolean.getBoolean("vandorlabs.connectionAcceptanceOpposite");
+                if(opposite&&!diagonal)throw new IllegalArgumentException("Opposite connection views require diagonals");
                 for(String name:ConnectionAcceptance.names())
                     SHOTS.add(diagonal
-                            ? new Shot(name,GALLERY_X+2.84D,GALLERY_Y+10.75D,-20.23D,40.6F,70F)
+                            ? (opposite?new Shot(name,GALLERY_X-4.18D,GALLERY_Y+5D,-12.04D,220.6F,29.8F):new Shot(name,GALLERY_X+2.84D,GALLERY_Y+10.75D,-20.23D,40.6F,70F))
                             : new Shot(name,GALLERY_X+5,GALLERY_Y+4.5D,-23,40.6F,30F));
+                String selected=System.getProperty("vandorlabs.connectionAcceptanceShotNames","");
+                if(!selected.isEmpty()){
+                    java.util.Set<String> names=new java.util.HashSet<>(java.util.Arrays.asList(selected.split(",")));
+                    for(Shot shot:SHOTS)names.remove(shot.name);
+                    if(!names.isEmpty())throw new IllegalArgumentException("Unknown selected connection shots: "+names);
+                    java.util.Set<String> include=new java.util.HashSet<>(java.util.Arrays.asList(selected.split(",")));
+                    SHOTS.removeIf(shot->!include.contains(shot.name));
+                }
             }
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
             if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_") && !shot.name.startsWith("gallery_glass_finishes_"));

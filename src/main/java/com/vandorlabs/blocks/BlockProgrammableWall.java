@@ -382,7 +382,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
 
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {
-        if (!isDiagonalShape() || isPortholeShape() || halfHeight(world,pos)) return null;
+        if (!PanelJoins.cornerDiagonal(state,world,pos) || !PanelJoins.cornerDiagonalEnabled(world,pos)) return null;
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
         int override=raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector?((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw).getDiagonalJoin():0;
         if(override==1)return null;
@@ -400,7 +400,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
                 continue;
             IBlockState neighbor = world.getBlockState(neighborPos);
-            if(!PanelJoins.enabled(world,neighborPos))continue;
+            if(!PanelJoins.cornerDiagonalEnabled(world,neighborPos))continue;
             if(PanelJoins.flat(neighbor)) {
                 EnumFacing nf=PanelJoins.facing(neighbor);
                 if(nf.getAxis()==facing.getAxis())continue;
@@ -409,7 +409,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                 if(front){frontRight=right;frontFlat=arm;}else{backRight=right;backFlat=arm;}
                 continue;
             }
-            if (!PanelJoins.diagonal(neighbor)
+            if (!PanelJoins.cornerDiagonal(neighbor,world,neighborPos)
                     || neighbor.getValue(INVERTED) != state.getValue(INVERTED)
                     || !sameDiagonalWidth(world, pos, neighborPos)) continue;
             EnumFacing neighborFacing = neighbor.getValue(FACING);
@@ -433,7 +433,10 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
             return false;
         IBlockState neighbor = world.getBlockState(neighborPos);
-        if (neighbor.getBlock() != this && !(isDiagonalShape() && !isPortholeShape() && PanelJoins.diagonal(neighbor))) return false;
+        if(isDiagonalShape() && geometry(world,pos)==1) {
+            if(!PanelJoins.cornerDiagonal(neighbor,world,neighborPos)
+                    || !PanelJoins.cornerDiagonalEnabled(world,pos) || !PanelJoins.cornerDiagonalEnabled(world,neighborPos))return false;
+        } else if (neighbor.getBlock() != this && !(isDiagonalShape() && !isPortholeShape() && PanelJoins.diagonal(neighbor))) return false;
         EnumFacing facing = state.getValue(FACING);
         EnumFacing neighborFacing = neighbor.getValue(FACING);
         if (isDiagonalShape())

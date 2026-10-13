@@ -19,6 +19,20 @@ final class StaticSurfaceMesh {
         batch=new OpaqueDoorBatch.Mesh(data,false);return batch;
     }
     int vertexCount() { return vertices.length/8; }
+    /** Keep only the connector surfaces around a sloped porthole's open central body. */
+    StaticSurfaceMesh diagonalArms(int mode,boolean inverted,double lower,double upper) {
+        float[] result=new float[vertices.length];int used=0;
+        for(int q=0;q<vertices.length;q+=32) {
+            boolean body=true;
+            for(int v=0;v<4;v++) {
+                int p=q+v*8;
+                double near=16*com.vandorlabs.render.DiagonalWallGeometry.near(mode,inverted,vertices[p+1]/16D,lower,upper);
+                body &= vertices[p+2]>=near-1E-4 && vertices[p+2]<=near+4+1E-4;
+            }
+            if(!body){System.arraycopy(vertices,q,result,used,32);used+=32;}
+        }
+        return new StaticSurfaceMesh(Arrays.copyOf(result,used));
+    }
     boolean samplesOnly(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
         for(int i=0;i<vertices.length;i+=8)
             if(vertices[i+3]<sprite.getMinU()-1E-6 || vertices[i+3]>sprite.getMaxU()+1E-6
@@ -293,6 +307,8 @@ final class StaticSurfaceMesh {
 
     private static final ThreadLocal<Capture> CAPTURE=ThreadLocal.withInitial(Capture::new);
     static Capture capture() { Capture result=CAPTURE.get();result.used=0;return result; }
+    /** Nested mesh emitters must not reset a caller's thread-local capture. */
+    static Capture independentCapture() { return new Capture(); }
 
     /** Captures existing geometry emitters without packing a shader-dependent vertex layout. */
     static final class Capture extends BufferBuilder {

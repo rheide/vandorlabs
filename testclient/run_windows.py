@@ -45,6 +45,7 @@ def main():
     parser.add_argument('--connection-mode', type=int, choices=[0, 1, 2], default=0,
                         help='Diagonal size: 0 half-width/full-height; 1 full-width/full-height; 2 full-width/half-height')
     parser.add_argument('--connection-baseline', type=Path, help='Accepted screenshot baseline (defaults to the regular-wall baseline)')
+    parser.add_argument('--connection-opposite-feedback', type=Path, help='Capture only flagged Wrong diagonal cases from this feedback at the opposite diagnostic angle')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if args.connection_family == 'regular' and args.connection_mode != 0:
@@ -52,6 +53,15 @@ def main():
     diagonal_scopes = ['diagonal-half-width-full-height', 'diagonal-full-width-full-height', 'diagonal-full-width-half-height']
     connection_scope = (diagonal_scopes[args.connection_mode] if args.connection_family == 'diagonal'
                         else 'regular-'+args.connection_topology)
+    opposite_names = []
+    if args.connection_opposite_feedback:
+        if args.focus != 'connection-acceptance' or args.connection_family != 'diagonal' or args.acceptance_pilot or args.connection_baseline or args.shot_prefix or args.start_shot or args.shot_limit or args.shot_shards != 1 or args.shot_shard != 0:
+            parser.error('Opposite capture requires unfiltered diagonal connection acceptance without a baseline override')
+        from review_connections import secondary_scene_names
+        try:
+            opposite_names = secondary_scene_names(args.connection_opposite_feedback, connection_scope)
+        except (OSError, ValueError, TypeError) as error:
+            parser.error(str(error))
     if os.name != 'nt':
         parser.error('Use run.sh on Linux; this launcher hides native Windows client windows.')
     root = Path(__file__).resolve().parents[1]
@@ -70,6 +80,7 @@ def main():
             'topology': 'l-t-x' if args.connection_family == 'diagonal' else args.connection_topology,
             'image_size': [1920, 1080],
             'family': args.connection_family, 'mode': args.connection_mode, 'scope': connection_scope,
+            'view': 'opposite lower oblique' if opposite_names else 'primary', 'selected_cases': opposite_names,
         }, indent=2), encoding='utf-8')
     if args.disable_categories:
         categories=args.disable_categories.split(',')
@@ -132,6 +143,8 @@ def main():
     properties.append('-Dvandorlabs.connectionAcceptanceTopology='+args.connection_topology)
     properties.append('-Dvandorlabs.connectionAcceptanceFamily='+args.connection_family)
     properties.append('-Dvandorlabs.connectionAcceptanceMode='+str(args.connection_mode))
+    if opposite_names:
+        properties += ['-Dvandorlabs.connectionAcceptanceOpposite=true', '-Dvandorlabs.connectionAcceptanceShotNames='+','.join(opposite_names)]
     properties += ['-Dvandorlabs.reproShotShards='+str(args.shot_shards), '-Dvandorlabs.reproShotShard='+str(args.shot_shard), '-Dvandorlabs.reproShotLimit='+str(args.shot_limit)]
     if args.acceptance_pilot:
         properties.append('-Dvandorlabs.connectionAcceptancePilot=true')
@@ -231,11 +244,19 @@ def main():
             if 'flat-glass-cross-frame PASS 1296 material/facing fixtures' not in client_log:
                 raise SystemExit('Missing glass cross-junction frame runtime checks.')
             scope = connection_scope
-            if not args.acceptance_pilot:
+            if opposite_names:
+                from connection_baseline import read_manifest
+                from review_connections import secondary_png_digest
+                if set(read_manifest(output)) != set(opposite_names):
+                    raise SystemExit('Diagnostic opposite capture case IDs differ from requested '+str(len(opposite_names)))
+                for name in opposite_names:
+                    secondary_png_digest(output/('shot_'+name+'.png'))
+                print('Diagnostic opposite capture PASS '+str(len(opposite_names))+' flagged cases')
+            if not args.acceptance_pilot and not opposite_names:
                 subprocess.run([sys.executable, str(root/'testclient/review_connections.py'), str(output), '--scope', scope, '--no-contact-sheet'] + (['--compact'] if args.connection_family == 'regular' and args.connection_topology in ('t', 'x') else []), check=True)
             from connection_baseline import default_baseline
             baseline = args.connection_baseline or default_baseline(scope if args.connection_family == 'diagonal' else args.connection_topology)
-            complete_capture = (not args.acceptance_pilot and not args.shot_prefix and not args.start_shot
+            complete_capture = (not opposite_names and not args.acceptance_pilot and not args.shot_prefix and not args.start_shot
                                 and not args.shot_limit and args.shot_shards == 1)
             if complete_capture and (baseline/'baseline.json').is_file():
                 checked = subprocess.run([sys.executable, str(root/'testclient/connection_baseline.py'), 'compare',

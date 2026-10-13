@@ -1,0 +1,3272 @@
+{
+  "schema": "vandorlabs-connection-baseline-v1",
+  "source_capture_id": "render-run.diagonal-full-width-full-height-recheck-20261013",
+  "acceptance": "Reviewer status ok only; defaultStatus honored when explicitly present",
+  "comparison": {
+    "roi": [
+      480,
+      216,
+      1440,
+      918
+    ],
+    "sample_scale": 2,
+    "mask_dilation_pixels": 2,
+    "channel_tolerance": 12,
+    "max_changed_fraction": 0.003,
+    "max_mean_error": 2.0,
+    "max_lighting_bias": 6
+  },
+  "cases": [
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_0_1_2_12_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_0_1_2_12_0.png",
+      "sha256": "6bef3e979dc6745acd1f7b9cba5dc7d13fd889c8b107c3428b78f99e4191e3e6",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 lower placement \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_0_2_0_242_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_0_2_0_242_0.png",
+      "sha256": "95270a731c36ae470464301c04406c265f0aa9238818821c00a09da8ae97763d",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 lower placement \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_0_3_5_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_0_3_5_0.png",
+      "sha256": "c51fba7af60f04d38e8a3a1ac3c35bcf29c586e22963df4149422c2c8e9d959b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_0_3_5_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_0_3_5_1.png",
+      "sha256": "c51fba7af60f04d38e8a3a1ac3c35bcf29c586e22963df4149422c2c8e9d959b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 back-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_1_0_23_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_1_0_23_0.png",
+      "sha256": "9cbf937e861681a742ddab6707f62a4e0cd1a4212b197f240b955e61ac12a1bd",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_1_4_72_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_1_4_72_0.png",
+      "sha256": "8877cde4ef7916b8e8004c29ddb33022237c6acf4add9de96f5230dd5fab06b0",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_1_7_40_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_1_7_40_0.png",
+      "sha256": "b8d1f0676d5c75a320d95a6f866069ad304ce0a71acc4b8a26c514b604a84a1c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 front right / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_2_1_6_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_2_1_6_0.png",
+      "sha256": "88191603280175c8886a2f87f3288669c68a05e29e564890f6e2fd406bfd7186",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 front right / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_1_2_3_176_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_1_2_3_176_0.png",
+      "sha256": "8a3ab8f58a4dbb2e0119286f1072b0164dfd67b34e44c8cf823c51800c24fb97",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 upper placement \u00b7 front right / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_1_2_25_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_1_2_25_0.png",
+      "sha256": "be63398f4248085480dd2f879e8daa4ac25e1eb81b001b678633bf25eaca0279",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_1_5_52_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_1_5_52_0.png",
+      "sha256": "14cdc3b5130866d163669b987003fd3f72c9afb7d69c123df7a1457acc46d5d0",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_1_5_71_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_1_5_71_0.png",
+      "sha256": "258743be1f44b5a1a0ce17c4d34f0f6b70cfe0ccc1eb1856f45703f68aa1fae6",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front left / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_1_3_44_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_1_3_44_0.png",
+      "sha256": "e3f3134ee2c69456d2be6d45555b11cf899187bf185bf8ff45de2519d9c48f2c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 back-right branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_0_0_8_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_0_0_8_0.png",
+      "sha256": "c141a6ea1e801a3bd92809a647f817bf74bcdab70caff07b4214e6aad096044e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_0_0_8_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_0_0_8_1.png",
+      "sha256": "c141a6ea1e801a3bd92809a647f817bf74bcdab70caff07b4214e6aad096044e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_0_2_6_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_0_2_6_0.png",
+      "sha256": "5fef403e9e7bc6ccb390c3b5bf3d7367442102b140cb026910611c9e4bc6cd5f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_0_2_6_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_0_2_6_1.png",
+      "sha256": "5fef403e9e7bc6ccb390c3b5bf3d7367442102b140cb026910611c9e4bc6cd5f",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 back-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_1_0_24_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_1_0_24_0.png",
+      "sha256": "5bfe7e667b92c0fd41d584fac74252d2d73452b1c3c13bfc3504e2ed5a7071cf",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_1_0_47_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_1_0_47_0.png",
+      "sha256": "62149fdfb9677b869fe0831e928e9cce1b5e38f29d4b25af05e040a521254ede",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_1_10_2_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_1_10_2_0.png",
+      "sha256": "996a9b5c224dec3aaf08c378b229eb6afcaa593204eafd66f8a9ccb732313110",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front right / back right + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_2_0_107_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_2_0_107_0.png",
+      "sha256": "7179a7b4b143f1d31ddcd1a49ddf07653783a20d52afbead6384f00c5e0e7f19",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_0_2_2_240_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_0_2_2_240_0.png",
+      "sha256": "fd65796450e04d42900dbba0d3f320be030a3d8ab062e2e799a41a513a89eed7",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 lower placement \u00b7 front left / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_0_1_7_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_0_1_7_0.png",
+      "sha256": "ea1224fbab408f8563a251bf8dbd1b6437106dc4d8c980ae879d1697f73d11d4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_0_1_7_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_0_1_7_1.png",
+      "sha256": "ea1224fbab408f8563a251bf8dbd1b6437106dc4d8c980ae879d1697f73d11d4",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_1_2_34_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_1_2_34_0.png",
+      "sha256": "40f6a6ac243648853101c919ad35762b67dda960b957be87a9e45ad1909a3131",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 back-left branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_1_9_20_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_1_9_20_0.png",
+      "sha256": "8c3e8406c3b185f1268bb8d50ffb15e446a38f125e459fcc2cbca8ce74b81785",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 front left / back right + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_2_1_52_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_2_1_52_0.png",
+      "sha256": "8c8a07af93c91de8c600752d8875ad639fa8b02067d8c22cb7f8d77b5d32d106",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 front right / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_0_1_1_67_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_0_1_1_67_0.png",
+      "sha256": "78b7a6cdcb1f300ff8af9bc6a00eb3acd91ed65c07600bda3a298d593126f8f2",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 lower placement \u00b7 front-right branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_0_1_4_80_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_0_1_4_80_0.png",
+      "sha256": "993dc4444d0f0edb18b669db19ca242585af56685f080d57caf786a92d84ad3c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 lower placement \u00b7 front left / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "porthole"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_0_2_3_16_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_0_2_3_16_0.png",
+      "sha256": "6e28168bab259bf8bde86483eb4945beff0ef851644d0b3b80c3e8c8e96b641d",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 lower placement \u00b7 front right / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_1_1_3_59_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_1_1_3_59_0.png",
+      "sha256": "4d3730a4c46691d2f3138464bf3deb7fca1fbfa8cd9a7e678f1b9489e09aa937",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 upper placement \u00b7 back-right branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_1_2_0_189_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_1_2_0_189_0.png",
+      "sha256": "dfeb978c431e21af1136e02ba4d47a536811970c1d9683ff41a2b7324e9e3203",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 upper placement \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_0_0_0_0_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_0_0_0_0_0.png",
+      "sha256": "e1fefe628598fda05757da692e8b4a3671eb9d685065ebceeef24dc3acac004b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 lower placement \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_0_0_0_0_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_0_0_0_0_1.png",
+      "sha256": "e1fefe628598fda05757da692e8b4a3671eb9d685065ebceeef24dc3acac004b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 lower placement \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_0_2_0_0_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_0_2_0_0_0.png",
+      "sha256": "7c3d734caf4b9a3aed01a443f051f007d95eb25c855a978ed92412b241410c58",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 lower placement \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_0_0_2_2_18_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_0_0_2_2_18_0.png",
+      "sha256": "2f60ee21c36faf1e90286d03779949f6c6609d3c52763d0ee997a7387b81355e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing north \u00b7 lower placement \u00b7 front left / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_0_1_3_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_0_1_3_0.png",
+      "sha256": "159851f670a4fcb21ffd77c38e510cd0a1484417a896416ee50d5cf9fe85c090",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_0_1_3_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_0_1_3_1.png",
+      "sha256": "159851f670a4fcb21ffd77c38e510cd0a1484417a896416ee50d5cf9fe85c090",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front-right",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_2_1_0_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_2_1_0_0.png",
+      "sha256": "cc71007e17d648fad051dfef2ee622fbbcdd0d24282f417f027d39ba94ee2971",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front right / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_2_1_120_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_2_1_120_0.png",
+      "sha256": "f2ff8d29d9553bda017ebfabf01711cc5f97b01e2a9bf0d8b158450b0d78c1f9",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front right / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_0_2_3_81_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_0_2_3_81_0.png",
+      "sha256": "9b33e5b39dfb00641d6acc5cc71d5460feaa5517b51a9707afe4193d08ac1c5e",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 lower placement \u00b7 front right / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_0_0_4_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_0_0_4_0.png",
+      "sha256": "c3fdc17a36d97bc7bb826adc6a2e43f2ccf9cc9856dca87f93cff458b0ec3e4c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_0_0_4_1",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_0_0_4_1.png",
+      "sha256": "c3fdc17a36d97bc7bb826adc6a2e43f2ccf9cc9856dca87f93cff458b0ec3e4c",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "L cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 front-left",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_1_1_40_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_1_1_40_0.png",
+      "sha256": "03402268456578292bd3ef3830c9e84682f4fcac0b2217599a60ad4bc09e6bbb",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 front-right branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_1_11_13_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_1_11_13_0.png",
+      "sha256": "af312ef59c004f30bddb3b93e538d9c90d3061eaa2555ee84205be8fff5c37e7",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 front right / back right + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_2_0_115_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_2_0_115_0.png",
+      "sha256": "d80c3f2c840a94dc04fa4b874b23d8af4b95cd7d2ae5c558ddb4b19d13876b92",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 front left / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "porthole"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_1_1_2_2_189_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_1_1_2_2_189_0.png",
+      "sha256": "46a86102d2968aaebad9732de64fc609c8392de8267a262cefec898447a58bec",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing east \u00b7 upper placement \u00b7 front left / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "east",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "porthole"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_1_3_40_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_1_3_40_0.png",
+      "sha256": "d0d475e42a808aeea18544a11436a78f5ea67ba755c8565f491e6e386f9cc4c8",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 back-right branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_2_1_2_3_121_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_2_1_2_3_121_0.png",
+      "sha256": "afa99a94b6bf03d9e5f9a9c34456023e8cf19955f67d8d23c25e6ab86d3268e2",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing south \u00b7 upper placement \u00b7 front right / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_0_1_7_12_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_0_1_7_12_0.png",
+      "sha256": "b88754cff56445ea053907d57eeedf383a8a3b3d749efb613a1b3d67a823a77b",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 lower placement \u00b7 front right / back left + right tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_0_2_1_81_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_0_2_1_81_0.png",
+      "sha256": "acccc04ef8418debbd7ed068546646a54185872432d5c03bdf549ae3083a20e2",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 lower placement \u00b7 front right / back left + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_1_1_1_1_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_1_1_1_1_0.png",
+      "sha256": "36c215b5a480a6c1e811b57c0ef103b718540c600046316cb9304e3fb7628b81",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 upper placement \u00b7 front-right branch + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "wall"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_1_1_6_40_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_1_1_6_40_0.png",
+      "sha256": "d5c7d5dcf9fe60738e372daf3bbed9d0dba6c41acf0e24e0706849dd00b0daa1",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "T cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 upper placement \u00b7 front right / back left + left tail",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "north",
+          "material": "glass"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "south",
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "name": "gallery_acceptance_horizontal_1_1_3_1_2_2_23_0",
+      "file": "shot_gallery_acceptance_horizontal_1_1_3_1_2_2_23_0.png",
+      "sha256": "040b515ed16e9093a56288ae2ff762d23f8ce96a18f39915df04c87bbe4527df",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "camera": {
+        "posX": 160.0,
+        "posY": 6.0,
+        "posZ": -18.0,
+        "camX": 162.84,
+        "camY": 14.75,
+        "camZ": -20.23,
+        "yaw": 40.6,
+        "pitch": 70.0
+      },
+      "title": "Four-way cell arrangement \u00b7 diagonal \u00b7 facing west \u00b7 upper placement \u00b7 front left / back right + both tails",
+      "roles": [
+        {
+          "id": "C",
+          "position": [
+            0,
+            0
+          ],
+          "location": "center",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "N",
+          "position": [
+            0,
+            -1
+          ],
+          "location": "north",
+          "facing": "west",
+          "material": "glass"
+        },
+        {
+          "id": "S",
+          "position": [
+            0,
+            1
+          ],
+          "location": "south",
+          "facing": "west",
+          "material": "porthole"
+        },
+        {
+          "id": "W",
+          "position": [
+            -1,
+            0
+          ],
+          "location": "west",
+          "facing": "south",
+          "material": "wall"
+        },
+        {
+          "id": "E",
+          "position": [
+            1,
+            0
+          ],
+          "location": "east",
+          "facing": "north",
+          "material": "wall"
+        }
+      ]
+    }
+  ],
+  "excluded_status_counts": {
+    "wrong": 6
+  }
+}
