@@ -41,131 +41,515 @@
         }
       }
     ],
-    "facing=north,height=0,upper=false": {
+    "arms=0,facing=north,height=0,upper=false": {
       "model": "vandorlabs:pilot_seat.obj",
       "y": 0
     },
-    "facing=north,height=1,upper=false": {
+    "arms=1,facing=north,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_1.obj",
+      "y": 0
+    },
+    "arms=2,facing=north,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_2.obj",
+      "y": 0
+    },
+    "arms=3,facing=north,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_3.obj",
+      "y": 0
+    },
+    "arms=0,facing=north,height=1,upper=false": {
       "model": "vandorlabs:pilot_seat_height_1.obj",
       "y": 0
     },
-    "facing=north,height=2,upper=false": {
+    "arms=1,facing=north,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_1.obj",
+      "y": 0
+    },
+    "arms=2,facing=north,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_2.obj",
+      "y": 0
+    },
+    "arms=3,facing=north,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_3.obj",
+      "y": 0
+    },
+    "arms=0,facing=north,height=2,upper=false": {
       "model": "vandorlabs:pilot_seat_height_2.obj",
       "y": 0
     },
-    "facing=north,height=3,upper=false": {
+    "arms=1,facing=north,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_1.obj",
+      "y": 0
+    },
+    "arms=2,facing=north,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_2.obj",
+      "y": 0
+    },
+    "arms=3,facing=north,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_3.obj",
+      "y": 0
+    },
+    "arms=0,facing=north,height=3,upper=false": {
       "model": "vandorlabs:pilot_seat_height_3.obj",
       "y": 0
     },
-    "facing=north,height=0,upper=true": {
+    "arms=1,facing=north,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_1.obj",
+      "y": 0
+    },
+    "arms=2,facing=north,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_2.obj",
+      "y": 0
+    },
+    "arms=3,facing=north,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_3.obj",
+      "y": 0
+    },
+    "arms=0,facing=north,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 0
     },
-    "facing=north,height=1,upper=true": {
+    "arms=1,facing=north,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 0
     },
-    "facing=north,height=2,upper=true": {
+    "arms=2,facing=north,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 0
     },
-    "facing=north,height=3,upper=true": {
+    "arms=3,facing=north,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 0
     },
-    "facing=east,height=0,upper=false": {
+    "arms=0,facing=north,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=1,facing=north,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=2,facing=north,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=3,facing=north,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=0,facing=north,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=1,facing=north,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=2,facing=north,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=3,facing=north,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=0,facing=north,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=1,facing=north,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=2,facing=north,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=3,facing=north,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 0
+    },
+    "arms=0,facing=east,height=0,upper=false": {
       "model": "vandorlabs:pilot_seat.obj",
       "y": 90
     },
-    "facing=east,height=1,upper=false": {
+    "arms=1,facing=east,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_1.obj",
+      "y": 90
+    },
+    "arms=2,facing=east,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_2.obj",
+      "y": 90
+    },
+    "arms=3,facing=east,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_3.obj",
+      "y": 90
+    },
+    "arms=0,facing=east,height=1,upper=false": {
       "model": "vandorlabs:pilot_seat_height_1.obj",
       "y": 90
     },
-    "facing=east,height=2,upper=false": {
+    "arms=1,facing=east,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_1.obj",
+      "y": 90
+    },
+    "arms=2,facing=east,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_2.obj",
+      "y": 90
+    },
+    "arms=3,facing=east,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_3.obj",
+      "y": 90
+    },
+    "arms=0,facing=east,height=2,upper=false": {
       "model": "vandorlabs:pilot_seat_height_2.obj",
       "y": 90
     },
-    "facing=east,height=3,upper=false": {
+    "arms=1,facing=east,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_1.obj",
+      "y": 90
+    },
+    "arms=2,facing=east,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_2.obj",
+      "y": 90
+    },
+    "arms=3,facing=east,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_3.obj",
+      "y": 90
+    },
+    "arms=0,facing=east,height=3,upper=false": {
       "model": "vandorlabs:pilot_seat_height_3.obj",
       "y": 90
     },
-    "facing=east,height=0,upper=true": {
+    "arms=1,facing=east,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_1.obj",
+      "y": 90
+    },
+    "arms=2,facing=east,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_2.obj",
+      "y": 90
+    },
+    "arms=3,facing=east,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_3.obj",
+      "y": 90
+    },
+    "arms=0,facing=east,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 90
     },
-    "facing=east,height=1,upper=true": {
+    "arms=1,facing=east,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 90
     },
-    "facing=east,height=2,upper=true": {
+    "arms=2,facing=east,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 90
     },
-    "facing=east,height=3,upper=true": {
+    "arms=3,facing=east,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 90
     },
-    "facing=south,height=0,upper=false": {
+    "arms=0,facing=east,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=1,facing=east,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=2,facing=east,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=3,facing=east,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=0,facing=east,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=1,facing=east,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=2,facing=east,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=3,facing=east,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=0,facing=east,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=1,facing=east,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=2,facing=east,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=3,facing=east,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 90
+    },
+    "arms=0,facing=south,height=0,upper=false": {
       "model": "vandorlabs:pilot_seat.obj",
       "y": 180
     },
-    "facing=south,height=1,upper=false": {
+    "arms=1,facing=south,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_1.obj",
+      "y": 180
+    },
+    "arms=2,facing=south,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_2.obj",
+      "y": 180
+    },
+    "arms=3,facing=south,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_3.obj",
+      "y": 180
+    },
+    "arms=0,facing=south,height=1,upper=false": {
       "model": "vandorlabs:pilot_seat_height_1.obj",
       "y": 180
     },
-    "facing=south,height=2,upper=false": {
+    "arms=1,facing=south,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_1.obj",
+      "y": 180
+    },
+    "arms=2,facing=south,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_2.obj",
+      "y": 180
+    },
+    "arms=3,facing=south,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_3.obj",
+      "y": 180
+    },
+    "arms=0,facing=south,height=2,upper=false": {
       "model": "vandorlabs:pilot_seat_height_2.obj",
       "y": 180
     },
-    "facing=south,height=3,upper=false": {
+    "arms=1,facing=south,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_1.obj",
+      "y": 180
+    },
+    "arms=2,facing=south,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_2.obj",
+      "y": 180
+    },
+    "arms=3,facing=south,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_3.obj",
+      "y": 180
+    },
+    "arms=0,facing=south,height=3,upper=false": {
       "model": "vandorlabs:pilot_seat_height_3.obj",
       "y": 180
     },
-    "facing=south,height=0,upper=true": {
+    "arms=1,facing=south,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_1.obj",
+      "y": 180
+    },
+    "arms=2,facing=south,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_2.obj",
+      "y": 180
+    },
+    "arms=3,facing=south,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_3.obj",
+      "y": 180
+    },
+    "arms=0,facing=south,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 180
     },
-    "facing=south,height=1,upper=true": {
+    "arms=1,facing=south,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 180
     },
-    "facing=south,height=2,upper=true": {
+    "arms=2,facing=south,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 180
     },
-    "facing=south,height=3,upper=true": {
+    "arms=3,facing=south,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 180
     },
-    "facing=west,height=0,upper=false": {
+    "arms=0,facing=south,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=1,facing=south,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=2,facing=south,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=3,facing=south,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=0,facing=south,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=1,facing=south,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=2,facing=south,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=3,facing=south,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=0,facing=south,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=1,facing=south,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=2,facing=south,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=3,facing=south,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 180
+    },
+    "arms=0,facing=west,height=0,upper=false": {
       "model": "vandorlabs:pilot_seat.obj",
       "y": 270
     },
-    "facing=west,height=1,upper=false": {
+    "arms=1,facing=west,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_1.obj",
+      "y": 270
+    },
+    "arms=2,facing=west,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_2.obj",
+      "y": 270
+    },
+    "arms=3,facing=west,height=0,upper=false": {
+      "model": "vandorlabs:pilot_seat_arms_3.obj",
+      "y": 270
+    },
+    "arms=0,facing=west,height=1,upper=false": {
       "model": "vandorlabs:pilot_seat_height_1.obj",
       "y": 270
     },
-    "facing=west,height=2,upper=false": {
+    "arms=1,facing=west,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_1.obj",
+      "y": 270
+    },
+    "arms=2,facing=west,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_2.obj",
+      "y": 270
+    },
+    "arms=3,facing=west,height=1,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_1_arms_3.obj",
+      "y": 270
+    },
+    "arms=0,facing=west,height=2,upper=false": {
       "model": "vandorlabs:pilot_seat_height_2.obj",
       "y": 270
     },
-    "facing=west,height=3,upper=false": {
+    "arms=1,facing=west,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_1.obj",
+      "y": 270
+    },
+    "arms=2,facing=west,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_2.obj",
+      "y": 270
+    },
+    "arms=3,facing=west,height=2,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_2_arms_3.obj",
+      "y": 270
+    },
+    "arms=0,facing=west,height=3,upper=false": {
       "model": "vandorlabs:pilot_seat_height_3.obj",
       "y": 270
     },
-    "facing=west,height=0,upper=true": {
+    "arms=1,facing=west,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_1.obj",
+      "y": 270
+    },
+    "arms=2,facing=west,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_2.obj",
+      "y": 270
+    },
+    "arms=3,facing=west,height=3,upper=false": {
+      "model": "vandorlabs:pilot_seat_height_3_arms_3.obj",
+      "y": 270
+    },
+    "arms=0,facing=west,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 270
     },
-    "facing=west,height=1,upper=true": {
+    "arms=1,facing=west,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 270
     },
-    "facing=west,height=2,upper=true": {
+    "arms=2,facing=west,height=0,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 270
     },
-    "facing=west,height=3,upper=true": {
+    "arms=3,facing=west,height=0,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=0,facing=west,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=1,facing=west,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=2,facing=west,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=3,facing=west,height=1,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=0,facing=west,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=1,facing=west,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=2,facing=west,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=3,facing=west,height=2,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=0,facing=west,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=1,facing=west,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=2,facing=west,height=3,upper=true": {
+      "model": "vandorlabs:pilot_seat_empty",
+      "y": 270
+    },
+    "arms=3,facing=west,height=3,upper=true": {
       "model": "vandorlabs:pilot_seat_empty",
       "y": 270
     }

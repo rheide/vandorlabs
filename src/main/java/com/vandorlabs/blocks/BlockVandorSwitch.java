@@ -237,8 +237,8 @@ public class BlockVandorSwitch extends BlockVandor {
             if (momentary) {
                 boolean before = state.getValue(ON);
                 if (!before) {
-                    world.setBlockState(pos, state.withProperty(ON, true), 3);
                     if (tile != null) tile.setLocalOn(true);
+                    world.setBlockState(pos, state.withProperty(ON, true), 3);
                     world.checkLight(pos);
                     world.notifyNeighborsOfStateChange(pos.offset(state.getValue(FACING).getOpposite()), this, false);
                 }

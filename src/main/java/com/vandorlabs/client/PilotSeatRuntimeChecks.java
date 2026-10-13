@@ -87,6 +87,14 @@ public final class PilotSeatRuntimeChecks {
             require(variant!=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),"height variant "+height+" "+facing);
             require(variant.getQuads(null,null,0).size()>100,"height geometry "+height);
         }
+        for(int height=0;height<4;height++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            int[] counts=new int[4];
+            for(int arms=0;arms<4;arms++){
+                IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING,facing).withProperty(BlockPilotSeat.HEIGHT,height).withProperty(BlockPilotSeat.ARMS,arms);
+                IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);require(model!=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),"armrest model variant");counts[arms]=model.getQuads(null,null,0).size();
+            }
+            require(counts[0]>counts[1] && counts[0]>counts[2] && counts[1]>counts[3] && counts[2]>counts[3],"each armrest mask removes its own visible faces");
+        }
         require(icon.getParticleTexture() != mc.getTextureMapBlocks().getMissingSprite(), "particle texture");
         System.out.println("[vandorlabs][reprolab] pilot-seat-model PASS four-facings inventory textures");
     }

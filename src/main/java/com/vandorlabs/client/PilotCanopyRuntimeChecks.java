@@ -61,6 +61,7 @@ final class PilotCanopyRuntimeChecks {
                 BlockPos anchor=new BlockPos(400,112,400);
                 BlockPos lower=anchor.offset(facing.rotateY(),canopy.width*joined/2).offset(facing.getOpposite(),canopy.length/2).down();
                 for(BlockPos at:BlockPos.getAllInBox(anchor.add(-8,-3,-8),anchor.add(8,4,8)))world.setBlockToAir(at);
+                player.setPosition(anchor.getX()+6,anchor.getY()+2,anchor.getZ()+6);
                 IBlockState seatState=seat.getDefaultState().withProperty(BlockPilotSeat.FACING,facing);
                 if(seatFirst){world.setBlockState(lower,seatState,3);seat.onBlockPlacedBy(world,lower,seatState,player,new ItemStack(seat));}
                 require(canopy.fits(world,anchor,facing),"canopy fits over seat reservation "+canopy.kind+" "+seatFirst);
@@ -76,7 +77,7 @@ final class PilotCanopyRuntimeChecks {
                     require(seat.canPlaceBlockAt(world,lower),"seat fits below "+canopy.kind);
                     ItemStack held=player.getHeldItemMainhand().copy();player.setSneaking(false);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(seat));
                     require(!canopy.onBlockActivated(world,lower.up(),world.getBlockState(lower.up()),player,EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,0,.5F),"canopy must pass seat item click through "+canopy.kind);
-                    require(player.getHeldItemMainhand().getItem().onItemUse(player,world,lower.up(),EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,0,.5F)==EnumActionResult.SUCCESS,"seat item fits below "+canopy.kind+" width="+joined);
+                    require(player.getHeldItemMainhand().getItem().onItemUse(player,world,lower.up(),EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,0,.5F)==EnumActionResult.SUCCESS,"seat item fits below "+canopy.kind+" width="+joined+" mayPlace="+world.mayPlace(seat,lower,false,EnumFacing.DOWN,player)+" player="+player.getPositionVector());
                     player.setHeldItem(EnumHand.MAIN_HAND,held);
                 }
                 require(world.getBlockState(lower).getBlock()==seat && world.getBlockState(lower.up()).getBlock()==canopy,"both blocks survive either placement order");

@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 /** Pilot seat with an invisible upper cell reserving the backrest. */
 public final class BlockPilotSeat extends BlockVandorDirectional {
     public static final net.minecraft.block.properties.PropertyInteger HEIGHT=net.minecraft.block.properties.PropertyInteger.create("height",0,3);
+    public static final net.minecraft.block.properties.PropertyInteger ARMS=net.minecraft.block.properties.PropertyInteger.create("arms",0,3);
     public static final PropertyBool UPPER = BlockBridgeChair.UPPER;
     public static final double SEAT_HEIGHT = 7D / 16D;
     private static final AxisAlignedBB BOUNDS = new AxisAlignedBB(-.125, 0, 0, 1.125, 1, 1.125);
@@ -21,11 +22,11 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
 
     public BlockPilotSeat() {
         super("pilot_seat");
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(UPPER, false).withProperty(HEIGHT,0));
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(UPPER, false).withProperty(HEIGHT,0).withProperty(ARMS,0));
         setLightOpacity(0);
     }
 
-    @Override protected BlockStateContainer createBlockState() { return new BlockStateContainer(this, FACING, UPPER,HEIGHT); }
+    @Override protected BlockStateContainer createBlockState() { return new BlockStateContainer(this, FACING, UPPER,HEIGHT,ARMS); }
     @Override public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta & 3)).withProperty(UPPER, (meta & 4) != 0);
     }
@@ -40,7 +41,9 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     }
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         net.minecraft.tileentity.TileEntity tile=world.getTileEntity(state.getValue(UPPER)?pos.down():pos);
-        return state.withProperty(HEIGHT,tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat?((com.vandorlabs.tiles.TileEntityPilotSeat)tile).getHeight():0);
+        BlockPos lower=state.getValue(UPPER)?pos.down():pos;EnumFacing facing=state.getValue(FACING);
+        int arms=(world.getBlockState(lower.offset(facing.rotateYCCW())).isFullCube()?1:0)|(world.getBlockState(lower.offset(facing.rotateY())).isFullCube()?2:0);
+        return state.withProperty(ARMS,arms).withProperty(HEIGHT,tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat?((com.vandorlabs.tiles.TileEntityPilotSeat)tile).getHeight():0);
     }
     @Override public int damageDropped(IBlockState state) { return 0; }
     /** Open-bottom shells share their lower air space with the rendered backrest. */
