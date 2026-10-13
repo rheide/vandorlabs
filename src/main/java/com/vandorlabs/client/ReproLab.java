@@ -834,7 +834,7 @@ public class ReproLab {
                 if(documentationCapture.isFinished()) {
                     if(++documentationIndex<documentationScenes.size())beginDocumentationScene(mc);
                     else {
-                        if(Boolean.getBoolean("vandorlabs.rampChecksOnly")){state=999;mc.shutdown();break;}
+                        if(Boolean.getBoolean("vandorlabs.rampChecksOnly") || Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly")){state=999;mc.shutdown();break;}
                         beginShot(mc,new Shot("documentation_item_camera",GALLERY_X+.7,GALLERY_Y+1D-1.62D+.75,-19.8,12,29),false);
                         mc.getIntegratedServer().addScheduledTask(()->buildGalleryStage(mc.getIntegratedServer().getWorld(0),"gallery_close_display_diagonal_up"));
                         mc.gameSettings.hideGUI=false;
@@ -1719,6 +1719,7 @@ public class ReproLab {
         }
         World world = mc.getIntegratedServer().getWorld(0);
         if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly"))return;
+        if(Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly"))return;
         if(Boolean.getBoolean("vandorlabs.doorChecksOnly")){onServer(mc,()->{EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());DoorRuntimeChecks.run(world,owner);LargeDoorRuntimeChecks.run(world,owner);RedstoneChannelRuntimeChecks.run(world,owner);System.out.println("[vandorlabs] programmable-doors-live PASS");});return;}
         if(Boolean.getBoolean("vandorlabs.redstoneInversionChecksOnly")){onServer(mc,()->RedstoneInversionRuntimeChecks.run(world));return;}
         if(Boolean.getBoolean("vandorlabs.rampChecksOnly")) {
@@ -2149,7 +2150,8 @@ public class ReproLab {
         // Ramp cells are created by their server controller. A client-side clear
         // after chunk arrival would erase them without generating new packets.
         if(world.isRemote && shot.equals("gallery_distant_geometry"))return;
-        if(shot.startsWith("gallery_acceptance_")) {
+        if(shot.startsWith("gallery_canopy_motion_")){CanopyDocumentationScenes.build(world,shot);
+        } else if(shot.startsWith("gallery_acceptance_")) {
             world.getGameRules().setOrCreateGameRule("doMobSpawning","false");
             boolean drops=world.getGameRules().getBoolean("doTileDrops");
             world.getGameRules().setOrCreateGameRule("doTileDrops","false");
@@ -2196,7 +2198,8 @@ public class ReproLab {
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
         world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(tileDrops));
-        if(shot.startsWith("gallery_acceptance_")) {
+        if(shot.startsWith("gallery_canopy_motion_")){CanopyDocumentationScenes.build(world,shot);
+        } else if(shot.startsWith("gallery_acceptance_")) {
             BlockPos.getAllInBox(new BlockPos(GALLERY_X-14,GALLERY_Y,-23),
                     new BlockPos(GALLERY_X+14,GALLERY_Y+16,-13)).forEach(world::setBlockToAir);
             ConnectionAcceptance.build(world,shot,GALLERY_X,GALLERY_Y);

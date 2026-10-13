@@ -1,6 +1,6 @@
 # Animated documentation
 
-The door, trapdoor and Programmable Ramp guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The [version 1.6 guide](gallery/version-1.6.md) adds channel-linked control demonstrations: a Thruster Lever drives a Rocket Thruster, and a Wall Slider drives a Programmable Light. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
+The canopy, door, trapdoor and Programmable Ramp guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The [version 1.6 guide](gallery/version-1.6.md) adds channel-linked control demonstrations: a Thruster Lever drives a Rocket Thruster, and a Wall Slider drives a Programmable Light. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
 
 ![Observation door opening and closing](images/gallery/doors/observation-rotating.gif)
 
@@ -38,8 +38,22 @@ python3 testclient/encode_animations.py testclient/door-animation.RUN/door-rotat
 
 Deployment clips must contain synchronized closed/open/closed states, visible intermediate geometry in both transitions, a returned endpoint and a motion footprint inside the crop. The encoder checks dimensions, frame count, exact loop duration and loop settings, and writes timing/size results plus a decoded contact sheet for review. Escalator clips instead verify stopped/running/stopped movement while retaining the extended staircase. Windows can capture only these two scenes with `python testclient/run_windows.py --focus ramps`. Doors and trapdoors have 2.6-second cycles; ramps have 4.6-second cycles. Signal demonstrations have six-second cycles, with real control clicks selecting 0, 5, 10, 15 and then 0; recorded consumer levels and particle thresholds are checked at each setting. See [capture validation](animation-validation.md) for the current results.
 
+## Canopy captures on Windows
+
+Build the standard Java 8 JAR, then run:
+
+```text
+python testclient/run_windows.py --focus canopy-animations
+# Optional single-scene capture
+python testclient/run_windows.py --focus canopy-animations --animation-filter canopy-large-left
+python testclient/encode_animations.py <capture-directory> --report docs/canopy-animation-validation.json
+```
+
+This records nine scenes using the actual renderer and sixteen-tick canopy clocks. The six narrow-shell scenes cover single Flat, double Angled and triple Long Angled profiles in both opening modes. The remaining scenes show a large top hinge, a 5 × 5 left hinge and an inverted double Canopy. Camera crops include the complete moving geometry. See [the canopy guide](canopies.md) and [2.0 highlights](gallery/version-2.0.md).
+
 ## Motion index
 
+- [Canopies](canopies.md): single/double/triple sliding and rear-hinged shells, large-window hinges and ceiling mounting.
 - [Programmable Door](gallery/doors.md): four motions.
 - [Programmable Trapdoor](gallery/programmable-trapdoor.md): three in-block motions, two next-block motions and opposing mounts.
 - [Programmable Diagonal Trapdoor](gallery/programmable-diagonal-trapdoor.md): three motions, all three shapes, rectangular/staggered/partial groups and joined slope orientations.
@@ -103,3 +117,12 @@ The complete capture set:
 | trapdoor-stagger-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-inset-sliding.gif) |
 | trapdoor-stagger-halfwidth-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-halfwidth-inset-sliding.gif) |
 | trapdoor-stagger-shallow-inset-sliding | [Open clip](images/gallery/tasks/trapdoor-stagger-shallow-inset-sliding.gif) |
+| canopy-slide-1 | [Open clip](images/gallery/canopies/slide-1.gif) |
+| canopy-slide-2 | [Open clip](images/gallery/canopies/slide-2.gif) |
+| canopy-slide-3 | [Open clip](images/gallery/canopies/slide-3.gif) |
+| canopy-hinge-1 | [Open clip](images/gallery/canopies/hinge-1.gif) |
+| canopy-hinge-2 | [Open clip](images/gallery/canopies/hinge-2.gif) |
+| canopy-hinge-3 | [Open clip](images/gallery/canopies/hinge-3.gif) |
+| canopy-large-top | [Open clip](images/gallery/canopies/large-top.gif) |
+| canopy-large-left | [Open clip](images/gallery/canopies/large-left.gif) |
+| canopy-ceiling | [Open clip](images/gallery/canopies/ceiling.gif) |

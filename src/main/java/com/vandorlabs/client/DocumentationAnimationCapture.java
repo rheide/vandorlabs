@@ -59,7 +59,8 @@ final class DocumentationAnimationCapture {
             if(kind().equals("door") && tile instanceof TileEntitySpaceDoor
                     && world.getBlockState(tile.getPos()).getValue(BlockVandorDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.LOWER
                     || kind().equals("trapdoor") && tile instanceof TileEntityProgrammableTrapdoor
-                    || kind().equals("ramp") && tile instanceof TileEntityRampController)result.add(tile);
+                    || kind().equals("ramp") && tile instanceof TileEntityRampController
+                    || kind().equals("canopy") && tile instanceof TileEntityCanopy && ((TileEntityCanopy)tile).draws())result.add(tile);
         }
         if(result.isEmpty())throw new IllegalStateException("Documentation fixture has no "+kind()+" tiles: "+spec.get("id"));
         return result;
@@ -89,6 +90,7 @@ final class DocumentationAnimationCapture {
                 if(!visited.add(leaf.getPos()))continue;
                 for(TileEntityProgrammableTrapdoor other:leaf.group())visited.add(other.getPos());
                 leaf.requestOpen(open);
+            } else if(member instanceof TileEntityCanopy){TileEntityCanopy canopy=((TileEntityCanopy)member).owner();if(visited.add(canopy.getPos()) && canopy.targetOpen!=open)canopy.toggle();
             } else {
                 TileEntityRampController controller=(TileEntityRampController)member;
                 BlockPos power=controller.getPos().north();
@@ -101,7 +103,7 @@ final class DocumentationAnimationCapture {
     private boolean active(World world) {
         boolean any=false,all=true;
         for(TileEntity member:members(world)) {
-            boolean value=member instanceof TileEntityRampController?(((TileEntityRampController)member).escalator!=0?((TileEntityRampController)member).isEscalatorRequested():((TileEntityRampController)member).isOpen())
+            boolean value=member instanceof TileEntityCanopy?((TileEntityCanopy)member).owner().targetOpen:member instanceof TileEntityRampController?(((TileEntityRampController)member).escalator!=0?((TileEntityRampController)member).isEscalatorRequested():((TileEntityRampController)member).isOpen())
                     :world.getBlockState(member.getPos()).getValue(member instanceof TileEntityProgrammableTrapdoor?BlockTrapDoor.OPEN:BlockVandorDoor.OPEN);
             any|=value;all&=value;
         }

@@ -1,6 +1,6 @@
 # Animation validation
 
-All **50 motion GIFs** passed the live-capture geometry and encoding checks: closed/open/closed state sequence, intermediate geometry in both directions, endpoint return, unclipped motion, 420×350 dimensions, animated frames, continuous loop and exact loop duration. The finished GIFs and decoded contact sheets were visually reviewed; camera framing covers edge-on patches and neighbor clearance.
+The original **50 motion GIFs** passed the live-capture geometry and encoding checks: closed/open/closed state sequence, intermediate geometry in both directions, endpoint return, unclipped motion, 420×350 dimensions, animated frames, continuous loop and exact loop duration. The finished GIFs and decoded contact sheets were visually reviewed; camera framing covers edge-on patches and neighbor clearance.
 
 | Group | Clips | Loop |
 | --- | --- | --- |
@@ -34,3 +34,11 @@ are included in the same machine-readable report.
 - The Diagonal Screen uses the shared wedge mesh and was inspected in the live hotbar alongside a placed screen.
 
 The launchers record the built JAR checksum and source commit in each raw capture directory. Raw PNGs/logs stay ignored; this report and the GIFs are committed. These are software-rendered documentation/runtime checks and do not measure hardware FPS or shader appearance.
+
+## Canopy animations for 2.0
+
+Nine additional live clips cover sliding and rear-hinged Canopies at widths one, two and three, a large top hinge, a 5 × 5 left hinge, and an inverted double Canopy. Each loops for 2.6 seconds at 420 × 350 with closed/open/closed endpoints and actual intermediate poses in both directions. The encoder checks movement, endpoint return, unclipped motion, GIF dimensions, frame count, continuous looping and exact duration. Decoded contact sheets are reviewed for framing and appearance.
+
+The [canopy encoding report](canopy-animation-validation.json) records each clip's frame count, size and capture cadence. These captures validate rendering and animation behavior; they do not measure hardware frame rate.
+
+The Java 8 standard build and live canopy, large-canopy, Pilot Seat and Taxi Mode suites validate mounting, ownership, configuration packets, cross-family tint copying, moved selection and vehicle preservation. Large-window and opening-canopy checks project all 1,374 generated shape/palette/material icon variants after GUI rotation to verify inventory padding. The large-window tests also operate each local hinge on wall, floor and ceiling mounts and retain exact owned cells through four cardinal vehicle rotations.

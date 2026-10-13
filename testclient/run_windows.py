@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
-    parser.add_argument('--focus', choices=['connection-acceptance', 'large-canopy', 'pilot-inspection', 'pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins', 'ramps', 'redstone-inversion', 'doors', 'block-categories', 'machinery', 'glass-appearance'])
+    parser.add_argument('--focus', choices=['canopy-animations', 'connection-acceptance', 'large-canopy', 'pilot-inspection', 'pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins', 'ramps', 'redstone-inversion', 'doors', 'block-categories', 'machinery', 'glass-appearance'])
     parser.add_argument('--disable-categories', help='Comma-separated category keys for isolated availability checks')
     parser.add_argument('--shot-prefix', help='Restrict visual scenes to one named family or arrangement')
     parser.add_argument('--start-shot', help='Resume visual scenes at this exact name, retaining later runtime checks')
@@ -46,6 +46,7 @@ def main():
                         help='Diagonal size: 0 half-width/full-height; 1 full-width/full-height; 2 full-width/half-height')
     parser.add_argument('--connection-baseline', type=Path, help='Accepted screenshot baseline (defaults to the regular-wall baseline)')
     parser.add_argument('--connection-opposite-feedback', type=Path, help='Capture only flagged Wrong diagonal cases from this feedback at the opposite diagnostic angle')
+    parser.add_argument('--animation-filter', help='Comma-separated canopy animation scene IDs')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
     if args.connection_family == 'regular' and args.connection_mode != 0:
@@ -65,6 +66,10 @@ def main():
     if os.name != 'nt':
         parser.error('Use run.sh on Linux; this launcher hides native Windows client windows.')
     root = Path(__file__).resolve().parents[1]
+    canopy_scenes={scene['id'] for scene in json.loads((root/'src/main/resources/assets/vandorlabs/data/documentation_animations.json').read_text()) if scene['kind']=='canopy'}
+    selected_animations=set(args.animation_filter.split(',')) if args.animation_filter else canopy_scenes
+    if args.animation_filter and (args.focus!='canopy-animations' or not selected_animations or not selected_animations<=canopy_scenes):
+        parser.error('--animation-filter requires --focus canopy-animations and known canopy scene IDs')
     version = re.search(r"^version = '([^']+)'", (root/'build.gradle').read_text(), re.M)[1]
     jar = (args.jar or root/'build/libs'/('vandorlabs-'+version+'.jar')).resolve()
     if not jar.is_file():
@@ -89,7 +94,7 @@ def main():
         (game/'config').mkdir()
         (game/'config/vandorlabs-blocks.cfg').write_text('blocks {\n'+''.join(' B:'+key+'=false\n' for key in categories)+'}\n')
     natives.mkdir()
-    (game/'options.txt').write_text('soundCategory_master:0.0\npauseOnLostFocus:false\n'+('enableVsync:false\nmaxFps:120\n' if args.focus=='ramps' else ''))
+    (game/'options.txt').write_text('soundCategory_master:0.0\npauseOnLostFocus:false\n'+('enableVsync:false\nmaxFps:120\n' if args.focus in ('ramps','canopy-animations') else ''))
     if args.world_copy:
         shutil.copytree(args.world_copy, game/'saves'/('repro-'+output.name))
     base = args.minecraft_dir.resolve()
@@ -159,19 +164,21 @@ def main():
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
-        properties.append('-Dvandorlabs.'+{'connection-acceptance':'connectionAcceptanceOnly', 'large-canopy':'largeCanopyChecksOnly', 'pilot-inspection':'pilotInspectionChecksOnly', 'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly', 'glass-appearance':'glassAppearanceChecksOnly', 'machinery':'machineryChecksOnly', 'block-categories':'blockCategoryChecksOnly', 'doors':'doorChecksOnly', 'redstone-inversion':'redstoneInversionChecksOnly', 'ramps': 'rampChecksOnly'}[args.focus]+'=true')
+        properties.append('-Dvandorlabs.'+{'canopy-animations':'canopyAnimationChecksOnly', 'connection-acceptance':'connectionAcceptanceOnly', 'large-canopy':'largeCanopyChecksOnly', 'pilot-inspection':'pilotInspectionChecksOnly', 'pilot-seat': 'pilotSeatChecksOnly', 'vehicles': 'vehicleChecksOnly', 'vehicle-render': 'vehicleChecksOnly', 'vehicle-taxi': 'vehicleTaxiChecksOnly', 'vehicle-motion': 'vehicleMotionChecksOnly', 'vehicle-network': 'vehicleNetworkChecksOnly', 'canopies': 'canopyChecksOnly', 'diagonal-joins': 'diagonalJoinChecksOnly', 'glass-appearance':'glassAppearanceChecksOnly', 'machinery':'machineryChecksOnly', 'block-categories':'blockCategoryChecksOnly', 'doors':'doorChecksOnly', 'redstone-inversion':'redstoneInversionChecksOnly', 'ramps': 'rampChecksOnly'}[args.focus]+'=true')
         if args.focus=='vehicle-render':properties.append('-Dvandorlabs.vehicleRenderChecksOnly=true')
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
+    if args.focus == 'canopy-animations':
+        properties += ['-Dvandorlabs.documentationAnimations=true', '-Dvandorlabs.documentationAnimationFilter='+','.join(sorted(selected_animations))]
     if args.focus == 'ramps':
         properties += ['-Dvandorlabs.documentationAnimations=true', '-Dvandorlabs.documentationAnimationFilter=ramp-escalator-up,ramp-escalator-down,ramp-escalator-walkway,ramp-escalator-curve-in']
     if args.role:
         properties.append('-Dvandorlabs.networkRole='+args.role)
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
-    command = [args.java, '-Xmx3G']+(['-XX:+UseG1GC', '-XX:MaxGCPauseMillis=20'] if args.focus=='ramps' else [])+properties+['-cp', ';'.join(classpath),
+    command = [args.java, '-Xmx3G']+(['-XX:+UseG1GC', '-XX:MaxGCPauseMillis=20'] if args.focus in ('ramps','canopy-animations') else [])+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
         '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,
-        '--width', '1920' if args.focus == 'connection-acceptance' else '896' if args.focus == 'ramps' else '1280', '--height', '1080' if args.focus == 'connection-acceptance' else '504' if args.focus == 'ramps' else '720']
+        '--width', '1920' if args.focus == 'connection-acceptance' else '896' if args.focus in ('ramps','canopy-animations') else '1280', '--height', '1080' if args.focus == 'connection-acceptance' else '504' if args.focus in ('ramps','canopy-animations') else '720']
     if args.server:
         host,port=args.server.split(':')
         command+=['--server',host,'--port',port]
@@ -216,9 +223,15 @@ def main():
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
-        marker = {'connection-acceptance':'connection-acceptance PASS', 'large-canopy':'large-canopy-live PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
+        marker = {'canopy-animations':'documentation-animation PASS', 'connection-acceptance':'connection-acceptance PASS', 'large-canopy':'large-canopy-live PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
         if marker not in (output/'client.log').read_text(errors='replace'):
             raise SystemExit('Missing completion marker: '+marker)
+        if args.focus == 'canopy-animations':
+            if {path.parent.name for path in output.glob('*/capture.json')} != selected_animations:
+                raise SystemExit('Incomplete or out-of-scope canopy animation set')
+            for scene in selected_animations:
+                if 'documentation-animation PASS '+scene+' frames=' not in client_log:
+                    raise SystemExit('Missing canopy animation: '+scene)
         if args.focus == 'ramps':
             for mode in (1, 2, 3, 4, 5):
                 expected = 'escalator-player-live PASS real client/server rider transport and redstone stop, mode='+str(mode)

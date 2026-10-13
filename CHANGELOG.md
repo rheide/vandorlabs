@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0
+
+- Add reversible ground vehicles and default-on Taxi Mode: sit in a Pilot Seat to assemble a connected craft, drive with W/S and A/D, and dismount to park. Include manual Configurizer previews, guarded cardinal rotation, obstruction retries, saved block/tile data, safe exits, movement-driven propulsion brightness and adjustable third-person distance.
+- Add Pilot Seat height and Redstone ON/OFF channel settings in placed and vehicle previews. Hide each armrest beside a solid cabin wall.
+- Keep doors, normal/diagonal trapdoors and Canopies manually operable aboard vehicles; retain their motion and settings through saving and parking. Capture settled extended ramps and pause escalators while driving.
+- Combine Sliding and Rear-Hinged Canopy into Canopy, with selectable opening mode, Flat/Angled/Long Angled fronts, physical redstone and channel lists, one-pixel slide lift, ceiling mounting and automatic widths of one, two and three. Join regular glass to the rear opening.
+- Configure 3 × 3 and 5 × 5 Large Front Canopy Glass with 0–80 px depth and 10–100% inner frames. Place the broad back at the clicked face and extrude towards the player on wall, floor or ceiling mounts. Add optional opening with four local hinge positions and redstone/channel control.
+- Reserve only large-canopy surface cells, support building into clear cabin space from outside, and save exact owned-cell offsets for resizing, removal and vehicle rotation. Clean stale follower cells without deleting unrelated cabin blocks.
+- Add compact live canopy dialogs, shared glass colors/intensity and normal Programmable Block materials including trapdoor artwork. Copy tint and intensity between canopies, visors and regular/diagonal programmable glass with the Duplifier.
+- Add Programmable Diagonal Glass, shared regular/diagonal glass finishes and improved reciprocal wall/glass joins. Allow long angled noses against walls and angled noses under ceilings.
+- Add redstone-controlled Escalator Up/Down modes with rider transport, nearby-player sleeping and preserved extended ramp geometry.
+- Fix floor-mounted Push Button notification order so neighboring dust receives the press immediately. Keep ordinary sliding trapdoors selectable and collidable outside their original cells.
+- Reuse settled canopy poses and submit rectangular faces as direct quads. Cache vehicle hull rendering and cull offscreen tile renderers.
+- Add block-category availability settings and live canopy animations for widths, opening modes, large hinges and ceiling mounts. See the [2.0 feature guide](docs/gallery/version-2.0.md).
+
 ## 1.8
 
 - Add thirty canopy components using the supplied cockpit meshes and translucent materials: regular glass, two angled fronts, narrow and wide sliding/rear-hinged shells, Large Front Canopy Glass, Figher Canopy Glass, nine additional fixed shells and twelve composable visor sections.

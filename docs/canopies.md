@@ -1,193 +1,87 @@
 # Canopies
 
-Version 1.8 adds glass and framed cockpit components to the Vandor Labs creative tab.
-Sliding, rear-hinged and angled-front canopies place with their opening facing away from the
-player. Other components retain their existing orientation. Width runs to the
-component's right; length runs rearward. Every cell of a larger component belongs to its placement anchor.
-Placement requires the complete footprint to be free. Breaking any occupied cell removes
-that component; survival harvesting returns one item. Pistons cannot move these assemblies.
+Build a cockpit from connected glass, angled noses, openable shells and broad front windows. Use the Configurizer, or sneak-use with configuration permission, to change settings on any occupied cell. Changes apply immediately; the compact dialog leaves the surrounding world visible.
 
-| Component | Width × length × height | Recipe |
+## Components and placement
+
+| Component | Size | Shapeless conversion from Canopy Glass |
 | --- | --- | --- |
-| Canopy Glass | 1 × 1 × 1 | Base recipe below |
-| Angled Front Canopy Glass | 1 × 1 × 1 | Canopy Glass + 1 iron nugget |
-| Long Angled Front Canopy Glass | 1 × 2 × 1 | Canopy Glass + 2 iron nuggets |
-| Sliding Canopy | 1 × 2 × 1 | Canopy Glass + 3 iron nuggets |
-| Rear-Hinged Canopy | 1 × 2 × 1 | Canopy Glass + 4 iron nuggets |
-| Wide Sliding Canopy | 2 × 2 × 1 | Canopy Glass + 5 iron nuggets |
-| Wide Rear-Hinged Canopy | 2 × 2 × 1 | Retired; join narrow canopies |
-| Large Front Canopy Glass | 3 × 1 × 3 | Canopy Glass + 8 iron nuggets |
-| Figher Canopy Glass | 2 × 1 × 2 | Canopy Glass + 1 gold nugget |
+| Canopy Glass | 1 × 1 × 1 | Base recipe |
+| Angled Front Canopy Glass | 1 × 1 × 1 | 1 iron nugget |
+| Long Angled Front Canopy Glass | 1 × 2 × 1 | 2 iron nuggets |
+| Canopy | 1 × 2 × 1; joins to two or three wide | 3 iron nuggets |
+| Large Front Canopy Glass | 3 × 3 outer frame; adjustable depth | 8 iron nuggets |
+| Large Front Canopy Glass (5 × 5) | 5 × 5 outer frame; adjustable depth | Large Front Canopy Glass surrounded by 8 iron ingots (shaped) |
 
-The conversion recipes are shapeless. The base recipe uses three glass blocks across
-the top, Programmable Matter Ingots at both middle edges, and three more ingots across
-the bottom. Figher Canopy Glass retains the kit's spelling. Its glass is only 1/16 block
-deep, with a one-block-deep placement footprint.
+The base recipe has three glass blocks across the top, Programmable Matter Ingots at both middle edges, and three more ingots across the bottom. Visor, Wide Visor, Extra-Wide Visor and Tall Extra-Wide Visor remain available as fixed front windows. Their widths are two, three, five and five blocks; the Tall variant is two blocks high. They have no roof, rear or bottom, and a one-pixel border follows the upper outline. Visors center on the clicked block, including the two-wide variant's half-block alignment.
 
-All canopy glass supports Clear, the Vandor soft shades, all sixteen Minecraft
-colors, and Mild, Normal or Strong intensity. Use the Configurizer, or sneak-use
-with configuration permission, to change a canopy's glass. Joined opening shells
-share the chosen finish. Pick-block and harvested items retain the finish.
+Click a wall to mount an angled nose or Canopy with its rear against that wall. Long noses extend outward instead of requiring space inside the support. Click the underside of a ceiling to place either angled nose or Canopy upside down. The large windows mount against any of the six block faces: their broad rear opening stays centered on the clicked location and their smaller front projects outward, towards the player.
 
-## Fixed glass
+Placement checks the complete owned footprint and editing permissions before writing blocks. Breaking an owned cell removes its component and returns one configured item in survival. Joined Canopies lose only the broken constituent and reconnect the survivors where possible. Pistons cannot move these assemblies.
 
-Canopy Glass tiles at the same elevation join sideways and lengthways, regardless
-of the direction each tile was placed.
-Shared side glazing and perimeter rails disappear, leaving the roof and outer perimeter.
-All sixteen neighbor combinations are supported, including irregular layouts. Matching
-angled fronts join sideways; they also join a regular tile immediately behind their
-complete footprint. Angled fronts retain their slope and elevation requirements. Canopy Glass can join
-their rear edge even when the glass tile faces another direction.
+## Glass and materials
 
-The short angled front rises steeply; the longer front uses the kit's shallower nose.
-Large Front Canopy Glass narrows toward its forward face. The retired Fighter canopy provides
-a thin stepped front window with radial framing.
+The **Glass** picker offers Clear, soft Vandor shades and all sixteen Minecraft colors. **Tint** selects Mild, Normal or Strong intensity. Switch to **Materials** for the normal Programmable Block texture catalog, including trapdoor artwork and filesystem materials. Selecting a glass entry restores glazing; selecting a material replaces the glazed surfaces while preserving the frame and shape.
 
-## Additional fixed shells
+The Duplifier copies glass shade and intensity between canopies, visors, regular programmable glass and diagonal glass walls. Joined opening shells share their finish. Pick-block and harvested items retain their settings.
 
-The collection includes Crystal (2 x 2 x 0.75), Shuttle (2 x 3 x 1.25),
-Wide Shuttle (3 x 3 x 1.25), and Bubble Wedge (3 x 3 x 1.25) shells.
-Their roofs and sides remain fixed, with open bottoms.
-Models taller than one block reserve an upper follower cell even when their actual
-height is only 1.25 blocks.
+## Connected fixed glass
 
-Visor, Wide Visor, Extra-Wide Visor, and Tall Extra-Wide Visor are fixed front windows,
-respectively 2 × 1 × 1, 3 × 1 × 1, 5 × 1 × 1, and 5 × 1 × 2 blocks.
-They have no roof, rear or bottom. Each has a one-pixel-thick border along its complete
-upper outline. Standalone Visor sizes and the 3 × 3 Bubble Wedge center on the clicked
-block, including the two-wide Visor's half-block alignment. New two-wide Visors reserve
-three cells for that centered outline; older placed Visors retain their original two-cell
-footprint and alignment. All standalone sizes occupy their complete footprint
-and return one item when any occupied cell is harvested.
+Canopy Glass joins neighboring tiles at the same elevation and mounting orientation, regardless of horizontal facing. Shared glazing and perimeter rails disappear. Matching angled noses join sideways and connect to regular glass behind their complete footprint. Regular glass also opens its side towards the rear of a Canopy. Ceiling-mounted parts use the same local joins after inversion.
 
-| Result | Shapeless ingredients |
+## One Canopy, two opening modes
+
+Choose **Sliding** or **Rear hinge** in the Canopy dialog. Place one, two or three matching closed Canopies side by side to form a shared shell. Their opening mode, front profile and mount must match. A fourth constituent stays independent.
+
+- **Flat** has a vertical front matching Canopy Glass.
+- **Angled** uses the short angled nose followed by a roof section.
+- **Long Angled** uses the two-block nose profile.
+
+Both motions take sixteen ticks and can reverse during movement. Sliding lifts the shell by one pixel before carrying it two blocks rearward. Rear hinge raises the front through 105 degrees around the rear upper edge. The stationary mounts stay in place. Right-click an occupied cell or the actual moved shell to operate it. Enable **Redstone** to follow physical power or any configured comma-separated channel. The channel field accepts the same lists as other programmable blocks.
+
+| Width / profile | Sliding | Rear hinge |
+| --- | --- | --- |
+| Single / Flat | ![Single flat sliding Canopy](images/gallery/canopies/slide-1.gif) | ![Single flat rear-hinged Canopy](images/gallery/canopies/hinge-1.gif) |
+| Double / Angled | ![Double angled sliding Canopy](images/gallery/canopies/slide-2.gif) | ![Double angled rear-hinged Canopy](images/gallery/canopies/hinge-2.gif) |
+| Triple / Long Angled | ![Triple long-angled sliding Canopy](images/gallery/canopies/slide-3.gif) | ![Triple long-angled rear-hinged Canopy](images/gallery/canopies/hinge-3.gif) |
+
+![Ceiling-mounted double Canopy](images/gallery/canopies/ceiling.gif)
+
+Opening shells intentionally pass through rear bodywork. Opening does not reserve the destination cells. Collision and exact face picking follow the moving surfaces; the selection outline encloses the complete posed shell. Keep a footwell below an upright canopy for a standing player: it has no bottom panel. Canopy Glass and opening Canopies can share the backrest space of a Pilot Seat directly below them, in either placement order.
+
+## Large Front Canopy Glass
+
+Both frame sizes provide **Depth: 0–80 pixels**, **Inner size: 10–100%**, glass/material selection and optional opening. Sixteen pixels equals one block. The defaults are sixteen pixels deep and 71% inner size. Zero depth keeps a thin physical frame for usable collision and selection.
+
+Changing depth moves the front while the broad rear stays fixed. Only cells touched by the closed surfaces are reserved; clear cabin cells can hold other blocks. Hold an ordinary block and click the outside glazing towards empty cabin space to build inside without entering the canopy. Normal placement and protection checks still apply. A blocked resize preserves the original geometry and all cabin blocks.
+
+Enable **Openable** and choose a **Left**, **Right**, **Top** or **Bottom** hinge. These directions follow the frame's local orientation, including floor and ceiling mounts. The complete frame rotates through 105 degrees. Enable **Redstone** and set channels to operate it remotely, or right-click it manually. Close the canopy before changing its hinge or opening mode. Deep or moved surfaces remain operable and configurable even when their anchor lies farther away; interaction validates the reached surface and intervening terrain.
+
+| Large top hinge | 5 × 5 left hinge |
 | --- | --- |
-| Crystal Canopy | 2 Canopy Glass + glass pane |
-| Shuttle Canopy | Crystal Canopy + glass pane |
-| Wide Shuttle Canopy | Shuttle Canopy + glass pane |
-| Bubble Wedge Canopy | Crystal Canopy + diamond + glass pane |
-| Visor Canopy | Canopy Glass + iron bars |
-| Wide Visor Canopy | Visor Canopy + glass pane |
-| Extra-Wide Visor Canopy | Wide Visor Canopy + 2 Canopy Glass |
-| Tall Extra-Wide Visor Canopy | 2 Extra-Wide Visor Canopies |
+| ![Large front canopy with top hinge](images/gallery/canopies/large-top.gif) | ![Five-wide front canopy with left hinge](images/gallery/canopies/large-left.gif) |
 
-## Opening shells
+## Taxi Mode and compatibility
 
-Right-click any occupied cell or the moved shell to open or close it. Sliding shells move
-two blocks rearward. Rear-hinged shells lift their front through 105 degrees around the
-rear upper edge. Both use a 16-tick smooth motion and retain their stationary side mounts.
-Saves preserve the target, progress, ownership and pairing; clients interpolate the pose.
+Canopy and enabled large-window hinges remain manually openable aboard a Taxi Mode vehicle. Click the actual surface with an empty hand. Motion, collision, target, geometry, finish, mount and owned cells survive saving, parking and cardinal rotation. As with captured doors, the vehicle's block redstone simulation and settings menus resume after parking.
 
-Opening does not reserve empty space behind the canopy. Sliding and rear-hinged
-shells pass through rear bodywork, so a cabin roof or hull behind them does not prevent
-opening. Placement still requires the original footprint to be free. The original interior
-remains traversable when fully open; collision and precise face picking follow the
-moving surfaces into their destination cells. Selecting any visible surface highlights
-the complete posed assembly instead of one small collision fragment.
+The former separate Rear-Hinged Canopy, wide opening items and older fixed-shell variants remain registered for saved-world compatibility but are absent from new crafting and creative selection. Existing rear-hinged placements retain their opening mode.
 
-Place two or three closed Sliding or Rear-Hinged Canopies side by side at the same height and facing
-to form a two- or three-block-wide shell. Placement order does not matter. For example,
-three adjacent Sliding Canopies create one three-wide, two-deep canopy; right-click
-any constituent or the moved shell to operate the complete assembly. Rear-Hinged
-Canopies also support three constituents. The local-left anchor draws the shared shell, without duplicated
-inner walls or mounts. A fourth constituent stays independent.
-
-Breaking a constituent removes only its own two cells, closes the survivors, and
-reconnects adjacent survivors where possible. Breaking the middle of a three-wide
-canopy leaves two independent narrow canopies. Ownership and joined width survive
-saving, craft snapshots, and cardinal craft rotation. The separate Wide Sliding Canopy
-item has been removed from creative and crafting; existing placed blocks and saved
-items remain compatible. Use joined narrow Sliding Canopies for new wider assemblies.
-Wedge and Longnose items have also been removed from creative and crafting: their
-rounded rear shells do not match the modular front/glass join height. Existing blocks
-and saved items remain compatible; use Long Angled Front Canopy Glass for a joined nose.
-Figher Canopy Glass is likewise removed from creative and crafting, with existing
-worlds and items preserved.
-The separate Wide Rear-Hinged Canopy is also retired from creative and crafting;
-existing blocks and saved items remain compatible. Join narrow canopies for new assemblies.
-
-Canopy Glass, Shuttle, Bubble Wedge, Sliding and Rear-Hinged Canopies can share the upper
-backrest space of a Pilot Seat placed directly below them. Both placement orders
-are supported, including one-, two- and three-wide opening shells. Holding a Pilot
-Seat lets its placement click pass through the canopy controls; the canopy remains
-intact when the seat is removed.
-
-The opening shells are one block high. Provide a footwell at least one block below the canopy
-for a standing player; there is no bottom panel.
-
-Dynmap uses tile-aware closed overview meshes, clipped into each occupied cell. It shows
-the fixed joins and connected widths; opening animation remains an in-game feature.
+Owned-cell offsets are saved explicitly. Resizing replaces that footprint only after validation, and removing a canopy uses its recorded cells. Loaded follower cells whose owner no longer includes them clean themselves up without deleting foreign blocks. These safeguards also cover translated and rotated vehicle snapshots.
 
 ## Rendering and validation
 
-The kit's authored face, UV and material data are stored in `canopy_meshes.json`.
-The renderer draws stationary mounts and transformed shells once, with opaque framing
-before sorted translucent glazing. Prepared vertices, face centers and normals are
-cached per owner and rebuilt when the model, settings, facing, joined width or pose
-changes. Closed and fully open shells reuse that preparation while the camera moves;
-only glass distances and sorting are updated each frame. Atlas sprites are cached
-until resource reload. Palette variants share immutable vertices and UV data, and
-large-canopy surface footprints are cached until the dimensions or facing change.
-Moving shells still rebuild posed vertices during animation. Detailed meshes and
-per-owner draw calls remain the principal rendering costs; these changes reduce CPU
-allocation and repeated transforms without claiming a measured frame-rate increase. Collision uses thin subdivided surface boxes, cached
-by model, facing and pose. Picking tests the actual posed triangles; highlights enclose the complete owner geometry.
-Collision and picking inspect loaded chunks only. Item models
-are rebuilt on resource reload and fitted after GUI rotation to retain slot padding.
+Rendering, collision, picking and Taxi Mode use one posed mesh. Settled shells reuse prepared vertices and sprite lookups; animation rebuilds only the moving pose. Ordinary four-vertex faces submit a quad directly instead of two triangle-shaped quads, halving vertex submission for those faces. Transparent glazing remains sorted separately from opaque frames. Large-window collision uses glazing triangles and thin rails along their edges, avoiding thousands of boxes for decorative frame bevels during rotation. Detailed face picking still follows the complete mesh. Captured selection tests each canopy owner once per ray instead of repeating the same mesh for every owned cell. These are CPU and submission reductions; they are not a measured frame-rate guarantee.
 
-Run the Java 8 standard build and the focused Forge client suite:
-`python testclient/run_windows.py --focus canopies --jar build/libs/<standard-jar>.jar`.
-The suite discovers active canopy designs from the registry, checks four facings,
-regular neighbor masks, angled joins, three-wide opening groups, clearance, saved
-state, single-item harvesting, exact picking and projected inventory padding.
-`--focus large-canopy` runs the configurable window checks without rendering the
-complete kit gallery. Configurable large canopies exercise both widths, zero and maximum depth,
-10% and 100% inner frames, every glass palette/intensity combination, and rejected
-expansion into occupied cells. Focused captures show actual client rendering;
-these checks are correctness tests and do not establish a frame-rate guarantee.
+Dynmap uses the mounted closed overview geometry. Item models fit after GUI rotation so every configured variant retains inventory padding.
 
-## Configurable Large Front Canopy Glass
+Run the standard Java 8 build, then the live suites:
 
-Large Front Canopy Glass has a 3 x 3 outer frame. Large Front Canopy Glass (5 x 5)
-has a 5 x 5 outer frame. Both preserve the kit's chamfered frame, mullions, rubber,
-metal trim and connecting glass sides. Use the Configurizer on any occupied cell
-(or sneak-use with configuration permission) to open the owner settings.
+```text
+python testclient/run_windows.py --focus canopies
+python testclient/run_windows.py --focus large-canopy
+python testclient/run_windows.py --focus vehicle-taxi
+python testclient/run_windows.py --focus canopy-animations
+```
 
-- Inner frame depth: 0–80 Minecraft pixels, where 16 pixels equals one block.
-- Inner frame size: 10–100% of the outer frame, centered within it.
-- Glass: Clear, the Vandor soft shades, all sixteen Minecraft colors, and Mild,
-  Normal or Strong intensity.
-
-The default depth is 16 pixels and the inner frame size is 71%, matching the
-original outer extent of the detailed inner frame. A zero-depth setting retains
-a thin physical frame so collision and selection remain usable. Controls apply
-changes immediately. New placements center the rear frame on the clicked block
-in both width and height, with the nose extending away from the player. Changing
-depth keeps the rear frame fixed and moves the front. Existing saved placements
-retain their previous anchor and orientation, and release unused interior reservation
-cells the next time their settings are successfully changed.
-
-New large canopies reserve only cells intersecting their surfaces. Clear interior
-cells can contain ordinary blocks. Changing depth or inner size checks the new
-surface footprint and editing permission before changing any cells; an obstructed
-change preserves the complete existing assembly. Shrinking removes only cells owned
-by that canopy and preserves blocks in the hollow area.
-
-For example, use a 5 x 5 frame at depth 64 pixels and 40% inner size for a deep
-nose window, or depth 0 and 100% size for a flat broad window. Cyan with Mild
-intensity keeps the glazing light; Soft Dark Grey with Strong gives a darker
-cockpit. Pick-block and harvested items retain their configured geometry and
-glass. Captured craft retain the complete owned footprint and settings.
-
-Modular Visor Front, Front Latch, Corner and Side pieces, including Tall variants, are
-removed from creative and crafting. Existing assemblies remain compatible. The older
-2 × 2 Bubble Wedge is also retained only for saved-world compatibility; new Bubble
-Wedge placements use the centered 3 × 3 version.
-
-Sliding and Rear-Hinged Canopies remain usable after vehicle assembly. Right-click
-the actual canopy surface with an empty hand to open or close it, including joined
-widths of one, two and three. Clicking again during movement reverses it. The
-shell animates over 16 ticks and its collision follows its current pose. Parking,
-saving and newly tracking clients retain the current position and target; a
-partly open canopy resumes moving after loading. Other captured tile entities do
-not tick as part of canopy movement. Settled canopies do not rebuild collision.
+The canopy release checks exercise six-face large-window placement, mounted hinges, exterior cabin targeting, exact ownership, removal, ceiling joins, all front/opening combinations, channel operation, finish copying, floor-button dust output and armrest masking. Animation capture records the actual client renderer; encode and validate it with `testclient/encode_animations.py`.

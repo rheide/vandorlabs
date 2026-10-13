@@ -387,5 +387,122 @@
       40,
       18
     ]
+  },
+  {
+    "id": "canopy-slide-1",
+    "shot": "gallery_canopy_motion_slide_1",
+    "kind": "canopy",
+    "output": "canopies/slide-1.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      17
+    ]
+  },
+  {
+    "id": "canopy-slide-2",
+    "shot": "gallery_canopy_motion_slide_2",
+    "kind": "canopy",
+    "output": "canopies/slide-2.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      17
+    ]
+  },
+  {
+    "id": "canopy-slide-3",
+    "shot": "gallery_canopy_motion_slide_3",
+    "kind": "canopy",
+    "output": "canopies/slide-3.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      17
+    ]
+  },
+  {
+    "id": "canopy-hinge-1",
+    "shot": "gallery_canopy_motion_hinge_1",
+    "kind": "canopy",
+    "output": "canopies/hinge-1.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      17
+    ]
+  },
+  {
+    "id": "canopy-hinge-2",
+    "shot": "gallery_canopy_motion_hinge_2",
+    "kind": "canopy",
+    "output": "canopies/hinge-2.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      17
+    ]
+  },
+  {
+    "id": "canopy-hinge-3",
+    "shot": "gallery_canopy_motion_hinge_3",
+    "kind": "canopy",
+    "output": "canopies/hinge-3.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      17
+    ]
+  },
+  {
+    "id": "canopy-large-top",
+    "shot": "gallery_canopy_motion_large_top",
+    "kind": "canopy",
+    "output": "canopies/large-top.gif",
+    "camera": [
+      167,
+      8.38,
+      -25,
+      38,
+      15
+    ]
+  },
+  {
+    "id": "canopy-large-left",
+    "shot": "gallery_canopy_motion_large_left",
+    "kind": "canopy",
+    "output": "canopies/large-left.gif",
+    "camera": [
+      169,
+      9.38,
+      -28,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "canopy-ceiling",
+    "shot": "gallery_canopy_motion_ceiling",
+    "kind": "canopy",
+    "output": "canopies/ceiling.gif",
+    "camera": [
+      164.5,
+      5.38,
+      -22.5,
+      35,
+      0
+    ]
   }
 ]

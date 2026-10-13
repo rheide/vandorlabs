@@ -1,0 +1,92 @@
+[
+  {
+    "id": "canopy-ceiling",
+    "output": "canopies/ceiling.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 108160,
+    "median_gap_ms": 50.14,
+    "max_gap_ms": 56.96
+  },
+  {
+    "id": "canopy-hinge-1",
+    "output": "canopies/hinge-1.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 113210,
+    "median_gap_ms": 50.18,
+    "max_gap_ms": 56.26
+  },
+  {
+    "id": "canopy-hinge-2",
+    "output": "canopies/hinge-2.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 122896,
+    "median_gap_ms": 50.16,
+    "max_gap_ms": 60.26
+  },
+  {
+    "id": "canopy-hinge-3",
+    "output": "canopies/hinge-3.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 137238,
+    "median_gap_ms": 49.92,
+    "max_gap_ms": 58.03
+  },
+  {
+    "id": "canopy-large-left",
+    "output": "canopies/large-left.gif",
+    "frames": 37,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 217497,
+    "median_gap_ms": 50.04,
+    "max_gap_ms": 58.23
+  },
+  {
+    "id": "canopy-large-top",
+    "output": "canopies/large-top.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 146624,
+    "median_gap_ms": 49.91,
+    "max_gap_ms": 58.11
+  },
+  {
+    "id": "canopy-slide-1",
+    "output": "canopies/slide-1.gif",
+    "frames": 33,
+    "captured": 51,
+    "duration_ms": 2600,
+    "bytes": 94742,
+    "median_gap_ms": 50.18,
+    "max_gap_ms": 83.52
+  },
+  {
+    "id": "canopy-slide-2",
+    "output": "canopies/slide-2.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 111251,
+    "median_gap_ms": 50.11,
+    "max_gap_ms": 62.67
+  },
+  {
+    "id": "canopy-slide-3",
+    "output": "canopies/slide-3.gif",
+    "frames": 35,
+    "captured": 52,
+    "duration_ms": 2600,
+    "bytes": 120436,
+    "median_gap_ms": 50.19,
+    "max_gap_ms": 57.14
+  }
+]
