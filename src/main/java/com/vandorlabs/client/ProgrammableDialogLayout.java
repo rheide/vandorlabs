@@ -7,7 +7,10 @@ final class ProgrammableDialogLayout {
     static final int CONTROLS_WIDTH=154;
     final int left,top,width,height,controlsX,listX,listWidth,doneY;
     ProgrammableDialogLayout(int screenWidth,int screenHeight) {
-        width=Math.min(460,screenWidth-8);height=Math.min(332,screenHeight-8);
+        this(screenWidth,screenHeight,460,332);
+    }
+    ProgrammableDialogLayout(int screenWidth,int screenHeight,int maxWidth,int maxHeight) {
+        width=Math.min(maxWidth,screenWidth-8);height=Math.min(maxHeight,screenHeight-8);
         left=(screenWidth-width)/2;top=(screenHeight-height)/2;
         controlsX=left+width-CONTROLS_WIDTH-12;listX=left+12;
         listWidth=controlsX-listX-19;doneY=top+height-26;

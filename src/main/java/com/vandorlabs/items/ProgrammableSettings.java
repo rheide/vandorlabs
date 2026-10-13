@@ -141,7 +141,10 @@ public final class ProgrammableSettings {
             if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
             else out.setIntArray(CHANNEL,channels.toArray());
         }
-        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
+        if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
+            com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
+            out.setInteger(GLASS_SHADE,canopy.large.shade);out.setInteger(GLASS_TINT,canopy.large.tint);
+        } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
             if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor){
@@ -329,7 +332,11 @@ public final class ProgrammableSettings {
             EntityPlayer player, TileEntity tile, Block block) {
         if (tile == null || values == null || values.hasNoTags()) return false;
         boolean applicable = false;
-        if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
+        if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
+            com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
+            if(!values.hasKey(GLASS_SHADE,3) && !values.hasKey(GLASS_TINT,3))return false;
+            return com.vandorlabs.canopy.LargeCanopyOwnership.apply(canopy,player,canopy.large.depth,canopy.large.scale,number(values,GLASS_SHADE,canopy.large.shade),number(values,GLASS_TINT,canopy.large.tint));
+        } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
             applicable=values.hasKey(TRAPDOOR_COVER_FACING,3) || values.hasKey(TRAPDOOR_TILE_TEXTURE,1) || values.hasKey(TRAPDOOR_COVER,1) || values.hasKey(WALL_TEXTURE,3) || (diagonal?values.hasKey(DIAGONAL_GEOMETRY,10):values.hasKey(TRAPDOOR_POSITION,3))

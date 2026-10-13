@@ -22,7 +22,7 @@ public final class GuiLargeCanopy extends GuiContainer {
         depth=result.depth;scale=result.scale;shade=result.shade;tint=result.tint;sent=key();error="The new surface is obstructed or protected.";initGui();
     }
     @Override public void updateScreen(){super.updateScreen();reconcile();}
-    @Override public void initGui(){ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();ready=false;
+    @Override public void initGui(){ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height,360,190);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();ready=false;
         textures=HousingTextureList.forGlass(1,guiLeft+12,guiTop+30,layout.controlsX-guiLeft-31,shade).visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT));
         if(tile.resizable()){buttonList.add(new GuiSlider(0,layout.controlsX,guiTop+30,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Depth: "," px",0,80,depth,false,true,slider->{depth=slider.getValueInt();apply();}));
         buttonList.add(new GuiSlider(1,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Inner size: ","%",10,100,scale,false,true,slider->{scale=slider.getValueInt();apply();}));
@@ -34,6 +34,6 @@ public final class GuiLargeCanopy extends GuiContainer {
     @Override protected void mouseClickMove(int x,int y,int button,long time){if(!textures.drag(y))super.mouseClickMove(x,y,button,time);}
     @Override public void handleMouseInput()throws IOException{super.handleMouseInput();textures.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
-    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);textures.draw(fontRenderer,x,y);if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-ProgrammableDialogLayout.CONTROLS_WIDTH-12,guiTop+ySize-44,ProgrammableDialogLayout.CONTROLS_WIDTH,0xffffaa88);super.drawScreen(x,y,partial);}
+    @Override public void drawScreen(int x,int y,float partial){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);textures.draw(fontRenderer,x,y);if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-ProgrammableDialogLayout.CONTROLS_WIDTH-12,guiTop+ySize-44,ProgrammableDialogLayout.CONTROLS_WIDTH,0xffffaa88);super.drawScreen(x,y,partial);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }
