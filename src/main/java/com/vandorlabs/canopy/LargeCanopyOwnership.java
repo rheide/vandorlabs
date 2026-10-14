@@ -21,7 +21,7 @@ public final class LargeCanopyOwnership {
     public static List<BlockPos> shellCells(BlockCanopy block,BlockPos pos,EnumFacing facing,LargeCanopySettings settings,boolean backAnchored){
         List<net.minecraft.util.math.AxisAlignedBB> surfaces=CanopyMesh.collision(CanopyPose.faces(LargeCanopyGeometry.faces(block.width,settings,backAnchored),block.kind,block.width,settings,0),block.kind,block.width,0,facing,pos);
         List<BlockPos> candidates=new ArrayList<>();
-        int h=settings.mount>=2?settings.length():block.height,d=settings.mount>=2?block.height:settings.length();
+        int h=settings.mount>=2?(int)Math.ceil(Math.max(1D/64,settings.depth/16D)+CanopyPose.FRONT_MOUNT_CLEARANCE):block.height,d=settings.mount>=2?block.height:settings.length();
         for(int x=0;x<block.width;x++)for(int y=0;y<h;y++)for(int z=0;z<d;z++)candidates.add(pos.offset(facing.rotateY(),x).up(settings.mount==3?y-h+1:y).offset(facing.getOpposite(),z));Set<BlockPos> allowed=new HashSet<>(candidates),occupied=new HashSet<>();occupied.add(pos);
         for(net.minecraft.util.math.AxisAlignedBB surface:surfaces){
             BlockPos min=new BlockPos(surface.minX,surface.minY,surface.minZ),max=new BlockPos(surface.maxX,surface.maxY,surface.maxZ);

@@ -5,6 +5,9 @@ import net.minecraft.util.math.Vec3d;
 
 /** One local pose for rendering, collision, picking and transported canopies. */
 public final class CanopyPose {
+    // Clear the one-pixel selection/collision rail and separate the back frame
+    // from the supporting floor or ceiling without scaling this gap with depth.
+    public static final double FRONT_MOUNT_CLEARANCE=1D/16+.004;
     public static List<CanopyMesh.Face> faces(List<CanopyMesh.Face> source,String kind,int width,
             LargeCanopySettings settings,double progress) {
         List<CanopyMesh.Face> result=new ArrayList<>(source.size());
@@ -30,8 +33,9 @@ public final class CanopyPose {
         if(LargeCanopySettings.supports(kind) && settings.openable)v=hinge(v,width,settings.hinge,progress);
         else if(kind.equals("canopy"))v=CanopyMesh.pose(v,settings.motion==0?"slide":"hinge",1,progress,group.equals("shell"),settings.slideForward);
         if(settings.mount==1)return new Vec3d(v.x,1-v.y,v.z);
-        if(settings.mount==2)return new Vec3d(v.x,v.z,width-v.y);
-        if(settings.mount==3)return new Vec3d(v.x,1-v.z,v.y);
+        double clearance=LargeCanopySettings.supports(kind)?FRONT_MOUNT_CLEARANCE:0;
+        if(settings.mount==2)return new Vec3d(v.x,v.z+clearance,width-v.y);
+        if(settings.mount==3)return new Vec3d(v.x,1-v.z-clearance,v.y);
         return v;
     }
     private static Vec3d hinge(Vec3d v,int width,int hinge,double progress) {

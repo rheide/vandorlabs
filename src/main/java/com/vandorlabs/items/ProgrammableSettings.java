@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
     public static final String TRAPDOOR_SLIDE_INTO_WALL="trapdoor_slide_into_wall";
@@ -132,6 +133,7 @@ public final class ProgrammableSettings {
     }
 
     public static NBTTagCompound capture(World world, BlockPos pos) {
+        pos=ProgrammableTarget.settingsPos(world,pos);
         TileEntity tile = world.getTileEntity(pos);
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
@@ -147,6 +149,16 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
             out.setInteger(GLASS_SHADE,canopy.large.shade);out.setInteger(GLASS_TINT,canopy.large.tint);
             out.setInteger(GLASS_MATERIAL,canopy.large.material);
+            NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Tile",canopy.large.tileMaterial);out.setTag(GLASS_LAYOUT,layout);
+            NBTTagCompound configuration=new NBTTagCompound();
+            if(canopy.resizable()) {configuration.setInteger("CanopyDepth",canopy.large.depth);configuration.setInteger("CanopyScale",canopy.large.scale);configuration.setInteger("CanopyHinge",canopy.large.hinge);configuration.setBoolean("CanopyOpenable",canopy.large.openable);}
+            if(canopy.block().opening()){configuration.setInteger("CanopyMotion",canopy.large.motion);configuration.setBoolean("CanopySlideForward",canopy.large.slideForward);configuration.setInteger("CanopyAngle",canopy.large.angle);}
+            if(!configuration.hasNoTags())out.setTag(BLOCK_CONFIGURATION,configuration);
+            if(canopy.resizable() || canopy.block().opening()){out.setInteger(TRIGGER,canopy.large.redstone?1:0);out.setIntArray(CHANNEL,canopy.large.channels.toArray());}
+        } else if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){
+            com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)tile;
+            out.setInteger(CHAIR_HEIGHT,seat.getHeight());out.setInteger(TRIGGER,seat.getRedstoneMode());
+            NBTTagCompound configuration=new NBTTagCompound();configuration.setBoolean("TaxiMode",seat.isTaxiMode());out.setTag(BLOCK_CONFIGURATION,configuration);
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
@@ -288,12 +300,13 @@ public final class ProgrammableSettings {
     public static net.minecraft.item.ItemStack applyToItem(net.minecraft.item.ItemStack input, NBTTagCompound values) {
         if (!(input.getItem() instanceof net.minecraft.item.ItemBlock)) return net.minecraft.item.ItemStack.EMPTY;
         Block block = ((net.minecraft.item.ItemBlock)input.getItem()).getBlock();
-        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor))
+        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor) && !(block instanceof com.vandorlabs.blocks.BlockCanopy) && !(block instanceof com.vandorlabs.blocks.BlockPilotSeat) && !(block instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear))
             return net.minecraft.item.ItemStack.EMPTY;
         TileEntity tile = block.createTileEntity(null, block.getStateFromMeta(input.getMetadata()));
         if (tile == null) return net.minecraft.item.ItemStack.EMPTY;
         NBTTagCompound existing = input.getSubCompound("BlockEntityTag");
         if (existing != null) tile.readFromNBT(existing.copy());
+        if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && input.hasTagCompound())((com.vandorlabs.tiles.TileEntityCanopy)tile).large.read(input.getTagCompound());
         if (tile instanceof TileEntitySpaceDoor && input.getSubCompound("SpaceDoorSettings") != null)
             ((TileEntitySpaceDoor)tile).applyItemSettings(input.getSubCompound("SpaceDoorSettings"));
         if (tile instanceof TileEntityProgrammableGlass && input.getSubCompound("ProgrammableGlassSettings") != null) {
@@ -311,7 +324,13 @@ public final class ProgrammableSettings {
         NBTTagCompound data = tile.writeToNBT(new NBTTagCompound());
         data.removeTag("x"); data.removeTag("y"); data.removeTag("z"); data.removeTag("id");
         if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) data.removeTag("Items");
-        output.setTagInfo("BlockEntityTag", data);
+        if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy){
+            NBTTagCompound root=output.hasTagCompound()?output.getTagCompound():new NBTTagCompound();
+            ((com.vandorlabs.tiles.TileEntityCanopy)tile).large.write(root);root.removeTag("BlockEntityTag");output.setTagCompound(root);
+        }else{
+            if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){data.removeTag("VehicleOwnerMost");data.removeTag("VehicleOwnerLeast");data.removeTag("VehicleSignalHigh");}
+            output.setTagInfo("BlockEntityTag", data);
+        }
         if (tile instanceof TileEntitySpaceDoor) output.setTagInfo("SpaceDoorSettings", ((TileEntitySpaceDoor)tile).itemSettings());
         if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass)tile;
@@ -332,6 +351,7 @@ public final class ProgrammableSettings {
 
     public static boolean apply(World world, BlockPos pos, NBTTagCompound values,
             EntityPlayer player) {
+        pos=ProgrammableTarget.settingsPos(world,pos);
         TileEntity tile = world.getTileEntity(pos);
         Block block = world.getBlockState(pos).getBlock();
         return applyToTile(world, pos, values, player, tile, block);
@@ -343,10 +363,31 @@ public final class ProgrammableSettings {
         boolean applicable = false;
         if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
-            if(!values.hasKey(GLASS_SHADE,3) && !values.hasKey(GLASS_TINT,3) && !values.hasKey(GLASS_MATERIAL,3))return false;
-            NBTTagCompound settings=new NBTTagCompound();canopy.large.write(settings);com.vandorlabs.canopy.LargeCanopySettings next=new com.vandorlabs.canopy.LargeCanopySettings();next.read(settings);
+            com.vandorlabs.blocks.BlockCanopy canopyBlock=(com.vandorlabs.blocks.BlockCanopy)block;
+            boolean configurable=com.vandorlabs.canopy.LargeCanopySettings.supports(canopyBlock.kind) || canopyBlock.opening();
+            if(!values.hasKey(GLASS_SHADE,3) && !values.hasKey(GLASS_TINT,3) && !values.hasKey(GLASS_MATERIAL,3) && !values.hasKey(GLASS_LAYOUT,10) && !(configurable && (values.hasKey(CHANNEL) || values.hasKey(TRIGGER) || values.hasKey(BLOCK_CONFIGURATION))))return false;
+            NBTTagCompound settings=new NBTTagCompound();canopy.large.write(settings);
+            if(values.hasKey(BLOCK_CONFIGURATION,10)){
+                NBTTagCompound configuration=values.getCompoundTag(BLOCK_CONFIGURATION);
+                String[] keys=com.vandorlabs.canopy.LargeCanopySettings.supports(canopyBlock.kind)?new String[]{"CanopyDepth","CanopyScale","CanopyHinge","CanopyOpenable"}:canopyBlock.opening()?new String[]{"CanopyMotion","CanopySlideForward","CanopyAngle"}:new String[0];
+                for(String key:keys)if(configuration.hasKey(key))settings.setTag(key,configuration.getTag(key).copy());
+            }
+            com.vandorlabs.canopy.LargeCanopySettings next=new com.vandorlabs.canopy.LargeCanopySettings();next.read(settings);
             next.shade=number(values,GLASS_SHADE,next.shade);next.tint=number(values,GLASS_TINT,next.tint);next.material=number(values,GLASS_MATERIAL,next.material);
+            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Tile",1))next.tileMaterial=values.getCompoundTag(GLASS_LAYOUT).getBoolean("Tile");
+            if(configurable){if(values.hasKey(TRIGGER,3))next.redstone=values.getInteger(TRIGGER)!=0;if(values.hasKey(CHANNEL))next.channels=ChannelData.read(values,CHANNEL,next.channels);}
+            if(!com.vandorlabs.canopy.LargeCanopySettings.valid(next.depth,next.scale,next.shade,next.tint))return false;
+            if(world==null){next.write(settings);canopy.large.read(settings);return true;}
             return com.vandorlabs.canopy.LargeCanopyOwnership.apply(canopy,player,next);
+        } else if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){
+            com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)tile;
+            if(values.hasKey(CHAIR_HEIGHT) || values.hasKey(TRIGGER)){
+                int mode=number(values,TRIGGER,seat.getRedstoneMode()),height=number(values,CHAIR_HEIGHT,seat.getHeight());
+                if(mode<0 || mode>2 || height<0 || height>3)return false;
+                if(values.hasKey(CHANNEL))seat.setVehicleChannels(channels(values,seat),world);
+                seat.configure(mode,height,world);applicable=true;
+            }
+            if(values.hasKey(BLOCK_CONFIGURATION,10) && values.getCompoundTag(BLOCK_CONFIGURATION).hasKey("TaxiMode",1)){seat.setTaxiMode(values.getCompoundTag(BLOCK_CONFIGURATION).getBoolean("TaxiMode"));applicable=true;}
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
@@ -521,7 +562,7 @@ public final class ProgrammableSettings {
             }
             if(isPorthole(block) || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass){
                 if(values.hasKey(GLASS_MATERIAL,3)){screen.setGlassMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
-                if(values.hasKey(GLASS_LAYOUT,10)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);screen.setGlassLayout(layout.getBoolean("Stretch"),!layout.hasKey("TextureJoin") || layout.getBoolean("TextureJoin"));applicable=true;}
+                if(values.hasKey(GLASS_LAYOUT,10)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);screen.setGlassLayout(layout.hasKey("Stretch",1)?layout.getBoolean("Stretch"):screen.isGlassStretch(),layout.hasKey("TextureJoin",1)?layout.getBoolean("TextureJoin"):screen.isGlassTextureJoin());applicable=true;}
             }
             if (applicable && world != null && screen.getSettingsRevision()!=before) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
@@ -531,7 +572,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass) tile;
             if(values.hasKey(GLASS_MATERIAL,3)){glass.setMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
-            if(values.hasKey(GLASS_LAYOUT,10)){glass.setStretch(values.getCompoundTag(GLASS_LAYOUT).getBoolean("Stretch"));applicable=true;}
+            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Stretch",1)){glass.setStretch(values.getCompoundTag(GLASS_LAYOUT).getBoolean("Stretch"));applicable=true;}
             if (values.hasKey(JOIN, 1)) {
                 glass.setJoin(values.getBoolean(JOIN)); applicable = true;
             }
@@ -600,8 +641,8 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.TileEntityLandingGear gear=(com.vandorlabs.tiles.TileEntityLandingGear)tile;
             if(values.hasKey(GEAR_SIZE)||values.hasKey(GEAR_LENGTH)||values.hasKey(GEAR_MODE)) {
                 int size=number(values,GEAR_SIZE,gear.getSize()),length=number(values,GEAR_LENGTH,gear.getExtensionPixels()),mode=number(values,GEAR_MODE,gear.getMode());
-                if(world!=null) applicable=gear.configure(mode,channels(values,gear),length,size);
-                else if(size>=0&&size<=2&&length>=0&&length<=64&&length%8==0&&mode>=0&&mode<=2) {
+                if(world!=null){if(!gear.configure(mode,channels(values,gear),length,size))return false;applicable=true;}
+                else if(size>=0&&size<=4&&length>=0&&length<=64&&length%8==0&&mode>=0&&mode<=2) {
                     NBTTagCompound tag=gear.writeToNBT(new NBTTagCompound());
                     tag.setInteger("GearSize",size);tag.setInteger("ExtensionPixels",length);tag.setInteger("RedstoneMode",mode);
                     gear.readFromNBT(tag);applicable=true;

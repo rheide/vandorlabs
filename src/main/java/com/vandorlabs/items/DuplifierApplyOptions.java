@@ -93,10 +93,13 @@ public final class DuplifierApplyOptions {
             option(DuplifierArmorTextures.KEY,"Armor Texture",0),
             option(ProgrammableSettings.RAMP_ESCALATOR,"Escalator Mode",4),
             option(ProgrammableSettings.GLASS_TINT,"Glass Tint",2),
-            option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material / Layout",0)
+            option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material / Layout",0),
+            option(ProgrammableSettings.BLOCK_CONFIGURATION,"Canopy / Pilot Settings",2)
     };
 
-    public static final long ALL = (1L << OPTIONS.length) - 1L;
+    public static final long ALL = OPTIONS.length==64?-1L:(1L << OPTIONS.length) - 1L;
+
+    static {if(OPTIONS.length>Long.SIZE)throw new IllegalStateException("Duplifier options exceed the saved mask width");}
 
     private DuplifierApplyOptions() { }
 
@@ -116,7 +119,7 @@ public final class DuplifierApplyOptions {
         // while the saved choices for every existing property remain intact.
         int known = root.hasKey(COUNT_TAG, 3) ? root.getInteger(COUNT_TAG) : 56;
         known = Math.max(0, Math.min(OPTIONS.length, known));
-        long knownBits = (1L << known) - 1L;
+        long knownBits = known==64?-1L:(1L << known) - 1L;
         return (root.getLong(TAG) | (ALL & ~knownBits)) & ALL;
     }
 
@@ -140,6 +143,8 @@ public final class DuplifierApplyOptions {
         if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
         if (!selected.hasKey(ProgrammableSettings.GLASS_MATERIAL)) selected.removeTag(ProgrammableSettings.GLASS_LAYOUT);
+        if (!selected.hasKey(ProgrammableSettings.RAMP_START)) selected.removeTag(ProgrammableSettings.RAMP_START_HALF);
+        if (!selected.hasKey(ProgrammableSettings.RAMP_END)) selected.removeTag(ProgrammableSettings.RAMP_END_HALF);
         if (!selected.hasKey(ProgrammableSettings.PRIMARY_TEXTURE))
             selected.removeTag(ProgrammableSettings.PRIMARY_KIND);
         return selected;

@@ -49,7 +49,7 @@ The whole group is found before settings change, so a new texture does not stop
 the search halfway through a wall. Diagonal contact connects groups, including vertical diagonals.
 
 The search uses loaded chunks and blocks you can edit. Door and seat halves and
-Landing Gear parts are addressed through their settings root and applied once.
+Landing Gear parts and canopy followers are addressed through their settings root and applied once.
 Groups larger than 4,096 occupied block cells are rejected without applying
 settings. The mode stays on the tool when you copy or clear settings; crafting
 still applies settings to the crafted item.
@@ -61,7 +61,8 @@ still applies settings to the crafted item.
 | Wall Texture | Programmable block, slab, stairs, wall, porthole, trapdoor, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
 | Redstone Channel | Every configured block that implements `RedstoneChannelMember`. |
 | Frame / Glass Tint | Regular and diagonal programmable glass preserve Bare / Framed and Mild / Normal / Strong independently. |
-| Glass Material / Layout | Copy the selected glass or regular panel material between canopies, visors, regular/diagonal programmable glass and portholes. Glass blocks and portholes also preserve Tile/Stretch and material joining; shade and tint remain independent options. Porthole Main and Side textures use their usual separate options. |
+| Glass Material / Layout | Copy the selected glass or regular panel material between canopies, visors, regular/diagonal programmable glass and portholes. Canopies preserve Fit/Tile; glass blocks and portholes preserve Tile/Stretch and material joining; shade and tint remain independent options. Porthole Main and Side textures use their usual separate options. |
+| Canopy / Pilot Settings | Front-window depth, inner size, hinge and Openable; Canopy opening motion, slide direction and front profile; Pilot Seat Taxi Mode. Placement mount and facing stay with the target. |
 | Join | Portholes, Programmable Glass, Programmable Light, connected propulsion blocks, and Luxury/Military Seats. |
 | Trigger | Programmable Light, Door and Trapdoor support Disabled, Redstone ON, and Redstone OFF. Displays support Disabled and Redstone ON. |
 | Active | Manual light state, propulsion state, and switch or lever latch. |
@@ -86,8 +87,10 @@ direction, travel axis, texture matching, trigger polarity, and redstone channel
 geometry uses the controller's normal validation and reset path; an obstructed
 platform can reject the change.
 
+Canopy redstone enablement uses **Trigger**, with channel lists copied even when redstone is disabled. Pilot Seats use **Chair Height**, **Trigger** for Disabled / ON / OFF, **Redstone Channel**, and **Canopy / Pilot Settings** for Taxi Mode. These settings also transfer through Duplifier crafting recipes for canopies, visors and Pilot Seats.
+
 Landing Gear supports independent **Gear Size**, **Gear Extension**, and
-**Gear Redstone Mode** switches, plus the shared redstone channel.
+**Gear Redstone Mode** switches, plus the shared redstone channel. All five sizes work in configured crafting outputs.
 
 Ordinary placement facing, physical position, live redstone signal, current door motion,
 and ownership are not stored. The explicit Next block hinge direction is a configurable setting and can be copied. The item uses semantic setting keys rather than

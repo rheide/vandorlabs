@@ -31,7 +31,7 @@ See the [live shallow/deep and small/large nosecone comparisons](../canopies.md#
 
 ![Five-wide front canopy opening on its left hinge](../images/gallery/canopies/large-left.gif)
 
-Only the shell reserves space. Build in the empty cabin by aiming through the outside glazing with a block in hand. The live dialog puts every setting beside a large texture list, with glass shades and ordinary materials in one picker. Exact saved ownership and stale-follower cleanup keep removal and resizing from leaving invisible reservations behind.
+Only the shell reserves space. Open the front canopy to build in its empty cabin. Floor and ceiling frames keep a fixed clearance from their supporting surfaces. The live dialog puts every setting beside a large texture list, with glass shades and ordinary materials in one picker. Exact saved ownership and stale-follower cleanup keep removal and resizing from leaving invisible reservations behind.
 
 Regular Canopy Glass connects to the rear of opening Canopies. Both angled fixed noses mount against walls and upside down beneath ceilings. Visors retain their thin framed outlines and centered placement. See the [complete canopy guide](../canopies.md).
 
@@ -43,7 +43,7 @@ Non-glass canopy materials also respond to Tint: Mild and Normal give 35% and 65
 
 ![Canopy settings with forward sliding and a unified texture list](../images/gallery/canopies/settings.png)
 
-The **Duplifier** transfers glass shade and intensity between canopy pieces, visors, regular programmable glass and diagonal glass walls. Programmable Diagonal Glass adds half-width/full-height, full-width/full-height and full-width/half-height shapes, with optional frames and the same color system. Regular and diagonal wall/glass junctions have reciprocal seams and improved corner and intersection geometry.
+The **Duplifier** also copies canopy opening, shape, Fit/Tile and redstone settings, plus Pilot Seat height, signal mode and Taxi Mode, including configured crafting outputs. It transfers glass shade and intensity between canopy pieces, visors, regular programmable glass and diagonal glass walls. Programmable Diagonal Glass adds half-width/full-height, full-width/full-height and full-width/half-height shapes, with optional frames and the same color system. Regular and diagonal wall/glass junctions have reciprocal seams and improved corner and intersection geometry.
 
 **Programmable Glass** and **Programmable Diagonal Glass** also accept the regular material catalog from the same texture list. Turn panel artwork into a translucent screen with Mild or Normal Tint, or select Strong for opaque surfaces. Material choices follow configured items and Duplifier copies across glass and canopy families.
 

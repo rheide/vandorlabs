@@ -22,6 +22,10 @@ final class DuplifierArmorRuntimeChecks {
     private static boolean matrix;
     private static Future<?> pending;
     private static final java.util.Map<EntityEquipmentSlot,ItemStack> originalEquipment=new java.util.EnumMap<>(EntityEquipmentSlot.class);
+    private static int armorOption(){
+        for(int i=0;i<DuplifierApplyOptions.OPTIONS.length;i++)if(DuplifierApplyOptions.OPTIONS[i].key.equals(DuplifierArmorTextures.KEY))return i;
+        throw new IllegalStateException("Missing armor Duplifier option");
+    }
     private static EntityPlayerMP owner(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());}
     private static EntityEquipmentSlot sourceSlot(){return example==2?EntityEquipmentSlot.CHEST:example==3?EntityEquipmentSlot.HEAD:EntityEquipmentSlot.LEGS;}
     private static EntityEquipmentSlot targetSlot(){return example==0?EntityEquipmentSlot.HEAD:example==1?EntityEquipmentSlot.CHEST:example==2?EntityEquipmentSlot.LEGS:EntityEquipmentSlot.FEET;}
@@ -57,7 +61,7 @@ final class DuplifierArmorRuntimeChecks {
         }
         ItemStack source=armor(ModItems.PROGRAMMABLE_LEGGINGS),tool=new ItemStack(ModItems.DUPLIFIER);ItemProgrammableArmor.setSample(source,"minecraft:blocks/log_oak_top");DuplifierArmorTextures.copyFrom(source,tool);
         for(ItemProgrammableArmor item:ITEMS){ItemStack target=armor(item),before=target.copy();require(DuplifierArmorTextures.applyTo(target,tool) && "minecraft:blocks/log_oak_top".equals(ItemProgrammableArmor.sample(target)),"sampled texture copied unchanged");sameMetadata(before,target);}
-        int option=DuplifierApplyOptions.OPTIONS.length-1;require(DuplifierApplyOptions.OPTIONS[option].key.equals(DuplifierArmorTextures.KEY),"new option appended without shifting old bits");
+        int option=armorOption();require(option>=0,"armor copy option remains available");
         tool.setTagInfo(DuplifierApplyOptions.TAG,new net.minecraft.nbt.NBTTagLong(0));require(DuplifierApplyOptions.enabled(DuplifierApplyOptions.mask(tool),option) && !DuplifierApplyOptions.enabled(DuplifierApplyOptions.mask(tool),0),"old unversioned masks enable armor and preserve previous disabled choices");
         DuplifierApplyOptions.setMask(tool,DuplifierApplyOptions.ALL & ~(1L<<option));ItemStack target=armor(ModItems.PROGRAMMABLE_HELMET),before=target.copy();require(!DuplifierArmorTextures.applyTo(target,tool) && ItemStack.areItemStacksEqual(before,target),"disabled armor option preserves target");
         ItemDuplifier.clearCopyState(tool);require(!ItemDuplifier.hasCopy(tool) && !DuplifierArmorTextures.applyTo(target,tool),"clear removes armor snapshot");
@@ -126,7 +130,7 @@ final class DuplifierArmorRuntimeChecks {
                 require(mc.currentScreen instanceof GuiDuplifier,"existing tool options still available");
                 DuplifierRuntimeChecks.checkDialog((GuiDuplifier)mc.currentScreen);
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(System.getenv("VANDOR_LABS_REPRO_OUT"),"shot_armor_duplifier_options.png"));
-                ((GuiDuplifier)mc.currentScreen).actionPerformed(new GuiButton(100+DuplifierApplyOptions.OPTIONS.length-1,0,0,"Armor Texture"));stage=7;ticks=0;return;
+                ((GuiDuplifier)mc.currentScreen).actionPerformed(new GuiButton(100+armorOption(),0,0,"Armor Texture"));stage=7;ticks=0;return;
             }
             if(stage==7){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP player=owner(mc);ItemStack target=armor(ModItems.PROGRAMMABLE_CHESTPLATE),before=target.copy();require(!DuplifierArmorTextures.applyTo(target,player.getHeldItemMainhand()) && ItemStack.areItemStacksEqual(target,before),"real options packet disables armor application");});stage=8;return;

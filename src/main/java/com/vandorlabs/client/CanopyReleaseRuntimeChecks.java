@@ -17,11 +17,6 @@ import java.util.*;
 
 /** Release regressions use actual item placement, dust, ownership and shared moving poses. */
 final class CanopyReleaseRuntimeChecks {
-    private static final class PlacementGuard {
-        final BlockPos denied;boolean seen;
-        PlacementGuard(BlockPos denied){this.denied=denied;}
-        @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public void place(net.minecraftforge.event.world.BlockEvent.PlaceEvent event){if(event.getPos().equals(denied)){seen=true;event.setCanceled(true);}}
-    }
     private static int farUses;
     private static final BlockPos BASE=new BlockPos(80,100,80);
     private static void require(boolean value,String text){if(!value)throw new IllegalStateException("canopy 2.0: "+text);}
@@ -52,19 +47,26 @@ final class CanopyReleaseRuntimeChecks {
                 Vec3d center=closed.getCenter();Vec3d outward=new Vec3d(side.getFrontOffsetX(),side.getFrontOffsetY(),side.getFrontOffsetZ());
                 Vec3d eye=center.add(outward.scale(5)),end=center.subtract(outward.scale(5));
                 RayTraceResult front=tile.trace(eye,end);require(front!=null,"mounted front is selectable");
-                BlockPos inside=CanopyInteractions.interiorTarget(tile,eye,front.hitVec,12);
-                require(inside!=null && !tile.cells().contains(inside),"outside click reaches free cabin cell "+side);
+                BlockPos inside=new BlockPos(center);
+                require(!tile.cells().contains(inside) && world.isAirBlock(inside),"free cabin fixture "+side);
                 player.setPosition(eye.x,eye.y-player.getEyeHeight(),eye.z);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Blocks.IRON_BLOCK,2));
-                PlacementGuard guard=new PlacementGuard(inside);net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(guard);
-                try{
-                    net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock denied=new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock(player,EnumHand.MAIN_HAND,anchor,front.sideHit,front.hitVec);
-                    new CanopyInteractions().placeInside(denied);
-                    require(guard.seen && denied.getCancellationResult()==EnumActionResult.FAIL && world.isAirBlock(inside) && player.getHeldItemMainhand().getCount()==2,"outside placement honors Forge cancellation and restores the held stack");
-                }finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(guard);}
-                net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock click=new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock(player,EnumHand.MAIN_HAND,anchor,front.sideHit,front.hitVec);
-                new CanopyInteractions().placeInside(click);
-                require(click.isCanceled() && click.getCancellationResult()==EnumActionResult.SUCCESS && world.getBlockState(inside).getBlock()==Blocks.IRON_BLOCK,"outside click places an actual cabin block");
-                require(player.getHeldItemMainhand().getCount()==(player.capabilities.isCreativeMode?2:1),"outside placement consumes items only in survival");
+                require(!com.vandorlabs.network.MessageCanopyUse.interact(player,anchor,EnumHand.MAIN_HAND,front.hitVec),"held blocks are not redirected through glazing");
+                require(world.isAirBlock(inside) && player.getHeldItemMainhand().getCount()==2,"closed glazing preserves cabin and held stack");
+                Vec3d hitLocal=front.hitVec.subtract(new Vec3d(anchor));
+                player.interactionManager.processRightClickBlock(player,world,player.getHeldItemMainhand(),EnumHand.MAIN_HAND,anchor,front.sideHit,(float)hitLocal.x,(float)hitLocal.y,(float)hitLocal.z);
+                require(world.isAirBlock(inside) && player.getHeldItemMainhand().getCount()==2,"ordinary use cannot place through closed glazing");
+                if(!tile.targetOpen)tile.toggle();for(int tick=0;tick<16;tick++)tile.update();
+                BlockPos support=null;EnumFacing placementFace=null;
+                for(EnumFacing direction:EnumFacing.values()){
+                    BlockPos candidate=inside.offset(direction);
+                    if(!tile.cells().contains(candidate) && world.isAirBlock(candidate) && closed.contains(new Vec3d(candidate).addVector(.5,.5,.5))){support=candidate;placementFace=direction.getOpposite();break;}
+                }
+                require(support!=null,"cabin has a clear adjacent support cell "+kind+" "+side);
+                world.setBlockState(support,Blocks.STONE.getDefaultState(),3);
+                player.setPosition(center.x,inside.getY()+1.01,center.z);
+                player.interactionManager.processRightClickBlock(player,world,player.getHeldItemMainhand(),EnumHand.MAIN_HAND,support,placementFace,.5F,.5F,.5F);
+                require(world.getBlockState(inside).getBlock()==Blocks.IRON_BLOCK,"ordinary placement works in opened cabin "+kind+" "+side);
+                world.setBlockToAir(support);tile.toggle();for(int tick=0;tick<16;tick++)tile.update();
                 next.shade=12;next.tint=2;require(LargeCanopyOwnership.apply(tile,player,next),"finish edit preserves cabin blocks");
                 for(int hinge=0;hinge<4;hinge++) {
                     next.hinge=hinge;require(LargeCanopyOwnership.apply(tile,player,next),"hinge setting");
@@ -90,9 +92,19 @@ final class CanopyReleaseRuntimeChecks {
             }
             require(farUses>0,"opened tips beyond the anchor interaction limit are exercised");
             require(!new LargeCanopySettings().slideForward,"direction defaults backward");
-            opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
+            mountClearance();opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
         }finally{clear(world);player.setHeldItem(EnumHand.MAIN_HAND,held);player.setSneaking(sneak);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);}
-        System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 outside-placement exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
+        System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 closed-glass-occlusion exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
+    }
+    private static void mountClearance(){
+        for(int width:new int[]{3,5})for(int mount:new int[]{2,3})for(int depth:new int[]{0,1,15,16,17,64,79,80})for(int scale:new int[]{10,71,100}){
+            LargeCanopySettings settings=new LargeCanopySettings();settings.mount=mount;settings.depth=depth;settings.scale=scale;
+            List<CanopyMesh.Face> faces=CanopyPose.faces(LargeCanopyGeometry.faces(width,settings,true),width==3?"front_canopy_glass":"large_front_canopy_glass",width,settings,0);
+            for(CanopyMesh.Face face:faces)for(Vec3d vertex:face.vertices)
+                require(mount==2?vertex.y>=CanopyPose.FRONT_MOUNT_CLEARANCE-1e-8:vertex.y<=1-CanopyPose.FRONT_MOUNT_CLEARANCE+1e-8,"mounted back frame clears support at every depth and scale");
+            for(EnumFacing facing:EnumFacing.HORIZONTALS)for(AxisAlignedBB box:CanopyMesh.windowCollision(faces,facing,BASE))
+                require(mount==2?box.minY>BASE.getY()+.001:box.maxY<BASE.getY()+1-.001,"mounted collision clears support plane");
+        }
     }
     private static void animatedFrontSurface(TileEntityCanopy tile){
         Vec3d center=null,normal=null;double largest=0;

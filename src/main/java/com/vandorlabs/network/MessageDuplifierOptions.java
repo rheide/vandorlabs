@@ -26,7 +26,7 @@ public final class MessageDuplifierOptions implements IMessage {
         @Override public IMessage onMessage(MessageDuplifierOptions message, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (message.mask < 0 || (message.mask & ~DuplifierApplyOptions.ALL) != 0
+                if ((message.mask & ~DuplifierApplyOptions.ALL) != 0
                         || !(player.openContainer instanceof ContainerDuplifier)
                         || !player.openContainer.canInteractWith(player)) return;
                 ItemStack tool = player.getHeldItemMainhand();

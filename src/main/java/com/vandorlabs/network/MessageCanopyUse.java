@@ -38,8 +38,8 @@ public final class MessageCanopyUse implements IMessage {
         ItemStack stack=player.getHeldItem(hand);
         if(!stack.isEmpty() && !(stack.getItem() instanceof ItemBlock) && stack.getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER && stack.getItem()!=com.vandorlabs.items.ModItems.DUPLIFIER)return false;
         if(stack.getItem() instanceof com.vandorlabs.blocks.BlockCanopy.CanopyItem)return false;
-        // Ordinary blocks may target a reached cabin cell, never a distant anchor-adjacent cell.
-        if(stack.getItem() instanceof ItemBlock && (!tile.resizable() || tile.progress!=0 || CanopyInteractions.interiorTarget(tile,eye,hit.hitVec,reach)==null))return false;
+        // Block placement follows normal visible surfaces; never redirect it through glazing.
+        if(stack.getItem() instanceof ItemBlock)return false;
         Vec3d local=hit.hitVec.subtract(new Vec3d(pos));
         boolean before=tile.targetOpen;net.minecraft.inventory.Container previous=player.openContainer;
         EnumActionResult result=player.interactionManager.processRightClickBlock(player,player.world,stack,hand,pos,hit.sideHit,(float)local.x,(float)local.y,(float)local.z);
