@@ -62,7 +62,7 @@ Opening shells intentionally pass through bodywork. Opening does not reserve the
 
 ## Front Canopy Glass and Large Front Canopy Glass
 
-Both frame sizes provide **Depth: 0–80 pixels**, **Inner size: 10–100%**, glass/material selection and optional opening. Sixteen pixels equals one block. The defaults are sixteen pixels deep and 71% inner size. Zero depth keeps a thin physical frame for usable collision and selection.
+Both frame sizes provide **Depth: 0–80 pixels**, **Inner size: 10–100%**, glass/material selection and optional opening. Sixteen pixels equals one block. The defaults are sixteen pixels deep and 71% inner size. Zero depth keeps a thin physical frame for usable collision and selection. Drag either slider continuously; the thumb follows the pointer while world previews update at most ten times per second. Releasing applies the final value immediately.
 
 Changing depth moves the front while the broad rear stays fixed. Only cells touched by the closed surfaces are reserved; clear cabin cells can hold other blocks. Hold an ordinary block and click the outside glazing towards empty cabin space to build inside without entering the canopy. Normal placement and protection checks still apply. A blocked resize preserves the original geometry and all cabin blocks.
 

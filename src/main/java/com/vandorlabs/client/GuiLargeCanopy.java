@@ -15,13 +15,13 @@ public final class GuiLargeCanopy extends GuiContainer {
     private int depth,scale,shade,tint;
     private final LargeCanopySettings draft=new LargeCanopySettings();
     private HousingTextureList textures;private GuiTextField channels;private int channelLabelY,channelLabelX;
-    private String sent,error="";private boolean ready;private MessageCanopySettingsResult pending;
+    private String sent,error="";private boolean ready,sliderDirty,sliderDragging;private int sliderDelay;private MessageCanopySettingsResult pending;
     public GuiLargeCanopy(TileEntityCanopy tile){super(new ContainerLargeCanopy(tile));this.tile=tile.owner();net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();this.tile.large.write(tag);draft.read(tag);depth=draft.depth;scale=draft.scale;shade=draft.shade;tint=draft.tint;sent=key();}
     private String key(){draft.depth=depth;draft.scale=scale;draft.shade=shade;draft.tint=tint;return draft.key();}
-    void apply(){if(!ready)return;if(channels!=null){com.vandorlabs.redstone.ChannelList parsed=ChannelFields.parse(channels);if(parsed==null)return;draft.channels=parsed;}if(!key().equals(sent)){sent=key();PacketHandler.INSTANCE.sendToServer(new MessageLargeCanopy(tile.getPos(),draft));}}
+    void apply(){if(!ready)return;if(channels!=null){com.vandorlabs.redstone.ChannelList parsed=ChannelFields.parse(channels);if(parsed==null)return;draft.channels=parsed;}sliderDirty=false;if(!key().equals(sent)){sent=key();PacketHandler.INSTANCE.sendToServer(new MessageLargeCanopy(tile.getPos(),draft));}}
     public void acknowledge(MessageCanopySettingsResult result){if(tile.getPos().equals(result.pos) && result.requested.equals(sent)){pending=result;reconcile();}}
-    private void reconcile(){if(pending==null || Mouse.isButtonDown(0))return;MessageCanopySettingsResult result=pending;pending=null;if(!result.requested.equals(sent))return;if(result.applied){error="";return;}net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();result.settings.write(tag);draft.read(tag);depth=draft.depth;scale=draft.scale;shade=draft.shade;tint=draft.tint;sent=key();error="Blocked: close first or clear the new surface.";initGui();}
-    @Override public void updateScreen(){super.updateScreen();reconcile();if(channels!=null)channels.updateCursorCounter();}
+    private void reconcile(){if(pending==null || sliderDragging || Mouse.isButtonDown(0))return;MessageCanopySettingsResult result=pending;pending=null;if(!result.requested.equals(sent))return;if(result.applied){error="";return;}net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();result.settings.write(tag);draft.read(tag);depth=draft.depth;scale=draft.scale;shade=draft.shade;tint=draft.tint;sent=key();error="Blocked: close first or clear the new surface.";initGui();}
+    @Override public void updateScreen(){super.updateScreen();if(sliderDirty && --sliderDelay<=0){apply();sliderDelay=2;}reconcile();if(channels!=null)channels.updateCursorCounter();}
     @Override public void initGui(){
         String text=channels==null?draft.channels.toString():channels.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();ready=false;
@@ -31,8 +31,8 @@ public final class GuiLargeCanopy extends GuiContainer {
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(this::choose).keepView(previous);
         int y=30;
         if(tile.resizable()){
-            buttonList.add(new GuiSlider(0,layout.controlsX,guiTop+y,154,20,"Depth: "," px",0,80,depth,false,true,slider->{depth=slider.getValueInt();apply();}));y+=22;
-            buttonList.add(new GuiSlider(1,layout.controlsX,guiTop+y,154,20,"Inner size: ","%",10,100,scale,false,true,slider->{scale=slider.getValueInt();apply();}));y+=22;
+            buttonList.add(new GuiSlider(0,layout.controlsX,guiTop+y,154,20,"Depth: "," px",0,80,depth,false,true,slider->sliderChanged(0,slider)));y+=22;
+            buttonList.add(new GuiSlider(1,layout.controlsX,guiTop+y,154,20,"Inner size: ","%",10,100,scale,false,true,slider->sliderChanged(1,slider)));y+=22;
         }
         buttonList.add(layout.control(2,y,"Tint: "+GlassTextures.tintLabel(tint)));y+=22;
         buttonList.add(layout.control(12,y,"Texture layout: "+(draft.tileMaterial?"Tile":"Fit")));y+=22;
@@ -55,7 +55,15 @@ public final class GuiLargeCanopy extends GuiContainer {
         else draft.material=choice;
         textures.setSelected(choice);apply();
     }
+    private void sliderChanged(int id,GuiSlider slider){
+        int value=slider.getValueInt();
+        if(id==0){if(value==depth)return;depth=value;}
+        else {if(value==scale)return;scale=value;}
+        sliderDirty=true;
+    }
     @Override protected void actionPerformed(GuiButton button){
+        // GuiSlider owns its value callback and drag state. Rebuilding here cancels the drag.
+        if(button instanceof GuiSlider)return;
         switch(button.id){
             case 2:tint=GuiOptionCycle.next(tint,3);break;
             case 3:draft.motion=GuiOptionCycle.next(draft.motion,2);break;
@@ -69,13 +77,15 @@ public final class GuiLargeCanopy extends GuiContainer {
         }
         apply();initGui();
     }
-    @Override protected void keyTyped(char typed,int key)throws IOException{if(channels!=null && channels.textboxKeyTyped(typed,key)){apply();return;}super.keyTyped(typed,key);}
+    @Override protected void keyTyped(char typed,int key)throws IOException{if(channels!=null && channels.textboxKeyTyped(typed,key)){apply();return;}if(key==1 || key==mc.gameSettings.keyBindInventory.getKeyCode())apply();super.keyTyped(typed,key);}
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
         if(channels!=null)channels.mouseClicked(x,y,button);
+        if(button==0)for(GuiButton control:buttonList)if(control instanceof GuiSlider && control.enabled && control.visible && x>=control.x && x<control.x+control.width && y>=control.y && y<control.y+control.height)sliderDragging=true;
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,6,11,12))return;
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);
     }
-    @Override protected void mouseReleased(int x,int y,int button){textures.release();super.mouseReleased(x,y,button);}
+    @Override protected void mouseReleased(int x,int y,int button){textures.release();if(button==0){for(GuiButton control:buttonList)if(control instanceof GuiSlider)control.mouseReleased(x,y);sliderDragging=false;if(sliderDirty)apply();reconcile();}super.mouseReleased(x,y,button);}
+    @Override public void onGuiClosed(){if(sliderDirty)apply();super.onGuiClosed();}
     @Override protected void mouseClickMove(int x,int y,int button,long time){if(!textures.drag(y))super.mouseClickMove(x,y,button,time);}
     @Override public void handleMouseInput()throws IOException{super.handleMouseInput();textures.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}

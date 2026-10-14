@@ -9,6 +9,7 @@
 - Configure 3 × 3 Front Canopy Glass and 5 × 5 Large Front Canopy Glass with 0–80 px depth and 10–100% inner frames. Place the broad back at the clicked face and extrude towards the player on wall, floor or ceiling mounts. Add optional opening with four local hinge positions and redstone/channel control.
 - Align Canopy and front-window registry IDs with their final names; remove obsolete canopy registrations, assets and runtime references without remapping aliases.
 - Reserve only large-canopy surface cells, support building into clear cabin space from outside, and save exact owned-cell offsets for resizing, removal and vehicle rotation. Clean stale follower cells without deleting unrelated cabin blocks.
+- Keep front-window depth and inner-size sliders responsive during dragging, coalesce live world updates and immediately apply the final released value.
 - Add single-view live canopy dialogs with large unified glass/material lists, shared glass colors/intensity and normal Programmable Block materials including trapdoor artwork, with Fit/Tile mapping at correct panel/block scale. Copy tint and intensity between canopies, visors and regular/diagonal programmable glass with the Duplifier.
 - Add Programmable Diagonal Glass, shared regular/diagonal glass finishes and improved reciprocal wall/glass joins. Allow long angled noses against walls and angled noses under ceilings.
 - Add redstone-controlled Escalator Up/Down modes with rider transport, nearby-player sleeping and preserved extended ramp geometry.
