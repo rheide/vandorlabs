@@ -90,12 +90,16 @@ public final class CanopyRuntimeChecks {
                                     if (b.opening()) {
                                         require(t.clearance(), "empty sweep " + id);
                                         BlockPos obstacle =
-                                                TEST.offset(f.getOpposite(), 2)
+                                                TEST.offset(f.getOpposite(), b.length)
                                                         .up(b.kind.contains("hinge") ? 1 : 0);
+                                        require(!b.cells(TEST,f).contains(obstacle), "rear bodywork lies outside the owned footprint " + id);
                                         w.setBlockState(obstacle, Blocks.STONE.getDefaultState());
                                         t.toggle();
-                                        require(t.targetOpen, "rear bodywork does not block opening " + id);
+                                        require(t.targetOpen && !t.removing && TileEntityCanopy.at(w,TEST)==t, "rear bodywork does not block opening " + id);
+                                        for (int i = 0; i < 16; i++) t.update();
+                                        require(t.progress == 1 && w.getBlockState(obstacle).getBlock()==Blocks.STONE, "opening preserves rear bodywork " + id);
                                         t.toggle();
+                                        for (int i = 0; i < 16; i++) t.update();
                                         w.setBlockToAir(obstacle);
                                         t.toggle();
                                         require(t.targetOpen, "clear opening " + id);
