@@ -7,14 +7,13 @@ import com.vandorlabs.network.*;
 import com.vandorlabs.persistence.SpaceDoorData;
 import com.vandorlabs.tiles.*;
 import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureMap;
 import org.lwjgl.input.*;
 import java.io.IOException;
 
 /** Same housing finish picker as other programmable blocks, with live settings. */
-public final class GuiProgrammableTrapdoor extends GuiContainer {
+public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     private final TileEntityProgrammableTrapdoor tile;
     private HousingTextureList textures;
     private int position,trigger,channel,tallWidth,doorDetail;
@@ -33,6 +32,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         xSize=360;ySize=240;
     }
     private int controlsX, channelLabelY;
+    @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
         String channelText=channelField==null?channelList.toString():channelField.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
@@ -98,12 +98,7 @@ public final class GuiProgrammableTrapdoor extends GuiContainer {
         channelField.mouseClicked(x,y,button);int before=textures.selected();
         if(textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
     }
-    @Override protected void mouseClickMove(int x,int y,int button,long elapsed){if(!textures.drag(y))super.mouseClickMove(x,y,button,elapsed);}
-    @Override protected void mouseReleased(int x,int y,int button){textures.release();super.mouseReleased(x,y,button);}
-    @Override public void handleMouseInput()throws IOException {
-        super.handleMouseInput();textures.wheel(Mouse.getEventX()*width/mc.displayWidth,
-                height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
-    }
+
     @Override protected void keyTyped(char c,int key)throws IOException {
         if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
         if(channelField.textboxKeyTyped(c,key)){done.enabled=parsedChannel()>=0;channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);if(done.enabled)send();return;}

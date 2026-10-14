@@ -24,6 +24,7 @@ final class GlassVisualChecks {
             mc.gameSettings.hideGUI=true;
         }
         if(ticks==140) {
+            RuntimeResourceChecks.animations(mc);
             GlassAppearanceRuntimeChecks.checkRenderMeshes(mc.world);save(mc,output,"glass-strengths-and-frames");
             mc.gameSettings.hideGUI=false;
             openDialog(mc,new BlockPos(42,5,40),com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_GLASS);
@@ -82,7 +83,13 @@ final class GlassVisualChecks {
         if(ticks==550){checkWindowDialog(mc,new BlockPos(106,5,64));save(mc,output,"diagonal-porthole-glass-settings");mc.player.closeScreen();mc.gameSettings.hideGUI=true;camera(mc,92.5,7,48,0,18);}
         if(ticks==580){save(mc,output,"porthole-joined-tile-stretch");camera(mc,92.5,7,56,0,18);}
         if(ticks==610){save(mc,output,"diagonal-porthole-joined-tile-stretch");camera(mc,143,6.5,34.5,14,15);}
-        if(ticks==650){save(mc,output,"porthole-octagon-wall-pipes");System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins, joined materials, porthole palettes and dialogs, opaque octagonal Wall Pipes example");return true;}
+        if(ticks==650){save(mc,output,"porthole-octagon-wall-pipes");mc.getIntegratedServer().addScheduledTask(()->{
+            EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+            net.minecraft.block.Block[] blocks={net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_door"),com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_TRAPDOOR};
+            for(int i=0;i<blocks.length;i++){BlockPos pos=new BlockPos(150+i*4,5,40);player.world.setBlockState(pos.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);player.world.setBlockState(pos,blocks[i].getDefaultState(),3);blocks[i].onBlockPlacedBy(player.world,pos,player.world.getBlockState(pos),player,new net.minecraft.item.ItemStack(blocks[i]));}
+        }).get();mc.gameSettings.hideGUI=false;openDialog(mc,new BlockPos(150,5,40),com.vandorlabs.GuiHandler.GUI_SPACE_DOOR);}
+        if(ticks==670){if(!(mc.currentScreen instanceof GuiSpaceDoor))throw new IllegalStateException("shared door picker did not open");ProgrammableDialogRuntimeChecks.check(mc);openDialog(mc,new BlockPos(154,5,40),com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR);}
+        if(ticks==690){if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))throw new IllegalStateException("shared trapdoor picker did not open");ProgrammableDialogRuntimeChecks.check(mc);System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins, joined materials, porthole palettes and dialogs, opaque octagonal Wall Pipes example, shared door and trapdoor dialogs");return true;}
         return false;
     }
     private static void camera(Minecraft mc,double x,double y,double z,float yaw,float pitch)throws Exception{mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x,y,z,yaw,pitch)).get();mc.player.setPositionAndRotation(x,y,z,yaw,pitch);}

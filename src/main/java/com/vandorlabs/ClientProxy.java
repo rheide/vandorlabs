@@ -64,7 +64,7 @@ public class ClientProxy extends CommonProxy {
         super.init(event);
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.VehicleClient());
         ((net.minecraft.client.resources.IReloadableResourceManager)net.minecraft.client.Minecraft.getMinecraft().getResourceManager())
-                .registerReloadListener(manager->com.vandorlabs.client.RenderGroundVehicle.reload());
+                .registerReloadListener(manager->{com.vandorlabs.client.RenderGroundVehicle.reload();TEAnimatedScreenSelector.clearCache();});
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCanopy.class,new com.vandorlabs.client.TECanopy());
         net.minecraft.block.Block programmableDoor = net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS
                 .getValue(new net.minecraft.util.ResourceLocation(VandorLabs.MODID, "programmable_door"));

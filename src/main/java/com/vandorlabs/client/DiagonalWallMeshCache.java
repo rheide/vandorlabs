@@ -3,12 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -133,7 +128,7 @@ public final class DiagonalWallMeshCache {
             this.wall=wall;this.metal=metal;this.mesh=mesh;this.glass=glass;this.frame=frame;this.slice=slice;
         }
     }
-    private static final class WorldCache implements IWorldEventListener {
+    private static final class WorldCache extends WorldRenderListener {
         final LinkedHashMap<BlockPos,Entry> entries=new LinkedHashMap<>(64,.75F,true);
         int vertices;
         void remove(BlockPos pos) { Entry removed=entries.remove(pos);if(removed!=null)vertices-=removed.vertices(); }
@@ -160,21 +155,13 @@ public final class DiagonalWallMeshCache {
             invalidate(pos.getX(),pos.getY(),pos.getZ(),pos.getX(),pos.getY(),pos.getZ());
         }
         @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2) { invalidate(x1,y1,z1,x2,y2,z2); }
-        @Override public void notifyLightSet(BlockPos pos) { } // Lightmap values are supplied at every draw.
-        @Override public void playSoundToAllNearExcept(EntityPlayer p,SoundEvent s,SoundCategory c,double x,double y,double z,float volume,float pitch) { }
-        @Override public void playRecord(SoundEvent s,BlockPos p) { }
-        @Override public void spawnParticle(int id,boolean range,double x,double y,double z,double sx,double sy,double sz,int... args) { }
-        @Override public void spawnParticle(int id,boolean range,boolean level,double x,double y,double z,double sx,double sy,double sz,int... args) { }
-        @Override public void onEntityAdded(Entity e) { }
-        @Override public void onEntityRemoved(Entity e) { }
-        @Override public void broadcastSound(int id,BlockPos p,int data) { }
-        @Override public void playEvent(EntityPlayer p,int id,BlockPos pos,int data) { }
-        @Override public void sendBlockBreakProgress(int id,BlockPos pos,int progress) { }
+
     }
     public static final class Events {
         @SubscribeEvent public void worldUnloaded(WorldEvent.Unload event) {
             if(event.getWorld().isRemote) {
                 unload(event.getWorld());
+                GlassSurfaceGroups.unload(event.getWorld());
                 TEAnimatedScreenSelector.unloadGroups(event.getWorld());
             }
         }
@@ -182,6 +169,7 @@ public final class DiagonalWallMeshCache {
         @SubscribeEvent public void chunkUnloaded(ChunkEvent.Unload event) { changed(event); }
         private void changed(ChunkEvent event) {
             if(!event.getWorld().isRemote)return;
+            GlassSurfaceGroups.invalidate(event.getWorld());
             int x=event.getChunk().x*16,z=event.getChunk().z*16;
             invalidate(event.getWorld(),x,0,z,x+15,255,z+15);
         }

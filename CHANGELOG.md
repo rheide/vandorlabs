@@ -2,6 +2,11 @@
 
 ## 2.0
 
+- Omit unused legacy previews, door masks and retired trim from the runtime JAR after checking code, model, catalog and Dynmap references. Share identical Clear glass strength textures and repair stale Dynmap texture paths.
+- Share texture-picker input handling across six dialogs, index configured item-material lookup, remove the obsolete porthole tint path, and release both screen and input animation textures on resource reload.
+- Retain joined glass material layouts until their world or settings change, bound the per-world cache, and invalidate on chunk changes and unload. Share world-render listener plumbing with the diagonal mesh cache.
+- Stream compact animation deltas one frame at a time instead of retaining the entire decoded delta payload during texture upload.
+
 - Cache canopy rigid-part overlap removal and tiled texture subdivision during animation, retaining clipping where moving shells meet stationary mounts. Reuse appearance geometry for rendering and picking instead of rebuilding it for each interpolated pose.
 - Allow canopy placement over an existing Pilot Seat through normal item interaction, including its invisible backrest cell. Trim overlapping Pilot Seat cushion and armrest surfaces across every height and armrest variant.
 

@@ -12,18 +12,16 @@ import com.vandorlabs.blocks.BlockProgrammableSlab;
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
-import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 
 /** Scrollable finish picker shared by programmable walls and the full block. */
-public class GuiProgrammableWall extends GuiContainer {
+public class GuiProgrammableWall extends GuiMaterialPicker {
     private static final String[] JOINS={"Auto","Straight","Front left corner","Front right corner","Back left corner","Back right corner","Front left T","Front right T","Back left T","Back right T","Left cross","Right cross"};
     private int rows = 8;
     private HousingTextureList textureList;
@@ -90,6 +88,7 @@ public class GuiProgrammableWall extends GuiContainer {
         ySize = porthole ? 272 : slab || diagonal ? 216 : 190;
     }
 
+    @Override protected HousingTextureList materialPicker(){return textureList;}
     @Override public void initGui() { initWallLayout(); }
 
     private void initWallLayout() {
@@ -223,22 +222,6 @@ public class GuiProgrammableWall extends GuiContainer {
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override protected void mouseReleased(int mouseX, int mouseY, int button) {
-        textureList.release();
-        super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    @Override protected void mouseClickMove(int mouseX, int mouseY,
-            int clickedButton, long timeSinceLastClick) {
-        if (textureList.drag(mouseY)) return;
-        else super.mouseClickMove(mouseX, mouseY, clickedButton, timeSinceLastClick);
-    }
-
-    @Override public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-        textureList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
     }
 
     @Override protected void actionPerformed(GuiButton button) {

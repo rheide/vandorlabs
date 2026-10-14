@@ -131,6 +131,7 @@ final class RoleArmorRuntimeChecks {
                 if(++preview<choices(ITEMS[0]).size()) {stage=7;ticks=0;return;}
                 System.out.println("[vandorlabs][reprolab] role-armor PASS choices=48 icons=48 sets=16 (Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
                 stage=9;
+                if(Boolean.getBoolean("vandorlabs.armorChecksOnly"))mc.shutdown();
             }
         } catch(Exception e) {throw new IllegalStateException("Role armor check piece="+piece+" design="+design+" stage="+stage,e);}
     }

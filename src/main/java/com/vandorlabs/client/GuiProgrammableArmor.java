@@ -4,16 +4,15 @@ import com.vandorlabs.container.ContainerProgrammableArmor;
 import com.vandorlabs.items.ItemProgrammableArmor;
 import com.vandorlabs.network.*;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import org.lwjgl.input.Mouse;
 
 /** The same categorized material list used by Programmable Blocks. */
-public final class GuiProgrammableArmor extends GuiContainer {
+public final class GuiProgrammableArmor extends GuiMaterialPicker {
     private final ContainerProgrammableArmor armor;
     private HousingTextureList textures;
     public GuiProgrammableArmor(ContainerProgrammableArmor armor) {
         super(armor); this.armor = armor; xSize = 284; ySize = 268;
     }
+    @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
         xSize=Math.min(284,width-16);
         ySize=Math.min(268,height-16);
@@ -33,13 +32,7 @@ public final class GuiProgrammableArmor extends GuiContainer {
         if (textures.click(x,y,button)) { if (textures.picked()) select(textures.selected()); return; }
         super.mouseClicked(x,y,button);
     }
-    @Override protected void mouseClickMove(int x,int y,int button,long time) { textures.drag(y); }
-    @Override protected void mouseReleased(int x,int y,int button) { textures.release(); super.mouseReleased(x,y,button); }
-    @Override public void handleMouseInput() throws java.io.IOException {
-        super.handleMouseInput();
-        textures.wheel(Mouse.getEventX()*width/mc.displayWidth,
-                height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
-    }
+
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF18242F);
         fontRenderer.drawString(armor.stack(mc.player).getDisplayName(),guiLeft+12,guiTop+12,0xFFFFFF);

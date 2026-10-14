@@ -5,12 +5,11 @@ import com.vandorlabs.canopy.LargeCanopySettings;
 import com.vandorlabs.container.ContainerLargeCanopy;
 import com.vandorlabs.network.*;
 import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraftforge.fml.client.config.GuiSlider;
 import org.lwjgl.input.Mouse;
 import java.io.IOException;
 /** One live settings view with the shared full-height material picker. */
-public final class GuiLargeCanopy extends GuiContainer {
+public final class GuiLargeCanopy extends GuiMaterialPicker {
     private final TileEntityCanopy tile;
     private int depth,scale,shade,tint;
     private final LargeCanopySettings draft=new LargeCanopySettings();
@@ -22,6 +21,7 @@ public final class GuiLargeCanopy extends GuiContainer {
     public void acknowledge(MessageCanopySettingsResult result){if(tile.getPos().equals(result.pos) && result.requested.equals(sent)){pending=result;reconcile();}}
     private void reconcile(){if(pending==null || sliderDragging || Mouse.isButtonDown(0))return;MessageCanopySettingsResult result=pending;pending=null;if(!result.requested.equals(sent))return;if(result.applied){error="";return;}net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();result.settings.write(tag);draft.read(tag);depth=draft.depth;scale=draft.scale;shade=draft.shade;tint=draft.tint;sent=key();error="Blocked: close first or clear the new surface.";initGui();}
     @Override public void updateScreen(){super.updateScreen();if(sliderDirty && --sliderDelay<=0){apply();sliderDelay=2;}reconcile();if(channels!=null)channels.updateCursorCounter();}
+    @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui(){
         String text=channels==null?draft.channels.toString():channels.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();ready=false;
@@ -84,10 +84,9 @@ public final class GuiLargeCanopy extends GuiContainer {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,6,11,12))return;
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);
     }
-    @Override protected void mouseReleased(int x,int y,int button){textures.release();if(button==0){for(GuiButton control:buttonList)if(control instanceof GuiSlider)control.mouseReleased(x,y);sliderDragging=false;if(sliderDirty)apply();reconcile();}super.mouseReleased(x,y,button);}
+    @Override protected void mouseReleased(int x,int y,int button){if(button==0){for(GuiButton control:buttonList)if(control instanceof GuiSlider)control.mouseReleased(x,y);sliderDragging=false;if(sliderDirty)apply();reconcile();}super.mouseReleased(x,y,button);}
     @Override public void onGuiClosed(){if(sliderDirty)apply();super.onGuiClosed();}
-    @Override protected void mouseClickMove(int x,int y,int button,long time){if(!textures.drag(y))super.mouseClickMove(x,y,button,time);}
-    @Override public void handleMouseInput()throws IOException{super.handleMouseInput();textures.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());}
+
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
     @Override public void drawScreen(int x,int y,float partial){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);if(channels!=null){fontRenderer.drawString("Channels",channelLabelX,channelLabelY,0xffffff);channels.drawTextBox();}if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-166,guiTop+ySize+3,154,0xffffaa88);}
     @Override public boolean doesGuiPauseGame(){return false;}

@@ -43,25 +43,21 @@ public final class CompactAnimationDecoder {
                     || declaredPayload != expectedPayload) {
                 throw new IllegalArgumentException("animation dimensions do not match base");
             }
-            byte[] delta = new byte[(int) expectedPayload];
-            try (InflaterInputStream inflated = new InflaterInputStream(in)) {
-                int cursor = 0;
-                while (cursor < delta.length) {
-                    int count = inflated.read(delta, cursor, delta.length - cursor);
-                    if (count < 0) throw new IllegalArgumentException("truncated animation payload");
-                    if (count > 0) cursor += count;
-                }
-                if (inflated.read() >= 0) {
-                    throw new IllegalArgumentException("oversized animation payload");
-                }
-            }
-
+            // The output strip is required for upload; compressed deltas need only one frame.
+            byte[] delta = new byte[width * height * 3];
             BufferedImage strip = new BufferedImage(width, height * frames, BufferedImage.TYPE_INT_ARGB);
             int[] previous = base.getRGB(0, 0, width, height, null, 0, width);
             strip.setRGB(0, 0, width, height, previous, 0, width);
-            int cursor = 0;
             int[] pixels = new int[width * height];
+            try (InflaterInputStream inflated = new InflaterInputStream(in)) {
             for (int frame = 1; frame < frames; frame++) {
+                int cursor=0;
+                while(cursor<delta.length){
+                    int count=inflated.read(delta,cursor,delta.length-cursor);
+                    if(count<0)throw new IllegalArgumentException("truncated animation payload");
+                    cursor+=count;
+                }
+                cursor=0;
                 for (int pixel = 0; pixel < pixels.length; pixel++) {
                     int original = previous[pixel];
                     int red = (((original >> 16) & 255) + (delta[cursor++] & 255)) & 255;
@@ -71,6 +67,8 @@ public final class CompactAnimationDecoder {
                 }
                 strip.setRGB(0, frame * height, width, height, pixels, 0, width);
                 int[] reusable = previous; previous = pixels; pixels = reusable;
+            }
+            if(inflated.read()>=0)throw new IllegalArgumentException("oversized animation payload");
             }
             return new Result(strip, frames);
         }

@@ -83,7 +83,6 @@ public class TEAnimatedScreenSelector
     }
 
     private static final Map<String, AnimData> ANIM_CACHE = new HashMap<>();
-    private static final Map<String, AnimData> INPUT_ANIM_CACHE = new HashMap<>();
     private static final Map<BlockPos, PortholeGroup> PORTHOLE_GROUPS = new HashMap<>();
     private static World portholeCacheWorld;
     private static long portholeCacheTick = Long.MIN_VALUE;
@@ -314,26 +313,20 @@ public class TEAnimatedScreenSelector
     }
 
     private static synchronized AnimData animData(String screenId) {
-        AnimData data = ANIM_CACHE.get(screenId);
-        if (data == null) {
-            data = loadAnimData(screenId);
-            ANIM_CACHE.put(screenId, data);
-        }
-        return data;
+        return animation(screenId,TEX_ROOT+screenId);
     }
 
-    private static AnimData loadAnimData(String screenId) {
-        return loadCompactAnimation(screenId, TEX_ROOT + screenId);
+    private static synchronized AnimData animation(String key,String pathRoot){
+        AnimData data = ANIM_CACHE.get(key);
+        if (data == null) {
+            data = loadCompactAnimation(key,pathRoot);
+            ANIM_CACHE.put(key, data);
+        }
+        return data;
     }
 
     private static synchronized AnimData inputAnimData(String id) {
-        AnimData data = INPUT_ANIM_CACHE.get(id);
-        if (data == null) {
-            data = loadCompactAnimation("input_" + id,
-                    TEX_ROOT + "console_inputs/" + id);
-            INPUT_ANIM_CACHE.put(id, data);
-        }
-        return data;
+        return animation("input_"+id,TEX_ROOT+"console_inputs/"+id);
     }
 
     private static AnimData loadCompactAnimation(String cacheName, String pathRoot) {
@@ -356,11 +349,12 @@ public class TEAnimatedScreenSelector
                 pathRoot + "_animated.anim");
         ResourceLocation baseLocation = new ResourceLocation(VandorLabs.MODID,
                 pathRoot + "_static.png");
-        BufferedImage base = TextureUtil.readBufferedImage(
-                manager.getResource(baseLocation).getInputStream());
-        InputStream resource = manager.getResource(packed).getInputStream();
-        CompactAnimationDecoder.Result decoded = CompactAnimationDecoder.decode(base, resource);
-        return new DecodedAnimation(decoded.strip, decoded.frameCount);
+        try(InputStream baseStream=manager.getResource(baseLocation).getInputStream();
+                InputStream resource=manager.getResource(packed).getInputStream()){
+            BufferedImage base = TextureUtil.readBufferedImage(baseStream);
+            CompactAnimationDecoder.Result decoded = CompactAnimationDecoder.decode(base, resource);
+            return new DecodedAnimation(decoded.strip, decoded.frameCount);
+        }
     }
 
     @Override
@@ -1522,6 +1516,7 @@ public class TEAnimatedScreenSelector
 
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
     public static synchronized void clearCache() {
+        for(AnimData data:ANIM_CACHE.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(data.texture);
         ANIM_CACHE.clear();
     }
 }

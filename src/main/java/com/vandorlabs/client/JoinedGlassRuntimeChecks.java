@@ -52,13 +52,32 @@ final class JoinedGlassRuntimeChecks {
                     require(ProgrammableSettings.apply(world,p,settings(0,2,true),player),"group setup");
                 }
                 TileEntity root=world.getTileEntity(BASE);GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(root);require(layout.columns==2 && layout.rows==rows,"joined rectangle "+facing+":"+mode+":"+inverted+" actual="+layout.key());
+                long tick=world.getTotalWorldTime();try{world.setTotalWorldTime(tick+1);require(GlassSurfaceGroups.layout(root)==layout,"unchanged joined layout was rebuilt on the next tick");}finally{world.setTotalWorldTime(tick);}
+                world.setBlockState(BASE.up(4),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                // Fresh server fixture chunks suppress ordinary notifications until populated.
+                world.notifyBlockUpdate(BASE.up(4),net.minecraft.init.Blocks.AIR.getDefaultState(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                require(GlassSurfaceGroups.layout(root)!=layout,"block event did not invalidate layout");world.setBlockToAir(BASE.up(4));
                 if(root instanceof TileEntityProgrammableGlass)((TileEntityProgrammableGlass)root).setJoin(false);else ((TileEntityAnimatedScreenSelector)root).setGlassLayout(true,false);
                 layout=GlassSurfaceGroups.layout(root);require(layout.columns==1 && layout.rows==1,"Join Off has local artwork");
             }
             NBTTagCompound captured=settings(0,1,true);int index=-1;for(int i=0;i<DuplifierApplyOptions.OPTIONS.length;i++)if(DuplifierApplyOptions.OPTIONS[i].key.equals(ProgrammableSettings.GLASS_MATERIAL))index=i;
             NBTTagCompound masked=DuplifierApplyOptions.selected(captured,DuplifierApplyOptions.ALL&~(1L<<index));require(!masked.hasKey(ProgrammableSettings.GLASS_MATERIAL) && !masked.hasKey(ProgrammableSettings.GLASS_LAYOUT),"material copy mask includes layout");
+            cacheBounds(world);
         }finally{clear(world);}
         System.out.println("[vandorlabs][reprolab] joined-glass-settings PASS families=5 variants="+count+" groups=32 facings=4 slopes=3 Join-off main-side-independent configured-items copy-mask");
+    }
+    private static void cacheBounds(World world){
+        try{
+            TileEntity root=world.getTileEntity(BASE);GlassSurfaceGroups.Layout before=GlassSurfaceGroups.layout(root);
+            java.lang.reflect.Field caches=GlassSurfaceGroups.class.getDeclaredField("CACHES");caches.setAccessible(true);Object cache=((Map<?,?>)caches.get(null)).get(world);
+            java.lang.reflect.Field layouts=cache.getClass().getDeclaredField("layouts");layouts.setAccessible(true);
+            @SuppressWarnings("unchecked") Map<BlockPos,GlassSurfaceGroups.Layout> entries=(Map<BlockPos,GlassSurfaceGroups.Layout>)layouts.get(cache);
+            for(int i=0;i<GlassSurfaceGroups.MAX_LAYOUTS+1;i++)entries.put(new BlockPos(10000+i,0,0),new GlassSurfaceGroups.Layout(0,0,1,1));
+            require(entries.size()==GlassSurfaceGroups.MAX_LAYOUTS,"layout cache exceeded its bound");require(GlassSurfaceGroups.layout(root).key().equals(before.key()),"evicted layout did not reconstruct correctly");
+            GlassSurfaceGroups.invalidate(world);require(entries.isEmpty(),"chunk invalidation did not clear layouts");
+            GlassSurfaceGroups.layout(root);GlassSurfaceGroups.unload(world);require(!((Map<?,?>)caches.get(null)).containsKey(world),"unloaded world retained cache");
+        }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
+        System.out.println("[vandorlabs][reprolab] joined-glass-cache PASS stable-ticks block-events settings chunk-invalidation bounded-layouts eviction world-unload");
     }
     static void buildGallery(World world){
         for(int type=0;type<4;type++)for(int mode=0;mode<2;mode++)for(int x=0;x<3;x++)for(int y=0;y<2;y++){

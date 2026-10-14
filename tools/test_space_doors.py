@@ -23,7 +23,7 @@ tile=(ROOT/'src/main/java/com/vandorlabs/tiles/TileEntitySpaceDoor.java').read_t
 designs=re.findall(r'"([a-z_]+)"',re.search(r'DESIGNS=\{(.*?)\};',tile,re.S).group(1))
 assert tuple(designs[:15])==FAMILIES and designs[15:17]==["white_glass","dark_glass"]
 gui=(ROOT/'src/main/java/com/vandorlabs/client/GuiSpaceDoor.java').read_text()
-assert len(re.findall(r'"[^"]+"',re.search(r'LABELS=\{(.*?)\};',gui,re.S).group(1)))==len(designs)
+assert 'index<TileEntitySpaceDoor.DESIGNS.length' in gui, 'door dialog must use the shared design catalog'
 sprites=(ROOT/'src/main/java/com/vandorlabs/client/SpaceDoorTextures.java').read_text()
 glass_indices={int(i) for i in re.findall(r'design==(\d+)',re.search(r'hasGlassDesign\(int design\) \{(.*?)\}',tile).group(1))}
 assert {designs[i] for i in glass_indices}==set(GLASS_FAMILIES)|{"white_glass","dark_glass","slim_glass"}

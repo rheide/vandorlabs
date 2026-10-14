@@ -11,35 +11,22 @@ import com.vandorlabs.render.SpaceDoorMotion;
 import com.vandorlabs.persistence.SpaceDoorData;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 import java.io.IOException;
 
 /** List selector with server-authoritative live updates, like programmable screens. */
-public class GuiSpaceDoor extends GuiContainer {
-    private static final int ROW_H=14, LIST_ROWS=10, LIST_H=ROW_H*LIST_ROWS;
+public class GuiSpaceDoor extends GuiMaterialPicker {
     private final TileEntitySpaceDoor tile;
     private HousingTextureList textureList;
     private ProgrammableDialogLayout layout;
     private int faceTexture;
-    private int design,detail,depth,scrollIndex,lastValidChannel;
+    private int design,detail,depth,lastValidChannel;
     private int trigger;
     private SpaceDoorMotion motion;
-    private boolean framed,hinges,panel,draggingScrollbar,tileTexture;
-    private int listLeft,listTop,listRight,listBottom;
+    private boolean framed,hinges,panel,tileTexture;
     private GuiTextField channelField;
     private GuiButton done,motionButton,hingeButton;
-    private int previewX,previewY;
-    private static final String[] LABELS={"Observation","Airlock","Standard","Security","Reactor Service",
-            "Viewport","Laboratory","Cargo","Ventilation","Cargo Lift","Blast Shield","Glazed Hangar",
-            "Quarantine Seal","Reactor Barrier","Modular Shutter","White Glass","Dark Glass","Plain Cargo","Stepped Freight","Observation Leaf","Reinforced Leaf","Warehouse Shutter","Slotted Bay","Cross Braced Bay","Split View Bay","Offset Cargo","Twin Observation","Armored Biparting","Service Freight","Slim Glass"};
     private static final String[] SIZES={"Size: Small","Size: Large"};
-    private static final String[] TEXTURES={"observation","airlock","standard","security","reactor",
-            "door_viewport","door_laboratory","door_cargo","door_ventilation","lift_cargo_lift",
-            "lift_blast_shield","lift_glazed_hangar","lift_quarantine_seal","lift_reactor_barrier","lift_modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight","slim_glass"};
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
@@ -52,14 +39,14 @@ public class GuiSpaceDoor extends GuiContainer {
         panel=tile.hasPanel();
         trigger=tile.getTrigger();
         lastValidChannels=tile.getRedstoneChannels();lastValidChannel=lastValidChannels.first();
-        scrollIndex=Math.max(0,Math.min(maxScroll(),design-LIST_ROWS/2));
         xSize=420; ySize=240;
     }
+    @Override protected HousingTextureList materialPicker(){return textureList;}
     @Override public void initGui() {
         String channelText=channelField==null?lastValidChannels.toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        listLeft=layout.listX;listRight=listLeft+layout.listWidth;listTop=guiTop+38;
+        int listLeft=layout.listX,listTop=guiTop+38;
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
@@ -116,13 +103,8 @@ public class GuiSpaceDoor extends GuiContainer {
         else return;
         sendUpdate();
     }
-    private int maxScroll() { return Math.max(0,LABELS.length-LIST_ROWS); }
-    private void clampScroll() { scrollIndex=Math.max(0,Math.min(maxScroll(),scrollIndex)); }
     private void select(int index) {
-        if (index>=0 && index<LABELS.length && tile.acceptsDesign(index) && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
-    }
-    private void dragScrollbarTo(int y) {
-        scrollIndex=Math.round((float)(y-listTop)/LIST_H*maxScroll()); clampScroll();
+        if (index>=0 && index<TileEntitySpaceDoor.DESIGNS.length && tile.acceptsDesign(index) && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18))return;
@@ -138,19 +120,7 @@ public class GuiSpaceDoor extends GuiContainer {
         }
         super.mouseClicked(x,y,button);
     }
-    @Override protected void mouseReleased(int x,int y,int state) {
-        textureList.release();draggingScrollbar=false; super.mouseReleased(x,y,state);
-    }
-    @Override protected void mouseClickMove(int x,int y,int button,long elapsed) {
-        if (textureList.drag(y)) return; else super.mouseClickMove(x,y,button,elapsed);
-    }
-    @Override public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-        int wheel=Mouse.getEventDWheel();
-        int x=Mouse.getEventX()*width/mc.displayWidth;
-        int y=height-Mouse.getEventY()*height/mc.displayHeight-1;
-        textureList.wheel(x,y,wheel);
-    }
+
     @Override protected void keyTyped(char c,int key) throws IOException {
         if (key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER) {
             if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return;
@@ -163,9 +133,7 @@ public class GuiSpaceDoor extends GuiContainer {
         }
         if (!channelField.isFocused() && (key==Keyboard.KEY_UP || key==Keyboard.KEY_DOWN)) {
             select(design+(key==Keyboard.KEY_UP?-1:1));
-            if (design<scrollIndex) scrollIndex=design;
-            if (design>=scrollIndex+LIST_ROWS) scrollIndex=design-LIST_ROWS+1;
-            clampScroll(); return;
+            return;
         }
         super.keyTyped(c,key);
     }

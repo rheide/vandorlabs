@@ -5,12 +5,10 @@ import com.vandorlabs.network.MessageProgrammableGlass;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityProgrammableGlass;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import org.lwjgl.input.Mouse;
 import java.io.IOException;
 
 /** Glass finishes use the same scrollable thumbnail picker as programmable walls. */
-public final class GuiProgrammableGlass extends GuiContainer {
+public final class GuiProgrammableGlass extends GuiMaterialPicker {
     private final TileEntityProgrammableGlass tile;
     private int size,shade,tint,material;
     private boolean join,framed,stretch;
@@ -19,6 +17,7 @@ public final class GuiProgrammableGlass extends GuiContainer {
         super(new ContainerProgrammableGlass(tile));this.tile=tile;
         size=tile.getSize();shade=tile.getShade();join=tile.isJoin();tint=tile.getTint();framed=tile.isFramed();material=tile.getMaterial();stretch=tile.isStretch();
     }
+    @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();
@@ -47,9 +46,7 @@ public final class GuiProgrammableGlass extends GuiContainer {
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}
         super.mouseClicked(x,y,button);
     }
-    @Override protected void mouseReleased(int x,int y,int button){textures.release();super.mouseReleased(x,y,button);}
-    @Override protected void mouseClickMove(int x,int y,int button,long time){if(!textures.drag(y))super.mouseClickMove(x,y,button,time);}
-    @Override public void handleMouseInput()throws IOException{super.handleMouseInput();textures.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());}
+
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
     @Override public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF101012);

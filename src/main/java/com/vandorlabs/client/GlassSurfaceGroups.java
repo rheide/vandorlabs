@@ -16,11 +16,22 @@ final class GlassSurfaceGroups {
         Layout(int column,int row,int columns,int rows){this.column=column;this.row=row;this.columns=columns;this.rows=rows;}
         String key(){return column+":"+row+":"+columns+":"+rows;}
     }
-    private static final class Cache {long tick=Long.MIN_VALUE,revision;final Map<BlockPos,Layout> layouts=new HashMap<>();}
+    static final int MAX_LAYOUTS=8192;
+    private static final class Cache extends WorldRenderListener {
+        long tick=Long.MIN_VALUE,revision;
+        final Map<BlockPos,Layout> layouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
+        void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();}}
+        @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags){clear();}
+        @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2){clear();}
+    }
     private static final Map<World,Cache> CACHES=new WeakHashMap<>();
+    static synchronized void invalidate(World world){Cache cache=CACHES.get(world);if(cache!=null)cache.clear();}
+    static synchronized void unload(World world){Cache cache=CACHES.remove(world);if(cache!=null)world.removeEventListener(cache);}
     static synchronized Layout layout(TileEntity tile){
-        World world=tile.getWorld();Cache cache=CACHES.computeIfAbsent(world,w->new Cache());
-        if(cache.tick!=world.getTotalWorldTime() || cache.revision!=GlassMaterials.revision()){cache.tick=world.getTotalWorldTime();cache.revision=GlassMaterials.revision();cache.layouts.clear();}
+        World world=tile.getWorld();Cache cache=CACHES.get(world);
+        if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
+        // Captured vehicle worlds can replace their local structure without ordinary block events.
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld && cache.tick!=world.getTotalWorldTime() || cache.revision!=GlassMaterials.revision()){cache.tick=world.getTotalWorldTime();cache.revision=GlassMaterials.revision();cache.layouts.clear();}
         Layout found=cache.layouts.get(tile.getPos());if(found!=null)return found;
         IBlockState state=world.getBlockState(tile.getPos());boolean diagonal=tile instanceof TileEntityAnimatedScreenSelector;
         EnumFacing facing=PanelJoins.facing(state),right=facing.rotateY(),up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?facing.getOpposite():EnumFacing.UP;

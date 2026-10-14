@@ -47,6 +47,11 @@ public final class CompactAnimationDecoderTest {
         rejects(()->CompactAnimationDecoder.decode(base,
                 new ByteArrayInputStream(encoded(1,1,2,4,new byte[]{1,2,3,4}))),
                 "false declared length accepted");
+        byte[] sequence=new byte[300];java.util.Arrays.fill(sequence,(byte)1);
+        result=CompactAnimationDecoder.decode(base,new ByteArrayInputStream(encoded(1,1,101,300,sequence)));
+        if(result.strip.getRGB(0,100)!=0xFF748494)throw new AssertionError("streamed deltas did not accumulate across frame boundaries");
+        rejects(()->CompactAnimationDecoder.decode(base,new ByteArrayInputStream(encoded(1,1,101,300,new byte[299]))),"truncated later frame accepted");
+        rejects(()->CompactAnimationDecoder.decode(base,new ByteArrayInputStream(encoded(1,1,101,300,new byte[301]))),"trailing later-frame payload accepted");
         System.out.println("Compact animation decoder PASS");
     }
 }
