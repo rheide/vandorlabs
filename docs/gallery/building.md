@@ -137,6 +137,12 @@ Storage materials use their front artwork on ordinary blocks; [Programmable Stor
 
 Portholes offer **Round**, **Hexagon**, **Octagon**, and **Square** openings, glass shade, and **Join**. Joining merges eligible neighboring portholes into a larger window. The wall form is thin; the block form fills the entire block depth.
 
+Programmable Porthole Wall, Programmable Diagonal Porthole and the full-depth Porthole Block have separate **Main**, **Side** and **Glass** texture tabs. Glass offers the same nineteen glass finishes and normal material catalog as Programmable Glass, including trapdoor artwork. **Tint** selects Mild, Normal or Strong glass intensity; for non-glass artwork it selects 35%, 65% or 100% opacity. Main and Side keep their own textures. With **Join** on, **Stretch** fits one image across the joined window opening, while **Tile** repeats artwork per block. Layout controls appear only for non-glass choices.
+
+| Porthole glass colors | Diagonal porthole materials |
+| --- | --- |
+| ![Porthole Glass tab with all glass colors and tint strength](../images/gallery/building/porthole-glass-settings.png) | ![Diagonal porthole Glass tab with regular materials, tint and Stretch](../images/gallery/building/diagonal-porthole-glass-settings.png) |
+
 | Finish group | Close-up |
 | --- | --- |
 | Hull | ![Hull finishes](../images/gallery/building/hull.png) |
@@ -152,7 +158,19 @@ Programmable Glass provides Small or Large detail, nineteen finishes in one **Gl
 
 For example, use Cyan with Mild tint and Bare edges for a clear cockpit canopy, or Dark Grey with Strong tint and Framed edges for a screened observation wall. Tint changes the color overlay opacity while retaining the reflection artwork. Strong uses a 40.5% color overlay for dye colors (Normal 30%, Mild 12%), so the stronger finish remains translucent. Clear has no color overlay, so its three strengths look identical.
 
-For regular materials, Tint controls the artwork opacity instead: **Mild 35%**, **Normal 65%**, **Strong 100%**. Strong makes the panel opaque; texture cutouts remain cutouts. Select any entry in the Glass category to restore the original glass finish. Material selection persists through saves, creative pick-block, configured crafting and Taxi Mode. The Duplifier's **Glass Material** option copies it independently of shade and tint.
+For regular materials, Tint controls the artwork opacity instead: **Mild 35%**, **Normal 65%**, **Strong 100%**. Strong makes the panel opaque; texture cutouts remain cutouts. Select any entry in the Glass category to restore the original glass finish. Material selection persists through saves, creative pick-block, configured crafting and Taxi Mode. The Duplifier's **Glass Material / Layout** option copies it independently of shade and tint.
+
+For non-glass choices, **Texture: Tile / Stretch** controls the artwork across joined panels. Tile repeats once per block. Stretch fits one image across a rectangle of matching, coplanar panels. Programmable Glass uses its existing **Join** setting; Diagonal Glass has a material-only **Join** control beside Tile/Stretch, independent of its geometric corner/junction selector. Join Off keeps artwork local to each block. Matching groups use the same material, tint, layout and surface plane; gaps partition a group into complete rectangles. Original glass finishes retain their existing reflection and tint mapping, and never use this layout setting.
+
+Each comparison shows **Stretch on the left** and **Tile on the right**, with Strong tint and joined 3 × 2 surfaces. Portholes stretch the window artwork independently of the surrounding main texture.
+
+| Glass panels | Diagonal glass panels |
+| --- | --- |
+| ![Joined regular panels comparing Stretch and Tile](../images/gallery/building/glass-joined-tile-stretch.png) | ![Joined diagonal panels comparing Stretch and Tile](../images/gallery/building/diagonal-glass-joined-tile-stretch.png) |
+
+| Porthole windows | Diagonal porthole windows |
+| --- | --- |
+| ![Joined porthole windows comparing Stretch and Tile](../images/gallery/building/porthole-joined-tile-stretch.png) | ![Joined diagonal porthole windows comparing Stretch and Tile](../images/gallery/building/diagonal-porthole-joined-tile-stretch.png) |
 
 ![Regular panels in front and diagonal panels behind, with Mild, Normal and Strong material tint from left to right](../images/gallery/building/glass-material-opacity.png)
 

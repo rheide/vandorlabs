@@ -39,6 +39,8 @@ The **Duplifier** transfers glass shade and intensity between canopy pieces, vis
 
 **Programmable Glass** and **Programmable Diagonal Glass** also accept the regular material catalog from the same texture list. Turn panel artwork into a translucent screen with Mild or Normal Tint, or select Strong for opaque surfaces. Material choices follow configured items and Duplifier copies across glass and canopy families.
 
+Join non-glass panels to stretch a single image across a larger surface, or tile artwork at block scale. **Programmable Porthole** and **Diagonal Porthole** add a separate **Glass** tab beside Main and Side, with all glass colors, regular textures, tint strength and the same Tile/Stretch choice for joined window artwork. Full-depth portholes share these controls.
+
 ## Moving stairs and better everyday building
 
 Programmable Ramp gains **Escalator Up** and **Escalator Down** modes. The extended treads carry riders, respond to redstone and sleep when nobody is nearby. Curved profiles and moving walkways use the same controller settings. Capturing an extended ramp preserves its actual segments and source materials; escalators pause while driving and resume after parking.
