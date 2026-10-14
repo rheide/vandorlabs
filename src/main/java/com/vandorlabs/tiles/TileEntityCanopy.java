@@ -33,7 +33,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         String key=model+":"+large.key()+":"+centeredPlacement+":"+width+":"+connections+":"+(block().kind.equals("regular_canopy_glass")?roofMask():connections);
         if(!key.equals(baseKey)){
             List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
-            if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,large.angle,(connections&8)!=0);
+            if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,block().length,Math.min(block().length==3?3:2,large.angle),(connections&8)!=0);
             baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.tileMaterial);baseKey=key;
         }
         return baseFaces;
@@ -192,7 +192,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public void tryPair() {
         BlockCanopy b=block();
         if(b==null || !b.opening() || b.width!=1 || removing || constituent()!=this)return;
-        int limit=3;
+        int limit=9;
         TileEntityCanopy owner=owner();
         if(owner.targetOpen || owner.progress!=0)return;
         for(EnumFacing dir:new EnumFacing[]{facing().rotateYCCW(),facing().rotateY()}) {
@@ -396,7 +396,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
                 n.hasKey("PairOffset")
                         ? pos.add(BlockPos.fromLong(n.getLong("PairOffset")))
                         : n.hasKey("Pair") ? BlockPos.fromLong(n.getLong("Pair")) : null;
-        joinedWidth=n.hasKey("CanopyWidth",3)?Math.max(1,Math.min(3,n.getInteger("CanopyWidth"))):pair==null?1:2;
+        joinedWidth=n.hasKey("CanopyWidth",3)?Math.max(1,Math.min(9,n.getInteger("CanopyWidth"))):pair==null?1:2;
         targetOpen = n.getBoolean("Open");
         progress = previous = Math.max(0, Math.min(1, n.getFloat("Progress")));
         cachedKey = null;
@@ -419,7 +419,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
 
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        return new AxisAlignedBB(pos).grow(resizable()?block().width+large.length()+2:5);
+        return new AxisAlignedBB(pos).grow(resizable()?block().width+large.length()+2:Math.max(5,width()+2));
     }
 
     @Override

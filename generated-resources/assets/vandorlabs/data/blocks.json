@@ -3599,6 +3599,11 @@
     "class": "BlockCanopy"
   },
   {
+    "id": "long_canopy",
+    "type": "canopy",
+    "class": "BlockCanopy"
+  },
+  {
     "id": "regular_canopy_glass",
     "type": "canopy",
     "class": "BlockCanopy"

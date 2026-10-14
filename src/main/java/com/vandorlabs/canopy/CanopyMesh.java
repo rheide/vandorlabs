@@ -68,6 +68,8 @@ public final class CanopyMesh {
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
         }
+        DIMENSIONS.put("long_canopy",new int[]{1,3,1});
+        MODELS.put("long_canopy",OpeningCanopyGeometry.faces(1,3,1,false));
     }
 
     public static Vec3d pose(Vec3d v, String kind, int width, double progress, boolean moving) {
@@ -75,9 +77,9 @@ public final class CanopyMesh {
     }
 
     public static Vec3d pose(Vec3d v, String kind, int width, double progress, boolean moving, boolean slideForward) {
-        // Three constituents share the two-wide shell, retaining the authored outer rail thickness.
-        if(width==3 && (kind.contains("slide") || kind.contains("hinge"))) {
-            double x=v.x<=.125?v.x:v.x>=1.875?v.x+1:.125+(v.x-.125)*2.75/1.75;
+        // Widen the authored two-wide mounting rails while preserving their outer thickness.
+        if(width>=3 && (kind.contains("slide") || kind.contains("hinge"))) {
+            double x=v.x<=.125?v.x:v.x>=1.875?v.x+width-2:.125+(v.x-.125)*(width-.25)/1.75;
             v=new Vec3d(x,v.y,v.z);
         }
         if (!moving) return v;

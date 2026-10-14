@@ -39,7 +39,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         if(tile.block().opening()){
             buttonList.add(layout.control(3,y,"Opening: "+(draft.motion==0?"Sliding":"Rear hinge")));y+=22;
             if(draft.motion==0){buttonList.add(layout.control(11,y,"Slide: "+(draft.slideForward?"Forward":"Backward")));y+=22;}
-            buttonList.add(layout.control(4,y,"Front: "+new String[]{"Flat","Angled","Long Angled"}[draft.angle]));y+=22;
+            buttonList.add(layout.control(4,y,"Front: "+new String[]{"Flat","Angled","Long Angled","Extra Long Angled"}[draft.angle]));y+=22;
         }else if(tile.resizable()){
             buttonList.add(layout.control(5,y,"Openable: "+(draft.openable?"On":"Off")));y+=22;
             buttonList.add(layout.control(6,y,"Hinge: "+new String[]{"Left","Right","Top","Bottom"}[draft.hinge]));y+=22;
@@ -69,7 +69,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
             case 3:draft.motion=GuiOptionCycle.next(draft.motion,2);break;
             case 12:draft.tileMaterial=!draft.tileMaterial;break;
             case 11:draft.slideForward=!draft.slideForward;break;
-            case 4:draft.angle=GuiOptionCycle.next(draft.angle,3);break;
+            case 4:draft.angle=GuiOptionCycle.next(draft.angle,tile.block().length==3?4:3);break;
             case 5:draft.openable=!draft.openable;break;
             case 6:draft.hinge=GuiOptionCycle.next(draft.hinge,4);break;
             case 7:draft.redstone=!draft.redstone;break;

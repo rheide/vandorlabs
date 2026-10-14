@@ -10,6 +10,7 @@ Build a cockpit from connected glass, angled noses, openable shells and broad fr
 | Angled Front Canopy Glass | 1 × 1 × 1 | 1 iron nugget |
 | Long Angled Front Canopy Glass | 1 × 2 × 1 | 2 iron nuggets |
 | Canopy | 1 × 2 × 1; joins to two or three wide | 3 iron nuggets |
+| Long Canopy | 1 � 3 � 1; joins up to nine wide | Canopy + Canopy Glass |
 | Front Canopy Glass | 3 × 3 outer frame; adjustable depth | 8 iron nuggets |
 | Large Front Canopy Glass | 5 × 5 outer frame; adjustable depth | Front Canopy Glass surrounded by 8 iron ingots (shaped) |
 
@@ -58,13 +59,14 @@ An opening Canopy keeps its complete rear frame when joined to Canopy Glass: top
 
 ## One Canopy, two opening modes
 
-Choose **Sliding** or **Rear hinge** in the Canopy dialog. Place one, two or three matching closed Canopies side by side to form a shared shell. Their opening mode, sliding direction, front profile and mount must match. A fourth constituent stays independent.
+Choose **Sliding** or **Rear hinge** in the Canopy dialog. Place up to nine matching closed Canopies or Long Canopies side by side to form a shared shell. Their opening mode, sliding direction, front profile and mount must match. A tenth constituent stays independent. The two lengths form separate assemblies.
 
 - **Flat** has a vertical front matching Canopy Glass.
 - **Angled** uses the short angled nose followed by a roof section.
 - **Long Angled** uses the two-block nose profile.
+- Long Canopy extends Flat, Angled and Long Angled with a flat rear block, preserving the nose angles. Its **Extra Long Angled** profile slopes across the complete three-block length.
 
-Both motions take sixteen ticks and can reverse during movement. Sliding lifts the shell by one pixel and carries it two blocks in the selected direction. In the dialog, choose **Slide: Backward** (the default) or **Slide: Forward**. Directions follow the canopy’s front, including ceiling mounts. Close the canopy before changing direction; joined shells change together. Rear hinge raises the front through 105 degrees around the rear upper edge. The stationary mounts stay in place. Right-click an occupied cell or the actual moved shell to operate it. Enable **Redstone** to follow physical power or any configured comma-separated channel. The channel field accepts the same lists as other programmable blocks.
+Both motions take sixteen ticks and can reverse during movement. Sliding lifts the shell by one pixel and carries it its full length (two or three blocks) in the selected direction. In the dialog, choose **Slide: Backward** (the default) or **Slide: Forward**. Directions follow the canopy’s front, including ceiling mounts. Close the canopy before changing direction; joined shells change together. Rear hinge raises the front through 105 degrees around the rear upper edge. The stationary mounts stay in place. Right-click an occupied cell or the actual moved shell to operate it. Enable **Redstone** to follow physical power or any configured comma-separated channel. The channel field accepts the same lists as other programmable blocks.
 
 | Width / profile | Sliding | Rear hinge |
 | --- | --- | --- |

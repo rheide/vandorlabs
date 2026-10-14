@@ -69,6 +69,7 @@ final class CanopyAssemblyRuntimeChecks {
             require(TileEntityCanopy.at(world,BASE).width()==1 && TileEntityCanopy.at(world,BASE.offset(facing.rotateY(),2)).width()==1,"breaking middle splits survivors safely");
         }
         }
+        LongCanopyRuntimeChecks.check(world);
         fixedGlass(world);
         legacyVisor(world);
         CenteredCanopyPlacementChecks.check(world);

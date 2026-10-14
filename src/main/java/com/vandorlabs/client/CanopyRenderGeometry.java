@@ -22,7 +22,7 @@ final class CanopyRenderGeometry {
     }
     List<CanopyMesh.Face> posed(String kind,int width,LargeCanopySettings settings,double progress){
         if(posed==null || progress!=lastProgress){
-            boolean separated=kind.equals("canopy") && progress>0;
+            boolean separated=(kind.equals("canopy") || kind.equals("long_canopy")) && progress>0;
             posed=CanopyPose.faces(faces(separated),kind,width,settings,progress);
             if(separated)posed=CanopySurfaces.visibleRigidParts(posed,movingPlanes);
             lastProgress=progress;

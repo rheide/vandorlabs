@@ -46,7 +46,7 @@ public final class LargeCanopyRuntimeChecks {
     private static double area(List<CanopyMesh.Face> faces){double result=0;for(CanopyMesh.Face face:faces)for(int i=1;i<face.vertices.length-1;i++)result+=face.vertices[i].subtract(face.vertices[0]).crossProduct(face.vertices[i+1].subtract(face.vertices[0])).lengthVector()/2;return result;}
     static void materialUvs(){
         List<List<CanopyMesh.Face>> models=new ArrayList<>();
-        for(int width:new int[]{1,2,3})for(int angle=0;angle<3;angle++)models.add(OpeningCanopyGeometry.faces(width,angle,false));
+        for(int depth:new int[]{2,3})for(int width:new int[]{1,3,9})for(int angle=0;angle<(depth==3?4:3);angle++)models.add(OpeningCanopyGeometry.faces(width,depth,angle,false));
         for(int width:new int[]{3,5}){LargeCanopySettings settings=new LargeCanopySettings();settings.depth=80;models.add(LargeCanopyGeometry.faces(width,settings,true));}
         for(List<CanopyMesh.Face> source:models)for(boolean tiled:new boolean[]{false,true}){
             List<CanopyMesh.Face> material=CanopyFinishes.faces(source,0,1,8,tiled),draw=CanopyMaterialUv.drawable(material);

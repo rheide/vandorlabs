@@ -7,21 +7,35 @@ import net.minecraft.util.math.Vec3d;
 public final class OpeningCanopyGeometry {
     private static final Map<String,List<CanopyMesh.Face>> CACHE=new HashMap<>();
     public static synchronized List<CanopyMesh.Face> faces(int width,int angle,boolean rear) {
-        String key=width+":"+angle+":"+rear;
+        return faces(width,2,angle,rear);
+    }
+    public static synchronized List<CanopyMesh.Face> faces(int width,int depth,int angle,boolean rear) {
+        if(width<1 || width>9 || depth<2 || depth>3 || angle<0 || angle>(depth==3?3:2))throw new IllegalArgumentException("Invalid opening canopy dimensions");
+        String key=width+":"+depth+":"+angle+":"+rear;
         List<CanopyMesh.Face> cached=CACHE.get(key);if(cached!=null)return cached;
         List<CanopyMesh.Face> result=new ArrayList<>();
         for(int x=0;x<width;x++) {
             int sides=(x>0?1:0)|(x+1<width?2:0);
-            if(angle==2)append(result,rearJoined("angled_front_1x2",sides,rear),x,0);
-            else {
+            if(angle==3) {
+                List<CanopyMesh.Face> diagonal=new ArrayList<>();
+                for(CanopyMesh.Face original:rearJoined("angled_front_1x2",sides,rear)) {
+                    CanopyMesh.Face face=copy(original);face.vertices=new Vec3d[original.vertices.length];
+                    for(int i=0;i<face.vertices.length;i++){Vec3d v=original.vertices[i];face.vertices[i]=new Vec3d(v.x,v.y,v.z*1.5);}
+                    diagonal.add(face);
+                }
+                append(result,diagonal,x,0);
+            }else if(angle==2) {
+                append(result,rearJoined("angled_front_1x2",sides,depth==3 || rear),x,0);
+                if(depth==3)append(result,rearJoined("regular_1x1",sides|4,rear),x,2);
+            }else {
                 append(result,angle==0?regular(sides|8):model("angled_front_1x1",sides|8),x,0);
-                append(result,rearJoined("regular_1x1",sides|4,rear),x,1,angle==1);
+                for(int z=1;z<depth;z++)append(result,rearJoined("regular_1x1",sides|4|(z+1<depth?8:0),z+1<depth || rear),x,z,angle==1);
             }
         }
         String mounts=width==1?"canopy":"canopy_mounts_double";
         for(CanopyMesh.Face source:CanopyMesh.MODELS.get(mounts))if(source.group.equals("mount")) {
             CanopyMesh.Face face=copy(source);face.vertices=new Vec3d[source.vertices.length];
-            for(int i=0;i<face.vertices.length;i++)face.vertices[i]=CanopyMesh.pose(source.vertices[i],"slide",width,0,false);
+            for(int i=0;i<face.vertices.length;i++){Vec3d v=CanopyMesh.pose(source.vertices[i],"slide",width,0,false);face.vertices[i]=new Vec3d(v.x,v.y,v.z*depth/2D);}
             result.add(face);
         }
         cached=Collections.unmodifiableList(result);CACHE.put(key,cached);return cached;

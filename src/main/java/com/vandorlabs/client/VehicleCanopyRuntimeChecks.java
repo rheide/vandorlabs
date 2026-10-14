@@ -41,10 +41,10 @@ public final class VehicleCanopyRuntimeChecks {
     }
     public static void check(World world) {
         int max=0;
-        for(String id:new String[]{"regular_canopy_glass","canopy","front_canopy_glass"}) {
+        for(String id:new String[]{"regular_canopy_glass","canopy","long_canopy","front_canopy_glass"}) {
             BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+id);
             for(EnumFacing facing:EnumFacing.HORIZONTALS) {
-                VehicleStructure structure=fixture(block,facing,block.opening()?3:1,0);
+                VehicleStructure structure=fixture(block,facing,block.opening()?9:1,0);
                 for(int turn=0;turn<4;turn++) {
                     VehicleWorld view=new VehicleWorld(world,structure);VehicleCollision hull=new VehicleCollision(view);
                     TileEntityCanopy owner=null;

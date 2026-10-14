@@ -42,7 +42,7 @@ public final class BlockCanopy extends Block {
     }
 
     public boolean opening() {
-        return kind.equals("canopy");
+        return kind.equals("canopy") || kind.equals("long_canopy");
     }
     public EnumFacing placementFacing(EntityLivingBase player){
         EnumFacing facing=player.getHorizontalFacing();

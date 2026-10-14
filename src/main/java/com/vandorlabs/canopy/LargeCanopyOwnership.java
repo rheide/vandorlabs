@@ -31,6 +31,7 @@ public final class LargeCanopyOwnership {
         return result;
     }
     public static boolean fitsItem(BlockCanopy block,World world,BlockPos pos,EnumFacing facing,ItemStack stack){for(BlockPos cell:itemCells(block,pos,facing,stack))if(!available(block,world,cell))return false;return true;}
+    private static boolean blockAngleInvalid(TileEntityCanopy tile,LargeCanopySettings settings){return tile.block()!=null && tile.block().opening() && settings.angle>(tile.block().length==3?3:2);}
     private static boolean available(BlockCanopy block,World world,BlockPos cell){return cell.getY()>=0 && cell.getY()<world.getHeight() && world.getWorldBorder().contains(cell) && world.isBlockLoaded(cell) && (world.getBlockState(cell).getBlock().isReplaceable(world,cell) || block.sharesSeatBackrest(world.getBlockState(cell)));}
     public static boolean apply(TileEntityCanopy tile,EntityPlayer player,int depth,int scale,int shade,int tint){
         net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tile.large.write(tag);
@@ -39,7 +40,7 @@ public final class LargeCanopyOwnership {
     }
     public static boolean apply(TileEntityCanopy tile,EntityPlayer player,LargeCanopySettings nextSettings){
         int depth=nextSettings.depth,scale=nextSettings.scale,shade=nextSettings.shade,tint=nextSettings.tint;
-        if(!tile.configurable() || !tile.draws() || !LargeCanopySettings.valid(depth,scale,shade,tint))return false;
+        if(blockAngleInvalid(tile,nextSettings) || !tile.configurable() || !tile.draws() || !LargeCanopySettings.valid(depth,scale,shade,tint))return false;
         World world=tile.getWorld();BlockCanopy block=tile.block();
         if(nextSettings.mount!=tile.large.mount || tile.progress!=0 && (nextSettings.motion!=tile.large.motion || nextSettings.slideForward!=tile.large.slideForward || nextSettings.angle!=tile.large.angle || nextSettings.hinge!=tile.large.hinge || nextSettings.openable!=tile.large.openable))return false;
         net.minecraft.nbt.NBTTagCompound nextTag=new net.minecraft.nbt.NBTTagCompound();nextSettings.write(nextTag);

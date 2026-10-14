@@ -62,7 +62,7 @@ public final class CanopyRenderer extends CustomRenderer {
         for(String field:new String[]{"CanopyDepth","CanopyScale","CanopyShade","CanopyTint","CanopyMount","CanopyAngle","CanopyMotion"}){Object value=context.getBlockTileEntityFieldAt(field,ox,oy,oz);if(value instanceof Number)tag.setInteger(field,((Number)value).intValue());}
         com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();settings.read(tag);
         if(com.vandorlabs.canopy.LargeCanopySettings.supports(id))mesh=com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.equals("large_front_canopy_glass")?5:3,settings,Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0);
-        if(id.equals("canopy"))mesh=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,settings.angle,(bits&8)!=0);
+        if(id.equals("canopy") || id.equals("long_canopy"))mesh=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,id.equals("long_canopy")?3:2,Math.min(id.equals("long_canopy")?3:2,settings.angle),(bits&8)!=0);
         mesh=com.vandorlabs.canopy.CanopyPose.faces(mesh,id,width,settings,0);
         if (mesh == null) return new RenderPatch[0];
         Object savedShade=context.getBlockTileEntityFieldAt("CanopyShade",ox,oy,oz),savedTint=context.getBlockTileEntityFieldAt("CanopyTint",ox,oy,oz);

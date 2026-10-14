@@ -8,7 +8,7 @@ ASSETS = ROOT / 'src/main/resources/assets/vandorlabs'
 GENERATED = ROOT / 'generated-resources/assets/vandorlabs'
 catalog = json.loads((GENERATED / 'data/blocks.json').read_text())
 canopies = {entry['id'] for entry in catalog if entry.get('class') == 'BlockCanopy'}
-expected = {'canopy', 'front_canopy_glass', 'large_front_canopy_glass',
+expected = {'canopy', 'long_canopy', 'front_canopy_glass', 'large_front_canopy_glass',
             'regular_canopy_glass', 'angled_front_1x1', 'angled_front_1x2',
             'space_visor_2x1', 'space_visor_3x1', 'space_visor_5x1',
             'space_visor_5x1_double_height'}
@@ -25,8 +25,8 @@ models = json.loads((ASSETS / 'data/canopy_meshes.json').read_text())
 allowed = expected | {'canopy_mounts_double'}
 for model in models:
     assert model['id'] in allowed or model['id'].startswith(('regular_1x1_', 'angled_front_1x1_', 'angled_front_1x2_')), model['id']
-assert {model['id'] for model in models} >= expected - {'regular_canopy_glass', 'large_front_canopy_glass'}
+assert {model['id'] for model in models} >= expected - {'regular_canopy_glass', 'large_front_canopy_glass', 'long_canopy'}
 large = json.loads((ASSETS / 'recipes/large_front_canopy_glass.json').read_text())
 assert large['key']['C']['item'] == 'vandorlabs:front_canopy_glass'
 assert large['result']['item'] == 'vandorlabs:large_front_canopy_glass'
-print('PASS: 10 canopy blocks, 39 retained mesh variants, final 2.0 name/ID alignment and complete recipes/models')
+print('PASS: 11 canopy blocks, 39 retained mesh variants, final 2.1 name/ID alignment and complete recipes/models')

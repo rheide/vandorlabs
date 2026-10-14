@@ -31,7 +31,14 @@ public final class CanopyPose {
     }
     public static Vec3d vertex(Vec3d v,String group,String kind,int width,LargeCanopySettings settings,double progress){
         if(LargeCanopySettings.supports(kind) && settings.openable)v=hinge(v,width,settings.hinge,progress);
-        else if(kind.equals("canopy"))v=CanopyMesh.pose(v,settings.motion==0?"slide":"hinge",1,progress,group.equals("shell"),settings.slideForward);
+        else if(kind.equals("canopy") || kind.equals("long_canopy")) {
+            int depth=kind.equals("long_canopy")?3:2;
+            if(group.equals("shell")) {
+                double p=progress*progress*(3-2*progress);
+                if(settings.motion==0)v=v.addVector(0,Math.min(1,p*8)/16D,(settings.slideForward?-depth:depth)*p);
+                else {double a=Math.toRadians(105*p),y=v.y-1,z=v.z-depth;v=new Vec3d(v.x,1+y*Math.cos(a)-z*Math.sin(a),depth+y*Math.sin(a)+z*Math.cos(a));}
+            }
+        }
         if(settings.mount==1)return new Vec3d(v.x,1-v.y,v.z);
         double clearance=LargeCanopySettings.supports(kind)?FRONT_MOUNT_CLEARANCE:0;
         if(settings.mount==2)return new Vec3d(v.x,v.z+clearance,width-v.y);
