@@ -80,7 +80,7 @@ Opening shells intentionally pass through bodywork. Opening does not reserve the
 
 Both frame sizes provide **Depth: 0â€“80 pixels**, **Inner size: 10â€“100%**, glass/material selection and optional opening. Sixteen pixels equals one block. The defaults are sixteen pixels deep and 71% inner size. Zero depth keeps a thin physical frame for usable collision and selection. Drag either slider continuously; the thumb follows the pointer while world previews update at most ten times per second. Releasing applies the final value immediately.
 
-Changing depth moves the front while the broad rear stays fixed. Only cells touched by the closed surfaces are reserved; clear cabin cells can hold other blocks. Hold an ordinary block and click the outside glazing towards empty cabin space to build inside without entering the canopy. Normal placement and protection checks still apply. A blocked resize preserves the original geometry and all cabin blocks.
+Changing depth moves the front while the broad rear stays fixed. Floor and ceiling mounts keep a fixed clearance of just over one pixel between the broad frame and its supporting surface, including at zero depth. Only cells touched by the closed surfaces are reserved; clear cabin cells can hold other blocks. Open the front canopy or enter the cabin to place blocks inside; closed glazing follows normal block placement and does not pass clicks through to the cabin. A blocked resize preserves the original geometry and all cabin blocks.
 
 ### Depth and nosecone comparisons
 
@@ -90,6 +90,15 @@ Each live view shows **Front Canopy Glass (3 Ã— 3) on the left** and **Large Fro
 | --- | --- | --- |
 | Shallow: 8 px (half a block) | ![Both front-window sizes, shallow depth and small nosecone](images/gallery/canopies/front-shallow-small.png) | ![Both front-window sizes, shallow depth and large nosecone](images/gallery/canopies/front-shallow-large.png) |
 | Deep: 64 px (four blocks) | ![Both front-window sizes, deep extrusion and small nosecone](images/gallery/canopies/front-deep-small.png) | ![Both front-window sizes, deep extrusion and large nosecone](images/gallery/canopies/front-deep-large.png) |
+
+### Floor and ceiling mounting
+
+The broad rear frame stays clear of its support at both shallow and deep settings. These live views show the 3 × 3 frame on the left and 5 × 5 frame on the right, with Inner size set to 45%. The ceiling fixture is lit to make its lower border visible.
+
+| Mount | Shallow: 8 px | Deep: 64 px |
+| --- | --- | --- |
+| Floor, facing upward | ![Shallow front windows above the floor](images/gallery/canopies/front-floor-shallow.png) | ![Deep front windows above the floor](images/gallery/canopies/front-floor-deep.png) |
+| Ceiling, facing downward | ![Shallow front windows below the ceiling](images/gallery/canopies/front-ceiling-shallow.png) | ![Deep front windows below the ceiling](images/gallery/canopies/front-ceiling-deep.png) |
 
 Enable **Openable** and choose a **Left**, **Right**, **Top** or **Bottom** hinge. These directions follow the frame's local orientation, including floor and ceiling mounts. The complete frame rotates through 105 degrees. Enable **Redstone** and set channels to operate it remotely, or right-click it manually. Close the canopy before changing its hinge or opening mode. Deep or moved surfaces remain operable and configurable even when their anchor lies farther away; interaction validates the reached surface and intervening terrain.
 
@@ -120,4 +129,4 @@ python testclient/run_windows.py --focus vehicle-taxi
 python testclient/run_windows.py --focus canopy-animations
 ```
 
-The canopy release checks exercise six-face large-window placement, mounted hinges, exterior cabin targeting, exact ownership, removal, ceiling joins, all front/opening combinations, channel operation, finish copying, floor-button dust output and armrest masking. Animation capture records the actual client renderer; encode and validate it with `testclient/encode_animations.py`.
+The canopy release checks exercise six-face large-window placement, mounted hinges, closed-glazing placement protection and floor/ceiling frame clearance, exact ownership, removal, ceiling joins, all front/opening combinations, channel operation, finish copying, floor-button dust output and armrest masking. Animation capture records the actual client renderer; encode and validate it with `testclient/encode_animations.py`.
