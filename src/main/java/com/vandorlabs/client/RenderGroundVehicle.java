@@ -40,8 +40,16 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     }
     private static final class Regions {
         VehicleStructure structure;
+        VehicleStructure tileStructure;
+        int tileRevision;
+        final List<TileDraw> tiles=new ArrayList<>();
+        final VehicleOpaqueTileCache opaqueTiles=new VehicleOpaqueTileCache();
         final Map<BlockPos,Mesh[]> sections=new LinkedHashMap<>();
-        void delete(){for(Mesh[] pair:sections.values())for(Mesh mesh:pair)mesh.delete();sections.clear();}
+        void delete(){for(Mesh[] pair:sections.values())for(Mesh mesh:pair)mesh.delete();sections.clear();opaqueTiles.delete();tiles.clear();}
+    }
+    private static final class TileDraw {
+        final TileEntity tile;final TileEntitySpecialRenderer<TileEntity> renderer;
+        TileDraw(TileEntity tile,TileEntitySpecialRenderer<TileEntity> renderer){this.tile=tile;this.renderer=renderer;}
     }
     private static final class Mesh {
         final List<VertexBuffer> buffers=new ArrayList<>();final List<BlockRenderLayer> layers=new ArrayList<>();
@@ -49,6 +57,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         double sortedX=Double.NaN,sortedY,sortedZ;
         List<VehicleStructure.Cell> cells=Collections.emptyList(),builtCells;
         int generation,light,level;
+        net.minecraft.util.math.AxisAlignedBB bounds;
         Build pending;
         void delete(){for(VertexBuffer b:buffers)b.deleteGlBuffers();buffers.clear();layers.clear();translucent.clear();sortedX=Double.NaN;if(pending!=null){pending.result.delete();pending=null;}}
     }
@@ -66,14 +75,17 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         for(int n=0;n<a.size();n++) {
             VehicleStructure.Cell x=a.get(n),y=b.get(n);if(x==y)continue;
             if(!x.pos.equals(y.pos) || x.state!=y.state)return false;
+            // Canopy geometry is emitted by its live renderer, never the baked hull mesh.
+            if(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy || x.state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear)continue;
             if(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat
-                    && (x.tileData()==null?0:x.tileData().getInteger("PilotHeight"))!=(y.tileData()==null?0:y.tileData().getInteger("PilotHeight")))return false;
-            if(!(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat) && !Objects.equals(x.tileData(),y.tileData()))return false;
+                    && x.tileInteger("PilotHeight")!=y.tileInteger("PilotHeight"))return false;
+            if(!(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat) && !x.sameTileData(y))return false;
         }
         return true;
     }
     private Regions regions(EntityGroundVehicle e) {
         Regions regions=meshes.computeIfAbsent(e,k->new Regions());if(regions.structure==e.structure)return regions;
+        if(regions.structure!=null && same(regions.structure.cells,e.structure.cells)){regions.structure=e.structure;return regions;}
         Map<BlockPos,List<VehicleStructure.Cell>[]> groups=new LinkedHashMap<>();
         Set<BlockPos> dirty=new HashSet<>();
         if(regions.structure!=null) {
@@ -99,6 +111,19 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             }
         }
         regions.structure=e.structure;return regions;
+    }
+    private static void tiles(EntityGroundVehicle craft,Regions regions){
+        if(regions.tileStructure==craft.structure || regions.tileStructure!=null && regions.tileRevision==craft.view.tileRevision)return;
+        regions.opaqueTiles.delete();regions.tiles.clear();
+        for(TileEntity tile:craft.view.tiles.values()){
+            TileEntitySpecialRenderer<TileEntity> renderer=TileEntityRendererDispatcher.instance.getRenderer(tile);
+            if(renderer==null)continue;
+            if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && !((com.vandorlabs.tiles.TileEntityCanopy)tile).draws())continue;
+            if((Object)renderer instanceof TEAnimatedScreenSelector && (tile.getBlockType().getClass()==com.vandorlabs.blocks.BlockProgrammableBlock.class || tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableSlab))continue;
+            regions.tiles.add(new TileDraw(tile,renderer));
+        }
+        regions.tileStructure=craft.structure;
+        regions.tileRevision=craft.view.tileRevision;
     }
     private static BlockPos section(BlockPos p){return new BlockPos(p.getX()>>3,p.getY()>>3,p.getZ()>>3);}
     public RenderGroundVehicle(RenderManager manager){super(manager);shadowSize=0;}
@@ -128,6 +153,11 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
                 if(job.cell<job.cells.size())break;
                 job.builder.finishDrawing();
                 if(job.builder.getVertexCount()>0) {
+                    java.nio.ByteBuffer data=job.builder.getByteBuffer();int stride=DefaultVertexFormats.BLOCK.getNextOffset();
+                    double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
+                    for(int vertex=0;vertex<job.builder.getVertexCount();vertex++){int offset=vertex*stride;float vx=data.getFloat(offset),vy=data.getFloat(offset+4),vz=data.getFloat(offset+8);minX=Math.min(minX,vx);minY=Math.min(minY,vy);minZ=Math.min(minZ,vz);maxX=Math.max(maxX,vx);maxY=Math.max(maxY,vy);maxZ=Math.max(maxZ,vz);}
+                    net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ);
+                    job.result.bounds=job.result.bounds==null?bounds:job.result.bounds.union(bounds);
                     long upload=VehicleDiagnostics.ENABLED?System.nanoTime():0;
                     VertexBuffer buffer=new VertexBuffer(DefaultVertexFormats.BLOCK);buffer.bufferData(job.builder.getByteBuffer());
                     if(VehicleDiagnostics.ENABLED)uploadSamples[uploadCount++%uploadSamples.length]=System.nanoTime()-upload;
@@ -140,6 +170,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         if(job.layer==BlockRenderLayer.values().length) {
             mesh.pending=null;mesh.delete();mesh.buffers.addAll(job.result.buffers);mesh.layers.addAll(job.result.layers);mesh.translucent.putAll(job.result.translucent);
             mesh.builtCells=mesh.cells;mesh.generation=generation;mesh.light=job.result.light;mesh.level=job.result.level;
+            mesh.bounds=job.result.bounds;
         }
         return mesh;
     }
@@ -172,6 +203,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         // Capture the camera planes before applying the craft's model transform.
         net.minecraft.client.renderer.culling.Frustum tileFrustum=new net.minecraft.client.renderer.culling.Frustum();
         tileFrustum.setPosition(cameraXWorld,cameraYWorld,cameraZWorld);
+        pair.removeIf(mesh->mesh.bounds!=null && mesh.builtCells==mesh.cells && !tileFrustum.isBoundingBoxInFrustum(pose.world(mesh.bounds,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)));
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.translate(e.structure.bounds.maxX/2,0,e.structure.bounds.maxZ/2);GlStateManager.rotate(-angle,0,1,0);GlStateManager.translate(-e.structure.bounds.maxX/2,0,-e.structure.bounds.maxZ/2);GlStateManager.disableLighting();GlStateManager.enableTexture2D();bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1,1,1,1);
         pair.sort(Comparator.comparingDouble((Mesh mesh)->mesh.cells.isEmpty()?0:-localCamera.squareDistanceTo(new net.minecraft.util.math.Vec3d(section(mesh.cells.get(0).pos)).scale(8).addVector(4,4,4))));
@@ -193,16 +225,18 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         double cameraX=dispatcher.entityX,cameraY=dispatcher.entityY,cameraZ=dispatcher.entityZ;
         net.minecraft.world.World previousWorld=dispatcher.world;
         dispatcher.world=e.view;dispatcher.entityX=localCamera.x;dispatcher.entityY=localCamera.y;dispatcher.entityZ=localCamera.z;
-        try {for(TileEntity tile:e.view.tiles.values()) {
+        tiles(e,regions);
+        try {for(TileDraw draw:regions.tiles) {
+            TileEntity tile=draw.tile;
             try {
                 net.minecraft.util.math.AxisAlignedBB box=tile.getRenderBoundingBox();
                 if(box!=null && Double.isFinite(box.minX) && Double.isFinite(box.minY) && Double.isFinite(box.minZ)
                         && Double.isFinite(box.maxX) && Double.isFinite(box.maxY) && Double.isFinite(box.maxZ)
                         && !tileFrustum.isBoundingBoxInFrustum(pose.world(box,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;
             }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile visibility",error);}
-            TileEntitySpecialRenderer<TileEntity> renderer=TileEntityRendererDispatcher.instance.getRenderer(tile);
+            TileEntitySpecialRenderer<TileEntity> renderer=draw.renderer;
             if(renderer!=null){BlockPos p=tile.getPos();GlStateManager.pushMatrix();
-                try{renderer.render(tile,p.getX(),p.getY(),p.getZ(),partial,-1,1);tileDraws++;}
+                try{regions.opaqueTiles.draw(tile,renderer,e.structure,partial);tileDraws++;}
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile renderer",error);}
                 finally{GlStateManager.popMatrix();}
             }

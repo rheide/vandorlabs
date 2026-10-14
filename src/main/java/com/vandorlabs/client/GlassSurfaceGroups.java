@@ -18,7 +18,8 @@ final class GlassSurfaceGroups {
     }
     static final int MAX_LAYOUTS=8192;
     private static final class Cache extends WorldRenderListener {
-        long tick=Long.MIN_VALUE,revision;
+        long revision;
+        int tileRevision=-1;
         final Map<BlockPos,Layout> layouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
         void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();}}
         @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags){clear();}
@@ -31,7 +32,8 @@ final class GlassSurfaceGroups {
         World world=tile.getWorld();Cache cache=CACHES.get(world);
         if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
         // Captured vehicle worlds can replace their local structure without ordinary block events.
-        if(world instanceof com.vandorlabs.vehicle.VehicleWorld && cache.tick!=world.getTotalWorldTime() || cache.revision!=GlassMaterials.revision()){cache.tick=world.getTotalWorldTime();cache.revision=GlassMaterials.revision();cache.layouts.clear();}
+        int tileRevision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
+        if(cache.tileRevision!=tileRevision || cache.revision!=GlassMaterials.revision()){cache.tileRevision=tileRevision;cache.revision=GlassMaterials.revision();cache.layouts.clear();}
         Layout found=cache.layouts.get(tile.getPos());if(found!=null)return found;
         IBlockState state=world.getBlockState(tile.getPos());boolean diagonal=tile instanceof TileEntityAnimatedScreenSelector;
         EnumFacing facing=PanelJoins.facing(state),right=facing.rotateY(),up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?facing.getOpposite():EnumFacing.UP;

@@ -10,7 +10,7 @@ import net.minecraft.world.storage.WorldInfo;
 import java.util.*;
 
 /** Read-only local world for collision, extended block states and existing tile renderers.
- * Tiles never tick or register with the real world's redstone networks. */
+ * Only explicit vehicle adapters animate tiles and subscribe supported channel controls. */
 public final class VehicleWorld extends World {
     public VehicleStructure structure;
     public final World parent;
@@ -18,6 +18,8 @@ public final class VehicleWorld extends World {
     private final Map<Long,Chunk> chunks=new HashMap<>();
     public BlockPos origin=BlockPos.ORIGIN;
     public int propulsionLevel;
+    public int tileRevision;
+    public java.util.function.Consumer<BlockPos> controlUpdates;
     public static boolean isMovingControl(net.minecraft.block.Block block) {
         return block instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)block).hasSelectableType();
     }
@@ -32,7 +34,7 @@ public final class VehicleWorld extends World {
     public VehicleWorld(World parent,VehicleStructure structure) {
         super(parent.getSaveHandler(),new WorldInfo(parent.getWorldInfo()),parent.provider,new net.minecraft.profiler.Profiler(),true);
         this.parent=parent; this.structure=structure; this.chunkProvider=createChunkProvider();
-        for(VehicleStructure.Cell cell:structure.cells) if(cell.tileData()!=null) {
+        for(VehicleStructure.Cell cell:structure.cells) if(cell.hasTileData()) {
             try {
                 TileEntity tile=TileEntity.create(null,cell.tileData());
                 if(tile!=null){tile.setWorld(this); tiles.put(cell.pos,tile);}
@@ -44,11 +46,14 @@ public final class VehicleWorld extends World {
     }
     public void update(VehicleStructure next) {
         VehicleStructure before=structure;structure=next;
-        tiles.keySet().removeIf(pos->next.at(pos)==null || next.at(pos).tileData()==null);
-        for(VehicleStructure.Cell cell:next.cells)if(cell.tileData()!=null) {
+        if(tiles.keySet().stream().anyMatch(pos->next.at(pos)==null || !next.at(pos).hasTileData()))tileRevision++;
+        tiles.keySet().removeIf(pos->next.at(pos)==null || !next.at(pos).hasTileData());
+        for(VehicleStructure.Cell cell:next.cells)if(cell.hasTileData()) {
             VehicleStructure.Cell old=before.at(cell.pos);
-            if(old!=null && old.state.getBlock()==cell.state.getBlock() && Objects.equals(old.tileData(),cell.tileData()) && tiles.containsKey(cell.pos))continue;
+            if(old!=null && old.state!=cell.state)tileRevision++;
+            if(old!=null && old.state.getBlock()==cell.state.getBlock() && old.sameTileData(cell) && tiles.containsKey(cell.pos))continue;
             tiles.remove(cell.pos);
+            tileRevision++;
             try {
                 TileEntity tile=TileEntity.create(null,cell.tileData());
                 if(tile!=null){tile.setWorld(this);tiles.put(cell.pos,tile);}
@@ -73,7 +78,7 @@ public final class VehicleWorld extends World {
     @Override public boolean setBlockState(BlockPos p,IBlockState state,int flags){return false;}
     @Override public void setTileEntity(BlockPos p,TileEntity tile){}
     @Override public void removeTileEntity(BlockPos p){}
-    @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){}
+    @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){if(controlUpdates!=null)controlUpdates.accept(p);}
     @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){}
     @Override public boolean checkLight(BlockPos p){return false;}
     @Override public int getCombinedLight(BlockPos p,int minimum){

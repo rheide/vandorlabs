@@ -21,6 +21,9 @@ public final class VehicleStructure {
             this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:tile.copy();
         }
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
+        public boolean hasTileData(){return tile!=null;}
+        public boolean sameTileData(Cell other){return Objects.equals(tile,other.tile);}
+        public int tileInteger(String key){return tile==null?0:tile.getInteger(key);}
     }
     public final List<Cell> cells;
     public final BlockPos seat;
