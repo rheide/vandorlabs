@@ -238,7 +238,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.isSurfaceTileSides()));return;}
         switch (button.id) {
             case 0:
-                {if(!redstoneEnabled){redstoneEnabled=true;redstoneInverted=false;}else if(!redstoneInverted)redstoneInverted=true;else{redstoneEnabled=false;redstoneInverted=false;}}
+                {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
                 break;
             case 1:
                 displayMode = TileEntityAnimatedScreenSelector.MODE_OFF;

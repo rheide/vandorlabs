@@ -30,6 +30,8 @@ final class HoverClientRuntimeChecks {
         key(mc.gameSettings.keyBindJump,false);key(mc.gameSettings.keyBindSneak,false);key(mc.gameSettings.keyBindSprint,false);
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=player(mc);player.setSneaking(false);player.dismountRidingEntity();
+            for(BlockPos at:BlockPos.getAllInBox(ORIGIN.add(-3,0,-3),ORIGIN.add(7,8,5)))world.setBlockToAir(at);
+            for(BlockPos at:BlockPos.getAllInBox(ORIGIN.add(-3,-1,-3),ORIGIN.add(7,-1,5)))world.setBlockState(at,Blocks.STONE.getDefaultState(),2);
             List<VehicleStructure.Cell> cells=new ArrayList<>();cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null));
             TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setPos(SEAT);seat.setTaxiMode(false);seat.owner=player.getUniqueID();cells.add(new VehicleStructure.Cell(SEAT,ModBlocks.PILOT_SEAT.getDefaultState(),seat.writeToNBT(new NBTTagCompound())));
             String[] lift={"antigravity_plate","repulsor_array","vertical_hover_thruster"};for(int i=0;i<3;i++)cells.add(new VehicleStructure.Cell(new BlockPos(i,0,1),Block.getBlockFromName("vandorlabs:"+lift[i]).getDefaultState(),null));

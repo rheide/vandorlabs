@@ -35,4 +35,3 @@ public final class VehicleFlight {
         return highest==Double.NEGATIVE_INFINITY?Double.POSITIVE_INFINITY:Math.max(0,bottom-highest);
     }
 }
-

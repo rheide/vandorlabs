@@ -190,7 +190,7 @@ public class GuiProgrammableInput extends GuiContainer {
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
         if(button.id==4){if(!screenList.hasPair())return;screenList.setFramed(!screenList.framed());chooseArtwork(screenList);return;}
         if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
-        if (button.id == 0) {if(!redstoneEnabled){redstoneEnabled=true;redstoneInverted=false;}else if(!redstoneInverted)redstoneInverted=true;else{redstoneEnabled=false;redstoneInverted=false;}}
+        if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
         else if (button.id == 30) smallInput = true;
