@@ -33,6 +33,7 @@ public final class RedstoneChannels {
     }
 
     private static Network existingNetwork(World world) {
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld)world=((com.vandorlabs.vehicle.VehicleWorld)world).parent;
         synchronized (NETWORKS) { return NETWORKS.get(world); }
     }
 

@@ -45,10 +45,10 @@ public final class VehicleService {
         if(player==null || player.world!=world || player.isDead || player.isSpectator())return;
         if(!VehicleTaxiMode.enabled(craft.structure)){craft.taxiReturnPending=false;return;}
         try {
-            craft.stopForParking();BlockPos origin=VehicleRotation.plan(craft).origin;
+            craft.stopForParking();VehicleRotation.Plan plan=VehicleRotation.plan(craft);BlockPos origin=plan.origin;
             validateParking(player,craft,origin,true,false);
             VehicleTransfer.park(world,craft,origin,player,false);
-            if(distance(player,craft.getEntityBoundingBox())<=64)com.vandorlabs.entity.SafeDismount.move(player,com.vandorlabs.entity.SafeDismount.find(world,player,new AxisAlignedBB(origin.add(craft.structure.seat))),new AxisAlignedBB(origin.add(craft.structure.seat)));
+            if(distance(player,craft.getEntityBoundingBox())<=64)com.vandorlabs.entity.SafeDismount.move(player,com.vandorlabs.entity.SafeDismount.find(world,player,new AxisAlignedBB(origin.add(plan.structure.seat))),new AxisAlignedBB(origin.add(plan.structure.seat)));
             player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Taxi Mode: craft restored as blocks."),true);
         }catch(Exception failure){if(first)VehicleNetwork.error(player,"Taxi Mode could not park: "+failure.getMessage()+". Craft preserved; parking retries automatically. You can reboard or use the Configurizer.");}
     }
@@ -272,12 +272,12 @@ public final class VehicleService {
         require(entity.stopped(),"Stop before parking.");
         VehicleRotation.Plan plan=VehicleRotation.plan(entity);
         require(plan.origin.equals(origin),"Craft moved; open a new parking preview.");
-        VehicleCollision parkedGeometry=new VehicleCollision(new VehicleWorld(player.world,plan.structure));
+        VehicleWorld parkedView=new VehicleWorld(player.world,plan.structure);VehicleCollision parkedGeometry=new VehicleCollision(parkedView);
         for(VehicleStructure.Cell cell:plan.structure.cells) {
             BlockPos p=origin.add(cell.pos);permission(player,p);require(player.world.isAirBlock(p),"Parking is blocked at "+p);
         }
-        for(net.minecraft.tileentity.TileEntity raw:entity.view.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityRampController)
-            for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)raw).vehicleSources())if(entity.structure.at(source)==null){permission(player,origin.add(source));require(player.world.isAirBlock(origin.add(source)),"Parking blocks a ramp recovery source at "+origin.add(source));}
+        for(net.minecraft.tileentity.TileEntity raw:parkedView.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityRampController)
+            for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)raw).vehicleSources())if(plan.structure.at(source)==null){permission(player,origin.add(source));require(player.world.isAirBlock(origin.add(source)),"Parking blocks a ramp recovery source at "+origin.add(source));}
         require(clearOfPeople(player.world,parkedGeometry,origin,player,entity.getControllingPassenger()),"The parking area is occupied.");
         for(AxisAlignedBB box:parkedGeometry.boxes)
             require(player.world.getCollisionBoxes(entity,box.offset(origin).shrink(1e-6)).isEmpty(),"Snapped craft geometry overlaps an obstacle.");

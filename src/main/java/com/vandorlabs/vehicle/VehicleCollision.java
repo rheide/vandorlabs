@@ -23,7 +23,9 @@ public final class VehicleCollision {
                         // Owner boxes already use VehicleWorld coordinates, including shell displacement.
                         if(owner.draws() && canopyOwners.add(owner.getPos()))component.addAll(owner.boxes());
                     }
-                } else c.state.addCollisionBoxToList(view,c.pos,query,component,null,false);
+                } else if(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear)
+                    component.addAll(((com.vandorlabs.blocks.BlockTelescopicLandingGear)c.state.getBlock()).vehicleBoxes(view,c.pos));
+                else c.state.addCollisionBoxToList(view,c.pos,query,component,null,false);
                 all.addAll(component);
             }
             catch(RuntimeException | LinkageError error){

@@ -25,6 +25,7 @@ final class VehicleOpaqueTileCache {
         // Reestablish the atlas after unrelated chest, sign or screen renderers.
         net.minecraft.client.Minecraft.getMinecraft().getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1,1,1,1);
+        GlStateManager.enableLighting();
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0),format=BlockSurfaceFormat.get().getNextOffset(),pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
         Entry entry=entries.get(tile);
         if(entry==null || entry.light!=light || entry.format!=format || entry.pass!=pass){

@@ -16,6 +16,10 @@ Canopy and optionally openable Front Canopy Glass / Large Front Canopy Glass rem
 
 While seated, your own Pilot Seat does not intercept selection of captured canopy or cabin surfaces. Walls and other blocks still block clicks normally. The same empty-hand operation works for rear hinges and forward or backward sliding canopies above a parked seat.
 
+Programmable Screens in Redstone mode remain clickable aboard a vehicle, including row buttons and level sliders on supported screen and console faces. Their channels share the loaded world’s channel network: onboard controls can operate placed receivers, and placed controls can operate captured doors, trapdoors, redstone-enabled Canopies, lights and landing gear in the same dimension. Trigger polarity and numeric light levels remain configured per block. Channel 0 remains disabled. Ordinary machine simulation and inventory access remain paused while driving.
+
+Landing gear can retract or extend through its configured channel while driving. Before parking, the conversion prepares fully extended gear and its complete owned footprint, raising the chassis when needed to retain its support height. If the extended gear or raised hull needs occupied space, parking preserves the vehicle and retries after the space is clear. Gear settings and channel lists survive conversion.
+
 Parking accepts headings within **12 degrees** of a multiple of 90 degrees. Successful parking aligns the restored blocks to that cardinal heading and checks the complete placement area before writing any blocks. At an unsupported angle, leaving Taxi Mode still dismounts the player and shows a warning that the craft was not converted back. The vehicle and its contents remain intact. Reboard to adjust its heading, or use the Configurizer when aligned. Obstructed parking also preserves the craft and retries automatically after the obstruction is removed.
 
 Using **Park as blocks** while standing beside or inside an unoccupied craft keeps your position and does not seat you. A player already driving remains in the restored Pilot Seat.

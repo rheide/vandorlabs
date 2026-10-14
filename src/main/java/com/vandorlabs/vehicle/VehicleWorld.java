@@ -29,7 +29,12 @@ public final class VehicleWorld extends World {
     public int propulsionBrightness(BlockPos pos,int configured) {
         VehicleStructure.Cell cell=structure.at(pos);
         if(cell==null || !(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return configured;
+        if(channelPropulsion(pos)!=null)return configured;
         return propulsionLevel;
+    }
+    private com.vandorlabs.tiles.TileEntityRedstoneLight channelPropulsion(BlockPos pos){
+        TileEntity raw=tiles.get(pos);
+        return raw instanceof com.vandorlabs.tiles.TileEntityRedstoneLight && !((com.vandorlabs.tiles.TileEntityRedstoneLight)raw).getRedstoneChannels().isEmpty()?(com.vandorlabs.tiles.TileEntityRedstoneLight)raw:null;
     }
     public VehicleWorld(World parent,VehicleStructure structure) {
         super(parent.getSaveHandler(),new WorldInfo(parent.getWorldInfo()),parent.provider,new net.minecraft.profiler.Profiler(),true);
@@ -73,7 +78,10 @@ public final class VehicleWorld extends World {
     @Override public boolean isBlockLoaded(BlockPos p){return true;}
     @Override public boolean isBlockLoaded(BlockPos p,boolean allowEmpty){return true;}
     @Override public IBlockState getBlockState(BlockPos p){VehicleStructure.Cell c=structure.at(p);if(c==null)return Blocks.AIR.getDefaultState();
-        return c.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight?c.state.withProperty(com.vandorlabs.blocks.BlockPropulsionLight.POWERED,propulsionLevel>0).withProperty(com.vandorlabs.blocks.BlockPropulsionLight.PARTICLES,false):c.state;}
+        if(!(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return c.state;
+        com.vandorlabs.tiles.TileEntityRedstoneLight light=channelPropulsion(p);
+        boolean powered=light==null?propulsionLevel>0:light.isSignalBrightness()?(light.isRedstoneInverted()?15-light.getChannelLevel():light.getChannelLevel())>0:(light.getChannelLevel()>0)!=light.isRedstoneInverted();
+        return c.state.withProperty(com.vandorlabs.blocks.BlockPropulsionLight.POWERED,powered).withProperty(com.vandorlabs.blocks.BlockPropulsionLight.PARTICLES,false);}
     @Override public TileEntity getTileEntity(BlockPos p){return tiles.get(p);}
     @Override public boolean setBlockState(BlockPos p,IBlockState state,int flags){return false;}
     @Override public void setTileEntity(BlockPos p,TileEntity tile){}
@@ -81,6 +89,7 @@ public final class VehicleWorld extends World {
     @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){if(controlUpdates!=null)controlUpdates.accept(p);}
     @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){}
     @Override public boolean checkLight(BlockPos p){return false;}
+    @Override public boolean checkLightFor(EnumSkyBlock type,BlockPos p){return false;}
     @Override public int getCombinedLight(BlockPos p,int minimum){
         BlockPos absolute=origin.add(p);
         return parent.isBlockLoaded(absolute)?parent.getCombinedLight(absolute,Math.max(minimum,getBlockState(p).getLightValue(this,p))):0;

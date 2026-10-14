@@ -2,6 +2,10 @@
 
 ## 2.0
 
+- Keep Redstone Screen row buttons and sliders operational aboard vehicles. Share the parent world's channel network with captured doors, trapdoors, Canopies, lights and landing gear, synchronize control changes, and unregister vehicle sources when parking or unloading.
+- Animate channel-operated landing gear while driving and prepare fully extended gear, including owned lower cells, in the checked parking footprint. Raise the chassis when needed to retain support height, remove obsolete rotated reservations, and preserve the vehicle when extension is blocked.
+- Reuse opaque vehicle wall rendering, skip hidden canopy followers and inactive tile renderers, cull baked hull sections using their actual geometry, and retain captured glass joins between ticks. Avoid repeated tile-NBT copies and static hull regrouping during canopy animation.
+
 - Let seated pilots select captured Canopies and other cabin surfaces without their own Pilot Seat's selection box intercepting the ray. Keep ordinary terrain and cabin-wall occlusion, and exercise real seated clicks for hinged and both sliding modes in parked and captured cockpits.
 - Reuse settled ramp geometry and collision boxes until the pose, shape settings, source origins or facing changes. Keep moving ramps and escalators animated, and verify direct setting edits against freshly loaded ramp cells.
 - Keep the fixed Canopy Glass roof frame next to an opening Canopy, and retain the Canopy's complete rear frame, including both vertical uprights and the bottom sill. Preserve the open cabin connection and joins between fixed glass. Check joined surfaces for duplication, and add live shallow/deep and small/large nosecone comparisons for both front-window sizes.

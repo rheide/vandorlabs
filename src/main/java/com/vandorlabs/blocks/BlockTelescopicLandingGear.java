@@ -143,6 +143,16 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
         }
         return result;
     }
+    /** Vehicle collision includes the whole moving assembly, even outside captured cells. */
+    public List<AxisAlignedBB> vehicleBoxes(IBlockAccess world,BlockPos pos){
+        TileEntityLandingGear tile=root(world,pos);List<AxisAlignedBB> result=new ArrayList<>();
+        if(tile==null || !tile.getPos().equals(pos))return result;
+        for(int group=0;group<3;group++)for(AxisAlignedBB source:geometry.get(tile.getSize()).get(group)){
+            AxisAlignedBB box=group==1?source.offset(0,-tile.progress,0):group==2?new AxisAlignedBB(source.minX,source.minY-tile.progress,source.minZ,source.maxX,source.maxY,source.maxZ):source;
+            result.add(box.offset(pos.getX()+(tile.getSize()==4?.5:0),pos.getY(),pos.getZ()+(tile.getSize()==4?.5:0)));
+        }
+        return result;
+    }
     public void breakBlock(World world,BlockPos pos,IBlockState s){
         TileEntityLandingGear tile=root(world,pos);
         if(s.getValue(LOWER)){

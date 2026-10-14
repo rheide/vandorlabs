@@ -30,6 +30,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     private int channel;
     private boolean channelSignal;
     private int channelLevel;
+    public int getChannelLevel(){return channelLevel;}
     private boolean signalBrightness;
     private boolean redstoneInverted;
     public boolean isRedstoneInverted(){return redstoneInverted;}

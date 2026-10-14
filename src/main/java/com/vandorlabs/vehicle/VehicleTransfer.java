@@ -70,6 +70,11 @@ public final class VehicleTransfer {
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated)throws Exception {
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         VehicleStructure placed=VehicleRotation.plan(entity).structure;
+        // Include newly extended gear cells in the final check before journaling or writing.
+        for(VehicleStructure.Cell cell:placed.cells){BlockPos target=origin.add(cell.pos);
+            if(target.getY()<0 || target.getY()>=world.getHeight() || !world.getWorldBorder().contains(target)
+                    || !world.isBlockLoaded(target) || !world.isAirBlock(target))throw new IOException("Parking is blocked at "+target);
+        }
         net.minecraft.entity.Entity driver=entity.getControllingPassenger();
         net.minecraft.entity.Entity relocate=keepSeated?driver:null;
         NBTTagCompound undo=record(entity.structure,origin,entity,true);undo.setTag("ParkedCraft",placed.write());write(world,undo);

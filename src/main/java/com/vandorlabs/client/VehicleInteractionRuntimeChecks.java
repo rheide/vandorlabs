@@ -23,6 +23,7 @@ public final class VehicleInteractionRuntimeChecks {
     private static int ticks,phase,doorCase,totalTicks;
     private static final BlockPos SEAT=new BlockPos(40,20,1),DOOR=new BlockPos(36,20,1),PAIR=new BlockPos(24,20,1),LARGE=new BlockPos(32,20,1);
     private static final BlockPos ORIGIN=new BlockPos(160,101,40);
+    private static final BlockPos SCREEN=new BlockPos(28,22,4);
     private static final List<BlockPos> doorCells=new ArrayList<>(),trapRoots=new ArrayList<>();
     private static boolean finished;
     private static NBTTagCompound originalStructure;
@@ -46,6 +47,9 @@ public final class VehicleInteractionRuntimeChecks {
         for(int x=22;x<=42;x++)for(int z=0;z<=4;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,19,z),Blocks.STONE.getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(SEAT,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(SEAT.up(),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.UPPER,true),null));
+        TileEntityAnimatedScreenSelector screen=new TileEntityAnimatedScreenSelector();screen.setPos(SCREEN);
+        screen.redstoneScreen(0).configureRows(Arrays.asList("Door","Level"),Arrays.asList(com.vandorlabs.redstone.ChannelList.of(19372),com.vandorlabs.redstone.ChannelList.of(19372)),14);screen.redstoneScreen(0).rows().get(1).slider=true;
+        cells.add(new VehicleStructure.Cell(SCREEN,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),screen.writeToNBT(new NBTTagCompound())));
         Block normal=Block.getBlockFromName("vandorlabs:programmable_door"),large=Block.getBlockFromName("vandorlabs:large_programmable_door");
         require(normal instanceof BlockConfigurableSpaceDoor && large instanceof BlockLargeProgrammableDoor,"registered programmable doors");
         for(BlockPos lower:new BlockPos[]{DOOR,PAIR,PAIR.east()})for(int row=0;row<2;row++) {
@@ -148,6 +152,20 @@ public final class VehicleInteractionRuntimeChecks {
             }
         }).get();
     }
+    private static void screenClick(Minecraft mc,int index)throws Exception{
+        EntityGroundVehicle craft=client(mc);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(SCREEN);IBlockState state=craft.view.getBlockState(SCREEN);
+        for(int y=0;y<=32;y++)for(int x=0;x<=32;x++){
+            Vec3d a=new Vec3d(x/32D,y/32D,-2),b=a.addVector(0,0,4);
+            double column=RedstoneScreenInteractions.hitColumn(state,tile,0,a,b);
+            if(column<90 || column>=100 || RedstoneScreenInteractions.hitRow(state,tile,0,a,b,2)!=index
+                    || RedstoneScreenInteractions.hitRow(state,tile,0,a.addVector(0,.01,0),b.addVector(0,.01,0),2)!=index
+                    || RedstoneScreenInteractions.hitRow(state,tile,0,a.addVector(0,-.01,0),b.addVector(0,-.01,0),2)!=index)continue;
+            aim(mc,craft.toWorld(a.add(new Vec3d(SCREEN))),craft.toWorld(b.add(new Vec3d(SCREEN))));
+            VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);
+            require(target!=null && target.craft==craft && target.hit.action==VehicleSelection.Action.SCREEN && target.hit.cell.pos.equals(SCREEN),"rotated screen surface selected");click(mc);return;
+        }
+        throw new IllegalStateException("no accessible screen row "+index);
+    }
     public static boolean tick(Minecraft mc,File output) throws Exception {
         if(finished)return true;
         require(++totalTicks<=5000,"timed out at phase="+phase+" door-case="+doorCase+" elapsed-ticks="+totalTicks);
@@ -159,6 +177,16 @@ public final class VehicleInteractionRuntimeChecks {
         }
         if(ticks<25)return false;
         ticks=0;
+        if(phase==10){screenClick(mc,0);phase++;return false;}
+        if(phase==11 || phase==12){
+            RedstoneScreenContents controls=((TileEntityAnimatedScreenSelector)client(mc).view.getTileEntity(SCREEN)).redstoneScreen(0);
+            require(controls.rows().get(0).active() && controls.rows().get(1).level()>0,"client screen rows reflect received channel update");
+            if(phase==12)require(controls.rows().get(1).level()==controls.rows().get(1).segmentValue(2),"slider click changes the synchronized level from full power");
+            mc.getIntegratedServer().addScheduledTask(()->require(com.vandorlabs.redstone.RedstoneChannels.level(player(mc).world,19372)>0,"actual screen click publishes server channel")).get();
+            if(phase==11){screenClick(mc,1);phase++;return false;}
+            mc.getIntegratedServer().addScheduledTask(()->server(mc).setDead()).get();
+            System.out.println("[vandorlabs][reprolab] vehicle-screen-clicks PASS rotated-button slider client-sync server-channels");finished=true;return true;
+        }
         if(phase==0){seatClick(mc,false);phase++;return false;}
         if(phase==1) {
             require(mc.player.getRidingEntity()==client(mc),"real click mounts distant lower seat on client");
@@ -206,8 +234,7 @@ public final class VehicleInteractionRuntimeChecks {
                         }
                     }
                     require(cycle.write().equals(original.write()),"door and trapdoor state/NBT return exactly after four cardinal rotations");
-                    server(mc).setDead();
-                }).get();finished=true;return true;
+                }).get();phase=10;return false;
             }
             mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle craft=server(mc);craft.rotationYaw=doorCase%2==0?0:90;craft.setPosition(ORIGIN.getX(),ORIGIN.getY(),ORIGIN.getZ());}).get();phase=8;return false;
         }

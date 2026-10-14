@@ -17,6 +17,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public VehicleStructure structure;
     public VehicleWorld view;
     public VehicleCollision collision;
+    public final VehicleSignals signals=new VehicleSignals(this);
     public long transferEpoch;
     public boolean ownershipBlocked;
     public boolean transferInProgress;
@@ -104,6 +105,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public EntityGroundVehicle(World world){super(world);setSize(1,1);isImmuneToFire=true;preventEntitySpawning=true;}
     public void install(VehicleStructure snapshot) {
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=new VehicleCollision(view);encoded=null;
+        if(!world.isRemote)view.controlUpdates=signals::changed;
         setPosition(posX,posY,posZ);
     }
     /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
@@ -121,7 +123,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override protected void entityInit(){}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA)VehicleNetwork.request(this);}
-    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
+    @Override protected void writeEntityToNBT(NBTTagCompound tag){signals.persist();tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
     @Override protected void readEntityFromNBT(NBTTagCompound tag){transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{install(VehicleStructure.read(tag.getCompoundTag("Craft")));net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(structure.seat);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}catch(Exception e){unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;}
     @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
@@ -150,9 +152,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         pendingInputs.clear();lastAcknowledgement=-1;
         return true;
     }
-    @Override public void onAddedToWorld(){super.onAddedToWorld();VehicleLookup.update(this);}
-    @Override public void onRemovedFromWorld(){VehicleLookup.remove(this);super.onRemovedFromWorld();}
-    @Override public void setDead(){VehicleLookup.remove(this);super.setDead();}
+    @Override public void onAddedToWorld(){super.onAddedToWorld();signals.open();VehicleLookup.update(this);}
+    @Override public void onRemovedFromWorld(){signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
+    @Override public void setDead(){signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
             Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger);
@@ -191,6 +193,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public void onUpdate() {
         super.onUpdate();rotationPitch=prevRotationPitch=0;
         VehicleCanopies.tick(this);
+        signals.tick();VehicleLandingGear.tick(this);
         if(world.isRemote) {
             previousVisual=currentVisual==null?new VehiclePose(posX,posY,posZ,rotationYaw):currentVisual;
             correctionX*=.65;correctionY*=.65;correctionZ*=.65;correctionYaw*=.65;

@@ -110,9 +110,9 @@ public final class VehicleSelectionChecks {
                     && received.token.equals(sent.token) && received.origin.equals(position),"interaction identity and cell codec");
             // HEIGHT, INSPECTION and CANOPIES were added after SETTINGS.
             // Exercise the current protocol boundary rather than an older valid packet ID.
-            buffer.clear();sent.type=VehicleNetwork.CANOPIES;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
-            require(received.valid && received.type==VehicleNetwork.CANOPIES,"latest supported packet type accepted");
-            for(int unknownType:new int[]{VehicleNetwork.CANOPIES+1,255}){
+            buffer.clear();sent.type=VehicleNetwork.TILE;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
+            require(received.valid && received.type==VehicleNetwork.TILE,"latest supported packet type accepted");
+            for(int unknownType:new int[]{VehicleNetwork.TILE+1,255}){
                 buffer.clear();sent.type=unknownType;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
                 require(!received.valid,"unknown interaction packet type rejected: "+unknownType);
             }

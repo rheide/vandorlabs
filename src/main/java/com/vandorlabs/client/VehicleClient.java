@@ -81,6 +81,7 @@ public final class VehicleClient {
                 return;
             }
             if(p.type==VehicleNetwork.TAXI){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleTaxiMode.apply((EntityGroundVehicle)raw,p.flag);return;}
+            if(p.type==VehicleNetwork.TILE){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).view!=null)VehicleSignals.apply((EntityGroundVehicle)raw,p);return;}
             if(p.type==VehicleNetwork.CANOPIES){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleCanopies.apply((EntityGroundVehicle)raw,p.data);return;}
             if(p.type==VehicleNetwork.DOORS){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleDoors.apply((EntityGroundVehicle)raw,p.data);return;}
             if(p.type==VehicleNetwork.STATE){if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly"))VehicleNetworkRuntimeChecks.state(p);Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)((EntityGroundVehicle)raw).authoritative(p);return;}

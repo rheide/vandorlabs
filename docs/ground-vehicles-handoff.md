@@ -2,7 +2,7 @@
 
 ## Supported behavior
 
-The 2.0 alpha supports reversible Configurizer assembly/parking, Pilot Seat driving, braking, safe exits, adjustable third-person distance, movement-driven propulsion brightness, manual vanilla/Vandor doors and trapdoors, extended ramp and paused escalator transport and channel-triggered conversion. Limits remain 4,096 occupied cells, 64 cells per axis, 4 MiB serialized data and 8,192 merged collision boxes. The bounded performance workloads stop at 2,048 cells in anticipation of a smaller release limit. There is no flight, engine requirement or fuel system.
+The 2.0 beta supports reversible Configurizer assembly/parking, Pilot Seat driving, braking, safe exits, adjustable third-person distance, movement-driven propulsion brightness, manual vanilla/Vandor doors and trapdoors, extended ramp and paused escalator transport and channel-triggered conversion. Limits remain 4,096 occupied cells, 64 cells per axis, 4 MiB serialized data and 8,192 merged collision boxes. The bounded performance workloads stop at 2,048 cells in anticipation of a smaller release limit. There is no flight, engine requirement or fuel system.
 
 Taxi Mode defaults to ON, including older seats without a saved setting. Sitting starts discovery while the player remains in the placed seat; successful conversion transfers the pilot to the craft. Exiting stops the craft and restores blocks. Turn Taxi Mode off in placed-seat settings or a Configurizer preview to convert manually. Discovery schedules each coordinate once, processes at most 256 positions per job per tick and shares a 1,024-position world budget. It remains iterative and bounded even when gear ownership and hull connections form loops.
 
@@ -51,9 +51,9 @@ The hidden-origin rendering fixture spans 64 blocks along one axis. It puts the 
 
 ## Deliberately deferred onboard systems
 
-Foreign blocks and complete tile NBT are preserved. Arbitrary machines, inventories, screens and controls do not tick or operate while assembled. `VehicleWorld` is a read-only presentation/collision view on both client and server, and uses classes available on a dedicated server. Manual door interaction and Pilot Seat settings have explicit authoritative adapters.
+Foreign blocks and complete tile NBT are preserved. Arbitrary machines and inventories do not tick or operate while assembled. Redstone Screen rows, channel-operated doors, Canopies, lights and landing gear use explicit vehicle adapters. `VehicleWorld` is a read-only presentation/collision view on both client and server, and uses classes available on a dedicated server. Manual door interaction, Pilot Seat settings and supported channel controls have explicit authoritative adapters. Vehicle subscriptions share the channel bank in the parent dimension and retire when the entity unloads or parks.
 
-Working onboard inventories require craft-aware container sessions, authoritative mutable inventory state, transformed reach checks, session closure during conversion, and concurrent-player/disconnect/rollback tests. Screens, lights and foreign machines need individual configuration and persistence adapters. Enabling unrestricted tile ticking or forwarding real-world position packets into local storage is not a compatibility solution. These features remain outside the current simple vehicle scope.
+Working onboard inventories require craft-aware container sessions, authoritative mutable inventory state, transformed reach checks, session closure during conversion, and concurrent-player/disconnect/rollback tests. Additional controls and foreign machines need individual configuration and persistence adapters. Enabling unrestricted tile ticking or forwarding real-world position packets into local storage is not a compatibility solution. These features remain outside the current simple vehicle scope.
 
 ### Pilot Seat inspection failures
 

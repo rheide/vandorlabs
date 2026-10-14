@@ -68,6 +68,10 @@ public final class ProgrammableLightConnections {
         }
         refreshAround(world,java.util.Collections.singleton(pos));
     }
+    /** Captured lights share signal state without mutating the parent world's blocks. */
+    public static void refreshVehicle(com.vandorlabs.vehicle.VehicleWorld world,BlockPos pos){
+        if(!world.parent.isRemote)refreshAround(world,java.util.Collections.singleton(pos));
+    }
 
     private static void refreshAround(World world, Set<BlockPos> positions) {
         Set<BlockPos> visited = new LinkedHashSet<>();

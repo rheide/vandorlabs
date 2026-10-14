@@ -44,6 +44,7 @@ public final class VehicleInteraction {
         return target!=null && (player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER
                 || target.hit.action==VehicleSelection.Action.CANOPY
                 || target.hit.action==VehicleSelection.Action.DOOR
+                || target.hit.action==VehicleSelection.Action.SCREEN && !player.isSneaking() && VehicleSignals.supports(target.craft.view,target.hit.cell.pos)
                 || target.hit.action==VehicleSelection.Action.BOARD && !player.isSneaking());
     }
     public static void receive(EntityPlayerMP player,VehicleNetwork.Packet packet) {
@@ -77,6 +78,7 @@ public final class VehicleInteraction {
             if(!VehicleDoors.toggle(craft,target.hit.cell.pos))VehicleNetwork.error(server,"This door has an incomplete captured group.");
             return true;
         }
+        if(target.hit.action==VehicleSelection.Action.SCREEN)return craft.signals.click(target.hit.cell.pos,player);
         BlockPos seat=target.hit.cell.pos;
         if(target.hit.cell.state.getValue(BlockPilotSeat.UPPER))seat=seat.down();
         if(!seat.equals(craft.structure.seat))return false;

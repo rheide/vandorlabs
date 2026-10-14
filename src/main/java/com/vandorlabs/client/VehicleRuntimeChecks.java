@@ -127,6 +127,7 @@ public final class VehicleRuntimeChecks {
     private static void server(Minecraft mc) throws Exception {
         WorldServer w=mc.getIntegratedServer().getWorld(0);EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
         chunkSerialization(w);
+        VehicleSignalRuntimeChecks.run(w,p);
         extendedHull(w,p);
         p.dismountRidingEntity();p.setSneaking(false);p.setPositionAndUpdate(4,101,8);p.capabilities.isFlying=true;p.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(0,100,0),new BlockPos(48,100,32)))w.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
@@ -293,6 +294,7 @@ public final class VehicleRuntimeChecks {
         p.dismountRidingEntity();p.setPositionAndUpdate(4,101,8);
         BlockPos parked=new BlockPos(ORIGIN.getX()+10,ORIGIN.getY(),ORIGIN.getZ());
         entity.setPosition(parked.getX(),parked.getY(),parked.getZ());entity.motionX=entity.motionY=entity.motionZ=0;
+        expected=VehicleRotation.plan(entity).structure;
         UUID id=entity.getUniqueID();CancelParking preventParking=new CancelParking();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(preventParking);
         denied=false;try{VehicleTransfer.park(w,entity,parked,p);}catch(Exception expectedFailure){denied=true;}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(preventParking);}
         require(denied && !VehicleTransfer.pending(w),"cancelled parking rolls back");
@@ -323,6 +325,7 @@ public final class VehicleRuntimeChecks {
             }
             if(ticks==20){mc.displayGuiScreen(null);mc.getIntegratedServer().addScheduledTask(()->{try{server(mc);}catch(Exception e){throw new IllegalStateException(e);}}).get();mc.gameSettings.hideGUI=true;}
             if(ticks==160) {
+                VehicleRenderRuntimeChecks.run(mc);
                 EntityGroundVehicle entity=null;
                 for(net.minecraft.entity.Entity raw:mc.world.loadedEntityList)if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(vehicleUUID))entity=(EntityGroundVehicle)raw;
                 require(entity!=null && entity.structure!=null,"client tracking snapshot received (id="+vehicleId+", entity="+entity+", ticks="+(entity==null?-1:entity.ticksExisted)+")");

@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 /** Shared simulation-pose selection for validated craft interaction packets. */
 public final class VehicleSelection {
     private VehicleSelection() {}
-    public enum Action { SURFACE, BOARD, DOOR, CANOPY }
+    public enum Action { SURFACE, BOARD, DOOR, CANOPY, SCREEN }
 
     public static final class Hit {
         public final VehicleStructure.Cell cell;
@@ -24,7 +24,7 @@ public final class VehicleSelection {
             action = cell.state.getBlock() instanceof BlockPilotSeat ? Action.BOARD
                     : VehicleCanopies.supports(cell.state.getBlock()) ? Action.CANOPY
                     : VehicleDoors.supports(cell.state.getBlock())
-                    ? Action.DOOR : Action.SURFACE;
+                    ? Action.DOOR : com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock()) ? Action.SCREEN : Action.SURFACE;
         }
     }
 

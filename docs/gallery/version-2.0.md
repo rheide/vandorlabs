@@ -8,6 +8,8 @@ Place a **Pilot Seat** in a connected craft with landing gear. Sit down and Taxi
 
 The craft keeps its block types, inventories and saved settings. Open doors, normal and diagonal trapdoors, and cockpit Canopies while aboard. Propulsion brightness follows movement, third-person camera distance is adjustable, and supported craft can park at cardinal headings. A blocked parking area keeps the vehicle intact so you can clear the space or reboard.
 
+Bring your controls aboard too: Redstone Screen buttons and level sliders operate while driving. Channel-controlled doors, Canopies, lights and landing gear keep communicating with placed controls in the same dimension. Parking extends the landing gear first and checks the space needed by its wheels and pistons.
+
 The Pilot Seat offers four cushion heights, channel activation with Redstone ON/OFF polarity, and settings in the Configurizer preview. Armrests disappear independently beside solid cabin walls. Safe exits check supporting surfaces and standing room.
 
 See [Pilot Seat and Taxi Mode](../pilot-seat-taxi.md) and the [ground vehicle guide](../ground-vehicles-analysis.md) for building limits, supported components and parking behavior. Ground-craft turning and presentation remain areas for continued refinement; captured machines do not simulate while driving.

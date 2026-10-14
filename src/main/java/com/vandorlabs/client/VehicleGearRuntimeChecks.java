@@ -37,6 +37,30 @@ final class VehicleGearRuntimeChecks {
             VehicleScan aligned=scan(world,seat);
             require(aligned.error==null && aligned.result!=null && aligned.result.gearCount==3,
                     "different mount heights and extension lengths share a support plane, size="+size+": "+aligned.error);
+            List<VehicleStructure.Cell> retracted=new ArrayList<>();
+            for(VehicleStructure.Cell cell:aligned.result.cells){
+                net.minecraft.nbt.NBTTagCompound data=cell.tileData();net.minecraft.block.state.IBlockState state=cell.state;
+                if(state.getBlock()==block && !state.getValue(BlockTelescopicLandingGear.LOWER)){data.setFloat("Progress",0);state=state.withProperty(BlockTelescopicLandingGear.EXTENDED,false);}
+                retracted.add(new VehicleStructure.Cell(cell.pos,state,data));
+            }
+            VehicleRotation.Plan restored=VehicleLandingGear.parking(new VehicleStructure(retracted,aligned.result.seat,aligned.result.facing,3),aligned.origin);
+            VehicleWorld restoredView=new VehicleWorld(world,restored.structure);int restoredRoots=0;
+            for(VehicleStructure.Cell cell:restored.structure.cells)if(cell.state.getBlock()==block && !cell.state.getValue(BlockTelescopicLandingGear.LOWER)){
+                TileEntityLandingGear root=(TileEntityLandingGear)restoredView.getTileEntity(cell.pos);restoredRoots++;
+                require(cell.state.getValue(BlockTelescopicLandingGear.EXTENDED) && root.progress==root.getExtensionPixels()/16F,"parking extends and settles each gear size");
+                for(int down=1;down<=Math.ceil(root.progress)+(size>=3?1:0);down++)require(block.root(restoredView,cell.pos.down(down))==root,"extended parking footprint resolves its owner");
+            }
+            require(restoredRoots==3,"parking retains all gear roots");
+            VehicleStructure originalRetracted=new VehicleStructure(retracted,aligned.result.seat,aligned.result.facing,3);
+            for(int turn=0;turn<4;turn++){
+                VehicleStructure rotated=VehicleRotation.rotate(originalRetracted,new VehicleWorld(world,originalRetracted),turn);
+                VehicleRotation.Plan rotation=VehicleLandingGear.parking(rotated,aligned.origin);VehicleWorld local=new VehicleWorld(world,rotation.structure);
+                for(VehicleStructure.Cell cell:rotation.structure.cells)if(cell.state.getBlock()==block && cell.state.getValue(BlockTelescopicLandingGear.LOWER)){
+                    TileEntityLandingGear root=block.root(local,cell.pos);require(root!=null,"rotated gear reservation has a root");
+                    BlockPos delta=cell.pos.subtract(root.getPos());int radius=size>=3?1:0,minimum=size==4?0:-radius,count=(int)Math.ceil(root.getExtensionPixels()/16D)+(size>=3?1:0);
+                    require(delta.getX()>=minimum && delta.getX()<=radius && delta.getZ()>=minimum && delta.getZ()<=radius && delta.getY()>=-count && delta.getY()<=0,"parking removes obsolete rotated gear cells");
+                }
+            }
             double bottom=Double.POSITIVE_INFINITY;
             List<AxisAlignedBB> collision=new ArrayList<>();
             for(VehicleStructure.Cell cell:aligned.result.cells)if(cell.state.getBlock()==block)
