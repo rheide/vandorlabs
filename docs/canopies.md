@@ -46,7 +46,15 @@ The same ribbed material on a five-wide front window, without changing its geome
 
 Canopy Glass joins neighboring tiles at the same elevation and mounting orientation, regardless of horizontal facing. Shared glazing and perimeter rails disappear. Matching angled noses join sideways and connect to regular glass behind their complete footprint. Regular glass also opens its side towards the rear of a Canopy. Ceiling-mounted parts use the same local joins after inversion.
 
-An opening Canopy keeps its top rear crossbar when joined to Canopy Glass. Click that bar or an exposed stationary mounting rail to close it. The mounting rails remain selectable when surrounding bodywork covers the opened shell, for rear hinges and either sliding direction.
+An opening Canopy keeps its complete rear frame when joined to Canopy Glass: top crossbar, vertical uprights and bottom sill. The fixed glass also retains its own top frame at that connection, so the border stays complete when the shell moves away. Joins between fixed glass still remove their internal rails. Click the moving frame or an exposed stationary mounting rail to close the Canopy. The mounting rails remain selectable when surrounding bodywork covers the opened shell, for rear hinges and either sliding direction.
+
+| Joined shell closed | Shell slid backward |
+| --- | --- |
+| ![Two fixed Canopy Glass blocks joined to a closed Canopy](images/gallery/canopies/joined-frame-closed.png) | ![The fixed glass keeps its top frame after the Canopy slides backward](images/gallery/canopies/joined-frame-slide-back.png) |
+
+| Shell slid forward | Shell hinged open |
+| --- | --- |
+| ![Fixed Canopy Glass retains its border with the Canopy slid forward](images/gallery/canopies/joined-frame-slide-forward.png) | ![Fixed Canopy Glass retains its border with the Canopy hinged open](images/gallery/canopies/joined-frame-hinge.png) |
 
 ## One Canopy, two opening modes
 
@@ -73,6 +81,15 @@ Opening shells intentionally pass through bodywork. Opening does not reserve the
 Both frame sizes provide **Depth: 0–80 pixels**, **Inner size: 10–100%**, glass/material selection and optional opening. Sixteen pixels equals one block. The defaults are sixteen pixels deep and 71% inner size. Zero depth keeps a thin physical frame for usable collision and selection. Drag either slider continuously; the thumb follows the pointer while world previews update at most ten times per second. Releasing applies the final value immediately.
 
 Changing depth moves the front while the broad rear stays fixed. Only cells touched by the closed surfaces are reserved; clear cabin cells can hold other blocks. Hold an ordinary block and click the outside glazing towards empty cabin space to build inside without entering the canopy. Normal placement and protection checks still apply. A blocked resize preserves the original geometry and all cabin blocks.
+
+### Depth and nosecone comparisons
+
+Each live view shows **Front Canopy Glass (3 × 3) on the left** and **Large Front Canopy Glass (5 × 5) on the right**, with the same camera and glass finish. Depth controls the projection; Inner size controls the front nosecone relative to the fixed outer frame.
+
+| Depth | Small nosecone: Inner size 25% | Large nosecone: Inner size 90% |
+| --- | --- | --- |
+| Shallow: 8 px (half a block) | ![Both front-window sizes, shallow depth and small nosecone](images/gallery/canopies/front-shallow-small.png) | ![Both front-window sizes, shallow depth and large nosecone](images/gallery/canopies/front-shallow-large.png) |
+| Deep: 64 px (four blocks) | ![Both front-window sizes, deep extrusion and small nosecone](images/gallery/canopies/front-deep-small.png) | ![Both front-window sizes, deep extrusion and large nosecone](images/gallery/canopies/front-deep-large.png) |
 
 Enable **Openable** and choose a **Left**, **Right**, **Top** or **Bottom** hinge. These directions follow the frame's local orientation, including floor and ceiling mounts. The complete frame rotates through 105 degrees. Enable **Redstone** and set channels to operate it remotely, or right-click it manually. Close the canopy before changing its hinge or opening mode. Deep or moved surfaces remain operable and configurable even when their anchor lies farther away; interaction validates the reached surface and intervening terrain.
 

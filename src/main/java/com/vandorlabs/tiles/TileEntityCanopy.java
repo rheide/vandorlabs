@@ -30,7 +30,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public List<CanopyMesh.Face> baseFaces(){
         if(block()==null)return Collections.emptyList();
         int connections=mask(),width=width();String model=model();
-        String key=model+":"+large.key()+":"+centeredPlacement+":"+width+":"+connections;
+        String key=model+":"+large.key()+":"+centeredPlacement+":"+width+":"+connections+":"+(block().kind.equals("regular_canopy_glass")?roofMask():connections);
         if(!key.equals(baseKey)){
             List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
             if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,large.angle,(connections&8)!=0);
@@ -166,6 +166,17 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             seam |= b.opening() && bit==8 && other.opening() && t.facing()==f.getOpposite()
                     && t.getPos().offset(f,other.length-1).equals(pos.offset(dir,b.length));
             if (large.mount==t.large.mount && (same || seam)) result |= bit;
+        }
+        return result;
+    }
+
+    /** Fixed glazing keeps a roof frame against a shell that can move away. */
+    public int roofMask(){
+        int result=mask();EnumFacing f=facing();
+        for(int bit:new int[]{1,2,4,8})if((result&bit)!=0){
+            EnumFacing dir=bit==1?f.rotateYCCW():bit==2?f.rotateY():bit==4?f:f.getOpposite();
+            TileEntityCanopy neighbor=at(world,pos.offset(dir));
+            if(neighbor!=null && neighbor.constituent().block()!=null && neighbor.constituent().block().opening())result&=~bit;
         }
         return result;
     }
@@ -359,7 +370,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             n.setLong("Pair", pair.toLong());
             n.setLong("PairOffset", pair.subtract(pos).toLong());
         }
-        if (block() != null) {n.setInteger("CanopyMask", mask());n.setInteger("CanopyWidth",width());}
+        if (block() != null) {n.setInteger("CanopyMask", mask());n.setInteger("CanopyRoofMask",roofMask());n.setInteger("CanopyWidth",width());}
         if(configurable())large.write(n);
         if(ownedCells!=null){int[] offsets=new int[ownedCells.size()*3];int i=0;for(BlockPos cell:ownedCells){BlockPos delta=cell.subtract(pos);offsets[i++]=delta.getX();offsets[i++]=delta.getY();offsets[i++]=delta.getZ();}n.setIntArray("CanopyFootprint",offsets);}
         n.setBoolean("CenteredPlacement",centeredPlacement);

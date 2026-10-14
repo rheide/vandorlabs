@@ -30,11 +30,23 @@ public final class OpeningCanopyGeometry {
     private static List<CanopyMesh.Face> rearJoined(String id,int mask,boolean rear){
         List<CanopyMesh.Face> closed=model(id,mask);
         if(!rear)return closed;
+        double back=id.equals("angled_front_1x2")?2:1;
         List<CanopyMesh.Face> result=new ArrayList<>();
-        // Join the rear aperture, but retain the authored roof and its moving crossbar.
+        // Keep the complete authored rear frame, including its uprights and sill.
+        // Only the rear glazing opens into the connected cabin.
+        for(CanopyMesh.Face face:closed){
+            boolean rearGlass=face.baseMaterial.equals("glass");
+            for(Vec3d vertex:face.vertices)if(vertex.z<back-1D/8)rearGlass=false;
+            if(!rearGlass)result.add(face);
+        }
+        return result;
+    }
+    static List<CanopyMesh.Face> withRoof(List<CanopyMesh.Face> aperture,List<CanopyMesh.Face> roof){
+        List<CanopyMesh.Face> result=new ArrayList<>();
+        // Retain the fixed roof frame while joining the aperture underneath it.
         // Taking the complete roof from one variant avoids overlapping extended glazing.
-        for(CanopyMesh.Face face:model(id,mask|8))if(!roof(face))result.add(face);
-        for(CanopyMesh.Face face:closed)if(roof(face))result.add(face);
+        for(CanopyMesh.Face face:aperture)if(!roof(face))result.add(face);
+        for(CanopyMesh.Face face:roof)if(roof(face))result.add(face);
         return result;
     }
     private static boolean roof(CanopyMesh.Face face){

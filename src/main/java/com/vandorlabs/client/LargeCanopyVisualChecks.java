@@ -13,7 +13,7 @@ import java.io.File;
 import java.util.concurrent.Future;
 /** Dedicated feature regression: no full kit gallery. */
 public final class LargeCanopyVisualChecks {
-    private static int state,ticks;private static Future<?> pending;private static final BlockPos POS=new BlockPos(40,20,40);
+    private static int state,ticks,frameScene;private static Future<?> pending;private static final BlockPos POS=new BlockPos(40,20,40);
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("large-canopy-live: "+text);}
     public static boolean tick(Minecraft mc,File output)throws Exception{
         if(mc.world==null || mc.player==null || mc.getIntegratedServer()==null)return false;
@@ -44,12 +44,16 @@ public final class LargeCanopyVisualChecks {
         if(state==20 && ticks==30){camera(mc,64.5,21,32,new Vec3d(64.5,20.5,40.5));state=21;ticks=0;return false;}
         if(state==21 && ticks==30){CanopyOpacityRuntimeChecks.prepared(mc,0);shot(mc,output,"canopy_material_opacity");camera(mc,67.5,23,44,new Vec3d(67.5,21.5,54.5));state=22;ticks=0;return false;}
         if(state==22 && ticks==30){CanopyOpacityRuntimeChecks.prepared(mc,1);shot(mc,output,"front_canopy_material_opacity");camera(mc,70.5,25,54,new Vec3d(70.5,22.5,68.5));state=23;ticks=0;return false;}
-        if(state==23 && ticks==30){CanopyOpacityRuntimeChecks.prepared(mc,2);shot(mc,output,"large_front_canopy_material_opacity");System.out.println("[vandorlabs][reprolab] large-canopy-live PASS GUI-live continuous-slider-drag both-frame-sizes slide-direction-packet unified-picker fit-tile material-opacity palette depth-extrema rotated-picking ownership vehicle-hull padded-items screenshots=8");return true;}
+        if(state==23 && ticks==30){CanopyOpacityRuntimeChecks.prepared(mc,2);shot(mc,output,"large_front_canopy_material_opacity");frameScene=0;pending=mc.getIntegratedServer().addScheduledTask(()->CanopyFrameDocumentationScenes.build(mc.getIntegratedServer().getWorld(0),frameScene));state=24;return false;}
+        if(state==24 && ticks>=25){if(TileEntityCanopy.at(mc.world,new BlockPos(frameScene<4?104:100,20,40))==null){require(ticks<200,"documentation fixture did not arrive");return false;}mc.gameSettings.fovSetting=frameScene<4?40:35;if(frameScene<4)camera(mc,108,24,48,new Vec3d(105,21.2,41.5));else camera(mc,117,28,54,new Vec3d(106.5,22,42));state=25;ticks=0;return false;}
+        if(state==25 && ticks==20){shot(mc,output,CanopyFrameDocumentationScenes.NAMES[frameScene]);frameScene++;if(frameScene==CanopyFrameDocumentationScenes.NAMES.length){System.out.println("[vandorlabs][reprolab] large-canopy-live PASS GUI-live continuous-slider-drag both-frame-sizes slide-direction-packet unified-picker fit-tile material-opacity palette depth-extrema rotated-picking ownership vehicle-hull padded-items joined-fixed-frames screenshots=16");return true;}pending=mc.getIntegratedServer().addScheduledTask(()->CanopyFrameDocumentationScenes.build(mc.getIntegratedServer().getWorld(0),frameScene));state=24;return false;}
         return false;
     }
     private static void camera(Minecraft mc,double x,double y,double z,Vec3d target)throws Exception{
-        mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x,y,z,0,0)).get();
-        mc.player.setPosition(x,y,z);Vec3d look=target.subtract(mc.player.getPositionEyes(1));mc.player.rotationYaw=mc.player.prevRotationYaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z));mc.player.rotationPitch=mc.player.prevRotationPitch=(float)-Math.toDegrees(Math.atan2(look.y,Math.hypot(look.x,look.z)));
+        Vec3d look=target.subtract(new Vec3d(x,y+mc.player.getEyeHeight(),z));
+        float yaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z)),pitch=(float)-Math.toDegrees(Math.atan2(look.y,Math.hypot(look.x,look.z)));
+        mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x,y,z,yaw,pitch)).get();
+        mc.player.setPosition(x,y,z);mc.player.rotationYaw=mc.player.prevRotationYaw=yaw;mc.player.rotationPitch=mc.player.prevRotationPitch=pitch;
     }
     private static void shot(Minecraft mc,File output,String name)throws Exception{ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_"+name+".png"));}
 }

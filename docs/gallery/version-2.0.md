@@ -25,6 +25,8 @@ Animation reuses prepared shell surfaces and tiled artwork, reducing repeated ge
 
 **Front Canopy Glass** has a 3 × 3 outer frame; **Large Front Canopy Glass** expands it to 5 × 5. Keep the broad back exactly where you click, adjust the nose from flat to five blocks deep, and choose an inner frame from 10–100% size. Mount it against a wall, floor or ceiling. Enable opening and select a left, right, top or bottom hinge, with optional redstone/channel control.
 
+See the [live shallow/deep and small/large nosecone comparisons](../canopies.md#depth-and-nosecone-comparisons) for both frame sizes.
+
 ![Five-wide front canopy opening on its left hinge](../images/gallery/canopies/large-left.gif)
 
 Only the shell reserves space. Build in the empty cabin by aiming through the outside glazing with a block in hand. The live dialog puts every setting beside a large texture list, with glass shades and ordinary materials in one picker. Exact saved ownership and stale-follower cleanup keep removal and resizing from leaving invisible reservations behind.

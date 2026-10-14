@@ -7,9 +7,25 @@ import java.util.*;
 /** Placement and mesh variants for complete fixed cockpit shells. */
 public final class CanopyVariants {
     private static List<CanopyMesh.Face> centeredVisor;
+    private static final Map<Integer,List<CanopyMesh.Face>> GLASS_ROOFS=new HashMap<>();
     public static boolean visor(String kind){return kind.equals("space_visor_2x1") || kind.equals("space_visor_3x1") || kind.equals("space_visor_5x1") || kind.equals("space_visor_5x1_double_height");}
     public static boolean centered(String kind){return LargeCanopySettings.supports(kind) || visor(kind);}
-    public static List<CanopyMesh.Face> faces(TileEntityCanopy tile,List<CanopyMesh.Face> original){return faces(tile.centeredPlacement,tile.block().kind,original);}
+    public static List<CanopyMesh.Face> faces(TileEntityCanopy tile,List<CanopyMesh.Face> original){
+        if(tile.block().kind.equals("regular_canopy_glass")){
+            return fixedGlassFaces(tile.mask(),tile.roofMask());
+        }
+        return faces(tile.centeredPlacement,tile.block().kind,original);
+    }
+    public static List<CanopyMesh.Face> fixedGlassFaces(int mask,int roof){
+        mask&=15;roof&=mask;List<CanopyMesh.Face> original=CanopyMesh.MODELS.get(String.format(Locale.ROOT,"regular_1x1_%02x",mask));
+        if(mask==roof)return original;
+        int key=mask|(roof<<4);
+        synchronized(GLASS_ROOFS){
+            List<CanopyMesh.Face> cached=GLASS_ROOFS.get(key);
+            if(cached==null){cached=Collections.unmodifiableList(OpeningCanopyGeometry.withRoof(original,CanopyMesh.MODELS.get(String.format(Locale.ROOT,"regular_1x1_%02x",roof))));GLASS_ROOFS.put(key,cached);}
+            return cached;
+        }
+    }
     public static List<CanopyMesh.Face> faces(boolean centered,String kind,List<CanopyMesh.Face> original){return centered && kind.equals("space_visor_2x1")?centeredVisor:original;}
     public static void init() {
         for(String id:new String[]{"space_visor_2x1","space_visor_3x1","space_visor_5x1","space_visor_5x1_double_height"}) {

@@ -168,6 +168,11 @@ final class CanopyReleaseRuntimeChecks {
             Vec3d end=CanopyMesh.rotate(CanopyPose.vertex(new Vec3d(width/2D,height,1.8),"shell","canopy",width,settings,tile.progress),tile.facing()).add(origin);
             require((tile.trace(start,end)!=null)==(height>.9),"joined rear aperture stays open and roof crossbar stays selectable height="+height+" angle="+settings.angle+" width="+width+" mount="+settings.mount+" motion="+settings.motion+" progress="+tile.progress+" mask="+tile.mask());
         }
+        for(double x:new double[]{.02,width-.02}){
+            Vec3d start=CanopyMesh.rotate(CanopyPose.vertex(new Vec3d(x,.5,2.2),"shell","canopy",width,settings,tile.progress),tile.facing()).add(origin);
+            Vec3d end=CanopyMesh.rotate(CanopyPose.vertex(new Vec3d(x,.5,1.8),"shell","canopy",width,settings,tile.progress),tile.facing()).add(origin);
+            require(tile.trace(start,end)!=null,"joined canopy retains selectable rear uprights angle="+settings.angle+" width="+width+" mount="+settings.mount+" motion="+settings.motion+" progress="+tile.progress);
+        }
     }
     private static void opening(World world,EntityPlayerMP player){
         BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy"),glass=(BlockCanopy)Block.getBlockFromName("vandorlabs:regular_canopy_glass");
@@ -176,12 +181,15 @@ final class CanopyReleaseRuntimeChecks {
             ItemStack stack=new ItemStack(block);NBTTagCompound tag=new NBTTagCompound();settings.write(tag);stack.setTagCompound(tag);
             for(int column=0;column<width;column++){BlockPos pos=BASE.east(column);world.setBlockState(pos,block.getDefaultState(),2);block.onBlockPlacedBy(world,pos,block.getDefaultState(),player,stack);}
             TileEntityCanopy tile=TileEntityCanopy.at(world,BASE);require(tile.width()==width,"configured shells join");
-            BlockPos rear=BASE.south(2);ItemStack rearStack=new ItemStack(glass);rearStack.setTagCompound(tag.copy());world.setBlockState(rear,glass.getDefaultState(),2);glass.onBlockPlacedBy(world,rear,glass.getDefaultState(),player,rearStack);
+            BlockPos rear=BASE.south(2);ItemStack rearStack=new ItemStack(glass);rearStack.setTagCompound(tag.copy());
+            for(int column=0;column<width;column++){BlockPos cell=rear.east(column);world.setBlockState(cell,glass.getDefaultState(),2);glass.onBlockPlacedBy(world,cell,glass.getDefaultState(),player,rearStack);}
             require((tile.mask()&8)!=0 && TileEntityCanopy.at(world,rear).mask()!=0,"rear glass joins opening shell");
+            fixedGlassCrossbars(world,rear,width);
             rearCrossbar(tile,settings,width);
             List<CanopyMesh.Face> closedFaces=tile.faces(0);
             tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==1,"configured shell opens");
             rearCrossbar(tile,settings,width);
+            fixedGlassCrossbars(world,rear,width);
             if(motion==0){
                 List<CanopyMesh.Face> openFaces=tile.faces();boolean moved=false,stationary=false;
                 for(int f=0;f<closedFaces.size();f++)for(int v=0;v<closedFaces.get(f).vertices.length;v++){
@@ -217,6 +225,16 @@ final class CanopyReleaseRuntimeChecks {
         for(String kind:new String[]{"angled_front_1x1","angled_front_1x2","canopy"})for(EnumFacing facing:EnumFacing.HORIZONTALS) {
             clear(world);BlockCanopy nose=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+kind);world.setBlockState(BASE,Blocks.STONE.getDefaultState(),3);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(nose));
             require(player.getHeldItemMainhand().getItem().onItemUse(player,world,BASE,EnumHand.MAIN_HAND,facing,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"long nose can mount against a wall");
+        }
+    }
+    private static void fixedGlassCrossbars(World world,BlockPos rear,int width){
+        for(int column=0;column<width;column++){
+            TileEntityCanopy tile=TileEntityCanopy.at(world,rear.east(column));
+            require((tile.mask()&4)!=0 && (tile.roofMask()&4)==0,"fixed glass joins moving shell but keeps its top frame");
+            Vec3d origin=new Vec3d(tile.getPos());
+            Vec3d a=CanopyPose.vertex(new Vec3d(.5,.99,-.1),"fixed","regular_canopy_glass",1,tile.large,0);
+            Vec3d b=CanopyPose.vertex(new Vec3d(.5,.99,.1),"fixed","regular_canopy_glass",1,tile.large,0);
+            require(tile.trace(CanopyMesh.rotate(a,tile.facing()).add(origin),CanopyMesh.rotate(b,tile.facing()).add(origin))!=null,"fixed glass crossbar remains selectable behind open canopy");
         }
     }
     private static void closeCoveredShell(World world,EntityPlayerMP player,TileEntityCanopy tile){

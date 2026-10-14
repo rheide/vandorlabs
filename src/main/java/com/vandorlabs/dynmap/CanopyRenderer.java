@@ -13,7 +13,7 @@ import java.util.*;
 public final class CanopyRenderer extends CustomRenderer {
     @Override
     public String[] getTileEntityFieldsNeeded() {
-        return new String[] {"Anchor", "Pair", "CanopyMask", "CanopyWidth", "CenteredPlacement", "CanopyDepth", "CanopyScale", "CanopyShade", "CanopyTint", "CanopyMount", "CanopyAngle", "CanopyMotion"};
+        return new String[] {"Anchor", "Pair", "CanopyMask", "CanopyRoofMask", "CanopyWidth", "CenteredPlacement", "CanopyDepth", "CanopyScale", "CanopyShade", "CanopyTint", "CanopyMount", "CanopyAngle", "CanopyMotion"};
     }
 
     private static BlockPos position(Object value, BlockPos fallback) {
@@ -52,6 +52,10 @@ public final class CanopyRenderer extends CustomRenderer {
         int width=savedWidth instanceof Number?((Number)savedWidth).intValue():pair instanceof Number?2:1;
         List<RenderPatch> result = new ArrayList<>();
         List<CanopyMesh.Face> mesh = CanopyMesh.MODELS.get(id);
+        if(id.startsWith("regular_1x1_")){
+            Object roof=context.getBlockTileEntityFieldAt("CanopyRoofMask",ox,oy,oz);
+            mesh=com.vandorlabs.canopy.CanopyVariants.fixedGlassFaces(bits,roof instanceof Number?((Number)roof).intValue():bits);
+        }
         Object alignment=context.getBlockTileEntityFieldAt("CenteredPlacement",ox,oy,oz);
         mesh=com.vandorlabs.canopy.CanopyVariants.faces(Boolean.TRUE.equals(alignment) || alignment instanceof Number && ((Number)alignment).intValue()!=0,id,mesh);
         net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();
