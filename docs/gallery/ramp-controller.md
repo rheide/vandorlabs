@@ -15,6 +15,8 @@ The Programmable Ramp controls a platform of matching slabs or solid blocks. It 
 
 **Ramp** moves successive treads by different amounts. **Filled ramp** follows the same slope and fills from each tread's starting point. **Lift** moves the whole platform together. **Extend** moves the leading surface and fills the space behind it. Ramp and lift carry standing entities; filled ramp and extend are intended as changing structure.
 
+Settled ramps reuse their geometry and collision boxes between frames and collision queries. Pose, shape settings, source-origin or facing changes invalidate that cache, including direct edits and restored saves. Moving ramps and running escalators still update their surfaces normally. This reduces repeated CPU work on large extended structures.
+
 ## Craft and place
 
 Place a piston in the center of a crafting grid and surround it with eight Programmable Matter Ingots. Place the controller beside a flat platform and point its top arrow toward the first slab or block. It selects face-connected blocks of the same type and complete block state on that level. Diagonal contact does not count; gaps remain gaps. Different slab halves and material variants stay separate.

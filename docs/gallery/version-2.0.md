@@ -51,6 +51,8 @@ Join non-glass panels to stretch a single image across a larger surface, or tile
 
 Programmable Ramp gains **Escalator Up** and **Escalator Down** modes. The extended treads carry riders, respond to redstone and sleep when nobody is nearby. Curved profiles and moving walkways use the same controller settings. Capturing an extended ramp preserves its actual segments and source materials; escalators pause while driving and resume after parking.
 
+Stationary ramps reuse their prepared geometry and collision boxes, reducing repeated work while large extended structures are visible.
+
 | Uphill | Downhill | Curved steps |
 | --- | --- | --- |
 | ![Escalator moving riders uphill](../images/gallery/ramp-controller/escalator-up.gif) | ![Escalator moving riders downhill](../images/gallery/ramp-controller/escalator-down.gif) | ![Curved escalator starting and stopping](../images/gallery/ramp-controller/escalator-curve-in.gif) |

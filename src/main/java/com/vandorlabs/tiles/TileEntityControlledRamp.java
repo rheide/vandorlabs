@@ -72,6 +72,32 @@ public class TileEntityControlledRamp extends TileEntity {
     private boolean open,moving;
     private double startPose;
     private long startTick;
+    private GeometryKey cachedGeometryKey;
+    private List<RampGeometry.Box> cachedGeometry,boxedGeometry;
+    private List<AxisAlignedBB> cachedBoxes;
+
+    /** Saved settings can be edited directly; compare them rather than relying on notifications. */
+    private static final class GeometryKey {
+        final BlockPos pos;final EnumFacing facing;final double pose,low,high;
+        final int sourceY,row,length,start,end,tread,axis,interpolation;
+        final boolean elevator,extend,instant;final List<BlockPos> origins;
+        GeometryKey(TileEntityControlledRamp tile,EnumFacing facing,double pose){
+            pos=tile.pos;this.facing=facing;this.pose=pose;low=tile.low;high=tile.high;
+            sourceY=tile.sourceY;row=tile.row;length=tile.length;start=tile.startHalfSteps;end=tile.endHalfSteps;tread=tile.treadPixels;axis=tile.travelAxis;interpolation=tile.interpolation;
+            elevator=tile.elevator;extend=tile.extendSegments;instant=tile.speed==0;origins=new ArrayList<>();for(BlockPos origin:tile.origins)origins.add(origin.toImmutable());
+        }
+        boolean matches(TileEntityControlledRamp tile,EnumFacing facing,double pose){
+            return this.facing==facing && this.pose==pose && pos.equals(tile.pos) && low==tile.low && high==tile.high
+                    && sourceY==tile.sourceY && row==tile.row && length==tile.length && start==tile.startHalfSteps && end==tile.endHalfSteps
+                    && tread==tile.treadPixels && axis==tile.travelAxis && interpolation==tile.interpolation && elevator==tile.elevator
+                    && extend==tile.extendSegments && instant==(tile.speed==0) && sameOrigins(tile.origins);
+        }
+        private boolean sameOrigins(List<BlockPos> current){
+            if(origins.size()!=current.size())return false;
+            for(int i=0;i<origins.size();i++)if(!origins.get(i).equals(current.get(i)))return false;
+            return true;
+        }
+    }
 
     public boolean isOpen() { return open; }
     public boolean isMoving() { return moving || beltRunning; }
@@ -86,19 +112,21 @@ public class TileEntityControlledRamp extends TileEntity {
         world.notifyBlockUpdate(pos,s,s,2);
     }
     public List<AxisAlignedBB> boxes(double partial) {
+        List<RampGeometry.Box> geometry=geometry(partial);
+        if(geometry==boxedGeometry && cachedBoxes!=null)return cachedBoxes;
         List<AxisAlignedBB> boxes=new ArrayList<>();
-        for (RampGeometry.Box box:geometry(partial))
+        for (RampGeometry.Box box:geometry)
             boxes.add(new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ));
-        return boxes;
+        boxedGeometry=geometry;cachedBoxes=java.util.Collections.unmodifiableList(boxes);return cachedBoxes;
     }
     public List<RampGeometry.Box> geometry(double partial) {
-        List<RampGeometry.Box> boxes=new ArrayList<>();
         IBlockState state=world.getBlockState(pos);
-        if (!(state.getBlock() instanceof BlockControlledRamp)) return boxes;
+        if (!(state.getBlock() instanceof BlockControlledRamp)) return java.util.Collections.emptyList();
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
         if(escalator!=0 && !moving && pose(partial)>=1) {
             double distance=beltDistance(partial);
             if(distance==cachedBeltDistance && cachedBeltGeometry!=null)return cachedBeltGeometry;
+            List<RampGeometry.Box> boxes=new ArrayList<>();
             beltMaterials.clear();beltTops.clear();
             for(BlockPos origin:origins) {
                 // Only the source lane matching this cell can intersect it.
@@ -117,15 +145,23 @@ public class TileEntityControlledRamp extends TileEntity {
             cachedBeltDistance=distance;cachedBeltGeometry=boxes;
             return boxes;
         }
+        double pose=pose(partial);
+        if(!moving && cachedGeometryKey!=null && cachedGeometryKey.matches(this,face,pose))return cachedGeometry;
+        List<RampGeometry.Box> result=geometryUncached(face,pose);
+        if(!moving){cachedGeometryKey=new GeometryKey(this,face,pose);cachedGeometry=java.util.Collections.unmodifiableList(result);return cachedGeometry;}
+        return result;
+    }
+    private List<RampGeometry.Box> geometryUncached(EnumFacing face,double pose){
         if (origins.isEmpty() && travelAxis==RampGeometry.VERTICAL && !extendSegments)
             return RampGeometry.boxesPixels(direction(face),pos.getY(),sourceY,low,high,
-                    row,length,startOffsetValue(),endOffsetValue(),treadPixels,pose(partial),elevator,speed==0,interpolation);
+                    row,length,startOffsetValue(),endOffsetValue(),treadPixels,pose,elevator,speed==0,interpolation);
+        List<RampGeometry.Box> boxes=new ArrayList<>();
         for (BlockPos origin:origins) {
             int originRow=origin.getX()*face.getFrontOffsetX()+origin.getZ()*face.getFrontOffsetZ()
                     -(pos.getX()*face.getFrontOffsetX()+pos.getZ()*face.getFrontOffsetZ()-row);
             for (int step=0;step<(elevator?1:ControllerPlatform.treadCount(treadPixels));step++) {
                 RampGeometry.Box whole=RampGeometry.movingTread(direction(face),origin.getX(),origin.getY(),origin.getZ(),
-                        low,high,originRow,length,startOffsetValue(),endOffsetValue(),treadPixels,step,pose(partial),pose(partial),
+                        low,high,originRow,length,startOffsetValue(),endOffsetValue(),treadPixels,step,pose,pose,
                         elevator,travelAxis,extendSegments,speed==0,interpolation);
                 RampGeometry.Box clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
                 if (clipped!=null) boxes.add(clipped);

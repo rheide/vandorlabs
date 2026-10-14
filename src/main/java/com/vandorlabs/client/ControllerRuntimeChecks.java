@@ -80,6 +80,7 @@ public final class ControllerRuntimeChecks {
         }
     }
     public static void run(World world,EntityPlayerMP player) {
+        RampGeometryCacheRuntimeChecks.run(world);
         double px=player.posX,py=player.posY,pz=player.posZ;
         BlockPos pos=new BlockPos(24,12,24);
         player.setPosition(pos.getX()+.5,pos.getY()+1,pos.getZ()+.5);
