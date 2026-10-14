@@ -22,16 +22,27 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public boolean resizable(){return block()!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(block().kind);}
     private List<CanopyMesh.Face> posedFaces;
     private String posedKey;
+    private List<CanopyMesh.Face> baseFaces;
+    private String baseKey;
     public boolean opening(){return block()!=null && (block().opening() || resizable() && large.openable);}
     public List<CanopyMesh.Face> faces(){return faces(progress);}
+    /** Appearance and connection geometry stay constant while the mechanism moves. */
+    public List<CanopyMesh.Face> baseFaces(){
+        if(block()==null)return Collections.emptyList();
+        int connections=mask(),width=width();String model=model();
+        String key=model+":"+large.key()+":"+centeredPlacement+":"+width+":"+connections;
+        if(!key.equals(baseKey)){
+            List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
+            if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,large.angle,(connections&8)!=0);
+            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.tileMaterial);baseKey=key;
+        }
+        return baseFaces;
+    }
     public List<CanopyMesh.Face> faces(double pose){
 
         if(block()==null)return Collections.emptyList();
-        String key=model()+":"+large.key()+":"+centeredPlacement+":"+width()+":"+mask()+":"+pose;
+        List<CanopyMesh.Face> source=baseFaces();String key=baseKey+":"+pose;
         if(!key.equals(posedKey)){
-            List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model()));
-            if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width(),large.angle,(mask()&8)!=0);
-            source=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.tileMaterial);
             posedFaces=com.vandorlabs.canopy.CanopyPose.faces(source,block().kind,width(),large,opening()?pose:0);posedKey=key;
         }
         return posedFaces;

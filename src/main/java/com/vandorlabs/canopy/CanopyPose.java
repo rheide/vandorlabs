@@ -8,20 +8,14 @@ public final class CanopyPose {
     public static List<CanopyMesh.Face> faces(List<CanopyMesh.Face> source,String kind,int width,
             LargeCanopySettings settings,double progress) {
         List<CanopyMesh.Face> result=new ArrayList<>(source.size());
-        boolean large=LargeCanopySettings.supports(kind);
         for(CanopyMesh.Face original:source) {
             CanopyMesh.Face face=new CanopyMesh.Face();
             face.vertices=new Vec3d[original.vertices.length];face.uv=original.uv;
             face.glazing=original.glazing || original.baseMaterial.equals("glass");face.baseMaterial=original.baseMaterial;face.material=original.material;
-            face.tiled=original.tiled;face.doubleSided=original.doubleSided;face.group="posed";
+            face.tiled=original.tiled;face.doubleSided=original.doubleSided;face.group=original.group;
             for(int i=0;i<face.vertices.length;i++) {
                 Vec3d v=original.vertices[i];
-                if(large && settings.openable) v=hinge(v,width,settings.hinge,progress);
-                else if(kind.equals("canopy"))
-                    v=CanopyMesh.pose(v,settings.motion==0?"slide":"hinge",1,progress,original.group.equals("shell"),settings.slideForward);
-                if(settings.mount==1) v=new Vec3d(v.x,1-v.y,v.z);
-                else if(settings.mount==2) v=new Vec3d(v.x,v.z,width-v.y);
-                else if(settings.mount==3) v=new Vec3d(v.x,1-v.z,v.y);
+                v=vertex(v,original.group,kind,width,settings,progress);
                 face.vertices[i]=v;
             }
             if(settings.mount==1) {
@@ -31,6 +25,14 @@ public final class CanopyPose {
             result.add(face);
         }
         return Collections.unmodifiableList(result);
+    }
+    public static Vec3d vertex(Vec3d v,String group,String kind,int width,LargeCanopySettings settings,double progress){
+        if(LargeCanopySettings.supports(kind) && settings.openable)v=hinge(v,width,settings.hinge,progress);
+        else if(kind.equals("canopy"))v=CanopyMesh.pose(v,settings.motion==0?"slide":"hinge",1,progress,group.equals("shell"),settings.slideForward);
+        if(settings.mount==1)return new Vec3d(v.x,1-v.y,v.z);
+        if(settings.mount==2)return new Vec3d(v.x,v.z,width-v.y);
+        if(settings.mount==3)return new Vec3d(v.x,1-v.z,v.y);
+        return v;
     }
     private static Vec3d hinge(Vec3d v,int width,int hinge,double progress) {
         double p=progress*progress*(3-2*progress),a=Math.toRadians(105*p);

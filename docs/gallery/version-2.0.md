@@ -16,6 +16,8 @@ See [Pilot Seat and Taxi Mode](../pilot-seat-taxi.md) and the [ground vehicle gu
 
 **Canopy** combines sliding and rear-hinged opening in one configurable block. Choose a vertical **Flat**, short **Angled** or **Long Angled** front, then place matching neighbors for a single, double or triple shell. Ceiling mounts invert the complete mechanism. Sliding can move forward or backward, lifting the shell one pixel to clear surrounding bodywork; physical redstone and channel lists can operate either motion.
 
+Animation reuses prepared shell surfaces and tiled artwork, reducing repeated geometry work while opening or closing, including the broad hinged front windows. Canopy and Canopy Glass also fit over an existing Pilot Seat, so cockpit construction works in either order.
+
 | Single / Flat | Double / Angled | Triple / Long Angled |
 | --- | --- | --- |
 | ![Single sliding Canopy](../images/gallery/canopies/slide-1.gif) | ![Double sliding Canopy](../images/gallery/canopies/slide-2.gif) | ![Triple sliding Canopy](../images/gallery/canopies/slide-3.gif) |

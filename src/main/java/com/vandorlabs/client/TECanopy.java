@@ -23,7 +23,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
     }
 
     private static final class Prepared {
-        List<CanopyMesh.Face> source;net.minecraft.util.EnumFacing facing;int width;double progress;
+        List<CanopyMesh.Face> source,drawable;String settings;CanopyRenderGeometry geometry;net.minecraft.util.EnumFacing facing;int width;double progress=Double.NaN;
         final List<DrawFace> opaque=new ArrayList<>(),glass=new ArrayList<>();
     }
     private static final Map<TileEntityCanopy,Prepared> CACHE=new WeakHashMap<>();
@@ -44,19 +44,23 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
                 tile.opening()
                         ? tile.previous + (tile.progress - tile.previous) * partial
                         : 0;
-        List<CanopyMesh.Face> source=tile.faces(progress);
+        List<CanopyMesh.Face> source=tile.baseFaces();
+        String settings=tile.large.key();
         Prepared prepared=CACHE.get(tile);
-        if(prepared==null || prepared.source!=source || prepared.facing!=tile.facing() || prepared.width!=tile.width() || prepared.progress!=progress){
-            prepared=new Prepared();prepared.source=source;prepared.facing=tile.facing();prepared.width=tile.width();prepared.progress=progress;
-            for(CanopyMesh.Face f:com.vandorlabs.canopy.CanopyMaterialUv.drawable(com.vandorlabs.canopy.CanopySurfaces.visible(source))){
-                DrawFace draw=new DrawFace();draw.source=f;draw.v=new Vec3d[f.vertices.length];Vec3d center=Vec3d.ZERO;
-                for(int i=0;i<draw.v.length;i++){draw.v[i]=CanopyMesh.rotate(f.vertices[i],prepared.facing);center=center.add(draw.v[i]);}
-                draw.center=center.scale(1D/draw.v.length);
-                draw.normal=Vec3d.ZERO;for(int i=1;i<draw.v.length-1;i++){Vec3d normal=draw.v[i].subtract(draw.v[0]).crossProduct(draw.v[i+1].subtract(draw.v[0]));if(normal.lengthSquared()>1e-16){draw.normal=normal.normalize();break;}}
+        if(prepared==null || prepared.source!=source || !settings.equals(prepared.settings) || prepared.facing!=tile.facing() || prepared.width!=tile.width()){
+            prepared=new Prepared();prepared.source=source;prepared.settings=settings;prepared.facing=tile.facing();prepared.width=tile.width();prepared.geometry=new CanopyRenderGeometry(source);CACHE.put(tile,prepared);
+        }
+        List<CanopyMesh.Face> drawable=prepared.geometry.posed(tile.block().kind,prepared.width,tile.large,progress);
+        if(prepared.drawable!=drawable){
+            prepared.drawable=drawable;prepared.opaque.clear();prepared.glass.clear();prepared.progress=Double.NaN;
+            for(CanopyMesh.Face f:drawable){
+                DrawFace draw=new DrawFace();draw.source=f;draw.v=new Vec3d[f.vertices.length];
                 draw.opacity=com.vandorlabs.canopy.CanopyFinishes.opacity(f,tile.large.material,tile.large.tint);
                 (com.vandorlabs.canopy.CanopyFinishes.translucent(f,tile.large.material,tile.large.tint)?prepared.glass:prepared.opaque).add(draw);
             }
-            CACHE.put(tile,prepared);
+        }
+        if(prepared.progress!=progress){
+            orient(prepared.opaque,prepared.facing);orient(prepared.glass,prepared.facing);prepared.progress=progress;
         }
         List<DrawFace> opaque=prepared.opaque,glass=prepared.glass;
         Vec3d camera=new Vec3d(rendererDispatcher.entityX-tile.getPos().getX(),rendererDispatcher.entityY-tile.getPos().getY(),rendererDispatcher.entityZ-tile.getPos().getZ());
@@ -85,6 +89,17 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         GlStateManager.enableLighting();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldX, oldY);
         GlStateManager.popMatrix();
+    }
+
+    private static void orient(List<DrawFace> faces,net.minecraft.util.EnumFacing facing){
+        for(DrawFace draw:faces){
+            CanopyMesh.Face f=draw.source;Vec3d center=Vec3d.ZERO;
+            for(int i=0;i<draw.v.length;i++){
+                draw.v[i]=CanopyMesh.rotate(f.vertices[i],facing);center=center.add(draw.v[i]);
+            }
+            draw.center=center.scale(1D/draw.v.length);draw.normal=Vec3d.ZERO;
+            for(int i=1;i<draw.v.length-1;i++){Vec3d normal=draw.v[i].subtract(draw.v[0]).crossProduct(draw.v[i+1].subtract(draw.v[0]));if(normal.lengthSquared()>1e-16){draw.normal=normal.normalize();break;}}
+        }
     }
 
     private void draw(List<DrawFace> faces) {

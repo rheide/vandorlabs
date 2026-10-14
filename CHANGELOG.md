@@ -2,6 +2,9 @@
 
 ## 2.0
 
+- Cache canopy rigid-part overlap removal and tiled texture subdivision during animation, retaining clipping where moving shells meet stationary mounts. Reuse appearance geometry for rendering and picking instead of rebuilding it for each interpolated pose.
+- Allow canopy placement over an existing Pilot Seat through normal item interaction, including its invisible backrest cell. Trim overlapping Pilot Seat cushion and armrest surfaces across every height and armrest variant.
+
 - Apply Mild/Normal/Strong material opacity to all canopies and visors, including both front canopy sizes and opening Canopy. Keep frames opaque, sort translucent replacement panels with glass, and retain native glass alpha and configured icon padding.
 - Join matching non-glass Programmable Glass and Diagonal Glass artwork with Tile or Stretch mapping. Add independent porthole Glass tabs with the complete glass/material picker, tint intensity, opacity and joined-window layout, including full-depth portholes.
 - Fix coincident canopy side surfaces, align the angled/rear sill trim and allow back-to-back placement by clicking the rear glass, including ceiling mounts.

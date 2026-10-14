@@ -312,6 +312,19 @@ task testCanopyCatalog(type: Exec) {
 }
 check.dependsOn testCanopyCatalog
 
+task testPilotSeatSurfaces(type: Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/clean_pilot_seat_surfaces.py', '--check'
+}
+check.dependsOn testPilotSeatSurfaces
+
+task testCanopyAnimationCache(type: JavaExec) {
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.vandorlabs.client.CanopyPerformanceRuntimeChecks'
+}
+check.dependsOn testCanopyAnimationCache
+
 task testCanopyMaterialUvs(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)

@@ -22,7 +22,34 @@ public final class CanopySurfaces {
         for(int i=1;i<face.vertices.length-1;i++){Vec3d n=face.vertices[i].subtract(face.vertices[0]).crossProduct(face.vertices[i+1].subtract(face.vertices[0]));double length=Math.sqrt(n.lengthSquared());if(length>1e-12)return n.scale(1/length);}return Vec3d.ZERO;
     }
     private static long rounded(double value){return Math.round(value*1e7);}
+    private static String planeKey(CanopyMesh.Face face){
+        Vec3d n=normal(face);if((Math.abs(n.x)>EPS?n.x:Math.abs(n.y)>EPS?n.y:n.z)<0)n=n.scale(-1);
+        return rounded(n.x)+":"+rounded(n.y)+":"+rounded(n.z)+":"+rounded(n.dotProduct(face.vertices[0]));
+    }
+    /** Plane membership within a rigid part is invariant under animation. */
+    public static int[][] rigidPlanes(List<CanopyMesh.Face> source){
+        Map<String,List<Integer>> planes=new LinkedHashMap<>();
+        for(int i=0;i<source.size();i++){CanopyMesh.Face f=source.get(i);planes.computeIfAbsent(f.group+":"+planeKey(f),k->new ArrayList<>()).add(i);}
+        int[][] result=new int[planes.size()][];int index=0;
+        for(List<Integer> plane:planes.values())result[index++]=plane.stream().mapToInt(Integer::intValue).toArray();return result;
+    }
+    /** Test transformed planes once per part, then clip only planes shared with another part. */
+    public static List<CanopyMesh.Face> visibleRigidParts(List<CanopyMesh.Face> posed,int[][] parts){
+        Map<String,List<int[]>> planes=new LinkedHashMap<>();
+        for(int[] part:parts)planes.computeIfAbsent(planeKey(posed.get(part[0])),k->new ArrayList<>()).add(part);
+        List<CanopyMesh.Face> result=new ArrayList<>(posed.size()),contacts=new ArrayList<>();
+        for(List<int[]> plane:planes.values()){
+            if(plane.size()==1){for(int i:plane.get(0))result.add(posed.get(i));continue;}
+            List<Integer> indices=new ArrayList<>();for(int[] part:plane)for(int i:part)indices.add(i);Collections.sort(indices);
+            for(int i:indices)contacts.add(posed.get(i));
+        }
+        if(!contacts.isEmpty())result.addAll(visible(contacts,true));return result;
+    }
     public static List<CanopyMesh.Face> visible(List<CanopyMesh.Face> source){
+        return visible(source,false);
+    }
+    /** Rigid parts have already had their internal overlaps removed. */
+    public static List<CanopyMesh.Face> visible(List<CanopyMesh.Face> source,boolean crossGroupsOnly){
         Map<String,List<Surface>> planes=new LinkedHashMap<>();
         for(CanopyMesh.Face face:source){
             Vec3d n=normal(face);if(n.lengthSquared()==0)continue;
@@ -32,14 +59,17 @@ public final class CanopySurfaces {
             planes.computeIfAbsent(key,k->new ArrayList<>()).add(surface);
         }
         List<CanopyMesh.Face> result=new ArrayList<>(source.size());
-        for(List<Surface> plane:planes.values())for(int index=0;index<plane.size();index++){
+        for(List<Surface> plane:planes.values()){
+        boolean oneGroup=crossGroupsOnly && plane.stream().allMatch(other->other.face.group.equals(plane.get(0).face.group));
+        for(int index=0;index<plane.size();index++){
             Surface surface=plane.get(index);CanopyMesh.Face face=surface.face;
+            if(oneGroup){result.add(face);continue;}
             List<double[]> polygon=new ArrayList<>();
             for(int i=0;i<face.vertices.length;i++){Vec3d p=face.vertices[i];polygon.add(new double[]{p.x,p.y,p.z,face.uv[i][0],face.uv[i][1]});}
             List<List<double[]>> pieces=new ArrayList<>();pieces.add(polygon);
             for(int j=0;j<plane.size() && !pieces.isEmpty();j++){
                 Surface other=plane.get(j);boolean glass=face.baseMaterial.equals("glass"),otherGlass=other.face.baseMaterial.equals("glass");
-                if(j==index || j<index && !(glass && !otherGlass) || !glass && otherGlass || !surface.overlaps(other))continue;
+                if(j==index || crossGroupsOnly && face.group.equals(other.face.group) || j<index && !(glass && !otherGlass) || !glass && otherGlass || !surface.overlaps(other))continue;
                 if(!face.doubleSided && !other.face.doubleSided && surface.normal.dotProduct(other.normal)<=0)continue;
                 List<double[]> cut=new ArrayList<>();for(Vec3d p:other.face.vertices)cut.add(new double[]{p.x,p.y,p.z});
                 List<List<double[]>> next=new ArrayList<>();for(List<double[]> piece:pieces)next.addAll(subtract(piece,cut,surface.u,surface.v));pieces=next;
@@ -50,6 +80,7 @@ public final class CanopySurfaces {
                 copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.group=face.group;copy.doubleSided=face.doubleSided;copy.glazing=face.glazing;copy.tiled=face.tiled;
                 for(int i=0;i<piece.size();i++){double[] p=piece.get(i);copy.vertices[i]=new Vec3d(p[0],p[1],p[2]);copy.uv[i]=new double[]{p[3],p[4]};}result.add(copy);
             }
+        }
         }
         return result;
     }
