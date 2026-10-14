@@ -2,6 +2,8 @@
 
 The Pilot Seat controls a ground craft assembled from connected blocks and landing gear. Taxi Mode is enabled by default: sitting assembles the craft, and leaving attempts to restore it as blocks. Disable Taxi Mode to convert the craft manually with the Configurizer.
 
+Canopy and Canopy Glass share the space above the seat's lower block with its backrest. Either placement order works: holding a canopy item passes clicks on the seat through to placement, including when sneaking. Empty-hand boarding and configuration tools retain their usual actions.
+
 The Configurizer assembly and parking preview includes the Pilot Seat settings on its first screen. Seat height applies immediately while the dialog stays open, including the cushion model and an occupied rider. Edit the channel list and trigger, then click **Save**. Saving does not assemble or park the craft. **Close** closes the preview; live height changes remain saved, while unsaved channel and trigger edits are discarded. The Taxi Mode button applies its setting immediately and refreshes the preview. Sneak-right-click the placed Pilot Seat to edit the same seat settings directly.
 
 The trigger can be **Disabled**, **Redstone ON** or **Redstone OFF**. ON reacts when any configured channel becomes powered; OFF reacts when all configured channels become unpowered. Each new activation toggles between placed blocks and an assembled vehicle. A held signal does not repeatedly convert a craft. Saving settings and loading a world establish the current signal as the baseline, so they do not trigger a conversion. Channel 0 disables channel activation even when OFF is selected.

@@ -79,6 +79,11 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing face, float x, float y, float z) {
         if (hand != EnumHand.MAIN_HAND) return false;
+        // Let the canopy item replace the invisible backrest reservation in either placement order.
+        if(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock){
+            net.minecraft.block.Block held=((net.minecraft.item.ItemBlock)player.getHeldItem(hand).getItem()).getBlock();
+            if(held instanceof BlockCanopy && ((BlockCanopy)held).supportsSeatBackrest())return false;
+        }
         if(player.isSneaking()) {
             BlockPos lower=state.getValue(UPPER)?pos.down():pos;
             if(!world.isRemote && !player.isSpectator() && world.isBlockModifiable(player,lower) && player.canPlayerEdit(lower,face,player.getHeldItem(hand))) {

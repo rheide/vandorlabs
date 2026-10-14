@@ -38,7 +38,15 @@ final class PilotCanopyRuntimeChecks {
                 for(int column=0;column<joined;column++){
                     BlockPos member=anchor.offset(facing.rotateY(),column*canopy.width);
                     require(canopy.fits(world,member,facing),"joined canopy fits over seat reservation");
-                    world.setBlockState(member,canopyState,3);canopy.onBlockPlacedBy(world,member,canopyState,player,new ItemStack(canopy));
+                    if(seatFirst && joined==1){
+                        ItemStack saved=player.getHeldItemMainhand().copy();player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(canopy));
+                        net.minecraft.item.ItemBlock item=(net.minecraft.item.ItemBlock)player.getHeldItemMainhand().getItem();
+                        require(item.canPlaceBlockOnSide(world,lower.up(),facing,player,player.getHeldItemMainhand()),"client placement accepts seat backrest");
+                        for(boolean sneak:new boolean[]{false,true}){player.setSneaking(sneak);require(!seat.onBlockActivated(world,lower.up(),world.getBlockState(lower.up()),player,EnumHand.MAIN_HAND,facing,.5F,.5F,.5F),"canopy click passes seat activation");}
+                        player.setSneaking(false);
+                        require(player.interactionManager.processRightClickBlock(player,world,player.getHeldItemMainhand(),EnumHand.MAIN_HAND,lower.up(),facing,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"normal server interaction places canopy over seat");
+                        player.setHeldItem(EnumHand.MAIN_HAND,saved);
+                    }else {world.setBlockState(member,canopyState,3);canopy.onBlockPlacedBy(world,member,canopyState,player,new ItemStack(canopy));}
                 }
                 require(((TileEntityCanopy)world.getTileEntity(anchor)).owner().width()==canopy.width*joined,
                         "opening canopy joined width "+joined);

@@ -17,11 +17,12 @@ for height in range(4):
  name='pilot_seat'+('_height_'+str(height) if height else '')
  text=(assets/'models/block'/(name+'.obj')).read_text()
  for arms in range(1,4):
-  output=[];group='';points=[];skip=False
+  output=[];group='';vertices=[tuple(map(float,line.split()[1:])) for line in text.splitlines() if line.startswith('v ')]
   for line in text.splitlines():
-   if line.startswith('g '):group=line[2:];points=[];skip=False
-   if line.startswith('v ') and group.startswith('armrest'):
-    points.append(float(line.split()[1]));center=sum(points)/len(points);skip=bool(arms&(1 if center<.5 else 2))
-   if not (skip and line.startswith('f ')):output.append(line)
+   if line.startswith('g '):group=line[2:]
+   skip=False
+   if line.startswith('f ') and group.startswith('armrest'):
+    points=[vertices[int(ref.split('/')[0])-1][0] for ref in line.split()[1:]];center=sum(points)/len(points);skip=bool(arms&(1 if center<.5 else 2))
+   if not skip:output.append(line)
   (assets/'models/block'/(name+'_arms_'+str(arms)+'.obj')).write_text('\n'.join(output)+'\n')
 data['variants']=replacement;blockstates.write_text(json.dumps(data,indent=2)+'\n')

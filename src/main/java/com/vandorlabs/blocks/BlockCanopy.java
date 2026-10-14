@@ -282,6 +282,13 @@ public final class BlockCanopy extends Block {
         }
 
         @Override
+        public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side,EntityPlayer player,ItemStack stack){
+            BlockCanopy canopy=(BlockCanopy)block;
+            if(canopy.sharesSeatBackrest(world.getBlockState(pos)) || side==EnumFacing.UP && canopy.sharesSeatBackrest(world.getBlockState(pos.up())))return true;
+            return super.canPlaceBlockOnSide(world,pos,side,player,stack);
+        }
+
+        @Override
         public EnumActionResult onItemUse(
                 EntityPlayer player,
                 World w,

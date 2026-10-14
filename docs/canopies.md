@@ -19,6 +19,8 @@ Click a wall to mount an angled nose or Canopy with its rear against that wall. 
 
 Placement checks the complete owned footprint and editing permissions before writing blocks. Breaking an owned cell removes its component and returns one configured item in survival. Joined Canopies lose only the broken constituent and reconnect the survivors where possible. Pistons cannot move these assemblies.
 
+Canopy and Canopy Glass can share their open lower space with a Pilot Seat's backrest in either placement order. Hold the canopy item and click the seat's upper backrest area to place the shell; the seat passes that click through instead of boarding or opening its settings.
+
 Hold a Canopy and click the rear glazing of another Canopy to place it facing the opposite direction. The placement uses the clicked rear cell and retains ceiling mounting; the shared rear glazing opens into a continuous cabin. Empty-hand use still opens or closes the mechanism.
 
 ## Glass and materials
