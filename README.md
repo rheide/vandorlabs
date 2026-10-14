@@ -1,6 +1,6 @@
 # Vandor Labs
 
-Current release: **2.0-beta**. See the [2.0 feature guide](docs/gallery/version-2.0.md) and [changelog](CHANGELOG.md).
+Current release: **2.0**. See the [2.0 feature guide](docs/gallery/version-2.0.md) and [changelog](CHANGELOG.md).
 
 Block availability can be configured by category in the generated `config/vandorlabs-blocks.cfg`; see [category settings](docs/block-categories.md). Disabled categories are hidden from creative menus and cannot be crafted, while existing world blocks remain intact.
 
@@ -243,7 +243,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-2.0-beta.jar`.
+`build/libs/vandorlabs-2.0.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 

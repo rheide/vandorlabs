@@ -2,7 +2,7 @@
 
 ## Supported behavior
 
-The 2.0 beta supports reversible Configurizer assembly/parking, Pilot Seat driving, braking, safe exits, adjustable third-person distance, movement-driven propulsion brightness, manual vanilla/Vandor doors and trapdoors, extended ramp and paused escalator transport and channel-triggered conversion. Limits remain 4,096 occupied cells, 64 cells per axis, 4 MiB serialized data and 8,192 merged collision boxes. The bounded performance workloads stop at 2,048 cells in anticipation of a smaller release limit. There is no flight, engine requirement or fuel system.
+Version 2.0 supports reversible Configurizer assembly/parking, Pilot Seat driving, braking, safe exits, adjustable third-person distance, movement-driven propulsion brightness, manual vanilla/Vandor doors and trapdoors, extended ramp and paused escalator transport and channel-triggered conversion. Limits remain 4,096 occupied cells, 64 cells per axis, 4 MiB serialized data and 8,192 merged collision boxes. The bounded performance workloads stop at 2,048 cells in anticipation of a smaller release limit. There is no flight, engine requirement or fuel system.
 
 Taxi Mode defaults to ON, including older seats without a saved setting. Sitting starts discovery while the player remains in the placed seat; successful conversion transfers the pilot to the craft. Exiting stops the craft and restores blocks. Turn Taxi Mode off in placed-seat settings or a Configurizer preview to convert manually. Discovery schedules each coordinate once, processes at most 256 positions per job per tick and shares a 1,024-position world budget. It remains iterative and bounded even when gear ownership and hull connections form loops.
 
