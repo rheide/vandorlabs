@@ -68,8 +68,9 @@ final class CanopyReleaseRuntimeChecks {
                 next.shade=12;next.tint=2;require(LargeCanopyOwnership.apply(tile,player,next),"finish edit preserves cabin blocks");
                 for(int hinge=0;hinge<4;hinge++) {
                     next.hinge=hinge;require(LargeCanopyOwnership.apply(tile,player,next),"hinge setting");
-                    tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==1 && !tile.boxes().equals(CanopyMesh.collision(tile.faces(0),"posed",tile.width(),0,tile.facing(),anchor)),"hinge changes mounted collision");
-                    if(!useFarSurface(tile,player))tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==0,"hinge returns closed kind="+kind+" mount="+side+" hinge="+hinge+" target="+tile.targetOpen+" progress="+tile.progress+" removing="+tile.removing+" draws="+tile.draws());
+                    animatedFrontSurface(tile);
+                    tile.toggle();for(int tick=0;tick<16;tick++){tile.update();if(tick%4==3)animatedFrontSurface(tile);}require(tile.progress==1 && !tile.boxes().equals(CanopyMesh.collision(tile.faces(0),"posed",tile.width(),0,tile.facing(),anchor)),"hinge changes mounted collision");
+                    if(!useFarSurface(tile,player))tile.toggle();for(int tick=0;tick<16;tick++){tile.update();if(tick%4==3)animatedFrontSurface(tile);}require(tile.progress==0,"hinge returns closed kind="+kind+" mount="+side+" hinge="+hinge+" target="+tile.targetOpen+" progress="+tile.progress+" removing="+tile.removing+" draws="+tile.draws());
                 }
                 TileEntityCanopy restored=new TileEntityCanopy();restored.setWorld(world);restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(restored.cells().equals(tile.cells()) && restored.large.key().equals(tile.large.key()),"exact footprint and settings persist");
@@ -92,6 +93,32 @@ final class CanopyReleaseRuntimeChecks {
             opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
         }finally{clear(world);player.setHeldItem(EnumHand.MAIN_HAND,held);player.setSneaking(sneak);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);}
         System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 outside-placement exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
+    }
+    private static void animatedFrontSurface(TileEntityCanopy tile){
+        Vec3d center=null,normal=null;double largest=0;
+        for(CanopyMesh.Face face:tile.faces())if(face.glazing)for(int i=1;i<face.vertices.length-1;i++){
+            Vec3d a=face.vertices[0],b=face.vertices[i],c=face.vertices[i+1],cross=b.subtract(a).crossProduct(c.subtract(a));
+            if(cross.lengthSquared()<=largest)continue;largest=cross.lengthSquared();
+            center=a.add(b).add(c).scale(1D/3);normal=cross.normalize();
+        }
+        require(center!=null,"animated front retains a nondegenerate panel");
+        Vec3d start=CanopyMesh.rotate(center.add(normal.scale(.01)),tile.facing()).add(new Vec3d(tile.getPos()));
+        Vec3d end=CanopyMesh.rotate(center.subtract(normal.scale(.01)),tile.facing()).add(new Vec3d(tile.getPos()));
+        Vec3d expected=CanopyMesh.rotate(center,tile.facing()).add(new Vec3d(tile.getPos()));
+        RayTraceResult hit=tile.trace(start,end);
+        String detail=tile.block().kind+" mount="+tile.large.mount+" facing="+tile.facing()+" hinge="+tile.large.hinge+" progress="+tile.progress;
+        require(hit!=null && hit.hitVec.squareDistanceTo(expected)<1e-12,"animated front pick matches panel "+detail);
+        require(tile.boxes().stream().anyMatch(box->box.grow(1e-6).contains(expected)),"animated front collision follows panel "+detail);
+        require(tile.getRenderBoundingBox().grow(1e-6).contains(expected),"animated front stays inside render bounds "+detail);
+        List<CanopyMesh.Face> rendered=new CanopyRenderGeometry(tile.baseFaces()).posed(tile.block().kind,tile.width(),tile.large,tile.progress);
+        RayTraceResult drawn=CanopyMesh.trace(rendered,"posed",tile.width(),0,tile.facing(),tile.getPos(),start,end);
+        require(drawn!=null && drawn.hitVec.squareDistanceTo(expected)<1e-12,"animated front rendered surface matches picking "+detail);
+        List<CanopyMesh.Face> closed=tile.faces(0),posed=tile.faces();
+        require(closed.size()==posed.size(),"hinge retains face topology "+detail);
+        for(int f=0;f<posed.size();f++)for(int v=1;v<posed.get(f).vertices.length;v++){
+            double before=closed.get(f).vertices[0].squareDistanceTo(closed.get(f).vertices[v]),after=posed.get(f).vertices[0].squareDistanceTo(posed.get(f).vertices[v]);
+            require(Math.abs(before-after)<1e-8,"hinge keeps frame rigid "+detail);
+        }
     }
     private static void backToBack(World world,EntityPlayerMP player){
         BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
