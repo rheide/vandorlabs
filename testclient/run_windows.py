@@ -18,6 +18,14 @@ import time
 import zipfile
 
 
+def validate_completion(client_log, marker, duplifier_only=False):
+    markers = ('armor-duplifier-matrix PASS', 'duplifier-dialog-layout PASS',
+               'armor-duplifier-interactions PASS', 'armor-custom-picker PASS') if duplifier_only else (marker,)
+    for required in markers:
+        if required not in client_log:
+            raise SystemExit('Missing completion marker: '+required)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--server')
@@ -224,8 +232,8 @@ def main():
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.focus:
         marker = {'canopy-animations':'documentation-animation PASS', 'connection-acceptance':'connection-acceptance PASS', 'large-canopy':'large-canopy-live PASS', 'armor':'role-armor PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
-        if marker not in (output/'client.log').read_text(errors='replace'):
-            raise SystemExit('Missing completion marker: '+marker)
+        validate_completion(client_log, marker, args.focus == 'armor'
+                            and os.environ.get('VANDOR_LABS_ARMOR_DUPLIFIER_ONLY', '').lower() == 'true')
         if args.focus == 'canopy-animations':
             if {path.parent.name for path in output.glob('*/capture.json')} != selected_animations:
                 raise SystemExit('Incomplete or out-of-scope canopy animation set')
