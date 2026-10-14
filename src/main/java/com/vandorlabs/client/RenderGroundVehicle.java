@@ -43,6 +43,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         VehicleStructure tileStructure;
         int tileRevision;
         final List<TileDraw> tiles=new ArrayList<>();
+        final List<VehicleStructure.Cell> wheels=new ArrayList<>();
         final VehicleOpaqueTileCache opaqueTiles=new VehicleOpaqueTileCache();
         final Map<BlockPos,Mesh[]> sections=new LinkedHashMap<>();
         void delete(){for(Mesh[] pair:sections.values())for(Mesh mesh:pair)mesh.delete();sections.clear();opaqueTiles.delete();tiles.clear();}
@@ -68,7 +69,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         int layer,cell;
         Build(Mesh source,int light,int level){cells=source.cells;result.generation=generation;result.light=light;result.level=level;}
     }
-    public static void reload(){generation++;for(Regions regions:meshes.values())regions.delete();meshes.clear();}
+    public static void reload(){generation++;for(Regions regions:meshes.values())regions.delete();meshes.clear();VehicleWheelMotion.clear();TELandingGear.clearWheelModels();}
     public static void cleanup(net.minecraft.world.World world){Iterator<Map.Entry<EntityGroundVehicle,Regions>> i=meshes.entrySet().iterator();while(i.hasNext()){Map.Entry<EntityGroundVehicle,Regions> e=i.next();if(e.getKey().isDead || e.getKey().world!=world){e.getValue().delete();i.remove();}}}
     private static boolean same(List<VehicleStructure.Cell> a,List<VehicleStructure.Cell> b) {
         if(a.size()!=b.size())return false;
@@ -87,6 +88,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         Regions regions=meshes.computeIfAbsent(e,k->new Regions());if(regions.structure==e.structure)return regions;
         if(regions.structure!=null && same(regions.structure.cells,e.structure.cells)){regions.structure=e.structure;return regions;}
         Map<BlockPos,List<VehicleStructure.Cell>[]> groups=new LinkedHashMap<>();
+        regions.wheels.clear();
         Set<BlockPos> dirty=new HashSet<>();
         if(regions.structure!=null) {
             for(VehicleStructure.Cell cell:e.structure.cells) {
@@ -98,6 +100,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         if(regions.structure!=null)for(VehicleStructure.Cell cell:regions.structure.cells)if(e.structure.at(cell.pos)==null)
             for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())dirty.add(section(cell.pos.offset(side)));
         for(VehicleStructure.Cell cell:e.structure.cells) {
+            if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockWheel){if(cell.state.getValue(com.vandorlabs.blocks.BlockWheel.PART)==0)regions.wheels.add(cell);continue;}
             List<VehicleStructure.Cell>[] lists=groups.computeIfAbsent(section(cell.pos),k->new List[]{new ArrayList<>(),new ArrayList<>()});
             lists[cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight || VehicleWorld.isMovingControl(cell.state.getBlock())?1:0].add(cell);
         }
@@ -220,6 +223,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             OpenGlHelper.setClientActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
         }
         GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.enableLighting();
+        VehicleWheelRenderer.render(e,regions.wheels,partial);
         // Each vehicle owns a separate World identity, isolating renderer adjacency and animation caches.
         TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
         double cameraX=dispatcher.entityX,cameraY=dispatcher.entityY,cameraZ=dispatcher.entityZ;

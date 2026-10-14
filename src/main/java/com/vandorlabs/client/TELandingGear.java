@@ -8,9 +8,31 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.block.model.*;
+import net.minecraft.util.EnumFacing;
+import java.util.*;
 
 /** Applies the three transforms supplied with the telescopic model. */
 public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLandingGear> {
+    private static final double[] WHEEL_CENTERS={.25,.375,.4375,-.125},WHEEL_RADII={.25,.375,.4375,.875};
+    private static final Map<IBakedModel,IBakedModel[]> wheelModels=new IdentityHashMap<>();
+    static void clearWheelModels(){wheelModels.clear();}
+    static IBakedModel wheelPart(IBakedModel model,boolean tyre){
+        IBakedModel[] parts=wheelModels.computeIfAbsent(model,m->new IBakedModel[]{new WheelPart(m,false),new WheelPart(m,true)});
+        return parts[tyre?1:0];
+    }
+    private static final class WheelPart implements IBakedModel {
+        final IBakedModel original;final List<BakedQuad> general;final Map<EnumFacing,List<BakedQuad>> faces=new EnumMap<>(EnumFacing.class);
+        WheelPart(IBakedModel original,boolean tyre){this.original=original;general=filter(original.getQuads(null,null,0),tyre);for(EnumFacing side:EnumFacing.values())faces.put(side,filter(original.getQuads(null,side,0),tyre));}
+        private static List<BakedQuad> filter(List<BakedQuad> source,boolean tyre){List<BakedQuad> result=new ArrayList<>();for(BakedQuad quad:source){String name=quad.getSprite().getIconName();if((name.endsWith("/rubber")||name.endsWith("/hub"))==tyre)result.add(quad);}return Collections.unmodifiableList(result);}
+        public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed){return side==null?general:faces.get(side);}
+        public boolean isAmbientOcclusion(){return original.isAmbientOcclusion();}
+        public boolean isGui3d(){return original.isGui3d();}
+        public boolean isBuiltInRenderer(){return false;}
+        public net.minecraft.client.renderer.texture.TextureAtlasSprite getParticleTexture(){return original.getParticleTexture();}
+        public ItemCameraTransforms getItemCameraTransforms(){return original.getItemCameraTransforms();}
+        public ItemOverrideList getOverrides(){return original.getOverrides();}
+    }
     public void render(TileEntityLandingGear tile,double x,double y,double z,float partial,int stage,float alpha) {
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock() instanceof BlockTelescopicLandingGear) || state.getValue(BlockTelescopicLandingGear.LOWER)) return;
@@ -29,7 +51,19 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
         GlStateManager.disableLighting();GlStateManager.disableCull();
         draw(FIXED);
-        GlStateManager.pushMatrix();GlStateManager.translate(0,-t,0);draw(WHEEL);GlStateManager.popMatrix();
+        GlStateManager.pushMatrix();GlStateManager.translate(0,-t,0);
+        com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
+        if(craft==null)draw(WHEEL);
+        else {
+            int size=Math.min(3,tile.getSize());double center=WHEEL_CENTERS[size],radius=WHEEL_RADII[size];
+            IBakedModel wheel=Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getModelManager().getModel(WHEEL);
+            double distance=VehicleWheelMotion.sample(craft,partial);
+            GlStateManager.translate(.5,center,.5);GlStateManager.rotate(VehicleWheelMotion.steer(craft),0,1,0);GlStateManager.translate(-.5,-center,-.5);
+            draw(wheelPart(wheel,false));
+            GlStateManager.translate(.5,center,.5);GlStateManager.rotate(VehicleWheelMotion.roll(distance,radius,VehicleWheelMotion.alignment(craft.structure.facing,state.getValue(BlockTelescopicLandingGear.FACING))),1,0,0);GlStateManager.translate(-.5,-center,-.5);
+            draw(wheelPart(wheel,true));
+        }
+        GlStateManager.popMatrix();
         drawArm(anchor, anchor-pistonLength-t,tile.getSize()>=3);
         GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
@@ -64,7 +98,7 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
     }
     private void draw(ModelResourceLocation model) {
         Minecraft mc=Minecraft.getMinecraft();
-        mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(
-                mc.getRenderItem().getItemModelMesher().getModelManager().getModel(model),1,1,1,1);
+        draw(mc.getRenderItem().getItemModelMesher().getModelManager().getModel(model));
     }
+    private void draw(IBakedModel model){Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(model,1,1,1,1);}
 }

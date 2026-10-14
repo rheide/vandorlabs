@@ -9,10 +9,11 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.*;
 
-/** Fixed side wheels. Large wheels reserve a two-by-two vertical footprint. */
+/** Side wheels. Large wheels reserve a two-by-two vertical footprint. */
 public final class BlockWheel extends BlockLandingGear {
     public static final PropertyInteger PART=PropertyInteger.create("part",0,3);
     private final int size;
+    public int wheelSize(){return size;}
     public BlockWheel(String name,int size){
         super(name,false);this.size=size;
         parts.addAll(loadParts("block/"+name));

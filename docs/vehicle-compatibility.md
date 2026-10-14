@@ -22,9 +22,9 @@ The dependency-free checks use the actual registered block and tile classes. In 
 
 ## Limits and wheels
 
-`vandorlabs-blocks.cfg` has a `vehicles.maxBlocks` setting, default 4096 and range 1–32768. It limits new assemblies. Lowering it does not prevent existing vehicles from being restored. The 64-block limit on each axis, 4 MiB snapshot limit and collision-complexity limit still apply.
+`vandorlabs-blocks.cfg` has a `vehicles.maxBlocks` setting, default 4096 and range 1â€“32768. It limits new assemblies. Lowering it does not prevent existing vehicles from being restored. The 64-block limit on each axis, 4 MiB snapshot limit and collision-complexity limit still apply.
 
-Small and Medium Wheels occupy one block. Large Wheels reserve a 2×2 vertical footprint. Place a wheel on a vertical side of a slab; the wheel faces outward from that side. Large wheels need free space above and to the right of the placement point when viewed from outside. Wheels count as landing supports, including mixed wheel/landing-gear craft when their actual bottom surfaces have the same height. At least three independent supports are required. Breaking any large-wheel part removes the whole wheel.
+Small and Medium Wheels occupy one block. Large Wheels reserve a 2Ã—2 vertical footprint. Place a wheel on a vertical side of a slab; the wheel faces outward from that side. Large wheels need free space above and to the right of the placement point when viewed from outside. Wheels count as landing supports, including mixed wheel/landing-gear craft when their actual bottom surfaces have the same height. At least three independent supports are required. Breaking any large-wheel part removes the whole wheel. In Taxi mode, wheels and landing-gear tyres roll with actual travel, reverse with the craft and swivel with steering. Stopping holds their rotation; Hover centers steering and stops rolling.
 
 Top slabs have an empty lower half. Vehicle discovery does not connect a top slab to a floor beneath that empty space. Slabs that physically touch another block still connect normally.
 
