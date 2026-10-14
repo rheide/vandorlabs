@@ -19,6 +19,8 @@ Click a wall to mount an angled nose or Canopy with its rear against that wall. 
 
 Placement checks the complete owned footprint and editing permissions before writing blocks. Breaking an owned cell removes its component and returns one configured item in survival. Joined Canopies lose only the broken constituent and reconnect the survivors where possible. Pistons cannot move these assemblies.
 
+Hold a Canopy and click the rear glazing of another Canopy to place it facing the opposite direction. The placement uses the clicked rear cell and retains ceiling mounting; the shared rear glazing opens into a continuous cabin. Empty-hand use still opens or closes the mechanism.
+
 ## Glass and materials
 
 The **Glass** category in the shared texture list offers Clear, soft Vandor shades and all sixteen Minecraft colors. **Tint** selects Mild, Normal or Strong intensity. The same list includes the normal Programmable Block texture catalog, trapdoor artwork, filesystem materials and custom sampled textures. Selecting a glass entry restores glazing; selecting a material replaces the glazed surfaces while preserving the frame and shape. **Texture layout: Fit** maps the whole artwork to each panel; **Tile** repeats it once per block of surface distance, including slopes. Both avoid the old zoomed glass UVs. The setting follows configured items and Taxi Mode snapshots.

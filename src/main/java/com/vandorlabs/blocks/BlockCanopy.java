@@ -185,6 +185,8 @@ public final class BlockCanopy extends Block {
             float y,
             float z) {
         if (player != null && supportsSeatBackrest() && player.getHeldItem(hand).getItem() == Item.getItemFromBlock(com.vandorlabs.blocks.ModBlocks.PILOT_SEAT)) return false;
+        // Let the held canopy use the actual clicked surface, including the rear follower cell.
+        if(player!=null && player.getHeldItem(hand).getItem() instanceof CanopyItem)return false;
         TileEntityCanopy selected=TileEntityCanopy.at(w,p);
         if(player!=null && selected!=null && selected.owner().configurable() && player.isSneaking()) {
             if(!w.isRemote && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){BlockPos owner=selected.owner().getPos();player.openGui(VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LARGE_CANOPY,w,owner.getX(),owner.getY(),owner.getZ());}return true;
@@ -290,11 +292,16 @@ public final class BlockCanopy extends Block {
                 float y,
                 float z) {
             BlockCanopy b=(BlockCanopy)block;
+            TileEntityCanopy clickedCanopy=TileEntityCanopy.at(w,p);
+            if(clickedCanopy!=null){
+                p=new BlockPos(new Vec3d(p).addVector(x,y,z).subtract(new Vec3d(side.getDirectionVec()).scale(.0001)));
+            }
             ItemStack held=player.getHeldItem(hand),configured=held.copy();
             com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();
             if(held.hasTagCompound())settings.read(held.getTagCompound());
             boolean large=com.vandorlabs.canopy.LargeCanopySettings.supports(b.kind);
             settings.mount=large?(side==EnumFacing.UP?2:side==EnumFacing.DOWN?3:0):side==EnumFacing.DOWN?1:0;
+            if(!large && clickedCanopy!=null && side.getAxis().isHorizontal() && clickedCanopy.owner().large.mount<2)settings.mount=clickedCanopy.owner().large.mount;
             net.minecraft.nbt.NBTTagCompound tag=configured.hasTagCompound()?configured.getTagCompound():new net.minecraft.nbt.NBTTagCompound();settings.write(tag);configured.setTagCompound(tag);
             EnumFacing facing=side.getAxis().isHorizontal() && (large || b.opening() || b.kind.startsWith("angled_"))?(large?side.getOpposite():side):b.placementFacing(player);
             BlockPos dest=w.getBlockState(p).getBlock().isReplaceable(w,p) || b.sharesSeatBackrest(w.getBlockState(p))?p:p.offset(side);

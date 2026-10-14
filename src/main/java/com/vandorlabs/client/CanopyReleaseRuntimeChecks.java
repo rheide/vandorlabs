@@ -89,9 +89,30 @@ final class CanopyReleaseRuntimeChecks {
             }
             require(farUses>0,"opened tips beyond the anchor interaction limit are exercised");
             require(!new LargeCanopySettings().slideForward,"direction defaults backward");
-            opening(world,player);copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
+            opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
         }finally{clear(world);player.setHeldItem(EnumHand.MAIN_HAND,held);player.setSneaking(sneak);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);}
         System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 outside-placement exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
+    }
+    private static void backToBack(World world,EntityPlayerMP player){
+        BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
+        for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int mount=0;mount<2;mount++)for(double x:new double[]{.25,.75}){
+            clear(world);IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);world.setBlockState(BASE,state,2);
+            ItemStack item=new ItemStack(block,2);NBTTagCompound tag=new NBTTagCompound();tag.setInteger("CanopyMount",mount);item.setTagCompound(tag);
+            block.onBlockPlacedBy(world,BASE,state,player,item);
+            Vec3d eye=CanopyMesh.rotate(new Vec3d(x,.5,3.5),facing).add(new Vec3d(BASE));
+            Vec3d target=CanopyMesh.rotate(new Vec3d(x,.5,2),facing).add(new Vec3d(BASE)),look=target.subtract(eye).normalize();
+            player.setPosition(eye.x,eye.y-player.getEyeHeight(),eye.z);player.rotationYaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z));player.rotationPitch=0;
+            player.setHeldItem(EnumHand.MAIN_HAND,item);
+            TileEntityCanopy first=TileEntityCanopy.at(world,BASE);RayTraceResult hit=first.trace(eye,target.add(look));require(hit!=null,"rear glass can be selected");
+            Vec3d local=hit.hitVec.subtract(new Vec3d(hit.getBlockPos()));
+            EnumActionResult result=player.interactionManager.processRightClickBlock(player,world,item,EnumHand.MAIN_HAND,hit.getBlockPos(),hit.sideHit,(float)local.x,(float)local.y,(float)local.z);
+            TileEntityCanopy second=TileEntityCanopy.at(world,BASE.offset(facing.getOpposite(),3));
+            require(result==EnumActionResult.SUCCESS && second!=null && second.facing()==facing.getOpposite(),"rear click places opposite canopy "+facing+" mount="+mount);
+            require(second.large.mount==mount,"back-to-back canopy retains ceiling mount");
+            require(!first.targetOpen,"placing a canopy does not toggle its support");
+            require((first.mask()&8)!=0 && (second.mask()&8)!=0,"back-to-back rear glazing has an open seam");
+        }
+        System.out.println("[vandorlabs][reprolab] canopy-back-to-back PASS real interaction facings=4 mounts=2 rear-points=2");
     }
     private static boolean useFarSurface(TileEntityCanopy tile,EntityPlayerMP player){
         for(CanopyMesh.Face face:tile.faces())for(int i=1;i<face.vertices.length-1;i++){

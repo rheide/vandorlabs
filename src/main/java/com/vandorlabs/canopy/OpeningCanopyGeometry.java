@@ -15,7 +15,7 @@ public final class OpeningCanopyGeometry {
             if(angle==2)append(result,model("angled_front_1x2",sides|(rear?8:0)),x,0);
             else {
                 append(result,angle==0?regular(sides|8):model("angled_front_1x1",sides|8),x,0);
-                append(result,regular(sides|4|(rear?8:0)),x,1);
+                append(result,regular(sides|4|(rear?8:0)),x,1,angle==1);
             }
         }
         String mounts=width==1?"canopy":"canopy_mounts_double";
@@ -29,7 +29,11 @@ public final class OpeningCanopyGeometry {
     private static List<CanopyMesh.Face> regular(int mask){return CanopyMesh.MODELS.get(String.format(Locale.ROOT,"regular_1x1_%02x",mask));}
     private static List<CanopyMesh.Face> model(String id,int mask){return CanopyMesh.MODELS.get(mask==0?id:String.format(Locale.ROOT,"%s_%02x",id,mask));}
     private static void append(List<CanopyMesh.Face> result,List<CanopyMesh.Face> source,int x,int z){
-        for(CanopyMesh.Face original:source){CanopyMesh.Face face=copy(original);face.group="shell";face.vertices=new Vec3d[original.vertices.length];for(int i=0;i<face.vertices.length;i++)face.vertices[i]=original.vertices[i].addVector(x,0,z);result.add(face);}
+        append(result,source,x,z,false);
+    }
+    private static void append(List<CanopyMesh.Face> result,List<CanopyMesh.Face> source,int x,int z,boolean raisedSill){
+        // The short angled nose has a one-pixel raised sill. Carry that sill through the rear panel.
+        for(CanopyMesh.Face original:source){CanopyMesh.Face face=copy(original);face.group="shell";face.vertices=new Vec3d[original.vertices.length];for(int i=0;i<face.vertices.length;i++){Vec3d v=original.vertices[i];face.vertices[i]=v.addVector(x,raisedSill && v.y<.5?1D/16:0,z);}result.add(face);}
     }
     private static CanopyMesh.Face copy(CanopyMesh.Face source){CanopyMesh.Face face=new CanopyMesh.Face();face.uv=source.uv;face.material=source.material;face.baseMaterial=source.baseMaterial;face.group=source.group;face.doubleSided=source.doubleSided;return face;}
     private OpeningCanopyGeometry(){}

@@ -143,6 +143,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             TileEntityCanopy t = at(world, pos.offset(dir, bit == 8 ? b.length : 1));
             boolean regular=b.kind.equals("regular_canopy_glass");
             if(regular && t!=null)t=t.constituent();
+            if(b.opening() && bit==8 && t!=null && t.facing()==f.getOpposite())t=t.constituent();
             if(t==null || t.block()==null || t.constituent()!=t)continue;
             BlockCanopy other=t.block();
             boolean same=b.kind.equals(other.kind) && (regular || t.facing()==f);
@@ -151,6 +152,8 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
                     && t.getPos().offset(t.facing().getOpposite(),other.length).equals(pos);
             seam |= regular && other.opening() && t.getPos().offset(t.facing().getOpposite(),other.length).equals(pos)
                     || b.opening() && bit==8 && other.kind.equals("regular_canopy_glass");
+            seam |= b.opening() && bit==8 && other.opening() && t.facing()==f.getOpposite()
+                    && t.getPos().offset(f,other.length-1).equals(pos.offset(dir,b.length));
             if (large.mount==t.large.mount && (same || seam)) result |= bit;
         }
         return result;

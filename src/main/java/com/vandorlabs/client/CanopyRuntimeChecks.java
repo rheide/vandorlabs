@@ -508,9 +508,12 @@ public final class CanopyRuntimeChecks {
             if (stage == 6) {
                 shot(mc, output, "canopy_icons");
                 mc.displayGuiScreen(null);
-                System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection screenshots=5");
-                stage=7;mc.shutdown();
+                mc.getIntegratedServer().addScheduledTask(()->{World w=mc.getIntegratedServer().getEntityWorld();clear(w);place(w,block("canopy"),TEST,EnumFacing.NORTH);}).get();
+                mc.gameSettings.hideGUI=true;mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
+                mc.player.setPosition(11.5,99.2,7.2);lookAt(mc,new Vec3d(8.5,100.5,9));stage=7;ticks=0;return;
             }
+            if(stage==7){shot(mc,output,"canopy_side_trim");mc.player.setPosition(11.4,99.2,7.3);lookAt(mc,new Vec3d(8.5,100.5,9));stage=8;ticks=0;return;}
+            if(stage==8){shot(mc,output,"canopy_side_trim_shifted");System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection side-surfaces screenshots=6");stage=9;mc.shutdown();}
         } catch (Exception e) {
             throw new IllegalStateException("canopy live stage=" + stage, e);
         }
