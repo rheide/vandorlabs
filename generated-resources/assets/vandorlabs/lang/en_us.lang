@@ -520,3 +520,14 @@ tile.vandorlabs.pilot_seat.name=Pilot Seat
 tile.vandorlabs.programmable_diagonal_glass.name=Programmable Diagonal Glass
 
 tile.large_front_canopy_glass.name=Large Front Canopy Glass
+
+tile.long_canopy.name=Long Canopy
+
+tile.vandorlabs.wheel_small.name=Small Wheel
+
+tile.vandorlabs.wheel_medium.name=Medium Wheel
+
+tile.vandorlabs.wheel_large.name=Large Wheel
+
+tile.vandorlabs.autopilot.name=Autopilot
+tile.vandorlabs.waypoint.name=Waypoint Block
