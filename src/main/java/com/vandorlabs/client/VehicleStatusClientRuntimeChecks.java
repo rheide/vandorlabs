@@ -89,6 +89,7 @@ final class VehicleStatusClientRuntimeChecks {
     private static boolean near(int a,int b){return Math.abs((a>>16&255)-(b>>16&255))<=4&&Math.abs((a>>8&255)-(b>>8&255))<=4&&Math.abs((a&255)-(b&255))<=4;}
     private static void next(){stage++;frame=0;}
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if(stage>11)return true;
         require(++total<550,"timeout stage="+stage);if(++frame<25)return false;
         if(stage==0){if(!(mc.world.getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector))return false;aim(mc,SCREEN,false);next();return false;}
         if(stage==1){shot(mc,output,"block_off",0x362B19);click(mc,false);next();return false;}
@@ -101,7 +102,7 @@ final class VehicleStatusClientRuntimeChecks {
         if(stage==8){require(client(mc).hover,"Hover mode reached client renderer");shot(mc,output,"hover_off",0x152D48);click(mc,true);next();return false;}
         if(stage==9){state(mc,true,true);shot(mc,output,"hover_on",0x152D48);aim(mc,INPUT,true);next();return false;}
         if(stage==10){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(INPUT),"half input remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_input",0x152D48);aim(mc,CONSOLE,true);next();return false;}
-        if(stage==11){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(CONSOLE),"half console remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_console",0x152D48);mc.getIntegratedServer().addScheduledTask(()->{server(mc).setDead();for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles client-server-sync half-input half-console");return true;}
+        if(stage==11){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(CONSOLE),"half console remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_console",0x152D48);mc.getIntegratedServer().addScheduledTask(()->{server(mc).setDead();for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();stage=12;System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles client-server-sync half-input half-console");return true;}
         return false;
     }
     private VehicleStatusClientRuntimeChecks(){}

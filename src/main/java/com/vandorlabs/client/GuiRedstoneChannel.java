@@ -99,12 +99,12 @@ public class GuiRedstoneChannel extends GuiContainer {
         channelField.setFocused(true);
         if (thruster) housingList = new HousingTextureList(layout.listX,guiTop+38,layout.listWidth,sideTexture).visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{sideTexture=value;submit();});
         if (thruster) {
-            particleButton = layout.control(2,68,particleLabel());
+            particleButton = layout.control(2,64,particleLabel());
             buttonList.add(particleButton);
         }
-        if (programmableThruster) buttonList.add(layout.control(4,92,shapeLabel()));
+        if (programmableThruster) buttonList.add(layout.control(4,88,shapeLabel()));
         refreshJoinButton();
-        if(thruster){buttonList.add(layout.control(16,188,redstoneInverted?"Activate on: OFF":"Activate on: ON"));buttonList.add(layout.control(5,140,brightnessLabel()));buttonList.add(layout.control(6,164,thresholdLabel()));}
+        if(thruster){buttonList.add(layout.control(16,184,redstoneInverted?"Activate on: OFF":"Activate on: ON"));buttonList.add(layout.control(5,136,brightnessLabel()));buttonList.add(layout.control(6,160,thresholdLabel()));}
         if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+66,102,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+124,guiTop+66,102,20,"High: "+highLimit));}
         if(selectableType)buttonList.add(new GuiButton(13,guiLeft+14,guiTop+122,212,20,typeLabel()));
         if(adjustableBase){int y=guiTop+baseControlsY();buttonList.add(new GuiButton(9,guiLeft+14,y,212,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,y+24,102,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+124,y+24,102,20,directionLabel()));}
@@ -121,7 +121,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (joinButton != null) buttonList.remove(joinButton);
         joinButton = null;
         if (connected) {
-            joinButton=layout.control(3,programmableThruster?116:92,joinLabel());
+            joinButton=layout.control(3,programmableThruster?112:88,joinLabel());
             buttonList.add(joinButton);
         }
     }
