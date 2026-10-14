@@ -143,6 +143,10 @@ Programmable Porthole Wall, Programmable Diagonal Porthole and the full-depth Po
 | --- | --- |
 | ![Porthole Glass tab with all glass colors and tint strength](../images/gallery/building/porthole-glass-settings.png) | ![Diagonal porthole Glass tab with regular materials, tint and Stretch](../images/gallery/building/diagonal-porthole-glass-settings.png) |
 
+An octagonal porthole also makes a recessed machinery panel. This joined 3 × 3 example uses **Octagon**, **Join On**, **Light Alloy Hull** on Main, **Glass Frame Inner** on Side, and **Wall Pipes** on the Glass tab. Choose **Stretch** to fit the pipe artwork across the opening and **Strong** tint for a fully opaque panel.
+
+![Octagonal porthole with opaque Wall Pipes artwork in a Light Alloy Hull surround](../images/gallery/building/porthole-octagon-wall-pipes.png)
+
 | Finish group | Close-up |
 | --- | --- |
 | Hull | ![Hull finishes](../images/gallery/building/hull.png) |

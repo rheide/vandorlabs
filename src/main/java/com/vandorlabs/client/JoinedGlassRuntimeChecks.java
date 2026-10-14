@@ -68,6 +68,14 @@ final class JoinedGlassRuntimeChecks {
             ProgrammableSettings.apply(world,p,settings(0,2,mode==1));if(y==0)world.setBlockState(p.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
         }
         for(int type=2;type<4;type++){BlockPos p=new BlockPos(106,5,40+type*8);world.setBlockState(p,Block.getBlockFromName("vandorlabs:"+IDS[type]).getDefaultState(),3);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);tile.setHousingTexture(8);tile.setSideTexture(26);ProgrammableSettings.apply(world,p,settings(0,2,false));}
+        int pipes=Arrays.asList(ScreenHousingTextures.IDS).indexOf("wall_pipes");require(pipes>=0,"Wall Pipes material exists");
+        for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+            BlockPos p=new BlockPos(140+x,5+y,40);world.setBlockState(p,ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState(),3);
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+            tile.setHousingTexture(2);tile.setSideTexture(26);tile.setPortholeShape(PortholeHex.OCTAGON);
+            ProgrammableSettings.apply(world,p,settings(pipes,2,true));
+            if(y==0)world.setBlockState(p.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+        }
     }
     static void renderChecks(World world)throws Exception{
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(0));

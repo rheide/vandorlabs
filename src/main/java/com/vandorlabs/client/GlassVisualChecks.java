@@ -81,7 +81,8 @@ final class GlassVisualChecks {
         if(ticks==530){GuiProgrammableWall gui=(GuiProgrammableWall)mc.currentScreen;gui.actionPerformed(new net.minecraft.client.gui.GuiButton(129,0,0,""));gui.choose(0);gui.actionPerformed(new net.minecraft.client.gui.GuiButton(115,0,0,""));gui.actionPerformed(new net.minecraft.client.gui.GuiButton(113,0,0,""));ProgrammableDialogRuntimeChecks.check(mc);}
         if(ticks==550){checkWindowDialog(mc,new BlockPos(106,5,64));save(mc,output,"diagonal-porthole-glass-settings");mc.player.closeScreen();mc.gameSettings.hideGUI=true;camera(mc,92.5,7,48,0,18);}
         if(ticks==580){save(mc,output,"porthole-joined-tile-stretch");camera(mc,92.5,7,56,0,18);}
-        if(ticks==610){save(mc,output,"diagonal-porthole-joined-tile-stretch");System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins, joined materials, porthole palettes and dialogs");return true;}
+        if(ticks==610){save(mc,output,"diagonal-porthole-joined-tile-stretch");camera(mc,143,6.5,34.5,14,15);}
+        if(ticks==650){save(mc,output,"porthole-octagon-wall-pipes");System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins, joined materials, porthole palettes and dialogs, opaque octagonal Wall Pipes example");return true;}
         return false;
     }
     private static void camera(Minecraft mc,double x,double y,double z,float yaw,float pitch)throws Exception{mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x,y,z,yaw,pitch)).get();mc.player.setPositionAndRotation(x,y,z,yaw,pitch);}
