@@ -15,8 +15,8 @@ import java.util.*;
 
 /** Real client render and interaction round trips for every vehicle mode. */
 final class VehicleStatusClientRuntimeChecks {
-    private static final BlockPos BASE=new BlockPos(184,120,82),SCREEN=new BlockPos(0,1,0),CONTROL=new BlockPos(1,1,0),INPUT=new BlockPos(2,1,2),CONSOLE=new BlockPos(3,1,0);
-    private static UUID id;private static int stage,frame,total;
+    private static final BlockPos BASE=new BlockPos(184,120,82),SCREEN=new BlockPos(0,1,0),CONTROL=new BlockPos(1,1,0),INPUT=new BlockPos(2,1,0),CONSOLE=new BlockPos(3,1,0);
+    private static UUID id;private static int stage,frame,total;private static Vec3d expectedEye;
     private static void require(boolean value,String what){if(!value)throw new IllegalStateException("vehicle status client: "+what);}
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
     private static WorldServer world(Minecraft mc){return mc.getIntegratedServer().getWorld(0);}
@@ -47,7 +47,7 @@ final class VehicleStatusClientRuntimeChecks {
         cells.add(new VehicleStructure.Cell(new BlockPos(4,1,3),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),null));
         EntityGroundVehicle craft=new EntityGroundVehicle(w);craft.install(new VehicleStructure(cells,seatPos,EnumFacing.NORTH,1));craft.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());require(w.spawnEntity(craft),"fixture spawn");id=craft.getUniqueID();
     }
-    private static void aim(Minecraft mc,BlockPos local,boolean vehicle){
+    private static void aim(Minecraft mc,BlockPos local,boolean vehicle)throws Exception{
         EntityGroundVehicle craft=vehicle?client(mc):null;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)(vehicle?craft.view.getTileEntity(local):mc.world.getTileEntity(BASE.add(local)));
         net.minecraft.block.state.IBlockState state=vehicle?craft.view.getBlockState(local):mc.world.getBlockState(BASE.add(local));
@@ -63,13 +63,16 @@ final class VehicleStatusClientRuntimeChecks {
         // Approach half surfaces along their normal, keeping the player above or outside the hull.
         // The horizontal console deck cannot be intersected by a horizontal ray.
         com.vandorlabs.render.ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,0);double u=85/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),0)+5D)/RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
-        Vec3d point=new Vec3d((q.topRight.x+(q.topLeft.x-q.topRight.x)*u)/16,(q.topRight.y+(q.bottomRight.y-q.topRight.y)*v)/16,(q.topRight.z+(q.bottomRight.z-q.topRight.z)*v)/16),normal=new Vec3d(q.nx,q.ny,q.nz),a=point.add(normal.scale(3)),b=point.subtract(normal.scale(.25));
+        Vec3d point=new Vec3d((q.topRight.x+(q.topLeft.x-q.topRight.x)*u)/16,(q.topRight.y+(q.bottomRight.y-q.topRight.y)*v)/16,(q.topRight.z+(q.bottomRight.z-q.topRight.z)*v)/16),normal=new Vec3d(q.nx,q.ny,q.nz),a=point.add(normal.scale(3)).addVector(0,1.8,0),b=point.subtract(a.subtract(point).scale(.1));
         require(RedstoneScreenInteractions.hitRow(state,tile,0,a,b,1)==0,"normal ray intersects console status row");
         Vec3d eye=vehicle?craft.toWorld(a.add(new Vec3d(local))):a.add(new Vec3d(BASE.add(local))),at=vehicle?craft.toWorld(b.add(new Vec3d(local))):b.add(new Vec3d(BASE.add(local)));
         Vec3d delta=at.subtract(eye);float yaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z)),pitch=(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)));
-        mc.player.setPositionAndRotation(eye.x,eye.y-mc.player.getEyeHeight(),eye.z,yaw,pitch);mc.player.prevRotationYaw=mc.player.rotationYawHead=mc.player.prevRotationYawHead=yaw;mc.player.prevRotationPitch=pitch;
-        mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.PositionRotation(mc.player.posX,mc.player.posY,mc.player.posZ,yaw,pitch,false));
+        expectedEye=eye;
+        mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();p.motionX=p.motionY=p.motionZ=0;p.connection.setPlayerLocation(eye.x,eye.y-p.getEyeHeight(),eye.z,yaw,pitch);require(world(mc).getCollisionBoxes(p,p.getEntityBoundingBox().grow(-.01)).isEmpty(),"half-surface camera body is clear of terrain and hull at "+eye);}).get();
+        mc.player.setSneaking(false);mc.player.capabilities.allowFlying=true;mc.player.capabilities.isFlying=true;mc.player.motionX=mc.player.motionY=mc.player.motionZ=0;mc.player.setPositionAndRotation(eye.x,eye.y-mc.player.getEyeHeight(),eye.z,yaw,pitch);mc.player.prevRotationYaw=mc.player.rotationYawHead=mc.player.prevRotationYawHead=yaw;mc.player.prevRotationPitch=pitch;
+        System.out.println("[vandorlabs][reprolab] status-camera local="+local+" expected-eye="+eye+" yaw="+yaw+" pitch="+pitch+" normal="+normal);
     }
+    private static String targetDiagnostic(Minecraft mc,VehicleInteraction.Target target){return " expected-eye="+expectedEye+" actual-eye="+mc.player.getPositionEyes(1)+" target="+(target==null?"none":target.hit.cell.pos+"/"+target.hit.action)+" yaw="+mc.player.rotationYaw+" pitch="+mc.player.rotationPitch;}
     private static void click(Minecraft mc,boolean vehicle)throws Exception{
         aim(mc,SCREEN,vehicle);
         if(vehicle){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.action==VehicleSelection.Action.SCREEN&&target.hit.cell.pos.equals(SCREEN),"captured status screen selected");mc.objectMouseOver=new RayTraceResult(RayTraceResult.Type.MISS,mc.player.getPositionEyes(1),EnumFacing.UP,BlockPos.ORIGIN);net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag").invoke(mc);}
@@ -97,8 +100,8 @@ final class VehicleStatusClientRuntimeChecks {
         if(stage==7){state(mc,false,true);mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle craft=server(mc);require(craft.setHover(true),"Hover status fixture capability");craft.hoverTarget=craft.posY;((TileEntityWaypoint)world(mc).getTileEntity(BASE.add(1,-1,0))).stopMode=2;}).get();next();return false;}
         if(stage==8){require(client(mc).hover,"Hover mode reached client renderer");shot(mc,output,"hover_off",0x152D48);click(mc,true);next();return false;}
         if(stage==9){state(mc,true,true);shot(mc,output,"hover_on",0x152D48);aim(mc,INPUT,true);next();return false;}
-        if(stage==10){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(INPUT),"half input remains in actual camera view");shot(mc,output,"half_input",0x152D48);aim(mc,CONSOLE,true);next();return false;}
-        if(stage==11){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(CONSOLE),"half console remains in actual camera view");shot(mc,output,"half_console",0x152D48);mc.getIntegratedServer().addScheduledTask(()->{server(mc).setDead();for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles client-server-sync half-input half-console");return true;}
+        if(stage==10){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(INPUT),"half input remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_input",0x152D48);aim(mc,CONSOLE,true);next();return false;}
+        if(stage==11){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(CONSOLE),"half console remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_console",0x152D48);mc.getIntegratedServer().addScheduledTask(()->{server(mc).setDead();for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles client-server-sync half-input half-console");return true;}
         return false;
     }
     private VehicleStatusClientRuntimeChecks(){}

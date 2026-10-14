@@ -1224,7 +1224,7 @@ public class ReproLab {
                     throw new IllegalStateException("glass GUI did not open");
                 GuiProgrammableGlass glassScreen=(GuiProgrammableGlass)mc.currentScreen;
                 glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Size"));
-                glassScreen.choose(1);
+                glassScreen.choose(HousingTextureList.CANOPY_GLASS_BASE+1);
                 glassScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Join"));
                 state=14;
                 holdTicks=20;
@@ -1235,13 +1235,14 @@ public class ReproLab {
                     throw new IllegalStateException("glass GUI closed after selection");
                 BlockPos configuredGlass=CONSOLE.add(3,0,3);
                 World glassWorld=mc.getIntegratedServer().getWorld(0);
-                if (glassWorld.getBlockState(configuredGlass).getValue(
-                        com.vandorlabs.blocks.BlockProgrammableGlass.SIZE)!=0
-                        || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)
-                        glassWorld.getTileEntity(configuredGlass)).getShade()!=1
-                        || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)
-                        glassWorld.getTileEntity(configuredGlass)).isJoin())
-                    throw new IllegalStateException("glass GUI selections were not applied");
+                com.vandorlabs.tiles.TileEntityProgrammableGlass editedGlass=
+                        (com.vandorlabs.tiles.TileEntityProgrammableGlass)glassWorld.getTileEntity(configuredGlass);
+                int editedGlassSize=glassWorld.getBlockState(configuredGlass).getValue(
+                        com.vandorlabs.blocks.BlockProgrammableGlass.SIZE);
+                if (editedGlassSize!=0 || editedGlass.getShade()!=1
+                        || editedGlass.getMaterial()!=-1 || editedGlass.isJoin())
+                    throw new IllegalStateException("glass GUI selections were not applied: size="+editedGlassSize
+                            +" shade="+editedGlass.getShade()+" material="+editedGlass.getMaterial()+" join="+editedGlass.isJoin());
                 saveNamed(mc,"programmable_glass_gui");
                 mc.displayGuiScreen(null);
                 openLightPicker(mc);
