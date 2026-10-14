@@ -46,7 +46,8 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
         if(FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
-        bindTexture(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.fullTexture(tile.getShade(),size,tile.getTint())));
+        net.minecraft.client.renderer.texture.TextureAtlasSprite material=tile.getMaterial()<0?null:net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tile.getMaterial()));
+        bindTexture(material==null?new ResourceLocation(com.vandorlabs.tiles.GlassTextures.fullTexture(tile.getShade(),size,tile.getTint())):net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();
@@ -64,13 +65,15 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
-        GlStateManager.depthMask(false);
+        float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
+        GlStateManager.depthMask(tile.getMaterial()>=0 && opacity==1);
         GlStateManager.disableCull();
         GlStateManager.color(1F, 1F, 1F, 1F);
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        pane(b,PANE_NEAR,1,1,1,1);
-        pane(b,PANE_FAR,1,1,1,1);
+        double inset=tile.getMaterial()<0?0:.0001;
+        pane(b,PANE_NEAR+inset,1,1,1,opacity,material);
+        pane(b,PANE_FAR-inset,1,1,1,opacity,material);
         Tessellator.getInstance().draw();
         GlStateManager.enableCull();
         GlStateManager.depthMask(true);
@@ -95,7 +98,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.disableLighting();GlStateManager.disableCull();
         GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
-        if(tile.isFramed()) {
+        if(tile.isFramed() && corner!=null) {
             // Tile pass one enters with translucent state; metal must own depth
             // before the pane is blended over the surrounding clear area.
             GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
@@ -103,15 +106,16 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,sky,block);Tessellator.getInstance().draw();
         }
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
-        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
-        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.draw(buffer,sky,block);Tessellator.getInstance().draw();
+        float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
+        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(tile.getMaterial()>=0 && opacity==1);
+        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,block,1,1,1,opacity);Tessellator.getInstance().draw();
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }
 
     static CornerMeshes meshes(TileEntityProgrammableGlass tile,net.minecraft.block.state.IBlockState state,
             com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner) {
         net.minecraft.client.renderer.texture.TextureMap atlas=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks();
-        net.minecraft.client.renderer.texture.TextureAtlasSprite glass=atlas.getAtlasSprite(com.vandorlabs.tiles.GlassTextures.texture(tile.getShade(),tile.getSize(),tile.getTint()));
+        net.minecraft.client.renderer.texture.TextureAtlasSprite glass=atlas.getAtlasSprite(com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
         net.minecraft.client.renderer.texture.TextureAtlasSprite rail=atlas.getAtlasSprite("vandorlabs:blocks/space_doors/medium/double_frame_metal");
         CornerKey key=new CornerKey(glass,rail,com.vandorlabs.blocks.PanelJoins.flatNear(state,tile.getWorld(),tile.getPos()),corner);
         CornerMeshes meshes=CORNERS.get(key);
@@ -125,11 +129,14 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
 
     static void pane(BufferBuilder buffer,double depth,float r,float g,float b,float a) {
-        boolean near=depth==PANE_NEAR;
+        pane(buffer,depth,r,g,b,a,null);
+    }
+    private static void pane(BufferBuilder buffer,double depth,float r,float g,float b,float a,net.minecraft.client.renderer.texture.TextureAtlasSprite material) {
+        boolean near=depth<.5;
         for(int i=0;i<4;i++) {
             int index=near?(4-i)&3:i;
             double x=index==1 || index==2?1:0,y=index<2?0:1;
-            buffer.pos(x,y,depth).color(r,g,b,a).tex(x,1-y)
+            buffer.pos(x,y,depth).color(r,g,b,a).tex(material==null?x:material.getInterpolatedU(x*16),material==null?1-y:material.getInterpolatedV((1-y)*16))
                     .lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX)
                     .normal(0,0,near?-1:1).endVertex();
         }

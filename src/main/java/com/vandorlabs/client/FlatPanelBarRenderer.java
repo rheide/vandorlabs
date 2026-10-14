@@ -26,6 +26,7 @@ final class FlatPanelBarRenderer {
         @Override public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return source==k.source && turns==k.turns && half==k.half && near==k.near && depth==k.depth && left==k.left && width==k.width && padding==k.padding;}
     }
     static final class Material {
+        float opacity=1;
         final StaticSurfaceMesh opaque,transparent;final TextureAtlasSprite cap;final boolean porthole;final int shade;final double depth,left,width;
         Material(StaticSurfaceMesh opaque,StaticSurfaceMesh transparent,boolean porthole,int shade,double depth,double left,double width,TextureAtlasSprite cap) {
             this.opaque=opaque;this.transparent=transparent;this.cap=cap;this.porthole=porthole;this.shade=shade;this.depth=depth;this.left=left;this.width=width;
@@ -35,7 +36,7 @@ final class FlatPanelBarRenderer {
         if(tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)tile;
             TEProgrammableGlass.CornerMeshes m=TEProgrammableGlass.meshes(glass,state,PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos()));
-            return new Material(glass.isFramed()?m.frame:null,m.pane,false,0,0,0,1,null);
+            Material result=new Material(glass.isFramed()?m.frame:null,m.pane,false,0,0,0,1,null);result.opacity=GlassMaterials.opacity(glass.getMaterial(),glass.getTint());return result;
         }
         if(!(tile instanceof TileEntityAnimatedScreenSelector))return null;
         TileEntityAnimatedScreenSelector wall=(TileEntityAnimatedScreenSelector)tile;
@@ -63,7 +64,7 @@ final class FlatPanelBarRenderer {
         if(root instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)root;
             TEProgrammableGlass.CornerMeshes m=TEProgrammableGlass.meshes(glass,state,null);
-            return new Material(glass.isFramed()?m.frame:null,m.pane,false,0,near-PanelJoins.flatNear(state,root.getWorld(),root.getPos()),0,1,null);
+            Material result=new Material(glass.isFramed()?m.frame:null,m.pane,false,0,near-PanelJoins.flatNear(state,root.getWorld(),root.getPos()),0,1,null);result.opacity=GlassMaterials.opacity(glass.getMaterial(),glass.getTint());return result;
         }
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)root;
         BlockProgrammableWall block=(BlockProgrammableWall)state.getBlock();
@@ -124,7 +125,7 @@ final class FlatPanelBarRenderer {
             Material m=materials[i];StaticSurfaceMesh mesh=part(transparent?m.transparent:m.opaque,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width,!transparent && m.cap==null?.02:0);
             if(mesh==null || mesh.vertexCount()==0)continue;
             Minecraft.getMinecraft().getTextureManager().bindTexture(transparent && m.porthole?PORTHOLE_GLASS:TextureMap.LOCATION_BLOCKS_TEXTURE);
-            draw(mesh,sky,block);
+            if(transparent){GlStateManager.depthMask(m.opacity==1 && root instanceof TileEntityProgrammableGlass && ((TileEntityProgrammableGlass)root).getMaterial()>=0);BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,block,1,1,1,m.opacity);Tessellator.getInstance().draw();}else draw(mesh,sky,block);
             if(!transparent && i==0) {
                 StaticSurfaceMesh cap=stemCap(m,bar.straightLeft?bar.frontArm:bar.frontArm+4,PanelJoins.flatNear(state,root.getWorld(),root.getPos()),bar.straightLeft);
                 if(cap!=null)draw(cap,sky,block);

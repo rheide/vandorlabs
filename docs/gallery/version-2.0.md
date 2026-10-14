@@ -37,11 +37,15 @@ Canopies and visors offer clear glass, soft Vandor shades, all sixteen Minecraft
 
 The **Duplifier** transfers glass shade and intensity between canopy pieces, visors, regular programmable glass and diagonal glass walls. Programmable Diagonal Glass adds half-width/full-height, full-width/full-height and full-width/half-height shapes, with optional frames and the same color system. Regular and diagonal wall/glass junctions have reciprocal seams and improved corner and intersection geometry.
 
+**Programmable Glass** and **Programmable Diagonal Glass** also accept the regular material catalog from the same texture list. Turn panel artwork into a translucent screen with Mild or Normal Tint, or select Strong for opaque surfaces. Material choices follow configured items and Duplifier copies across glass and canopy families.
+
 ## Moving stairs and better everyday building
 
 Programmable Ramp gains **Escalator Up** and **Escalator Down** modes. The extended treads carry riders, respond to redstone and sleep when nobody is nearby. Curved profiles and moving walkways use the same controller settings. Capturing an extended ramp preserves its actual segments and source materials; escalators pause while driving and resume after parking.
 
-![Escalator moving riders uphill](../images/gallery/ramp-controller/escalator-up.gif)
+| Uphill | Downhill | Curved steps |
+| --- | --- | --- |
+| ![Escalator moving riders uphill](../images/gallery/ramp-controller/escalator-up.gif) | ![Escalator moving riders downhill](../images/gallery/ramp-controller/escalator-down.gif) | ![Curved escalator starting and stopping](../images/gallery/ramp-controller/escalator-curve-in.gif) |
 
 Floor-mounted Push Buttons now update adjacent redstone dust immediately. Sliding trapdoors remain selectable after leaving their original block cell. Canopy rendering reuses settled poses and submits four-vertex faces directly, reducing vertex work for detailed shells. Vehicle rendering caches hull meshes and limits offscreen tile work.
 

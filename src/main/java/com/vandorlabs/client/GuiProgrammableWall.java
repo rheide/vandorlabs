@@ -99,7 +99,7 @@ public class GuiProgrammableWall extends GuiContainer {
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
         rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
-        textureList=diagonalGlass?HousingTextureList.forGlass(1,listX,listY,controlsX-listX-19,selected).visibleRows(rows)
+        textureList=diagonalGlass?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
                 :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
         if(faceTabs || slab || porthole) {
             int count=faceTabs?(slab?8:7):2;
@@ -174,7 +174,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
-                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()));
+                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()));
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -188,7 +188,8 @@ public class GuiProgrammableWall extends GuiContainer {
 
     void choose(int choice) {
         selected = choice;
-        if(diagonalGlass){shade=choice;tile.setGlassShade(choice);sendPortholeSettings();return;}
+        if(diagonalGlass && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
+        if(diagonalGlass){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();return;}
         if(faceTarget==-2) {
             tile.setSideTexture(choice);
             PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),choice));

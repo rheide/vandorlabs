@@ -839,7 +839,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         if(wallBlock instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
-            TextureAtlasSprite glass=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.GlassTextures.texture(te.getGlassShade(),1,te.getGlassTint()));
+            TextureAtlasSprite glass=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.GlassMaterials.texture(te.getGlassMaterial(),te.getGlassShade(),1,te.getGlassTint()));
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
@@ -851,9 +851,10 @@ public class TEAnimatedScreenSelector
                 if(frame!=null){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);Tessellator.getInstance().draw();}
                 GlStateManager.enableBlend();GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
             }
-            GlStateManager.depthMask(false);
+            float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(te.getGlassMaterial(),te.getGlassTint());
+            GlStateManager.depthMask(te.getGlassMaterial()>=0 && opacity==1);
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            DiagonalWallMeshCache.get(te,state,glass,glass).draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+            DiagonalWallMeshCache.get(te,state,glass,glass).drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);
             Tessellator.getInstance().draw();
             GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
             GlStateManager.enableLighting();endLocalTransform();return;

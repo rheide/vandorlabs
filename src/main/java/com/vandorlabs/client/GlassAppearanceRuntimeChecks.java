@@ -77,8 +77,36 @@ final class GlassAppearanceRuntimeChecks {
         masked=DuplifierApplyOptions.selected(values,DuplifierApplyOptions.ALL&~(1L<<frameIndex));
         require(masked.hasKey(ProgrammableSettings.GLASS_TINT) && !masked.hasKey(ProgrammableSettings.FRAMED),"frame mask independence");
         packetChecks(pos);
+        materialChecks(player,pos);
         insideCornerChecks(player,pos);
         System.out.println("[vandorlabs][reprolab] glass-appearance-live PASS variants="+assertions);
+    }
+    private static void materialChecks(EntityPlayer player,BlockPos pos){
+        Block[] blocks={Block.getBlockFromName("vandorlabs:programmable_glass"),ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS,Block.getBlockFromName("vandorlabs:regular_canopy_glass")};
+        for(Block source:blocks)for(Block target:blocks)for(int material:new int[]{-1,0})for(int tint=0;tint<3;tint++){
+            player.world.setBlockState(pos,source.getDefaultState(),3);
+            player.world.setBlockState(pos.east(6),target.getDefaultState(),3);
+            NBTTagCompound values=new NBTTagCompound();values.setInteger(ProgrammableSettings.GLASS_MATERIAL,material);values.setInteger(ProgrammableSettings.GLASS_TINT,tint);
+            require(ProgrammableSettings.apply(player.world,pos,values,player),"material source apply");
+            NBTTagCompound saved=ProgrammableSettings.capture(player.world,pos);
+            require(saved.getInteger(ProgrammableSettings.GLASS_MATERIAL)==material,"material capture");
+            require(ProgrammableSettings.apply(player.world,pos.east(6),saved,player),"cross-family material copy");
+            NBTTagCompound copied=ProgrammableSettings.capture(player.world,pos.east(6));
+            require(copied.getInteger(ProgrammableSettings.GLASS_MATERIAL)==material && copied.getInteger(ProgrammableSettings.GLASS_TINT)==tint,"material and opacity copy");
+            if(!(source instanceof com.vandorlabs.blocks.BlockCanopy)){
+                ItemStack picked=source.getPickBlock(player.world.getBlockState(pos),null,player.world,pos,player);
+                NBTTagCompound item=picked.getSubCompound(source instanceof BlockProgrammableGlass?"ProgrammableGlassSettings":"BlockEntityTag");
+                require(item.getInteger(source instanceof BlockProgrammableGlass?"Material":"GlassMaterial")==material,"picked material");
+                ItemStack crafted=ProgrammableSettings.applyToItem(picked,values);
+                NBTTagCompound craftedData=crafted.getSubCompound(source instanceof BlockProgrammableGlass?"ProgrammableGlassSettings":"BlockEntityTag");
+                require(craftedData.getInteger(source instanceof BlockProgrammableGlass?"Material":"GlassMaterial")==material,"configured material crafting");
+                net.minecraft.tileentity.TileEntity loaded=source.createTileEntity(player.world,source.getDefaultState());loaded.readFromNBT(player.world.getTileEntity(pos).writeToNBT(new NBTTagCompound()));
+                require((loaded instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)loaded).getMaterial():((TileEntityAnimatedScreenSelector)loaded).getGlassMaterial())==material,"material save/load");
+            }
+            player.world.setBlockToAir(pos);player.world.setBlockToAir(pos.east(6));
+        }
+        require(com.vandorlabs.tiles.GlassMaterials.opacity(0,0)<com.vandorlabs.tiles.GlassMaterials.opacity(0,1) && com.vandorlabs.tiles.GlassMaterials.opacity(0,2)==1,"strong material tint is opaque");
+        System.out.println("[vandorlabs][reprolab] glass-materials PASS cross-family-copy NBT picked-items configured-crafting opacity=35/65/100");
     }
 
     private static void insideCornerChecks(EntityPlayer player,BlockPos pos) {
@@ -136,11 +164,11 @@ final class GlassAppearanceRuntimeChecks {
     private static void packetChecks(BlockPos pos) {
         for(int tint=0;tint<3;tint++)for(boolean frame:new boolean[]{false,true}) {
             ByteBuf first=Unpooled.buffer(),second=Unpooled.buffer();
-            new MessageProgrammableGlass(pos,1,12,true).withAppearance(tint,frame).toBytes(first);
+            new MessageProgrammableGlass(pos,1,12,true).withAppearance(tint,frame).withMaterial(0).toBytes(first);
             MessageProgrammableGlass decoded=new MessageProgrammableGlass();decoded.fromBytes(first.duplicate());decoded.toBytes(second);
             require(first.equals(second),"regular appearance packet");first.release();second.release();
             first=Unpooled.buffer();second=Unpooled.buffer();
-            new MessageProgrammableWallShade(pos,12,false,0).withAppearance(tint,frame).toBytes(first);
+            new MessageProgrammableWallShade(pos,12,false,0).withAppearance(tint,frame).withMaterial(0).toBytes(first);
             MessageProgrammableWallShade wall=new MessageProgrammableWallShade();wall.fromBytes(first.duplicate());wall.toBytes(second);
             require(first.equals(second),"diagonal appearance packet");first.release();second.release();
         }

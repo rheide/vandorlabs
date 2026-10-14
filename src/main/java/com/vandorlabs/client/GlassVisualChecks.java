@@ -31,6 +31,7 @@ final class GlassVisualChecks {
             checkDialog(mc,false);ProgrammableDialogRuntimeChecks.check(mc);
             ((GuiProgrammableGlass)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(4,0,0,""));
             ((GuiProgrammableGlass)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(5,0,0,""));
+            ((GuiProgrammableGlass)mc.currentScreen).choose(0);
         }
         if(ticks==180) {
             checkDialog(mc,false);save(mc,output,"glass-regular-settings");
@@ -40,6 +41,7 @@ final class GlassVisualChecks {
             checkDialog(mc,true);ProgrammableDialogRuntimeChecks.check(mc);
             ((GuiProgrammableWall)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(113,0,0,""));
             ((GuiProgrammableWall)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(114,0,0,""));
+            ((GuiProgrammableWall)mc.currentScreen).choose(0);
         }
         if(ticks==220) {
             checkDialog(mc,true);save(mc,output,"glass-diagonal-settings");mc.player.closeScreen();mc.gameSettings.hideGUI=true;
@@ -54,7 +56,20 @@ final class GlassVisualChecks {
         if(ticks==280){save(mc,output,"glass-w-joined-edges");camera(mc,57.5,8,41,0,42);}
         if(ticks==310){save(mc,output,"glass-closed-frame-top-regular-diagonal");camera(mc,57.5,3.5,41,0,-21);}
         if(ticks==340){save(mc,output,"glass-closed-frame-bottom-regular-diagonal");camera(mc,61,6,43,67,16);}
-        if(ticks==370){save(mc,output,"glass-closed-frame-side-regular-diagonal");System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins and dialogs");return true;}
+        if(ticks==370){save(mc,output,"glass-closed-frame-side-regular-diagonal");
+            mc.getIntegratedServer().addScheduledTask(()->{
+                for(int type=0;type<2;type++)for(int tint=0;tint<3;tint++){
+                    BlockPos p=new BlockPos(70+(2-tint)*3,5,40+type*4);
+                    for(int dx=0;dx<2;dx++)for(int dy=0;dy<2;dy++){
+                        BlockPos cell=p.add(dx,dy,0);mc.getIntegratedServer().getEntityWorld().setBlockState(cell,(type==0?net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass"):com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS).getDefaultState(),3);
+                        net.minecraft.nbt.NBTTagCompound appearance=new net.minecraft.nbt.NBTTagCompound();appearance.setInteger(com.vandorlabs.items.ProgrammableSettings.GLASS_MATERIAL,0);appearance.setInteger(com.vandorlabs.items.ProgrammableSettings.GLASS_TINT,tint);
+                        com.vandorlabs.items.ProgrammableSettings.apply(mc.getIntegratedServer().getEntityWorld(),cell,appearance);
+                        mc.getIntegratedServer().getEntityWorld().setBlockState(cell.south(2),net.minecraft.init.Blocks.GOLD_BLOCK.getDefaultState(),3);
+                    }
+                }
+            }).get();camera(mc,73.5,9,33,0,24);
+        }
+        if(ticks==410){save(mc,output,"glass-material-opacity");System.out.println("[vandorlabs] glass-render-live PASS strengths, closed frame caps, W joins, material opacity and dialogs");return true;}
         return false;
     }
     private static void camera(Minecraft mc,double x,double y,double z,float yaw,float pitch)throws Exception{mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(x,y,z,yaw,pitch)).get();mc.player.setPositionAndRotation(x,y,z,yaw,pitch);}
@@ -92,6 +107,9 @@ final class GlassVisualChecks {
                     :((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).getTint();
             boolean actualFrame=diagonal?((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isGlassFramed()
                     :((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).isFramed();
+            int material=diagonal?((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)clientTile).getGlassMaterial():((com.vandorlabs.tiles.TileEntityProgrammableGlass)clientTile).getMaterial();
+            int actualMaterial=diagonal?((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).getGlassMaterial():((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).getMaterial();
+            if(material!=actualMaterial)throw new IllegalStateException("Glass material did not synchronize to server");
             if(actualTint!=tint || actualFrame!=frame)
                 throw new IllegalStateException("Glass dialog appearance did not synchronize to server");
         }).get();

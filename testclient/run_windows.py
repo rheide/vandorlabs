@@ -216,7 +216,7 @@ def main():
     if proc.returncode:
         raise SystemExit('Client failed; inspect '+str(output/'client.log'))
     client_log=(output/'client.log').read_text(errors='replace')
-    if 'domain vandorlabs is missing' in client_log or 'Exception loading model' in client_log:
+    if 'domain vandorlabs is missing' in client_log or 'Exception loading model' in client_log or 'Failed to load texture: vandorlabs:' in client_log:
         raise SystemExit('Invalid Vandor asset; inspect '+str(output/'client.log'))
     if 'Exception caught during firing event' in client_log or 'A severe problem occurred during the spawning of an entity' in client_log:
         raise SystemExit('Asynchronous gameplay exception; inspect '+str(output/'client.log'))

@@ -198,6 +198,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int diagonalFill;
     private int glassShade = 2;
     private int glassTint = 1;
+    private int glassMaterial=-1;
+    public int getGlassMaterial(){return glassMaterial;}
+    public void setGlassMaterial(int value){if(GlassMaterials.valid(value) && glassMaterial!=value){glassMaterial=value;settingsChanged();}}
     private boolean glassFramed=true;
     private boolean joinPortholes;
     private int portholeShape;
@@ -500,6 +503,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 .write(new NbtPrimitiveData(compound));
         compound.setInteger("GlassShade", glassShade);
         compound.setInteger("GlassTint",glassTint);
+        compound.setInteger("GlassMaterial",glassMaterial);
         compound.setBoolean("GlassFramed",glassFramed);
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setInteger("PortholeShape", portholeShape);
@@ -574,6 +578,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         glassShade = compound.hasKey("GlassShade", 3)
                 ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
         glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
+        glassMaterial=compound.hasKey("GlassMaterial",3)?GlassMaterials.clamp(compound.getInteger("GlassMaterial")):-1;
         glassFramed=!compound.hasKey("GlassFramed")||compound.getBoolean("GlassFramed");
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)

@@ -69,9 +69,12 @@ final class HousingTextureList {
     }
     /** UI-only glass choices coexist with stable saved material IDs in one picker. */
     static HousingTextureList forCanopy(int x,int y,int width,int shade,int material) {
+        return forGlassMaterials(1,x,y,width,shade,material);
+    }
+    static HousingTextureList forGlassMaterials(int detail,int x,int y,int width,int shade,int material) {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(CANOPY_GLASS_BASE+i,
-                com.vandorlabs.tiles.GlassTextures.LABELS[i],"Glass",com.vandorlabs.tiles.GlassTextures.texture(i,1)));
+                com.vandorlabs.tiles.GlassTextures.LABELS[i],"Glass",com.vandorlabs.tiles.GlassTextures.texture(i,detail)));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && generalTexture(i)){
             int choice=ScreenHousingTextures.choiceAt(i);
             entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));

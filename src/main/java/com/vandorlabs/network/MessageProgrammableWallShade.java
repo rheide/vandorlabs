@@ -18,6 +18,8 @@ public final class MessageProgrammableWallShade implements IMessage {
     private boolean join;
     private int shape;
     private int tint=1;
+    private int material=-1;
+    public MessageProgrammableWallShade withMaterial(int material){this.material=material;return this;}
     private boolean framed;
     private boolean appearance;
 
@@ -36,6 +38,7 @@ public final class MessageProgrammableWallShade implements IMessage {
         shape = buf.readInt();
         appearance=buf.readableBytes()>=2;
         if(appearance){tint=buf.readUnsignedByte();framed=buf.readBoolean();}
+        material=buf.readableBytes()>=4?buf.readInt():-1;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -43,13 +46,14 @@ public final class MessageProgrammableWallShade implements IMessage {
         buf.writeBoolean(join);
         buf.writeInt(shape);
         if(appearance){buf.writeByte(tint);buf.writeBoolean(framed);}
+        if(appearance)buf.writeInt(material);
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableWallShade, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableWallShade msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (!com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
+                if (!com.vandorlabs.tiles.GlassMaterials.valid(msg.material) || !com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || msg.shape < 0 || msg.shape > 3
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector)) return;
@@ -66,6 +70,7 @@ public final class MessageProgrammableWallShade implements IMessage {
                         .getBlock()).isPortholeShape() && !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass))) return;
                 if (!(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) && msg.shade>2) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
+                if(msg.appearance && player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)((TileEntityAnimatedScreenSelector)raw).setGlassMaterial(msg.material);
                 if(msg.appearance && player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)
                     ((TileEntityAnimatedScreenSelector)raw).setGlassAppearance(msg.tint,msg.framed);
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);

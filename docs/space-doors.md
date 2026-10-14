@@ -109,6 +109,8 @@ Their supplied one-model-pixel border width stays unchanged. Sliding models have
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
 Programmable Glass selects Small or Large detail, a glass finish, Mild / Normal / Strong tint, and Bare / Framed edges in its settings menu. Programmable Diagonal Glass exposes the same tint and frame choices alongside its diagonal geometry controls.
+
+Both glass blocks include the regular material catalog in the same list. For these materials, Mild and Normal Tint use 35% and 65% opacity; Strong is fully opaque. The original Glass category retains its existing translucent finishes.
 The glass shade is selected independently for each size. The thick inside faces
 use the former Observation Glass metal texture; the front and rear keep their
 original finish. Framed diagonal glass has a closed one-pixel metal rim on both faces and along exposed top, bottom and side edges; connected edges share the outer perimeter. Bare hides the perimeter frame. Both frame and shimmer use the selected native tier. Mixed

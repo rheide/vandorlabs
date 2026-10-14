@@ -92,7 +92,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.SIGNAL_SETTINGS,"Signal Levels",0),
             option(DuplifierArmorTextures.KEY,"Armor Texture",0),
             option(ProgrammableSettings.RAMP_ESCALATOR,"Escalator Mode",4),
-            option(ProgrammableSettings.GLASS_TINT,"Glass Tint",2)
+            option(ProgrammableSettings.GLASS_TINT,"Glass Tint",2),
+            option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material",0)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;

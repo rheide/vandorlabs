@@ -17,6 +17,8 @@ public final class MessageProgrammableGlass implements IMessage {
     private int size, shade;
     private boolean join;
     private int tint=1;
+    private int material=-1;
+    public MessageProgrammableGlass withMaterial(int material){this.material=material;return this;}
     private boolean framed=true;
     public MessageProgrammableGlass() {}
     public MessageProgrammableGlass(BlockPos pos, int size, int shade, boolean join) {
@@ -27,15 +29,16 @@ public final class MessageProgrammableGlass implements IMessage {
         pos = BlockPos.fromLong(b.readLong()); size = b.readInt(); shade = b.readInt();
         join = b.readBoolean();
         tint=b.isReadable()?b.readUnsignedByte():1;framed=!b.isReadable()||b.readBoolean();
+        material=b.readableBytes()>=4?b.readInt():-1;
     }
     @Override public void toBytes(ByteBuf b) {
-        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);
+        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);b.writeInt(material);
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (!com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || msg.size < 0 || msg.size > 2
+                if (!com.vandorlabs.tiles.GlassMaterials.valid(msg.material) || !com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || msg.size < 0 || msg.size > 2
                         || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerProgrammableGlass)) return;
@@ -54,6 +57,7 @@ public final class MessageProgrammableGlass implements IMessage {
                 if (updated instanceof TileEntityProgrammableGlass) {
                     ((TileEntityProgrammableGlass) updated).setSize(msg.size);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
+                    ((TileEntityProgrammableGlass) updated).setMaterial(msg.material);
                     ((TileEntityProgrammableGlass) updated).setJoin(msg.join);
                     ((TileEntityProgrammableGlass) updated).setAppearance(msg.tint,msg.framed);
                 }

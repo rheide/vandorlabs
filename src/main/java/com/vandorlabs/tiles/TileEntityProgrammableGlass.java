@@ -11,6 +11,13 @@ import net.minecraft.world.World;
 /** Glass tint is synchronized independently of the baked frame geometry. */
 public final class TileEntityProgrammableGlass extends TileEntity {
     private int shade;
+    private int material=-1;
+    public int getMaterial(){return material;}
+    public void setMaterial(int value){
+        if(!GlassMaterials.valid(value) || material==value)return;
+        material=value;markDirty();
+        if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
+    }
     private int tint = 1;
     private boolean framed = true;
     private int size = 1;
@@ -73,6 +80,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setInteger("GlassShade", shade);
+        tag.setInteger("GlassMaterial",material);
         tag.setInteger("GlassTint", tint);
         tag.setBoolean("GlassFramed", framed);
         tag.setInteger("GlassSize", size);
@@ -83,6 +91,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
         restored = true;
+        material=tag.hasKey("GlassMaterial",3)?GlassMaterials.clamp(tag.getInteger("GlassMaterial")):-1;
         tint=tag.hasKey("GlassTint",3)?GlassTextures.clampTint(tag.getInteger("GlassTint")):1;
         framed=!tag.hasKey("GlassFramed") || tag.getBoolean("GlassFramed");
         shade = GlassTextures.clamp(tag.getInteger("GlassShade"));

@@ -49,6 +49,7 @@ public final class ProgrammableSettings {
     public static final String PROPULSION_SHAPE = "propulsion_shape";
     public static final String PORTHOLE_SHAPE = "porthole_shape";
     public static final String GLASS_SHADE = "glass_shade";
+    public static final String GLASS_MATERIAL = "glass_material";
     public static final String GLASS_TINT = "glass_tint";
     public static final String GLASS_SIZE = "glass_size";
     public static final String SIDE_TEXTURE="side_texture";
@@ -144,6 +145,7 @@ public final class ProgrammableSettings {
         if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
             out.setInteger(GLASS_SHADE,canopy.large.shade);out.setInteger(GLASS_TINT,canopy.large.tint);
+            out.setInteger(GLASS_MATERIAL,canopy.large.material);
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
@@ -212,6 +214,7 @@ public final class ProgrammableSettings {
                 out.setInteger(GLASS_SHADE, screen.getGlassShade());
                 if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
                     out.setInteger(GLASS_TINT,screen.getGlassTint());out.setBoolean(FRAMED,screen.isGlassFramed());
+                    out.setInteger(GLASS_MATERIAL,screen.getGlassMaterial());
                 }
             }
         } else if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
@@ -229,6 +232,7 @@ public final class ProgrammableSettings {
             out.setInteger(GLASS_SHADE, glass.getShade());
             out.setInteger(GLASS_SIZE, glass.getSize());
             out.setInteger(GLASS_TINT,glass.getTint());out.setBoolean(FRAMED,glass.isFramed());
+            out.setInteger(GLASS_MATERIAL,glass.getMaterial());
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
             out.setInteger(TRIGGER, door.getTrigger());
@@ -295,6 +299,7 @@ public final class ProgrammableSettings {
             NBTTagCompound glass = input.getSubCompound("ProgrammableGlassSettings");
             ((TileEntityProgrammableGlass)tile).setSize(glass.getInteger("Size"));
             ((TileEntityProgrammableGlass)tile).setShade(glass.getInteger("Shade"));
+            ((TileEntityProgrammableGlass)tile).setMaterial(glass.hasKey("Material",3)?glass.getInteger("Material"):-1);
             ((TileEntityProgrammableGlass)tile).setJoin(!glass.hasKey("Join") || glass.getBoolean("Join"));
             ((TileEntityProgrammableGlass)tile).setAppearance(glass.hasKey("Tint",3)?glass.getInteger("Tint"):1,!glass.hasKey("Framed")||glass.getBoolean("Framed"));
         }
@@ -310,6 +315,7 @@ public final class ProgrammableSettings {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass)tile;
             NBTTagCompound settings = new NBTTagCompound();
             settings.setInteger("Size", glass.getSize());settings.setInteger("Shade",glass.getShade());settings.setBoolean("Join",glass.isJoin());settings.setInteger("Tint",glass.getTint());settings.setBoolean("Framed",glass.isFramed());
+            settings.setInteger("Material",glass.getMaterial());
             output.setTagInfo("ProgrammableGlassSettings",settings);
         }
         if (tile instanceof TileEntityRampController) output.setTagInfo("CopiedRampSettings", values.copy());
@@ -334,8 +340,10 @@ public final class ProgrammableSettings {
         boolean applicable = false;
         if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
-            if(!values.hasKey(GLASS_SHADE,3) && !values.hasKey(GLASS_TINT,3))return false;
-            return com.vandorlabs.canopy.LargeCanopyOwnership.apply(canopy,player,canopy.large.depth,canopy.large.scale,number(values,GLASS_SHADE,canopy.large.shade),number(values,GLASS_TINT,canopy.large.tint));
+            if(!values.hasKey(GLASS_SHADE,3) && !values.hasKey(GLASS_TINT,3) && !values.hasKey(GLASS_MATERIAL,3))return false;
+            NBTTagCompound settings=new NBTTagCompound();canopy.large.write(settings);com.vandorlabs.canopy.LargeCanopySettings next=new com.vandorlabs.canopy.LargeCanopySettings();next.read(settings);
+            next.shade=number(values,GLASS_SHADE,next.shade);next.tint=number(values,GLASS_TINT,next.tint);next.material=number(values,GLASS_MATERIAL,next.material);
+            return com.vandorlabs.canopy.LargeCanopyOwnership.apply(canopy,player,next);
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
@@ -508,6 +516,7 @@ public final class ProgrammableSettings {
                 screen.setGlassAppearance(values.hasKey(GLASS_TINT,3)?values.getInteger(GLASS_TINT):screen.getGlassTint(),
                         values.hasKey(FRAMED,1)?values.getBoolean(FRAMED):screen.isGlassFramed());applicable=true;
             }
+            if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass && values.hasKey(GLASS_MATERIAL,3)){screen.setGlassMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
             if (applicable && world != null && screen.getSettingsRevision()!=before) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
@@ -515,6 +524,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass) tile;
+            if(values.hasKey(GLASS_MATERIAL,3)){glass.setMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
             if (values.hasKey(JOIN, 1)) {
                 glass.setJoin(values.getBoolean(JOIN)); applicable = true;
             }

@@ -2,6 +2,8 @@
 
 ## 2.0
 
+- Fix coincident canopy side surfaces, align the angled/rear sill trim and allow back-to-back placement by clicking the rear glass, including ceiling mounts.
+- Offer the regular material catalog in Programmable Glass and Programmable Diagonal Glass. Mild/Normal Tint gives materials 35%/65% opacity; Strong is opaque. Preserve material choices in saved blocks, configured items and cross-family Duplifier copying.
 - Add reversible ground vehicles and default-on Taxi Mode: sit in a Pilot Seat to assemble a connected craft, drive with W/S and A/D, and dismount to park. Include manual Configurizer previews, guarded cardinal rotation, obstruction retries, saved block/tile data, safe exits, movement-driven propulsion brightness and adjustable third-person distance.
 - Add Pilot Seat height and Redstone ON/OFF channel settings in placed and vehicle previews. Hide each armrest beside a solid cabin wall.
 - Keep doors, normal/diagonal trapdoors and Canopies manually operable aboard vehicles; retain their motion and settings through saving and parking. Capture settled extended ramps and pause escalators while driving.
