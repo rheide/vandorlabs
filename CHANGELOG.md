@@ -2,6 +2,7 @@
 
 ## 2.0
 
+- Apply Mild/Normal/Strong material opacity to all canopies and visors, including both front canopy sizes and opening Canopy. Keep frames opaque, sort translucent replacement panels with glass, and retain native glass alpha and configured icon padding.
 - Join matching non-glass Programmable Glass and Diagonal Glass artwork with Tile or Stretch mapping. Add independent porthole Glass tabs with the complete glass/material picker, tint intensity, opacity and joined-window layout, including full-depth portholes.
 - Fix coincident canopy side surfaces, align the angled/rear sill trim and allow back-to-back placement by clicking the rear glass, including ceiling mounts.
 - Offer the regular material catalog in Programmable Glass and Programmable Diagonal Glass. Mild/Normal Tint gives materials 35%/65% opacity; Strong is opaque. Preserve material choices in saved blocks, configured items and cross-family Duplifier copying.

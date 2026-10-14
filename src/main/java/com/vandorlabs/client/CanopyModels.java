@@ -65,8 +65,9 @@ public final class CanopyModels {
             faces=com.vandorlabs.canopy.CanopyMaterialUv.drawable(com.vandorlabs.canopy.CanopySurfaces.visible(faces));
             for (CanopyMesh.Face f : faces)
                 for (int triangle = 1; triangle < f.vertices.length - 1; triangle++) {
-                    add(f, new int[] {0, triangle, triangle + 1, triangle + 1});
-                    if (f.doubleSided) add(f, new int[] {triangle + 1, triangle, 0, 0});
+                    float opacity=settings==null?1F:com.vandorlabs.canopy.CanopyFinishes.opacity(f,settings.material,settings.tint);
+                    add(f, new int[] {0, triangle, triangle + 1, triangle + 1},opacity);
+                    if (f.doubleSided) add(f, new int[] {triangle + 1, triangle, 0, 0},opacity);
                 }
             particle =
                     Minecraft.getMinecraft()
@@ -89,7 +90,7 @@ public final class CanopyModels {
         }
 
         private static String spriteName(String material){return material.contains(":")?material:"vandorlabs:blocks/canopy/"+material;}
-        private void add(CanopyMesh.Face f, int[] index) {
+        private void add(CanopyMesh.Face f, int[] index,float opacity) {
             int[] data = new int[28];
             TextureAtlasSprite sprite =
                     Minecraft.getMinecraft()
@@ -106,7 +107,7 @@ public final class CanopyModels {
                 data[offset] = Float.floatToRawIntBits((float) p.x);
                 data[offset + 1] = Float.floatToRawIntBits((float) p.y);
                 data[offset + 2] = Float.floatToRawIntBits((float) p.z);
-                data[offset + 3] = 0xffffffff;
+                data[offset + 3] = (Math.round(opacity*255)<<24)|0xffffff;
                 data[offset + 4] =
                         Float.floatToRawIntBits(sprite.getInterpolatedU(f.uv[v][0] * 16));
                 data[offset + 5] =

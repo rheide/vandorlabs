@@ -5,6 +5,11 @@ import java.util.*;
 
 /** Immutable palette variants share authored vertices and UVs. */
 public final class CanopyFinishes {
+    /** Native glass keeps its texture alpha; only replacement panels use the tint opacity. */
+    public static float opacity(CanopyMesh.Face face,int material,int tint){
+        return face.glazing && face.baseMaterial.equals("panel")?com.vandorlabs.tiles.GlassMaterials.opacity(material,tint):1F;
+    }
+    public static boolean translucent(CanopyMesh.Face face,int material,int tint){return face.baseMaterial.equals("glass") || opacity(face,material,tint)<1F;}
     private static final class Key {
         final List<CanopyMesh.Face> source;final int shade,tint,material;final boolean tiled;
         Key(List<CanopyMesh.Face> source,int shade,int tint,int material,boolean tiled){this.tiled=tiled;this.material=material;this.source=source;this.shade=shade;this.tint=tint;}

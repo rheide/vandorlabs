@@ -18,6 +18,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         CanopyMesh.Face source;
         Vec3d[] v;
         double distance;
+        float opacity;
         Vec3d center,normal;
     }
 
@@ -52,7 +53,8 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
                 for(int i=0;i<draw.v.length;i++){draw.v[i]=CanopyMesh.rotate(f.vertices[i],prepared.facing);center=center.add(draw.v[i]);}
                 draw.center=center.scale(1D/draw.v.length);
                 draw.normal=Vec3d.ZERO;for(int i=1;i<draw.v.length-1;i++){Vec3d normal=draw.v[i].subtract(draw.v[0]).crossProduct(draw.v[i+1].subtract(draw.v[0]));if(normal.lengthSquared()>1e-16){draw.normal=normal.normalize();break;}}
-                (f.baseMaterial.equals("glass")?prepared.glass:prepared.opaque).add(draw);
+                draw.opacity=com.vandorlabs.canopy.CanopyFinishes.opacity(f,tile.large.material,tile.large.tint);
+                (com.vandorlabs.canopy.CanopyFinishes.translucent(f,tile.large.material,tile.large.tint)?prepared.glass:prepared.opaque).add(draw);
             }
             CACHE.put(tile,prepared);
         }
@@ -70,6 +72,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
+        GlStateManager.disableBlend();GlStateManager.depthMask(true);
         draw(opaque);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(
@@ -108,6 +111,6 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
     private void vertex(BufferBuilder b,DrawFace f,net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,int index,int sign){
         Vec3d p=f.v[index],normal=f.normal;
         b.pos(p.x,p.y,p.z).tex(sprite.getInterpolatedU(f.source.uv[index][0]*16),sprite.getInterpolatedV((1-f.source.uv[index][1])*16))
-                .color(1F,1F,1F,1F).normal((float)normal.x*sign,(float)normal.y*sign,(float)normal.z*sign).endVertex();
+                .color(1F,1F,1F,f.opacity).normal((float)normal.x*sign,(float)normal.y*sign,(float)normal.z*sign).endVertex();
     }
 }

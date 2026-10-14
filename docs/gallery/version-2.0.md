@@ -33,6 +33,8 @@ Regular Canopy Glass connects to the rear of opening Canopies. Both angled fixed
 
 Canopies and visors offer clear glass, soft Vandor shades, all sixteen Minecraft colors and three tint strengths. Their shared texture picker also accepts normal Programmable Block textures, including trapdoor artwork, so the same geometry can become an opaque hull shell. Choose **Fit** for complete panel artwork or **Tile** for repeats at block scale.
 
+Non-glass canopy materials also respond to Tint: Mild and Normal give 35% and 65% opacity, while Strong creates opaque panels. This includes opening Canopy and both front-window sizes; metal frames stay opaque throughout.
+
 ![Canopy settings with forward sliding and a unified texture list](../images/gallery/canopies/settings.png)
 
 The **Duplifier** transfers glass shade and intensity between canopy pieces, visors, regular programmable glass and diagonal glass walls. Programmable Diagonal Glass adds half-width/full-height, full-width/full-height and full-width/half-height shapes, with optional frames and the same color system. Regular and diagonal wall/glass junctions have reciprocal seams and improved corner and intersection geometry.
