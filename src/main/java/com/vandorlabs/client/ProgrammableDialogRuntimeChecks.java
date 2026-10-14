@@ -96,9 +96,10 @@ final class ProgrammableDialogRuntimeChecks {
                     for(GuiButton b:new java.util.ArrayList<>(buttons))if(b.id==127) {
                         click(gui,b.x+b.width/2,b.y+b.height/2);require(face.getInt(gui)==-2,"side button click failed");
                     }
+                    for(GuiButton b:new java.util.ArrayList<>(buttons))if(b.id==129){click(gui,b.x+b.width/2,b.y+b.height/2);require(face.getInt(gui)==-3,"glass tab click failed");}
                     if(count>0) {
                         require(count==1 || count==7,"face selector lacks Main or one of six faces");
-                        ((GuiProgrammableWall)gui).actionPerformed(new GuiButton(121+original,0,0,""));
+                        ((GuiProgrammableWall)gui).actionPerformed(new GuiButton(original==-3?129:original==-2?127:121+original,0,0,""));
                     }
                 }
             }

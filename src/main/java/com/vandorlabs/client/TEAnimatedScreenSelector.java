@@ -854,7 +854,9 @@ public class TEAnimatedScreenSelector
             float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(te.getGlassMaterial(),te.getGlassTint());
             GlStateManager.depthMask(te.getGlassMaterial()>=0 && opacity==1);
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            DiagonalWallMeshCache.get(te,state,glass,glass).drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);
+            StaticSurfaceMesh pane=DiagonalWallMeshCache.get(te,state,glass,glass);
+            if(te.getGlassMaterial()>=0 && te.isGlassStretch())pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0);
+            pane.drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);
             Tessellator.getInstance().draw();
             GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
             GlStateManager.enableLighting();endLocalTransform();return;
@@ -875,7 +877,7 @@ public class TEAnimatedScreenSelector
                     GlStateManager.translate(flat.left(),0,com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH)));
                     GlStateManager.scale((flat.right()-flat.left())/16,1,1);
                 }
-                renderPortholeGlass(te.getGlassShade(),DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
+                renderPortholeGlass(te,state,DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
                 GlStateManager.popMatrix();
             }
             GlStateManager.enableLighting();
@@ -1369,25 +1371,19 @@ public class TEAnimatedScreenSelector
         }
     }
 
-    private void renderPortholeGlass(int shade,StaticSurfaceMesh glass) {
+    private void renderPortholeGlass(TileEntityAnimatedScreenSelector tile,IBlockState state,StaticSurfaceMesh glass) {
         if(glass.vertexCount()==0)return;
-        bindTexture(new ResourceLocation(VandorLabs.MODID,"textures/blocks/space_doors/medium/glass_tile.png"));
+        glass=PortholePane.mesh(tile,state,glass);bindAtlas();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
-        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
+        float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getGlassMaterial(),tile.getGlassTint());
+        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(tile.getGlassMaterial()>=0 && opacity==1);
         GlStateManager.color(1,1,1,1);
         BufferBuilder buf=Tessellator.getInstance().getBuffer();
         int sky=(int)OpenGlHelper.lastBrightnessY,block=(int)OpenGlHelper.lastBrightnessX;
-        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());glass.draw(buf,sky,block);
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());glass.drawColored(buf,sky,block,1,1,1,opacity);
         Tessellator.getInstance().draw();
-        if(shade!=0) {
-            GlStateManager.disableTexture2D();
-            buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            if(shade==1)glass.drawColored(buf,sky,block,.20F,.85F,.95F,.0513F);
-            else glass.drawColored(buf,sky,block,.10F,.12F,.16F,.1754F);
-            Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
-        }
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
         GlStateManager.disableBlend();bindAtlas();
     }

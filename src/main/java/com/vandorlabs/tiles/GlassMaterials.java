@@ -2,6 +2,9 @@ package com.vandorlabs.tiles;
 
 /** Regular panel artwork shares glass tint controls without changing the original glass palette. */
 public final class GlassMaterials {
+    private static final java.util.concurrent.atomic.AtomicLong REVISION=new java.util.concurrent.atomic.AtomicLong();
+    public static void changed(){REVISION.incrementAndGet();}
+    public static long revision(){return REVISION.get();}
     public static boolean valid(int material){return material==-1 || ScreenHousingTextures.validChoice(material);}
     public static int clamp(int material){return valid(material)?material:-1;}
     public static float opacity(int material,int tint){return material<0?1F:tint==0?.35F:tint==1?.65F:1F;}

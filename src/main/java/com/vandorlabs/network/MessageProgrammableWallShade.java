@@ -19,6 +19,8 @@ public final class MessageProgrammableWallShade implements IMessage {
     private int shape;
     private int tint=1;
     private int material=-1;
+    private boolean stretch,textureJoin=true;
+    public MessageProgrammableWallShade withLayout(boolean stretch,boolean join){this.stretch=stretch;textureJoin=join;return this;}
     public MessageProgrammableWallShade withMaterial(int material){this.material=material;return this;}
     private boolean framed;
     private boolean appearance;
@@ -39,6 +41,7 @@ public final class MessageProgrammableWallShade implements IMessage {
         appearance=buf.readableBytes()>=2;
         if(appearance){tint=buf.readUnsignedByte();framed=buf.readBoolean();}
         material=buf.readableBytes()>=4?buf.readInt():-1;
+        stretch=buf.isReadable() && buf.readBoolean();textureJoin=!buf.isReadable() || buf.readBoolean();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -46,7 +49,7 @@ public final class MessageProgrammableWallShade implements IMessage {
         buf.writeBoolean(join);
         buf.writeInt(shape);
         if(appearance){buf.writeByte(tint);buf.writeBoolean(framed);}
-        if(appearance)buf.writeInt(material);
+        if(appearance){buf.writeInt(material);buf.writeBoolean(stretch);buf.writeBoolean(textureJoin);}
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableWallShade, IMessage> {
@@ -68,11 +71,8 @@ public final class MessageProgrammableWallShade implements IMessage {
                         instanceof BlockProgrammableWall)
                         || (!((BlockProgrammableWall) player.world.getBlockState(msg.pos)
                         .getBlock()).isPortholeShape() && !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass))) return;
-                if (!(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) && msg.shade>2) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
-                if(msg.appearance && player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)((TileEntityAnimatedScreenSelector)raw).setGlassMaterial(msg.material);
-                if(msg.appearance && player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)
-                    ((TileEntityAnimatedScreenSelector)raw).setGlassAppearance(msg.tint,msg.framed);
+                if(msg.appearance){TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;tile.setGlassMaterial(msg.material);tile.setGlassAppearance(msg.tint,msg.framed);tile.setGlassLayout(msg.stretch,msg.textureJoin);}
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);
                 ((TileEntityAnimatedScreenSelector) raw).setPortholeShape(msg.shape);
             });

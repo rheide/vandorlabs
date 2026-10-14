@@ -43,7 +43,9 @@ public class GuiProgrammableWall extends GuiContainer {
         return block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STORAGE
                 || block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
     }
+    private boolean glassSurface(){return diagonalGlass || porthole && faceTarget==-3;}
     private int selectedTexture() {
+        if(faceTarget==-3)return tile.getGlassMaterial()<0?HousingTextureList.CANOPY_GLASS_BASE+tile.getGlassShade():tile.getGlassMaterial();
         return faceTarget == -2 ? (tile.getSideTexture()>=0?tile.getSideTexture():porthole?26:tile.getHousingTexture())
                 : faceTarget < 0 ? tile.getHousingTexture()
                 : tile.getFaceTextures().texture(faceTarget, tile.getHousingTexture());
@@ -99,20 +101,21 @@ public class GuiProgrammableWall extends GuiContainer {
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
         rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
-        textureList=diagonalGlass?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
+        textureList=glassSurface()?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
                 :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
         if(faceTabs || slab || porthole) {
-            int count=faceTabs?(slab?8:7):2;
+            int count=faceTabs?(slab?8:7):porthole?3:2;
             int span=faceTabs?xSize-24:controlsX-listX-19;
             int tabWidth=span/count;
             for(int i=0;i<count;i++) {
                 boolean side=(slab || porthole) && i==1;
                 int face=i-((slab || porthole)?2:1);
-                int id=i==0?120:side?127:121+face;
-                String label=i==0?"Main":side?"Side":FACE_NAMES[face];
+                boolean glass=porthole && i==2;
+                int id=i==0?120:side?127:glass?129:121+face;
+                String label=i==0?"Main":side?"Side":glass?"Glass":FACE_NAMES[face];
                 GuiButton tab=new GuiButton(id,listX+i*tabWidth,guiTop+30,
                         i==count-1?span-i*tabWidth-2:tabWidth-2,18,label);
-                tab.enabled=faceTarget!=(i==0?-1:side?-2:face);buttonList.add(tab);
+                tab.enabled=faceTarget!=(i==0?-1:side?-2:glass?-3:face);buttonList.add(tab);
             }
         }
         int y=guiTop+(faceTabs?54:30);
@@ -132,7 +135,6 @@ public class GuiProgrammableWall extends GuiContainer {
         }
         if (slab) { buttonList.add(new GuiButton(103,controlsX,y,controlsWidth,20,slabSidesLabel())); y+=24; }
         if (porthole) {
-            buttonList.add(new GuiButton(101,controlsX,y,controlsWidth,20,shadeLabel())); y+=24;
             buttonList.add(new GuiButton(102,controlsX,y,controlsWidth,20,joinLabel())); y+=24;
             buttonList.add(new GuiButton(104,controlsX,y,controlsWidth,20,shapeLabel())); y+=24;
         }
@@ -146,10 +148,15 @@ public class GuiProgrammableWall extends GuiContainer {
                 buttonList.add(new GuiButton(110,controlsX,y,controlsWidth,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
             }
         }
-        if(diagonalGlass) {
+        if(diagonalGlass)y+=24;
+        if(glassSurface()) {
+            buttonList.add(new GuiButton(113,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Tint: ")+com.vandorlabs.tiles.GlassTextures.tintLabel(tile.getGlassTint())));
+            if(diagonalGlass)buttonList.add(new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare"));
             y+=24;
-            buttonList.add(new GuiButton(113,controlsX,y,controlsWidth/2-1,20,com.vandorlabs.tiles.GlassTextures.tintLabel(tile.getGlassTint())));
-            buttonList.add(new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare"));
+            if(tile.getGlassMaterial()>=0){
+                buttonList.add(new GuiButton(115,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Texture: ")+(tile.isGlassStretch()?"Stretch":"Tile")));
+                if(diagonalGlass)buttonList.add(new GuiButton(116,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,"Join: "+(tile.isGlassTextureJoin()?"On":"Off")));y+=24;
+            }
         }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
     }
@@ -174,7 +181,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
-                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()));
+                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()).withLayout(tile.isGlassStretch(),tile.isGlassTextureJoin()));
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -188,8 +195,8 @@ public class GuiProgrammableWall extends GuiContainer {
 
     void choose(int choice) {
         selected = choice;
-        if(diagonalGlass && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
-        if(diagonalGlass){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();return;}
+        if(glassSurface() && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
+        if(glassSurface()){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();initGui();return;}
         if(faceTarget==-2) {
             tile.setSideTexture(choice);
             PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),choice));
@@ -212,7 +219,7 @@ public class GuiProgrammableWall extends GuiContainer {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116))return;
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
@@ -235,7 +242,11 @@ public class GuiProgrammableWall extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(diagonalGlass && (button.id==113 || button.id==114)) {
+        if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
+        if(glassSurface() && (button.id==115 || button.id==116)){
+            tile.setGlassLayout(button.id==115?!tile.isGlassStretch():tile.isGlassStretch(),button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());sendPortholeSettings();initGui();return;
+        }
+        if(glassSurface() && (button.id==113 || button.id==114)) {
             tile.setGlassAppearance(button.id==113?GuiOptionCycle.next(tile.getGlassTint(),3):tile.getGlassTint(),
                     button.id==114?!tile.isGlassFramed():tile.isGlassFramed());
             sendPortholeSettings();initGui();

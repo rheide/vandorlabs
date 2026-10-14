@@ -2,6 +2,7 @@
 
 ## 2.0
 
+- Join matching non-glass Programmable Glass and Diagonal Glass artwork with Tile or Stretch mapping. Add independent porthole Glass tabs with the complete glass/material picker, tint intensity, opacity and joined-window layout, including full-depth portholes.
 - Fix coincident canopy side surfaces, align the angled/rear sill trim and allow back-to-back placement by clicking the rear glass, including ceiling mounts.
 - Offer the regular material catalog in Programmable Glass and Programmable Diagonal Glass. Mild/Normal Tint gives materials 35%/65% opacity; Strong is opaque. Preserve material choices in saved blocks, configured items and cross-family Duplifier copying.
 - Add reversible ground vehicles and default-on Taxi Mode: sit in a Pilot Seat to assemble a connected craft, drive with W/S and A/D, and dismount to park. Include manual Configurizer previews, guarded cardinal rotation, obstruction retries, saved block/tile data, safe exits, movement-driven propulsion brightness and adjustable third-person distance.

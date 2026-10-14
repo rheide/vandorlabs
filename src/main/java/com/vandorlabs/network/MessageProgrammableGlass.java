@@ -18,6 +18,8 @@ public final class MessageProgrammableGlass implements IMessage {
     private boolean join;
     private int tint=1;
     private int material=-1;
+    private boolean stretch;
+    public MessageProgrammableGlass withStretch(boolean stretch){this.stretch=stretch;return this;}
     public MessageProgrammableGlass withMaterial(int material){this.material=material;return this;}
     private boolean framed=true;
     public MessageProgrammableGlass() {}
@@ -30,9 +32,10 @@ public final class MessageProgrammableGlass implements IMessage {
         join = b.readBoolean();
         tint=b.isReadable()?b.readUnsignedByte():1;framed=!b.isReadable()||b.readBoolean();
         material=b.readableBytes()>=4?b.readInt():-1;
+        stretch=b.isReadable() && b.readBoolean();
     }
     @Override public void toBytes(ByteBuf b) {
-        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);b.writeInt(material);
+        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);b.writeInt(material);b.writeBoolean(stretch);
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
@@ -58,6 +61,7 @@ public final class MessageProgrammableGlass implements IMessage {
                     ((TileEntityProgrammableGlass) updated).setSize(msg.size);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
                     ((TileEntityProgrammableGlass) updated).setMaterial(msg.material);
+                    ((TileEntityProgrammableGlass) updated).setStretch(msg.stretch);
                     ((TileEntityProgrammableGlass) updated).setJoin(msg.join);
                     ((TileEntityProgrammableGlass) updated).setAppearance(msg.tint,msg.framed);
                 }

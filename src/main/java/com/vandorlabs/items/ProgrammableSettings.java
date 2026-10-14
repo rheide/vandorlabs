@@ -50,6 +50,7 @@ public final class ProgrammableSettings {
     public static final String PORTHOLE_SHAPE = "porthole_shape";
     public static final String GLASS_SHADE = "glass_shade";
     public static final String GLASS_MATERIAL = "glass_material";
+    public static final String GLASS_LAYOUT = "glass_layout";
     public static final String GLASS_TINT = "glass_tint";
     public static final String GLASS_SIZE = "glass_size";
     public static final String SIDE_TEXTURE="side_texture";
@@ -212,10 +213,9 @@ public final class ProgrammableSettings {
                 out.setBoolean(JOIN, screen.isJoinPortholes());
                 out.setInteger(PORTHOLE_SHAPE, screen.getPortholeShape());
                 out.setInteger(GLASS_SHADE, screen.getGlassShade());
-                if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) {
-                    out.setInteger(GLASS_TINT,screen.getGlassTint());out.setBoolean(FRAMED,screen.isGlassFramed());
-                    out.setInteger(GLASS_MATERIAL,screen.getGlassMaterial());
-                }
+                out.setInteger(GLASS_TINT,screen.getGlassTint());out.setInteger(GLASS_MATERIAL,screen.getGlassMaterial());
+                NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Stretch",screen.isGlassStretch());layout.setBoolean("TextureJoin",screen.isGlassTextureJoin());out.setTag(GLASS_LAYOUT,layout);
+                if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)out.setBoolean(FRAMED,screen.isGlassFramed());
             }
         } else if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
             TileEntityRedstoneLight propulsion = (TileEntityRedstoneLight) tile;
@@ -233,6 +233,7 @@ public final class ProgrammableSettings {
             out.setInteger(GLASS_SIZE, glass.getSize());
             out.setInteger(GLASS_TINT,glass.getTint());out.setBoolean(FRAMED,glass.isFramed());
             out.setInteger(GLASS_MATERIAL,glass.getMaterial());
+            NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Stretch",glass.isStretch());out.setTag(GLASS_LAYOUT,layout);
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
             out.setInteger(TRIGGER, door.getTrigger());
@@ -300,6 +301,7 @@ public final class ProgrammableSettings {
             ((TileEntityProgrammableGlass)tile).setSize(glass.getInteger("Size"));
             ((TileEntityProgrammableGlass)tile).setShade(glass.getInteger("Shade"));
             ((TileEntityProgrammableGlass)tile).setMaterial(glass.hasKey("Material",3)?glass.getInteger("Material"):-1);
+            ((TileEntityProgrammableGlass)tile).setStretch(glass.getBoolean("Stretch"));
             ((TileEntityProgrammableGlass)tile).setJoin(!glass.hasKey("Join") || glass.getBoolean("Join"));
             ((TileEntityProgrammableGlass)tile).setAppearance(glass.hasKey("Tint",3)?glass.getInteger("Tint"):1,!glass.hasKey("Framed")||glass.getBoolean("Framed"));
         }
@@ -316,6 +318,7 @@ public final class ProgrammableSettings {
             NBTTagCompound settings = new NBTTagCompound();
             settings.setInteger("Size", glass.getSize());settings.setInteger("Shade",glass.getShade());settings.setBoolean("Join",glass.isJoin());settings.setInteger("Tint",glass.getTint());settings.setBoolean("Framed",glass.isFramed());
             settings.setInteger("Material",glass.getMaterial());
+            settings.setBoolean("Stretch",glass.isStretch());
             output.setTagInfo("ProgrammableGlassSettings",settings);
         }
         if (tile instanceof TileEntityRampController) output.setTagInfo("CopiedRampSettings", values.copy());
@@ -512,11 +515,14 @@ public final class ProgrammableSettings {
                     screen.setGlassShade(values.getInteger(GLASS_SHADE)); applicable = true;
                 }
             }
-            if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass && (values.hasKey(GLASS_TINT,3)||values.hasKey(FRAMED,1))) {
+            if((isPorthole(block) || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass) && (values.hasKey(GLASS_TINT,3)||values.hasKey(FRAMED,1))) {
                 screen.setGlassAppearance(values.hasKey(GLASS_TINT,3)?values.getInteger(GLASS_TINT):screen.getGlassTint(),
                         values.hasKey(FRAMED,1)?values.getBoolean(FRAMED):screen.isGlassFramed());applicable=true;
             }
-            if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass && values.hasKey(GLASS_MATERIAL,3)){screen.setGlassMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
+            if(isPorthole(block) || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass){
+                if(values.hasKey(GLASS_MATERIAL,3)){screen.setGlassMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
+                if(values.hasKey(GLASS_LAYOUT,10)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);screen.setGlassLayout(layout.getBoolean("Stretch"),!layout.hasKey("TextureJoin") || layout.getBoolean("TextureJoin"));applicable=true;}
+            }
             if (applicable && world != null && screen.getSettingsRevision()!=before) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
                 world.notifyBlockUpdate(pos, state, state, 3);
@@ -525,6 +531,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass) tile;
             if(values.hasKey(GLASS_MATERIAL,3)){glass.setMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
+            if(values.hasKey(GLASS_LAYOUT,10)){glass.setStretch(values.getCompoundTag(GLASS_LAYOUT).getBoolean("Stretch"));applicable=true;}
             if (values.hasKey(JOIN, 1)) {
                 glass.setJoin(values.getBoolean(JOIN)); applicable = true;
             }

@@ -114,7 +114,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     private long settingsRevision;
     public long getSettingsRevision() { return settingsRevision; }
-    private void settingsChanged() { settingsRevision++; markDirty(); }
+    private void settingsChanged() { settingsRevision++;GlassMaterials.changed();markDirty(); }
 
     private String selectedScreen = "engineering_screen";
     private boolean redstoneEnabled = false;
@@ -199,6 +199,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int glassShade = 2;
     private int glassTint = 1;
     private int glassMaterial=-1;
+    private boolean glassStretch,glassTextureJoin=true;
+    public boolean isGlassStretch(){return glassStretch;}
+    public boolean isGlassTextureJoin(){return glassTextureJoin;}
+    public void setGlassLayout(boolean stretch,boolean join){if(glassStretch==stretch && glassTextureJoin==join)return;glassStretch=stretch;glassTextureJoin=join;settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public int getGlassMaterial(){return glassMaterial;}
     public void setGlassMaterial(int value){if(GlassMaterials.valid(value) && glassMaterial!=value){glassMaterial=value;settingsChanged();}}
     private boolean glassFramed=true;
@@ -504,6 +508,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("GlassShade", glassShade);
         compound.setInteger("GlassTint",glassTint);
         compound.setInteger("GlassMaterial",glassMaterial);
+        compound.setBoolean("GlassStretch",glassStretch);compound.setBoolean("GlassTextureJoin",glassTextureJoin);
         compound.setBoolean("GlassFramed",glassFramed);
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setInteger("PortholeShape", portholeShape);
@@ -579,6 +584,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
         glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
         glassMaterial=compound.hasKey("GlassMaterial",3)?GlassMaterials.clamp(compound.getInteger("GlassMaterial")):-1;
+        glassStretch=compound.getBoolean("GlassStretch");glassTextureJoin=!compound.hasKey("GlassTextureJoin") || compound.getBoolean("GlassTextureJoin");
         glassFramed=!compound.hasKey("GlassFramed")||compound.getBoolean("GlassFramed");
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)

@@ -93,7 +93,7 @@ public final class DuplifierApplyOptions {
             option(DuplifierArmorTextures.KEY,"Armor Texture",0),
             option(ProgrammableSettings.RAMP_ESCALATOR,"Escalator Mode",4),
             option(ProgrammableSettings.GLASS_TINT,"Glass Tint",2),
-            option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material",0)
+            option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material / Layout",0)
     };
 
     public static final long ALL = (1L << OPTIONS.length) - 1L;
@@ -139,6 +139,7 @@ public final class DuplifierApplyOptions {
             if (!enabled(mask, i)) selected.removeTag(OPTIONS[i].key);
         if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
+        if (!selected.hasKey(ProgrammableSettings.GLASS_MATERIAL)) selected.removeTag(ProgrammableSettings.GLASS_LAYOUT);
         if (!selected.hasKey(ProgrammableSettings.PRIMARY_TEXTURE))
             selected.removeTag(ProgrammableSettings.PRIMARY_KIND);
         return selected;

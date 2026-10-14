@@ -19,6 +19,16 @@ final class StaticSurfaceMesh {
         batch=new OpaqueDoorBatch.Mesh(data,false);return batch;
     }
     int vertexCount() { return vertices.length/8; }
+    StaticSurfaceMesh glassTexture(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,GlassSurfaceGroups.Layout layout,boolean raw,double borderX,double borderY){
+        float[] data=vertices.clone();double width=layout.columns-2*borderX,height=layout.rows-2*borderY;
+        for(int i=0;i<data.length;i+=8){
+            double u=raw?data[i+3]:(data[i+3]-sprite.getMinU())/(sprite.getMaxU()-sprite.getMinU());
+            double v=raw?data[i+4]:(data[i+4]-sprite.getMinV())/(sprite.getMaxV()-sprite.getMinV());
+            u=(layout.column+u-borderX)/width;v=(layout.rows-1-layout.row+v-borderY)/height;
+            data[i+3]=sprite.getInterpolatedU(Math.max(0,Math.min(1,u))*16);data[i+4]=sprite.getInterpolatedV(Math.max(0,Math.min(1,v))*16);
+        }
+        return new StaticSurfaceMesh(data);
+    }
     /** Keep only the connector surfaces around a sloped porthole's open central body. */
     StaticSurfaceMesh diagonalArms(int mode,boolean inverted,double lower,double upper) {
         float[] result=new float[vertices.length];int used=0;
