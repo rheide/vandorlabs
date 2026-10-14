@@ -318,6 +318,26 @@ task testPilotSeatSurfaces(type: Exec) {
 }
 check.dependsOn testPilotSeatSurfaces
 
+task testUnifiedItemLookup(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.UnifiedItemLookupChecks'
+}
+check.dependsOn testUnifiedItemLookup
+
+task testUnusedRuntimeAssets(type: Exec) {
+    dependsOn jar
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--check-jar', jar.archivePath
+}
+check.dependsOn testUnusedRuntimeAssets
+
+task testRuntimeAssetRoots(type: Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/test_runtime_asset_roots.py'
+}
+check.dependsOn testRuntimeAssetRoots
+
 task testCanopyAnimationCache(type: JavaExec) {
     dependsOn classes
     classpath = sourceSets.main.runtimeClasspath
@@ -390,7 +410,7 @@ processResources {
     inputs.dir('texture-packs/additional/assets/vandorlabs/textures')
     inputs.dir('texture-packs/default/assets/vandorlabs/textures')
     inputs.dir('texture-packs/original/assets/vandorlabs/textures')
-    inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py')
+    inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py', 'tools/prune_unused_runtime_assets.py')
     inputs.file('src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java')
     inputs.property('pythonExecutable', pythonExecutable)
     doFirst {
@@ -435,6 +455,9 @@ processResources {
         }
         exec {
             commandLine pythonExecutable, 'tools/prune_retired_textures.py', '--stage', target.parentFile
+        }
+        exec {
+            commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--stage', target.parentFile
         }
         logger.lifecycle("Installed ${supplied.size()} default runtime textures")
     }

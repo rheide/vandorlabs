@@ -5,10 +5,24 @@ from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
 
+def texture_aliases(catalog):
+    aliases={'vandorlabs:blocks/unified/'+e['id']:'vandorlabs:blocks/unified/'+e['alias'] for e in catalog if e.get('alias')}
+    for tier in ('low','medium'):
+        for suffix in ('_mild','_strong'):
+            aliases['vandorlabs:blocks/programmable_glass/'+tier+'/clear'+suffix]='vandorlabs:blocks/programmable_glass/'+tier+'/clear'
+    return aliases
+
 def resized(path,size):
     with Image.open(path) as source:
         image=source.convert('RGBA').convert('RGBa').resize((size,size),Image.Resampling.LANCZOS).convert('RGBA')
     image.save(path,optimize=True)
+
+def redirect_dynmap(text,aliases):
+    import re
+    text=text.replace('blocks/space_doors/high/','blocks/space_doors/medium/').replace('blocks/cargo_doors/high/','blocks/cargo_doors/medium/')
+    text=re.sub(r'(filename=(?:assets/vandorlabs/textures/)?blocks/space_doors/)([^/\s,]+\.png)',r'\1medium/\2',text)
+    for old,new in aliases.items():text=text.replace(old.split(':',1)[1]+'.png',new.split(':',1)[1]+'.png')
+    return text
 
 def redirect(value,texture_aliases):
     if isinstance(value,str):
@@ -47,10 +61,11 @@ def stage(directory, models_staged=False):
     low=textures/'blocks/space_doors/low/glass_tile.png'
     shutil.copyfile(pane,low);resized(low,256)
     catalog=json.loads((directory/'data/unified_textures.json').read_text())
-    aliases={}
-    for entry in catalog:
-        if entry.get('alias'):
-            aliases['vandorlabs:blocks/unified/'+entry['id']]='vandorlabs:blocks/unified/'+entry['alias']
+    aliases=texture_aliases(catalog)
+    for tier in ('low','medium'):
+        for suffix in ('_mild','_strong'):
+            duplicate=textures/'blocks/programmable_glass'/tier/('clear'+suffix+'.png')
+            if duplicate.exists():duplicate.unlink()
     removed=0
     templates={};reused=0
     shared=models/'block/runtime_shared';shared.mkdir(parents=True,exist_ok=True)
@@ -73,10 +88,7 @@ def stage(directory, models_staged=False):
     for file in (directory/'blockstates').glob('*.json'):
         file.write_text(json.dumps(redirect(json.loads(file.read_text()),aliases),separators=(',',':'))+'\n')
     for file in directory.glob('dynmap*.txt'):
-        text=file.read_text().replace('blocks/space_doors/high/','blocks/space_doors/medium/').replace('blocks/cargo_doors/high/','blocks/cargo_doors/medium/')
-        import re
-        text=re.sub(r'filename=blocks/space_doors/([^/\s,]+\.png)',r'filename=blocks/space_doors/medium/\1',text)
-        file.write_text(text)
+        file.write_text(redirect_dynmap(file.read_text(),aliases))
     after_models=list(models.rglob('*.json'))
     print('Runtime assets: removed',removed,'High models;',reused,'geometry models share',len(templates),'templates;',len(after_models),'models;',before_bytes,'->',sum(p.stat().st_size for p in after_models),'JSON bytes')
 

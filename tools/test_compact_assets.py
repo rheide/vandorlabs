@@ -4,7 +4,7 @@ import io,json,sys
 from pathlib import Path
 from zipfile import ZipFile
 from PIL import Image
-from compact_runtime_assets import redirect
+from compact_runtime_assets import redirect,texture_aliases
 from prune_retired_textures import retired,remap_model
 ROOT=Path(__file__).resolve().parents[1]
 jar=Path(sys.argv[1]);prefix='assets/vandorlabs/'
@@ -12,7 +12,7 @@ with ZipFile(jar) as archive:
     names=set(archive.namelist())
     models={name:json.loads(archive.read(name)) for name in names if name.startswith(prefix+'models/') and name.endswith('.json')}
     entries=json.loads(archive.read(prefix+'data/unified_textures.json'))
-    aliases={'vandorlabs:blocks/unified/'+e['id']:'vandorlabs:blocks/unified/'+e['alias'] for e in entries if e.get('alias')}
+    aliases=texture_aliases(entries)
     paths=retired()
     def expanded(model):
         parent=model.get('parent','')

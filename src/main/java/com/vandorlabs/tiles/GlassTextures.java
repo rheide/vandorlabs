@@ -11,7 +11,7 @@ public final class GlassTextures {
     public static boolean validTint(int tint){return tint>=0 && tint<3;}
     public static int clampTint(int tint){return validTint(tint)?tint:1;}
     public static String tintLabel(int tint){return new String[]{"Mild","Normal","Strong"}[clampTint(tint)];}
-    public static String texture(int id,int size,int tint){return texture(id,size)+(tint==0?"_mild":tint==2?"_strong":"");}
+    public static String texture(int id,int size,int tint){return texture(id,size)+(clamp(id)==0?"":tint==0?"_mild":tint==2?"_strong":"");}
     public static String fullTexture(int id,int size,int tint){return texture(id,size,tint).replace(":blocks/",":textures/blocks/")+".png";}
     private GlassTextures() { }
 }

@@ -61,6 +61,7 @@ def stage(directory):
         text = file.read_text()
         for path in paths:
             text = text.replace('filename=blocks/' + path + '.png', 'filename=blocks/dark_wall_panel.png')
+            text = text.replace('filename=assets/vandorlabs/textures/blocks/' + path + '.png', 'filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png')
         file.write_text(text)
     print(f'Pruned {removed} retired texture files ({saved} source bytes); remapped {remapped} compatibility models')
 
@@ -82,6 +83,7 @@ def check_jar(file):
                 text = archive.read(name).decode()
                 for path in paths:
                     assert 'filename=blocks/' + path + '.png' not in text, f'retired map texture: {path}'
+                    assert 'filename=assets/vandorlabs/textures/blocks/' + path + '.png' not in text, f'retired map texture: {path}'
         # Required non-picker surfaces and every visible catalog source remain.
         for path in ('programmable_glass/metal_side', 'porthole_on', 'porthole_off'):
             assert prefix + 'textures/blocks/' + path + '.png' in names, path
