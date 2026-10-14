@@ -1,6 +1,6 @@
 # Vandor Labs
 
-Current release: **2.0**. See the [2.0 feature guide](docs/gallery/version-2.0.md) and [changelog](CHANGELOG.md).
+Current development version: **2.1**. Latest release: **2.0**. See the [2.0 feature guide](docs/gallery/version-2.0.md) and [changelog](CHANGELOG.md).
 
 Block availability can be configured by category in the generated `config/vandorlabs-blocks.cfg`; see [category settings](docs/block-categories.md). Disabled categories are hidden from creative menus and cannot be crafted, while existing world blocks remain intact.
 
