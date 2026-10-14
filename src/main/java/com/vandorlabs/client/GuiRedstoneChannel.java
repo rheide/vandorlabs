@@ -109,7 +109,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         if(selectableType)buttonList.add(new GuiButton(13,guiLeft+14,guiTop+122,212,20,typeLabel()));
         if(adjustableBase){int y=guiTop+baseControlsY();buttonList.add(new GuiButton(9,guiLeft+14,y,212,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,y+24,102,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+124,y+24,102,20,directionLabel()));}
         if(powerLever)buttonList.add(new GuiButton(12,guiLeft+14,guiTop+66,212,20,sizeLabel()));
-        if(pilotSeat){buttonList.add(new GuiButton(15,guiLeft+14,guiTop+66,212,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(18,guiLeft+14,guiTop+90,212,20,pilotModeLabel()));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+114,212,20,pilotHeightLabel()));}
+        if(pilotSeat){buttonList.add(new GuiButton(21,guiLeft+148,guiTop+3,78,18,"Modes..."));buttonList.add(new GuiButton(15,guiLeft+14,guiTop+66,212,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(18,guiLeft+14,guiTop+90,212,20,pilotModeLabel()));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+114,212,20,pilotHeightLabel()));}
         if(pilotSeat && !inspectionStatus.isEmpty()){GuiButton assemble=new GuiButton(20,guiLeft+14,guiTop+214,212,20,"Assemble (inspection required)");assemble.enabled=false;buttonList.add(assemble);}
         int doneWidth=200;
         buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - doneWidth) / 2,
@@ -138,6 +138,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==21){submit();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessagePilotModes(member.channelTile().getPos(),null));return;}
         if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);button.displayString=pilotModeLabel();}
         if(button.id==19){pilotHeight=GuiOptionCycle.next(pilotHeight,4);button.displayString=pilotHeightLabel();com.vandorlabs.vehicle.VehicleNetwork.Packet setting=new com.vandorlabs.vehicle.VehicleNetwork.Packet(com.vandorlabs.vehicle.VehicleNetwork.HEIGHT);setting.entity=-1;setting.origin=member.channelTile().getPos();setting.strafe=(byte)pilotHeight;PacketHandler.INSTANCE.sendToServer(setting);}
         if(button.id==16){redstoneInverted=!redstoneInverted;button.displayString=redstoneInverted?"Activate on: OFF":"Activate on: ON";}

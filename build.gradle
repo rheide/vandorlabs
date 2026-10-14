@@ -312,6 +312,12 @@ task testCanopyCatalog(type: Exec) {
 }
 check.dependsOn testCanopyCatalog
 
+task testWheelAssets(type: Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/test_wheel_assets.py'
+}
+check.dependsOn testWheelAssets
+
 task testPilotSeatSurfaces(type: Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'tools/clean_pilot_seat_surfaces.py', '--check'

@@ -22,7 +22,7 @@ public final class VehicleService {
     private static final Map<UUID,Job> jobs=new HashMap<>();
     private static final Map<String,Long> requests=new HashMap<>();
     private static final Set<World> recovered=Collections.newSetFromMap(new WeakHashMap<World,Boolean>());
-    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi;int ticks;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);}}
+    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);}}
     public static void taxiAssembly(EntityPlayerMP player,BlockPos seat) {
         if(player.isSpectator() || !(player.world.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)
                 || !((com.vandorlabs.tiles.TileEntityPilotSeat)player.world.getTileEntity(seat)).isTaxiMode() || !seatedAt(player,seat))return;
@@ -35,6 +35,7 @@ public final class VehicleService {
                 && pos.equals(((com.vandorlabs.entity.EntityChairSeat)player.getRidingEntity()).getChairPos());
     }
     public static void taxiParking(EntityPlayerMP player,EntityGroundVehicle craft) {
+        if(craft.hover || craft.autopilot.enabled())return;
         craft.stopForParking();craft.taxiReturnPending=true;craft.taxiReturnActor=player.getUniqueID();craft.taxiNextAttempt=0;
     }
     private static void returnTaxi(WorldServer world,EntityGroundVehicle craft) {
@@ -55,41 +56,57 @@ public final class VehicleService {
     @SubscribeEvent public static void taxiExit(net.minecraftforge.event.entity.EntityMountEvent event) {
         if(event.isMounting() || !(event.getEntityMounting() instanceof EntityPlayerMP) || !(event.getEntityBeingMounted() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityBeingMounted();EntityPlayerMP player=(EntityPlayerMP)event.getEntityMounting();
+        if(craft.hover && player.isSneaking() && !craft.flightDismount && !craft.transferInProgress){event.setCanceled(true);return;}
+        if(craft.hover || craft.autopilot.enabled())return;
         if(craft.transferInProgress || craft.isDead || player.isDead || !player.connection.netManager.isChannelOpen() || !VehicleTaxiMode.enabled(craft.structure))return;
         try{VehicleRotation.plan(craft);}catch(IllegalArgumentException failure){if(craft.world.getTotalWorldTime()>=craft.taxiNextWarning){craft.taxiNextWarning=craft.world.getTotalWorldTime()+20;VehicleNetwork.error(player,"Exited Taxi Mode; craft was not converted back: "+failure.getMessage()+" Reboard to align it, or use the Configurizer.");}}
     }
     private static final java.util.ArrayDeque<Signal> signals=new java.util.ArrayDeque<>();
     private static final class Signal {
-        final com.vandorlabs.tiles.TileEntityPilotSeat seat;final EntityGroundVehicle craft;
+        final com.vandorlabs.tiles.TileEntityPilotSeat seat;final EntityGroundVehicle craft;int mode=-1;
         Signal(com.vandorlabs.tiles.TileEntityPilotSeat s,EntityGroundVehicle e){seat=s;craft=e;}
     }
     public static void signal(com.vandorlabs.tiles.TileEntityPilotSeat seat,EntityGroundVehicle craft) {
         if(signals.size()<64)signals.add(new Signal(seat,craft));
     }
+    public static void modeSignal(com.vandorlabs.tiles.TileEntityPilotSeat seat,EntityGroundVehicle craft,int mode){
+        if(mode<0 || mode>2 || signals.size()>=64)return;
+        Signal request=new Signal(seat,craft);request.mode=mode;signals.add(request);
+    }
     private static void signal(WorldServer world,Signal signal) {
         com.vandorlabs.tiles.TileEntityPilotSeat seat=signal.seat;
+        if(signal.craft!=null && (signal.mode==1 || signal.mode==2)){
+            EntityGroundVehicle craft=signal.craft;
+            if(!craft.isDead && !craft.ownershipBlocked && !craft.setHover(signal.mode==2))
+                VandorLabs.logger.debug("Requested vehicle mode unavailable: check lift blocks or ground clearance.");
+            return;
+        }
         if(seat.owner==null)return;
         EntityPlayerMP player=world.getMinecraftServer().getPlayerList().getPlayerByUUID(seat.owner);
         if(player==null || player.world!=world)return;
         try {
             if(signal.craft!=null) {
                 EntityGroundVehicle craft=signal.craft;if(craft.isDead || craft.ownershipBlocked)return;
+                if(signal.mode==0){if(craft.autopilot.controller()!=null)craft.autopilot.controller().setEnabled(false);craft.stopForParking();}
                 BlockPos origin=VehicleRotation.plan(craft).origin;
                 validateParking(player,craft,origin,true,false);VehicleTransfer.park(world,craft,origin,player);
             } else {
+                if(signal.mode==0)return;
                 if(world.getTileEntity(seat.getPos())!=seat || jobs.size()>=16)return;
                 for(Job existing:jobs.values())if(existing.world==world && existing.scan.startPosition().equals(seat.getPos()))return;
-                Job job=new Job(player,seat.getPos());job.signal=true;jobs.put(UUID.randomUUID(),job);
+                Job job=new Job(player,seat.getPos());job.signal=true;job.requestedMode=signal.mode;jobs.put(UUID.randomUUID(),job);
             }
         }catch(Exception e){VandorLabs.logger.warn("Pilot Seat signal failed: "+e.getMessage());VehicleNetwork.error(player,"Pilot Seat signal: "+e.getMessage());}
     }
     private static void assembleSignal(Job job) throws Exception {
         VehicleStructure structure=job.scan.result;WorldServer world=(WorldServer)job.world;BlockPos origin=job.scan.origin;
+        require(job.requestedMode!=2 || VehicleFlight.canHover(structure),"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
         for(BlockPos boundary:job.scan.airBoundary)require(world.isBlockLoaded(boundary) && world.isAirBlock(boundary),"Craft connections changed during signal scan.");
         require(clearOfPeople(world,new VehicleCollision(new VehicleWorld(world,structure)),origin,job.player),"Another occupant obstructs assembly.");
         authorizeAssembly(job.player,structure,origin);
-        VehicleTransfer.assemble(world,structure,origin,job.player);
+        EntityGroundVehicle assembled=VehicleTransfer.assemble(world,structure,origin,job.player);
+        if(job.requestedMode==2 && !assembled.setHover(true))VehicleNetwork.error(job.player,"Craft assembled in Taxi: Hover requires three lift blocks.");
     }
     private static final class Preview {
         final UUID token=UUID.randomUUID();final WorldServer world;VehicleStructure structure;final BlockPos origin;final EntityGroundVehicle entity;final long expires;
@@ -267,8 +284,9 @@ public final class VehicleService {
         require(player.world.isBlockModifiable(player,p) && player.canPlayerEdit(p,EnumFacing.UP,player.getHeldItemMainhand()),"You cannot modify a target block.");
     }
     private static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events) {validateParking(player,entity,origin,events,true);}
-    private static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events,boolean reach) {
+    static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events,boolean reach) {
         require(!entity.isDead && entity.world==player.world && (!reach || distance(player,entity.getEntityBoundingBox())<=64),"Move closer to the craft.");
+        require(!entity.hover,"Select Taxi mode before parking as blocks.");
         require(entity.stopped(),"Stop before parking.");
         VehicleRotation.Plan plan=VehicleRotation.plan(entity);
         require(plan.origin.equals(origin),"Craft moved; open a new parking preview.");
@@ -282,7 +300,7 @@ public final class VehicleService {
         for(AxisAlignedBB box:parkedGeometry.boxes)
             require(player.world.getCollisionBoxes(entity,box.offset(origin).shrink(1e-6)).isEmpty(),"Snapped craft geometry overlaps an obstacle.");
     }
-    private static boolean clearOfPeople(World world,VehicleCollision geometry,BlockPos origin,Entity... allowed) {
+    static boolean clearOfPeople(World world,VehicleCollision geometry,BlockPos origin,Entity... allowed) {
         java.util.Set<Entity> excluded=new java.util.HashSet<>();for(Entity e:allowed)if(e!=null){excluded.add(e);if(e.isRiding())excluded.add(e.getRidingEntity());}
         for(Entity person:world.getEntitiesWithinAABB(Entity.class,geometry.bounds.offset(origin).grow(.01),e->!e.isDead && !excluded.contains(e) && (e instanceof net.minecraft.entity.EntityLivingBase || e instanceof com.vandorlabs.entity.EntityChairSeat && !e.getPassengers().isEmpty())))
             for(AxisAlignedBB box:geometry.boxes)if(box.offset(origin).grow(.01).intersects(person.getEntityBoundingBox()))return false;

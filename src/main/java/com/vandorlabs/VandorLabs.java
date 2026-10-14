@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.1";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t159";
+    public static final String BUILD_ID = "t167";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -43,6 +43,8 @@ public class VandorLabs {
         com.vandorlabs.tiles.FilesystemTextures.initialize(event.getModConfigurationDirectory().toPath().resolve("vandorlabs/textures"));
         proxy.preInit(event);
         com.vandorlabs.tiles.DeferredTileLoad.install();
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityAutopilot.class,"vandorlabs:autopilot");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWaypoint.class,"vandorlabs:waypoint");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityPilotSeat.class,"vandorlabs:pilot_seat");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, "vandorlabs:programmable_trapdoor");

@@ -17,7 +17,14 @@ public final class VehicleClient {
     private static final Map<UUID,Incoming> incoming=new HashMap<>();
     private static final Map<UUID,Incoming> completed=new HashMap<>();
     private static Preview preview;
-    private static int sequence,ticks;
+    private static int sequence,ticks,lastJump=-100;
+    private static boolean jumpDown;
+    @SubscribeEvent public void hoverSneak(net.minecraftforge.client.event.InputUpdateEvent event){
+        Minecraft mc=Minecraft.getMinecraft();
+        if(event.getEntityPlayer()==mc.player && mc.player.getRidingEntity() instanceof EntityGroundVehicle
+                && ((EntityGroundVehicle)mc.player.getRidingEntity()).hover && !mc.gameSettings.keyBindSprint.isKeyDown())
+            event.getMovementInput().sneak=false;
+    }
     private static boolean sendInteraction() {
         Minecraft mc=Minecraft.getMinecraft();
         if(mc.currentScreen!=null || mc.player==null || mc.world==null || mc.player.isSpectator())return false;
@@ -115,12 +122,20 @@ public final class VehicleClient {
         RenderGroundVehicle.cleanup(mc.world);
         if(mc.world!=lastWorld){incoming.clear();completed.clear();preview=null;lastWorld=mc.world;sequence=0;}
         if(mc.world==null || mc.player==null)return;apply(mc);
-        for(Entity raw:mc.world.loadedEntityList)if(raw instanceof EntityGroundVehicle)((EntityGroundVehicle)raw).setLocalDriver(mc.player.getRidingEntity()==raw);
+        for(Entity raw:mc.world.loadedEntityList)if(raw instanceof EntityGroundVehicle)((EntityGroundVehicle)raw).setLocalDriver(mc.player.getRidingEntity()==raw && !((EntityGroundVehicle)raw).hover && !((EntityGroundVehicle)raw).autopilot.enabled());
         if(!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle entity=(EntityGroundVehicle)mc.player.getRidingEntity();
         VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.INPUT);p.entity=entity.getEntityId();p.token=entity.getUniqueID();p.sequence=++sequence;
         if(mc.currentScreen==null){p.forward=(byte)((mc.gameSettings.keyBindForward.isKeyDown()?1:0)-(mc.gameSettings.keyBindBack.isKeyDown()?1:0));p.strafe=(byte)((mc.gameSettings.keyBindRight.isKeyDown()?1:0)-(mc.gameSettings.keyBindLeft.isKeyDown()?1:0));p.flag=mc.gameSettings.keyBindJump.isKeyDown();}
         else p.flag=true;
+        boolean jump=mc.currentScreen==null && mc.gameSettings.keyBindJump.isKeyDown();
+        boolean toggle=jump && !jumpDown && mc.player.ticksExisted-lastJump<=7;
+        if(jump && !jumpDown)lastJump=toggle?-100:mc.player.ticksExisted;
+        jumpDown=jump;
+        VehicleNetwork.Packet flight=new VehicleNetwork.Packet(VehicleNetwork.FLIGHT);flight.entity=p.entity;flight.token=p.token;
+        flight.sequence=entity.hover && mc.currentScreen==null && mc.gameSettings.keyBindSprint.isKeyDown() && mc.gameSettings.keyBindSneak.isKeyDown()?1:0;
+        flight.flag=toggle;flight.forward=(byte)((jump?1:0)-(mc.currentScreen==null && mc.gameSettings.keyBindSneak.isKeyDown()?1:0));
+        PacketHandler.INSTANCE.sendToServer(flight);
         entity.predict(p.sequence,p.forward,p.strafe,p.flag);
         PacketHandler.INSTANCE.sendToServer(p);
     }

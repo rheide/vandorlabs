@@ -178,7 +178,14 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
             initialized = true;
             markDirty();
         }
-        DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
+        DeferredTileLoad.schedule(this, () -> {
+            RedstoneChannels.register(this);
+            IBlockState state=world.getBlockState(pos);
+            if(state.getBlock() instanceof BlockVandorSwitch
+                    && ((BlockVandorSwitch)state.getBlock()).isMomentary()
+                    && state.getValue(BlockVandorSwitch.ON))
+                world.scheduleUpdate(pos,state.getBlock(),state.getBlock().tickRate(world));
+        });
     }
 
     @Override public void invalidate() { RedstoneChannels.unregister(this); super.invalidate(); }

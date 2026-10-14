@@ -11,7 +11,7 @@ import java.util.*;
 
 /** Versioned immutable structure. Local coordinates are independent of its current world position. */
 public final class VehicleStructure {
-    public static final int MAX_BLOCKS=4096, MAX_AXIS=64, MAX_NBT_BYTES=4*1024*1024;
+    public static final int MAX_BLOCKS=32768, MAX_AXIS=64, MAX_NBT_BYTES=4*1024*1024;
     public static final int SCHEMA=1;
     public static final class Cell {
         public final BlockPos pos;
@@ -79,7 +79,7 @@ public final class VehicleStructure {
                 NBTTagCompound actual=VehicleTileData.translated(captured,BlockPos.ORIGIN.subtract(origin));
                 NBTTagCompound saved=cell.tile.copy();
                 // A short pulse can fall while the bounded scan is still running.
-                if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){actual.removeTag("VehicleSignalHigh");saved.removeTag("VehicleSignalHigh");}
+                if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){VehicleSeatSettings.clearSignalEdges(actual);VehicleSeatSettings.clearSignalEdges(saved);}
                 if(!saved.equals(actual))return false;
             }
         }

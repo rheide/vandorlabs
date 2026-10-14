@@ -50,8 +50,8 @@ public final class VehicleEscalatorRuntimeChecks {
     private static final class CancelParking {
         @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public void place(net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent event){event.setCanceled(true);}
     }
-    public static void run(WorldServer world){run(world,0,false);run(world,1,false);run(world,0,true);run(world,1,true);}
-    private static void run(WorldServer world,int mode,boolean vanilla){try{
+    public static void run(WorldServer world){run(world,0,false,false);run(world,1,false,false);run(world,0,true,false);run(world,1,true,false);run(world,0,false,true);run(world,0,true,true);}
+    private static void run(WorldServer world,int mode,boolean vanilla,boolean filled){try{
         BlockPos base=new BlockPos(320,110,200),seat=base.up(2),rampPos=base.add(2,2,0);
         for(BlockPos p:BlockPos.getAllInBox(base.add(-1,-1,-1),base.add(5,8,6)))world.setBlockToAir(p);
         EntityPlayerMP player=world.getMinecraftServer().getPlayerList().getPlayers().get(0);
@@ -61,6 +61,7 @@ public final class VehicleEscalatorRuntimeChecks {
         require(gear!=null,"registered gear");for(int x=0;x<3;x++){BlockPos at=base.east(x);world.setBlockState(at,gear.getDefaultState(),2);require(((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0),"retracted gear");}
         for(BlockPos p:BlockPos.getAllInBox(base.up(),base.add(3,1,2)))world.setBlockState(p,Blocks.STONE.getDefaultState(),2);
         world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),2);world.setBlockState(seat.up(),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.UPPER,true),2);
+        world.setBlockState(base.add(1,2,1),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
         world.setBlockState(rampPos,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockRampController.FACING,EnumFacing.SOUTH),2);
         Map<BlockPos,NBTTagCompound> originalTiles=new LinkedHashMap<>();
         net.minecraft.block.Block sourceBlock=vanilla?Blocks.STONE:ModBlocks.PROGRAMMABLE_BLOCK;
@@ -72,12 +73,24 @@ public final class VehicleEscalatorRuntimeChecks {
             originalTiles.put(p,raw==null?null:raw.writeToNBT(new NBTTagCompound()));
         }
         TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(rampPos);ramp.setOwner(player);
-        require(ramp.configureHalfOffsets(player,0,4,8,true,false,false,EnumFacing.SOUTH,com.vandorlabs.ramp.RampGeometry.VERTICAL,false,1,true,false,0,mode),"ramp configures: "+ramp.status);
+        require(ramp.configureHalfOffsets(player,0,4,8,true,false,false,EnumFacing.SOUTH,com.vandorlabs.ramp.RampGeometry.VERTICAL,filled,1,true,false,0,mode),"ramp configures: "+ramp.status);
         ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);require(!ramp.isMoving(),"ramp settled: "+ramp.status);
         world.setBlockState(rampPos.north(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);ramp.updatePower();ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);ramp.refreshEscalatorActivity();
         require(ramp.attached() && ramp.isOpen() && !ramp.isMoving() && !ramp.error && (mode==0 || ramp.isEscalatorRunning()),"powered extended ramp before assembly: "+ramp.status);
         if(mode!=0)for(int n=0;n<7;n++){java.lang.reflect.Field tick=TileEntityRampController.class.getDeclaredField("lastStepTick");tick.setAccessible(true);tick.setLong(ramp,world.getTotalWorldTime()-1);ramp.scheduledTick();}
         Set<BlockPos> sections=new HashSet<>(ramp.vehicleCells());
+        // Reproduce WorldEdit's x/y/z-only relocation, including its private recovery journal.
+        BlockPos copyOffset=new BlockPos(37,5,-29);
+        NBTTagCompound clipboard=ramp.writeToNBT(new NBTTagCompound());
+        clipboard.setInteger("x",rampPos.getX()+copyOffset.getX());clipboard.setInteger("y",rampPos.getY()+copyOffset.getY());clipboard.setInteger("z",rampPos.getZ()+copyOffset.getZ());
+        TileEntityRampController copied=new TileEntityRampController();copied.readFromNBT(clipboard);
+        require(copied.vehicleSources().size()==ramp.vehicleSources().size(),"clipboard retains all ramp sources");
+        for(BlockPos source:ramp.vehicleSources())require(copied.vehicleSources().contains(source.add(copyOffset)),"clipboard translates ramp source journal");
+        for(BlockPos cell:sections)require(copied.vehicleCells().contains(cell.add(copyOffset)),"clipboard translates ramp occupied journal");
+        for(BlockPos cell:sections){TileEntityControlledRamp part=(TileEntityControlledRamp)world.getTileEntity(cell);NBTTagCompound saved=part.writeToNBT(new NBTTagCompound());
+            saved.setInteger("x",cell.getX()+copyOffset.getX());saved.setInteger("y",cell.getY()+copyOffset.getY());saved.setInteger("z",cell.getZ()+copyOffset.getZ());
+            TileEntityControlledRamp relocated=new TileEntityControlledRamp();relocated.readFromNBT(saved);
+            require(relocated.controller.equals(rampPos.add(copyOffset))&&relocated.sourceY==part.sourceY+copyOffset.getY(),"clipboard translates part controller and source height");}
         BlockPos remoteTerrain=Collections.max(sections,Comparator.comparingInt(BlockPos::getY)).east();
         require(world.isAirBlock(remoteTerrain),"remote terrain fixture is initially empty");world.setBlockState(remoteTerrain,Blocks.DIAMOND_BLOCK.getDefaultState(),2);
         VehicleScan scan=new VehicleScan(world,seat);for(int n=0;n<100 && !scan.step(64);n++);
@@ -89,6 +102,19 @@ public final class VehicleEscalatorRuntimeChecks {
         List<String> originalGeometry=geometry(world,sections,scan.origin,0);
         Set<BlockPos> localSections=new HashSet<>();for(BlockPos section:sections)localSections.add(section.subtract(scan.origin));
         require(originalGeometry.equals(geometry(previewWorld,localSections,BlockPos.ORIGIN,0)),"extended preview retains exact tread geometry");
+        if(filled){
+            double filledVolume=0,unfilledVolume=0;
+            for(BlockPos section:localSections){TileEntityControlledRamp part=(TileEntityControlledRamp)previewWorld.getTileEntity(section);
+                require(part.extendSegments,"filled-ramp setting reaches every captured section");
+                for(net.minecraft.util.math.AxisAlignedBB box:part.boxes(0))filledVolume+=(box.maxX-box.minX)*(box.maxY-box.minY)*(box.maxZ-box.minZ);
+                // Compare the same captured source geometry without fill, ensuring
+                // this case actually exercises additional occupied volume.
+                part.extendSegments=false;
+                for(net.minecraft.util.math.AxisAlignedBB box:part.boxes(0))unfilledVolume+=(box.maxX-box.minX)*(box.maxY-box.minY)*(box.maxZ-box.minZ);
+                part.extendSegments=true;
+            }
+            require(filledVolume>unfilledVolume+1e-6,"filled-ramp fixture includes volume beyond ordinary ramp treads");
+        }
         for(BlockPos source:originalTiles.keySet())if(world.isAirBlock(source))require(craft.at(source.subtract(scan.origin))==null,"vacated source air is journal-only, not a craft block");
         TileEntityRampController previewRamp=(TileEntityRampController)previewWorld.getTileEntity(rampPos.subtract(scan.origin));
         for(VehicleStructure.Cell source:VehicleEscalators.originals(previewRamp))require(source.state==sourceState && java.util.Objects.equals(source.tileData(),originalTiles.get(source.pos.add(scan.origin))==null?null:VehicleTileData.translated(originalTiles.get(source.pos.add(scan.origin)),BlockPos.ORIGIN.subtract(scan.origin))),"original source material and NBT retained in recovery journal");
@@ -108,6 +134,24 @@ public final class VehicleEscalatorRuntimeChecks {
         for(BlockPos p:sections)require(world.isAirBlock(p),"no orphan section after assembly");
         TileEntityRampController paused=(TileEntityRampController)vehicle.view.getTileEntity(rampPos.subtract(scan.origin));require(paused.escalator==mode && paused.attached() && paused.isOpen() && !paused.isEscalatorRunning(),"vehicle ramp keeps extended pose with belt paused");
         require(originalGeometry.equals(geometry(vehicle.view,localSections,BlockPos.ORIGIN,.75)),"moving vehicle retains extended tread surfaces at every render partial tick");
+        if(mode==0){
+            EntityGroundVehicle probe=new EntityGroundVehicle(world);probe.install(craft);probe.setPosition(vehicle.posX,vehicle.posY+30,vehicle.posZ);
+            probe.hover=true;probe.hoverTarget=probe.posY;
+            BlockPos localController=rampPos.subtract(scan.origin);
+            boolean activation=paused.writeToNBT(new NBTTagCompound()).getBoolean("ActivateOnPower");
+            require(VehicleRamps.signal(probe,localController,!activation),"vehicle channel retracts captured ramp");
+            require(Math.abs(probe.hoverTarget-probe.posY)<1e-8,"ramp rebasing preserves hover altitude error");
+            require(!((TileEntityRampController)probe.view.getTileEntity(localController)).isOpen(),"retracted vehicle ramp pose");
+            require(VehicleRamps.signal(probe,localController,activation),"vehicle channel redeploys captured ramp");
+            require(originalGeometry.equals(geometry(probe.view,localSections,BlockPos.ORIGIN,0)),"vehicle channel restores complete ramp geometry");
+            List<VehicleStructure.Cell> fresh=new ArrayList<>();
+            for(VehicleStructure.Cell cell:craft.cells)if(!(cell.state.getBlock() instanceof BlockControlledRamp))fresh.add(cell.pos.equals(localController)?new VehicleStructure.Cell(cell.pos,cell.state,VehicleEscalators.legacyPaused(cell.tileData())):cell);
+            fresh.addAll(VehicleEscalators.originals(paused));
+            probe.install(new VehicleStructure(fresh,craft.seat,craft.facing,craft.gearCount));
+            require(VehicleRamps.signal(probe,localController,activation),"vehicle channel captures a previously retracted platform");
+            require(originalGeometry.equals(geometry(probe.view,localSections,BlockPos.ORIGIN,0)),"first vehicle deployment retains source material geometry");
+            probe.setDead();
+        }
         double frozenPhase=paused.beltDistance(0);paused.scheduledTick();paused.updatePower();paused.refreshEscalatorActivity();
         require(paused.beltDistance(200)==frozenPhase && originalGeometry.equals(geometry(vehicle.view,localSections,BlockPos.ORIGIN,200)),"vehicle clock and redstone callbacks cannot advance frozen tread geometry");
         NBTTagCompound before=vehicle.structure.write();for(int n=0;n<5;n++)vehicle.onUpdate();require(vehicle.structure.write().equals(before),"vehicle ticks never animate or mutate escalator");
@@ -151,6 +195,6 @@ public final class VehicleEscalatorRuntimeChecks {
         for(VehicleStructure.Cell source:parkedOriginals)require(world.getBlockState(source.pos)==source.state && java.util.Objects.equals(source.tileData(),world.getTileEntity(source.pos)==null?null:world.getTileEntity(source.pos).writeToNBT(new NBTTagCompound())),"retraction after rotated parking restores complete source state/NBT");
         for(BlockPos p:BlockPos.getAllInBox(base.add(-1,-1,-1),base.add(5,8,6)))world.setBlockToAir(p);
         player.capabilities.isFlying=originallyFlying;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);
-        System.out.println("[vandorlabs][reprolab] vehicle-ramp PASS mode="+mode+" vanilla="+vanilla+" extended-geometry frozen-phase journal-NBT exact-rollback no-orphans rotated-surfaces cancelled-parking extended-parking survival-realstate-upper-protection manual-park-actor-driver");
+        System.out.println("[vandorlabs][reprolab] vehicle-ramp PASS mode="+mode+" vanilla="+vanilla+" filled="+filled+" extended-geometry frozen-phase journal-NBT exact-rollback no-orphans rotated-surfaces cancelled-parking extended-parking survival-realstate-upper-protection manual-park-actor-driver");
     }catch(Exception e){throw new IllegalStateException(e);}}
 }

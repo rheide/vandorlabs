@@ -9,6 +9,24 @@ import java.util.*;
 /** Restore fully extended gear as part of the checked, atomic parking footprint. */
 public final class VehicleLandingGear {
     private VehicleLandingGear(){}
+    public static void retract(EntityGroundVehicle craft){
+        List<VehicleStructure.Cell> cells=new ArrayList<>();boolean changed=false;
+        for(VehicleStructure.Cell cell:craft.structure.cells){
+            if(cell.state.getBlock() instanceof BlockTelescopicLandingGear && !cell.state.getValue(BlockTelescopicLandingGear.LOWER) && cell.state.getValue(BlockTelescopicLandingGear.EXTENDED)){
+                cells.add(new VehicleStructure.Cell(cell.pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,false),cell.tileData()));changed=true;
+            }else cells.add(cell);
+        }
+        if(changed)craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
+        // Share the same cover predicate as placed gear; the captured world is read-only.
+        for(net.minecraft.tileentity.TileEntity raw:new ArrayList<>(craft.view.tiles.values()))if(raw instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor){
+            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor cover=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)raw;
+            if(cover.isCover()){
+                boolean open=com.vandorlabs.tiles.LandingGearCovers.needsOpen(cover);
+                boolean actual=raw.getBlockType().getActualState(craft.view.getBlockState(raw.getPos()),craft.view,raw.getPos()).getValue(net.minecraft.block.BlockDoor.OPEN);
+                if(open!=actual)VehicleDoors.toggle(craft,raw.getPos());
+            }
+        }
+    }
     public static void tick(EntityGroundVehicle craft){
         if(craft.view==null || craft.ownershipBlocked)return;
         Set<BlockPos> changed=new HashSet<>();

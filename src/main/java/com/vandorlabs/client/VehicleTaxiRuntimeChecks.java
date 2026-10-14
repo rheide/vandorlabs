@@ -79,6 +79,7 @@ public final class VehicleTaxiRuntimeChecks {
         }
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();w.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,seat,state,p,new ItemStack(ModBlocks.PILOT_SEAT));
         require(((TileEntityPilotSeat)w.getTileEntity(seat)).isTaxiMode(),"new seats default to Taxi Mode");
+        w.setBlockState(origin.add(1,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
         TileEntityPilotSeat legacy=new TileEntityPilotSeat();legacy.readFromNBT(new NBTTagCompound());require(legacy.isTaxiMode(),"legacy seats default to Taxi Mode");
         BlockPos furnacePos=origin.add(2,2,0);w.setBlockState(furnacePos,Blocks.FURNACE.getDefaultState().withProperty(net.minecraft.block.BlockFurnace.FACING,EnumFacing.EAST),2);
         TileEntityFurnace furnace=(TileEntityFurnace)w.getTileEntity(furnacePos);furnace.setCustomInventoryName("Taxi furnace");

@@ -17,6 +17,12 @@ public final class TileEntityPilotSeat extends TileEntity implements RedstoneCha
     private long readyAt;
     private boolean taxiMode=true;
     private int redstoneMode=1,height;
+    private final ChannelList[] modeChannels={ChannelList.EMPTY,ChannelList.EMPTY,ChannelList.EMPTY};
+    private final boolean[] modeHigh=new boolean[3];
+    public ChannelList modeChannels(int mode){return modeChannels[mode];}
+    public void setModeChannels(int mode,ChannelList value){if(mode<0||mode>2||value==null)throw new IllegalArgumentException("Invalid vehicle mode channels");modeChannels[mode]=value;modeHigh[mode]=modePowered(world,mode);markDirty();sync();}
+    private boolean modePowered(World real,int mode){if(real==null)return false;ChannelList list=modeChannels[mode];for(int i=0;i<list.size();i++)if(RedstoneChannels.level(real,list.get(i))>0)return true;return false;}
+    public int pollMode(World real){if(real==null)return -1;int selected=-1;boolean changed=false,baseline=baselineAfterLoad||real.getTotalWorldTime()<readyAt;for(int mode=0;mode<3;mode++){boolean next=modePowered(real,mode);if(next&&!modeHigh[mode]&&!baseline)selected=mode;changed|=next!=modeHigh[mode];modeHigh[mode]=next;}if(changed){markDirty();sync();}return selected;}
     public int getRedstoneMode(){return redstoneMode;}
     public int getHeight(){return height;}
     public void setHeight(int value){
@@ -53,10 +59,10 @@ public final class TileEntityPilotSeat extends TileEntity implements RedstoneCha
     public void resumeAfterLoad(World real){readyAt=real.getTotalWorldTime()+20;baselineAfterLoad=true;}
     @Override public void onLoad(){if(world!=null && !world.isRemote)resumeAfterLoad(world);}
     public int poll(World real) {if(real.getTotalWorldTime()<readyAt)return -1;boolean next=powered(real);if(baselineAfterLoad){baselineAfterLoad=false;high=next;markDirty();return -1;}if(next==high)return -1;high=next;markDirty();return next?1:0;}
-    public void update(){if(world!=null && !world.isRemote && poll(world)==1)VehicleService.signal(this,null);}
-    private void sync(){if(world!=null && !world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
-    public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setBoolean("TaxiMode",taxiMode);tag.setInteger("PilotRedstoneMode",redstoneMode);tag.setInteger("PilotHeight",height);tag.setBoolean("VehicleSignalHigh",high);if(owner!=null)tag.setUniqueId("VehicleOwner",owner);return tag;}
-    public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);channels=ChannelData.read(tag,0);redstoneMode=tag.hasKey("PilotRedstoneMode",3)?Math.max(0,Math.min(2,tag.getInteger("PilotRedstoneMode"))):1;height=Math.max(0,Math.min(3,tag.getInteger("PilotHeight")));taxiMode=!tag.hasKey("TaxiMode",1) || tag.getBoolean("TaxiMode");high=tag.getBoolean("VehicleSignalHigh");owner=tag.hasUniqueId("VehicleOwner")?tag.getUniqueId("VehicleOwner"):null;}
+    public void update(){if(world!=null && !world.isRemote){int mode=pollMode(world);if(mode>=0)VehicleService.modeSignal(this,null,mode);else if(poll(world)==1)VehicleService.signal(this,null);}}
+    private void sync(){if(world!=null && (!world.isRemote||world instanceof VehicleWorld))world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
+    public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ChannelData.write(tag,channels);for(int i=0;i<3;i++){NBTTagCompound mode=new NBTTagCompound();ChannelData.write(mode,modeChannels[i]);mode.setBoolean("High",modeHigh[i]);tag.setTag("VehicleModeChannels"+i,mode);}tag.setBoolean("TaxiMode",taxiMode);tag.setInteger("PilotRedstoneMode",redstoneMode);tag.setInteger("PilotHeight",height);tag.setBoolean("VehicleSignalHigh",high);if(owner!=null)tag.setUniqueId("VehicleOwner",owner);return tag;}
+    public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);channels=ChannelData.read(tag,0);for(int i=0;i<3;i++){NBTTagCompound mode=tag.getCompoundTag("VehicleModeChannels"+i);modeChannels[i]=ChannelData.read(mode,0);modeHigh[i]=mode.getBoolean("High");}redstoneMode=tag.hasKey("PilotRedstoneMode",3)?Math.max(0,Math.min(2,tag.getInteger("PilotRedstoneMode"))):1;height=Math.max(0,Math.min(3,tag.getInteger("PilotHeight")));taxiMode=!tag.hasKey("TaxiMode",1) || tag.getBoolean("TaxiMode");high=tag.getBoolean("VehicleSignalHigh");owner=tag.hasUniqueId("VehicleOwner")?tag.getUniqueId("VehicleOwner"):null;}
     public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());setHeight(height);}

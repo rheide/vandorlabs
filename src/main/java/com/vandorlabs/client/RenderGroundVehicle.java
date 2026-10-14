@@ -130,10 +130,10 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     @Override protected ResourceLocation getEntityTexture(EntityGroundVehicle e){return TextureMap.LOCATION_BLOCKS_TEXTURE;}
     @Override public boolean shouldRender(EntityGroundVehicle e,net.minecraft.client.renderer.culling.ICamera camera,double x,double y,double z){return e.structure==null || camera.isBoundingBoxInFrustum(e.getRenderBoundingBox());}
     private Mesh mesh(EntityGroundVehicle e,Mesh mesh,boolean propulsion) {
-        int light=e.view.getCombinedLight(e.structure.seat,0);
-        if(mesh.builtCells==mesh.cells && mesh.generation==generation && mesh.light==light && (!propulsion || mesh.level==e.view.propulsionLevel))return mesh;
+        int light=e.view.getCombinedLight(e.structure.seat,0),appearance=e.view.propulsionLevel+(e.hover?16:0);
+        if(mesh.builtCells==mesh.cells && mesh.generation==generation && mesh.light==light && (!propulsion || mesh.level==appearance))return mesh;
         if(buildCells<=0 || buildNanos<=0)return mesh;
-        if(mesh.pending==null)mesh.pending=new Build(mesh,light,e.view.propulsionLevel);
+        if(mesh.pending==null)mesh.pending=new Build(mesh,light,appearance);
         Build job=mesh.pending;long start=System.nanoTime(),deadline=start+buildNanos;
         Minecraft mc=Minecraft.getMinecraft();
         try {

@@ -13,11 +13,13 @@ import java.util.*;
  * Only explicit vehicle adapters animate tiles and subscribe supported channel controls. */
 public final class VehicleWorld extends World {
     public VehicleStructure structure;
+    public EntityGroundVehicle craft;
     public final World parent;
     public final Map<BlockPos,TileEntity> tiles=new LinkedHashMap<>();
     private final Map<Long,Chunk> chunks=new HashMap<>();
     public BlockPos origin=BlockPos.ORIGIN;
     public int propulsionLevel;
+    public boolean hover;
     public int tileRevision;
     public java.util.function.Consumer<BlockPos> controlUpdates;
     public static boolean isMovingControl(net.minecraft.block.Block block) {
@@ -29,6 +31,7 @@ public final class VehicleWorld extends World {
     public int propulsionBrightness(BlockPos pos,int configured) {
         VehicleStructure.Cell cell=structure.at(pos);
         if(cell==null || !(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return configured;
+        if(VehicleFlight.lift(cell.state.getBlock()))return hover?15:0;
         if(channelPropulsion(pos)!=null)return configured;
         return propulsionLevel;
     }
@@ -80,7 +83,7 @@ public final class VehicleWorld extends World {
     @Override public IBlockState getBlockState(BlockPos p){VehicleStructure.Cell c=structure.at(p);if(c==null)return Blocks.AIR.getDefaultState();
         if(!(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return c.state;
         com.vandorlabs.tiles.TileEntityRedstoneLight light=channelPropulsion(p);
-        boolean powered=light==null?propulsionLevel>0:light.isSignalBrightness()?(light.isRedstoneInverted()?15-light.getChannelLevel():light.getChannelLevel())>0:(light.getChannelLevel()>0)!=light.isRedstoneInverted();
+        boolean powered=VehicleFlight.lift(c.state.getBlock())?hover:light==null?propulsionLevel>0:light.isSignalBrightness()?(light.isRedstoneInverted()?15-light.getChannelLevel():light.getChannelLevel())>0:(light.getChannelLevel()>0)!=light.isRedstoneInverted();
         return c.state.withProperty(com.vandorlabs.blocks.BlockPropulsionLight.POWERED,powered).withProperty(com.vandorlabs.blocks.BlockPropulsionLight.PARTICLES,false);}
     @Override public TileEntity getTileEntity(BlockPos p){return tiles.get(p);}
     @Override public boolean setBlockState(BlockPos p,IBlockState state,int flags){return false;}

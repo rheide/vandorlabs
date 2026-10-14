@@ -19,7 +19,7 @@ public final class MessageSurfaceTexture implements IMessage {
         @Override public IMessage onMessage(MessageSurfaceTexture m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(m.pos==null || m.slot<0 || m.slot>1 || m.choice< TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || (m.choice>=0 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.choice))
+                if(m.pos==null || m.slot<0 || m.slot>1 || m.choice< TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || (m.choice>=0 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.choice))
                         || !player.world.isBlockLoaded(m.pos) || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
                 TileEntity tile=player.world.getTileEntity(m.pos);
                 if(player.openContainer instanceof ContainerAnimatedScreenSelector && tile instanceof TileEntityAnimatedScreenSelector) {

@@ -472,6 +472,7 @@ public class ReproLab {
     private static java.util.concurrent.Future<?> pendingGalleryBuild;
     private static int pendingGalleryTicks;
     private int holdTicks = 0;
+    private boolean vehicleStatusStarted;
     private static long renderedFrames, cameraChangedAtFrame;
     private int shotIndex = 0;
     private boolean distantReady;
@@ -601,6 +602,12 @@ public class ReproLab {
         if (Boolean.getBoolean("vandorlabs.vehicleMotionChecksOnly")) {
             try {if(VehicleMotionRuntimeChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("vehicle motion live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.vehicleStatusChecksOnly")) {
+            mc.displayGuiScreen(null);mc.setIngameFocus();
+            try {if(!vehicleStatusStarted){VehicleStatusClientRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(VehicleStatusClientRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("vehicle status live checks",failure);}
             return;
         }
         if (Boolean.getBoolean("vandorlabs.vehicleTaxiChecksOnly")) {

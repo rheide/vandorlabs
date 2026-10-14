@@ -13,7 +13,9 @@ import java.util.*;
 final class HousingTextureList {
     static final int ROW_HEIGHT=22;
     static final int CANOPY_GLASS_BASE=0x10000000;
-    private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001;
+    private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001,VEHICLE_ROW=-100002;
+    private Runnable vehicleAction;
+    HousingTextureList vehicle(Runnable action){vehicleAction=action;setSelected(selected());return this;}
     private Runnable redstoneAction;
     HousingTextureList redstone(Runnable action){redstoneAction=action;setSelected(selected());return this;}
     private final Map<Integer,Option> options=new LinkedHashMap<>();
@@ -148,7 +150,7 @@ final class HousingTextureList {
                 || nativeOptions && customConsumer!=null && choice>=0 && !options.containsKey(choice)
                     && com.vandorlabs.items.ItemProgrammableArmor.validTexture(choice))?choice:-1;
         missing=!nativeOptions && choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
-        selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
+        selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE?VEHICLE_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
         Option option=options.get(selected);if(option!=null)expanded.add(option.category);rebuild();
         int index=rows.indexOf(selected);scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
     }
@@ -162,6 +164,7 @@ final class HousingTextureList {
         }
         if(customConsumer!=null)rows.add(CUSTOM_ROW);
         if(redstoneAction!=null)rows.add(REDSTONE_ROW);
+        if(vehicleAction!=null)rows.add(VEHICLE_ROW);
         scroll=Math.min(scroll,maxScroll());
     }
     /** Pin the category of the first visible texture into the top row. */
@@ -170,7 +173,7 @@ final class HousingTextureList {
         if(row==0 && choice>=0)return -categories.indexOf(options.get(choice).category)-1;
         return choice;
     }
-    int selected(){return selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
+    int selected(){return selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
     private int height(){return ROW_HEIGHT*count;}
     private int maxScroll(){return Math.max(0,rows.size()-count);}
     private int thumbHeight(){return Math.max(8,height()*count/Math.max(count,rows.size()));}
@@ -185,6 +188,7 @@ final class HousingTextureList {
         if(mouseX<x || mouseX>=x+width)return false;
         int index=scroll+(mouseY-y)/ROW_HEIGHT;if(index>=rows.size())return true;
         int choice=visibleChoice((mouseY-y)/ROW_HEIGHT);
+        if(choice==VEHICLE_ROW){selected=VEHICLE_ROW;custom=-1;missing=-1;vehicleAction.run();return true;}
         if(choice==REDSTONE_ROW){selected=REDSTONE_ROW;custom=-1;missing=-1;redstoneAction.run();return true;}
         if(choice==CUSTOM_ROW){Minecraft mc=Minecraft.getMinecraft();net.minecraft.item.ItemStack carried=mc.player.inventory.getItemStack();mc.player.inventory.setItemStack(net.minecraft.item.ItemStack.EMPTY);mc.displayGuiScreen(new GuiCustomTexture(mc.currentScreen,value->{setSelected(value);customConsumer.accept(value);}));mc.player.inventory.setItemStack(carried);return true;}
         if(choice>=0){selected=choice;custom=-1;missing=-1;picked=true;}
@@ -223,7 +227,8 @@ final class HousingTextureList {
             int choice=visibleChoice(row),yy=y+row*ROW_HEIGHT;
             boolean hover=mouseX>=x && mouseX<x+width && mouseY>=yy && mouseY<yy+ROW_HEIGHT;
             if(choice==selected || hover)Gui.drawRect(x,yy,x+width,yy+ROW_HEIGHT,choice==selected?0xFF2A4A6A:0xFF1A1A20);
-            if(choice==REDSTONE_ROW){font.drawStringWithShadow("Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
+            if(choice==VEHICLE_ROW){font.drawStringWithShadow("Vehicle Status",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
+            else if(choice==REDSTONE_ROW){font.drawStringWithShadow("Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==CUSTOM_ROW){
                 if(custom>=0) {
                     if(!com.vandorlabs.tiles.CustomBlockMaterials.isCustom(custom))drawThumbnail(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(custom)),yy);

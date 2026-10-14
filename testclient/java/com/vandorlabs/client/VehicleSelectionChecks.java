@@ -9,6 +9,13 @@ import java.util.*;
 
 /** Headless selection coverage; does not substitute for real click/network boarding checks. */
 public final class VehicleSelectionChecks {
+    private static final class DirectionalFixture extends net.minecraft.block.Block {
+        private static final net.minecraft.block.properties.PropertyDirection FACING=net.minecraft.block.properties.PropertyDirection.create("facing",EnumFacing.Plane.HORIZONTAL);
+        private final boolean rotate;
+        DirectionalFixture(String name,boolean rotate){super(net.minecraft.block.material.Material.ROCK);this.rotate=rotate;setRegistryName("unknown_fixture",name);setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH));}
+        @Override protected net.minecraft.block.state.BlockStateContainer createBlockState(){return new net.minecraft.block.state.BlockStateContainer(this,FACING);}
+        @Override public net.minecraft.block.state.IBlockState withRotation(net.minecraft.block.state.IBlockState state,net.minecraft.util.Rotation rotation){return rotate?state.withProperty(FACING,rotation.rotate(state.getValue(FACING))):state;}
+    }
     private static void require(boolean value, String message) {
         if (!value) throw new AssertionError(message);
     }
@@ -88,13 +95,30 @@ public final class VehicleSelectionChecks {
         for(int turn=0;turn<4;turn++)cycle=VehicleRotation.rotate(cycle,new VehicleWorld(world,cycle),1);
         require(cycle.write().equals(structure.write()),"four rotations restore cell coordinates and native block states");
         net.minecraft.block.Block unknown=new net.minecraft.block.Block(net.minecraft.block.material.Material.ROCK){};
-        unknown.setRegistryName("unknown_fixture","directional_component");
+        unknown.setRegistryName("unknown_fixture","plain_cube");
         List<VehicleStructure.Cell> unsupportedCells=new ArrayList<>(structure.cells);
         unsupportedCells.add(new VehicleStructure.Cell(new BlockPos(1,0,1),unknown.getDefaultState(),null));
         VehicleStructure unsupported=new VehicleStructure(unsupportedCells,position,EnumFacing.NORTH,1);
-        require(VehicleRotation.rotate(unsupported,new VehicleWorld(world,unsupported),0)==unsupported,"unknown block can return at original orientation");
+        VehicleRotation.validate(unsupported,new VehicleWorld(world,unsupported));
+        VehicleStructure cubeCycle=unsupported;
+        for(int turn=0;turn<4;turn++)cubeCycle=VehicleRotation.rotate(cubeCycle,new VehicleWorld(world,cubeCycle),1);
+        require(cubeCycle.write().equals(unsupported.write()),"tile-free plain mod cube safely round-trips at every heading");
+        unknown=new DirectionalFixture("directional_noop",false);
+        unsupportedCells=new ArrayList<>(structure.cells);unsupportedCells.add(new VehicleStructure.Cell(new BlockPos(1,0,1),unknown.getDefaultState(),null));
+        unsupported=new VehicleStructure(unsupportedCells,position,EnumFacing.NORTH,1);
         boolean refused=false;try{VehicleRotation.rotate(unsupported,new VehicleWorld(world,unsupported),1);}catch(IllegalArgumentException expected){refused=true;}
-        require(refused,"unknown mod block rotation refused before mutation");
+        require(refused,"directional mod block with no-op rotation refused before mutation");
+        refused=false;try{VehicleRotation.validate(unsupported,new VehicleWorld(world,unsupported));}catch(IllegalArgumentException expected){refused=true;}
+        require(refused,"directional no-op rejected during pre-assembly validation");
+        unknown=new DirectionalFixture("directional_rotating",true);
+        unsupportedCells=new ArrayList<>(structure.cells);unsupportedCells.add(new VehicleStructure.Cell(new BlockPos(1,0,1),unknown.getDefaultState(),null));
+        unsupported=new VehicleStructure(unsupportedCells,position,EnumFacing.NORTH,1);
+        VehicleRotation.validate(unsupported,new VehicleWorld(world,unsupported));
+        VehicleStructure directionalCycle=unsupported;
+        VehicleStructure quarter=VehicleRotation.rotate(unsupported,new VehicleWorld(world,unsupported),1);
+        require(quarter.at(VehicleRotation.cell(new BlockPos(1,0,1),(int)unsupported.bounds.maxX,(int)unsupported.bounds.maxZ,1)).state.getValue(DirectionalFixture.FACING)==EnumFacing.EAST,"custom directional block quarter-turn faces east");
+        for(int turn=0;turn<4;turn++)directionalCycle=VehicleRotation.rotate(directionalCycle,new VehicleWorld(world,directionalCycle),1);
+        require(directionalCycle.write().equals(unsupported.write()),"custom rotating directional mod block round-trips complete snapshot data");
         net.minecraft.block.Block replacement=new net.minecraft.block.Block(net.minecraft.block.material.Material.ROCK){};
         replacement.setRegistryName("minecraft","unknown_replacement");
         unsupportedCells=new ArrayList<>(structure.cells);unsupportedCells.add(new VehicleStructure.Cell(new BlockPos(1,0,1),replacement.getDefaultState(),null));
@@ -112,7 +136,9 @@ public final class VehicleSelectionChecks {
             // Exercise the current protocol boundary rather than an older valid packet ID.
             buffer.clear();sent.type=VehicleNetwork.TILE;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
             require(received.valid && received.type==VehicleNetwork.TILE,"latest supported packet type accepted");
-            for(int unknownType:new int[]{VehicleNetwork.TILE+1,255}){
+            buffer.clear();sent.type=VehicleNetwork.FLIGHT;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
+            require(received.valid && received.type==VehicleNetwork.FLIGHT,"flight packet type accepted");
+            for(int unknownType:new int[]{VehicleNetwork.FLIGHT+1,255}){
                 buffer.clear();sent.type=unknownType;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
                 require(!received.valid,"unknown interaction packet type rejected: "+unknownType);
             }

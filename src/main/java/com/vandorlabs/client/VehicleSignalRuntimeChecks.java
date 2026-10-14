@@ -21,6 +21,7 @@ final class VehicleSignalRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("vehicle channels: "+message);}
     private static VehicleStructure.Cell cell(BlockPos pos,IBlockState state,TileEntity tile){tile.setPos(pos);NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());if(tile instanceof TileEntityCanopy)((TileEntityCanopy)tile).large.write(tag);return new VehicleStructure.Cell(pos,state,tag);}
     static void run(WorldServer world,EntityPlayerMP player){
+        CapturedControlRuntimeChecks.run(world,player);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         BlockPos screenPos=new BlockPos(2,2,2),lightPos=new BlockPos(4,2,2),doorPos=new BlockPos(6,2,2),gearPos=new BlockPos(8,0,2),canopyPos=new BlockPos(10,2,8);
@@ -28,7 +29,7 @@ final class VehicleSignalRuntimeChecks {
         cells.add(cell(screenPos,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),screen));
         TileEntityProgrammableLight light=new TileEntityProgrammableLight();light.configure(0,15,true,ChannelList.of(CHANNEL),0,1);cells.add(cell(lightPos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),light));
         TileEntityProgrammableLight neighbor=new TileEntityProgrammableLight();neighbor.configure(0,15,true,ChannelList.EMPTY,0,1);cells.add(cell(lightPos.east(),ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),neighbor));
-        Block propulsion=null;for(Block candidate:Block.REGISTRY)if(candidate instanceof BlockPropulsionLight){propulsion=candidate;break;}require(propulsion!=null,"propulsion fixture registered");
+        Block propulsion=null;for(Block candidate:Block.REGISTRY)if(candidate instanceof BlockPropulsionLight && !VehicleFlight.lift(candidate)){propulsion=candidate;break;}require(propulsion!=null,"propulsion fixture registered");
         BlockPos propulsionPos=lightPos.up(3);TileEntityRedstoneLight thruster=new TileEntityRedstoneLight();thruster.configureSignalBrightness(true,8);thruster.setRedstoneChannel(CHANNEL);cells.add(cell(propulsionPos,propulsion.getDefaultState(),thruster));
         Block door=Block.getBlockFromName("vandorlabs:programmable_door");require(door!=null,"door fixture registered");
         TileEntitySpaceDoor doorTile=new TileEntitySpaceDoor();doorTile.setRedstoneChannel(CHANNEL);NBTTagCompound doorTag=doorTile.writeToNBT(new NBTTagCompound());doorTag.setInteger("SpaceDoorTrigger",1);doorTile.readFromNBT(doorTag);

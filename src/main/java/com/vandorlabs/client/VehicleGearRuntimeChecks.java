@@ -77,6 +77,23 @@ final class VehicleGearRuntimeChecks {
                 world.removeTileEntity(at);world.setBlockState(at,Blocks.AIR.getDefaultState(),2);
             }
         }
+        BlockPos wheelAt=base.up(12);
+        for(String size:new String[]{"small","medium","large"}){
+            BlockWheel wheel=(BlockWheel)net.minecraft.block.Block.getBlockFromName("vandorlabs:wheel_"+size);
+            world.setBlockState(wheelAt.south(),Blocks.STONE_SLAB.getDefaultState(),2);
+            require(wheel.canPlaceBlockOnSide(world,wheelAt,net.minecraft.util.EnumFacing.NORTH),"wheel mounts on slab behind it: "+size);
+            net.minecraft.block.state.IBlockState state=wheel.getDefaultState();world.setBlockState(wheelAt,state,2);wheel.onBlockPlacedBy(world,wheelAt,state,null,net.minecraft.item.ItemStack.EMPTY);
+            List<BlockPos> members=wheel.members(wheelAt,state);require(members.size()==(size.equals("large")?4:1),"wheel footprint "+size);
+            for(int n=0;n<members.size();n++)require(world.getBlockState(members.get(n)).getBlock()==wheel&&world.getBlockState(members.get(n)).getValue(BlockWheel.PART)==n,"wheel reserves correctly numbered parts");
+            for(BlockPos member:members)world.setBlockToAir(member);
+            world.setBlockToAir(wheelAt.south());
+        }
+        BlockPos slabAt=wheelAt.up(4);world.setBlockState(slabAt.down(),Blocks.STONE.getDefaultState(),2);
+        net.minecraft.block.state.IBlockState topSlab=Blocks.STONE_SLAB.getDefaultState().withProperty(net.minecraft.block.BlockSlab.HALF,net.minecraft.block.BlockSlab.EnumBlockHalf.TOP);
+        world.setBlockState(slabAt,topSlab,2);
+        require(!VehicleScan.touches(world,slabAt,topSlab,net.minecraft.util.EnumFacing.DOWN),"top slabs exclude the separated floor below");
+        require(!VehicleScan.touches(world,slabAt.down(),Blocks.STONE.getDefaultState(),net.minecraft.util.EnumFacing.UP),"top-slab floor exclusion is symmetric");
+        world.setBlockToAir(slabAt);world.setBlockToAir(slabAt.down());
         System.out.println("[vandorlabs][reprolab] vehicle-gear PASS five-sizes minimum-three-roots equal-bottom-Y unequal-mounts unequal-extensions half-block-refused moving-refused collision-plane bounded-scan");
     }
 }

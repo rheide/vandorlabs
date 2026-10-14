@@ -58,6 +58,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_FULL_INPUT;
     public static Block CONTROLLED_RAMP;
     public static Block PROGRAMMABLE_RAMP;
+    public static Block AUTOPILOT, WAYPOINT;
     public static final List<Block> BLOCKS = new ArrayList<>();
     /** Ids of every "display" (animated screen) block, sorted. Populated
      * from the generated catalog; drives the selector GUI list and packet
@@ -197,6 +198,9 @@ public class ModBlocks {
         PROGRAMMABLE_LIGHT_SLAB = add(new BlockProgrammableLightSlab());
         PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
         PILOT_SEAT = add(new BlockPilotSeat());
+        add(new BlockWheel("wheel_small",0));
+        add(new BlockWheel("wheel_medium",1));
+        add(new BlockWheel("wheel_large",2));
         PROGRAMMABLE_SLAB = add(new BlockProgrammableSlab());
         PROGRAMMABLE_STAIRS = add(new BlockProgrammableStairs());
         PROGRAMMABLE_PORTHOLE_WALL = add(new BlockProgrammableWall("programmable_porthole_wall",
@@ -214,6 +218,8 @@ public class ModBlocks {
         PROGRAMMABLE_FULL_INPUT = new BlockProgrammableFullInput();
         add(PROGRAMMABLE_FULL_INPUT);
         PROGRAMMABLE_RAMP = add(new BlockRampController());
+        AUTOPILOT = add(new BlockAutopilot(false));
+        WAYPOINT = add(new BlockAutopilot(true));
         CONTROLLED_RAMP = new BlockControlledRamp();
         addNoItem(CONTROLLED_RAMP);
     }

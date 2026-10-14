@@ -10,6 +10,8 @@ import net.minecraftforge.common.config.Configuration;
 /** Startup-only acquisition settings; registry identities and saved worlds stay intact. */
 public final class BlockAvailability {
     private static final Map<String,Boolean> ENABLED=new HashMap<>();
+    private static int vehicleMaxBlocks=4096;
+    public static int vehicleMaxBlocks(){return vehicleMaxBlocks;}
     private BlockAvailability() {}
     public static void initialize(File directory) {
         load(new File(directory,"vandorlabs-blocks.cfg"));
@@ -18,6 +20,9 @@ public final class BlockAvailability {
     public static void load(File file) {
         Configuration config=new Configuration(file);
         config.load();
+        vehicleMaxBlocks=config.getInt("maxBlocks","vehicles",4096,1,
+                com.vandorlabs.vehicle.VehicleStructure.MAX_BLOCKS,
+                "Maximum connected blocks allowed when assembling a vehicle. Existing vehicles remain restorable. The 64-block axis and 4 MiB data limits still apply. Restart required.");
         ENABLED.clear();
         config.setCategoryComment("blocks","Block categories available in creative menus and crafting. Restart required. Existing world blocks and inventory items are preserved. Diagonal variants belong to diagonals, regardless of material/function.");
         for(String category:BlockCategories.IDS)

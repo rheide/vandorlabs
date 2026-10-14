@@ -44,12 +44,14 @@ public final class VehicleRuntimeChecks {
         void power(boolean on){high=on;com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);}
     }
     private static void channelConversion(WorldServer world,EntityPlayerMP player,Block gear) throws Exception {
+        AutopilotRuntimeChecks.run(world);
         BlockPos base=new BlockPos(40,101,12),seat=base.up(2);
         world.setBlockState(base,gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(base)).configure(0,0,0,0);
         world.setBlockState(base.up(),Blocks.STONE.getDefaultState(),2);
         for(int x=1;x<=2;x++){BlockPos at=base.east(x);world.setBlockState(at,gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0);world.setBlockState(at.up(),Blocks.STONE.getDefaultState(),2);}
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();world.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,state,player,new ItemStack(ModBlocks.PILOT_SEAT));
         ((TileEntityPilotSeat)world.getTileEntity(seat)).setTaxiMode(false);
+        world.setBlockState(seat.east(),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
         SignalSource source=new SignalSource();source.setWorld(world);source.setPos(base.west(3));com.vandorlabs.redstone.RedstoneChannels.register(source);
         try {
             TileEntityPilotSeat pilot=(TileEntityPilotSeat)world.getTileEntity(seat);pilot.setRedstoneChannel(5317);
@@ -227,21 +229,31 @@ public final class VehicleRuntimeChecks {
         List<VehicleStructure.Cell> large=new ArrayList<>();
         for(int x=0;x<16;x++)for(int y=0;y<16;y++)for(int z=0;z<16;z++)large.add(new VehicleStructure.Cell(new BlockPos(x,y,z),x==0&&y==0&&z==0?seat:Blocks.STONE.getDefaultState(),null));
         VehicleStructure full=new VehicleStructure(large,BlockPos.ORIGIN,EnumFacing.EAST,1);
-        require(VehicleStructure.decode(full.encode()).cells.size()==4096,"4096-block craft codec boundary");
+        require(VehicleStructure.decode(full.encode()).cells.size()==4096,"default assembly-sized craft codec round-trip");
         large.add(new VehicleStructure.Cell(new BlockPos(16,0,0),Blocks.STONE.getDefaultState(),null));
-        boolean oversize=false;try{new VehicleStructure(large,BlockPos.ORIGIN,EnumFacing.EAST,1);}catch(IllegalArgumentException expectedFailure){oversize=true;}
-        require(oversize,"4097-block craft rejected");
+        VehicleStructure retained=new VehicleStructure(large,BlockPos.ORIGIN,EnumFacing.EAST,1);
+        require(com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks()==4096,"isolated assembly-limit fixture uses default configuration");
+        require(VehicleStructure.decode(retained.encode()).write().equals(retained.write()),"existing snapshot above the lower assembly limit remains readable without data loss");
+        EntityGroundVehicle retainedVehicle=new EntityGroundVehicle(w);retainedVehicle.install(retained);
+        require(retainedVehicle.structure.cells.size()==4097,"existing larger snapshot can still load as a vehicle");retainedVehicle.setDead();
+        List<VehicleStructure.Cell> hardLimit=new ArrayList<>();
+        for(int x=0;x<32;x++)for(int y=0;y<32;y++)for(int z=0;z<32;z++)hardLimit.add(new VehicleStructure.Cell(new BlockPos(x,y,z),x==0&&y==0&&z==0?seat:Blocks.STONE.getDefaultState(),null));
+        require(new VehicleStructure(hardLimit,BlockPos.ORIGIN,EnumFacing.EAST,1).cells.size()==VehicleStructure.MAX_BLOCKS,"snapshot hard ceiling admits 32768 unique cells within axis limits");
+        hardLimit.add(new VehicleStructure.Cell(new BlockPos(32,0,0),Blocks.STONE.getDefaultState(),null));
+        boolean oversize=false;try{new VehicleStructure(hardLimit,BlockPos.ORIGIN,EnumFacing.EAST,1);}catch(IllegalArgumentException expectedFailure){oversize=true;}
+        require(oversize,"snapshot hard ceiling rejects 32769 unique cells before serialization");
         BlockPos bigOrigin=new BlockPos(64,112,0);
         for(int cx=3;cx<=5;cx++)for(int cz=-1;cz<=1;cz++)w.getChunkFromChunkCoords(cx,cz);
         for(int x=0;x<16;x++)for(int y=0;y<16;y++)for(int z=0;z<16;z++)w.setBlockState(bigOrigin.add(x,y,z),Blocks.STONE.getDefaultState(),2);
         w.setBlockState(bigOrigin,seat,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,bigOrigin,seat,p,new ItemStack(ModBlocks.PILOT_SEAT));
         for(int x=13;x<=15;x++){BlockPos bigGear=bigOrigin.add(x,0,15);w.setBlockState(bigGear,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(bigGear)).configure(0,0,0,0);}
-        require(scan(w,bigOrigin).result.cells.size()==4096,"4096 occupied blocks discovered across bounded scan slices");
+        require(scan(w,bigOrigin).result.cells.size()==com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks(),"configured assembly limit discovered across bounded scan slices");
         w.setBlockState(bigOrigin.add(16,0,0),Blocks.STONE.getDefaultState(),2);
         VehicleScan rejected=new VehicleScan(w,bigOrigin);for(int n=0;n<200 && !rejected.step(256);n++);
-        require(rejected.error!=null && rejected.error.contains("4096"),"scan rejects 4097 occupied blocks before conversion");
+        require(rejected.result==null&&rejected.error!=null && rejected.error.contains("configured "+com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks()+" block limit"),"assembly scan rejects one more than configured limit while larger snapshots remain restorable");
         for(BlockPos at:BlockPos.getAllInBox(bigOrigin,bigOrigin.add(16,15,15)))w.setBlockToAir(at);
 
+        HoverRuntimeChecks.check(w,p);
         channelConversion(w,p,gear);
         require(expected.matches(w,scan.origin),"spawn cancellation fixture matches before transfer");
         NBTTagCompound originalRetractedRamp=w.getTileEntity(rampPos).writeToNBT(new NBTTagCompound());
@@ -422,7 +434,7 @@ public final class VehicleRuntimeChecks {
             }
             if(ticks>425 && VehicleInteractionRuntimeChecks.tick(mc,output) && VehicleTaxiRuntimeChecks.tick(mc,output)) {
                 System.out.println("[vandorlabs][reprolab] vehicle-render-profile "+RenderGroundVehicle.profile());
-                System.out.println("[vandorlabs][reprolab] vehicle-live PASS rendering generic-blocks network-driving propulsion safe-dismount doors ramps channel-conversion seated-conversion 4096-blocks actual-clicks");mc.shutdown();
+                System.out.println("[vandorlabs][reprolab] vehicle-live PASS rendering generic-blocks network-driving propulsion safe-dismount doors ramps channel-conversion seated-conversion configured-assembly-limit snapshot-hard-ceiling retained-larger-snapshots actual-clicks");mc.shutdown();
             }
         }catch(Exception e){throw new IllegalStateException("vehicle live checks",e);}
     }

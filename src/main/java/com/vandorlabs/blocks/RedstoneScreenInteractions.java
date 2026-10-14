@@ -25,6 +25,9 @@ public final class RedstoneScreenInteractions {
         double reach=Math.min(8,player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d eye=player.getPositionEyes(1).subtract(new Vec3d(pos));
         Vec3d end=eye.add(player.getLook(1).scale(reach));
+        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)&&hitRow(state,tile,slot,eye,end,1)>=0){
+            if(!world.isRemote){com.vandorlabs.tiles.TileEntityAutopilot controller=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);if(controller!=null&&world.isBlockModifiable(player,controller.getPos())&&player.canPlayerEdit(controller.getPos(),EnumFacing.UP,player.getHeldItemMainhand()))controller.setEnabled(!controller.enabled());}return true;
+        }
         for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);
             int row=hitRow(state,tile,slot,eye,end,contents.rows().size());

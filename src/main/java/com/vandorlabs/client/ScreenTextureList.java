@@ -27,7 +27,7 @@ final class ScreenTextureList {
     }
     ScreenTextureList visibleRows(int rows){list.visibleRows(rows);return this;}
     ScreenTextureList restore(int choice){
-        if(choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE) {
+        if(choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE) {
             if(artwork(choice,input))framed=isFramed(choice);
             list.setSelected(canonical(choice));setFramed(framed);
         }
@@ -55,7 +55,7 @@ final class ScreenTextureList {
         return this;
     }
     ScreenTextureList custom(java.util.function.IntConsumer action){list.custom(action);return this;}
-    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot){list.redstone(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)));return this;}
+    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot){list.redstone(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE))).vehicle(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)));return this;}
     boolean picked(){return list.picked();}
     int choice(){return list.selected();}
     private String source(){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(counterpart(choice(),framed));return entry==null?"":entry.get("source").getAsString();}

@@ -24,7 +24,7 @@ public final class VehicleSelection {
             action = cell.state.getBlock() instanceof BlockPilotSeat ? Action.BOARD
                     : VehicleCanopies.supports(cell.state.getBlock()) ? Action.CANOPY
                     : VehicleDoors.supports(cell.state.getBlock())
-                    ? Action.DOOR : com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock()) ? Action.SCREEN : Action.SURFACE;
+                    ? Action.DOOR : (cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVandorSwitch || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever || com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock())) ? Action.SCREEN : Action.SURFACE;
         }
     }
 

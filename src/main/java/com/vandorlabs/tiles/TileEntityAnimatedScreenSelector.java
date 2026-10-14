@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
     public static final int REDSTONE_SURFACE=-2;
+    public static final int VEHICLE_SURFACE=-3;
+    public boolean hasVehicleStatus(int slot){return (slot==1?secondarySurface:primarySurface)==VEHICLE_SURFACE;}
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
     public RedstoneScreenContents redstoneScreen(int slot){
@@ -168,7 +170,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setSurfaceTexture(int slot,int choice) {
         if(choice==REDSTONE_SURFACE){redstoneScreen(slot).setEnabled(true);return;}
         if(controls[slot]!=null)controls[slot].setEnabled(false);
-        int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
         if(getSurfaceTexture(slot)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
         settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
@@ -270,7 +272,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 && ((com.vandorlabs.blocks.BlockProgrammableWall)block).isPortholeShape();
     }
     public void setSideTexture(int choice) {
-        int next=choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
         if(sideTexture==next)return;
         sideTexture=next;settingsChanged();
         if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);if(world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);}
@@ -548,8 +550,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             else if(controls[i]!=null)controls[i].readFromNBT(new NBTTagCompound());
         }
         if(controls!=NO_CONTROLS && world!=null && !world.isRemote)DeferredTileLoad.schedule(this,this::finishLoading);
-        primarySurface=compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
-        secondarySurface=compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
+        primarySurface=compound.getInteger("PrimarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
+        secondarySurface=compound.getInteger("SecondarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
         ceilingMounted=compound.getBoolean("CeilingMounted");
         ceilingPosition=compound.hasKey("CeilingPosition",3)
                 ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;

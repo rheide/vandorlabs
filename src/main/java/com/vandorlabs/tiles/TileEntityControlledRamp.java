@@ -337,6 +337,7 @@ public class TileEntityControlledRamp extends TileEntity {
     @Override public void invalidate() { ControllerRecovery.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() { ControllerRecovery.unregister(this); super.onChunkUnload(); }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
         super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setBoolean("EscalatorRunning",beltRunning);
@@ -395,6 +396,7 @@ public class TileEntityControlledRamp extends TileEntity {
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
+        tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
         vehicleFrozen=tag.getBoolean("VehicleRampFrozen");
         super.readFromNBT(tag);cachedBeltDistance=Double.NaN;beltMaterials.clear();
         escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));

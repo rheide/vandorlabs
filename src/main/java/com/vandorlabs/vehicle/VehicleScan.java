@@ -16,12 +16,13 @@ import java.util.*;
 /** Bounded, server-thread flood fill. Gear cells terminate only their own branch. */
 public final class VehicleScan {
     private final World world;
+    private final int maxBlocks=com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks();
     private final BlockPos start;
     private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
     private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
     private final Set<BlockPos> rampSections=new HashSet<>();
-    private int minX, minY, minZ, maxX, maxY, maxZ, seats;
+    private int minX, minY, minZ, maxX, maxY, maxZ, seats,autopilots;
     private Double gearBottomY;
     public BlockPos origin;
     public VehicleStructure result;
@@ -71,7 +72,7 @@ public final class VehicleScan {
         try {
             for(int i=0;i<budget && !queue.isEmpty();i++) {
                 BlockPos p=queue.removeFirst(); if(!visited.add(p))continue;
-                require(visited.size()<=VehicleStructure.MAX_BLOCKS*7, "Discovery limit exceeded; separate the craft from its surroundings.");
+                require(visited.size()<=maxBlocks*7, "Discovery limit exceeded; separate the craft from its surroundings.");
                 require(world.isBlockLoaded(p), "The craft touches an unloaded chunk.");
                 IBlockState state=world.getBlockState(p); Block block=state.getBlock();
                 if(block instanceof BlockControlledRamp && !rampSections.contains(p))continue;
@@ -79,9 +80,10 @@ public final class VehicleScan {
                 require(!state.getMaterial().isLiquid() && block!=net.minecraft.init.Blocks.BEDROCK
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
                 TileEntity tile=world.getTileEntity(p);
+                if(tile instanceof TileEntityAutopilot && !(tile instanceof TileEntityWaypoint))require(++autopilots<=1,"A craft can contain at most one Autopilot block.");
                 require(block.getRegistryName()!=null, "Unregistered block at "+p);
                 require(!block.hasTileEntity(state) || tile!=null, "Missing component data at "+p);
-                require(cells.size()<VehicleStructure.MAX_BLOCKS, "Craft exceeds 4096 blocks; check for connections to the ground.");
+                require(cells.size()<maxBlocks, "Craft exceeds the configured "+maxBlocks+" block limit; check for connections to the ground.");
                 minX=Math.min(minX,p.getX()); minY=Math.min(minY,p.getY()); minZ=Math.min(minZ,p.getZ());
                 maxX=Math.max(maxX,p.getX()); maxY=Math.max(maxY,p.getY()); maxZ=Math.max(maxZ,p.getZ());
                 require(maxX-minX<64 && maxY-minY<64 && maxZ-minZ<64, "Craft exceeds 64 blocks along an axis.");
@@ -135,6 +137,14 @@ public final class VehicleScan {
                     net.minecraft.nbt.NBTTagList assembly=data.getTagList("TrapdoorAssembly",4);
                     for(int n=0;n<assembly.tagCount();n++)linked(BlockPos.fromLong(((net.minecraft.nbt.NBTTagLong)assembly.get(n)).getLong()),block);
                 }
+                if(block instanceof BlockWheel){
+                    BlockWheel wheel=(BlockWheel)block;BlockPos root=wheel.root(p,state);
+                    require(world.isBlockLoaded(root)&&world.getBlockState(root).getBlock()==block&&world.getBlockState(root).getValue(BlockWheel.PART)==0,"Incomplete wheel.");
+                    if(gears.add(root)){support(wheel,root);List<BlockPos> members=wheel.members(root,world.getBlockState(root));
+                        for(int n=0;n<members.size();n++){BlockPos member=members.get(n);linked(member,block);
+                            require(world.getBlockState(member).getValue(BlockWheel.PART)==n&&world.getBlockState(member).getValue(BlockWheel.FACING)==state.getValue(BlockWheel.FACING),"Incomplete wheel ownership.");}}
+                    continue;
+                }
                 if(block instanceof BlockTelescopicLandingGear) {
                     TileEntityLandingGear root=((BlockTelescopicLandingGear)block).root(world,p);
                     require(root!=null, "Orphaned landing gear.");
@@ -176,9 +186,10 @@ public final class VehicleScan {
                 for(VehicleStructure.Cell cell:cells.values())local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,
                         cell.tileData()==null?null:VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin))));
                 result=new VehicleStructure(local,start.subtract(origin),world.getBlockState(start).getValue(BlockPilotSeat.FACING),gears.size());
+                VehicleRotation.validate(result,new VehicleWorld(world,result));
                 result.encode(); // Enforce the byte limit before a preview or mutation.
             }
-        } catch(Exception e) { error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage(); }
+        } catch(Exception e) { result=null;error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage(); }
         return error!=null || result!=null;
     }
 }

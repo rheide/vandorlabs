@@ -36,7 +36,7 @@ public class BlockSignalControl extends BlockVandorSwitch {
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntitySignalControl();}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         state=super.getActualState(state,world,pos);TileEntity tile=world.getTileEntity(pos);
-        int step=world instanceof com.vandorlabs.vehicle.VehicleWorld && hasSelectableType()
+        int step=world instanceof com.vandorlabs.vehicle.VehicleWorld && hasSelectableType() && tile instanceof TileEntitySignalControl && ((TileEntitySignalControl)tile).getRedstoneChannels().isEmpty()
                 ?(((com.vandorlabs.vehicle.VehicleWorld)world).propulsionLevel>0?1:0)
                 :tile instanceof TileEntitySignalControl?((TileEntitySignalControl)tile).getStep():0;
         return state.withProperty(LEVEL,step);

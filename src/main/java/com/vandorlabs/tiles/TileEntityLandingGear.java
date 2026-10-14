@@ -101,6 +101,13 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         // Loading is not placement: retain a manual override until the input changes.
         DeferredTileLoad.schedule(this,()->{
             if(!isRoot())return;
+            // Clipboard copies may omit the invisible reserved cells. Recreate only
+            // air cells in the validated footprint, after the complete paste loads.
+            if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld) && !com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){
+                boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
+                ((BlockTelescopicLandingGear)getBlockType()).reserve(world,pos,
+                        Math.max(progress,extended?extensionPixels/16F:0),size);
+            }
             RedstoneChannels.register(this);
             // Let every member in this load batch register before deciding the input edge.
             DeferredTileLoad.schedule(this,()->{restoringSignal=false;evaluateSignal(false);});

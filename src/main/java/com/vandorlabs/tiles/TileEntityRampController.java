@@ -439,6 +439,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if (!placePart(p,ModBlocks.CONTROLLED_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing)))
             throw new IllegalStateException("reservation failed");
         TileEntityControlledRamp te=(TileEntityControlledRamp)world.getTileEntity(p);
+        configurePart(te,p);
+    }
+    private void configurePart(TileEntityControlledRamp te,BlockPos p){
         te.controller=pos; te.source=original; te.sourceY=sources.get(0).getY();
         te.row=p.getX()*facing.getFrontOffsetX()+p.getZ()*facing.getFrontOffsetZ()-minAlong;
         te.treadPixels=treadPixels; te.startOffset=startOffset;
@@ -454,6 +457,35 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if (saved!=null) te.sourceTileTags.put(source,saved.copy());
         }
         te.move(open,startPose,startTick,duration,moving);
+    }
+
+    /** Build an endpoint in an isolated VehicleWorld; no placed blocks are written. */
+    public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> vehicleEndpoint(boolean deploy){
+        if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))throw new IllegalStateException("Vehicle endpoint requires an isolated world");
+        if(escalator!=0)throw new IllegalArgumentException("Escalator geometry remains frozen in vehicle mode");
+        if(sources.isEmpty()){
+            facing=rampDirection();BlockPos seed=pos.offset(world.getBlockState(pos).getValue(BlockVandorDirectional.FACING));
+            IBlockState material=world.getBlockState(seed);
+            boolean programmable=material.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK||material.getBlock()==ModBlocks.PROGRAMMABLE_SLAB;
+            boolean ieSlab=com.vandorlabs.compat.RampMaterials.isIESlab(world,seed);
+            if(material.getBlock()==Blocks.AIR || material.getBlockHardness(world,seed)<0 || material.getBlock().hasTileEntity(material)&&!programmable&&!ieSlab
+                    || !programmable&&!ieSlab&&!(material.getBlock() instanceof BlockSlab)&&!material.isFullCube())throw new IllegalArgumentException("No supported ramp platform in front of controller");
+            Set<ControllerPlatform.Cell> platform=ControllerPlatform.discover(new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->com.vandorlabs.compat.RampMaterials.matches(world,seed,new BlockPos(c.x,c.y,c.z),matchTextures));
+            if(platform.isEmpty())throw new IllegalArgumentException("No ramp platform found");
+            int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE;
+            for(ControllerPlatform.Cell c:platform){BlockPos p=new BlockPos(c.x,c.y,c.z);sources.add(p);int along=c.x*facing.getFrontOffsetX()+c.z*facing.getFrontOffsetZ();min=Math.min(min,along);max=Math.max(max,along);
+                TileEntity tile=world.getTileEntity(p);if(tile!=null)sourceTiles.put(p,tile.writeToNBT(new NBTTagCompound()));}
+            AxisAlignedBB box=material.getBoundingBox(world,seed);
+            if(box.minX!=0||box.maxX!=1||box.minZ!=0||box.maxZ!=1)throw new IllegalArgumentException("Ramp platform must use full-width slabs or cubes");
+            original=material;low=box.minY;high=box.maxY;length=max-min+1;minAlong=min;
+        }
+        open=deploy;moving=false;startPose=deploy?1:0;startTick=world.getTotalWorldTime();
+        latched=deploy;signalKnown=true;error=false;recoveryPending=false;status=deploy?"Deployed":"Retracted";vehicleFrozen=true;
+        cells.clear();cells.addAll(occupied(startPose,startPose));
+        java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> result=new java.util.ArrayList<>();
+        for(BlockPos p:cells){TileEntityControlledRamp part=new TileEntityControlledRamp();part.setWorld(world);part.setPos(p);configurePart(part,p);part.vehicleFrozen=true;
+            result.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(p,ModBlocks.CONTROLLED_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),part.writeToNBT(new NBTTagCompound())));}
+        return result;
     }
 
     /** Only geometry touched by this animation step is examined; nothing runs while idle. */
@@ -941,6 +973,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         } finally { changing=false; markDirty(); }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
         super.writeToNBT(tag);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
@@ -977,6 +1010,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
+        tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
         super.readFromNBT(tag);

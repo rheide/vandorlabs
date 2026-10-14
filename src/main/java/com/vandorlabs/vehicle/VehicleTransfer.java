@@ -41,10 +41,14 @@ public final class VehicleTransfer {
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Craft",structure.write());
         tag.setLong("Origin",origin.toLong());tag.setUniqueId("Entity",entity.getUniqueID());tag.setBoolean("Parking",park);
         tag.setBoolean("TaxiReturnPending",entity.taxiReturnPending);if(entity.taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",entity.taxiReturnActor);
+        tag.setTag("AutopilotNavigation",entity.autopilot.write());
         tag.setFloat("Yaw",entity.rotationYaw);tag.setDouble("X",entity.posX);tag.setDouble("Y",entity.posY);tag.setDouble("Z",entity.posZ);return tag;
     }
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
+        if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
+        VehicleFlight.requireThruster(structure);
+        VehicleRotation.validate(structure,new VehicleWorld(world,structure));
         if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear blocks.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         EntityGroundVehicle entity=new EntityGroundVehicle(world);entity.install(structure);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
@@ -68,6 +72,7 @@ public final class VehicleTransfer {
         park(world,entity,origin,player,true);
     }
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated)throws Exception {
+        if(entity.hover)throw new IOException("Select Taxi mode before parking as blocks.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         VehicleStructure placed=VehicleRotation.plan(entity).structure;
         // Include newly extended gear cells in the final check before journaling or writing.
@@ -119,6 +124,7 @@ public final class VehicleTransfer {
             blocks(world,undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure,origin,false);
             EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);
             restored.taxiReturnPending=undo.getBoolean("TaxiReturnPending");restored.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
+            restored.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));
             restored.transferEpoch=VehicleOwnership.update(world,id,1,true);
             restored.rotationYaw=undo.getFloat("Yaw");
             restored.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));

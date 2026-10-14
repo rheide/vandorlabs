@@ -456,7 +456,7 @@ public class TEAnimatedScreenSelector
             boolean ceiling=state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER);
             GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
             bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).sideLayout(te.isSurfaceTileSides()),ceiling);
-            if(te.hasRedstoneScreen(0)){
+            if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
                 GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
             }
             double[] uv=bindInput(te,te.getInputPanel());
@@ -514,8 +514,8 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
         }
-        if(te.hasRedstoneScreen(0)){
-            RedstoneScreenRenderer.draw(te.redstoneScreen(0),state);
+        if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
+            if(te.hasVehicleStatus(0))RedstoneScreenRenderer.drawVehicle(te,state,0);else RedstoneScreenRenderer.draw(te.redstoneScreen(0),state);
             GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
         }
         int mode = te.getEffectiveMode();
@@ -700,6 +700,7 @@ public class TEAnimatedScreenSelector
     }
 
     private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
+        if(tile.hasVehicleStatus(slot)){RedstoneScreenRenderer.drawVehicle(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
         if(!tile.hasRedstoneScreen(slot))return false;
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }

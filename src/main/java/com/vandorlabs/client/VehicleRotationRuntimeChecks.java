@@ -11,11 +11,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import java.util.*;
 
-/** Exercise every registered vanilla/Vandor block and its persistent metadata states. */
+/** Exercise vanilla/Vandor states and verify refusal of unsupported third-party replacements. */
 public final class VehicleRotationRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("vehicle rotation: "+message);}
     public static void run(WorldServer world){
-        List<VehicleStructure.Cell> cells=new ArrayList<>();int blocks=0,states=0;
+        List<VehicleStructure.Cell> cells=new ArrayList<>();int blocks=0,states=0,refusedStates=0;
+        Set<String> replacements=new HashSet<>();
         cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         for(Block block:Block.REGISTRY){
             String domain=block.getRegistryName().getResourceDomain();
@@ -27,12 +28,25 @@ public final class VehicleRotationRuntimeChecks {
                 TileEntity tile=state.getBlock().hasTileEntity(state)?state.getBlock().createTileEntity(world,state):null;
                 NBTTagCompound data=null;
                 if(tile!=null){tile.setWorld(world);tile.setPos(pos);data=tile.writeToNBT(new NBTTagCompound());}
+                if(domain.equals("minecraft")&&!block.getClass().getName().startsWith("net.minecraft.block.")){
+                    List<VehicleStructure.Cell> probeCells=Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null),new VehicleStructure.Cell(pos,state,data));
+                    VehicleStructure probe=new VehicleStructure(probeCells,BlockPos.ORIGIN,EnumFacing.NORTH,1);
+                    try{VehicleRotation.validate(probe,new VehicleWorld(world,probe));}
+                    catch(IllegalArgumentException unsupported){
+                        require(unsupported.getMessage().startsWith("No safe rotation/data adapter"),"replacement adapter failed its rotation checks: "+state+" class="+block.getClass().getName());
+                        boolean denied=false;try{VehicleRotation.rotate(probe,new VehicleWorld(world,probe),1);}catch(IllegalArgumentException expected){denied=true;}
+                        require(denied,"unsupported replacement must refuse rotated restoration: "+state);
+                        refusedStates++;
+                        if(replacements.add(block.getRegistryName().toString()))System.out.println("[vandorlabs][reprolab] vehicle-rotation-replacement REFUSED block="+block.getRegistryName()+" runtime-class="+block.getClass().getName()+" tile-class="+(tile==null?"none":tile.getClass().getName()));
+                        continue;
+                    }
+                }
                 cells.add(new VehicleStructure.Cell(pos,state,data));states++;
                 if(cells.size()==4000){check(world,cells);cells=new ArrayList<>();cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));}
             }
         }
         if(cells.size()>1)check(world,cells);
-        System.out.println("[vandorlabs][reprolab] vehicle-rotation-registry PASS blocks="+blocks+" states="+states+" four-turn state/NBT restoration");
+        System.out.println("[vandorlabs][reprolab] vehicle-rotation-registry PASS blocks="+blocks+" states="+states+" refused-replacement-states="+refusedStates+" four-turn state/NBT restoration; unsupported replacements refused");
     }
     private static void check(WorldServer world,List<VehicleStructure.Cell> cells){
         VehicleStructure source=new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1),rotated=source;

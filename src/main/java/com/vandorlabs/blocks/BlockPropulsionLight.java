@@ -85,7 +85,7 @@ public class BlockPropulsionLight extends BlockVandor {
             BlockPos pos) {
         if(source instanceof com.vandorlabs.vehicle.VehicleWorld) {
             com.vandorlabs.vehicle.VehicleWorld vehicle=(com.vandorlabs.vehicle.VehicleWorld)source;
-            return state.withProperty(POWERED,vehicle.propulsionLevel>0).withProperty(PARTICLES,false);
+            return vehicle.getBlockState(pos).withProperty(PARTICLES,false);
         }
         TileEntity tile = source.getTileEntity(pos);
         boolean particles = state.getValue(POWERED)

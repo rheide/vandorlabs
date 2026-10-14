@@ -14,21 +14,34 @@ import java.util.*;
 public class BlockLandingGear extends BlockVandorDirectional {
     protected final List<AxisAlignedBB> parts = new ArrayList<>();
     public BlockLandingGear(String name) {
+        this(name,true);
+    }
+    protected BlockLandingGear(String name,boolean loadModel) {
         super(name);
         setLightOpacity(0);
-        parts.addAll(loadParts("block/" + name + "_small_retracted"));
+        if(loadModel)parts.addAll(loadParts("block/" + name + "_small_retracted"));
     }
     protected static List<AxisAlignedBB> loadParts(String model) {
         List<AxisAlignedBB> result = new ArrayList<>();
-        try (Reader reader = new InputStreamReader(BlockLandingGear.class.getResourceAsStream(
-                "/assets/vandorlabs/models/" + model + ".json"), java.nio.charset.StandardCharsets.UTF_8)) {
-            for (JsonElement raw : new JsonParser().parse(reader).getAsJsonObject().getAsJsonArray("elements")) {
+        try {
+            for (JsonElement raw : modelElements("vandorlabs:"+model,0)) {
                 JsonObject e = raw.getAsJsonObject(); JsonArray a = e.getAsJsonArray("from"), b = e.getAsJsonArray("to");
                 result.add(new AxisAlignedBB(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16,
                         b.get(0).getAsDouble()/16,b.get(1).getAsDouble()/16,b.get(2).getAsDouble()/16));
             }
         } catch (IOException e) { throw new IllegalStateException("Cannot load gear geometry " + model, e); }
         return result;
+    }
+    private static JsonArray modelElements(String model,int depth)throws IOException {
+        if(depth>16)throw new IOException("Cyclic gear model inheritance: "+model);
+        String[] name=model.split(":",2);String domain=name.length==2?name[0]:"minecraft",path=name.length==2?name[1]:name[0];
+        InputStream stream=BlockLandingGear.class.getResourceAsStream("/assets/"+domain+"/models/"+path+".json");
+        if(stream==null)throw new IOException("Missing gear model "+model);
+        try(Reader reader=new InputStreamReader(stream,java.nio.charset.StandardCharsets.UTF_8)){
+            JsonObject root=new JsonParser().parse(reader).getAsJsonObject();
+            if(root.has("elements"))return root.getAsJsonArray("elements");
+            return root.has("parent")?modelElements(root.get("parent").getAsString(),depth+1):new JsonArray();
+        }
     }
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float x, float y, float z, int meta, EntityLivingBase placer) {

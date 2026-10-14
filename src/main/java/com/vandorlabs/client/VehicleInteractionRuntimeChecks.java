@@ -175,6 +175,8 @@ public final class VehicleInteractionRuntimeChecks {
             mc.getIntegratedServer().addScheduledTask(()->setup(mc)).get();
             System.out.println("[vandorlabs][reprolab] vehicle-clicks START door-cases="+(6+trapRoots.size()*2));
         }
+        if(phase==13){if(HoverClientRuntimeChecks.tick(mc,output)){VehicleStatusClientRuntimeChecks.begin(mc);phase=14;}return false;}
+        if(phase==14){if(VehicleStatusClientRuntimeChecks.tick(mc,output)){finished=true;return true;}return false;}
         if(ticks<25)return false;
         ticks=0;
         if(phase==10){screenClick(mc,0);phase++;return false;}
@@ -185,7 +187,7 @@ public final class VehicleInteractionRuntimeChecks {
             mc.getIntegratedServer().addScheduledTask(()->require(com.vandorlabs.redstone.RedstoneChannels.level(player(mc).world,19372)>0,"actual screen click publishes server channel")).get();
             if(phase==11){screenClick(mc,1);phase++;return false;}
             mc.getIntegratedServer().addScheduledTask(()->server(mc).setDead()).get();
-            System.out.println("[vandorlabs][reprolab] vehicle-screen-clicks PASS rotated-button slider client-sync server-channels");finished=true;return true;
+            System.out.println("[vandorlabs][reprolab] vehicle-screen-clicks PASS rotated-button slider client-sync server-channels");HoverClientRuntimeChecks.begin(mc);phase=13;return false;
         }
         if(phase==0){seatClick(mc,false);phase++;return false;}
         if(phase==1) {
