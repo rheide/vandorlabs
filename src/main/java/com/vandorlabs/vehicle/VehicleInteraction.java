@@ -26,7 +26,7 @@ public final class VehicleInteraction {
         double nearest=terrain==null?reach*reach:start.squareDistanceTo(terrain.hitVec);
         Target target=null;
         for(EntityGroundVehicle craft:VehicleLookup.near(player.world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(.001))) {
-            VehicleSelection.Hit hit=VehicleSelection.trace(craft,start,end,nearest);
+            VehicleSelection.Hit hit=VehicleSelection.trace(craft,start,end,nearest,player.getRidingEntity()==craft);
             if(hit!=null){nearest=hit.distanceSq;target=new Target(craft,hit);}
         }
         if(target==null)return null;

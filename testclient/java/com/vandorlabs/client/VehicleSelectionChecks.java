@@ -38,6 +38,14 @@ public final class VehicleSelectionChecks {
         Vec3d start = new Vec3d(39.9, 20.5, 38), end = start.addVector(0, 0, 6);
         require(VehicleSelection.local(structure, world, start, end, 36) != null,
                 "seat protruding outside its occupied cell remains selectable");
+        BlockPos overhead=position.up(2);List<VehicleStructure.Cell> cockpit=new ArrayList<>(cells);
+        cockpit.add(new VehicleStructure.Cell(overhead,Blocks.GLASS.getDefaultState(),null));world.states.put(overhead,Blocks.GLASS.getDefaultState());
+        VehicleStructure cabin=new VehicleStructure(cockpit,position,EnumFacing.NORTH,1);
+        Vec3d pilotEye=new Vec3d(40.5,21.2,40.5),roof=pilotEye.addVector(0,4,0);
+        require(VehicleSelection.local(cabin,world,pilotEye,roof,16).action==VehicleSelection.Action.BOARD,"occupied seat would intercept overhead selection");
+        VehicleSelection.Hit rider=VehicleSelection.local(cabin,world,pilotEye,roof,16,position);
+        require(rider!=null && rider.cell.pos.equals(overhead),"own seat does not swallow seated overhead selection");
+        require(VehicleSelection.local(cabin,world,pilotEye,roof,rider.distanceSq,position)==null,"terrain still blocks seated selection at equal distance");
         cells.add(new VehicleStructure.Cell(position.north(), Blocks.STONE.getDefaultState(), null));
         world.states.put(position.north(), Blocks.STONE.getDefaultState());
         structure = new VehicleStructure(cells, position, EnumFacing.NORTH, 1);

@@ -30,11 +30,18 @@ public final class VehicleSelection {
 
     /** All captured cells participate, so a nearer wall occludes a seat or door. */
     public static Hit local(VehicleStructure structure, World view, Vec3d start, Vec3d end, double limitSq) {
+        return local(structure,view,start,end,limitSq,null);
+    }
+    public static Hit local(VehicleStructure structure, World view, Vec3d start, Vec3d end, double limitSq,BlockPos riderSeat) {
         if (structure == null || view == null || !finite(start) || !finite(end)
                 || !Double.isFinite(limitSq) || limitSq < 0) return null;
         Hit nearest = null;
         java.util.Set<BlockPos> canopies=new java.util.HashSet<>();
         for (VehicleStructure.Cell cell : structure.cells) {
+            // The occupied seat surrounds the pilot's eyes; its selection box must
+            // not swallow clicks aimed at the canopy, doors or controls above it.
+            if(riderSeat!=null && cell.state.getBlock() instanceof BlockPilotSeat
+                    && (cell.pos.equals(riderSeat) || cell.pos.equals(riderSeat.up())))continue;
             VehicleStructure.Cell selected=cell;
             IBlockState state = view.getBlockState(cell.pos);
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy){
@@ -63,8 +70,11 @@ public final class VehicleSelection {
 
     /** Caller supplies terrain/nearer-craft distance; no enclosing-box target is used. */
     public static Hit trace(EntityGroundVehicle craft, Vec3d start, Vec3d end, double limitSq) {
+        return trace(craft,start,end,limitSq,false);
+    }
+    public static Hit trace(EntityGroundVehicle craft, Vec3d start, Vec3d end, double limitSq,boolean rider) {
         if (craft == null || craft.isDead || craft.structure == null || !finite(start) || !finite(end)) return null;
-        return local(craft.structure, craft.view, craft.toLocal(start), craft.toLocal(end), limitSq);
+        return local(craft.structure, craft.view, craft.toLocal(start), craft.toLocal(end), limitSq,rider?craft.structure.seat:null);
     }
 
     private static boolean finite(Vec3d point) {

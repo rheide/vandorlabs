@@ -14,6 +14,8 @@ A Pilot Seat fits one block directly below Canopy Glass or an upright Canopy, in
 
 Canopy and optionally openable Front Canopy Glass / Large Front Canopy Glass remain operable aboard the craft. Click their actual surface with an empty hand to open, close or reverse the motion. Their selected sliding/hinged motion, front profile, mount, large-window hinge and material settings survive assembly and parking.
 
+While seated, your own Pilot Seat does not intercept selection of captured canopy or cabin surfaces. Walls and other blocks still block clicks normally. The same empty-hand operation works for rear hinges and forward or backward sliding canopies above a parked seat.
+
 Parking accepts headings within **12 degrees** of a multiple of 90 degrees. Successful parking aligns the restored blocks to that cardinal heading and checks the complete placement area before writing any blocks. At an unsupported angle, leaving Taxi Mode still dismounts the player and shows a warning that the craft was not converted back. The vehicle and its contents remain intact. Reboard to adjust its heading, or use the Configurizer when aligned. Obstructed parking also preserves the craft and retries automatically after the obstruction is removed.
 
 Using **Park as blocks** while standing beside or inside an unoccupied craft keeps your position and does not seat you. A player already driving remains in the restored Pilot Seat.

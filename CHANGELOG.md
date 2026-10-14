@@ -2,6 +2,7 @@
 
 ## 2.0
 
+- Let seated pilots select captured Canopies and other cabin surfaces without their own Pilot Seat's selection box intercepting the ray. Keep ordinary terrain and cabin-wall occlusion, and exercise real seated clicks for hinged and both sliding modes in parked and captured cockpits.
 - Reuse settled ramp geometry and collision boxes until the pose, shape settings, source origins or facing changes. Keep moving ramps and escalators animated, and verify direct setting edits against freshly loaded ramp cells.
 - Keep the fixed Canopy Glass roof frame next to an opening Canopy, and retain the Canopy's complete rear frame, including both vertical uprights and the bottom sill. Preserve the open cabin connection and joins between fixed glass. Check joined surfaces for duplication, and add live shallow/deep and small/large nosecone comparisons for both front-window sizes.
 - Keep the opening Canopy's top rear crossbar when connected to Canopy Glass, including its selection surface for closing a hinged shell.

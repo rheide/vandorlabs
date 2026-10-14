@@ -157,6 +157,8 @@ public final class PilotSeatRuntimeChecks {
             if (ticks == 210) {
                 require(mc.player.isRiding(), "client receives mounted passenger");
                 shot(mc, output, "mounted");
+            }
+            if(ticks>=210 && SeatedCanopyClickRuntimeChecks.tick(mc)){
                 System.out.println("[vandorlabs][reprolab] pilot-seat-live PASS");
                 mc.shutdown();
             }
