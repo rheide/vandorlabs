@@ -2,6 +2,9 @@
 
 ## 2.0
 
+- Keep the opening Canopy's top rear crossbar when connected to Canopy Glass, including its selection surface for closing a hinged shell.
+- Align animated Canopy picking and collision with the visible shell by applying its pose once. Verify that exposed fixed mounts close hinged and forward/backward sliding shells when bodywork covers the moving glass.
+
 - Omit unused legacy previews, door masks and retired trim from the runtime JAR after checking code, model, catalog and Dynmap references. Share identical Clear glass strength textures and repair stale Dynmap texture paths.
 - Share texture-picker input handling across six dialogs, index configured item-material lookup, remove the obsolete porthole tint path, and release both screen and input animation textures on resource reload.
 - Retain joined glass material layouts until their world or settings change, bound the per-world cache, and invalidate on chunk changes and unload. Share world-render listener plumbing with the diagonal mesh cache.

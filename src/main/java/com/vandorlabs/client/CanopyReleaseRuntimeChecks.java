@@ -134,6 +134,14 @@ final class CanopyReleaseRuntimeChecks {
         }
         return false;
     }
+    private static void rearCrossbar(TileEntityCanopy tile,LargeCanopySettings settings,int width){
+        Vec3d origin=new Vec3d(tile.getPos());
+        for(double height:new double[]{.5,.99}){
+            Vec3d start=CanopyMesh.rotate(CanopyPose.vertex(new Vec3d(width/2D,height,2.2),"shell","canopy",width,settings,tile.progress),tile.facing()).add(origin);
+            Vec3d end=CanopyMesh.rotate(CanopyPose.vertex(new Vec3d(width/2D,height,1.8),"shell","canopy",width,settings,tile.progress),tile.facing()).add(origin);
+            require((tile.trace(start,end)!=null)==(height>.9),"joined rear aperture stays open and roof crossbar stays selectable height="+height+" angle="+settings.angle+" width="+width+" mount="+settings.mount+" motion="+settings.motion+" progress="+tile.progress+" mask="+tile.mask());
+        }
+    }
     private static void opening(World world,EntityPlayerMP player){
         BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy"),glass=(BlockCanopy)Block.getBlockFromName("vandorlabs:regular_canopy_glass");
         for(int mount=0;mount<2;mount++)for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++)for(int width=1;width<=3;width++)for(int direction=0;direction<(motion==0?2:1);direction++) {
@@ -143,8 +151,10 @@ final class CanopyReleaseRuntimeChecks {
             TileEntityCanopy tile=TileEntityCanopy.at(world,BASE);require(tile.width()==width,"configured shells join");
             BlockPos rear=BASE.south(2);ItemStack rearStack=new ItemStack(glass);rearStack.setTagCompound(tag.copy());world.setBlockState(rear,glass.getDefaultState(),2);glass.onBlockPlacedBy(world,rear,glass.getDefaultState(),player,rearStack);
             require((tile.mask()&8)!=0 && TileEntityCanopy.at(world,rear).mask()!=0,"rear glass joins opening shell");
+            rearCrossbar(tile,settings,width);
             List<CanopyMesh.Face> closedFaces=tile.faces(0);
             tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==1,"configured shell opens");
+            rearCrossbar(tile,settings,width);
             if(motion==0){
                 List<CanopyMesh.Face> openFaces=tile.faces();boolean moved=false,stationary=false;
                 for(int f=0;f<closedFaces.size();f++)for(int v=0;v<closedFaces.get(f).vertices.length;v++){
@@ -161,7 +171,8 @@ final class CanopyReleaseRuntimeChecks {
                     require(CanopyMesh.trace(openFaces,"posed",width,0,facing,BASE,center.addVector(0,3,0),center.addVector(0,-3,0))!=null,"moved roof remains selectable in every facing");
                 }
             }
-            tile.toggle();for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==0,"configured shell closes");
+            closeCoveredShell(world,player,tile);
+            for(int tick=0;tick<16;tick++)tile.update();require(tile.progress==0,"configured shell closes");
             if(motion==0){LargeCanopySettings changed=copy(settings);changed.slideForward=!changed.slideForward;require(LargeCanopyOwnership.apply(tile,player,changed),"closed joined direction changes together mount="+mount+" angle="+angle+" width="+width+" direction="+direction+" actual="+tile.large.key()+" progress="+tile.progress+" draws="+tile.draws());for(int column=0;column<width;column++)require(TileEntityCanopy.at(world,BASE.east(column)).large.slideForward==changed.slideForward,"joined constituent direction synchronized");require(LargeCanopyOwnership.apply(tile,player,settings),"restore chosen direction");}
             settings.redstone=true;settings.channels=com.vandorlabs.redstone.ChannelList.of(29020);
             require(LargeCanopyOwnership.apply(tile,player,settings),"redstone settings apply");
@@ -180,6 +191,36 @@ final class CanopyReleaseRuntimeChecks {
             clear(world);BlockCanopy nose=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+kind);world.setBlockState(BASE,Blocks.STONE.getDefaultState(),3);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(nose));
             require(player.getHeldItemMainhand().getItem().onItemUse(player,world,BASE,EnumHand.MAIN_HAND,facing,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"long nose can mount against a wall");
         }
+    }
+    private static void closeCoveredShell(World world,EntityPlayerMP player,TileEntityCanopy tile){
+        Map<BlockPos,IBlockState> covered=new HashMap<>();Set<BlockPos> reserved=new HashSet<>(tile.cells());
+        try{
+            // Cover the moved shell with bodywork, leaving its original footprint accessible.
+            for(CanopyMesh.Face face:tile.faces())if(face.group.equals("shell")){
+                AxisAlignedBB bounds=null;
+                for(Vec3d v:face.vertices){Vec3d p=CanopyMesh.rotate(v,tile.facing()).add(new Vec3d(tile.getPos()));AxisAlignedBB point=new AxisAlignedBB(p,p);bounds=bounds==null?point:bounds.union(point);}
+                for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(bounds.minX,bounds.minY,bounds.minZ),new BlockPos(bounds.maxX,bounds.maxY,bounds.maxZ))){
+                    if(reserved.contains(pos) || world.getBlockState(pos).getBlock() instanceof BlockCanopy)continue;
+                    BlockPos fixed=pos.toImmutable();if(!covered.containsKey(fixed))covered.put(fixed,world.getBlockState(fixed));world.setBlockState(fixed,Blocks.STONE.getDefaultState(),2);
+                }
+            }
+            require(!covered.isEmpty(),"bodywork covers moved canopy surfaces");
+            player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setSneaking(false);
+            for(CanopyMesh.Face face:tile.faces())if(face.group.equals("mount"))for(int i=1;i<face.vertices.length-1;i++){
+                Vec3d a=face.vertices[0],b=face.vertices[i],c=face.vertices[i+1],normal=b.subtract(a).crossProduct(c.subtract(a));
+                if(normal.lengthSquared()<1e-12)continue;
+                Vec3d center=CanopyMesh.rotate(a.add(b).add(c).scale(1D/3),tile.facing()).add(new Vec3d(tile.getPos()));
+                Vec3d direction=CanopyMesh.rotate(normal.normalize().addVector(.5,0,.5),tile.facing()).subtract(new Vec3d(.5,0,.5));
+                for(int side:new int[]{1,-1}){
+                    Vec3d eye=center.add(direction.scale(.75*side));if(!world.isAirBlock(new BlockPos(eye)))continue;
+                    player.setPosition(eye.x,eye.y-player.getEyeHeight(),eye.z);
+                    if(com.vandorlabs.network.MessageCanopyUse.interact(player,tile.getPos(),EnumHand.MAIN_HAND,center)){
+                        require(!tile.targetOpen,"fixed mount closes canopy with covered shell");return;
+                    }
+                }
+            }
+            throw new IllegalStateException("covered canopy has no reachable closing mount: "+tile.large.key()+" width="+tile.width());
+        }finally{for(Map.Entry<BlockPos,IBlockState> entry:covered.entrySet())world.setBlockState(entry.getKey(),entry.getValue(),2);}
     }
     private static void copyFinishes(World world,EntityPlayerMP player){
         String[] kinds={"regular_canopy_glass","space_visor_2x1","programmable_glass","programmable_diagonal_glass"};

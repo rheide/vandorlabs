@@ -276,7 +276,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
                             faces(),
                             "posed",
                             width(),
-                            block().opening() ? progress : 0,
+                            0,
                             facing(),
                             pos);
             cachedKey = key;
@@ -291,7 +291,8 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     }
 
     public RayTraceResult trace(Vec3d start, Vec3d end) {
-        return !draws() || block()==null?null:CanopyMesh.trace(faces(),"posed",width(),block().opening()?progress:0,facing(),pos,start,end);
+        // faces() already contains the animation pose, shared with the renderer.
+        return !draws() || block()==null?null:CanopyMesh.trace(faces(),"posed",width(),0,facing(),pos,start,end);
     }
 
     public void removeAssembly() {

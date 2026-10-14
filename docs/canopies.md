@@ -46,6 +46,8 @@ The same ribbed material on a five-wide front window, without changing its geome
 
 Canopy Glass joins neighboring tiles at the same elevation and mounting orientation, regardless of horizontal facing. Shared glazing and perimeter rails disappear. Matching angled noses join sideways and connect to regular glass behind their complete footprint. Regular glass also opens its side towards the rear of a Canopy. Ceiling-mounted parts use the same local joins after inversion.
 
+An opening Canopy keeps its top rear crossbar when joined to Canopy Glass. Click that bar or an exposed stationary mounting rail to close it. The mounting rails remain selectable when surrounding bodywork covers the opened shell, for rear hinges and either sliding direction.
+
 ## One Canopy, two opening modes
 
 Choose **Sliding** or **Rear hinge** in the Canopy dialog. Place one, two or three matching closed Canopies side by side to form a shared shell. Their opening mode, sliding direction, front profile and mount must match. A fourth constituent stays independent.

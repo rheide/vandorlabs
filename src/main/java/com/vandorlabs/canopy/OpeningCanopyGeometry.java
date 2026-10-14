@@ -12,10 +12,10 @@ public final class OpeningCanopyGeometry {
         List<CanopyMesh.Face> result=new ArrayList<>();
         for(int x=0;x<width;x++) {
             int sides=(x>0?1:0)|(x+1<width?2:0);
-            if(angle==2)append(result,model("angled_front_1x2",sides|(rear?8:0)),x,0);
+            if(angle==2)append(result,rearJoined("angled_front_1x2",sides,rear),x,0);
             else {
                 append(result,angle==0?regular(sides|8):model("angled_front_1x1",sides|8),x,0);
-                append(result,regular(sides|4|(rear?8:0)),x,1,angle==1);
+                append(result,rearJoined("regular_1x1",sides|4,rear),x,1,angle==1);
             }
         }
         String mounts=width==1?"canopy":"canopy_mounts_double";
@@ -27,6 +27,20 @@ public final class OpeningCanopyGeometry {
         cached=Collections.unmodifiableList(result);CACHE.put(key,cached);return cached;
     }
     private static List<CanopyMesh.Face> regular(int mask){return CanopyMesh.MODELS.get(String.format(Locale.ROOT,"regular_1x1_%02x",mask));}
+    private static List<CanopyMesh.Face> rearJoined(String id,int mask,boolean rear){
+        List<CanopyMesh.Face> closed=model(id,mask);
+        if(!rear)return closed;
+        List<CanopyMesh.Face> result=new ArrayList<>();
+        // Join the rear aperture, but retain the authored roof and its moving crossbar.
+        // Taking the complete roof from one variant avoids overlapping extended glazing.
+        for(CanopyMesh.Face face:model(id,mask|8))if(!roof(face))result.add(face);
+        for(CanopyMesh.Face face:closed)if(roof(face))result.add(face);
+        return result;
+    }
+    private static boolean roof(CanopyMesh.Face face){
+        for(Vec3d vertex:face.vertices)if(vertex.y<14D/16)return false;
+        return true;
+    }
     private static List<CanopyMesh.Face> model(String id,int mask){return CanopyMesh.MODELS.get(mask==0?id:String.format(Locale.ROOT,"%s_%02x",id,mask));}
     private static void append(List<CanopyMesh.Face> result,List<CanopyMesh.Face> source,int x,int z){
         append(result,source,x,z,false);
