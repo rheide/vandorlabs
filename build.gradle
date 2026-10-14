@@ -244,6 +244,17 @@ task testRamps(type: JavaExec) {
     classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.ramp.ControllerPlatformTest'
 }
+task testMoatGeometry(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.ramp.MoatGeometryTest'
+}
+task testFrontCanopyRenderDepth(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.FrontCanopyRenderDepthTest'
+}
+check.dependsOn testMoatGeometry, testFrontCanopyRenderDepth
 task testCompactAnimation(type: JavaExec) {
     dependsOn compilePortableTests
     classpath = files("$buildDir/portable-tests")
