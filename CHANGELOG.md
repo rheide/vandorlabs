@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1
+
+- Add Hover mode with altitude hold, lift requirements, safe Taxi transitions, automatic landing-gear retraction and optional Park/Taxi/Hover channels. Captured switches, buttons and analog controls share the world's channel network.
+- Add Autopilot and Waypoint blocks, configurable route markers, pulse journeys, delayed departures and Vehicle Status screens. Stop at route gaps, ambiguous junctions, obstacles and out-of-range terrain.
+- Add slab-mounted Small, Medium and Large Wheels, configurable vehicle block limits, early rotation checks and conservative support for modded building blocks. Repair newly copied ramp journals and missing landing-gear reservations; allow channel-controlled ramp endpoints aboard vehicles.
+- Add Long Canopy with a three-block depth and four profiles. Both opening canopy sizes join up to nine columns with shared materials and opening motion.
+- Document supported slab-adjacent screen placement and the limits of embedding screens inside occupied block cells.
+
 ## 2.0
 
 - Keep Redstone Screen row buttons and sliders operational aboard vehicles. Share the parent world's channel network with captured doors, trapdoors, Canopies, lights and landing gear, synchronize control changes, and unregister vehicle sources when parking or unloading.

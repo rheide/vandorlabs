@@ -9,8 +9,8 @@ Build a cockpit from connected glass, angled noses, openable shells and broad fr
 | Canopy Glass | 1 × 1 × 1 | Base recipe |
 | Angled Front Canopy Glass | 1 × 1 × 1 | 1 iron nugget |
 | Long Angled Front Canopy Glass | 1 × 2 × 1 | 2 iron nuggets |
-| Canopy | 1 × 2 × 1; joins to two or three wide | 3 iron nuggets |
-| Long Canopy | 1 � 3 � 1; joins up to nine wide | Canopy + Canopy Glass |
+| Canopy | 1 × 2 × 1; joins up to nine wide | 3 iron nuggets |
+| Long Canopy | 1 × 3 × 1; joins up to nine wide | Canopy + Canopy Glass |
 | Front Canopy Glass | 3 × 3 outer frame; adjustable depth | 8 iron nuggets |
 | Large Front Canopy Glass | 5 × 5 outer frame; adjustable depth | Front Canopy Glass surrounded by 8 iron ingots (shaped) |
 
@@ -95,7 +95,7 @@ Each live view shows **Front Canopy Glass (3 × 3) on the left** and **Large Fro
 
 ### Floor and ceiling mounting
 
-The broad rear frame stays clear of its support at both shallow and deep settings. These live views show the 3 � 3 frame on the left and 5 � 5 frame on the right, with Inner size set to 45%. The ceiling fixture is lit to make its lower border visible.
+The broad rear frame stays clear of its support at both shallow and deep settings. These live views show the 3 × 3 frame on the left and 5 × 5 frame on the right, with Inner size set to 45%. The ceiling fixture is lit to make its lower border visible.
 
 | Mount | Shallow: 8 px | Deep: 64 px |
 | --- | --- | --- |

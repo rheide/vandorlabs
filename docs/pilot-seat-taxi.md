@@ -1,6 +1,6 @@
-# Pilot Seat and Taxi Mode
+# Pilot Seat, Taxi and Hover modes
 
-The Pilot Seat controls a ground craft assembled from connected blocks and landing gear. Taxi Mode is enabled by default: sitting assembles the craft, and leaving attempts to restore it as blocks. Disable Taxi Mode to convert the craft manually with the Configurizer.
+The Pilot Seat controls a craft assembled from connected blocks and at least three landing gear or wheel supports. Taxi and Hover require at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine. Hover additionally requires at least three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters. Taxi Mode is enabled by default: sitting assembles the craft, and leaving attempts to restore it as blocks. Disable Taxi Mode to convert the craft manually with the Configurizer.
 
 Canopy and Canopy Glass share the space above the seat's lower block with its backrest. Either placement order works: holding a canopy item passes clicks on the seat through to placement, including when sneaking. Empty-hand boarding and configuration tools retain their usual actions.
 
@@ -10,7 +10,7 @@ The trigger can be **Disabled**, **Redstone ON** or **Redstone OFF**. ON reacts 
 
 Seat height offers **Base**, **+2 px**, **+4 px** and **+6 px**. Base is the default and uses a shorter pedestal. The cushion, armrests, backrest, collision bounds and seated player all follow the selected height. Height and trigger settings survive assembly, parking and world saves.
 
-A Pilot Seat fits one block directly below Canopy Glass or an upright Canopy, including joined widths of one, two and three. Place either block first. The open-bottom canopy shares the backrest space without replacing the glass, and both blocks remain part of the vehicle. Removing the canopy preserves the seat and restores its ordinary backrest reservation. Each armrest hides independently when a full solid block is directly beside the seat, including in the captured vehicle view.
+A Pilot Seat fits one block directly below Canopy Glass or an upright Canopy, including joined widths up to nine. Place either block first. The open-bottom canopy shares the backrest space without replacing the glass, and both blocks remain part of the vehicle. Removing the canopy preserves the seat and restores its ordinary backrest reservation. Each armrest hides independently when a full solid block is directly beside the seat, including in the captured vehicle view.
 
 Canopy and optionally openable Front Canopy Glass / Large Front Canopy Glass remain operable aboard the craft. Click their actual surface with an empty hand to open, close or reverse the motion. Their selected sliding/hinged motion, front profile, mount, large-window hinge and material settings survive assembly and parking.
 
@@ -25,3 +25,12 @@ Parking accepts headings within **12 degrees** of a multiple of 90 degrees. Succ
 Using **Park as blocks** while standing beside or inside an unoccupied craft keeps your position and does not seat you. A player already driving remains in the restored Pilot Seat.
 
 Craft detection respects empty slab faces: a slab occupying the top half of its cell does not connect through its empty lower half to a hangar floor. Bottom slabs still contact the floor normally. Settled ramps and escalators can assemble while extended: the vehicle carries the actual extended segments, collision surfaces, source materials and recovery data. Escalators freeze at their captured tread position while driving. Detection includes only sections owned by a captured controller and never follows those sections into neighboring terrain. Vacated source positions remain recovery data rather than solid craft blocks. Parking keeps the extended pose and resumes normal redstone and nearby-player behavior. Cancelled transfers restore the original geometry and recovery data exactly.
+
+
+Double-tap **Space** while seated in Taxi to enter Hover. **W/S** controls forward/reverse movement and **A/D** steers in both modes. In Hover, hold **Space** to ascend or **Crouch** to descend; releasing both holds the current altitude. Double-tap Space again to select Taxi only when the craft is less than two blocks above solid ground. Hover cannot convert directly to blocks: descend, select Taxi, then park. Hold **Sprint+Crouch** to leave a hovering craft without parking it.
+
+Lift blocks light up while Hover is enabled, with a small particle effect when more than one block above the ground. Landing gear retracts above two blocks of clearance, preserving nearby trapdoor-cover behavior. Captured Vandor buttons, levers and sliders remain usable through their channels in Taxi and Hover.
+
+The Pilot Seat dialog's **Modes...** button assigns separate optional channel lists to **Park**, **Taxi** and **Hover**. Channel 0 leaves a mode unassigned. A rising signal selects that mode directly; held signals do not repeatedly convert the craft. Existing toggle-channel configuration remains available separately. Capability, ground-clearance and placement checks still apply to mode requests.
+
+See [Autopilot and waypoints](vehicle-autopilot.md) for route markers, timed stops and the Vehicle Status screen. Autopilot owns movement while enabled and continues after the pilot exits.
