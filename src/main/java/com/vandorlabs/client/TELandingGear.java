@@ -36,9 +36,8 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
     public void render(TileEntityLandingGear tile,double x,double y,double z,float partial,int stage,float alpha) {
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock() instanceof BlockTelescopicLandingGear) || state.getValue(BlockTelescopicLandingGear.LOWER)) return;
-        String name="landing_gear_"+BlockTelescopicLandingGear.SIZES[Math.min(3,tile.getSize())];
-        ModelResourceLocation FIXED=new ModelResourceLocation("vandorlabs:"+name+"_fixed","inventory");
-        ModelResourceLocation WHEEL=new ModelResourceLocation("vandorlabs:"+name+"_wheel","inventory");
+        ModelResourceLocation FIXED=RenderIdentifierCache.gear(tile.getSize(),false);
+        ModelResourceLocation WHEEL=RenderIdentifierCache.gear(tile.getSize(),true);
         float anchor=BlockTelescopicLandingGear.pistonAnchor(tile.getSize());
         float pistonLength=BlockTelescopicLandingGear.pistonLength(tile.getSize());
         float t=tile.previous+(tile.progress-tile.previous)*partial;

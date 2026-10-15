@@ -64,17 +64,21 @@ public final class CanopySurfaces {
         for(int index=0;index<plane.size();index++){
             Surface surface=plane.get(index);CanopyMesh.Face face=surface.face;
             if(oneGroup){result.add(face);continue;}
-            List<double[]> polygon=new ArrayList<>();
-            for(int i=0;i<face.vertices.length;i++){Vec3d p=face.vertices[i];polygon.add(new double[]{p.x,p.y,p.z,face.uv[i][0],face.uv[i][1]});}
-            List<List<double[]>> pieces=new ArrayList<>();pieces.add(polygon);
-            for(int j=0;j<plane.size() && !pieces.isEmpty();j++){
+            List<double[]> polygon=null;
+            List<List<double[]>> pieces=null;
+            for(int j=0;j<plane.size() && (pieces==null || !pieces.isEmpty());j++){
                 Surface other=plane.get(j);boolean glass=face.baseMaterial.equals("glass"),otherGlass=other.face.baseMaterial.equals("glass");
                 if(j==index || crossGroupsOnly && face.group.equals(other.face.group) || j<index && !(glass && !otherGlass) || !glass && otherGlass || !surface.overlaps(other))continue;
                 if(!face.doubleSided && !other.face.doubleSided && surface.normal.dotProduct(other.normal)<=0)continue;
+                if(pieces==null){
+                    polygon=new ArrayList<>();
+                    for(int i=0;i<face.vertices.length;i++){Vec3d p=face.vertices[i];polygon.add(new double[]{p.x,p.y,p.z,face.uv[i][0],face.uv[i][1]});}
+                    pieces=new ArrayList<>();pieces.add(polygon);
+                }
                 List<double[]> cut=new ArrayList<>();for(Vec3d p:other.face.vertices)cut.add(new double[]{p.x,p.y,p.z});
                 List<List<double[]>> next=new ArrayList<>();for(List<double[]> piece:pieces)next.addAll(subtract(piece,cut,surface.u,surface.v));pieces=next;
             }
-            if(pieces.size()==1 && pieces.get(0)==polygon){result.add(face);continue;}
+            if(pieces==null || pieces.size()==1 && pieces.get(0)==polygon){result.add(face);continue;}
             for(List<double[]> piece:pieces){
                 CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new Vec3d[piece.size()];copy.uv=new double[piece.size()][2];
                 copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.group=face.group;copy.doubleSided=face.doubleSided;copy.glazing=face.glazing;copy.tiled=face.tiled;

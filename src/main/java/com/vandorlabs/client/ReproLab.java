@@ -694,6 +694,10 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.existingWorldChecks")) {
             mc.displayGuiScreen(null);
             holdTicks++;
+            if(Boolean.getBoolean("vandorlabs.checkVehiclePerformance"))try{if(!ExistingVehiclePerformanceChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world vehicle performance checks",failure);}
+            if(Boolean.getBoolean("vandorlabs.checkSharedCanopyRetraction"))try{if(!ExistingSharedCanopyChecks.tick(mc,holdTicks))return;}catch(Exception failure){throw new IllegalStateException("existing-world shared canopy checks",failure);}
+            if(Boolean.getBoolean("vandorlabs.checkCanopyClose"))try{if(!ExistingCanopyCloseChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world canopy close checks",failure);}
+            if(Boolean.getBoolean("vandorlabs.checkSeatedScreen"))try{if(!ExistingSeatedScreenChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world seated screen checks",failure);}
             if(Boolean.getBoolean("vandorlabs.checkVehicleParking"))try{if(!ExistingVehicleParkingChecks.tick(mc,holdTicks))return;}catch(Exception failure){throw new IllegalStateException("existing-world parking checks",failure);}
             if(holdTicks>=200){System.out.println("[vandorlabs][reprolab] existing-world-load PASS");mc.shutdown();}
             return;

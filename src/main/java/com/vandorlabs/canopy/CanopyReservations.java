@@ -16,6 +16,8 @@ import java.util.*;
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class CanopyReservations {
     private static final Map<World,Map<BlockPos,List<WeakReference<TileEntityCanopy>>>> WAITS=new WeakHashMap<>();
+    private static final Map<TileEntityCanopy,SweepCache> SWEEPS=new WeakHashMap<>();
+    private static final class SweepCache{final String key;final List<AxisAlignedBB> boxes;SweepCache(String key,List<AxisAlignedBB> boxes){this.key=key;this.boxes=boxes;}}
     private CanopyReservations(){}
     /** Logical seams survive an intentionally absent physical helper. */
     public static TileEntityCanopy logicalAt(net.minecraft.world.IBlockAccess access,BlockPos pos){
@@ -56,7 +58,7 @@ public final class CanopyReservations {
     }
     private static boolean available(TileEntityCanopy member,BlockPos cell){World world=member.getWorld();return world.isBlockLoaded(cell)&&(world.isAirBlock(cell)||own(member,cell)||sharedBackrest(member,cell));}
     public static void releaseOpen(TileEntityCanopy owner){
-        if(!real(owner)||!owner.draws()||owner.progress!=1||!owner.targetOpen)return;
+        if(!real(owner)||!owner.draws()||owner.progress!=1||!owner.targetOpen&&!owner.waitingForReservations)return;
         World world=owner.getWorld();List<AxisAlignedBB> shell=owner.boxes();boolean changed=false;
         for(TileEntityCanopy member:owner.reservationMembers()){
             for(BlockPos cell:member.cells()){
@@ -104,6 +106,22 @@ public final class CanopyReservations {
             return false;
         }
     }
+    public static List<AxisAlignedBB> closingSweep(TileEntityCanopy owner){return closingSweep(owner,owner.progress);}
+    private static List<AxisAlignedBB> closingSweep(TileEntityCanopy owner,double progress){
+        String key=owner.getPos()+":"+owner.facing()+":"+owner.width()+":"+owner.centeredPlacement+":"+owner.hollowPlacement+":"+owner.large.key()+":"+owner.model()+":"+owner.mask();
+        SweepCache cached=progress==1?SWEEPS.get(owner):null;if(cached!=null&&cached.key.equals(key))return cached.boxes;
+        List<AxisAlignedBB> result=new ArrayList<>();int samples=64;
+        for(int sample=0;sample<samples;sample++)for(CanopyMesh.Face face:owner.baseFaces()){
+            AxisAlignedBB local=CanopyPose.sweptBounds(face,owner.block().kind,owner.width(),owner.large,progress*sample/samples,progress*(sample+1D)/samples);
+            Vec3d a=CanopyMesh.rotate(new Vec3d(local.minX,local.minY,local.minZ),owner.facing()),b=CanopyMesh.rotate(new Vec3d(local.maxX,local.maxY,local.maxZ),owner.facing());
+            result.add(new AxisAlignedBB(a,b).offset(owner.getPos()));
+        }
+        if(progress==1)SWEEPS.put(owner,new SweepCache(key,Collections.unmodifiableList(result)));
+        return result;
+    }
+    private static void considerPartner(TileEntityCanopy owner,TileEntityRampController ramp,Map<BlockPos,TileEntityRampController> partners){
+        if(ramp.moat&&ramp.attached()&&(ramp.isMoving()||ramp.isOpen())&&!ramp.getRedstoneChannels().intersect(owner.getRedstoneChannels()).isEmpty())partners.put(ramp.getPos(),ramp);
+    }
     public static boolean prepareClose(TileEntityCanopy owner){
         if(!real(owner))return true;clearWait(owner);World world=owner.getWorld();Set<BlockPos> blocked=new HashSet<>(),ramps=new HashSet<>();
         for(TileEntityCanopy member:owner.reservationMembers())for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&!available(member,cell))blocked.add(cell);
@@ -111,17 +129,40 @@ public final class CanopyReservations {
         // ramp helper tiles in a conservative radius; ordinary bodywork retains
         // the established canopy policy.
         double radius=owner.width()+(owner.resizable()?owner.large.depth/16D:owner.block().length)+2;
-        AxisAlignedBB area=new AxisAlignedBB(owner.getPos()).grow(radius);Set<BlockPos> candidates=new HashSet<>();
+        AxisAlignedBB area=new AxisAlignedBB(owner.getPos()).grow(radius);Map<BlockPos,List<AxisAlignedBB>> candidates=new HashMap<>();Map<BlockPos,TileEntityRampController> partners=new HashMap<>();
         for(int x=MathHelper.floor(area.minX)>>4;x<=MathHelper.floor(area.maxX)>>4;x++)for(int z=MathHelper.floor(area.minZ)>>4;z<=MathHelper.floor(area.maxZ)>>4;z++){
             net.minecraft.world.chunk.Chunk chunk=world.getChunkProvider().getLoadedChunk(x,z);if(chunk==null)continue;
-            for(TileEntity tile:chunk.getTileEntityMap().values())if(tile instanceof TileEntityControlledRamp&&area.intersects(new AxisAlignedBB(tile.getPos())))candidates.add(tile.getPos());
+            for(TileEntity tile:chunk.getTileEntityMap().values()){
+                if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;
+                    considerPartner(owner,ramp,partners);
+                }
+                if(tile instanceof TileEntityControlledRamp&&area.intersects(new AxisAlignedBB(tile.getPos()))){
+                // A long ramp's controller may be outside this neighborhood;
+                // follow the loaded local part's journal owner without loading it.
+                BlockPos controller=((TileEntityControlledRamp)tile).controller;
+                net.minecraft.world.chunk.Chunk controllerChunk=world.getChunkProvider().getLoadedChunk(controller.getX()>>4,controller.getZ()>>4);
+                TileEntity controllerTile=controllerChunk==null?null:controllerChunk.getTileEntityMap().get(controller);
+                if(controllerTile instanceof TileEntityRampController)considerPartner(owner,(TileEntityRampController)controllerTile,partners);
+                List<AxisAlignedBB> physical=new ArrayList<>();
+                for(AxisAlignedBB box:((TileEntityControlledRamp)tile).boxes(0))physical.add(box.offset(tile.getPos()));
+                // Reservations span whole blocks, but slabs and empty arc cells
+                // must not obstruct a shell that clears their actual geometry.
+                if(!physical.isEmpty())candidates.put(tile.getPos(),physical);
+                }
+            }
+        }
+        List<AxisAlignedBB> sweep=candidates.isEmpty()&&partners.isEmpty()?Collections.emptyList():closingSweep(owner,1);
+        // A shared Moat's currently empty arc is not permission to close midway.
+        // Its persistent source journal proves the complete path until retraction
+        // finishes, including after either mechanism is reloaded.
+        for(TileEntityRampController ramp:partners.values()){boolean crosses=false;
+            for(AxisAlignedBB path:ramp.vehicleMoatSweep()){for(AxisAlignedBB shell:sweep)if(shell.intersects(path.shrink(1e-7))){crosses=true;break;}if(crosses)break;}
+            if(crosses){blocked.add(ramp.getPos());ramps.add(ramp.getPos());}
         }
         if(!candidates.isEmpty()){
-            int samples=64;double margin=radius*3D/samples;
-            for(int sample=0;sample<=samples&&!candidates.isEmpty();sample++)for(CanopyMesh.Face face:owner.faces(owner.progress*sample/samples)){
-                AxisAlignedBB bounds=null;for(Vec3d local:face.vertices){Vec3d point=CanopyMesh.rotate(local,owner.facing()).add(new Vec3d(owner.getPos()));AxisAlignedBB vertex=new AxisAlignedBB(point,point);bounds=bounds==null?vertex:bounds.union(vertex);}
-                if(bounds==null)continue;AxisAlignedBB swept=bounds.grow(margin);
-                for(java.util.Iterator<BlockPos> pending=candidates.iterator();pending.hasNext();){BlockPos cell=pending.next();if(swept.intersects(new AxisAlignedBB(cell))){blocked.add(cell);pending.remove();}}
+            for(AxisAlignedBB swept:sweep)for(java.util.Iterator<Map.Entry<BlockPos,List<AxisAlignedBB>>> pending=candidates.entrySet().iterator();pending.hasNext();){
+                Map.Entry<BlockPos,List<AxisAlignedBB>> candidate=pending.next();
+                for(AxisAlignedBB physical:candidate.getValue())if(swept.intersects(physical.shrink(1e-7))){blocked.add(candidate.getKey());pending.remove();break;}
             }
         }
         if(blocked.isEmpty()){if(restoreFootprint(owner))return true;for(TileEntityCanopy member:owner.reservationMembers())for(BlockPos cell:member.cells())if(member.isReleasedCell(cell))blocked.add(cell);}

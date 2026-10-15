@@ -8,7 +8,24 @@ import java.util.*;
 public final class VehicleCollision {
     public final List<AxisAlignedBB> boxes;
     public final AxisAlignedBB bounds;
+    private final List<Cluster> clusters=new ArrayList<>();
+    private static final boolean PROFILE=VehicleDiagnostics.ENABLED||Boolean.getBoolean("vandorlabs.checkVehiclePerformance");
+    private final long collectionNanos,mergeNanos,indexNanos;
+    private final int rawBoxes,uniqueBoxes,firstPassBoxes,secondPassBoxes;
+    public String buildProfile(){return "raw-boxes="+rawBoxes+" unique-boxes="+uniqueBoxes+" first-pass="+firstPassBoxes+" second-pass="+secondPassBoxes+" merged-boxes="+boxes.size()+" clusters="+clusters.size()+" collect-us="+collectionNanos/1000+" merge-us="+mergeNanos/1000+" index-us="+indexNanos/1000;}
+    private static final class Cluster {
+        final List<AxisAlignedBB> boxes=new ArrayList<>();AxisAlignedBB bounds;
+        void add(AxisAlignedBB box){boxes.add(box);bounds=bounds==null?box:bounds.union(box);}
+    }
+    /** Exact coordinate bits avoid formatting thousands of doubles during animation. */
+    private static final class FaceKey {
+        final long a,b,c,d;
+        FaceKey(double a,double b,double c,double d){this.a=Double.doubleToLongBits(a);this.b=Double.doubleToLongBits(b);this.c=Double.doubleToLongBits(c);this.d=Double.doubleToLongBits(d);}
+        @Override public int hashCode(){long hash=a^Long.rotateLeft(b,13)^Long.rotateLeft(c,29)^Long.rotateLeft(d,47);hash=(hash^(hash>>>33))*0xff51afd7ed558ccdL;hash=(hash^(hash>>>33))*0xc4ceb9fe1a85ec53L;return (int)(hash^(hash>>>32));}
+        @Override public boolean equals(Object other){if(!(other instanceof FaceKey))return false;FaceKey k=(FaceKey)other;return a==k.a&&b==k.b&&c==k.c&&d==k.d;}
+    }
     public VehicleCollision(VehicleWorld view) {
+        long profileStart=PROFILE?System.nanoTime():0;
         pivotX=view.structure.bounds.maxX/2; pivotZ=view.structure.bounds.maxZ/2;
         List<AxisAlignedBB> all=new ArrayList<>();
         Set<BlockPos> canopyOwners=new HashSet<>();
@@ -34,15 +51,23 @@ public final class VehicleCollision {
             }
         }
         if(all.isEmpty())throw new IllegalArgumentException("The craft has no collision geometry.");
+        rawBoxes=all.size();long collected=PROFILE?System.nanoTime():0;collectionNanos=collected-profileStart;
         // Equal adjacent full faces merge without filling empty interiors.
-        for(int axis=0;axis<3;axis++)all=merge(all,axis);
+        all=new ArrayList<>(new LinkedHashSet<>(all));uniqueBoxes=all.size();
+        all=merge(all,0);firstPassBoxes=all.size();all=merge(all,1);secondPassBoxes=all.size();all=merge(all,2);
+        long merged=PROFILE?System.nanoTime():0;mergeNanos=merged-collected;
         if(all.size()>8192)throw new IllegalArgumentException("Craft collision geometry exceeds 8192 boxes.");
         boxes=Collections.unmodifiableList(all);
         AxisAlignedBB bound=all.get(0);for(AxisAlignedBB box:all)bound=bound.union(box);bounds=bound;
+        // Keep every original box, but amortize terrain queries over nearby surfaces.
+        // Four-block clusters avoid querying the empty interior of a large hollow hull.
+        Map<BlockPos,Cluster> grouped=new LinkedHashMap<>();
+        for(AxisAlignedBB box:all){BlockPos key=new BlockPos(MathHelper.floor((box.minX+box.maxX)/2)>>2,MathHelper.floor((box.minY+box.maxY)/2)>>2,MathHelper.floor((box.minZ+box.maxZ)/2)>>2);grouped.computeIfAbsent(key,k->new Cluster()).add(box);}
+        clusters.addAll(grouped.values());indexNanos=PROFILE?System.nanoTime()-merged:0;
     }
     private static List<AxisAlignedBB> merge(List<AxisAlignedBB> input,int axis) {
-        Map<String,List<AxisAlignedBB>> groups=new LinkedHashMap<>();
-        for(AxisAlignedBB b:input){String key=axis==0?b.minY+":"+b.maxY+":"+b.minZ+":"+b.maxZ:axis==1?b.minX+":"+b.maxX+":"+b.minZ+":"+b.maxZ:b.minX+":"+b.maxX+":"+b.minY+":"+b.maxY;groups.computeIfAbsent(key,k->new ArrayList<>()).add(b);}
+        Map<FaceKey,List<AxisAlignedBB>> groups=new LinkedHashMap<>();
+        for(AxisAlignedBB b:input){FaceKey key=axis==0?new FaceKey(b.minY,b.maxY,b.minZ,b.maxZ):axis==1?new FaceKey(b.minX,b.maxX,b.minZ,b.maxZ):new FaceKey(b.minX,b.maxX,b.minY,b.maxY);groups.computeIfAbsent(key,k->new ArrayList<>()).add(b);}
         List<AxisAlignedBB> output=new ArrayList<>();
         for(List<AxisAlignedBB> group:groups.values()) {
             group.sort(Comparator.comparingDouble(b->axis==0?b.minX:axis==1?b.minY:b.minZ));
@@ -76,7 +101,19 @@ public final class VehicleCollision {
         if(recentPoses.size()>3)recentPoses.remove(recentPoses.keySet().iterator().next());
         return posed;
     }
-    public AxisAlignedBB bounds(float yaw){pose(yaw);return posedBounds;}
+    private float boundedYaw=Float.NaN;private AxisAlignedBB bounded;
+    public AxisAlignedBB bounds(float yaw){
+        if(posed!=null&&yaw==posedYaw)return posedBounds;
+        if(bounded!=null&&yaw==boundedYaw)return bounded;
+        double radians=Math.toRadians(yaw),cos=Math.cos(radians),sin=Math.sin(radians);
+        double minX=Double.POSITIVE_INFINITY,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxZ=maxX;
+        for(AxisAlignedBB box:boxes){
+            double x=(box.minX+box.maxX)/2-pivotX,z=(box.minZ+box.maxZ)/2-pivotZ,cx=pivotX+cos*x-sin*z,cz=pivotZ+sin*x+cos*z;
+            double hx=(box.maxX-box.minX)/2,hz=(box.maxZ-box.minZ)/2,rx=Math.abs(cos)*hx+Math.abs(sin)*hz,rz=Math.abs(sin)*hx+Math.abs(cos)*hz;
+            minX=Math.min(minX,cx-rx);maxX=Math.max(maxX,cx+rx);minZ=Math.min(minZ,cz-rz);maxZ=Math.max(maxZ,cz+rz);
+        }
+        boundedYaw=yaw;return bounded=new AxisAlignedBB(minX,bounds.minY,minZ,maxX,bounds.maxY,maxZ);
+    }
     public boolean loaded(World world,double x,double y,double z,double dx,double dy,double dz){return loaded(world,x,y,z,dx,dy,dz,0);}
     public boolean loaded(World world,double x,double y,double z,double dx,double dy,double dz,float yaw) {
         AxisAlignedBB b=bounds(yaw).offset(x,y,z).expand(dx,dy,dz).grow(1);
@@ -87,9 +124,14 @@ public final class VehicleCollision {
                 if(!world.isBlockLoaded(new BlockPos(cx*16,64,cz*16)))return false;
         return true;
     }
-    private Terrain terrain;
+    private Terrain terrain,replayTerrain;
     public int terrainQueries,candidateBoxes;
-    public void begin(World world,net.minecraft.entity.Entity entity){terrain=new Terrain(world,entity);terrainQueries=candidateBoxes=0;}
+    /** Synchronous prediction only: world obstacles cannot tick between replayed inputs. */
+    public void withTerrainCache(World world,net.minecraft.entity.Entity entity,Runnable replay){
+        Terrain previous=replayTerrain,active=terrain;replayTerrain=new Terrain(world,entity);
+        try{replay.run();}finally{replayTerrain=previous;terrain=active;}
+    }
+    public void begin(World world,net.minecraft.entity.Entity entity){terrain=replayTerrain!=null&&replayTerrain.world==world&&replayTerrain.entity==entity?replayTerrain:new Terrain(world,entity);terrainQueries=candidateBoxes=0;}
     public void end(){terrain=null;}
     private final class Terrain {
         final World world;final net.minecraft.entity.Entity entity;
@@ -117,6 +159,25 @@ public final class VehicleCollision {
         return (terrain==null?new Terrain(world,entity):terrain).obstacles(swept);
     }
     public float turn(World world,net.minecraft.entity.Entity entity,double x,double y,double z,float from,float change) {
+        if(boxes.size()<=32)return legacyTurn(world,entity,x,y,z,from,change);
+        if(Math.abs(change)<1e-6)return from;
+        double radius=Math.hypot(bounds.maxX-pivotX,bounds.maxZ-pivotZ);
+        int steps=Math.max(1,(int)Math.ceil(Math.abs(Math.toRadians(change))*radius/.12));float accepted=from;
+        for(int i=1;i<=steps;i++){
+            float next=from+change*i/steps;if(!loaded(world,x,y,z,0,0,0,next))break;
+            double radians=Math.toRadians(next),cos=Math.cos(radians),sin=Math.sin(radians);boolean blocked=false;
+            for(Cluster cluster:clusters){
+                AxisAlignedBB sweep=new OrientedBox(cluster.bounds,pivotX,pivotZ,cos,sin).broad.offset(x,y,z).shrink(1e-6);
+                Collection<AxisAlignedBB> obstacles=obstacles(world,entity,sweep);if(obstacles.isEmpty())continue;
+                for(AxisAlignedBB local:cluster.boxes){OrientedBox box=new OrientedBox(local,pivotX,pivotZ,cos,sin);AxisAlignedBB query=box.broad.offset(x,y,z).shrink(1e-6);
+                    for(AxisAlignedBB obstacle:obstacles)if(query.intersects(obstacle)&&box.intersects(obstacle.offset(-x,-y,-z))){blocked=true;break;}
+                    if(blocked)break;
+                }if(blocked)break;
+            }
+            if(blocked)break;accepted=next;
+        }return accepted;
+    }
+    private float legacyTurn(World world,net.minecraft.entity.Entity entity,double x,double y,double z,float from,float change) {
         if(Math.abs(change)<1e-6)return from;
         double radius=Math.hypot(bounds.maxX-pivotX,bounds.maxZ-pivotZ);
         int steps=Math.max(1,(int)Math.ceil(Math.abs(Math.toRadians(change))*radius/.12));
@@ -136,6 +197,17 @@ public final class VehicleCollision {
     }
     public double clip(World world,net.minecraft.entity.Entity entity,double x,double y,double z,double amount,int axis){return clip(world,entity,x,y,z,amount,axis,0);}
     public double clip(World world,net.minecraft.entity.Entity entity,double x,double y,double z,double amount,int axis,float yaw) {
+        if(boxes.size()<=32)return legacyClip(world,entity,x,y,z,amount,axis,yaw);
+        if(amount==0)return 0;double result=amount,radians=Math.toRadians(yaw),cos=Math.cos(radians),sin=Math.sin(radians);
+        for(Cluster cluster:clusters){
+            AxisAlignedBB swept=new OrientedBox(cluster.bounds,pivotX,pivotZ,cos,sin).broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);
+            Collection<AxisAlignedBB> obstacles=obstacles(world,entity,swept);if(obstacles.isEmpty())continue;
+            for(AxisAlignedBB local:cluster.boxes){OrientedBox box=new OrientedBox(local,pivotX,pivotZ,cos,sin);AxisAlignedBB query=box.broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);
+                for(AxisAlignedBB obstacle:obstacles)if(query.intersects(obstacle))result=box.clip(obstacle.offset(-x,-y,-z),result,axis);
+            }
+        }return result;
+    }
+    private double legacyClip(World world,net.minecraft.entity.Entity entity,double x,double y,double z,double amount,int axis,float yaw) {
         if(amount==0)return 0;
         double result=amount;
         for(OrientedBox box:pose(yaw)) {

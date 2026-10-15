@@ -76,6 +76,18 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
         AxisAlignedBB box=state.getValue(UPPER)?new AxisAlignedBB(-.125,0,0,1.125,.5+height/8D,1.125):new AxisAlignedBB(-.125,0,0,1.125,canopyAbove(world,pos)?1.5+height/8D:Math.min(1,.75+height/8D),1.125);
         return PanelPlacement.rotateFromNorth(box,state.getValue(FACING));
     }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
+        BlockPos lower=state.getValue(UPPER)?pos.down():pos;
+        for(EntityPlayer player:world.playerEntities){
+            if(!(player.getRidingEntity() instanceof EntityChairSeat))continue;
+            EntityChairSeat mount=(EntityChairSeat)player.getRidingEntity();
+            // The client mount's anchor is not sent as entity metadata; its centered position identifies this seat.
+            BlockPos occupied=mount.getChairPos()==null?new BlockPos(mount.posX,mount.posY,mount.posZ):mount.getChairPos();
+            if(!mount.isDead&&lower.equals(occupied)&&start.squareDistanceTo(player.getPositionEyes(1))<1e-8)return null;
+        }
+        return super.collisionRayTrace(state,world,pos,start,end);
+    }
+
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing face, float x, float y, float z) {
         if (hand != EnumHand.MAIN_HAND) return false;

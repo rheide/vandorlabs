@@ -33,7 +33,7 @@ final class RedstoneScreenRenderer {
         // layers prevent coplanar text/background flicker at oblique angles.
         GlStateManager.enableTexture2D();
         Minecraft.getMinecraft().getTextureManager().bindTexture(
-                new net.minecraft.util.ResourceLocation("vandorlabs","textures/blocks/screen_white.png"));
+                RenderIdentifierCache.white());
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         rect(buffer,0,0,128,height,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
@@ -74,7 +74,7 @@ final class RedstoneScreenRenderer {
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
-        Minecraft.getMinecraft().getTextureManager().bindTexture(new net.minecraft.util.ResourceLocation("vandorlabs","textures/blocks/screen_white.png"));
+        Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         rect(buffer,0,0,128,height,0,craft==null?0xFF362B19:hover?0xFF152D48:0xFF153A29);
         rect(buffer,6,top,122,top+10,.01,on?0xFF37D8AD:0xFF495C69);Tessellator.getInstance().draw();

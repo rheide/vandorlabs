@@ -198,32 +198,22 @@ public final class CanopyMesh {
         return result;
     }
 
-    private static void subdivide(
-            List<AxisAlignedBB> boxes, Vec3d a, Vec3d b, Vec3d c, int depth, BlockPos pos) {
-        boolean flat =
-                Math.max(a.x, Math.max(b.x, c.x)) - Math.min(a.x, Math.min(b.x, c.x)) < .0001
-                        || Math.max(a.y, Math.max(b.y, c.y)) - Math.min(a.y, Math.min(b.y, c.y))
-                                < .0001
-                        || Math.max(a.z, Math.max(b.z, c.z)) - Math.min(a.z, Math.min(b.z, c.z))
-                                < .0001;
-        if (depth == 0 || flat) {
-            boxes.add(
-                    new AxisAlignedBB(
-                                    Math.min(a.x, Math.min(b.x, c.x)),
-                                    Math.min(a.y, Math.min(b.y, c.y)),
-                                    Math.min(a.z, Math.min(b.z, c.z)),
-                                    Math.max(a.x, Math.max(b.x, c.x)),
-                                    Math.max(a.y, Math.max(b.y, c.y)),
-                                    Math.max(a.z, Math.max(b.z, c.z)))
-                            .grow(.002)
-                            .offset(pos));
-            return;
+    private static void subdivide(List<AxisAlignedBB> boxes,Vec3d a,Vec3d b,Vec3d c,int depth,BlockPos pos){
+        subdivide(boxes,a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z,depth,pos);
+    }
+    /** Keep the same dyadic triangles and bounds without temporary vectors or intermediate boxes. */
+    private static void subdivide(List<AxisAlignedBB> boxes,double ax,double ay,double az,double bx,double by,double bz,double cx,double cy,double cz,int depth,BlockPos pos){
+        double minX=Math.min(ax,Math.min(bx,cx)),minY=Math.min(ay,Math.min(by,cy)),minZ=Math.min(az,Math.min(bz,cz));
+        double maxX=Math.max(ax,Math.max(bx,cx)),maxY=Math.max(ay,Math.max(by,cy)),maxZ=Math.max(az,Math.max(bz,cz));
+        if(depth==0 || maxX-minX<.0001 || maxY-minY<.0001 || maxZ-minZ<.0001){
+            // Match constructor.grow(.002).offset(pos) in precisely that arithmetic order.
+            boxes.add(new AxisAlignedBB(minX-.002+pos.getX(),minY-.002+pos.getY(),minZ-.002+pos.getZ(),maxX+.002+pos.getX(),maxY+.002+pos.getY(),maxZ+.002+pos.getZ()));return;
         }
-        Vec3d ab = a.add(b).scale(.5), bc = b.add(c).scale(.5), ca = c.add(a).scale(.5);
-        subdivide(boxes, a, ab, ca, depth - 1, pos);
-        subdivide(boxes, ab, b, bc, depth - 1, pos);
-        subdivide(boxes, ca, bc, c, depth - 1, pos);
-        subdivide(boxes, ab, bc, ca, depth - 1, pos);
+        double abx=(ax+bx)*.5,aby=(ay+by)*.5,abz=(az+bz)*.5,bcx=(bx+cx)*.5,bcy=(by+cy)*.5,bcz=(bz+cz)*.5,cax=(cx+ax)*.5,cay=(cy+ay)*.5,caz=(cz+az)*.5;
+        subdivide(boxes,ax,ay,az,abx,aby,abz,cax,cay,caz,depth-1,pos);
+        subdivide(boxes,abx,aby,abz,bx,by,bz,bcx,bcy,bcz,depth-1,pos);
+        subdivide(boxes,cax,cay,caz,bcx,bcy,bcz,cx,cy,cz,depth-1,pos);
+        subdivide(boxes,abx,aby,abz,bcx,bcy,bcz,cax,cay,caz,depth-1,pos);
     }
 
     static {DIMENSIONS.put("large_front_canopy_glass",new int[]{5,1,5});MODELS.put("large_front_canopy_glass",LargeCanopyGeometry.faces(5,new LargeCanopySettings()));}

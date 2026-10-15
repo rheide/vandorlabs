@@ -5,7 +5,7 @@ Taxi Mode converts a connected craft into one persistent vehicle entity when its
 ## Player interaction
 
 1. Build a craft with exactly one Pilot Seat and at least one landing gear. Leave air between the hull and surrounding buildings or terrain; only landing gear should touch the ground.
-2. Right-click either Pilot Seat cell to sit and assemble in Taxi Mode. If Taxi Mode is off, use the Configurizer on the seat, inspect the highlighted selection and choose **Assemble**.
+2. Right-click either Pilot Seat cell to sit and assemble in Taxi Mode. If Taxi Mode is off, inspect the highlighted selection through the Vehicle Controller and choose **Taxi**.
 3. **W/S** accelerates forward/backward along the current heading, **A/D** steers, and **Space** brakes. Steering requires motion and reverses when backing up.
 4. Align to a cardinal heading and **Sneak** to exit. Taxi Mode restores blocks automatically; a foreign component without a rotation adapter preserves the craft and shows a warning while allowing dismount. An obstructed destination preserves the craft and retries. In manual mode, stop and use the Configurizer on the craft, including while seated, then choose **Park as blocks**. The preview highlights the actual restored cells. Manual parking transfers a seated pilot to the placed seat.
 

@@ -36,6 +36,9 @@ final class ProgrammableRenderBenchmark {
     static void run(File output) {
         if (!Boolean.getBoolean("vandorlabs.renderBenchmark")) return;
         outputDirectory = output;
+        int inheritedError;
+        while((inheritedError=GL11.glGetError())!=GL11.GL_NO_ERROR)
+            System.out.println("[vandorlabs][reprolab] render-benchmark inherited GL error="+inheritedError);
         Minecraft mc = Minecraft.getMinecraft();
         List<String> ids = new ArrayList<>();
         for (ResourceLocation id : Block.REGISTRY.getKeys()) {
@@ -53,6 +56,8 @@ final class ProgrammableRenderBenchmark {
                 PrintWriter info = new PrintWriter(new File(output, "render-benchmark.txt"));
                 PrintWriter meshes = new PrintWriter(new File(output, "mesh-build-benchmark.csv"))) {
             ProgrammableRedstoneBenchmark.run(mc, output);
+            CanopyRenderBenchmark.run(output);
+            RampRenderBenchmark.run(mc,output);
             meshes.println("block,variant,count,vertices,build_p50_ms,build_p95_ms,allocated_bytes_p50");
             info.println("GL renderer: " + GL11.glGetString(GL11.GL_RENDERER));
             info.println("GL version: " + GL11.glGetString(GL11.GL_VERSION));
@@ -133,6 +138,7 @@ final class ProgrammableRenderBenchmark {
                     measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant+"_reference",64);
                     measure(mc,csv,meshes,"vandorlabs:programmable_diagonal_wall",variant,64);
                 }
+                GeneralRenderBenchmark.run(mc, output);
                 DoorRenderModels.checkPreparedDrawStates();
                 OffsetCollisionRuntimeBenchmark.run(mc,output);
                 NeighborLightRuntimeBenchmark.run(mc,output);

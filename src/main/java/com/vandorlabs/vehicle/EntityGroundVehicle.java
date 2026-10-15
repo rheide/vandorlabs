@@ -115,7 +115,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         pendingInputs.removeIf(c->c.sequence<=p.sequence);
         rotationYaw=p.yaw;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
         setPosition(p.x,p.y,p.z);
-        for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;advance(true);}
+        if(!pendingInputs.isEmpty())collision.withTerrainCache(world,this,()->{for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;advance(true);}});
         double error=(oldX-posX)*(oldX-posX)+(oldY-posY)*(oldY-posY)+(oldZ-posZ)*(oldZ-posZ);
         correctionX=error<16?oldX-posX:0;correctionY=error<16?oldY-posY:0;correctionZ=error<16?oldZ-posZ:0;
         diagnostics.correction(MathHelper.wrapDegrees(oldYaw-rotationYaw),pendingInputs.size());
@@ -225,6 +225,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     @Override public double getMountedYOffset(){return 0;}
     @Override protected void removePassenger(Entity passenger) {
+        BlockPos exitSeat=structure==null?null:seatForPassenger(passenger);
         boolean wasDriver=getControllingPassenger()==passenger;
         if(wasDriver&&structure!=null)taxiReturnSeat=seatForPassenger(passenger);
         super.removePassenger(passenger);
@@ -232,7 +233,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(wasDriver){serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;forward=strafe=0;vertical=0;verticalAt=-100;}
         if(world.isRemote || collision==null)return;
         if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
-        com.vandorlabs.entity.SafeDismount.move(passenger,com.vandorlabs.entity.SafeDismount.find(world,passenger,getEntityBoundingBox()),getEntityBoundingBox());
+        Vec3d exit=null;
+        if(exitSeat!=null){Vec3d near=toWorld(new Vec3d(exitSeat).addVector(.5,0,.5));AxisAlignedBB seatArea=new AxisAlignedBB(near.x-.5,near.y,near.z-.5,near.x+.5,near.y+2,near.z+.5);exit=com.vandorlabs.entity.SafeDismount.findNear(world,passenger,seatArea,near);}
+        if(exit==null)exit=com.vandorlabs.entity.SafeDismount.find(world,passenger,getEntityBoundingBox());
+        com.vandorlabs.entity.SafeDismount.move(passenger,exit,getEntityBoundingBox());
         if(!transferInProgress && !isDead && passenger instanceof EntityPlayerMP && getPassengers().isEmpty() && !hover && !autopilot.enabled() && VehicleTaxiMode.enabled(structure,taxiReturnSeat))
             VehicleService.taxiParking((EntityPlayerMP)passenger,this);
     }

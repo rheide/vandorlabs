@@ -52,7 +52,8 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         FaceEmitter emitter=new FaceEmitter(b);
-        for (RampGeometry.Box box:geometry) materialCuboid(emitter,box,te,partial);
+        MaterialFaces materialFaces=new MaterialFaces(te);
+        for (RampGeometry.Box box:geometry) materialCuboid(emitter,box,te,partial,materialFaces);
         Tessellator.getInstance().draw();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldX,oldY);
         GlStateManager.enableCull();
@@ -100,23 +101,32 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
     private static double[] moatVertex(TileEntityControlledRamp tile,RampGeometry.Direction face,int hinge,float partial,int sourceY,int step,double x,double y,double z){
         return tile.verticalMoatSources?com.vandorlabs.ramp.RigidMoatGeometry.vertex(face,hinge,tile.sourceY,tile.length,tile.startOffsetValue(),tile.endOffsetValue(),tile.pose(partial),tile.speed==0,x,y,z):com.vandorlabs.ramp.LegacyMoatGeometry.vertex(face,hinge,tile.sourceY,tile.high,tile.startOffsetValue(),tile.endOffsetValue(),tile.pose(partial),tile.speed==0,x,y,z);
     }
-    private static void materialCuboid(FaceEmitter emitter,RampGeometry.Box a,TileEntityControlledRamp te,float partial) {
-        net.minecraft.client.renderer.block.model.IBakedModel model=Minecraft.getMinecraft()
-                .getBlockRendererDispatcher().getModelForState(te.source);
+    /** Resolve source model faces once per draw; geometry slices share state, position and tint. */
+    static final class MaterialFaces {
+        final TextureAtlasSprite[] sprites=new TextureAtlasSprite[6];
+        final int[] tints=new int[6];
+        MaterialFaces(TileEntityControlledRamp tile){
+            Minecraft mc=Minecraft.getMinecraft();
+            net.minecraft.client.renderer.block.model.IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(tile.source);
+            for(EnumFacing face:FACES){
+                java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(tile.source,face,0);
+                sprites[face.ordinal()]=quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
+                tints[face.ordinal()]=!quads.isEmpty()&&quads.get(0).hasTintIndex()?mc.getBlockColors().colorMultiplier(tile.source,tile.getWorld(),tile.getPos(),quads.get(0).getTintIndex()):0xFFFFFF;
+            }
+        }
+    }
+    static void materialCuboid(FaceEmitter emitter,RampGeometry.Box a,TileEntityControlledRamp te,float partial,MaterialFaces faces) {
         double y=a.minY,Y=a.maxY;
         double vBottom=te.sideTextureV(a,y,partial),vTop=te.sideTextureV(a,Y,partial);
         double[] shift=te.textureShift(a,partial);
         TileEntityControlledRamp.SourceMaterial material=te.sourceMaterial(a,partial);
         for (EnumFacing face:FACES) {
             int housing=material.texture(face);
-            java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(te.source,face,0);
             TextureAtlasSprite sprite=housing>=0
                     ? Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                     com.vandorlabs.tiles.ScreenHousingTextures.texture(housing))
-                    : quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
-            int tint=0xFFFFFF;
-            if (!quads.isEmpty() && quads.get(0).hasTintIndex()) tint=Minecraft.getMinecraft().getBlockColors()
-                    .colorMultiplier(te.source,te.getWorld(),te.getPos(),quads.get(0).getTintIndex());
+                    : faces.sprites[face.ordinal()];
+            int tint=faces.tints[face.ordinal()];
             double uShift=face==EnumFacing.WEST||face==EnumFacing.EAST?shift[1]:shift[0];
             double vShift=face==EnumFacing.UP||face==EnumFacing.DOWN?shift[1]:0;
             emitter.emit(a,face,sprite,material.stretchSides()?1:vBottom,material.stretchSides()?0:vTop,uShift,vShift,tint);

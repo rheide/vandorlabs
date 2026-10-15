@@ -745,8 +745,7 @@ public class TEAnimatedScreenSelector
         } else {
             suffix = "_static";
         }
-        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(
-                VandorLabs.MODID, "textures/blocks/console_inputs/" + id + suffix + ".png"));
+        Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.input(id,suffix.equals("_off")));
         return new double[] {vTop, vBottom};
     }
 

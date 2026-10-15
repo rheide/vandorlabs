@@ -48,8 +48,16 @@ public final class VehicleService {
         try {
             craft.stopForParking();VehicleRotation.Plan plan=VehicleRotation.plan(craft);BlockPos origin=plan.origin;
             validateParking(player,craft,origin,true,false);
+            int turns=VehicleRotation.turns(craft.rotationYaw),width=(int)craft.structure.bounds.maxX,depth=(int)craft.structure.bounds.maxZ;
+            BlockPos selected=craft.taxiReturnSeat==null?craft.structure.seat:craft.taxiReturnSeat;
+            BlockPos seat=origin.add(VehicleRotation.cell(selected,width,depth,turns)).add(plan.structure.seat.subtract(VehicleRotation.cell(craft.structure.seat,width,depth,turns)));
             VehicleTransfer.park(world,craft,origin,player,false);
-            if(distance(player,craft.getEntityBoundingBox())<=64)com.vandorlabs.entity.SafeDismount.move(player,com.vandorlabs.entity.SafeDismount.find(world,player,new AxisAlignedBB(origin.add(plan.structure.seat))),new AxisAlignedBB(origin.add(plan.structure.seat)));
+            if(distance(player,craft.getEntityBoundingBox())<=64){
+                AxisAlignedBB seatArea=new AxisAlignedBB(seat).expand(0,1,0);Vec3d near=new Vec3d(seat).addVector(.5,0,.5);
+                Vec3d exit=com.vandorlabs.entity.SafeDismount.findNear(world,player,seatArea,near);
+                if(exit==null)exit=com.vandorlabs.entity.SafeDismount.find(world,player,seatArea);
+                com.vandorlabs.entity.SafeDismount.move(player,exit,craft.getEntityBoundingBox());
+            }
             player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Taxi Mode: craft restored as blocks."),true);
         }catch(Exception failure){if(first)VehicleNetwork.error(player,"Taxi Mode could not park: "+failure.getMessage()+". Craft preserved; parking retries automatically. You can reboard or use the Configurizer.");}
     }
@@ -198,7 +206,25 @@ public final class VehicleService {
             preview.controlData=raw.writeToNBT(new net.minecraft.nbt.NBTTagCompound());open(player,preview);
         }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
-    public static void confirm(EntityPlayerMP player,UUID token) {
+    /** Mode buttons use the same authenticated controller preview as settings. */
+    public static void selectMode(EntityPlayerMP player,VehicleNetwork.Packet packet){
+        try{
+            require(packet.sequence>=0&&packet.sequence<=2,"Invalid vehicle mode.");
+            Preview preview=controllerPreview(player,packet.token,packet.entity,packet.origin);
+            editableController(player,preview);
+            require(preview.structure!=null,"Complete the craft before changing mode.");
+            require(preview.entity!=null||packet.sequence!=0,"Craft is already parked as blocks.");
+            if(preview.entity==null || packet.sequence==0){confirm(player,packet.token,packet.sequence);return;}
+            require(validCaptured(player,preview.entity),"Craft unavailable; inspect it again.");
+            require(preview.entity.setHover(packet.sequence==2),packet.sequence==2?
+                    "Hover requires three lift blocks and a Vehicle Thruster.":
+                    "Descend to less than two blocks above solid ground before selecting Taxi.");
+            previews.remove(player.getUniqueID());
+            VehicleNetwork.state(preview.entity);
+        }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage()==null?"Vehicle mode change failed.":denied.getMessage());}
+    }
+    public static void confirm(EntityPlayerMP player,UUID token){confirm(player,token,-1);}
+    private static void confirm(EntityPlayerMP player,UUID token,int requestedMode) {
         Preview preview=previews.get(player.getUniqueID());
         if(preview==null || !preview.token.equals(token))return;
         previews.remove(player.getUniqueID());
@@ -219,7 +245,9 @@ public final class VehicleService {
                 VehicleCollision geometry=new VehicleCollision(new VehicleWorld(player.world,preview.structure));
                 require(clearOfPeople(player.world,geometry,preview.origin,assemblyAllowed(player.world,preview.structure,preview.origin,player)),"Another occupant obstructs assembly.");
                 authorizeAssembly(player,preview.structure,preview.origin);
-                VehicleTransfer.assemble(preview.world,preview.structure,preview.origin,player);
+                if(requestedMode==2){require(VehicleFlight.canHover(preview.structure),"Hover requires three lift blocks.");VehicleFlight.requireThruster(preview.structure);}
+                EntityGroundVehicle assembled=VehicleTransfer.assemble(preview.world,preview.structure,preview.origin,player);
+                if(requestedMode==2)require(assembled.setHover(true),"Unable to select Hover.");
             }
             player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(preview.entity==null?"Craft assembled. Right-click to drive; W/S drives, A/D steers, Space brakes, Sneak dismounts.":"Craft parked as blocks."),false);
         }catch(Exception e){VandorLabs.logger.warn("Vehicle action failed",e);VehicleNetwork.error(player,e.getMessage()==null?"Vehicle transfer failed; the recovery record was retained.":e.getMessage());}

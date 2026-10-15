@@ -24,7 +24,9 @@ public final class RedstoneScreenInteractions {
         if(!supports(state.getBlock()))return false;
         double reach=Math.min(8,player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d eye=player.getPositionEyes(1).subtract(new Vec3d(pos));
-        Vec3d end=eye.add(player.getLook(1).scale(reach));
+        // A rotation packet updates yaw/pitch before the server's next head-animation tick.
+        // Use those authoritative view angles for a click delivered in the same tick.
+        Vec3d end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
         for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)&&hitRow(state,tile,slot,eye,end,1)>=0){
             if(!world.isRemote){com.vandorlabs.tiles.TileEntityAutopilot controller=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);if(controller!=null&&world.isBlockModifiable(player,controller.getPos())&&player.canPlayerEdit(controller.getPos(),EnumFacing.UP,player.getHeldItemMainhand()))controller.setEnabled(!controller.enabled());}return true;
         }

@@ -39,6 +39,7 @@ public final class VehicleControllerRuntimeChecks {
         for(int x=0;x<=6;x++)for(int z=0;z<=1;z++)world.setBlockState(BASE.add(x,1,z),Blocks.IRON_BLOCK.getDefaultState(),2);
         world.setBlockState(CONTROL,controller().getDefaultState(),3);
         world.setBlockState(BASE.add(6,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
+        for(int x:new int[]{1,3,5})world.setBlockState(BASE.add(x,2,1),Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState(),2);
         VehicleScan empty=new VehicleScan(world,CONTROL);for(int step=0;step<100&&!empty.step(256);step++){}
         require(empty.result==null&&empty.error!=null&&empty.error.contains("Pilot Seat"),"zero-seat controller scan rejects conversion");
         for(BlockPos pos:new BlockPos[]{FIRST,SECOND}){
@@ -64,13 +65,14 @@ public final class VehicleControllerRuntimeChecks {
         if(standaloneStage==1&&ticks>=40){
             require(mc.currentScreen!=null&&header(mc).forward==1,"isolated controller opens settings despite missing Pilot Seat");
             require(field(field(mc.currentScreen,"data"),"structure")==null,"invalid scan supplies real controller data without a fake hull");
-            require(buttons(mc).stream().anyMatch(b->b.id==0&&!b.enabled),"incomplete craft cannot assemble");
-            for(int id:new int[]{4,6})require(buttons(mc).stream().anyMatch(b->b.id==id&&b.enabled),"standalone control available: "+id);
-            GuiOptionCycleRuntimeChecks.check(mc);VehicleTaxiRuntimeChecks.type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"28811");mc.currentScreen.updateScreen();
+            require(buttons(mc).stream().anyMatch(b->b.id==11&&!b.enabled),"incomplete craft cannot assemble");
+            for(int id:new int[]{4})require(buttons(mc).stream().anyMatch(b->b.id==id&&b.enabled),"standalone control available: "+id);
+            GuiOptionCycleRuntimeChecks.check(mc);VehicleTaxiRuntimeChecks.type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"28811");GuiTextField[] modes=(GuiTextField[])field(mc.currentScreen,"modeChannels");for(int i=0;i<3;i++)VehicleTaxiRuntimeChecks.type(mc,modes[i],Integer.toString(28830+i));mc.currentScreen.updateScreen();
             standaloneStage=2;ticks=0;return;
         }
         if(standaloneStage==2&&ticks>=40){UUID token=header(mc).token;mc.getIntegratedServer().addScheduledTask(()->{
             TileEntityVehicleController tile=(TileEntityVehicleController)world(mc).getTileEntity(at);require(player(mc).getDistanceSqToCenter(at)<=64,"standalone observer remains within settings reach: "+player(mc).getPositionVector());require(tile.getRedstoneChannel()==28811&&tile.controlsInitialized(),"standalone settings autoapply and initialize controls before seats exist");
+            for(int i=0;i<3;i++)require(tile.modeChannels(i).equals(com.vandorlabs.redstone.ChannelList.of(28830+i)),"standalone inline mode channels persist: "+i);
             NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
             VehicleNetwork.Packet height=new VehicleNetwork.Packet(VehicleNetwork.HEIGHT);height.token=token;height.entity=-1;height.origin=at;height.strafe=3;VehicleService.configureHeight(player(mc),height);
             require(before.equals(tile.writeToNBT(new NBTTagCompound())),"controller token rejects forged seat Height");
@@ -127,12 +129,15 @@ public final class VehicleControllerRuntimeChecks {
     private static void panel(Minecraft mc)throws Exception{
         require(mc.currentScreen!=null&&mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview"),"controller opens integrated panel");
         require(header(mc).forward==1,"controller panel metadata distinct from seat");
-        require(buttons(mc).stream().anyMatch(button->button.id==0&&button.enabled),"controller assembly action available");
+        require(buttons(mc).stream().anyMatch(button->button.id==11&&button.enabled),"controller Taxi selection assembles the craft");
         require(buttons(mc).stream().noneMatch(button->button.id==5||button.id==2),"controller has no individual seat Height or Taxi setting");
-        for(int id:new int[]{4,6})require(buttons(mc).stream().anyMatch(button->button.id==id&&button.enabled),"controller owns trigger and mode channels: "+id);
+        require(buttons(mc).stream().noneMatch(button->button.id==0||button.id==6),"controller removes Assemble and separate mode channels dialog");
+        require(((GuiTextField[])field(mc.currentScreen,"modeChannels")).length==3,"controller exposes all three mode channel fields inline");
+        require(buttons(mc).stream().anyMatch(button->button.id==10&&!button.enabled),"current Park mode disabled");
+        for(int id:new int[]{4,12})require(buttons(mc).stream().anyMatch(button->button.id==id&&button.enabled),"controller trigger and Hover available: "+id);
     }
     public static boolean tick(Minecraft mc,File output)throws Exception{
-        if(done)return true;require(++ticks<400,"timeout state="+state);
+        if(done)return true;if(!VehicleParkingExitRuntimeChecks.tick(mc))return false;require(++ticks<400,"timeout state="+state);
         if(standaloneStage<4){standalone(mc,output);return false;}
         if(state==0){mc.displayGuiScreen(null);VehicleControllerItemChecks.run(mc,output);mc.getIntegratedServer().addScheduledTask(()->setup(mc)).get();state=1;ticks=0;return false;}
         if(state==1&&ticks>=30){if(mc.world.getBlockState(CONTROL).getBlock()!=controller())return false;click(mc);state=2;ticks=0;return false;}
@@ -155,7 +160,7 @@ public final class VehicleControllerRuntimeChecks {
                 ModBlocks.PILOT_SEAT.onBlockActivated(world(mc),at,world(mc).getBlockState(at),crew,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.3F,.5F);
                 require(crew.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"world crew sits before controller assembly");
             }
-        }).get();VehicleTaxiRuntimeChecks.button(mc,0);state=5;ticks=0;return false;}
+        }).get();pressMode(mc,11);state=5;ticks=0;return false;}
         if(state==5&&ticks>=30){mc.getIntegratedServer().addScheduledTask(()->{
             EntityGroundVehicle craft=null;for(EntityGroundVehicle candidate:VehicleLookup.loaded(world(mc)))if(candidate.getDistanceSq(BASE.getX(),BASE.getY(),BASE.getZ())<400&&candidate.structure!=null&&candidate.structure.pilotSeats().size()==2)craft=candidate;
             require(craft!=null,"actual controller confirmation creates two-seat vehicle");craftId=craft.getUniqueID();
@@ -169,14 +174,20 @@ public final class VehicleControllerRuntimeChecks {
             require(craft!=null&&craft.structure!=null&&craft.structure.pilotSeats().size()==2,"client receives multi-seat snapshot");
             clientPassengerAuthority(mc,craft.structure);
             javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_controller_multipilot.png"));
-            mc.getIntegratedServer().addScheduledTask(()->parkCrew(mc)).get();state=7;ticks=0;return false;
+            mc.getIntegratedServer().addScheduledTask(()->openModePanel(mc)).get();state=8;ticks=0;return false;
         }
+        if(state==8&&ticks>=30){require(buttons(mc).stream().anyMatch(b->b.id==11&&!b.enabled),"current Taxi mode disabled");VehicleTaxiRuntimeChecks.previewLayout(mc);pressMode(mc,12);state=9;ticks=0;return false;}
+        if(state==9&&ticks>=30){mc.getIntegratedServer().addScheduledTask(()->{require(((EntityGroundVehicle)world(mc).getEntityFromUuid(craftId)).hover,"actual inline Hover button changes server mode");openModePanel(mc);}).get();state=10;ticks=0;return false;}
+        if(state==10&&ticks>=30){require(buttons(mc).stream().anyMatch(b->b.id==12&&!b.enabled),"current Hover mode disabled");VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_vehicle_controller_inline_hover.png");pressMode(mc,11);state=11;ticks=0;return false;}
+        if(state==11&&ticks>=30){mc.getIntegratedServer().addScheduledTask(()->{require(!((EntityGroundVehicle)world(mc).getEntityFromUuid(craftId)).hover,"actual inline Taxi button returns near-ground Hover to Taxi");parkCrew(mc);}).get();state=7;ticks=0;return false;}
         if(state==7&&ticks>=20){require(mc.world.getBlockState(parkedFirst).getBlock()==ModBlocks.PILOT_SEAT&&mc.world.getBlockState(parkedSecond).getBlock()==ModBlocks.PILOT_SEAT,"client receives both restored seats");
             javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_controller_parked_crew.png"));
-            done=true;System.out.println("[vandorlabs][reprolab] vehicle-controller-live PASS actual-click controller-conversion zero-seat-rejected multi-seat-accepted distinct-passengers first-driver handoff input-authority occupied-seat client-passenger-authority Hover-passenger-exit NBT-mapping forged-token protected-reach screenshots");return true;
+            done=true;System.out.println("[vandorlabs][reprolab] vehicle-controller-live PASS actual-click controller-conversion zero-seat-rejected multi-seat-accepted inline-mode-channels actual-Taxi-Hover-Taxi current-disabled distinct-passengers first-driver handoff input-authority occupied-seat client-passenger-authority Hover-passenger-exit NBT-mapping forged-token protected-reach screenshots");return true;
         }
         return false;
     }
+    private static void pressMode(Minecraft mc,int id)throws Exception{GuiButton b=buttons(mc).stream().filter(button->button.id==id).findFirst().orElseThrow(()->new IllegalStateException("mode button missing"));require(b.enabled,"requested mode enabled");net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class).invoke(mc.currentScreen,b.x+b.width/2,b.y+b.height/2,0);}
+    private static void openModePanel(Minecraft mc){EntityGroundVehicle craft=(EntityGroundVehicle)world(mc).getEntityFromUuid(craftId);Vec3d point=craft.toWorld(new Vec3d(craft.structure.controller().pos).addVector(.5,.5,.5));player(mc).setPositionAndUpdate(point.x,point.y,point.z-2);VehicleService.previewController(player(mc),craft,craft.structure.controller().pos);}
     private static EntityPlayerMP fake(Minecraft mc,UUID id,String name){
         EntityPlayerMP fake=net.minecraftforge.common.util.FakePlayerFactory.get(world(mc),new com.mojang.authlib.GameProfile(id,name));
         // Transfer/dismount uses normal server teleports. A disconnected manager

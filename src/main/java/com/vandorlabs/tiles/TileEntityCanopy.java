@@ -252,13 +252,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             if(!world.isRemote){
                 if(targetOpen && waitingForReservations){waitingForReservations=false;reservationReview=true;com.vandorlabs.canopy.CanopyReservations.clearWait(this);sync();}
                 if(targetOpen && progress==1 && reservationReview){reservationReview=false;com.vandorlabs.canopy.CanopyReservations.releaseOpen(this);}
-                boolean released=reservationMembers().stream().anyMatch(TileEntityCanopy::hasReleasedCells);
-                if(!targetOpen && (progress>0||released) && closeReservationRetry){
+                if(!targetOpen && closeReservationRetry){
                     closeReservationRetry=false;boolean blocked=!com.vandorlabs.canopy.CanopyReservations.prepareClose(this);
                     // A closed snapshot parked after moving in vehicle mode may
                     // lack its released helpers. Reopen safely if foreign cells
                     // prevent restoring the closed footprint, then wait to close.
-                    if(blocked&&progress==0){previous=progress=1;waitingForReservations=true;sync();}
+                    if(blocked&&progress==0){previous=progress=1;waitingForReservations=true;com.vandorlabs.canopy.CanopyReservations.releaseOpen(this);sync();}
                     else if(blocked!=waitingForReservations){waitingForReservations=blocked;sync();}
                 }
             }
@@ -272,11 +271,19 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         }
     }
 
+    /** Recovery runs during tile ticks, when newly restored helpers may still be pending. */
+    private TileEntityCanopy membershipTile(BlockPos cell) {
+        if(!world.isBlockLoaded(cell))return null;
+        TileEntity raw=world.getTileEntity(cell);
+        return raw instanceof TileEntityCanopy&&!raw.isInvalid()
+                &&world.getBlockState(cell).getBlock()==block()?(TileEntityCanopy)raw:null;
+    }
+
     /** Resolve broken cross-chunk footprints after both sides become loaded again. */
     private boolean repairMembership() {
         if (anchor != null && !anchor.equals(pos)) {
             if (world.isBlockLoaded(anchor)) {
-                TileEntityCanopy parent = at(world, anchor);
+                TileEntityCanopy parent = membershipTile(anchor);
                 if (parent == null || parent.block() != block() || !anchor.equals(parent.anchor) || !parent.cells().contains(pos)) {
                     removing = true;
                     world.setBlockToAir(pos);
@@ -286,12 +293,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             return false;
         }
         if(pair!=null) {
-            TileEntityCanopy owner=at(world,pair);
+            TileEntityCanopy owner=membershipTile(pair);
             boolean broken=world.isBlockLoaded(pair) && (owner==null || owner.block()!=block() || owner.facing()!=facing() || !pair.equals(owner.pair));
             if(pair.equals(pos))for(int i=1;i<joinedWidth;i++) {
                 BlockPos other=pos.offset(facing().rotateY(),i);
                 if(world.isBlockLoaded(other)) {
-                    TileEntityCanopy member=at(world,other);
+                    TileEntityCanopy member=membershipTile(other);
                     if(member==null || member.block()!=block() || member.facing()!=facing() || !pos.equals(member.pair))broken=true;
                 }
             }
@@ -299,7 +306,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         }
         for (BlockPos cell : reservedCells())
             if (world.isBlockLoaded(cell)) {
-                TileEntityCanopy member = at(world, cell);
+                TileEntityCanopy member = membershipTile(cell);
                 if (member == null || member.block() != block() || !pos.equals(member.anchor)) {
                     removeAssembly();
                     world.setBlockToAir(pos);
@@ -311,7 +318,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
 
     public List<AxisAlignedBB> boxes() {
         if (!draws() || block() == null) return Collections.emptyList();
-        String key = model() + ":" + mask() + ":" + centeredPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
+        String key = model() + ":" + mask() + ":" + centeredPlacement + ":" + hollowPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
         if (!key.equals(cachedKey)) {
             cached = resizable()?CanopyMesh.windowCollision(faces(),facing(),pos):
                     CanopyMesh.collision(

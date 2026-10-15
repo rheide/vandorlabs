@@ -178,12 +178,12 @@ public final class VehicleTaxiRuntimeChecks {
         require(controls.stream().noneMatch(b->"Save".equalsIgnoreCase(b.displayString)),"preview applies valid changes without a Save button");
         boolean seatOnly=controls.stream().anyMatch(b->b.id==5);
         if(seatOnly){require(controls.size()==3&&controls.stream().allMatch(b->b.id==1||b.id==2||b.id==5),"compact seat dialog contains Height, Taxi and Done");}
-        GuiButton modes=null;
+
         for(GuiButton b:controls)if(b.visible){
             require(b.x>=0&&b.y>=0&&b.x+b.width<=gui.width&&b.y+b.height<=gui.height,"visible control fits screen: "+b.displayString);
-            if(b.displayString.toLowerCase(java.util.Locale.ROOT).contains("mode channels"))modes=b;
+
         }
-        if(!seatOnly)require(modes!=null&&modes.enabled&&modes.width>=140&&modes.height>=20,"mode channels is a prominent usable main control");
+        if(!seatOnly){require(controls.stream().noneMatch(b->b.id==0||b.id==6),"controller has no Assemble or separate mode dialog button");for(int id:new int[]{10,11,12})require(controls.stream().anyMatch(b->b.id==id&&b.width>=80),"inline mode switch fits minimum layout: "+id);}
         return controls;
     }
     static void screenshot(Minecraft mc,File output,String name)throws Exception{
@@ -278,10 +278,10 @@ public final class VehicleTaxiRuntimeChecks {
                 e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewController(player(mc),e,e.structure.controller().pos);
             }).get();break;
             case 21: {
-                if(modeUiStage==0){previewLayout(mc);screenshot(mc,output,"shot_pilot_captured_preview.png");button(mc,6);modeUiStage++;phase--;break;}
-                if(modeUiStage==1){require(mc.currentScreen instanceof GuiPilotModes,"mode channel child opens from preview");screenshot(mc,output,"shot_pilot_mode_channels.png");GuiTextField[] fields=(GuiTextField[])field(mc.currentScreen,"fields");type(mc,fields[1],"6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
-                if(modeUiStage==2){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"child mode channels automatically apply")).get();((GuiTextField[])field(mc.currentScreen,"fields"))[1].setText("1,,2");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
-                if(modeUiStage==3){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"invalid child draft preserves saved mode channels")).get();button(mc,4);modeUiStage++;phase--;break;}
+                if(modeUiStage==0){previewLayout(mc);screenshot(mc,output,"shot_pilot_captured_preview.png");GuiTextField[] fields=(GuiTextField[])field(mc.currentScreen,"modeChannels");type(mc,fields[1],"6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
+                if(modeUiStage==1){screenshot(mc,output,"shot_pilot_mode_channels.png");mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"inline mode channels automatically apply")).get();((GuiTextField[])field(mc.currentScreen,"modeChannels"))[1].setText("1,,2");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
+                if(modeUiStage==2){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"invalid inline draft preserves saved mode channels")).get();((GuiTextField[])field(mc.currentScreen,"modeChannels"))[1].setText("6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
+
                 previewLayout(mc);
                 Object data=field(mc.currentScreen,"data");require(!stalePreview.equals(((VehicleNetwork.Packet)field(data,"header")).token),"new inspection supersedes planted controller preview");
                 break;
@@ -323,10 +323,10 @@ public final class VehicleTaxiRuntimeChecks {
             case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"reboarding after non-cardinal exits keeps client able to steer");mc.getIntegratedServer().addScheduledTask(()->VehicleService.previewSeat(player(mc),craft(mc),craft(mc).structure.seat)).get();break;
             case 28:if(!taxiToggleApplied){previewLayout(mc);button(mc,2);taxiToggleApplied=true;phase--;break;}mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();
                 if(!parkingPanelRequested){prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);VehicleService.previewController(player(mc),e,e.structure.controller().pos);}).get();parkingPanelRequested=true;phase--;break;}
-                require(((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).forward==1,"dedicated controller parking panel");button(mc,0);break;
+                require(((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).forward==1,"dedicated controller parking panel");button(mc,10);break;
             case 29:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);com.vandorlabs.redstone.RedstoneChannels.unregister(powered);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
-                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS unified-entry-preview no-save autoapply valid-channels invalid-draft-preserved mode-channel-child minimum-layout screenshots held-high-baseline stale-preview canonical-list stacked-gear-loop bounded-discovery default-on manual-off actual-boarding 90-270-parking 45-dismount-preserved repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
+                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS unified-entry-preview no-save autoapply valid-channels invalid-draft-preserved inline-mode-channels minimum-layout screenshots held-high-baseline stale-preview canonical-list stacked-gear-loop bounded-discovery default-on manual-off actual-boarding 90-270-parking 45-dismount-preserved repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
             default:throw new IllegalStateException("Taxi test phase overflow");
         }
         return false;

@@ -5,7 +5,7 @@ Injects bounded application-message delay (0/50/100/200 ms), jitter and loss.
 This is not an emulation of TCP packet loss or retransmission.
 """
 from pathlib import Path
-import os, shutil, subprocess, sys, time
+import os, re, shutil, subprocess, sys, time
 
 
 def main():
@@ -20,7 +20,8 @@ def main():
     forge=cache/'maven_downloader/net/minecraftforge/forge/1.12.2-14.23.5.2860/forge-1.12.2-14.23.5.2860-universal.jar'
     server=cache/'mcp_repo/de/oceanlabs/mcp/mcp_config/1.12.2/joined/downloadServer/server.jar'
     libraries=list((tooling/'minecraft/libraries').rglob('*.jar'))
-    jars=[forge,server,root/'build/libs/vandorlabs-2.0.jar']+libraries
+    version=re.search(r"^version = '([^']+)'",(root/'build.gradle').read_text(),re.M)[1]
+    jars=[forge,server,root/'build/libs'/('vandorlabs-'+version+'.jar')]+libraries
     java=tooling/'jdk8u504-b01/bin/java.exe'
     command=[str(java),'-Xmx2G','-Dvandorlabs.vehicleNetworkLab=true','-Dlog4j.configurationFile='+str(output/'log4j.xml'),'-cp',os.pathsep.join(map(str,jars)),'net.minecraftforge.fml.relauncher.ServerLaunchWrapper','nogui']
     print('Dedicated output: '+str(output),flush=True)

@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /** Bounded fragments are sent only for previews and newly tracked vehicles. */
 public final class VehicleNetwork {
-    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15;
+    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16;
     public static final int FRAGMENT=28000;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
@@ -27,13 +27,14 @@ public final class VehicleNetwork {
         public Packet(){}
         public Packet(int type){this.type=type;}
         public void toBytes(ByteBuf b){b.writeByte(type);b.writeInt(entity);b.writeLong(token.getMostSignificantBits());b.writeLong(token.getLeastSignificantBits());b.writeInt(sequence);b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);if(type==STATE){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);}}
-        public void fromBytes(ByteBuf b){try{type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())throw new IllegalArgumentException();data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);valid=text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH && type<=FLIGHT;if(type==STATE){serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();valid=valid && Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z) && Double.isFinite(dy) && Double.isFinite(speed) && Float.isFinite(yaw) && Float.isFinite(steering);}}catch(Exception e){valid=false;}}
+        public void fromBytes(ByteBuf b){try{type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())throw new IllegalArgumentException();data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);valid=text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH && type<=MODE_SELECT;if(type==STATE){serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();valid=valid && Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z) && Double.isFinite(dy) && Double.isFinite(speed) && Float.isFinite(yaw) && Float.isFinite(steering);}}catch(Exception e){valid=false;}}
     }
     public static final class Server implements IMessageHandler<Packet,IMessage> {
         public IMessage onMessage(Packet message,MessageContext ctx) {
-            if(!message.valid || message.data.length!=0 || message.type>CONFIRM && message.type!=INTERACT && message.type!=TAXI && message.type!=SETTINGS && message.type!=HEIGHT && message.type!=FLIGHT)return null;
+            if(!message.valid || message.data.length!=0 || message.type>CONFIRM && message.type!=INTERACT && message.type!=TAXI && message.type!=SETTINGS && message.type!=HEIGHT && message.type!=FLIGHT && message.type!=MODE_SELECT)return null;
             EntityPlayerMP player=ctx.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
+                if(message.type==MODE_SELECT){VehicleService.selectMode(player,message);return;}
                 if(message.type==HEIGHT){VehicleService.configureHeight(player,message);return;}
                 if(message.type==SETTINGS){VehicleService.configureChannels(player,message);return;}
                 if(message.type==TAXI){VehicleService.configureTaxi(player,message);return;}
@@ -73,7 +74,7 @@ public final class VehicleNetwork {
                     ?((EntityGroundVehicle)raw).snapshotBytes():snapshot.encode();
             for(int offset=0;offset<bytes.length;offset+=FRAGMENT) {
                 Packet p=new Packet(preview?PREVIEW:SNAPSHOT);p.entity=entity;p.token=token;p.origin=origin;p.flag=parking;p.total=bytes.length;p.offset=offset;
-                p.text=status; p.sequence=status.isEmpty()?0:-1;p.forward=(byte)(controller?1:0);
+                p.text=status; p.sequence=status.isEmpty()?0:-1;p.forward=(byte)(controller?1:0);p.strafe=(byte)(raw instanceof EntityGroundVehicle?(((EntityGroundVehicle)raw).hover?2:1):0);
                 p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));PacketHandler.INSTANCE.sendTo(p,player);
             }
         }catch(Exception e){error(player,"Cannot send craft: "+e.getMessage());}

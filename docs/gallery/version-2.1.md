@@ -12,6 +12,8 @@ Lift your craft off the ground, send it between waypoints, and build a cockpit w
 
 Use one Vehicle Controller and at least one Pilot Seat. Multiple seats work: the first seated pilot controls the craft until they get up, then control passes to another seated pilot. Each seat keeps its own height and automatic Taxi Mode setting. Vehicle assembly and redstone mode controls live on the Vehicle Controller.
 
+Park, Taxi, and Hover each have a channel field and switch button on the main Controller screen. The current mode's button is disabled. Leaving or parking a craft prefers collision-free standing space near your seat, including space inside the cockpit.
+
 Right-click Vehicle Controller, Programmable Ramp, Autopilot, or Waypoint to open its settings. The Configurizer opens the same dialog. Pilot Seat settings use a compact chair-style preview, and changes apply immediately without a Save step. Left-click option buttons for the next value; right-click for the previous value.
 
 See [Pilot Seat and Taxi Mode](../pilot-seat-taxi.md) and [vehicle compatibility](../vehicle-compatibility.md).
@@ -57,7 +59,7 @@ These live client renders show two points during deployment. Smaller Tread px va
 
 At zero Start offset, the inactive tower returns to editable ordinary blocks. Generated moving sections cannot open the controller dialog. Full vanilla and Vandor glass blocks, slabs, and supported vanilla and Vandor stairs work across the applicable ramp modes. Each mode has distinct artwork on the controller's front and top; the other direction markings make its active side easier to identify.
 
-An open canopy can share a redstone channel with a Moat ramp. The ramp waits for the canopy to open; the canopy waits for the ramp to retract before closing. Blocks placed in released canopy space are preserved and can delay closure until removed. Pilot Seat backrest reservations remain compatible with closing Canopies, including joined assemblies.
+An open canopy can share a redstone channel with a Moat ramp. The ramp waits for the canopy to open; the canopy stays fully open until a matching Moat finishes retracting. This also applies to manual close requests while the bridge is deployed. Ramp parts below or beside the canopy's path do not prevent closure. Blocks placed in released canopy space are preserved and can delay closure until removed. Pilot Seat backrest reservations remain compatible with closing Canopies, including joined assemblies. Manual canopy clicks work with a configured redstone channel until the next signal change.
 
 See [Programmable Ramp](../landing-ramps.md) for material, offset, and movement details.
 
@@ -74,5 +76,7 @@ Programmable Screen, Input, and Console Redstone rows now offer **Pulse** alongs
 Extended ramps carry their geometry and original-block journal into Taxi mode. Conversion settles Vandor redstone channels after the entire structure has transferred, and removed tiles receive no further channel commands. Doors, trapdoors, lamps, and linked controls therefore see the completed result. Cancelled transfers restore the craft, source data, and occupied seat assignments.
 
 Compatibility remains specific to each block. Supported external machines retain their saved data and stay paused while carried; unknown tile entities are refused before assembly. The transfer safeguards do not replace an adapter for another mod's private network, multiblock, or unload behavior.
+
+Vehicle movement also spends less time rebuilding canopy collision geometry and querying nearby terrain. Canopy animations, ramp materials, landing gear, and console rendering avoid repeated allocations and lookups while preserving their shapes and materials.
 
 See the [complete changelog](../../CHANGELOG.md) for fixes and smaller changes.

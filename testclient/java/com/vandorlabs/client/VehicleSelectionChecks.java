@@ -135,10 +135,13 @@ public final class VehicleSelectionChecks {
             // HEIGHT, INSPECTION and CANOPIES were added after SETTINGS.
             // Exercise the current protocol boundary rather than an older valid packet ID.
             buffer.clear();sent.type=VehicleNetwork.TILE;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
-            require(received.valid && received.type==VehicleNetwork.TILE,"latest supported packet type accepted");
+            require(received.valid && received.type==VehicleNetwork.TILE,"tile update packet type accepted");
             buffer.clear();sent.type=VehicleNetwork.FLIGHT;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
             require(received.valid && received.type==VehicleNetwork.FLIGHT,"flight packet type accepted");
-            for(int unknownType:new int[]{VehicleNetwork.FLIGHT+1,255}){
+            buffer.clear();sent.type=VehicleNetwork.MODE_SELECT;sent.sequence=2;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
+            require(received.valid && received.type==VehicleNetwork.MODE_SELECT && received.sequence==2
+                    && received.token.equals(sent.token) && received.entity==sent.entity && received.origin.equals(position),"mode selection boundary and authenticated identity codec");
+            for(int unknownType:new int[]{VehicleNetwork.MODE_SELECT+1,255}){
                 buffer.clear();sent.type=unknownType;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
                 require(!received.valid,"unknown interaction packet type rejected: "+unknownType);
             }

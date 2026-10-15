@@ -2,6 +2,17 @@
 
 ## 2.1
 
+- Put Park, Taxi and Hover channel fields directly on Vehicle Controller, with an adjacent switch button for each mode and the current mode disabled. Apply channel changes before switching modes.
+- Prefer safe standing space near the occupied Pilot Seat when leaving or parking a vehicle, including usable space inside the hull; retain a safe exterior fallback when the interior is obstructed.
+- Reduce vehicle collision rebuild allocations and repeated terrain queries while retaining the same collision geometry. Reuse terrain within a synchronous prediction replay, then discard it so later movement sees changed blocks.
+- Reduce temporary geometry during canopy animation and reuse source-material lookups within ramp draws. Reuse landing-gear model and console texture identifiers without retaining stale resource-pack models or textures.
+
+- Keep shared-channel Moat canopies fully open until retraction finishes, using the complete ramp travel path even when its current pose is clear. Recover saved closed canopies that still obstruct an attached Moat's return path.
+
+- Check actual ramp segment geometry against the canopy's swept path without extra clearance padding, so blocks below or beside a Canopy do not falsely block manual or redstone closure.
+- Preserve joined Canopies when a removed Pilot Seat's backrest is replaced by a canopy helper during the same world tick.
+- Let seated pilots click nearby screen controls in block mode without their own seat's selection box intercepting the click; retain other blocks as obstructions. Use current view angles for screen controls when looking and clicking in the same tick.
+
 - Allow joined Canopies to close over a Pilot Seat's recreated invisible backrest reservation, preserving the seat and the supported shared cockpit space.
 
 - Settle redstone channels after vehicle transfers finish, discard callbacks to removed tiles, and preserve channel sources across assembly and parking. Prevent moving ramps, doors, trapdoors, lights and linked controls from reacting to partial transfers. Keep an extended Moat and its source journal together without leaving duplicate source blocks or ramp segments behind.

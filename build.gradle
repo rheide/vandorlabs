@@ -227,11 +227,11 @@ task compilePortableTests(type: JavaCompile) {
             },
             fileTree('src/portableTest/java') {
                 include '**/*.java'
+                exclude '**/SignalUpdateBatchTest.java'
             })
     source files('src/main/java/com/vandorlabs/client/PortholeHex.java',
             'src/main/java/com/vandorlabs/client/PortholeRectangles.java',
-            'src/main/java/com/vandorlabs/client/PortholeGeometryCache.java',
-            'src/main/java/com/vandorlabs/redstone/SignalUpdateBatch.java')
+            'src/main/java/com/vandorlabs/client/PortholeGeometryCache.java')
     classpath = files()
     destinationDir = file("$buildDir/portable-tests")
     sourceCompatibility = '1.8'
@@ -642,9 +642,22 @@ task testPortholePartitions(type: JavaExec) {
 }
 check.dependsOn testPortholePartitions
 
+// Signal settlement validates live tile identity and now requires the game types.
+// Keep the remaining portable suite independent of Minecraft and Forge.
+task compileSignalUpdateBatchChecks(type: JavaCompile) {
+    group = 'verification'
+    dependsOn compileJava
+    source = files('src/portableTest/java/com/vandorlabs/redstone/SignalUpdateBatchTest.java')
+    classpath = sourceSets.main.runtimeClasspath
+    destinationDir = file("$buildDir/signal-batch-checks/classes")
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+    options.compilerArgs += ['-Xlint:all', '-Werror']
+}
+
 task testSignalUpdateBatch(type: JavaExec) {
-    dependsOn compilePortableTests
-    classpath = files("$buildDir/portable-tests")
+    dependsOn compileSignalUpdateBatchChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileSignalUpdateBatchChecks.destinationDir)
     main = 'com.vandorlabs.redstone.SignalUpdateBatchTest'
 }
 check.dependsOn testSignalUpdateBatch
