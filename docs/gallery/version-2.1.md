@@ -57,7 +57,7 @@ These live client renders show two points during deployment. Smaller Tread px va
 
 At zero Start offset, the inactive tower returns to editable ordinary blocks. Generated moving sections cannot open the controller dialog. Full vanilla and Vandor glass blocks, slabs, and supported vanilla and Vandor stairs work across the applicable ramp modes. Each mode has distinct artwork on the controller's front and top; the other direction markings make its active side easier to identify.
 
-An open canopy can share a redstone channel with a Moat ramp. The ramp waits for the canopy to open; the canopy waits for the ramp to retract before closing. Blocks placed in released canopy space are preserved and can delay closure until removed.
+An open canopy can share a redstone channel with a Moat ramp. The ramp waits for the canopy to open; the canopy waits for the ramp to retract before closing. Blocks placed in released canopy space are preserved and can delay closure until removed. Pilot Seat backrest reservations remain compatible with closing Canopies, including joined assemblies.
 
 See [Programmable Ramp](../landing-ramps.md) for material, offset, and movement details.
 

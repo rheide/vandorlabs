@@ -36,6 +36,10 @@ public final class CanopyReservations {
         if(cells!=null){for(List<WeakReference<TileEntityCanopy>> refs:cells.values())refs.removeIf(ref->ref.get()==null||ref.get()==owner);cells.values().removeIf(List::isEmpty);}
         RampCanopyCoordination.clearCanopyWait(owner);
     }
+    private static void watchSharedBackrest(TileEntityCanopy owner,BlockPos cell){
+        List<WeakReference<TileEntityCanopy>> watchers=WAITS.computeIfAbsent(owner.getWorld(),k->new HashMap<>()).computeIfAbsent(cell.toImmutable(),k->new ArrayList<>());
+        watchers.removeIf(ref->ref.get()==null||ref.get()==owner);watchers.add(new WeakReference<>(owner));
+    }
     public static void targetChanged(TileEntityCanopy owner){if(real(owner))RampCanopyCoordination.changed(owner.getWorld(),owner.getPos());}
     public static void loaded(TileEntityCanopy owner){if(real(owner)){TileEntityCanopy root=owner.owner();root.reservationGeometryChanged();targetChanged(root);}}
     public static void removed(TileEntityCanopy owner){if(real(owner)){clearWait(owner);targetChanged(owner);}}
@@ -43,6 +47,14 @@ public final class CanopyReservations {
     // Mutation paths must see World.addedTileEntityList while tile ticks are in
     // progress. The general at() accessor intentionally reads only chunk maps.
     private static boolean own(TileEntityCanopy member,BlockPos cell){TileEntityCanopy tile=pendingAware(member.getWorld(),cell);return tile!=null&&tile.block()==member.block()&&member.getPos().equals(tile.anchor);}
+    /** Pilot seats recreate their invisible upper reservation when an open shell yields it. */
+    private static boolean sharedBackrest(TileEntityCanopy member,BlockPos cell){
+        World world=member.getWorld();if(member.block()==null||!member.block().sharesSeatBackrest(world.getBlockState(cell)))return false;
+        IBlockState lower=world.getBlockState(cell.down());
+        return lower.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat&&!lower.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER)
+                &&world.getTileEntity(cell.down()) instanceof TileEntityPilotSeat;
+    }
+    private static boolean available(TileEntityCanopy member,BlockPos cell){World world=member.getWorld();return world.isBlockLoaded(cell)&&(world.isAirBlock(cell)||own(member,cell)||sharedBackrest(member,cell));}
     public static void releaseOpen(TileEntityCanopy owner){
         if(!real(owner)||!owner.draws()||owner.progress!=1||!owner.targetOpen)return;
         World world=owner.getWorld();List<AxisAlignedBB> shell=owner.boxes();boolean changed=false;
@@ -58,19 +70,26 @@ public final class CanopyReservations {
         }
         if(changed)targetChanged(owner);
     }
-    /** Reacquire only air or exact owned helpers, after checking every affected cell. */
+    /** Reacquire air/exact helpers while preserving legitimate shared seat backrests. */
     public static boolean restoreFootprint(TileEntityCanopy owner){
         if(!real(owner))return true;World world=owner.getWorld();List<TileEntityCanopy> members=owner.reservationMembers();
-        for(TileEntityCanopy member:members)for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&(!world.isBlockLoaded(cell)||!world.isAirBlock(cell)&&!own(member,cell)))return false;
+        for(TileEntityCanopy member:members)for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&!available(member,cell))return false;
         if(members.stream().noneMatch(TileEntityCanopy::hasReleasedCells))return true;
         List<BlockPos> added=new ArrayList<>();List<TileEntityCanopy> parents=new ArrayList<>();
         try{
-            for(TileEntityCanopy member:members)for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&!own(member,cell)){
+            for(TileEntityCanopy member:members)for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&!own(member,cell)&&!sharedBackrest(member,cell)){
                 if(!world.setBlockState(cell,world.getBlockState(member.getPos()),2))throw new IllegalStateException("Canopy helper placement refused");
                 added.add(cell);parents.add(member);TileEntityCanopy helper=pendingAware(world,cell);if(helper==null)throw new IllegalStateException("Canopy helper tile missing");
                 helper.anchor=member.getPos();helper.centeredPlacement=member.centeredPlacement;helper.hollowPlacement=member.hollowPlacement;net.minecraft.nbt.NBTTagCompound settings=new net.minecraft.nbt.NBTTagCompound();member.large.write(settings);helper.large.read(settings);helper.sync();
             }
-            for(TileEntityCanopy member:members){for(BlockPos cell:member.cells())if(member.isReleasedCell(cell))member.releasedCell(cell,false);member.sync();}
+            for(TileEntityCanopy member:members){
+                for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)){
+                    // Keep the physical backrest and wake this owner if its seat
+                    // is later removed, including distant large-shell cells.
+                    if(sharedBackrest(member,cell))watchSharedBackrest(owner,cell);else member.releasedCell(cell,false);
+                }
+                member.sync();
+            }
             return true;
         }catch(RuntimeException failed){
             for(int i=0;i<added.size();i++){
@@ -87,7 +106,7 @@ public final class CanopyReservations {
     }
     public static boolean prepareClose(TileEntityCanopy owner){
         if(!real(owner))return true;clearWait(owner);World world=owner.getWorld();Set<BlockPos> blocked=new HashSet<>(),ramps=new HashSet<>();
-        for(TileEntityCanopy member:owner.reservationMembers())for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&(!world.isBlockLoaded(cell)||!world.isAirBlock(cell)&&!own(member,cell)))blocked.add(cell);
+        for(TileEntityCanopy member:owner.reservationMembers())for(BlockPos cell:member.cells())if(member.isReleasedCell(cell)&&!available(member,cell))blocked.add(cell);
         // Ordinary closes do not tessellate a sweep. First inspect only loaded
         // ramp helper tiles in a conservative radius; ordinary bodywork retains
         // the established canopy policy.
@@ -119,6 +138,7 @@ public final class CanopyReservations {
     @SubscribeEvent public static void neighbors(BlockEvent.NeighborNotifyEvent event){
         if(event.getWorld().isRemote)return;Map<BlockPos,List<WeakReference<TileEntityCanopy>>> waits=WAITS.get(event.getWorld());if(waits==null)return;
         Set<BlockPos> changed=new HashSet<>();changed.add(event.getPos());for(net.minecraft.util.EnumFacing side:event.getNotifiedSides())changed.add(event.getPos().offset(side));
-        for(BlockPos pos:changed){List<WeakReference<TileEntityCanopy>> refs=waits.remove(pos);if(refs!=null)for(WeakReference<TileEntityCanopy> ref:refs){TileEntityCanopy owner=ref.get();if(owner!=null&&!owner.isInvalid())owner.retryReservationClose();}}
+        for(BlockPos pos:changed){
+            List<WeakReference<TileEntityCanopy>> refs=waits.remove(pos);if(refs!=null)for(WeakReference<TileEntityCanopy> ref:refs){TileEntityCanopy owner=ref.get();if(owner!=null&&!owner.isInvalid())owner.retryReservationClose();}}
     }
 }

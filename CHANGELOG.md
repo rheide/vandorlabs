@@ -2,6 +2,8 @@
 
 ## 2.1
 
+- Allow joined Canopies to close over a Pilot Seat's recreated invisible backrest reservation, preserving the seat and the supported shared cockpit space.
+
 - Settle redstone channels after vehicle transfers finish, discard callbacks to removed tiles, and preserve channel sources across assembly and parking. Prevent moving ramps, doors, trapdoors, lights and linked controls from reacting to partial transfers. Keep an extended Moat and its source journal together without leaving duplicate source blocks or ramp segments behind.
 - Publish the complete transferred block footprint before invalidating old tile entities, preventing neighbor lookups from recreating ghost tiles. Restore occupied seats after cancelled assembly and retain pilot assignments and return-seat settings during parking rollback.
 
