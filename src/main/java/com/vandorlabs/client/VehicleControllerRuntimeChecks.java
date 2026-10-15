@@ -137,7 +137,7 @@ public final class VehicleControllerRuntimeChecks {
         for(int id:new int[]{4,12})require(buttons(mc).stream().anyMatch(button->button.id==id&&button.enabled),"controller trigger and Hover available: "+id);
     }
     public static boolean tick(Minecraft mc,File output)throws Exception{
-        if(done)return true;if(!VehicleParkingExitRuntimeChecks.tick(mc))return false;require(++ticks<400,"timeout state="+state);
+        if(done)return true;if(!VehicleCameraRuntimeChecks.tick(mc,output))return false;if(!VehicleParkingExitRuntimeChecks.tick(mc))return false;require(++ticks<400,"timeout state="+state);
         if(standaloneStage<4){standalone(mc,output);return false;}
         if(state==0){mc.displayGuiScreen(null);VehicleControllerItemChecks.run(mc,output);mc.getIntegratedServer().addScheduledTask(()->setup(mc)).get();state=1;ticks=0;return false;}
         if(state==1&&ticks>=30){if(mc.world.getBlockState(CONTROL).getBlock()!=controller())return false;click(mc);state=2;ticks=0;return false;}

@@ -694,6 +694,8 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.existingWorldChecks")) {
             mc.displayGuiScreen(null);
             holdTicks++;
+            if(holdTicks==1&&Boolean.getBoolean("vandorlabs.checkCanopyGlassOrder"))try{CanopyGlassOrderRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("canopy glass order checks",failure);}
+            if(Boolean.getBoolean("vandorlabs.checkVehicleAnimation"))try{if(!ExistingVehicleAnimationRuntimeChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world vehicle animation checks",failure);}
             if(Boolean.getBoolean("vandorlabs.checkVehiclePerformance"))try{if(!ExistingVehiclePerformanceChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world vehicle performance checks",failure);}
             if(Boolean.getBoolean("vandorlabs.checkSharedCanopyRetraction"))try{if(!ExistingSharedCanopyChecks.tick(mc,holdTicks))return;}catch(Exception failure){throw new IllegalStateException("existing-world shared canopy checks",failure);}
             if(Boolean.getBoolean("vandorlabs.checkCanopyClose"))try{if(!ExistingCanopyCloseChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world canopy close checks",failure);}

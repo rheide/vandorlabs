@@ -70,7 +70,7 @@ public final class VehicleCanopies {
     }
     public static void tick(EntityGroundVehicle craft){
         if(craft.structure==null || craft.view==null || craft.ownershipBlocked)return;
-        boolean changed=false;
+        boolean changed=false;int moving=0;
         List<TileEntityCanopy> settled=new ArrayList<>();
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityCanopy){
             TileEntityCanopy tile=(TileEntityCanopy)raw;
@@ -78,19 +78,25 @@ public final class VehicleCanopies {
             tile.previous=tile.progress;
             float next=Math.max(0,Math.min(1,tile.progress+(tile.targetOpen?1:-1)/16F));
             if(next==tile.progress)continue;
-            tile.progress=next;changed=true;
+            tile.progress=next;changed=true;moving++;
             if(next==0 || next==1)settled.add(tile);
         }
+        if(VehicleAnimationDiagnostics.start(craft)!=0)VehicleAnimationDiagnostics.value((craft.world.isRemote?"client/":"server/")+"moving-canopies-count",moving);
         if(changed)save(craft,true);
         if(!craft.world.isRemote)for(TileEntityCanopy tile:settled)send(craft,tile);
     }
     private static void save(EntityGroundVehicle craft,boolean moved){
+        long started=VehicleAnimationDiagnostics.start(craft);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(VehicleStructure.Cell cell:craft.structure.cells){
             TileEntity tile=craft.view.getTileEntity(cell.pos);
             cells.add(tile instanceof TileEntityCanopy
                     ?new VehicleStructure.Cell(cell.pos,cell.state,tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound())):cell);
         }
-        craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),moved);
+        VehicleAnimationDiagnostics.elapsed(craft,"canopy-NBT-and-cells",started);
+        started=VehicleAnimationDiagnostics.start(craft);
+        VehicleStructure snapshot=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+        VehicleAnimationDiagnostics.elapsed(craft,"canopy-snapshot-constructor",started);
+        craft.updateCanopies(snapshot,moved);
     }
 }

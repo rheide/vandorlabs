@@ -37,6 +37,8 @@ def main():
     parser.add_argument('--compat-mods', type=Path)
     parser.add_argument('--jar', type=Path)
     parser.add_argument('--world-copy', type=Path, help='Test a workspace copy of an existing save')
+    parser.add_argument('--client-options', type=Path, help='Use supplied graphics and input settings in the isolated client')
+    parser.add_argument('--max-heap', default='3G', help='Maximum heap for the isolated client, such as 3G or 4096M')
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
@@ -57,6 +59,8 @@ def main():
     parser.add_argument('--animation-filter', help='Comma-separated canopy animation scene IDs')
     parser.add_argument('--timeout', type=int, default=1200)
     args = parser.parse_args()
+    if not re.fullmatch(r'[1-9][0-9]*[mMgG]', args.max_heap):
+        parser.error('--max-heap must be a positive size in M or G')
     if args.connection_family == 'regular' and args.connection_mode != 0:
         parser.error('--connection-mode requires --connection-family diagonal')
     diagonal_scopes = ['diagonal-half-width-full-height', 'diagonal-full-width-full-height', 'diagonal-full-width-half-height']
@@ -102,7 +106,18 @@ def main():
         (game/'config').mkdir()
         (game/'config/vandorlabs-blocks.cfg').write_text('blocks {\n'+''.join(' B:'+key+'=false\n' for key in categories)+'}\n')
     natives.mkdir()
-    (game/'options.txt').write_text('soundCategory_master:0.0\npauseOnLostFocus:false\n'+('enableVsync:false\nmaxFps:120\n' if args.focus in ('ramps','canopy-animations') else ''))
+    options = args.client_options.read_text() if args.client_options else ''
+    overrides = {'soundCategory_master': '0.0', 'pauseOnLostFocus': 'false', 'fullscreen': 'false'}
+    if not args.client_options and args.focus in ('ramps', 'canopy-animations'):
+        overrides.update(enableVsync='false', maxFps='120')
+    for key, value in overrides.items():
+        pattern = r'(?m)^'+re.escape(key)+r':[^\r\n]*$'
+        options = re.sub(pattern, key+':'+value, options) if re.search(pattern, options) else options.rstrip()+'\n'+key+':'+value+'\n'
+    (game/'options.txt').write_text(options)
+    if args.client_options:
+        optifine_options = args.client_options.with_name('optionsof.txt')
+        if optifine_options.is_file():
+            shutil.copyfile(optifine_options, game/'optionsof.txt')
     if args.world_copy:
         shutil.copytree(args.world_copy, game/'saves'/('repro-'+output.name))
     base = args.minecraft_dir.resolve()
@@ -142,9 +157,10 @@ def main():
     classpath += [str(base/'versions/1.12.2/1.12.2.jar'), str(jar)]
     compat = args.compat_mods or Path(os.environ.get('VANDOR_LABS_COMPAT_MODS', str(root/'build/tooling/compat-mods')))
     (game/'mods').mkdir()
-    for name in ['worldedit-forge-mc1.12.2-6.1.10-dist.jar',
-                 'BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar', 'ImmersiveEngineering-0.12-98.jar']:
-        shutil.copyfile(compat/name, game/'mods'/name)
+    if not args.all_mods:
+        for name in ['worldedit-forge-mc1.12.2-6.1.10-dist.jar',
+                     'BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar', 'ImmersiveEngineering-0.12-98.jar']:
+            shutil.copyfile(compat/name, game/'mods'/name)
     if args.vehicle_preservation_mods:
         for name in ['Mekanism-1.12.2-9.8.2.389.jar','malisiscore-1.12.2-6.5.1.jar','malisisdoors-1.12.2-7.3.0.jar']:
             shutil.copyfile(args.vehicle_preservation_mods/name,game/'mods'/name)
@@ -182,7 +198,7 @@ def main():
     if args.role:
         properties.append('-Dvandorlabs.networkRole='+args.role)
         properties.append('-Dvandorlabs.vehicleDiagnostics=true')
-    command = [args.java, '-Xmx3G']+(['-XX:+UseG1GC', '-XX:MaxGCPauseMillis=20'] if args.focus in ('ramps','canopy-animations') else [])+properties+['-cp', ';'.join(classpath),
+    command = [args.java, '-Xmx'+args.max_heap]+(['-XX:+UseG1GC', '-XX:MaxGCPauseMillis=20'] if args.focus in ('ramps','canopy-animations') else [])+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
         '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,

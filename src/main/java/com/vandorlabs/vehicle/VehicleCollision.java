@@ -9,10 +9,11 @@ public final class VehicleCollision {
     public final List<AxisAlignedBB> boxes;
     public final AxisAlignedBB bounds;
     private final List<Cluster> clusters=new ArrayList<>();
-    private static final boolean PROFILE=VehicleDiagnostics.ENABLED||Boolean.getBoolean("vandorlabs.checkVehiclePerformance");
-    private final long collectionNanos,mergeNanos,indexNanos;
+    private static final boolean PROFILE=VehicleDiagnostics.ENABLED||Boolean.getBoolean("vandorlabs.checkVehiclePerformance")||Boolean.getBoolean("vandorlabs.checkVehicleAnimation");
+    private final long collectionNanos,mergeNanos,indexNanos,deduplicationNanos,axis0Nanos,axis1Nanos,axis2Nanos;
     private final int rawBoxes,uniqueBoxes,firstPassBoxes,secondPassBoxes;
-    public String buildProfile(){return "raw-boxes="+rawBoxes+" unique-boxes="+uniqueBoxes+" first-pass="+firstPassBoxes+" second-pass="+secondPassBoxes+" merged-boxes="+boxes.size()+" clusters="+clusters.size()+" collect-us="+collectionNanos/1000+" merge-us="+mergeNanos/1000+" index-us="+indexNanos/1000;}
+    private final boolean cached,cacheable;
+    public String buildProfile(){return "raw-boxes="+rawBoxes+" unique-boxes="+uniqueBoxes+" first-pass="+firstPassBoxes+" second-pass="+secondPassBoxes+" merged-boxes="+boxes.size()+" clusters="+clusters.size()+" collect-us="+collectionNanos/1000+" merge-us="+mergeNanos/1000+" index-us="+indexNanos/1000+" dedup-us="+deduplicationNanos/1000+" axis0-us="+axis0Nanos/1000+" axis1-us="+axis1Nanos/1000+" axis2-us="+axis2Nanos/1000+" cached="+cached;}
     private static final class Cluster {
         final List<AxisAlignedBB> boxes=new ArrayList<>();AxisAlignedBB bounds;
         void add(AxisAlignedBB box){boxes.add(box);bounds=bounds==null?box:bounds.union(box);}
@@ -24,11 +25,29 @@ public final class VehicleCollision {
         @Override public int hashCode(){long hash=a^Long.rotateLeft(b,13)^Long.rotateLeft(c,29)^Long.rotateLeft(d,47);hash=(hash^(hash>>>33))*0xff51afd7ed558ccdL;hash=(hash^(hash>>>33))*0xc4ceb9fe1a85ec53L;return (int)(hash^(hash>>>32));}
         @Override public boolean equals(Object other){if(!(other instanceof FaceKey))return false;FaceKey k=(FaceKey)other;return a==k.a&&b==k.b&&c==k.c&&d==k.d;}
     }
-    public VehicleCollision(VehicleWorld view) {
+    /** Immutable captured coordinates; worker preparation never touches a World or tile. */
+    static final class Raw {
+        final List<AxisAlignedBB> boxes;final double pivotX,pivotZ;final long collectionNanos;final String diagnosticSide;final boolean complete;
+        Raw(List<AxisAlignedBB> boxes,double x,double z,long nanos,String side,boolean complete){this.boxes=Collections.unmodifiableList(boxes);pivotX=x;pivotZ=z;collectionNanos=nanos;diagnosticSide=side;this.complete=complete;}
+    }
+    /** Immutable geometry only. Mutable heading/terrain caches belong to each wrapper. */
+    static final class Geometry {
+        final List<AxisAlignedBB> boxes;final List<Cluster> clusters;final AxisAlignedBB bounds;final double pivotX,pivotZ;final boolean cacheable;
+        Geometry(VehicleCollision collision){boxes=collision.boxes;clusters=Collections.unmodifiableList(new ArrayList<>(collision.clusters));bounds=collision.bounds;pivotX=collision.pivotX;pivotZ=collision.pivotZ;cacheable=collision.cacheable;}
+    }
+    Geometry geometry(){return new Geometry(this);}
+    VehicleCollision(Geometry geometry){
+        boxes=geometry.boxes;clusters.addAll(geometry.clusters);bounds=geometry.bounds;pivotX=geometry.pivotX;pivotZ=geometry.pivotZ;
+        rawBoxes=uniqueBoxes=firstPassBoxes=secondPassBoxes=boxes.size();collectionNanos=mergeNanos=indexNanos=deduplicationNanos=axis0Nanos=axis1Nanos=axis2Nanos=0;cached=true;cacheable=geometry.cacheable;
+    }
+    public VehicleCollision(VehicleWorld view) {this(capture(view),false);}
+    private VehicleCollision(VehicleWorld view,boolean reference) {this(capture(view),reference);}
+    static Raw capture(VehicleWorld view){
         long profileStart=PROFILE?System.nanoTime():0;
-        pivotX=view.structure.bounds.maxX/2; pivotZ=view.structure.bounds.maxZ/2;
+        long diagnostic=view.craft==null?0:VehicleAnimationDiagnostics.start(view.craft);
+        String diagnosticSide=diagnostic==0?null:view.parent.isRemote?"client/":"server/";
         List<AxisAlignedBB> all=new ArrayList<>();
-        Set<BlockPos> canopyOwners=new HashSet<>();
+        Set<BlockPos> canopyOwners=new HashSet<>();boolean complete=true;
         AxisAlignedBB query=view.structure.bounds.grow(16);
         for(VehicleStructure.Cell c:view.structure.cells) {
             List<AxisAlignedBB> component=new ArrayList<>();
@@ -38,7 +57,11 @@ public final class VehicleCollision {
                     if(raw instanceof com.vandorlabs.tiles.TileEntityCanopy) {
                         com.vandorlabs.tiles.TileEntityCanopy owner=((com.vandorlabs.tiles.TileEntityCanopy)raw).owner();
                         // Owner boxes already use VehicleWorld coordinates, including shell displacement.
-                        if(owner.draws() && canopyOwners.add(owner.getPos()))component.addAll(owner.boxes());
+                        if(owner.draws() && canopyOwners.add(owner.getPos())){
+                            long ownerStart=diagnostic==0?0:System.nanoTime();List<AxisAlignedBB> ownerBoxes=owner.boxes();
+                            if(diagnostic!=0){String name=diagnosticSide+"collision-owner/"+owner.block().kind+"@"+owner.getPos();VehicleAnimationDiagnostics.value(name+"/collect",System.nanoTime()-ownerStart);VehicleAnimationDiagnostics.value(name+"/raw-boxes-count",ownerBoxes.size());}
+                            component.addAll(ownerBoxes);
+                        }
                     }
                 } else if(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear)
                     component.addAll(((com.vandorlabs.blocks.BlockTelescopicLandingGear)c.state.getBlock()).vehicleBoxes(view,c.pos));
@@ -46,16 +69,29 @@ public final class VehicleCollision {
                 all.addAll(component);
             }
             catch(RuntimeException | LinkageError error){
-                VehicleCompatibility.warn(c.state.getBlock(),"collision",error);
+                complete=false;VehicleCompatibility.warn(c.state.getBlock(),"collision",error);
                 all.add(new AxisAlignedBB(c.pos));
             }
         }
         if(all.isEmpty())throw new IllegalArgumentException("The craft has no collision geometry.");
-        rawBoxes=all.size();long collected=PROFILE?System.nanoTime():0;collectionNanos=collected-profileStart;
+        return new Raw(all,view.structure.bounds.maxX/2,view.structure.bounds.maxZ/2,PROFILE?System.nanoTime()-profileStart:0,diagnostic==0?null:diagnosticSide,complete);
+    }
+    static VehicleCollision prepare(Raw raw){return new VehicleCollision(raw,false);}
+    private VehicleCollision(Raw raw,boolean reference){
+        List<AxisAlignedBB> all=raw.boxes;pivotX=raw.pivotX;pivotZ=raw.pivotZ;collectionNanos=raw.collectionNanos;cached=false;cacheable=raw.complete;
+        long diagnostic=raw.diagnosticSide==null?0:1;String diagnosticSide=raw.diagnosticSide;PrimitiveProfile primitiveProfile=diagnostic==0?null:new PrimitiveProfile();
+        if(all.isEmpty())throw new IllegalArgumentException("The craft has no collision geometry.");
+        rawBoxes=all.size();long collected=PROFILE?System.nanoTime():0;
         // Equal adjacent full faces merge without filling empty interiors.
-        all=new ArrayList<>(new LinkedHashSet<>(all));uniqueBoxes=all.size();
-        all=merge(all,0);firstPassBoxes=all.size();all=merge(all,1);secondPassBoxes=all.size();all=merge(all,2);
-        long merged=PROFILE?System.nanoTime():0;mergeNanos=merged-collected;
+        all=reference?new ArrayList<>(new LinkedHashSet<>(all)):deduplicate(all,primitiveProfile);uniqueBoxes=all.size();
+        long deduped=PROFILE?System.nanoTime():0;deduplicationNanos=deduped-collected;
+        all=reference?legacyMerge(all,0):merge(all,0,primitiveProfile);firstPassBoxes=all.size();long first=PROFILE?System.nanoTime():0;axis0Nanos=first-deduped;
+        all=reference?legacyMerge(all,1):merge(all,1,primitiveProfile);secondPassBoxes=all.size();long second=PROFILE?System.nanoTime():0;axis1Nanos=second-first;
+        all=reference?legacyMerge(all,2):merge(all,2,primitiveProfile);
+        long merged=PROFILE?System.nanoTime():0;axis2Nanos=merged-second;mergeNanos=merged-collected;
+        if(diagnostic!=0){VehicleAnimationDiagnostics.value(diagnosticSide+"collision-dedup",deduplicationNanos);VehicleAnimationDiagnostics.value(diagnosticSide+"collision-axis0",axis0Nanos);VehicleAnimationDiagnostics.value(diagnosticSide+"collision-axis1",axis1Nanos);VehicleAnimationDiagnostics.value(diagnosticSide+"collision-axis2",axis2Nanos);
+            for(int pass=0;pass<4;pass++){String name=diagnosticSide+"collision-table/"+(pass==0?"dedup":"axis"+(pass-1));VehicleAnimationDiagnostics.value(name+"/extra-probes-count",primitiveProfile.probes[pass]);VehicleAnimationDiagnostics.value(name+"/max-probes-count",primitiveProfile.maximum[pass]);VehicleAnimationDiagnostics.value(name+"/groups-count",primitiveProfile.groups[pass]);}
+        }
         if(all.size()>8192)throw new IllegalArgumentException("Craft collision geometry exceeds 8192 boxes.");
         boxes=Collections.unmodifiableList(all);
         AxisAlignedBB bound=all.get(0);for(AxisAlignedBB box:all)bound=bound.union(box);bounds=bound;
@@ -65,7 +101,69 @@ public final class VehicleCollision {
         for(AxisAlignedBB box:all){BlockPos key=new BlockPos(MathHelper.floor((box.minX+box.maxX)/2)>>2,MathHelper.floor((box.minY+box.maxY)/2)>>2,MathHelper.floor((box.minZ+box.maxZ)/2)>>2);grouped.computeIfAbsent(key,k->new Cluster()).add(box);}
         clusters.addAll(grouped.values());indexNanos=PROFILE?System.nanoTime()-merged:0;
     }
-    private static List<AxisAlignedBB> merge(List<AxisAlignedBB> input,int axis) {
+    private static final class PrimitiveProfile {final long[] probes=new long[4];final int[] maximum=new int[4],groups=new int[4];void sample(int pass,int count){probes[pass]+=count;maximum[pass]=Math.max(maximum[pass],count);}}
+    private static int tableSize(int entries){int size=2;while(size<entries*2L){if(size>=1<<29)throw new IllegalArgumentException("Too many raw collision boxes.");size<<=1;}return size;}
+    private static long mix(long hash){hash=(hash^(hash>>>33))*0xff51afd7ed558ccdL;hash=(hash^(hash>>>33))*0xc4ceb9fe1a85ec53L;return hash^(hash>>>33);}
+    private static long bits(double value){return Double.doubleToLongBits(value);}
+    /** AxisAlignedBB.equals uses Double.compare: canonical NaNs compare equal, signed zeros differ. */
+    private static List<AxisAlignedBB> deduplicate(List<AxisAlignedBB> input){return deduplicate(input,null);}
+    private static List<AxisAlignedBB> deduplicate(List<AxisAlignedBB> input,PrimitiveProfile profile){
+        // An adapter may supply a subclass with its own equality contract.
+        for(AxisAlignedBB box:input)if(box.getClass()!=AxisAlignedBB.class)return new ArrayList<>(new LinkedHashSet<>(input));
+        int[] table=new int[tableSize(input.size())];int mask=table.length-1;
+        List<AxisAlignedBB> output=new ArrayList<>(input.size());
+        for(AxisAlignedBB box:input){
+            long hash=bits(box.minX)^Long.rotateLeft(bits(box.minY),11)^Long.rotateLeft(bits(box.minZ),23)^Long.rotateLeft(bits(box.maxX),37)^Long.rotateLeft(bits(box.maxY),43)^Long.rotateLeft(bits(box.maxZ),53);
+            int slot=(int)mix(hash)&mask,probes=0;
+            while(table[slot]!=0&&!box.equals(output.get(table[slot]-1))){slot=(slot+1)&mask;probes++;}
+            if(profile!=null)profile.sample(0,probes);
+            if(table[slot]==0){output.add(box);table[slot]=output.size();}
+        }
+        if(profile!=null)profile.groups[0]=output.size();
+        return output;
+    }
+    private static final Comparator<AxisAlignedBB> X_ORDER=Comparator.comparingDouble(b->b.minX),Y_ORDER=Comparator.comparingDouble(b->b.minY),Z_ORDER=Comparator.comparingDouble(b->b.minZ);
+    /** First-seen groups and stable sorts exactly match the former LinkedHashMap pipeline. */
+    private static List<AxisAlignedBB> merge(List<AxisAlignedBB> input,int axis){return merge(input,axis,null);}
+    private static List<AxisAlignedBB> merge(List<AxisAlignedBB> input,int axis,PrimitiveProfile profile){
+        int size=input.size(),groups=0;int[] table=new int[tableSize(size)],representative=new int[size],groupOf=new int[size],counts=new int[size];int mask=table.length-1;
+        for(int i=0;i<size;i++){
+            AxisAlignedBB box=input.get(i);
+            long a=bits(axis==0?box.minY:box.minX),b=bits(axis==0?box.maxY:box.maxX),c=bits(axis==2?box.minY:box.minZ),d=bits(axis==2?box.maxY:box.maxZ);
+            int slot=(int)mix(a^Long.rotateLeft(b,13)^Long.rotateLeft(c,29)^Long.rotateLeft(d,47))&mask,probes=0;
+            while(table[slot]!=0){AxisAlignedBB other=input.get(representative[table[slot]-1]);if(a==bits(axis==0?other.minY:other.minX)&&b==bits(axis==0?other.maxY:other.maxX)&&c==bits(axis==2?other.minY:other.minZ)&&d==bits(axis==2?other.maxY:other.maxZ))break;slot=(slot+1)&mask;probes++;}
+            if(profile!=null)profile.sample(axis+1,probes);
+            int group=table[slot]-1;if(group<0){group=groups++;representative[group]=i;table[slot]=group+1;}groupOf[i]=group;counts[group]++;
+        }
+        if(profile!=null)profile.groups[axis+1]=groups;
+        int[] starts=new int[groups+1];for(int group=0;group<groups;group++)starts[group+1]=starts[group]+counts[group];
+        int[] write=starts.clone();AxisAlignedBB[] ordered=new AxisAlignedBB[size];for(int i=0;i<size;i++)ordered[write[groupOf[i]]++]=input.get(i);
+        Comparator<AxisAlignedBB> comparator=axis==0?X_ORDER:axis==1?Y_ORDER:Z_ORDER;List<AxisAlignedBB> output=new ArrayList<>(size);
+        for(int group=0;group<groups;group++){
+            int from=starts[group],to=starts[group+1],count=to-from;
+            if(count==1){output.add(ordered[from]);continue;}
+            if(count<=8){
+                // The same Double.compare ordering, stable for equal starts (including signed zero).
+                for(int i=from+1;i<to;i++){
+                    AxisAlignedBB box=ordered[i];double start=axis==0?box.minX:axis==1?box.minY:box.minZ;int j=i;
+                    while(j>from&&Double.compare(start,axis==0?ordered[j-1].minX:axis==1?ordered[j-1].minY:ordered[j-1].minZ)<0){ordered[j]=ordered[j-1];j--;}
+                    ordered[j]=box;
+                }
+            }else Arrays.sort(ordered,from,to,comparator);
+            AxisAlignedBB current=ordered[from];
+            for(int i=from+1;i<to;i++){
+                AxisAlignedBB box=ordered[i];double start=axis==0?box.minX:axis==1?box.minY:box.minZ,end=axis==0?current.maxX:axis==1?current.maxY:current.maxZ;
+                if(start<=end+1e-8){
+                    // Math.min/max also define union's NaN and signed-zero behavior. Reuse only exact bits.
+                    if(current.getClass()!=AxisAlignedBB.class||bits(current.minX)!=bits(Math.min(current.minX,box.minX))||bits(current.minY)!=bits(Math.min(current.minY,box.minY))||bits(current.minZ)!=bits(Math.min(current.minZ,box.minZ))
+                            ||bits(current.maxX)!=bits(Math.max(current.maxX,box.maxX))||bits(current.maxY)!=bits(Math.max(current.maxY,box.maxY))||bits(current.maxZ)!=bits(Math.max(current.maxZ,box.maxZ)))current=current.union(box);
+                }else{output.add(current);current=box;}
+            }
+            output.add(current);
+        }
+        return output;
+    }
+    private static List<AxisAlignedBB> legacyMerge(List<AxisAlignedBB> input,int axis) {
         Map<FaceKey,List<AxisAlignedBB>> groups=new LinkedHashMap<>();
         for(AxisAlignedBB b:input){FaceKey key=axis==0?new FaceKey(b.minY,b.maxY,b.minZ,b.maxZ):axis==1?new FaceKey(b.minX,b.maxX,b.minZ,b.maxZ):new FaceKey(b.minX,b.maxX,b.minY,b.maxY);groups.computeIfAbsent(key,k->new ArrayList<>()).add(b);}
         List<AxisAlignedBB> output=new ArrayList<>();

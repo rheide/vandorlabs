@@ -12,7 +12,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
 
-/** Static mounts and posed shells share authored faces. Draw opaque first, sorted glass last. */
+/** Frames join the opaque tile pass; sorted glazing follows all solid tile artwork. */
 public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> {
     private static final class DrawFace {
         CanopyMesh.Face source;
@@ -39,6 +39,11 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             float partial,
             int stage,
             float alpha) {
+        renderPass(tile,x,y,z,partial,stage,alpha,net.minecraftforge.client.MinecraftForgeClient.getRenderPass());
+    }
+
+    /** Vehicle rendering uses the same phases inside its local world transform. */
+    void renderPass(TileEntityCanopy tile,double x,double y,double z,float partial,int stage,float alpha,int pass) {
         if (tile.block() == null || !tile.draws()) return;
         double progress =
                 tile.opening()
@@ -64,8 +69,10 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         }
         List<DrawFace> opaque=prepared.opaque,glass=prepared.glass;
         Vec3d camera=new Vec3d(rendererDispatcher.entityX-tile.getPos().getX(),rendererDispatcher.entityY-tile.getPos().getY(),rendererDispatcher.entityZ-tile.getPos().getZ());
-        for(DrawFace face:glass)face.distance=face.center.squareDistanceTo(camera);
-        glass.sort((a, b) -> Double.compare(b.distance, a.distance));
+        if(pass!=0){
+            for(DrawFace face:glass)face.distance=face.center.squareDistanceTo(camera);
+            glass.sort((a, b) -> Double.compare(b.distance, a.distance));
+        }
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, z);
@@ -77,13 +84,13 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         GlStateManager.disableBlend();GlStateManager.depthMask(true);
-        draw(opaque);
+        if(pass!=1)draw(opaque);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(
                 GlStateManager.SourceFactor.SRC_ALPHA,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.depthMask(false);
-        draw(glass);
+        if(pass!=0)draw(glass);
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();
         GlStateManager.enableLighting();

@@ -242,6 +242,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             // alpha rounding must not depend on immutable snapshot insertion order.
             return a.tile.getPos().compareTo(b.tile.getPos());
         });
+        List<TileDraw> canopyGlass=new ArrayList<>();
         try {for(TileDraw draw:orderedTiles) {
             TileEntity tile=draw.tile;
             try {
@@ -252,11 +253,25 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile visibility",error);}
             TileEntitySpecialRenderer<TileEntity> renderer=draw.renderer;
             if(renderer!=null){BlockPos p=tile.getPos();GlStateManager.pushMatrix();
-                try{regions.opaqueTiles.draw(tile,renderer,e.structure,partial);tileDraws++;}
+                try{
+                    if((Object)renderer instanceof TECanopy){
+                        canopyGlass.add(draw);
+                        ((TECanopy)(Object)renderer).renderPass((com.vandorlabs.tiles.TileEntityCanopy)tile,p.getX(),p.getY(),p.getZ(),partial,-1,1,0);
+                    }else regions.opaqueTiles.draw(tile,renderer,e.structure,partial);
+                    tileDraws++;
+                }
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile renderer",error);}
                 finally{GlStateManager.popMatrix();}
             }
-        }}finally{dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
+        }
+            // A later solid screen/wall must never overwrite canopy tint.
+            canopyGlass.sort((a,b)->Double.compare(b.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),a.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z)));
+            for(TileDraw draw:canopyGlass){BlockPos p=draw.tile.getPos();GlStateManager.pushMatrix();
+                try{((TECanopy)(Object)draw.renderer).renderPass((com.vandorlabs.tiles.TileEntityCanopy)draw.tile,p.getX(),p.getY(),p.getZ(),partial,-1,1,1);tileDraws++;}
+                catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(draw.tile.getBlockType(),"canopy glass renderer",error);}
+                finally{GlStateManager.popMatrix();}
+            }
+        }finally{dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
         GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
     }
     private static boolean glassRamp(TileEntity tile){

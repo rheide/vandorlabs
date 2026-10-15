@@ -2,6 +2,10 @@
 
 ## 2.1
 
+- Reduce canopy animation stalls in vehicle mode by grouping and deduplicating collision boxes with primitive tables, retaining the same ordered collision geometry at every animation step.
+- Prepare collision poses for supported single-canopy assemblies incrementally after vehicle conversion, merging captured coordinates on a bounded background worker. Reuse bounded geometry caches while block states and settings match, discard stale preparation after changes, and retain exact fresh collision for unsupported or unprepared configurations. Cache immutable seat, controller and propulsion indexes with each vehicle snapshot.
+- Render canopy glazing after opaque walls, screens and other tile artwork, preserving tint when viewed from either side of the pane in block and vehicle modes.
+- Keep third-person cameras outside parked Pilot Seat cockpits while preserving collision with surrounding terrain, and correct the front-view camera extension for captured vehicles.
 - Put Park, Taxi and Hover channel fields directly on Vehicle Controller, with an adjacent switch button for each mode and the current mode disabled. Apply channel changes before switching modes.
 - Prefer safe standing space near the occupied Pilot Seat when leaving or parking a vehicle, including usable space inside the hull; retain a safe exterior fallback when the interior is obstructed.
 - Reduce vehicle collision rebuild allocations and repeated terrain queries while retaining the same collision geometry. Reuse terrain within a synchronous prediction replay, then discard it so later movement sees changed blocks.

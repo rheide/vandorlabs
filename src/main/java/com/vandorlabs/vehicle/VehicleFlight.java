@@ -12,12 +12,11 @@ public final class VehicleFlight {
         return name.startsWith("antigravity_plate") || name.startsWith("repulsor_array") || name.startsWith("vertical_hover_thruster");
     }
     public static void requireThruster(VehicleStructure structure){
-        for(VehicleStructure.Cell cell:structure.cells)if(cell.state.getBlock() instanceof BlockPropulsionLight && !lift(cell.state.getBlock()))return;
+        if(structure.hasThruster)return;
         throw new IllegalArgumentException("Taxi and Hover require at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine.");
     }
     public static boolean canHover(VehicleStructure structure){
-        int count=0;for(VehicleStructure.Cell cell:structure.cells)if(lift(cell.state.getBlock()))count++;
-        return count>=3;
+        return structure.liftCells.size()>=3;
     }
     public static double clearance(EntityGroundVehicle craft){
         if(craft.collision==null)return Double.POSITIVE_INFINITY;

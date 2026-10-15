@@ -15,6 +15,7 @@ import net.minecraft.world.*;
 import java.util.*;
 
 public final class TileEntityCanopy extends TileEntity implements ITickable, com.vandorlabs.redstone.RedstoneChannelMember {
+    @Override public boolean shouldRenderInPass(int pass){return (pass==0||pass==1)&&draws();}
     public BlockPos anchor, pair;
     public boolean centeredPlacement,hollowPlacement;
     public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();

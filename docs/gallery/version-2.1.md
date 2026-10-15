@@ -69,6 +69,8 @@ See [Programmable Ramp](../landing-ramps.md) for material, offset, and movement 
 
 Canopy and both Front Canopy sizes support **Disabled**, **Redstone ON**, and **Redstone OFF** triggers. Fixed glass retains its frame beside a moving shell, and broad front-window backs meet diagonal walls without overlapping glass surfaces.
 
+Canopy glazing draws after opaque walls and screen artwork so its tint remains visible from either side. Third-person Pilot Seat cameras orbit the parked craft as well as the assembled vehicle, while surrounding blocks still limit the camera distance.
+
 Programmable Screen, Input, and Console Redstone rows now offer **Pulse** alongside Toggle and Slider. Use a momentary button for departures or other brief channel activations, including aboard a vehicle.
 
 ## Convert the complete craft together
@@ -78,5 +80,7 @@ Extended ramps carry their geometry and original-block journal into Taxi mode. C
 Compatibility remains specific to each block. Supported external machines retain their saved data and stay paused while carried; unknown tile entities are refused before assembly. The transfer safeguards do not replace an adapter for another mod's private network, multiblock, or unload behavior.
 
 Vehicle movement also spends less time rebuilding canopy collision geometry and querying nearby terrain. Canopy animations, ramp materials, landing gear, and console rendering avoid repeated allocations and lookups while preserving their shapes and materials.
+
+Conversion builds the craft's current collision shape before driving. On supported craft with one opening canopy assembly, its poses prepare incrementally afterward, with coordinate merging on a background worker and a bounded cache for reuse. Changes to captured blocks or settings discard outdated preparation. Unprepared or unsupported configurations still use freshly computed collision geometry. Pilot Seat controls and automatic Taxi Mode behavior stay the same.
 
 See the [complete changelog](../../CHANGELOG.md) for fixes and smaller changes.

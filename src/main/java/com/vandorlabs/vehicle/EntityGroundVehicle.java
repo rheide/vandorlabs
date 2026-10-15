@@ -30,6 +30,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public VehicleStructure structure;
     public VehicleWorld view;
     public VehicleCollision collision;
+    public final VehicleCollisionCache collisionCache=new VehicleCollisionCache();
     public final VehicleSignals signals=new VehicleSignals(this);
     public long transferEpoch;
     public boolean ownershipBlocked;
@@ -159,15 +160,23 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=new VehicleCollision(view);encoded=null;
         view.craft=this;view.hover=hover;if(!world.isRemote)view.controlUpdates=signals::changed;
+        collisionCache.reset(view,collision);
         rampGeometryUpgradePending=!world.isRemote&&VehicleRamps.needsGeometryUpgrade(this);
         setPosition(posX,posY,posZ);
     }
     /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
     public void updateCanopies(VehicleStructure snapshot,boolean moved){
         structure=snapshot;view.structure=snapshot;encoded=null;
-        if(moved){collision=new VehicleCollision(view);setPosition(posX,posY,posZ);}
+        if(moved){
+            long sampled=VehicleAnimationDiagnostics.start(this);
+            collision=collisionCache.collision(view);
+            VehicleAnimationDiagnostics.elapsed(this,"collision-rebuild",sampled);
+            if(sampled!=0){String side=world.isRemote?"client/":"server/";StackTraceElement[] stack=Thread.currentThread().getStackTrace();String caller=stack.length>2?stack[2].getClassName()+"."+stack[2].getMethodName():"unknown";VehicleAnimationDiagnostics.value(side+"collision-rebuild-count/"+caller,1);VehicleAnimationDiagnostics.value(side+"collision-boxes-count",collision.boxes.size());}
+            sampled=VehicleAnimationDiagnostics.start(this);setPosition(posX,posY,posZ);VehicleAnimationDiagnostics.elapsed(this,"bounds-and-lookup",sampled);
+        }
     }
     public void updateSettings(VehicleStructure snapshot){
+        collisionCache.clear();
         boolean heightChanged=false;
         for(BlockPos seat:structure.pilotSeats()){
             NBTTagCompound before=structure.at(seat).tileData(),after=snapshot.at(seat)==null?null:snapshot.at(seat).tileData();
@@ -175,6 +184,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         structure=snapshot;view.update(snapshot);encoded=null;
         if(heightChanged){collision=new VehicleCollision(view);setPosition(posX,posY,posZ);for(Entity passenger:getPassengers())updatePassenger(passenger);}
+        collisionCache.restart(view);
     }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
     @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());}
@@ -209,8 +219,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         return true;
     }
     @Override public void onAddedToWorld(){super.onAddedToWorld();signals.open();VehicleLookup.update(this);}
-    @Override public void onRemovedFromWorld(){signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
-    @Override public void setDead(){signals.close();VehicleLookup.remove(this);super.setDead();}
+    @Override public void onRemovedFromWorld(){collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
+    @Override public void setDead(){collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
             Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger);
@@ -257,10 +267,18 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public boolean stopped(){return motionX*motionX+motionY*motionY+motionZ*motionZ<.0001;}
     @Override public void onUpdate() {
+        long sampled=VehicleAnimationDiagnostics.start(this);
+        try{updateAnimatedVehicle();}finally{VehicleAnimationDiagnostics.elapsed(this,"entity-full-tick",sampled);}
+    }
+    private void updateAnimatedVehicle() {
         super.onUpdate();rotationPitch=prevRotationPitch=0;
         if(rampGeometryUpgradePending&&!world.isRemote&&structure!=null){rampGeometryUpgradePending=false;VehicleRamps.upgradeLoadedGeometry(this);rampGeometryUpgradePending=false;}
-        VehicleCanopies.tick(this);
-        signals.tick();VehicleLandingGear.tick(this);
+        long animationSample=VehicleAnimationDiagnostics.start(this);
+        if(animationSample!=0&&view!=null){int gear=0;for(net.minecraft.tileentity.TileEntity raw:view.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityLandingGear){com.vandorlabs.tiles.TileEntityLandingGear tile=(com.vandorlabs.tiles.TileEntityLandingGear)raw;if(tile.progress!=tile.previous)gear++;}VehicleAnimationDiagnostics.value((world.isRemote?"client/":"server/")+"moving-gear-count",gear);}
+        VehicleCanopies.tick(this);VehicleAnimationDiagnostics.elapsed(this,"canopy-tick",animationSample);
+        animationSample=VehicleAnimationDiagnostics.start(this);signals.tick();VehicleAnimationDiagnostics.elapsed(this,"signals-tick",animationSample);
+        animationSample=VehicleAnimationDiagnostics.start(this);VehicleLandingGear.tick(this);VehicleAnimationDiagnostics.elapsed(this,"landing-gear-tick",animationSample);
+        collisionCache.tick(view);
         if(world.isRemote) {
             previousVisual=currentVisual==null?new VehiclePose(posX,posY,posZ,rotationYaw):currentVisual;
             correctionX*=.65;correctionY*=.65;correctionZ*=.65;correctionYaw*=.65;
@@ -278,7 +296,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
                 double speed=Math.hypot(posX-prevPosX,posZ-prevPosZ);
                 propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);view.hover=hover;
                 if(hover && ticksExisted%8==0 && groundClearance()>1)
-                    for(VehicleStructure.Cell cell:structure.cells)if(VehicleFlight.lift(cell.state.getBlock())) {
+                    for(VehicleStructure.Cell cell:structure.liftCells) {
                         EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);
                         Vec3d center=toWorld(new Vec3d(cell.pos).addVector(.5,.5,.5));
                         int style=com.vandorlabs.tiles.TileEntityRedstoneLight.particleStyle(cell.state.getBlock().getRegistryName().getResourcePath());

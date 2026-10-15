@@ -131,6 +131,7 @@ public final class VehicleClient {
         if(event.phase!=TickEvent.Phase.START)return;Minecraft mc=Minecraft.getMinecraft();
         RenderGroundVehicle.cleanup(mc.world);
         if(mc.world!=lastWorld){incoming.clear();completed.clear();preview=null;lastWorld=mc.world;sequence=0;}
+        PlacedSeatCamera.tick(mc);
         if(mc.world==null || mc.player==null)return;apply(mc);
         for(Entity raw:mc.world.loadedEntityList)if(raw instanceof EntityGroundVehicle)((EntityGroundVehicle)raw).setLocalDriver(mc.player.getRidingEntity()==raw && raw.getControllingPassenger()==mc.player && !((EntityGroundVehicle)raw).hover && !((EntityGroundVehicle)raw).autopilot.enabled());
         if(!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
@@ -174,11 +175,13 @@ public final class VehicleClient {
     }
     @SubscribeEvent public void wheel(net.minecraftforge.client.event.MouseEvent event) {
         Minecraft mc=Minecraft.getMinecraft();
+        if(PlacedSeatCamera.wheel(event))return;
         if(event.getDwheel()==0 || mc.currentScreen!=null || mc.player==null || mc.gameSettings.thirdPersonView==0 || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle e=(EntityGroundVehicle)mc.player.getRidingEntity();if(e.structure==null)return;cameraFor(e);
         cameraDistance=MathHelper.clamp(cameraDistance+(event.getDwheel()<0?2:-2),4,96);event.setCanceled(true);
     }
     @SubscribeEvent public void camera(net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup event) {
+        if(PlacedSeatCamera.camera(event))return;
         Minecraft mc=Minecraft.getMinecraft();
         if(mc.player==null || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle e=(EntityGroundVehicle)mc.player.getRidingEntity();if(e.structure==null)return;cameraFor(e);
@@ -204,7 +207,7 @@ public final class VehicleClient {
             RayTraceResult hit=mc.world.rayTraceBlocks(start,start.add(away.scale(cameraDistance)),false,true,false);
             if(hit!=null){double d=Math.max(0,start.distanceTo(hit.hitVec)-.1);distance=Math.min(distance,d);vanilla=Math.min(vanilla,d);}
         }
-        GlStateManager.translate(0,0,-Math.max(0,distance-vanilla));
+        GlStateManager.translate(0,0,(mc.gameSettings.thirdPersonView==2?1:-1)*Math.max(0,distance-vanilla));
     }
     @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START)RenderGroundVehicle.beginFrame();}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {
