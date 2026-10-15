@@ -43,7 +43,7 @@ final class MoatVisualChecks {
         NBTTagCompound data=controller.writeToNBT(new NBTTagCompound());data.setInteger("StartOffsetHalfSteps",start);data.setInteger("EndOffsetHalfSteps",end);
         originals.add(new VehicleStructure.Cell(root,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,face),data));
         for(int row=1;row<=3;row++)for(int lane=0;lane<2;lane++){
-            BlockPos p=root.offset(face,row).offset(face.rotateY(),lane);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(p);tile.setHousingTexture(CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(Blocks.GOLD_BLOCK)));tile.setSlabTileSides(tiledSides);
+            BlockPos p=(mode==6?root.offset(face).up(row-1):root.offset(face,row)).offset(face.rotateY(),lane);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(p);tile.setHousingTexture(CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(Blocks.GOLD_BLOCK)));tile.setSlabTileSides(tiledSides);
             if(sourceState!=null&&sourceState.getBlock() instanceof BlockProgrammableStairs)tile.setSideTexture(CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(Blocks.BRICK_BLOCK)));
             originals.add(new VehicleStructure.Cell(p,sourceState==null?ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState():sourceState,sourceState==null||sourceState.getBlock() instanceof BlockProgrammableStairs?tile.writeToNBT(new NBTTagCompound()):null));
         }
@@ -60,19 +60,19 @@ final class MoatVisualChecks {
             if(mode==6){boolean reserved=false;for(AxisAlignedBB swept:ramp.vehicleMoatSweep())if(swept.grow(-1e-8).intersects(new AxisAlignedBB(p))){reserved=true;break;}if(!reserved)continue;}
             NBTTagCompound copy=partData.copy();copy.setInteger("x",p.getX());copy.setInteger("y",p.getY());copy.setInteger("z",p.getZ());
             copy.removeTag(com.vandorlabs.ramp.RampCopyData.ORIGIN);
-            int min=Integer.MAX_VALUE;for(int row=1;row<=3;row++){BlockPos source=root.offset(face,row);min=Math.min(min,source.getX()*face.getFrontOffsetX()+source.getZ()*face.getFrontOffsetZ());}
+            int min=Integer.MAX_VALUE;for(int row=1;row<=3;row++){BlockPos source=mode==6?root.offset(face):root.offset(face,row);min=Math.min(min,source.getX()*face.getFrontOffsetX()+source.getZ()*face.getFrontOffsetZ());}
             copy.setInteger("Row",p.getX()*face.getFrontOffsetX()+p.getZ()*face.getFrontOffsetZ()-min);
             cells.put(p,new VehicleStructure.Cell(p,ModBlocks.CONTROLLED_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,face),copy));
         }
         cells.put(BlockPos.ORIGIN,new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         VehicleWorld view=new VehicleWorld(mc.world,new VehicleStructure(new ArrayList<>(cells.values()),BlockPos.ORIGIN,EnumFacing.NORTH,1));
-        int sourceMin=Integer.MAX_VALUE;for(int row=1;row<=3;row++){BlockPos p=root.offset(face,row);sourceMin=Math.min(sourceMin,p.getX()*face.getFrontOffsetX()+p.getZ()*face.getFrontOffsetZ());}
+        int sourceMin=Integer.MAX_VALUE;for(int row=1;row<=3;row++){BlockPos p=mode==6?root.offset(face):root.offset(face,row);sourceMin=Math.min(sourceMin,p.getX()*face.getFrontOffsetX()+p.getZ()*face.getFrontOffsetZ());}
         AxisAlignedBB total=null;
         for(net.minecraft.tileentity.TileEntity raw:view.tiles.values())if(raw instanceof TileEntityControlledRamp){TileEntityControlledRamp part=(TileEntityControlledRamp)raw;part.row=part.getPos().getX()*face.getFrontOffsetX()+part.getPos().getZ()*face.getFrontOffsetZ()-sourceMin;part.escalator=mode==4?1:mode==5?2:0;part.origins.clear();part.sourceTileTags.clear();for(VehicleStructure.Cell source:originals)if(!source.pos.equals(root)&&!source.pos.equals(BlockPos.ORIGIN)){part.origins.add(source.pos);NBTTagCompound saved=com.vandorlabs.compat.RampStairs.supported(source.state)?com.vandorlabs.compat.RampStairs.capture(staging,source.pos):source.tileData();if(saved!=null)part.sourceTileTags.put(source.pos,saved);}part.move(true,pose,view.getTotalWorldTime(),60,false);
             require(part.moat==(mode==6)&&part.sourceY==2&&part.getPos().getX()*face.getFrontOffsetX()+part.getPos().getZ()*face.getFrontOffsetZ()-part.row==sourceMin,"synthetic parts retain one source hinge and height");
             if(mode==6)for(AxisAlignedBB b:part.boxes(0)){AxisAlignedBB absolute=b.offset(part.getPos());total=total==null?absolute:total.union(absolute);}
         }
-        if(mode==6&&(pose==0||pose==1)&&!com.vandorlabs.compat.RampStairs.supported(sourceState==null?ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState():sourceState)){
+        if(mode==6&&start==0&&end==0&&(pose==0||pose==1)&&!com.vandorlabs.compat.RampStairs.supported(sourceState==null?ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState():sourceState)){
             require(total!=null,"Moat endpoint has geometry");double along=face.getAxis()==EnumFacing.Axis.X?total.maxX-total.minX:total.maxZ-total.minZ,width=face.getAxis()==EnumFacing.Axis.X?total.maxZ-total.minZ:total.maxX-total.minX;
             require(Math.abs(width-2)<1e-6&&Math.abs(along-(pose==0?1:3))<1e-6&&Math.abs(total.maxY-total.minY-(pose==0?3:1))<1e-6,"Moat endpoint is upright2x3 wall or horizontal2x3 deck: "+total);
         }

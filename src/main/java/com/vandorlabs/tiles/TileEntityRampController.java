@@ -97,6 +97,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public int drop=3,segments=2,speed=1;
     public boolean top=true,activateOnPower=true,slow,elevator,extendSegments;
     public boolean moat;
+    private boolean verticalMoatSources;
     public int travelAxis=RampGeometry.VERTICAL;
     public String status="Retracted";
     public boolean error;
@@ -346,6 +347,17 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return true;
     }
 
+    /** Moat sources occupy the upright plane directly adjacent to the controller. */
+    private Set<ControllerPlatform.Cell> discoverPlatform(ControllerPlatform.Cell seed,
+            RampGeometry.Direction direction,java.util.function.Predicate<ControllerPlatform.Cell> matches) {
+        return moat?ControllerPlatform.discoverVertical(seed,direction,matches)
+                :ControllerPlatform.discover(seed,direction,matches);
+    }
+    private int sourceBaseY() {
+        return sources.stream().mapToInt(BlockPos::getY).min().orElse(pos.getY());
+    }
+    public boolean usesVerticalMoatSources(){return moat&&verticalMoatSources;}
+
     private boolean capture() {
         // Old saves retain their full journal until restored; only new deployments are capped.
         drop=Math.min(drop,ControllerPlatform.MAX_DROP);
@@ -363,7 +375,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         && !material.isFullCube() && !com.vandorlabs.compat.RampMaterials.isFullGlass(material) && !RampStairs.supported(material)))
             return fail("Front block must be stairs, a slab, full glass, Programmable Block, or an ordinary solid block");
         boolean[] loaded={true};
-        Set<ControllerPlatform.Cell> platform=ControllerPlatform.discover(
+        Set<ControllerPlatform.Cell> platform=discoverPlatform(
                 new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->{
             BlockPos p=new BlockPos(c.x,c.y,c.z);
             if (!world.isBlockLoaded(p)) { loaded[0]=false; return false; }
@@ -399,8 +411,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if (bounds.minX!=0 || bounds.maxX!=1 || bounds.minZ!=0 || bounds.maxZ!=1)
             return fail("Only full-width slabs and cubes are supported");
         // Journal the whole transaction before replacing its first source.
-        sources.addAll(selected); original=material; low=bounds.minY; high=bounds.maxY;
-        length=max-min+1; minAlong=min; duration=ControllerPlatform.duration(length,
+        sources.addAll(selected); verticalMoatSources=moat; original=material; low=bounds.minY; high=bounds.maxY;
+        length=moat?selected.stream().mapToInt(BlockPos::getY).max().getAsInt()-sourceBaseY()+1:max-min+1; minAlong=min; duration=ControllerPlatform.duration(length,
                 (int)Math.ceil(Math.abs(endOffsetValue()-startOffsetValue())),speed);
         for (BlockPos p:occupied(0,1)) {
             if (!VerticalBounds.legacy(world.getHeight()).contains(p.getY())) { sources.clear(); return fail("Travel exceeds world height"); }
@@ -451,7 +463,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         configurePart(te,p);
     }
     private void configurePart(TileEntityControlledRamp te,BlockPos p){
-        te.controller=pos; te.source=original; te.sourceY=sources.get(0).getY();
+        te.verticalMoatSources=verticalMoatSources;te.controller=pos; te.source=original; te.sourceY=sourceBaseY();
         te.row=p.getX()*facing.getFrontOffsetX()+p.getZ()*facing.getFrontOffsetZ()-minAlong;
         te.treadPixels=treadPixels; te.startOffset=startOffset;
         te.setHalfOffsets(startHalfSteps,endHalfSteps);
@@ -479,14 +491,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             boolean ieSlab=com.vandorlabs.compat.RampMaterials.isIESlab(world,seed);
             if(material.getBlock()==Blocks.AIR || material.getBlockHardness(world,seed)<0 || material.getBlock().hasTileEntity(material)&&!programmable&&!ieSlab
                     || !programmable&&!ieSlab&&!(material.getBlock() instanceof BlockSlab)&&!material.isFullCube()&&!com.vandorlabs.compat.RampMaterials.isFullGlass(material)&&!RampStairs.supported(material))throw new IllegalArgumentException("No supported ramp platform in front of controller");
-            Set<ControllerPlatform.Cell> platform=ControllerPlatform.discover(new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->com.vandorlabs.compat.RampMaterials.matches(world,seed,new BlockPos(c.x,c.y,c.z),matchTextures));
+            Set<ControllerPlatform.Cell> platform=discoverPlatform(new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->com.vandorlabs.compat.RampMaterials.matches(world,seed,new BlockPos(c.x,c.y,c.z),matchTextures));
             if(platform.isEmpty())throw new IllegalArgumentException("No ramp platform found");
             int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE;
             for(ControllerPlatform.Cell c:platform){BlockPos p=new BlockPos(c.x,c.y,c.z);sources.add(p);int along=c.x*facing.getFrontOffsetX()+c.z*facing.getFrontOffsetZ();min=Math.min(min,along);max=Math.max(max,along);
                 TileEntity tile=world.getTileEntity(p);if(RampStairs.supported(material))sourceTiles.put(p,RampStairs.capture(world,p));else if(tile!=null)sourceTiles.put(p,tile.writeToNBT(new NBTTagCompound()));}
             AxisAlignedBB box=material.getBoundingBox(world,seed);
             if(box.minX!=0||box.maxX!=1||box.minZ!=0||box.maxZ!=1)throw new IllegalArgumentException("Ramp platform must use full-width slabs or cubes");
-            original=material;low=box.minY;high=box.maxY;length=max-min+1;minAlong=min;
+            verticalMoatSources=moat;original=material;low=box.minY;high=box.maxY;length=moat?sources.stream().mapToInt(BlockPos::getY).max().getAsInt()-sourceBaseY()+1:max-min+1;minAlong=min;
         }
         open=deploy;moving=false;startPose=deploy?1:0;startTick=world.getTotalWorldTime();
         latched=deploy;signalKnown=true;error=false;recoveryPending=false;status=deploy?"Deployed":"Retracted";vehicleFrozen=true;
@@ -517,11 +529,15 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                             result.add(new BlockPos(x,y,z));
             }
         }
+        // The solid anchor remains support and occludes any backward-leaning
+        // material inside its own cell. Never replace it with a reservation.
+        if(usesVerticalMoatSources())result.remove(pos);
         return result;
     }
 
     private RampGeometry.Box treadBox(BlockPos source,int row,int step,double from,double to) {
-        if(moat)return com.vandorlabs.ramp.MoatGeometry.swept(rampDirection(facing),minAlong,sources.get(0).getY(),low,high,startOffsetValue(),endOffsetValue(),from,to,speed==0,source.getX(),source.getY(),source.getZ());
+        if(moat && !verticalMoatSources)return com.vandorlabs.ramp.LegacyMoatGeometry.swept(rampDirection(facing),minAlong,sourceBaseY(),low,high,startOffsetValue(),endOffsetValue(),from,to,speed==0,source.getX(),source.getY(),source.getZ());
+        if(moat)return com.vandorlabs.ramp.MoatGeometry.swept(rampDirection(facing),minAlong,sourceBaseY(),length,treadPixels,low,high,startOffsetValue(),endOffsetValue(),from,to,speed==0,source.getX(),source.getY(),source.getZ());
         if(escalator!=0 && from>=1 && to>=1) {
             double pitch=treadPixels/16D;
             RampGeometry.Box fp=RampGeometry.footprintPixels(rampDirection(facing),step,treadPixels,low,high);
@@ -695,7 +711,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                     || entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.isFlying)continue;
             AxisAlignedBB body=entity.getEntityBoundingBox();
             if(Math.abs(body.minY-support(surfaces,body))>(entity instanceof EntityPlayer?.5:.15))continue;
-            double target=RampStairs.supported(original)?support(stairOriginalSurfaces(),body):sources.get(0).getY()+high;
+            double target=RampStairs.supported(original)?support(stairOriginalSurfaces(),body):sourceBaseY()+high;
             if(!Double.isFinite(target))continue;
             double delta=target-body.minY,allowed=delta;
             for(AxisAlignedBB obstacle:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.expand(0,delta,0).grow(1e-7)))
@@ -941,6 +957,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return true;
     }
 
+    private List<RampGeometry.Box> moatBoxes(BlockPos source,double pose) {
+        return verticalMoatSources?com.vandorlabs.ramp.MoatGeometry.boxes(rampDirection(facing),minAlong,sourceBaseY(),length,treadPixels,low,high,startOffsetValue(),endOffsetValue(),pose,speed==0,source.getX(),source.getY(),source.getZ())
+                :com.vandorlabs.ramp.LegacyMoatGeometry.boxes(rampDirection(facing),minAlong,sourceBaseY(),low,high,startOffsetValue(),endOffsetValue(),pose,speed==0,source.getX(),source.getY(),source.getZ());
+    }
     private boolean carryMoat(double previous,double current,boolean fromOriginal,boolean toOriginal){
         Map<Entity,net.minecraft.util.math.Vec3d> targets=new LinkedHashMap<>();List<AxisAlignedBB> before=new ArrayList<>(),after=new ArrayList<>(),sweep=new ArrayList<>();
         for(BlockPos source:sources){
@@ -949,14 +969,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 List<RampGeometry.Box> nativeShape=RampStairs.boxes(world,state);
                 for(int endpoint=0;endpoint<2;endpoint++){
                     boolean flat=endpoint==0?fromOriginal:toOriginal;
-                    List<RampGeometry.Box> shape=flat?nativeShape:RampStairs.moat(world,state,rampDirection(facing),minAlong,sources.get(0).getY(),high,startOffsetValue(),endOffsetValue(),endpoint==0?previous:current,speed==0,source);
+                    List<RampGeometry.Box> shape=flat?nativeShape:!verticalMoatSources?RampStairs.legacyMoat(world,state,rampDirection(facing),minAlong,sourceBaseY(),high,startOffsetValue(),endOffsetValue(),endpoint==0?previous:current,speed==0,source):RampStairs.moat(world,state,rampDirection(facing),minAlong,sourceBaseY(),length,treadPixels,startOffsetValue(),endOffsetValue(),endpoint==0?previous:current,speed==0,source);
                     for(RampGeometry.Box b:shape)(endpoint==0?before:after).add(new AxisAlignedBB(b.minX+(flat?source.getX():0),b.minY+(flat?source.getY():0),b.minZ+(flat?source.getZ():0),b.maxX+(flat?source.getX():0),b.maxY+(flat?source.getY():0),b.maxZ+(flat?source.getZ():0)));
                 }
                 RampGeometry.Box b=treadBox(source,0,0,previous,current);sweep.add(new AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));continue;
             }
             if(fromOriginal)before.add(new AxisAlignedBB(source.getX(),source.getY()+low,source.getZ(),source.getX()+1,source.getY()+high,source.getZ()+1));
-            else for(RampGeometry.Box b:com.vandorlabs.ramp.MoatGeometry.boxes(rampDirection(facing),minAlong,sources.get(0).getY(),low,high,startOffsetValue(),endOffsetValue(),previous,speed==0,source.getX(),source.getY(),source.getZ()))before.add(new AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
-            if(toOriginal)after.add(new AxisAlignedBB(source.getX(),source.getY()+low,source.getZ(),source.getX()+1,source.getY()+high,source.getZ()+1));else for(RampGeometry.Box next:com.vandorlabs.ramp.MoatGeometry.boxes(rampDirection(facing),minAlong,sources.get(0).getY(),low,high,startOffsetValue(),endOffsetValue(),current,speed==0,source.getX(),source.getY(),source.getZ()))after.add(new AxisAlignedBB(next.minX,next.minY,next.minZ,next.maxX,next.maxY,next.maxZ));
+            else for(RampGeometry.Box b:moatBoxes(source,previous))before.add(new AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
+            if(toOriginal)after.add(new AxisAlignedBB(source.getX(),source.getY()+low,source.getZ(),source.getX()+1,source.getY()+high,source.getZ()+1));else for(RampGeometry.Box next:moatBoxes(source,current))after.add(new AxisAlignedBB(next.minX,next.minY,next.minZ,next.maxX,next.maxY,next.maxZ));
             RampGeometry.Box b=treadBox(source,0,0,previous,current);sweep.add(new AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
         }
         if(before.isEmpty())return true;AxisAlignedBB area=before.get(0);for(AxisAlignedBB b:before)area=area.union(b);for(AxisAlignedBB b:sweep)area=area.union(b);
@@ -964,8 +984,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if(entity.isDead||entity.noClip||entity.isRiding()||entity instanceof EntityPlayer&&((EntityPlayer)entity).capabilities.isFlying)continue;
             AxisAlignedBB body=entity.getEntityBoundingBox();boolean rider=false;for(AxisAlignedBB b:before)if(body.maxX>b.minX+1e-7&&body.minX<b.maxX-1e-7&&body.maxZ>b.minZ+1e-7&&body.minZ<b.maxZ-1e-7&&Math.abs(body.minY-b.maxY)<=(entity instanceof EntityPlayer?.5:.15)){rider=true;break;}
             if(!rider){for(AxisAlignedBB b:sweep)if(b.grow(-1e-6).intersects(body))return false;continue;}
-            double[] source=fromOriginal?new double[]{entity.posX,body.minY,entity.posZ}:com.vandorlabs.ramp.MoatGeometry.inverse(rampDirection(facing),minAlong,sources.get(0).getY(),high,startOffsetValue(),endOffsetValue(),previous,speed==0,entity.posX,body.minY,entity.posZ);
-            double[] next=toOriginal?source:com.vandorlabs.ramp.MoatGeometry.vertex(rampDirection(facing),minAlong,sources.get(0).getY(),high,startOffsetValue(),endOffsetValue(),current,speed==0,source[0],source[1],source[2]);
+            double[] source=fromOriginal?new double[]{entity.posX,body.minY,entity.posZ}:!verticalMoatSources?com.vandorlabs.ramp.LegacyMoatGeometry.inverse(rampDirection(facing),minAlong,sourceBaseY(),high,startOffsetValue(),endOffsetValue(),previous,speed==0,entity.posX,body.minY,entity.posZ):com.vandorlabs.ramp.MoatGeometry.inverse(rampDirection(facing),minAlong,sourceBaseY(),length,startOffsetValue(),endOffsetValue(),previous,speed==0,entity.posX,body.minY,entity.posZ);
+            double[] next=toOriginal?source:!verticalMoatSources?com.vandorlabs.ramp.LegacyMoatGeometry.vertex(rampDirection(facing),minAlong,sourceBaseY(),high,startOffsetValue(),endOffsetValue(),current,speed==0,source[0],source[1],source[2]):com.vandorlabs.ramp.MoatGeometry.vertex(rampDirection(facing),minAlong,sourceBaseY(),length,startOffsetValue(),endOffsetValue(),current,speed==0,source[0],source[1],source[2]);
             net.minecraft.util.math.Vec3d delta=new net.minecraft.util.math.Vec3d(next[0]-entity.posX,next[1]-body.minY,next[2]-entity.posZ);
             for(AxisAlignedBB obstacle:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.expand(delta.x,delta.y,delta.z).grow(1e-7))){
                 double y=obstacle.calculateYOffset(body,delta.y);AxisAlignedBB moved=body.offset(0,y,0);double x=obstacle.calculateXOffset(moved,delta.x);moved=moved.offset(x,0,0);double z=obstacle.calculateZOffset(moved,delta.z);if(Math.abs(x-delta.x)>1e-6||Math.abs(y-delta.y)>1e-6||Math.abs(z-delta.z)>1e-6)return false;
@@ -1073,7 +1093,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
-        super.writeToNBT(tag);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
+        super.writeToNBT(tag);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
         tag.setBoolean("EscalatorRequested",beltRequested);
         tag.setBoolean("EscalatorRunning",beltRunning);tag.setLong("EscalatorTick",beltTick);ChannelData.write(tag,channels);
@@ -1112,7 +1132,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
         super.readFromNBT(tag);
-        vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");
+        verticalMoatSources=tag.getBoolean("MoatVerticalSources");vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");
         escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
         beltDistance=tag.getDouble("EscalatorDistance");if(!Double.isFinite(beltDistance))beltDistance=0;
         beltRequested=tag.getBoolean("EscalatorRequested");

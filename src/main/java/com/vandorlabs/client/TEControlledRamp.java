@@ -81,20 +81,24 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
             java.util.List<RampGeometry.Box> shapes=com.vandorlabs.compat.RampStairs.supported(te.source)
                     ?com.vandorlabs.compat.RampStairs.boxes(te.getWorld(),te.sourceState(origin))
                     :java.util.Collections.singletonList(new RampGeometry.Box(0,te.low,0,1,te.high,1));
-            for(RampGeometry.Box shape:shapes)for(EnumFacing face:FACES){
+            for(RampGeometry.Box original:shapes)for(RampGeometry.Box shape:te.verticalMoatSources?com.vandorlabs.ramp.MoatGeometry.slices(original,te.treadPixels):java.util.Collections.singletonList(original))for(EnumFacing face:FACES){
+                if(face==EnumFacing.UP&&shape.maxY<original.maxY-1e-8||face==EnumFacing.DOWN&&shape.minY>original.minY+1e-8)continue;
                 // Source neighbors share an internal face. Drawing both copies
                 // would accumulate stained-glass opacity inside the solid bridge.
                 if(glassSources.contains(origin.offset(face)))continue;
                 java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(te.source,face,0);int housing=material.texture(face);TextureAtlasSprite sprite=housing>=0?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(housing)):quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
                 int tint=!quads.isEmpty()&&quads.get(0).hasTintIndex()?Minecraft.getMinecraft().getBlockColors().colorMultiplier(te.source,te.getWorld(),te.getPos(),quads.get(0).getTintIndex()):0xFFFFFF;
                 java.util.List<double[]> vertices=new java.util.ArrayList<>();
-                CuboidMesh.emitFace(shape,MESH_FACES[face.ordinal()],material.stretchSides()?1:1-shape.minY,material.stretchSides()?0:1-shape.maxY,(vx,vy,vz,u,v)->{double[] point=com.vandorlabs.ramp.MoatGeometry.vertex(direction,hinge,te.sourceY,te.high,te.startOffsetValue(),te.endOffsetValue(),te.pose(partial),te.speed==0,origin.getX()+vx,origin.getY()+vy,origin.getZ()+vz);vertices.add(new double[]{point[0],point[1],point[2],u,v});});
-                double[] center=com.vandorlabs.ramp.MoatGeometry.vertex(direction,hinge,te.sourceY,te.high,te.startOffsetValue(),te.endOffsetValue(),te.pose(partial),te.speed==0,origin.getX(),origin.getY(),origin.getZ()),normal=com.vandorlabs.ramp.MoatGeometry.vertex(direction,hinge,te.sourceY,te.high,te.startOffsetValue(),te.endOffsetValue(),te.pose(partial),te.speed==0,origin.getX()+face.getFrontOffsetX(),origin.getY()+face.getFrontOffsetY(),origin.getZ()+face.getFrontOffsetZ());
+                CuboidMesh.emitFace(shape,MESH_FACES[face.ordinal()],material.stretchSides()?(original.maxY-shape.minY)/(original.maxY-original.minY):1-shape.minY,material.stretchSides()?(original.maxY-shape.maxY)/(original.maxY-original.minY):1-shape.maxY,(vx,vy,vz,u,v)->{double[] point=moatVertex(te,direction,hinge,partial,origin.getX()+vx,origin.getY()+vy,origin.getZ()+vz);vertices.add(new double[]{point[0],point[1],point[2],u,v});});
+                double[] center=moatVertex(te,direction,hinge,partial,origin.getX(),origin.getY(),origin.getZ()),normal=moatVertex(te,direction,hinge,partial,origin.getX()+face.getFrontOffsetX(),origin.getY()+face.getFrontOffsetY(),origin.getZ()+face.getFrontOffsetZ());
                 float nx=(float)(normal[0]-center[0]),ny=(float)(normal[1]-center[1]),nz=(float)(normal[2]-center[2]),shade=.6F+.4F*Math.max(0,ny);
                 for(double[] v:com.vandorlabs.render.DiagonalMeshClip.quads(clip,vertices.toArray(new double[vertices.size()][])))b.pos(v[0]-te.getPos().getX(),v[1]-te.getPos().getY(),v[2]-te.getPos().getZ()).color((tint>>16&255)/255F*shade,(tint>>8&255)/255F*shade,(tint&255)/255F*shade,1).tex(sprite.getInterpolatedU(v[3]*16),sprite.getInterpolatedV(v[4]*16)).lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX).normal(nx,ny,nz).endVertex();
             }
         }
         Tessellator.getInstance().draw();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldX,oldY);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
+    }
+    private static double[] moatVertex(TileEntityControlledRamp tile,RampGeometry.Direction face,int hinge,float partial,double x,double y,double z){
+        return tile.verticalMoatSources?com.vandorlabs.ramp.MoatGeometry.vertex(face,hinge,tile.sourceY,tile.length,tile.startOffsetValue(),tile.endOffsetValue(),tile.pose(partial),tile.speed==0,x,y,z):com.vandorlabs.ramp.LegacyMoatGeometry.vertex(face,hinge,tile.sourceY,tile.high,tile.startOffsetValue(),tile.endOffsetValue(),tile.pose(partial),tile.speed==0,x,y,z);
     }
     private static void materialCuboid(FaceEmitter emitter,RampGeometry.Box a,TileEntityControlledRamp te,float partial) {
         net.minecraft.client.renderer.block.model.IBakedModel model=Minecraft.getMinecraft()

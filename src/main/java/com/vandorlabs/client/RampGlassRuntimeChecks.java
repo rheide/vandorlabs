@@ -41,7 +41,7 @@ final class RampGlassRuntimeChecks {
                 for(int mode=0;mode<3;mode++){
                     clear(world,root);
                     world.setBlockState(root,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),3);
-                    for(int row=1;row<=2;row++)world.setBlockState(root.south(row),material,3);
+                    for(int row=1;row<=2;row++)world.setBlockState(mode==2?root.south().up(row-1):root.south(row),material,3);
                     TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(root);
                     require(ramp.configureHalfOffsets(owner,0,2,8,true,false,false,EnumFacing.SOUTH,0,mode==1,1,true,false,0,0,mode==2),"configure mode="+mode+" source="+material+" status="+ramp.status);
                     ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
@@ -56,7 +56,7 @@ final class RampGlassRuntimeChecks {
                     require(cells>0,"generated glass cells exist");
                     ramp.readFromNBT(ramp.writeToNBT(new NBTTagCompound()));
                     require(ramp.recover(false),"saved controller recovery");
-                    for(int row=1;row<=2;row++)require(world.getBlockState(root.south(row)).equals(material),"recovery restores exact color/material "+material);
+                    for(int row=1;row<=2;row++)require(world.getBlockState(mode==2?root.south().up(row-1):root.south(row)).equals(material),"recovery restores exact color/material "+material);
                     for(BlockPos p:BlockPos.getAllInBox(root.add(-3,-3,-3),root.add(3,6,6)))require(world.getBlockState(p).getBlock()!=ModBlocks.CONTROLLED_RAMP,"recovery clears reservations");
                 }
                 carried(world,material);
@@ -76,7 +76,7 @@ final class RampGlassRuntimeChecks {
         TileEntityRampController tile=new TileEntityRampController();tile.setPos(control);tile.moat=true;
         NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());data.setInteger("StartOffsetHalfSteps",0);data.setInteger("EndOffsetHalfSteps",2);
         cells.add(new VehicleStructure.Cell(control,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),data));
-        for(int row=1;row<=2;row++)cells.add(new VehicleStructure.Cell(control.south(row),material,null));
+        for(int row=1;row<=2;row++)cells.add(new VehicleStructure.Cell(control.south().up(row-1),material,null));
         EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1));craft.setPosition(550,150,550);
         try{
             require(VehicleRamps.signal(craft,control,false)&&VehicleRamps.signal(craft,control,true),"carried glass endpoints "+material);

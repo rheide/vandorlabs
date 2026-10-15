@@ -45,16 +45,15 @@ public final class ControllerRuntimeChecks {
         tag.setLong("StartTick",world.getTotalWorldTime()-elapsed);
         tag.setLong("LastStepTick",world.getTotalWorldTime()-1);
         controller.readFromNBT(tag);
-        NBTTagList cells=tag.getTagList("Sources",10);
+        // Retiming must cover the actual reservation journal. Rotating, sideways
+        // and extended ramps also reserve cells outside their source columns.
+        NBTTagList cells=tag.getTagList("Cells",10);
         for (int i=0;i<cells.tagCount();i++) {
-            BlockPos source=BlockPos.fromLong(cells.getCompoundTagAt(i).getLong("Pos"));
-            for (int d=(int)Math.floor(Math.min(0,Math.min(controller.startOffsetValue(),controller.endOffsetValue())));
-                    d<=Math.ceil(Math.max(0,Math.max(controller.startOffsetValue(),controller.endOffsetValue())));d++) {
-                BlockPos p=source.up(d);
-                if (world.getTileEntity(p) instanceof TileEntityControlledRamp)
-                    ((TileEntityControlledRamp)world.getTileEntity(p)).move(controller.isOpen(),
-                            tag.getDouble("StartPose"),tag.getLong("StartTick"),controller.durationTicks(),controller.isMoving());
-            }
+            BlockPos p=BlockPos.fromLong(cells.getCompoundTagAt(i).getLong("Pos"));
+            if (world.getTileEntity(p) instanceof TileEntityControlledRamp
+                    && ((TileEntityControlledRamp)world.getTileEntity(p)).belongsTo(controller.getPos()))
+                ((TileEntityControlledRamp)world.getTileEntity(p)).move(controller.isOpen(),
+                        tag.getDouble("StartPose"),tag.getLong("StartTick"),controller.durationTicks(),controller.isMoving());
         }
         controller.scheduledTick();
     }

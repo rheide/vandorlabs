@@ -30,7 +30,7 @@ public final class VehicleRamps {
                 double centerX=craft.structure.bounds.maxX/2,centerZ=craft.structure.bounds.maxZ/2;
                 for(AxisAlignedBB swept:ramp.vehicleMoatSweep()){
                     AxisAlignedBB inside=swept.grow(-1e-5);
-                    for(VehicleStructure.Cell fixed:cells.values())if(inside.intersects(new AxisAlignedBB(fixed.pos)))
+                    for(VehicleStructure.Cell fixed:cells.values())if(!(ramp.usesVerticalMoatSources()&&fixed.pos.equals(at))&&inside.intersects(new AxisAlignedBB(fixed.pos)))
                         throw new IllegalArgumentException("Moat rotation crosses another vehicle component");
                     AxisAlignedBB absolute=currentPose.world(swept,centerX,centerZ).grow(-1e-5);
                     for(BlockPos p:BlockPos.getAllInBox(new BlockPos(absolute.minX,absolute.minY,absolute.minZ),new BlockPos(absolute.maxX,absolute.maxY,absolute.maxZ)))

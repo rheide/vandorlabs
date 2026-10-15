@@ -2,6 +2,7 @@ package com.vandorlabs.ramp;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -49,6 +50,27 @@ public final class ControllerPlatform {
             found.add(c);
             queue.add(c.offset(1,0,0)); queue.add(c.offset(-1,0,0));
             queue.add(c.offset(0,0,1)); queue.add(c.offset(0,0,-1));
+        }
+        return found;
+    }
+
+    /** Connected tower in the plane perpendicular to the controller direction.
+     * The seed is the lowest permitted row; height and lateral span are bounded
+     * before consulting the world predicate. Stable breadth-first order also
+     * makes lateral clipping repeatable for a seed in the middle of a wall. */
+    public static Set<Cell> discoverVertical(Cell seed,RampGeometry.Direction direction,Predicate<Cell> matches){
+        boolean normalX=direction==RampGeometry.Direction.EAST || direction==RampGeometry.Direction.WEST;
+        Set<Cell> found=new LinkedHashSet<>(),seen=new HashSet<>();ArrayDeque<Cell> queue=new ArrayDeque<>();queue.add(seed);
+        int minimum=normalX?seed.z:seed.x,maximum=minimum;
+        while(!queue.isEmpty()){
+            Cell cell=queue.removeFirst();if(!seen.add(cell))continue;
+            long height=(long)cell.y-seed.y;int lateral=normalX?cell.z:cell.x;
+            int low=Math.min(minimum,lateral),high=Math.max(maximum,lateral);
+            if((normalX?cell.x!=seed.x:cell.z!=seed.z) || height<0 || height>=MAX_LENGTH || (long)high-low>=MAX_WIDTH || !matches.test(cell))continue;
+            found.add(cell);minimum=low;maximum=high;
+            if(normalX){queue.add(cell.offset(0,0,1));queue.add(cell.offset(0,0,-1));}
+            else{queue.add(cell.offset(1,0,0));queue.add(cell.offset(-1,0,0));}
+            queue.add(cell.offset(0,1,0));queue.add(cell.offset(0,-1,0));
         }
         return found;
     }

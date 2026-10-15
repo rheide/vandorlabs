@@ -3,38 +3,62 @@ package com.vandorlabs.ramp;
 import java.util.ArrayList;
 import java.util.List;
 
-/** A drawbridge rotates around the near top edge of the captured flat platform. */
+/** Rigid drawbridge motion from a vertical source tower about its near bottom edge. */
 public final class MoatGeometry {
     private MoatGeometry(){}
     private static int dx(RampGeometry.Direction f){return f==RampGeometry.Direction.EAST?1:f==RampGeometry.Direction.WEST?-1:0;}
     private static int dz(RampGeometry.Direction f){return f==RampGeometry.Direction.SOUTH?1:f==RampGeometry.Direction.NORTH?-1:0;}
     private static double progress(double p,boolean fast){p=Math.max(0,Math.min(1,p));return fast?p:p*p*(3-2*p);}
-    public static double[] vertex(RampGeometry.Direction face,int minAlong,int sourceY,double high,double start,double end,double pose,boolean fast,double x,double y,double z){
-        int fx=dx(face),fz=dz(face);double hinge=minAlong-(fx<0||fz<0?1:0),u=x*fx+z*fz-hinge,v=y-sourceY-high,p=progress(pose,fast),angle=(1-p)*Math.PI/2;
-        double along=u*Math.cos(angle)-v*Math.sin(angle),vertical=u*Math.sin(angle)+v*Math.cos(angle)+sourceY+high+start+(end-start)*p;
-        double shift=along-u;return new double[]{x+fx*shift,vertical,z+fz*shift};
+    private static double hinge(RampGeometry.Direction face,int minAlong){return minAlong-(dx(face)<0||dz(face)<0?1:0);}
+    public static double angle(int length,double start,double end,double pose,boolean fast){
+        double first=Math.atan2(start,Math.max(1,length)),last=Math.PI/2-Math.atan2(end,Math.max(1,length));
+        return first+(last-first)*progress(pose,fast);
     }
-    public static RampGeometry.Box box(RampGeometry.Direction f,int minAlong,int sourceY,double high,double start,double end,double pose,boolean fast,RampGeometry.Box original){
-        double x0=Double.POSITIVE_INFINITY,y0=x0,z0=x0,x1=-x0,y1=x1,z1=x1;
-        for(int ix=0;ix<2;ix++)for(int iy=0;iy<2;iy++)for(int iz=0;iz<2;iz++){double[] v=vertex(f,minAlong,sourceY,high,start,end,pose,fast,ix==0?original.minX:original.maxX,iy==0?original.minY:original.maxY,iz==0?original.minZ:original.maxZ);x0=Math.min(x0,v[0]);y0=Math.min(y0,v[1]);z0=Math.min(z0,v[2]);x1=Math.max(x1,v[0]);y1=Math.max(y1,v[1]);z1=Math.max(z1,v[2]);}
-        return new RampGeometry.Box(x0,y0,z0,x1,y1,z1);
+    private static double[] rotated(RampGeometry.Direction face,int minAlong,int baseY,double angle,double x,double y,double z){
+        int fx=dx(face),fz=dz(face);double u=x*fx+z*fz-hinge(face,minAlong),v=y-baseY;
+        double along=u*Math.cos(angle)+v*Math.sin(angle),height=-u*Math.sin(angle)+v*Math.cos(angle),shift=along-u;
+        return new double[]{x+fx*shift,baseY+height,z+fz*shift};
     }
-    public static double[] inverse(RampGeometry.Direction face,int minAlong,int sourceY,double high,double start,double end,double pose,boolean fast,double x,double y,double z){
-        int fx=dx(face),fz=dz(face);double hinge=minAlong-(fx<0||fz<0?1:0),u=x*fx+z*fz-hinge,p=progress(pose,fast),angle=(1-p)*Math.PI/2,v=y-sourceY-high-start-(end-start)*p;
-        double original=u*Math.cos(angle)+v*Math.sin(angle),height=-u*Math.sin(angle)+v*Math.cos(angle);return new double[]{x+fx*(original-u),sourceY+high+height,z+fz*(original-u)};
+    public static double[] vertex(RampGeometry.Direction face,int minAlong,int baseY,int length,double start,double end,double pose,boolean fast,double x,double y,double z){
+        return rotated(face,minAlong,baseY,angle(length,start,end,pose,fast),x,y,z);
     }
-    public static List<RampGeometry.Box> boxes(RampGeometry.Direction f,int minAlong,int sourceY,double low,double high,double start,double end,double pose,boolean fast,int x,int y,int z){
-        List<RampGeometry.Box> result=new ArrayList<>();boolean alongX=dx(f)!=0;
-        for(int i=0;i<16;i++){RampGeometry.Box original=new RampGeometry.Box(x+(alongX?i/16D:0),y+low,z+(alongX?0:i/16D),x+(alongX?(i+1)/16D:1),y+high,z+(alongX?1:(i+1)/16D));result.add(box(f,minAlong,sourceY,high,start,end,pose,fast,original));}return result;
+    public static double[] inverse(RampGeometry.Direction face,int minAlong,int baseY,int length,double start,double end,double pose,boolean fast,double x,double y,double z){
+        int fx=dx(face),fz=dz(face);double u=x*fx+z*fz-hinge(face,minAlong),v=y-baseY,a=angle(length,start,end,pose,fast);
+        double original=u*Math.cos(a)-v*Math.sin(a),height=u*Math.sin(a)+v*Math.cos(a);
+        return new double[]{x+fx*(original-u),baseY+height,z+fz*(original-u)};
     }
-    /** Sample the arc and pad by its proven chord-error bound; endpoint unions miss the outer sweep. */
-    public static RampGeometry.Box swept(RampGeometry.Direction f,int minAlong,int sourceY,double low,double high,double start,double end,double from,double to,boolean fast,int x,int y,int z){
-        double first=progress(from,fast),last=progress(to,fast),span=Math.abs(last-first)*Math.PI/2;int steps=Math.max(1,(int)Math.ceil(span*64/(Math.PI/2)));
-        double x0=Double.POSITIVE_INFINITY,y0=x0,z0=x0,x1=-x0,y1=x1,z1=x1;
-        // Linear progress is the transform parameter; invert easing only at the public boundary.
-        for(int i=0;i<=steps;i++){double p=first+(last-first)*i/steps;RampGeometry.Box b=box(f,minAlong,sourceY,high,start,end,p,true,new RampGeometry.Box(x,y+low,z,x+1,y+high,z+1));x0=Math.min(x0,b.minX);y0=Math.min(y0,b.minY);z0=Math.min(z0,b.minZ);x1=Math.max(x1,b.maxX);y1=Math.max(y1,b.maxY);z1=Math.max(z1,b.maxZ);}
-        int fx=dx(f),fz=dz(f);double hinge=minAlong-(fx<0||fz<0?1:0),radius=Math.abs(x*fx+z*fz-hinge)+3,pad=radius*(span/steps)*(span/steps)/8;
-        if(fx!=0){x0-=pad;x1+=pad;if(fx>0)x0=Math.max(x0,hinge);else x1=Math.min(x1,-hinge);}else{z0-=pad;z1+=pad;if(fz>0)z0=Math.max(z0,hinge);else z1=Math.min(z1,-hinge);}
-        y0=Math.max(y0-pad,sourceY+low+Math.min(start,end));return new RampGeometry.Box(x0,y0,z0,x1,y1+pad,z1);
+    private static void include(double[] bounds,double[] point){for(int axis=0;axis<3;axis++){bounds[axis]=Math.min(bounds[axis],point[axis]);bounds[axis+3]=Math.max(bounds[axis+3],point[axis]);}}
+    private static double[] bounds(){return new double[]{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};}
+    private static RampGeometry.Box box(double[] b){return new RampGeometry.Box(b[0],b[1],b[2],b[3],b[4],b[5]);}
+    public static RampGeometry.Box box(RampGeometry.Direction face,int minAlong,int baseY,int length,double start,double end,double pose,boolean fast,RampGeometry.Box original){
+        double[] b=bounds();double a=angle(length,start,end,pose,fast);
+        for(int ix=0;ix<2;ix++)for(int iy=0;iy<2;iy++)for(int iz=0;iz<2;iz++)include(b,rotated(face,minAlong,baseY,a,ix==0?original.minX:original.maxX,iy==0?original.minY:original.maxY,iz==0?original.minZ:original.maxZ));
+        return box(b);
+    }
+    /** Slice source Y, so tread size controls chunks without bending the straight bridge. */
+    public static List<RampGeometry.Box> slices(RampGeometry.Box source,int pixels){
+        if(!ControllerPlatform.validTreadPixels(pixels))throw new IllegalArgumentException("Invalid Moat tread size");
+        List<RampGeometry.Box> result=new ArrayList<>();double pitch=pixels/16D;
+        for(int step=(int)Math.floor(source.minY/pitch);step<(int)Math.ceil(source.maxY/pitch);step++){
+            double low=Math.max(source.minY,step*pitch),high=Math.min(source.maxY,(step+1)*pitch);
+            if(high-low>1e-8)result.add(new RampGeometry.Box(source.minX,low,source.minZ,source.maxX,high,source.maxZ));
+        }
+        return result;
+    }
+    public static List<RampGeometry.Box> boxes(RampGeometry.Direction face,int minAlong,int baseY,int length,int pixels,double low,double high,double start,double end,double pose,boolean fast,int x,int y,int z){
+        List<RampGeometry.Box> result=new ArrayList<>();
+        for(RampGeometry.Box piece:slices(new RampGeometry.Box(x,y+low,z,x+1,y+high,z+1),pixels))result.add(box(face,minAlong,baseY,length,start,end,pose,fast,piece));
+        return result;
+    }
+    /** Exact angular extrema of every corner; no padding can invade the fixed hinge. */
+    public static RampGeometry.Box swept(RampGeometry.Direction face,int minAlong,int baseY,int length,int pixels,double low,double high,double start,double end,double from,double to,boolean fast,int x,int y,int z){
+        if(!ControllerPlatform.validTreadPixels(pixels))throw new IllegalArgumentException("Invalid Moat tread size");
+        double first=angle(length,start,end,from,fast),last=angle(length,start,end,to,fast),a=Math.min(first,last),A=Math.max(first,last);double[] result=bounds();
+        for(int ix=0;ix<2;ix++)for(int iy=0;iy<2;iy++)for(int iz=0;iz<2;iz++){
+            double px=x+ix,py=y+(iy==0?low:high),pz=z+iz,u=px*dx(face)+pz*dz(face)-hinge(face,minAlong),v=py-baseY;
+            include(result,rotated(face,minAlong,baseY,first,px,py,pz));include(result,rotated(face,minAlong,baseY,last,px,py,pz));
+            for(double extremum:new double[]{Math.atan2(v,u),Math.atan2(-u,v)})for(int k=(int)Math.ceil((a-extremum)/Math.PI);k<=(int)Math.floor((A-extremum)/Math.PI);k++)include(result,rotated(face,minAlong,baseY,extremum+k*Math.PI,px,py,pz));
+        }
+        return box(result);
     }
 }

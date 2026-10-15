@@ -71,11 +71,11 @@ public class GuiRampController extends GuiContainer {
         refresh();
     }
     private void refresh() {
-        treadField.setEnabled(!elevator&&!moat);
+        treadField.setEnabled(!elevator);
         startSlider.enabled=escalator==0;
         endSlider.displayString=offsetLabel(escalator==0?"End / on":"Ramp height",endSlider.getValueInt());
         for (GuiButton b:buttonList) {
-            if (b.id==14 || b.id==15) b.enabled=!elevator&&!moat;
+            if (b.id==14 || b.id==15) b.enabled=!elevator;
             if (b.id==1) b.displayString=moat?"Mode: Moat":escalator!=0?(escalator==1?"Mode: escalator up":"Mode: escalator down"):elevator
                     ?(extendSegments?"Mode: extend":"Mode: lift")
                     :(extendSegments?"Mode: filled ramp":"Mode: ramp");
