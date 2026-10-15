@@ -215,31 +215,35 @@ Dropped items are supported belt passengers. While supported, the belt cancels t
 
 Build an upright source tower immediately in front of the controller, with its
 bottom level beside the controller. Matching blocks may extend upward and
-sideways to make a wider bridge. Choose Mode: Moat. Off retains that upright
-tower; On rotates the whole assembly outward around its controller-adjacent
-bottom edge into a deck. It stays straight throughout the movement and does
-not unfold one segment at a time. At zero offsets, the deployed deck top meets
-the hinge and its thickness extends downward.
+sideways to make a wider bridge. Choose Mode: Moat. Off retains that tower;
+On moves all tread sections outward together into a conventional ramp. Each
+source level becomes one horizontal row, starting directly in front of the
+controller. It does not unfold one row at a time.
 
-Start skews the stored tower; End sets the deployed deck slope. These half-block
-values select angles using atan2(offset, tower height); they do not translate the
-entire platform vertically. Both endpoints retain the same hinge. Tread px sets
-the vertical slice size used for collision segmentation during the rotation.
-The visible assembly and its original material UVs rotate rigidly together.
+Start skews the stored sections toward or away from the controller. End sets
+the deployed ramp height using exactly the ordinary Ramp tread profile. For
+example, End -1 produces the same descending treads as an ordinary deployed
+Ramp with End -1. Tread px selects the same 1, 2, 4, 8 or 16 pixel section widths;
+Interpolation applies the same spatial profile as the ordinary ramp.
 
-Full blocks, slabs, stairs and saved programmable finishes keep their actual
-source solids. In particular, slabs stacked at integer heights keep their gaps;
-those gaps rotate with the tower. Slabs are not stretched or reoriented into a
-continuous conventional slab deck. Source facing, stair corners and all source
-tile settings return exactly when the mechanism is recovered.
+Full blocks, slabs, stairs and saved programmable finishes retain their native
+horizontal solids, orientation and thickness throughout movement. Top slabs
+remain top slabs; stair facing and corner shapes remain unchanged. Sections
+move simultaneously along curved paths while keeping their native orientation.
+Source facing, slab halves and all source tile settings return exactly when the
+mechanism is recovered.
 
-Keep the entire rotation path clear. Terrain, occupants, protected blocks and
-unloaded chunks can prevent movement. The off state retains its source journal,
-including at Start zero. Changing mode or removing the controller restores the
-original upright source tower when its cells are clear. Carried vehicles switch
-between checked endpoints on channel edges, checking the full rotation path
-against terrain and other vehicle components. Settled mechanisms do not scan or
-animate while idle.
+Keep the actual tread paths and endpoints clear. Terrain, occupants, protected
+blocks and unloaded chunks can prevent movement. Blocks directly underneath
+the controller are outside the normal outward motion and may remain in place.
+The solid controller stays in place as the anchor. The off state retains the
+source journal, including at Start zero. Changing mode or removing the controller
+restores the original upright source tower when its cells are clear. Carried
+vehicles switch between checked endpoints on channel edges and check individual
+tread paths against terrain and other components. Settled mechanisms do not scan
+or animate while idle. Earlier flat-source and rigid vertical-source Moat journals retain their original
+geometry until recovered; new captures use the upright tower layout.
+
 Full glass platforms support vanilla Glass, all Stained Glass colors, and every Vandor cockpit glass variant. Source transparency and exact material/color survive deployment, copying, rotation and recovery. Glass panes, thin Programmable Glass panels and canopies keep their own geometry and are excluded from platform capture.
 
 Vanilla stairs and Programmable Stairs are supported in ramp, filled ramp, lift, extend, both escalator directions and Moat modes. Captured stairs retain their facing, top/bottom half and inner/outer corner shape, with collision following the moving steps. Programmable finishes and source tile settings survive copying, vehicle rotation and recovery. Platform selection still requires matching source block states and, when enabled, matching finishes.
