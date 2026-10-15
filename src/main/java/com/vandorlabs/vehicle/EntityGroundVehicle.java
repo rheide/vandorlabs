@@ -45,6 +45,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean flightDismount;
     public void exitFlight(EntityPlayerMP player){
         if(getControllingPassenger()!=player)return;
+        if(hover && !autopilot.enabled())holdHoverPosition();
         flightDismount=true;try{player.dismountRidingEntity();}finally{flightDismount=false;}
     }
     private byte vertical;
@@ -198,13 +199,16 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     @Override public double getMountedYOffset(){return 0;}
     @Override protected void removePassenger(Entity passenger) {
+        boolean wasDriver=getControllingPassenger()==passenger;
         super.removePassenger(passenger);
         if(world.isRemote || collision==null)return;
+        if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
         com.vandorlabs.entity.SafeDismount.move(passenger,com.vandorlabs.entity.SafeDismount.find(world,passenger,getEntityBoundingBox()),getEntityBoundingBox());
         if(!transferInProgress && !isDead && passenger instanceof EntityPlayerMP && !hover && !autopilot.enabled() && VehicleTaxiMode.enabled(structure))
             VehicleService.taxiParking((EntityPlayerMP)passenger,this);
     }
     public void stopForParking(){forward=strafe=0;brake=true;driveSpeed=0;steering=0;motionX=motionY=motionZ=0;pendingInputs.clear();serverInputs.clear();nextPrediction=null;}
+    private void holdHoverPosition(){stopForParking();vertical=0;verticalAt=-100;lastInput=-100;hoverTarget=posY;}
     @Override public boolean canBeCollidedWith(){return !isDead;}
     @Override public boolean canRiderInteract(){return true;}
     @Override public boolean canBePushed(){return false;}
@@ -239,7 +243,15 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             if(view!=null){view.origin=new BlockPos(posX,posY,posZ);
                 double speed=Math.hypot(posX-prevPosX,posZ-prevPosZ);
                 propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);view.hover=hover;
-                if(hover && ticksExisted%8==0 && groundClearance()>1)for(VehicleStructure.Cell cell:structure.cells)if(VehicleFlight.lift(cell.state.getBlock())){EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);Vec3d center=new Vec3d(cell.pos).addVector(.5,.5,.5),at=toWorld(center.addVector(face.getFrontOffsetX()*.55,face.getFrontOffsetY()*.55,face.getFrontOffsetZ()*.55));Vec3d velocity=toWorld(center.addVector(face.getFrontOffsetX()*.025,face.getFrontOffsetY()*.025,face.getFrontOffsetZ()*.025)).subtract(toWorld(center));world.spawnParticle(EnumParticleTypes.CLOUD,at.x,at.y,at.z,velocity.x,velocity.y,velocity.z);}}
+                if(hover && ticksExisted%8==0 && groundClearance()>1)
+                    for(VehicleStructure.Cell cell:structure.cells)if(VehicleFlight.lift(cell.state.getBlock())) {
+                        EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);
+                        Vec3d center=toWorld(new Vec3d(cell.pos).addVector(.5,.5,.5));
+                        int style=com.vandorlabs.tiles.TileEntityRedstoneLight.particleStyle(cell.state.getBlock().getRegistryName().getResourcePath());
+                        com.vandorlabs.VandorLabs.proxy.spawnRotatedThrusterParticle(world,center.x,center.y,center.z,face,
+                                com.vandorlabs.tiles.TileEntityRedstoneLight.particleColor(style),style,
+                                com.vandorlabs.tiles.TileEntityRedstoneLight.particleSpeed(style),1F,rotationYaw);
+                    }}
             return;
         }
         if(structure==null || ownershipBlocked){motionX=motionY=motionZ=0;return;}
@@ -269,8 +281,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private void advanceController(boolean active) {
         driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*.28:0,brake||!active?.045:forward==0?.008:.018);
         steering=(float)approach(steering,active?strafe:0,.18);
-        // Steering falls off with speed; reversing reverses the direction of the turn.
-        float change=(float)(steering*driveSpeed*11*(1-.45*Math.abs(driveSpeed)/.28));
+        // Hover can yaw in place; the route controller owns its own turns.
+        // Taxi steering falls off with speed and reverses when backing up.
+        float change=hover?(autopilot.enabled()?0:steering*1.7F):(float)(steering*driveSpeed*11*(1-.45*Math.abs(driveSpeed)/.28));
         rotationYaw=collision.turn(world,this,posX,posY,posZ,rotationYaw,change);
         EnumFacing front=structure.facing;double angle=Math.toRadians(rotationYaw),c=Math.cos(angle),s=Math.sin(angle);
         motionX=(front.getFrontOffsetX()*c-front.getFrontOffsetZ()*s)*driveSpeed;

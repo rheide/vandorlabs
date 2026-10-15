@@ -128,6 +128,11 @@ final class DuplifierRuntimeChecks {
                 }
             }
         }
+        gui.actionPerformed(new net.minecraft.client.gui.GuiButton(4,0,0,"Ramps"));
+        java.util.List<net.minecraft.client.gui.GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+        net.minecraft.client.gui.GuiButton moat=controls.stream().filter(button->button.id==164).findFirst().get();
+        net.minecraft.item.ItemStack tool=net.minecraft.client.Minecraft.getMinecraft().player.getHeldItemMainhand();long low=DuplifierApplyOptions.mask(tool);boolean before=DuplifierApplyOptions.enabled(DuplifierApplyOptions.maskWords(tool),64);
+        try{gui.mouseClicked(moat.x+moat.width/2,moat.y+moat.height/2,0);require(DuplifierApplyOptions.mask(tool)==low && DuplifierApplyOptions.enabled(DuplifierApplyOptions.maskWords(tool),64)!=before,"actual Moat click changes bit64 without aliasing first word");gui.mouseClicked(moat.x+moat.width/2,moat.y+moat.height/2,0);}catch(java.io.IOException error){throw new IllegalStateException(error);}
         gui.actionPerformed(new net.minecraft.client.gui.GuiButton(0,0,0,"Common"));
         System.out.println("[vandorlabs][reprolab] duplifier-dialog-layout PASS (all pages and last-row hinge/layout options)");
     }

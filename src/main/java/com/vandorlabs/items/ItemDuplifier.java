@@ -97,7 +97,7 @@ public final class ItemDuplifier extends Item {
             EntityPlayer player) {
         NBTTagCompound settings = tool.getSubCompound(SETTINGS_TAG);
         return ProgrammableSettings.apply(world, pos,
-                DuplifierApplyOptions.selected(settings, DuplifierApplyOptions.mask(tool)),
+                DuplifierApplyOptions.selected(settings, DuplifierApplyOptions.maskWords(tool)),
                 player);
     }
 

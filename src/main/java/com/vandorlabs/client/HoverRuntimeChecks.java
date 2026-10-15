@@ -44,15 +44,32 @@ final class HoverRuntimeChecks {
             craft.setPosition(BASE.getX(),BASE.getY()+4,BASE.getZ());require(craft.setHover(true),"Hover activates aloft");
             java.lang.reflect.Method advance=EntityGroundVehicle.class.getDeclaredMethod("advance",boolean.class);advance.setAccessible(true);
             double altitude=craft.posY;for(int i=0;i<20;i++)advance.invoke(craft,false);require(Math.abs(craft.posY-altitude)<1e-6,"unoccupied Hover holds altitude");
+            double turnX=craft.posX,turnZ=craft.posZ;float turnYaw=craft.rotationYaw;
+            craft.autopilotControls((byte)0,(byte)1,false);for(int i=0;i<20;i++)advance.invoke(craft,true);
+            require(Math.abs(craft.rotationYaw-turnYaw)>20 && Math.abs(craft.posX-turnX)<1e-8 && Math.abs(craft.posZ-turnZ)<1e-8 && Math.abs(craft.posY-altitude)<1e-8,"stationary Hover rotates without translation");
+            craft.autopilotControls((byte)0,(byte)0,false);for(int i=0;i<10;i++)advance.invoke(craft,false);
             require(player.startRiding(craft),"pilot boards fixture");
             craft.flightInput(player,(byte)1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY>altitude+1,"vertical input ascends");
             craft.flightInput(player,(byte)0,false);for(int i=0;i<40;i++)advance.invoke(craft,true);require(Math.abs(craft.posY-craft.hoverTarget)<.001,"released vertical input holds selected height");
             double raised=craft.posY;craft.flightInput(player,(byte)-1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY<raised-1,"vertical input descends");
             craft.flightInput(player,(byte)0,false);
             NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.readFromNBT(saved);require(restored.hover && restored.view.hover && Math.abs(restored.hoverTarget-craft.hoverTarget)<1e-6,"entity save restores Hover and altitude target");restored.setDead();
-            craft.transferInProgress=true;player.dismountRidingEntity();require(craft.hover && !craft.taxiReturnPending,"exiting Hover keeps autonomous entity");
+            craft.autopilotControls((byte)1,(byte)1,false);craft.flightInput(player,(byte)1,false);for(int i=0;i<8;i++)advance.invoke(craft,true);
+            double heldX=craft.posX,heldY=craft.posY,heldZ=craft.posZ;float heldYaw=craft.rotationYaw;require(craft.driveSpeed>0 && craft.hoverTarget>craft.posY,"exit fixture is translating and climbing");
+            craft.exitFlight(player);require(craft.hover && !craft.taxiReturnPending && craft.hoverTarget==heldY && craft.driveSpeed==0 && craft.motionY==0,"explicit Hover exit stops and latches present height");
+            for(int i=0;i<40;i++)advance.invoke(craft,false);require(craft.posX==heldX && craft.posY==heldY && craft.posZ==heldZ && craft.rotationYaw==heldYaw,"unoccupied craft holds exact exit pose");
+            require(player.startRiding(craft),"pilot reboards hold fixture");craft.autopilotControls((byte)1,(byte)-1,false);craft.flightInput(player,(byte)-1,false);for(int i=0;i<4;i++)advance.invoke(craft,true);
+            heldX=craft.posX;heldY=craft.posY;heldZ=craft.posZ;player.dismountRidingEntity();for(int i=0;i<20;i++)advance.invoke(craft,false);require(craft.posX==heldX && craft.posY==heldY && craft.posZ==heldZ,"ordinary manual Hover dismount also holds position");
+            EntityGroundVehicle taxi=new EntityGroundVehicle(world);taxi.install(fixture(3,true));taxi.setPosition(BASE.getX(),BASE.getY()+4,BASE.getZ());taxi.autopilotControls((byte)0,(byte)1,false);
+            try{float taxiYaw=taxi.rotationYaw;for(int i=0;i<10;i++)advance.invoke(taxi,true);require(taxi.rotationYaw==taxiYaw,"Taxi retains speed-dependent steering at rest");}finally{taxi.setDead();}
+            autopilotExit(world,player);
         }finally{craft.transferInProgress=true;if(player.getRidingEntity()==craft)player.dismountRidingEntity();craft.setDead();player.setPositionAndUpdate(px,py,pz);for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-2,-1,-2),BASE.add(7,12,5)))world.setBlockToAir(pos);}
-        System.out.println("[vandorlabs][reprolab] hover-world PASS mixed-lift-count thruster-required Taxi-boundary fresh-clearance no-direct-parking lift-visuals no-redstone hold-height ascend descend save-reload dismount");
+        System.out.println("[vandorlabs][reprolab] hover-world PASS mixed-lift-count thruster-required Taxi-boundary fresh-clearance no-direct-parking lift-visuals no-redstone hold-height stationary-yaw ascend descend save-reload explicit-normal-exit-hold autopilot-exit-continues");
+    }
+    private static void autopilotExit(WorldServer world,EntityPlayerMP player){
+        List<VehicleStructure.Cell> cells=new ArrayList<>(fixture(3,true).cells);BlockPos control=new BlockPos(4,0,1);com.vandorlabs.tiles.TileEntityAutopilot tile=new com.vandorlabs.tiles.TileEntityAutopilot();tile.setPos(control);cells.add(new VehicleStructure.Cell(control,ModBlocks.AUTOPILOT.getDefaultState(),tile.writeToNBT(new NBTTagCompound())));
+        EntityGroundVehicle automatic=new EntityGroundVehicle(world);automatic.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,1));automatic.setPosition(BASE.getX(),BASE.getY()+5,BASE.getZ());require(automatic.setHover(true),"autopilot exit Hover fixture");automatic.autopilot.controller().setEnabled(true);
+        try{require(player.startRiding(automatic),"pilot boards autopilot fixture");automatic.driveSpeed=.2;automatic.motionX=.1;automatic.motionY=.1;automatic.hoverTarget=automatic.posY+2;double target=automatic.hoverTarget;automatic.exitFlight(player);require(automatic.autopilot.enabled() && automatic.driveSpeed==.2 && automatic.motionX==.1 && automatic.motionY==.1 && automatic.hoverTarget==target,"autopilot retains movement and height target when pilot exits");}finally{automatic.transferInProgress=true;if(player.getRidingEntity()==automatic)player.dismountRidingEntity();automatic.setDead();}
     }
     private HoverRuntimeChecks(){}
 }

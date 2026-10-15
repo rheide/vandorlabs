@@ -37,6 +37,9 @@ final class RampGeometryCacheRuntimeChecks {
             tile.extendSegments=false;tile.elevator=true;tile.speed=0;freshMatches(tile);
             tile.origins.set(0,tile.origins.get(0).east());freshMatches(tile);
             tile.origins.add(pos.west());freshMatches(tile);tile.origins.remove(1);freshMatches(tile);
+            List<RampGeometry.Box> ordinary=tile.geometry(0);tile.moat=true;
+            require(ordinary!=tile.geometry(0),"Moat mode edit did not invalidate geometry");freshMatches(tile);
+            require(tile.geometry(0)==tile.geometry(.9),"settled Moat geometry rebuilt");tile.moat=false;
             world.setBlockState(pos,ModBlocks.CONTROLLED_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.WEST),2);freshMatches(tile);
             tile.move(false,1,world.getTotalWorldTime(),60,true);
             require(tile.geometry(.1)!=tile.geometry(.9),"moving geometry reused a settled pose");freshMatches(tile);

@@ -54,6 +54,16 @@ public class ClientProxy extends CommonProxy {
                 facing, color, style, speed, spreadScale));
     }
 
+    @Override public void spawnRotatedThrusterParticle(World world, double x, double y, double z,
+            EnumFacing facing, int color, int style, float speed, float spreadScale, float yaw) {
+        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
+        if (minecraft.effectRenderer == null) return;
+        ParticleThrusterStream particle = new ParticleThrusterStream(world, x, y, z,
+                facing, color, style, speed, spreadScale);
+        particle.rotateAround(x, z, yaw);
+        minecraft.effectRenderer.addEffect(particle);
+    }
+
     @Override public void platformMotion(com.vandorlabs.network.MessagePlatformMotion message) {
         net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getMinecraft();
         client.addScheduledTask(()->message.apply(client.player));

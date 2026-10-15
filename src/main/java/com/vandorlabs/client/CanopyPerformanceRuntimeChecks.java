@@ -23,9 +23,10 @@ final class CanopyPerformanceRuntimeChecks {
         for(int width:new int[]{3,5})for(int hinge=0;hinge<4;hinge++)for(int mount=0;mount<4;mount++){
             LargeCanopySettings settings=new LargeCanopySettings();settings.openable=true;settings.hinge=hinge;settings.mount=mount;settings.material=0;settings.tileMaterial=true;
             List<CanopyMesh.Face> base=CanopyFinishes.faces(LargeCanopyGeometry.faces(width,settings,true),0,1,0,true);CanopyRenderGeometry cache=new CanopyRenderGeometry(base);
+            List<CanopyMesh.Face> renderBase=CanopyRenderGeometry.insetRear(base,settings.depth,true);
             for(double progress:new double[]{0,.1,.5,1}){
-                List<CanopyMesh.Face> old=CanopyMaterialUv.drawable(CanopySurfaces.visible(CanopyPose.faces(base,"front_canopy_glass",width,settings,progress)));
-                List<CanopyMesh.Face> optimized=cache.posed("front_canopy_glass",width,settings,progress);
+                List<CanopyMesh.Face> old=CanopyMaterialUv.drawable(CanopySurfaces.visible(CanopyPose.faces(renderBase,"front_canopy_glass",width,settings,progress)));
+                List<CanopyMesh.Face> optimized=cache.posed("front_canopy_glass",width,settings,progress,true);
                 if(Math.abs(area(old)-area(optimized))>1e-6)throw new IllegalStateException("cached front canopy surfaces differ");variants++;
             }
         }
@@ -34,13 +35,14 @@ final class CanopyPerformanceRuntimeChecks {
             LargeCanopySettings settings=new LargeCanopySettings();settings.motion=motion==0?1:0;settings.openable=true;settings.material=0;settings.tileMaterial=true;
             String kind=motion<2?"canopy":"large_front_canopy_glass";int width=motion<2?3:5;
             List<CanopyMesh.Face> base=CanopyFinishes.faces(motion<2?OpeningCanopyGeometry.faces(width,2,false):LargeCanopyGeometry.faces(width,settings,true),0,1,0,true);
+            List<CanopyMesh.Face> renderBase=motion<2?base:CanopyRenderGeometry.insetRear(base,settings.depth,true);
             CanopyRenderGeometry cache=new CanopyRenderGeometry(base);cache.faces(false);cache.faces(true);
             for(int round=0;round<2;round++){
                 long baseline=0,optimized=0;
                 for(int frame=0;frame<120;frame++){
                     double progress=(frame%60+.25)/60;
-                    long start=System.nanoTime();double oldArea=area(CanopyMaterialUv.drawable(CanopySurfaces.visible(CanopyPose.faces(base,kind,width,settings,progress))));baseline+=System.nanoTime()-start;
-                    start=System.nanoTime();double newArea=area(cache.posed(kind,width,settings,progress));optimized+=System.nanoTime()-start;
+                    long start=System.nanoTime();double oldArea=area(CanopyMaterialUv.drawable(CanopySurfaces.visible(CanopyPose.faces(renderBase,kind,width,settings,progress))));baseline+=System.nanoTime()-start;
+                    start=System.nanoTime();double newArea=area(cache.posed(kind,width,settings,progress,motion>=2));optimized+=System.nanoTime()-start;
                     if(Math.abs(oldArea-newArea)>1e-6)throw new IllegalStateException("animation frame changed visible surfaces: "+kind+":"+progress);
                 }
                 if(round==1)System.out.println("[vandorlabs][reprolab] canopy-animation-benchmark "+(motion==0?"triple-hinge":motion==1?"triple-slide":"large-front-hinge")+" frames=120 geometry-ms old="+baseline/1e6+" cached="+optimized/1e6);

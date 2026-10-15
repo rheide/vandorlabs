@@ -210,3 +210,27 @@ Horizontal escalators use height 0 and retain the Escalator Up/Down mode names: 
 An extended ramp stays extended when assembled into a ground vehicle. Its generated segments, source materials, collision and recovery data travel together. An escalator keeps its captured tread pose with the belt paused while in vehicle mode. Parking preserves the extended pose and resumes normal redstone operation. Cancelled assembly restores the exact original expanded geometry and recovery data.
 
 Dropped items are supported belt passengers. While supported, the belt cancels their sideways push-out drift and sends position updates to nearby tracking clients; items keep normal gravity, pickup and despawn behavior. Item transport adds tracking traffic only while items are being carried.
+
+## Moat drawbridge
+
+Choose Mode: Moat beside the same horizontal source platform used by the other
+ramp modes. The platform rotates around its near top edge. Off stores it as an
+upright wall, with each original row becoming another row up the wall. On
+rotates it outward into a horizontal bridge. Source blocks, slabs and saved
+programmable surface materials retain their original thickness and finish.
+
+Start moves the entire stored wall up or down; End moves the entire deployed
+bridge up or down. Both sliders use half-block steps. Moat always uses vertical
+offsets; tread size and ramp interpolation do not apply. Left-click the mode
+button for the next mode or right-click for the previous mode.
+
+Keep the complete quarter-circle rotation path clear. Terrain, occupants,
+protected blocks and unloaded chunks can prevent movement. The off state keeps
+its source journal even with Start set to zero. Changing mode or removing the
+controller restores the original horizontal platform when its source positions
+are clear. Carried vehicles switch between checked endpoints on a channel edge;
+Moat also checks its rotation path against terrain and other vehicle components.
+Settled bridges and walls do not scan or animate while idle.
+Full glass platforms support vanilla Glass, all Stained Glass colors, and every Vandor cockpit glass variant. Source transparency and exact material/color survive deployment, copying, rotation and recovery. Glass panes, thin Programmable Glass panels and canopies keep their own geometry and are excluded from platform capture.
+
+Vanilla stairs and Programmable Stairs are supported in ramp, filled ramp, lift, extend, both escalator directions and Moat modes. Captured stairs retain their facing, top/bottom half and inner/outer corner shape, with collision following the moving steps. Programmable finishes and source tile settings survive copying, vehicle rotation and recovery. Platform selection still requires matching source block states and, when enabled, matching finishes.

@@ -9,6 +9,8 @@ final class CanopyRenderGeometry {
     private List<CanopyMesh.Face> closed,moving;
     private int[][] movingPlanes;
     private List<CanopyMesh.Face> posed;private double lastProgress=Double.NaN;
+    private List<CanopyMesh.Face> frontFrame,frontSource;private boolean frontBackAnchored;private int frontDepth;
+    private boolean lastBackAnchored;
     CanopyRenderGeometry(List<CanopyMesh.Face> source){this.source=source;}
     List<CanopyMesh.Face> faces(boolean separated){
         if(!separated){if(closed==null)closed=CanopyMaterialUv.drawable(CanopySurfaces.visible(source));return closed;}
@@ -21,12 +23,32 @@ final class CanopyRenderGeometry {
         return moving;
     }
     List<CanopyMesh.Face> posed(String kind,int width,LargeCanopySettings settings,double progress){
-        if(posed==null || progress!=lastProgress){
+        return posed(kind,width,settings,progress,false);
+    }
+    List<CanopyMesh.Face> posed(String kind,int width,LargeCanopySettings settings,double progress,boolean backAnchored){
+        if(posed==null || progress!=lastProgress || backAnchored!=lastBackAnchored){
             boolean separated=(kind.equals("canopy") || kind.equals("long_canopy")) && progress>0;
-            posed=CanopyPose.faces(faces(separated),kind,width,settings,progress);
+            List<CanopyMesh.Face> drawing=faces(separated);
+            if(LargeCanopySettings.supports(kind))drawing=rearClearance(drawing,settings.depth,backAnchored);
+            posed=CanopyPose.faces(drawing,kind,width,settings,progress);
             if(separated)posed=CanopySurfaces.visibleRigidParts(posed,movingPlanes);
             lastProgress=progress;
+            lastBackAnchored=backAnchored;
         }
         return posed;
+    }
+    private List<CanopyMesh.Face> rearClearance(List<CanopyMesh.Face> drawing,int depth,boolean backAnchored){
+        if(frontFrame!=null&&frontSource==drawing&&frontDepth==depth&&frontBackAnchored==backAnchored)return frontFrame;
+        frontSource=drawing;frontDepth=depth;frontBackAnchored=backAnchored;frontFrame=insetRear(drawing,depth,backAnchored);return frontFrame;
+    }
+    static List<CanopyMesh.Face> insetRear(List<CanopyMesh.Face> drawing,int depth,boolean backAnchored){
+        List<CanopyMesh.Face> result=new ArrayList<>(drawing.size());
+        for(CanopyMesh.Face original:drawing){
+            CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new net.minecraft.util.math.Vec3d[original.vertices.length];copy.uv=original.uv;
+            copy.material=original.material;copy.baseMaterial=original.baseMaterial;copy.group=original.group;copy.doubleSided=original.doubleSided;copy.glazing=original.glazing;copy.tiled=original.tiled;
+            for(int i=0;i<copy.vertices.length;i++){net.minecraft.util.math.Vec3d vertex=original.vertices[i];copy.vertices[i]=new net.minecraft.util.math.Vec3d(vertex.x,vertex.y,com.vandorlabs.render.FrontCanopyRenderDepth.coordinate(vertex.z,depth/16D,backAnchored));}
+            result.add(copy);
+        }
+        return result;
     }
 }

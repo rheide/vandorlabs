@@ -32,7 +32,7 @@ public final class CanopyInteractions {
         return found;
     }
 
-    /** A surface ray addresses its owner, whose cell is not a placement target behind the pane. */
+    /** A surface ray addresses its component; broad windows remain their own placement barrier. */
     @SubscribeEvent
     public void blockPlacement(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
         net.minecraft.item.Item item=event.getItemStack().getItem();

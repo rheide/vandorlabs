@@ -52,6 +52,16 @@ public class ParticleThrusterStream extends Particle {
                 : style == 2 ? 128 : style == 3 ? 7 : 65);
     }
 
+    /** Carries a local plume into the craft's yaw without changing its family preset. */
+    public void rotateAround(double x, double z, float yaw) {
+        double angle = Math.toRadians(yaw), c = Math.cos(angle), s = Math.sin(angle);
+        double dx = posX - x, dz = posZ - z, vx = motionX, vz = motionZ;
+        setPosition(x + c * dx - s * dz, posY, z + s * dx + c * dz);
+        prevPosX = posX; prevPosY = posY; prevPosZ = posZ;
+        motionX = c * vx - s * vz;
+        motionZ = s * vx + c * vz;
+    }
+
     @Override public int getBrightnessForRender(float partialTick) { return 0x00F000F0; }
 
     @Override public void onUpdate() {

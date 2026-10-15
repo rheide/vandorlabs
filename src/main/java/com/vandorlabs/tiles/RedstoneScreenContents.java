@@ -53,7 +53,7 @@ public final class RedstoneScreenContents {
         List<Row> next=new ArrayList<>();
         for(int i=0;i<labels.size();i++) {
             Row row=new Row(labels.get(i).trim(),channels.get(i));
-            if(i<rows.size()){row.latched=rows.get(i).latched.intersect(row.channels);row.levels.putAll(rows.get(i).levels);row.slider=rows.get(i).slider;row.min=rows.get(i).min;row.max=rows.get(i).max;}
+            if(i<rows.size()){row.latched=rows.get(i).latched.intersect(row.channels);row.levels.putAll(rows.get(i).levels);row.slider=rows.get(i).slider;row.pulse=rows.get(i).pulse;row.min=rows.get(i).min;row.max=rows.get(i).max;}
             next.add(row);
         }
         enabled=enable;this.title=title.trim();rows=next;view=Collections.unmodifiableList(rows);setHousingTexture(housing);if(enabled)refreshRows();else unregisterRows();changed();return true;
@@ -91,12 +91,13 @@ public final class RedstoneScreenContents {
     public static boolean validRows(NBTTagList list){
         for(int i=0;i<list.tagCount();i++){
             NBTTagCompound row=list.getCompoundTagAt(i);
+            if(row.getBoolean("Pulse")&&row.getBoolean("Slider"))return false;
             if(row.getBoolean("Slider") && (row.getString("Label").length()>SLIDER_LABEL || row.getInteger("Min")<0 || row.getInteger("Max")>15 || row.getInteger("Min")>row.getInteger("Max")))return false;
         }
         return true;
     }
     private void applyOptions(NBTTagList list){
-        for(int i=0;i<rows.size();i++){rows.get(i).readOptions(list.getCompoundTagAt(i));if(owner.getWorld()!=null && !owner.getWorld().isRemote)rows.get(i).setChannelSignal(false);}
+        for(int i=0;i<rows.size();i++){Row row=rows.get(i);RedstoneChannels.unregister(row);row.readOptions(list.getCompoundTagAt(i));if(enabled)RedstoneChannels.register(row);if(owner.getWorld()!=null && !owner.getWorld().isRemote)row.setChannelSignal(false);}
         changed();
     }
     public void selectSegment(int rowIndex,int segment){
@@ -107,9 +108,18 @@ public final class RedstoneScreenContents {
     public void toggleRow(int index) {
         if(owner.getWorld()==null || owner.getWorld().isRemote || !enabled || index<0 || index>=rows.size())return;
         Row row=rows.get(index);if(row.channels.isEmpty() || row.slider)return;
+        if(row.pulse){pulseRow(index);return;}
         RedstoneChannels.latchChanged(row,!RedstoneChannels.allPowered(owner.getWorld(),row.channels));
     }
-    public void finishLoading(){limitRows();if(enabled)refreshRows();else unregisterRows();}
+    public void pulseRow(int index){
+        net.minecraft.world.World server=serverWorld();if(server==null||server.isRemote||!enabled||index<0||index>=rows.size())return;
+        Row row=rows.get(index);if(!row.pulse||row.channels.isEmpty())return;row.pulseUntil=server.getTotalWorldTime()+20;changed();
+        if(!(owner.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)){RedstoneChannels.inputChanged(row);com.vandorlabs.redstone.ScreenPulseActivity.activate(this);}
+    }
+    private net.minecraft.world.World serverWorld(){return owner.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)owner.getWorld()).parent:owner.getWorld();}
+    public boolean expirePulses(long now){boolean active=false;for(Row row:rows)if(row.pulseUntil>0){if(now>=row.pulseUntil){row.pulseUntil=0;changed();RedstoneChannels.inputChanged(row);}else active=true;}return active;}
+    public boolean hasPulses(){for(Row row:rows)if(row.pulse&&row.pulseUntil>0)return true;return false;}
+    public void finishLoading(){limitRows();if(enabled)refreshRows();else unregisterRows();if(hasPulses())com.vandorlabs.redstone.ScreenPulseActivity.activate(this);}
     private void refreshRows(){
         if(owner.getWorld()==null || owner.getWorld().isRemote || !enabled)return;
         // Register replacements before removing old members so an unchanged bank
@@ -120,10 +130,11 @@ public final class RedstoneScreenContents {
         for(Row row:rows)row.setChannelSignal(false);
     }
     private void unregisterRows(){for(Row row:registered)RedstoneChannels.unregister(row);registered.clear();}
-    public void invalidate(){unregisterRows();}
-    public void onChunkUnload(){unregisterRows();}
+    public void invalidate(){unregisterRows();com.vandorlabs.redstone.ScreenPulseActivity.remove(this);}
+    public void onChunkUnload(){unregisterRows();com.vandorlabs.redstone.ScreenPulseActivity.remove(this);}
     private void changed(){
         markDirty();
+        if(owner.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){net.minecraft.block.state.IBlockState state=owner.getWorld().getBlockState(owner.getPos());owner.getWorld().notifyBlockUpdate(owner.getPos(),state,state,2);return;}
         if(owner.getWorld()==null || owner.getWorld().isRemote)return;
         if(SignalUpdateBatch.isActive())SignalUpdateBatch.afterSignals(owner,this::syncRows);else syncRows();
     }
@@ -133,7 +144,7 @@ public final class RedstoneScreenContents {
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         tag.setBoolean("Enabled",enabled);NBTTagList list=new NBTTagList();
         for(Row row:rows){NBTTagCompound entry=new NBTTagCompound();entry.setString("Label",row.label);ChannelData.write(entry,row.channels);row.writeOptions(entry);
-            row.writeLevels(entry);entry.setIntArray("LatchedChannels",row.latched.toArray());entry.setBoolean("Active",row.active);list.appendTag(entry);}
+            row.writeLevels(entry);entry.setLong("PulseUntil",row.pulseUntil);entry.setIntArray("LatchedChannels",row.latched.toArray());entry.setBoolean("Active",row.active);list.appendTag(entry);}
         tag.setString("Title",title);tag.setTag("Rows",list);return tag;
     }
     public void readFromNBT(NBTTagCompound tag){
@@ -142,6 +153,7 @@ public final class RedstoneScreenContents {
             NBTTagCompound entry=list.getCompoundTagAt(i);String label=entry.getString("Label");if(!validLabel(label))continue;
             Row row=new Row(label,ChannelData.read(entry,0));
             row.readOptions(entry);row.readLevels(entry);
+            if(row.pulse)row.pulseUntil=Math.max(0,entry.getLong("PulseUntil"));
             row.latched=ChannelData.read(entry,"LatchedChannels",ChannelList.EMPTY).intersect(row.channels);row.active=entry.getBoolean("Active");next.add(row);
         }
         rows=next;view=Collections.unmodifiableList(rows);if(owner.getWorld()!=null)limitRows();
@@ -151,7 +163,10 @@ public final class RedstoneScreenContents {
         public final ChannelList channels;
         private ChannelList latched=ChannelList.EMPTY;
         private boolean active;
-        public boolean slider;
+        public boolean slider,pulse;
+        private long pulseUntil;
+        public long pulseUntil(){return pulseUntil;}
+        public boolean expirePulse(long now){if(pulseUntil<=0||now<pulseUntil)return false;pulseUntil=0;changed();return true;}
         public int min=5,max=15;
         private int level;
         private final Map<Integer,Integer> levels=new HashMap<>();
@@ -159,27 +174,27 @@ public final class RedstoneScreenContents {
         public int segments(){return 4;}
         public int segmentValue(int index){return TileEntitySignalControl.levelForStep(index,min,max);}
         public int selectedSegment(){return TileEntitySignalControl.stepForLevel(level,min,max);}
-        void writeOptions(NBTTagCompound tag){tag.setBoolean("Slider",slider);tag.setInteger("Min",min);tag.setInteger("Max",max);}
+        void writeOptions(NBTTagCompound tag){tag.setBoolean("Slider",slider);tag.setBoolean("Pulse",pulse);tag.setInteger("Min",min);tag.setInteger("Max",max);}
         void readOptions(NBTTagCompound tag){
-            slider=tag.getBoolean("Slider");max=tag.hasKey("Max",3)?Math.max(3,Math.min(15,tag.getInteger("Max"))):15;
+            pulse=tag.getBoolean("Pulse");slider=!pulse&&tag.getBoolean("Slider");if(pulse){latched=ChannelList.EMPTY;levels.clear();}else pulseUntil=0;max=tag.hasKey("Max",3)?Math.max(3,Math.min(15,tag.getInteger("Max"))):15;
             // Older range sliders included Off in Min and allowed collapsed ranges.
             int savedLow=tag.getInteger("Min");min=Math.max(1,Math.min(max-2,savedLow==0?5:savedLow));
         }
         void writeLevels(NBTTagCompound tag){int[] saved=new int[channels.size()];for(int i=0;i<saved.length;i++)saved[i]=latchedLevel(channels.get(i));tag.setIntArray("Levels",saved);tag.setInteger("Level",level);}
         void readLevels(NBTTagCompound tag){int[] saved=tag.getIntArray("Levels");for(int i=0;i<Math.min(saved.length,channels.size());i++)levels.put(channels.get(i),Math.max(0,Math.min(15,saved[i])));level=Math.max(0,Math.min(15,tag.getInteger("Level")));}
         public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
-        public int localSignalLevel(int channel){return latchedLevel(channel);}
+        public int localSignalLevel(int channel){return pulse?(active()?15:0):latchedLevel(channel);}
         public void applyLinkedLevels(Map<Integer,Integer> value){levels.clear();levels.putAll(value);RedstoneChannelLatch.super.applyLinkedLevels(value);}
 
         Row(String label,ChannelList channels){this.label=label;this.channels=channels;}
-        public boolean active(){return active;}
+        public boolean active(){return pulse?pulseUntil>0&&owner.getWorld()!=null&&owner.getWorld().getTotalWorldTime()<pulseUntil:active;}
         public TileEntity channelTile(){return owner;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
         public void setRedstoneChannel(int ignored){throw new UnsupportedOperationException("Configure the screen rows");}
-        public boolean hasLocalRedstoneSignal(){return !latched.isEmpty();}
-        public boolean hasLocalRedstoneSignal(int channel){return latched.contains(channel);}
-        public boolean isChannelLatch(){return true;}
+        public boolean hasLocalRedstoneSignal(){return pulse?active():!latched.isEmpty();}
+        public boolean hasLocalRedstoneSignal(int channel){return pulse?active():latched.contains(channel);}
+        public boolean isChannelLatch(){return !pulse;}
         public boolean latchOn(){return !channels.isEmpty() && latched.containsAll(channels);}
         public ChannelList latchedChannels(){return latched;}
         public void applyLinkedLatch(boolean on){applyLinkedChannels(on?channels:ChannelList.EMPTY);}

@@ -116,6 +116,7 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_REDSTONE_CHANNEL) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+            if(te instanceof com.vandorlabs.tiles.TileEntityPilotSeat){com.vandorlabs.vehicle.VehicleService.previewAssembly((net.minecraft.entity.player.EntityPlayerMP)player,new BlockPos(x,y,z));return null;}
             if (te instanceof RedstoneChannelMember)
                 return new ContainerRedstoneChannel((RedstoneChannelMember) te);
         }
@@ -198,6 +199,7 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_REDSTONE_CHANNEL) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+            if(te instanceof com.vandorlabs.tiles.TileEntityPilotSeat)return null;
             if (te instanceof RedstoneChannelMember)
                 return new GuiRedstoneChannel((RedstoneChannelMember) te);
         }

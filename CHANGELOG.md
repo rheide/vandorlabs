@@ -2,6 +2,16 @@
 
 ## 2.1
 
+- Add Moat drawbridge mode with upright storage, horizontal deployment and signed height offsets. Support full vanilla and Vandor glass blocks as transparent ramp materials, and shaped stairs across all ramp modes.
+- Unify Configurizer and sneak-right-click Pilot Seat settings, remove Save, and apply valid changes automatically. Keep mode-channel controls visible on smaller screens.
+- Allow stationary Hover turns and hold the craft in position after a manual pilot exit. Preserve each hover thruster family's particle style and color.
+- Add momentary Pulse rows alongside Toggle and Slider on Programmable Screens, Inputs, Consoles and their variants, including controls aboard vehicles.
+- Add Disabled / Redstone ON / Redstone OFF triggers to Canopy, Long Canopy and both front canopy sizes. Preserve polarity in copied settings and captured vehicles.
+- Clean stale Front Canopy reservations after removal without deleting overlapping ramp cells. Prevent rear glazing from fighting with diagonal walls.
+- Keep Windows live client tests from capturing the desktop mouse, and run feature checks sequentially in one client.
+
+- Remove the clicked constituent of joined Canopies; correct Wheel texture UVs and animate vehicle tyres and steering. Restore previous-value right-clicks across Pilot Seat, canopy, Autopilot and Waypoint controls.
+
 - Add Hover mode with altitude hold, lift requirements, safe Taxi transitions, automatic landing-gear retraction and optional Park/Taxi/Hover channels. Captured switches, buttons and analog controls share the world's channel network.
 - Add Autopilot and Waypoint blocks, configurable route markers, pulse journeys, delayed departures and Vehicle Status screens. Stop at route gaps, ambiguous junctions, obstacles and out-of-range terrain.
 - Add slab-mounted Small, Medium and Large Wheels, configurable vehicle block limits, early rotation checks and conservative support for modded building blocks. Repair newly copied ramp journals and missing landing-gear reservations; allow channel-controlled ramp endpoints aboard vehicles.
@@ -36,7 +46,7 @@
 - Add Pilot Seat height and Redstone ON/OFF channel settings in placed and vehicle previews. Hide each armrest beside a solid cabin wall.
 - Keep doors, normal/diagonal trapdoors and Canopies manually operable aboard vehicles; retain their motion and settings through saving and parking. Capture settled extended ramps and pause escalators while driving.
 - Combine Sliding and Rear-Hinged Canopy into Canopy, with selectable opening mode, Flat/Angled/Long Angled fronts, physical redstone and channel lists, forward/backward sliding with one-pixel lift, ceiling mounting and automatic widths of one, two and three. Join regular glass to the rear opening.
-- Configure 3 × 3 Front Canopy Glass and 5 × 5 Large Front Canopy Glass with 0–80 px depth and 10–100% inner frames. Place the broad back at the clicked face and extrude towards the player on wall, floor or ceiling mounts. Add optional opening with four local hinge positions and redstone/channel control.
+- Configure 3 Ãƒâ€” 3 Front Canopy Glass and 5 Ãƒâ€” 5 Large Front Canopy Glass with 0Ã¢â‚¬â€œ80 px depth and 10Ã¢â‚¬â€œ100% inner frames. Place the broad back at the clicked face and extrude towards the player on wall, floor or ceiling mounts. Add optional opening with four local hinge positions and redstone/channel control.
 - Align Canopy and front-window registry IDs with their final names; remove obsolete canopy registrations, assets and runtime references without remapping aliases.
 - Keep floor- and ceiling-mounted front-canopy frames clear of their supporting surfaces; closed glazing blocks cabin placement clicks.
 - Copy canopy shape, opening, Fit/Tile and redstone settings and Pilot Seat height, signal mode and Taxi Mode through the Duplifier, including configured crafting outputs. Support all five Landing Gear sizes in crafting and preserve ramp half-offset application filters.
@@ -67,7 +77,7 @@
 
 - Fit Slim Glass artwork and glazing inside framed door openings, preserving the original thin rails instead of cropping them beneath the outer frame. Bare doors keep their full-size artwork.
 
-- Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Rocker Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Rocker Switch’s top face fully cyan while On.
+- Add upright base-height extensions and filled tilt wedges to Power Lever, Wall Slider, Rocker Switch and Industrial Power Lever, with shared persistence, copying, padded icons and solid collision. Merge Compact/Industrial lever sizes into one Industrial Power Lever item. Make the Rocker SwitchÃ¢â‚¬â„¢s top face fully cyan while On.
 
 - Add Slim Glass artwork for regular and Large Programmable Doors at both supported resolutions, with the existing translucent glass shimmer behind its clear openings.
 
@@ -77,7 +87,7 @@
 
 - Redesign Rocker Switch as a compact solid-color split rocker, with wall/floor/ceiling mounts, an amber bottom border while Off and a fully cyan top button while On. Retain its block ID and stick/alloy recipe; remove the separate Toggle Switch block.
 
-- Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power Lever’s On angle to 45 degrees for 67.5 degrees of total travel.
+- Recess twin-arm power lever sides inside their pivot caps to prevent Z-fighting. Shorten Large Power Lever arms by 2 pixels without changing its angles; increase Small Power LeverÃ¢â‚¬â„¢s On angle to 45 degrees for 67.5 degrees of total travel.
 
 - Keep throttle height extensions perpendicular to the support face, with the tilted assembly on top; increasing height no longer shifts it sideways. Preserve filled mounting geometry and matching collision/selection bounds.
 
@@ -85,16 +95,16 @@
 
 - Add Open helmets and Short Sleeves chestplates for all eight armor roles, with matching inventory icons and 16 additional slot-filtered choices. Preserve original IDs, artwork and defaults; map Duplifier copies to matching alternate pieces and standard leggings/boots.
 
-- Configure Thruster Lever, Airliner Throttle and Fighter Throttle bases at their original minimum height, +2 px, +4 px or +6 px. Tilt the complete control by 15, 30 or 45 degrees forward, backward, left or right. Fill the tilted base down to its support and give the base, panel and handles solid component collision. Match selection bounds to the transformed artwork, preserve settings in saves and configured drops/items, and copy them with the Duplifier’s Signal Levels option.
+- Configure Thruster Lever, Airliner Throttle and Fighter Throttle bases at their original minimum height, +2 px, +4 px or +6 px. Tilt the complete control by 15, 30 or 45 degrees forward, backward, left or right. Fill the tilted base down to its support and give the base, panel and handles solid component collision. Match selection bounds to the transformed artwork, preserve settings in saves and configured drops/items, and copy them with the DuplifierÃ¢â‚¬â„¢s Signal Levels option.
 
 - Add Custom... to the armor picker, reusing the non-consuming inventory block/door sampler. Preserve the selected Custom row across dialog reopening, resolve configured item artwork, and support custom appearances in worn armor, icons and Duplifier copies.
 
-- Copy programmable armor appearances with the Duplifier on armor stands, offhand items or crafting outputs. Role designs resolve to the destination piece’s corresponding artwork; generic and sampled textures transfer unchanged. Preserve item metadata and clipboard/apply options, with a separate Armor Texture switch.
+- Copy programmable armor appearances with the Duplifier on armor stands, offhand items or crafting outputs. Role designs resolve to the destination pieceÃ¢â‚¬â„¢s corresponding artwork; generic and sampled textures transfer unchanged. Preserve item metadata and clipboard/apply options, with a separate Armor Texture switch.
 
 - Design mounted programmable armor by right-clicking it with the Configurizer in creative or survival, on normal or small armor stands. Preserve equipment metadata and reject edits after the target or tool changes.
 - Resolve selected Programmable Door designs and custom leaf textures, current light on/off artwork and housings, and programmable wall/trigger materials when sampling world textures onto armor.
-- Add fifteen light artwork pairs to the armor picker’s Lights category with explicit On/Off labels; light artwork remains cosmetic.
-- Refresh the building gallery’s 114 current materials, all 21 regular and eight additional large-door designs, and current configuration dialogs.
+- Add fifteen light artwork pairs to the armor pickerÃ¢â‚¬â„¢s Lights category with explicit On/Off labels; light artwork remains cosmetic.
+- Refresh the building galleryÃ¢â‚¬â„¢s 114 current materials, all 21 regular and eight additional large-door designs, and current configuration dialogs.
 
 - Shift-right-click a block face with programmable armor to copy its displayed texture in creative or survival, including programmable face overrides and storage top/side/front artwork. Samples persist on the item and appear in its texture picker.
 
@@ -115,7 +125,7 @@
 - Right-click setting buttons to cycle to the previous option, including light modes, screen Low/High limits, propulsion settings and the other configuration dialogs. Left-click still cycles forward.
 - Use the shared dark door edge texture for Double Doors artwork, including large-door leaves, frames and inventory models.
 - Widen Redstone screen slider labels by three normal character widths while retaining four bordered settings.
-- Carry redstone levels 0–15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
+- Carry redstone levels 0Ã¢â‚¬â€œ15 on virtual channels, choosing the strongest loaded source without loading chunks. Existing switches and buttons retain their off/on behavior. Linked controls preserve intermediate channel values.
 - Let Programmable Lights, Light Slabs and Light Frames follow signal strength with a signed brightness offset; joined lights share the strongest loaded group signal.
 - Add signal-dependent propulsion light and emitter-texture brightness, with a configurable particle activation threshold and the existing particle density choices.
 - Add slider rows to the Redstone screen/input/console controls. Use four bordered Off/Low/Medium/High settings matching the levers, with amber Off and cyan powered indicators, no numbers, and configurable Low/High limits. Order the editor as Add/Remove, Up/Down, Label, Channels, Control and Low/High, and reserve most of each display row for the controls. Preserve row settings through saving, configured items and Duplifier copying.
@@ -133,7 +143,7 @@
 - Give Framed and Redstone Input separate full-width rows in the half-height screen/input dialog, with spacing for the size, wall-texture and channel controls.
 
 - Reduce door and Programmable Glass artwork to Small/Large: former Medium becomes Large, and former Large selections migrate to it without changing designs or physical door sizes. Glass panes now share one reflected pattern across resolutions.
-- Resize imported trapdoor artwork to 128×128 Small and 256×256 Large, with a separate size selector. Standard inventory texture images are 128×128.
+- Resize imported trapdoor artwork to 128Ãƒâ€”128 Small and 256Ãƒâ€”256 Large, with a separate size selector. Standard inventory texture images are 128Ãƒâ€”128.
 - Show one design row per Screens/Controls artwork pair. Bare/Framed changes its variant and thumbnail while preserving the selected row, animation and saved texture IDs.
 - Resolve Custom Malisis door faces through their optional icon components, including upper/lower artwork, instead of sampling a missing baked-model placeholder. Skip missing face sprites when sampling ordinary doors.
 - Remove obsolete High-tier runtime assets, redirect legacy references and share repeated JSON model geometry through parent templates. Validate packaged models against original geometry and texture bindings.
@@ -141,13 +151,13 @@
 - Add four cargo leaf designs to Doors and eight complete bay designs to the large-only Double Doors category, each with Small/Large artwork resolutions. Newly placed large doors default to Cross Braced Bay; existing saved selections retain their IDs.
 - Add large-only Sliding X: four triangular panels retract left/right/up/down from the center, retaining native and replacement artwork, glazing, fixed frames/panels, persistence and copying. Cache split meshes and assembly collision geometry; retain compatible opaque batching.
 - Batch compatible opaque Programmable Doors using cached geometry, CPU motion transforms and Forge's shared tile-renderer buffer. Preserve glass/custom-face and OptiFine rendering through the existing path, and support CodeChickenLib's vanilla item-renderer delegate.
-- Add Large Programmable Door: one indivisible 3×3 opening with two 1.5×3 leaves and the regular door's appearance, movement, control-panel, placement-depth and redstone options. Any cell addresses the anchor; only the anchor renders. Placement validates all nine loaded cells before writing, and removal clears the assembly.
+- Add Large Programmable Door: one indivisible 3Ãƒâ€”3 opening with two 1.5Ãƒâ€”3 leaves and the regular door's appearance, movement, control-panel, placement-depth and redstone options. Any cell addresses the anchor; only the anchor renders. Placement validates all nine loaded cells before writing, and removal clears the assembly.
 - Animate large doors over 12 ticks rather than 9, and lower their optional control panels to the regular door's center height, including collision and click regions.
 - Guard collision clipping against disjoint boxes so opened large doors leave a traversable passage in every orientation and movement mode.
 - Add White Glass doors: pale moving leaf rails around a large glass opening, with simple shallow rectangular handles on both faces. Crop/repeat the rail and pane textures at consistent proportions; keep the stationary frame independently optional.
 - Thicken the moving borders of glass-rim doors and add Dark Glass using the Door Interior (Dark) material with contrasting light handles.
 - Keep large-door inventory icons inside their slots with padding after GUI rotation.
-- Add Bussard Classic/Modern, Deflector Amber/Blue and Nacelle 1–4 light artwork with matching On/Off textures. Preserve existing texture indices.
+- Add Bussard Classic/Modern, Deflector Amber/Blue and Nacelle 1Ã¢â‚¬â€œ4 light artwork with matching On/Off textures. Preserve existing texture indices.
 - Submit redstone-screen backgrounds as textured surfaces with normals and explicit lightmaps for shader compatibility. Add Up/Down row controls that move labels and complete channel lists together.
 - Add Linear, Curve In and Curve Out spatial interpolation for Ramp and Filled Ramp modes. Keep endpoint heights, use the same profile for rendering/collision/rider motion, and preserve Linear for older saves. Include interpolation in configuration copying.
 
@@ -224,7 +234,7 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 - Add Industrial to the shared picker and apply the Hull/Panels/Tech moves for 27 finishes, preserving numeric choices and source artwork.
 
-- Replace door/trapdoor/ramp motion illustrations with smaller 420×350 live GIFs and add an animated 1.3 highlights guide. Buffer capture frames and use a steady output cadence to reduce jitter.
+- Replace door/trapdoor/ramp motion illustrations with smaller 420Ãƒâ€”350 live GIFs and add an animated 1.3 highlights guide. Buffer capture frames and use a steady output cadence to reduce jitter.
 - Shorten the eight trapdoor finish labels without changing saved material IDs.
 - Match the Programmable Diagonal Screen hotbar icon to its current solid wedge housing.
 - Preserve manually extended landing gear on reload when redstone input is unchanged; channel unregistration during unload no longer overwrites saved extension.
@@ -232,7 +242,7 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 - Demonstrate animated documentation with a live captured Observation door GIF and a reproducible capture/encoding workflow.
 
 - Reorganize shared texture categories into Tech, Hull and Panels, simplify names, and hide removed picker entries while preserving saved choice numbers. Retired artwork is excluded from the runtime build and uses the default-material fallback described above.
-- Add paired Blue Hex and Amber Hex programmable lights and four 140×140 overhead-bin storage sets (fourteen storage choices total).
+- Add paired Blue Hex and Amber Hex programmable lights and four 140Ãƒâ€”140 overhead-bin storage sets (fourteen storage choices total).
 
 - Cached static Programmable Diagonal Wall meshes and Programmable Door replacement-material surfaces/model quads, reducing per-frame geometry allocation while retaining live lighting, motion and resource reloads. Reapplying identical programmable settings no longer triggers appearance rebuilds; shallow-wall Duplifier copies avoid the redundant legacy width reset.
 - Landing gear and blocks moved by Programmable Ramps now share diagonal walls' loaded-terrain render distance instead of disappearing beyond 64 blocks.
@@ -245,7 +255,7 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 - Added Programmable Storage: 27 inventory slots, hopper/item-handler access, comparator output, shared material picker and matching top/side/front Storage sets. Defaults to Cabinet; crafted from a chest and Programmable Block. Appearance copying preserves target contents, and mining drops contents separately.
 
-- Added ten Storage material sets from matching top/side/front sheets, split into 30 crisp 140×140 textures.
+- Added ten Storage material sets from matching top/side/front sheets, split into 30 crisp 140Ãƒâ€”140 textures.
 
 - Gallery updates support focused live captures and incremental export, preserving unrelated screenshots and avoiding a second client run. Full refreshes require `--full`.
 
@@ -263,7 +273,7 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 ### Added
 
-- Extra Large (2×2) landing-gear alignment with matching reservations and saved/copied size settings.
+- Extra Large (2Ãƒâ€”2) landing-gear alignment with matching reservations and saved/copied size settings.
 - Adjacent next-block trapdoor placement, preserving the owning tile outside the gear shaft and holding the leaf open until retraction completes. Supports either rotating or sliding movement.
 - Custom block/door texture sample slot across shared material menus, with vanilla/mod atlas artwork, upper/lower door mapping and non-consuming inventory selection.
 - Fit/Tile housing controls for screens, half/full inputs and consoles. Static surface and material choices participate in Duplifier copying.
@@ -273,10 +283,10 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 - Programmable Light Frames offer centered Small/Full sizing; Light Slabs offer side-texture Fit/Tile. Small frames remain individual artwork panels.
 
-- Loaded-only rectangular programmable trapdoor groups through 8×8, with shared outer hinges and scaled sliding travel. Diagonal trapdoors connect across opposite-slope rows and full-width vertical/depth offsets.
+- Loaded-only rectangular programmable trapdoor groups through 8Ãƒâ€”8, with shared outer hinges and scaled sliding travel. Diagonal trapdoors connect across opposite-slope rows and full-width vertical/depth offsets.
 
-- Programmable Diagonal Trapdoor with wall-compatible half-width/full-height, full-width/full-height and full-width/half-height placement. Its 2px leaf leaves 1px clearance on each wall surface; pairs and 2×2 surface groups rotate or slide toward opposite sides. Shares textures, redstone channels, configuration and copying with programmable trapdoors.
-- Programmable Trapdoor with 78 block finishes, Rotating or horizontal Sliding motion, Bottom/Middle/Top positions, physical redstone and virtual channels. Adjacent pairs and complete 2×2 squares open together toward opposite sides, without frames or hinge hardware. Includes Configurizer, Duplifier, configured items and Dynmap support.
+- Programmable Diagonal Trapdoor with wall-compatible half-width/full-height, full-width/full-height and full-width/half-height placement. Its 2px leaf leaves 1px clearance on each wall surface; pairs and 2Ãƒâ€”2 surface groups rotate or slide toward opposite sides. Shares textures, redstone channels, configuration and copying with programmable trapdoors.
+- Programmable Trapdoor with 78 block finishes, Rotating or horizontal Sliding motion, Bottom/Middle/Top positions, physical redstone and virtual channels. Adjacent pairs and complete 2Ãƒâ€”2 squares open together toward opposite sides, without frames or hinge hardware. Includes Configurizer, Duplifier, configured items and Dynmap support.
 - Non-rendering Minecraft/Forge regression checks for placement, diagonal vertex data, connected copying, ramp clearance and trapdoor geometry, grouping, persistence and redstone.
 
 ### Fixed
@@ -293,11 +303,11 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 - Floor- and ceiling-mounted trapdoors sit flush visually, using a tiny coplanar-face inset instead of a one-pixel gap. Rotating leaves retain clearance from their support when open.
 
-- Next-block trapdoor leaves project one pixel beyond the covered cell’s far edge, with matching selection/collision and fully retracted sliding endpoints. Normal and diagonal trapdoor thin edges use the standard programmable door’s metal side texture, including Custom materials.
+- Next-block trapdoor leaves project one pixel beyond the covered cellÃ¢â‚¬â„¢s far edge, with matching selection/collision and fully retracted sliding endpoints. Normal and diagonal trapdoor thin edges use the standard programmable doorÃ¢â‚¬â„¢s metal side texture, including Custom materials.
 
 - Next-block placement is restricted to individual trapdoor mounts, preserving joined groups when configuration or copied settings request an offset. Offset leaves can be selected and collided with in neighboring cells after hinge changes; selection outlines follow their actual bounds.
 
-- Diagonal trapdoors have separate width/height controls and apply combined width edits together. Trapdoor Fit/Tile is saved/copied; Tile repeats and mirrors built-in and Custom door artwork instead of stretching it over 2×2 groups, while thin edges keep native door artwork.
+- Diagonal trapdoors have separate width/height controls and apply combined width edits together. Trapdoor Fit/Tile is saved/copied; Tile repeats and mirrors built-in and Custom door artwork instead of stretching it over 2Ãƒâ€”2 groups, while thin edges keep native door artwork.
 - Rotating trapdoors retain clearance from neighboring block faces; sliding diagonal trapdoors lift clear of continuation walls. Next-block closed-leaf placement is independent of Rotating/Sliding and offers an explicit hinge direction, replacing the forced-sliding Cover option.
 
 - Programmable light dialogs hide separate Off materials while keeping automatic on/off artwork, and grow to show up to seven textures plus the category heading. Temporarily reduce GUI scale when needed to fit the taller dialog, restoring it on close.
@@ -334,9 +344,9 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 - Duplifier's optional Connected Matching Blocks mode applies selected copied settings to a face-connected group with the exact same block type and original configuration, ignoring facing and rotation. It uses the multi-block item icon, stays within loaded chunks and rejects groups larger than 4,096 occupied block cells before applying settings.
 - 23 selected housing finishes from `textures2`, using 64x64 artwork and short descriptive menu names.
 - 16 selected housing finishes from the shared `textures` artwork folder, with shorter names prefixed `T1`, available across Programmable Blocks and the other blocks that share the housing finish menu.
-- 11 Hull Plating finishes from `hulls`, numbered 1–11 and available in the shared housing finish menu.
+- 11 Hull Plating finishes from `hulls`, numbered 1Ã¢â‚¬â€œ11 and available in the shared housing finish menu.
 - The building guide now shows all 78 selectable finishes on Programmable Blocks, in groups of up to ten with names in display order.
-- Extra Large Landing Gear doubles Large's model dimensions. Its centered mount and moving parts reserve a three-by-three footprint; extension remains configurable from 0–4 blocks.
+- Extra Large Landing Gear doubles Large's model dimensions. Its centered mount and moving parts reserve a three-by-three footprint; extension remains configurable from 0Ã¢â‚¬â€œ4 blocks.
 - Programmable Light Frame, a one-pixel-deep light panel, and Programmable Light Slab, a half-height light with top and bottom placement. Both use Programmable Light artwork, brightness, joining, redstone channels and configuration.
 - Ramp Controller start and end offset sliders with half-block steps from -16 to 16 blocks. The controller, moving cells, saved settings and copied items retain these intermediate positions.
 
@@ -368,8 +378,8 @@ See the [illustrated guide](docs/gallery/version-1.1.md) for examples and settin
 - Optional per-face texture overrides for Programmable Block, Slab and the new Programmable Stairs. Disabled by default; faces inherit the main texture unless overridden.
 - Programmable Diagonal Portholes with four opening shapes, half/full width, half-height/full-width geometry, glass shade and joining controls.
 - Half-height diagonal walls, independent Fill Inside/Outside controls, and a standalone Programmable Diagonal Half Console.
-- Luxury and Military Seats with joining controls and adjustable height (±2 pixels). Default legs are one pixel taller than the original models.
-- One configurable Landing Gear block with Small, Medium and Large sizes, animated extension/retraction, redstone modes and channels, and immediate size/length previews. Extension ranges from 0–4 blocks in half-block steps; all sizes use equally thick arms with tiled frame-interior metal.
+- Luxury and Military Seats with joining controls and adjustable height (Ã‚Â±2 pixels). Default legs are one pixel taller than the original models.
+- One configurable Landing Gear block with Small, Medium and Large sizes, animated extension/retraction, redstone modes and channels, and immediate size/length previews. Extension ranges from 0Ã¢â‚¬â€œ4 blocks in half-block steps; all sizes use equally thick arms with tiled frame-interior metal.
 - Glass Frame Interior and Door Interior finishes in programmable texture menus.
 - Copifier/Duplifier crafting: combine a configured tool with programmable items to apply selected settings while retaining the tool. Copying also supports the new block options and face overrides.
 

@@ -18,6 +18,8 @@ public class CommonProxy {
             int color, int style, float speed) { }
     public void spawnThrusterParticle(World world, double x, double y, double z,
             EnumFacing facing, int color, int style, float speed, float spreadScale) { }
+    public void spawnRotatedThrusterParticle(World world, double x, double y, double z,
+            EnumFacing facing, int color, int style, float speed, float spreadScale, float yaw) { }
 
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(BetterBuildersWandsCompat.INSTANCE);

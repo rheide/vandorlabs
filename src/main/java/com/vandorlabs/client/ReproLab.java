@@ -473,6 +473,9 @@ public class ReproLab {
     private static int pendingGalleryTicks;
     private int holdTicks = 0;
     private boolean vehicleStatusStarted;
+    private int followupStage;
+    private boolean followupsFinished;
+    private final List<String> followupFailures=new ArrayList<>();
     private static long renderedFrames, cameraChangedAtFrame;
     private int shotIndex = 0;
     private boolean distantReady;
@@ -483,6 +486,13 @@ public class ReproLab {
         enabled = prop != null && !prop.isEmpty();
         outDir = enabled ? new File(prop) : null;
         if (enabled) {
+            // Hidden lab clients use direct game input handlers. Native grabbing
+            // would warp the desktop pointer whenever a test opens/closes a GUI.
+            Minecraft.getMinecraft().mouseHelper = new net.minecraft.util.MouseHelper() {
+                @Override public void grabMouseCursor(){deltaX=deltaY=0;}
+                @Override public void ungrabMouseCursor(){deltaX=deltaY=0;}
+                @Override public void mouseXYChange(){deltaX=deltaY=0;}
+            };
             if(Boolean.getBoolean("vandorlabs.traceChunkTiles"))net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ChunkTileTrace());
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
@@ -604,10 +614,58 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("vehicle motion live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.followupChecksOnly")) {
+            if(followupsFinished){mc.shutdown();return;}
+            try {
+                boolean done=false;
+                if(followupStage==0){
+                    mc.displayGuiScreen(null);mc.setIngameFocus();
+                    if(!vehicleStatusStarted){MoatVisualChecks.begin(mc);vehicleStatusStarted=true;}
+                    else done=MoatVisualChecks.tick(mc,outDir);
+                }else if(followupStage==1){
+                    if(!vehicleStatusStarted){PulseScreenRuntimeChecks.begin(mc);vehicleStatusStarted=true;}
+                    else done=PulseScreenRuntimeChecks.tick(mc,outDir);
+                }else if(followupStage==2){
+                    mc.displayGuiScreen(null);mc.setIngameFocus();
+                    if(!vehicleStatusStarted){HoverClientRuntimeChecks.begin(mc);vehicleStatusStarted=true;}
+                    else done=HoverClientRuntimeChecks.tick(mc,outDir);
+                }else if(followupStage==3)done=LargeCanopyVisualChecks.tick(mc,outDir);
+                else if(followupStage==4)done=VehicleTaxiRuntimeChecks.tick(mc,outDir);
+                if(done){followupStage++;vehicleStatusStarted=false;mc.displayGuiScreen(null);}
+            }catch(Exception failure){
+                followupFailures.add("stage="+followupStage+": "+failure);
+                System.err.println("[vandorlabs][reprolab] followups stage="+followupStage+" FAIL");failure.printStackTrace();
+                followupStage++;vehicleStatusStarted=false;mc.displayGuiScreen(null);
+            }
+            if(followupStage==5){
+                followupsFinished=true;
+                if(org.lwjgl.input.Mouse.isGrabbed())followupFailures.add("Lab client captured the desktop mouse");
+                if(!followupFailures.isEmpty())throw new IllegalStateException("Follow-up live failures: "+followupFailures);
+                System.out.println("[vandorlabs][reprolab] followups-client PASS sequential-one-client native-mouse-ungrabbed");mc.shutdown();
+            }
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.hoverControlsChecksOnly")) {
             mc.displayGuiScreen(null);mc.setIngameFocus();
             try {if(!vehicleStatusStarted){HoverClientRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(HoverClientRuntimeChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Hover controls live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.pulseScreenChecksOnly")) {
+            try {if(!vehicleStatusStarted){PulseScreenRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(PulseScreenRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Pulse screen live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.moatChecksOnly")) {
+            mc.displayGuiScreen(null);mc.setIngameFocus();
+            try {if(!vehicleStatusStarted){MoatVisualChecks.begin(mc);vehicleStatusStarted=true;}else if(MoatVisualChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Moat live checks",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.wheelMotionChecksOnly")) {
+            mc.displayGuiScreen(null);mc.setIngameFocus();
+            try {if(!vehicleStatusStarted){WheelMotionRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(WheelMotionRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("wheel motion live checks",failure);}
             return;
         }
         if(Boolean.getBoolean("vandorlabs.vehicleStatusChecksOnly")) {

@@ -55,6 +55,8 @@ final class CanopyRemovalRuntimeChecks {
         orphan.writeToNBT(new NBTTagCompound());orphan.update();
         require(world.getTileEntity(stale)==null && world.getBlockState(BASE).getBlock()==Blocks.STONE,"orphan tile cleanup preserves foreign replacement");
         clear(world);
+        CanopyTargetedHarvestRuntimeChecks.check(world,player);
+        OpenedFrontCanopyRemovalChecks.check(world,player);
         System.out.println("[vandorlabs][reprolab] canopy-removal PASS real-harvest root/follower widths=1,2,3 facings=4 replacement old-tiles orphan-persistence");
     }
 }

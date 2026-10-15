@@ -61,12 +61,16 @@ public final class VehicleNetwork {
     }
     public static void request(EntityGroundVehicle entity){Packet p=new Packet(REQUEST);p.entity=entity.getEntityId();p.token=entity.getUniqueID();PacketHandler.INSTANCE.sendToServer(p);}
     public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking) {
+        send(player,snapshot,entity,token,origin,preview,parking,"");
+    }
+    public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking,String status) {
         try {
             Entity raw=entity<0?null:player.world.getEntityByID(entity);
             byte[] bytes=!preview && raw instanceof EntityGroundVehicle && ((EntityGroundVehicle)raw).structure==snapshot
                     ?((EntityGroundVehicle)raw).snapshotBytes():snapshot.encode();
             for(int offset=0;offset<bytes.length;offset+=FRAGMENT) {
                 Packet p=new Packet(preview?PREVIEW:SNAPSHOT);p.entity=entity;p.token=token;p.origin=origin;p.flag=parking;p.total=bytes.length;p.offset=offset;
+                p.text=status; p.sequence=status.isEmpty()?0:-1;
                 p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));PacketHandler.INSTANCE.sendTo(p,player);
             }
         }catch(Exception e){error(player,"Cannot send craft: "+e.getMessage());}

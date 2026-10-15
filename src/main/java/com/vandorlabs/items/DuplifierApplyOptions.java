@@ -94,12 +94,14 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.RAMP_ESCALATOR,"Escalator Mode",4),
             option(ProgrammableSettings.GLASS_TINT,"Glass Tint",2),
             option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material / Layout",0),
-            option(ProgrammableSettings.BLOCK_CONFIGURATION,"Canopy / Pilot Settings",2)
+            option(ProgrammableSettings.BLOCK_CONFIGURATION,"Canopy / Pilot Settings",2),
+            option("MoatMode","Moat Mode",4)
     };
 
-    public static final long ALL = OPTIONS.length==64?-1L:(1L << OPTIONS.length) - 1L;
-
-    static {if(OPTIONS.length>Long.SIZE)throw new IllegalStateException("Duplifier options exceed the saved mask width");}
+    /** Legacy API covers the original first word; option indices are append-only. */
+    public static final long ALL = OPTIONS.length>=64?-1L:(1L << OPTIONS.length) - 1L;
+    public static final String WORDS_TAG=TAG+"Words";
+    private static final int WORD_COUNT=(OPTIONS.length+63)/64;
 
     private DuplifierApplyOptions() { }
 
@@ -112,30 +114,31 @@ public final class DuplifierApplyOptions {
         tool.setTagInfo(CONNECTED_TAG, new net.minecraft.nbt.NBTTagByte((byte)(connected ? 1 : 0)));
     }
 
-    public static long mask(ItemStack tool) {
-        NBTTagCompound root = tool.getTagCompound();
-        if (root == null || !root.hasKey(TAG, 4)) return ALL;
-        // Older tools predate screen-row, interpolation, signal and armor options. New options start enabled,
-        // while the saved choices for every existing property remain intact.
-        int known = root.hasKey(COUNT_TAG, 3) ? root.getInteger(COUNT_TAG) : 56;
-        known = Math.max(0, Math.min(OPTIONS.length, known));
-        long knownBits = known==64?-1L:(1L << known) - 1L;
-        return (root.getLong(TAG) | (ALL & ~knownBits)) & ALL;
+    public static long[] legacyWords(long low){long[] words=new long[WORD_COUNT];java.util.Arrays.fill(words,-1L);words[0]=low;trim(words);return words;}
+    private static void trim(long[] words){int tail=OPTIONS.length%64;if(tail!=0)words[WORD_COUNT-1]&=(1L<<tail)-1;}
+    public static boolean valid(long[] words){if(words==null || words.length!=WORD_COUNT)return false;long[] clean=words.clone();trim(clean);return java.util.Arrays.equals(words,clean);}
+    /** Original long and option count remain readable; appended options begin enabled. */
+    public static long[] maskWords(ItemStack tool){
+        NBTTagCompound root=tool.getTagCompound();if(root==null || !root.hasKey(TAG,4))return legacyWords(ALL);
+        int known=root.hasKey(COUNT_TAG,3)?root.getInteger(COUNT_TAG):56;known=Math.max(0,Math.min(OPTIONS.length,known));
+        long[] words=new long[WORD_COUNT];words[0]=root.getLong(TAG);
+        if(root.hasKey(WORDS_TAG,11)){int[] stored=root.getIntArray(WORDS_TAG);for(int i=0;i<WORD_COUNT && i*2+1<stored.length;i++)words[i]=(stored[i*2]&0xffffffffL)|((long)stored[i*2+1]<<32);}
+        for(int i=known;i<OPTIONS.length;i++)words[i/64]|=1L<<(i%64);trim(words);return words;
     }
-
-    public static void setMask(ItemStack tool, long value) {
-        NBTTagCompound root = tool.getTagCompound();
-        if (root == null) root = new NBTTagCompound();
-        root.setLong(TAG, value & ALL);
-        root.setInteger(COUNT_TAG, OPTIONS.length);
-        tool.setTagCompound(root);
+    public static long mask(ItemStack tool){return maskWords(tool)[0];}
+    /** Updating an old first-word caller preserves all newer choices. */
+    public static void setMask(ItemStack tool,long value){long[] words=maskWords(tool);words[0]=value & ALL;setMask(tool,words);}
+    public static void setMask(ItemStack tool,long[] value){
+        if(!valid(value))throw new IllegalArgumentException("Invalid Duplifier option mask");
+        NBTTagCompound root=tool.getTagCompound();if(root==null)root=new NBTTagCompound();int[] stored=new int[WORD_COUNT*2];
+        for(int i=0;i<WORD_COUNT;i++){stored[i*2]=(int)value[i];stored[i*2+1]=(int)(value[i]>>>32);}
+        root.setLong(TAG,value[0]);root.setIntArray(WORDS_TAG,stored);root.setInteger(COUNT_TAG,OPTIONS.length);tool.setTagCompound(root);
     }
+    public static boolean enabled(long mask,int index){return index>=64 && index<OPTIONS.length || index>=0 && index<64 && (mask&(1L<<index))!=0;}
+    public static boolean enabled(long[] words,int index){return index>=0 && index<OPTIONS.length && index/64<words.length && (words[index/64]&(1L<<(index%64)))!=0;}
+    public static NBTTagCompound selected(NBTTagCompound captured,long mask){return selected(captured,legacyWords(mask));}
 
-    public static boolean enabled(long mask, int index) {
-        return (mask & (1L << index)) != 0;
-    }
-
-    public static NBTTagCompound selected(NBTTagCompound captured, long mask) {
+    public static NBTTagCompound selected(NBTTagCompound captured, long[] mask) {
         if (captured == null) return null;
         NBTTagCompound selected = captured.copy();
         for (int i = 0; i < OPTIONS.length; i++)

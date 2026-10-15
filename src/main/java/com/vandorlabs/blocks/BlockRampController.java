@@ -52,6 +52,7 @@ public class BlockRampController extends BlockVandorDirectional {
     @Override public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity te=world.getTileEntity(pos);
         if (!world.isRemote && te instanceof TileEntityRampController) ((TileEntityRampController)te).recover(true);
+        com.vandorlabs.ramp.ControllerRecovery.controllerChanged(world,pos);
         super.breakBlock(world,pos,state);
     }
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,
@@ -76,7 +77,7 @@ public class BlockRampController extends BlockVandorDirectional {
                         EnumFacing.getHorizontal(settings.getInteger("Direction") & 3),
                         settings.getInteger("TravelAxis"),
                         settings.getBoolean("ExtendSegments"), settings.getInteger("Speed"),
-                        !settings.hasKey("MatchTextures") || settings.getBoolean("MatchTextures"));
+                        !settings.hasKey("MatchTextures") || settings.getBoolean("MatchTextures"),false,settings.getInteger("RampInterpolation"),settings.getInteger("EscalatorMode"),settings.getBoolean("MoatMode"));
                 ramp.setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
             } else ramp.updatePower();
         }
@@ -88,6 +89,7 @@ public class BlockRampController extends BlockVandorDirectional {
         if (raw instanceof TileEntityRampController) {
             TileEntityRampController ramp = (TileEntityRampController) raw;
             NBTTagCompound settings = new NBTTagCompound();
+            settings.setBoolean("MoatMode",ramp.moat);settings.setInteger("RampInterpolation",ramp.interpolation);settings.setInteger("EscalatorMode",ramp.escalator);
             settings.setInteger("StartOffset", ramp.startOffset);
             settings.setInteger("EndOffset", ramp.endOffset());
             settings.setInteger("StartOffsetHalfSteps",ramp.startHalfSteps());

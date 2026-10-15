@@ -43,7 +43,7 @@ public final class DuplifierArmorTextures {
     }
     public static boolean applyTo(ItemStack armor,ItemStack tool) {
         return tool.getItem()==ModItems.DUPLIFIER && apply(armor,DuplifierApplyOptions.selected(
-                tool.getSubCompound(ItemDuplifier.SETTINGS_TAG),DuplifierApplyOptions.mask(tool)));
+                tool.getSubCompound(ItemDuplifier.SETTINGS_TAG),DuplifierApplyOptions.maskWords(tool)));
     }
     public static boolean interact(EntityPlayer player,ItemStack tool,ItemStack armor) {
         boolean copied=player.isSneaking();

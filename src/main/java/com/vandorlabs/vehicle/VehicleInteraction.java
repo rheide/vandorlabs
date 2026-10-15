@@ -45,7 +45,7 @@ public final class VehicleInteraction {
                 || target.hit.action==VehicleSelection.Action.CANOPY
                 || target.hit.action==VehicleSelection.Action.DOOR
                 || target.hit.action==VehicleSelection.Action.SCREEN && !player.isSneaking() && VehicleSignals.supports(target.craft.view,target.hit.cell.pos)
-                || target.hit.action==VehicleSelection.Action.BOARD && !player.isSneaking());
+                || target.hit.action==VehicleSelection.Action.BOARD);
     }
     public static void receive(EntityPlayerMP player,VehicleNetwork.Packet packet) {
         if(player.isDead || player.isSpectator() || packet.type!=VehicleNetwork.INTERACT)return;
@@ -82,6 +82,7 @@ public final class VehicleInteraction {
         BlockPos seat=target.hit.cell.pos;
         if(target.hit.cell.state.getValue(BlockPilotSeat.UPPER))seat=seat.down();
         if(!seat.equals(craft.structure.seat))return false;
+        if(player.isSneaking()){VehicleService.previewSeat(server,craft);return true;}
         if(!craft.board(player))VehicleNetwork.error(server,"The Pilot Seat is occupied or cannot be boarded.");
         return true;
     }

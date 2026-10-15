@@ -32,7 +32,8 @@ public final class MessageCanopyUse implements IMessage {
         Vec3d eye=player.getPositionEyes(1);if(!Double.isFinite(reach) || reach<=0 || eye.squareDistanceTo(point)>(reach+.25)*(reach+.25))return false;
         Vec3d end=eye.add(point.subtract(eye).normalize().scale(reach+.25));
         RayTraceResult hit=CanopyInteractions.trace(player.world,eye,end);
-        if(hit==null || !hit.getBlockPos().equals(pos))return false;
+        TileEntityCanopy selected=hit==null?null:TileEntityCanopy.at(player.world,hit.getBlockPos());
+        if(selected==null || selected.owner()!=tile)return false;
         RayTraceResult terrain=player.world.rayTraceBlocks(eye,end,false,true,false);
         if(terrain!=null && eye.squareDistanceTo(terrain.hitVec)+1e-6<eye.squareDistanceTo(hit.hitVec))return false;
         ItemStack stack=player.getHeldItem(hand);

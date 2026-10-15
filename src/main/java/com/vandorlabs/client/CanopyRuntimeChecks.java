@@ -358,6 +358,7 @@ public final class CanopyRuntimeChecks {
                 pending.get();
                 pending = null;
             }
+            if(stage==9){if(CanopyTargetedHarvestClientChecks.tick(mc)){System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection side-surfaces screenshots=6 targeted-harvest");stage=10;mc.shutdown();}return;}
             if (++ticks < 20) return;
             if (stage == 0) {
                 validate(mc);
@@ -367,6 +368,7 @@ public final class CanopyRuntimeChecks {
                 mc.player.setPosition(8.5, 100 - mc.player.getEyeHeight() + .6, 5);
                 mc.player.rotationYaw = mc.player.prevRotationYaw = 0;
                 mc.player.rotationPitch = mc.player.prevRotationPitch = 0;
+                synchronizeActor(mc);
                 stage = 1;
                 ticks = 0;
                 return;
@@ -378,6 +380,7 @@ public final class CanopyRuntimeChecks {
                 Vec3d start = new Vec3d(8.5, 100.5, 5), end = new Vec3d(8.5, 100.5, 10);
                 RayTraceResult hit = t.trace(start, end);
                 require(hit != null, "closed trace");
+                requireServerCamera(mc);
                 require(
                         mc.playerController.processRightClickBlock(
                                         mc.player,
@@ -415,6 +418,7 @@ public final class CanopyRuntimeChecks {
                                                         Math.sqrt(
                                                                 look.x * look.x
                                                                         + look.z * look.z)));
+                synchronizeActor(mc);
                 stage = 3;
                 ticks = 0;
                 return;
@@ -448,6 +452,7 @@ public final class CanopyRuntimeChecks {
                                 && mc.objectMouseOver.getBlockPos().equals(TEST),
                         "controller offset target");
                 hit = mc.objectMouseOver;
+                requireServerCamera(mc);
                 require(
                         mc.playerController.processRightClickBlock(
                                         mc.player,
@@ -517,10 +522,30 @@ public final class CanopyRuntimeChecks {
                 mc.player.setPosition(11.5,99.2,7.2);lookAt(mc,new Vec3d(8.5,100.5,9));stage=7;ticks=0;return;
             }
             if(stage==7){shot(mc,output,"canopy_side_trim");mc.player.setPosition(11.4,99.2,7.3);lookAt(mc,new Vec3d(8.5,100.5,9));stage=8;ticks=0;return;}
-            if(stage==8){shot(mc,output,"canopy_side_trim_shifted");System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection side-surfaces screenshots=6");stage=9;mc.shutdown();}
+            if(stage==8){shot(mc,output,"canopy_side_trim_shifted");stage=9;ticks=0;}
         } catch (Exception e) {
             throw new IllegalStateException("canopy live stage=" + stage, e);
         }
+    }
+
+    /** Server fixtures can leave a queued teleport; establish the actual packet actor after them. */
+    private static void synchronizeActor(Minecraft mc){
+        mc.player.setSneaking(false);mc.player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        final double x=mc.player.posX,y=mc.player.posY,z=mc.player.posZ;final float yaw=mc.player.rotationYaw,pitch=mc.player.rotationPitch;
+        pending=mc.getIntegratedServer().addScheduledTask(()->{
+            EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
+            player.setSneaking(false);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.inventoryContainer.detectAndSendChanges();player.capabilities.allowFlying=true;player.capabilities.isFlying=true;player.sendPlayerAbilities();
+            player.connection.setPlayerLocation(x,y,z,yaw,pitch);
+        });
+    }
+    private static void requireServerCamera(Minecraft mc)throws Exception{
+        final Vec3d eye=mc.player.getPositionEyes(1);final float yaw=mc.player.rotationYaw,pitch=mc.player.rotationPitch;
+        mc.getIntegratedServer().addScheduledTask(()->{
+            EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
+            require(player.getHeldItemMainhand().isEmpty() && !player.isSneaking(),"manual canopy click requires server empty hand and standing input");
+            require(player.getPositionEyes(1).squareDistanceTo(eye)<.04 && Math.abs(MathHelper.wrapDegrees(player.rotationYaw-yaw))<1 && Math.abs(player.rotationPitch-pitch)<1,
+                    "packet actor/camera mismatch server="+player.getPositionEyes(1)+" client="+eye+" serverYaw="+player.rotationYaw+" clientYaw="+yaw);
+        }).get();
     }
 
     private static void shot(Minecraft mc, File output, String name) throws Exception {

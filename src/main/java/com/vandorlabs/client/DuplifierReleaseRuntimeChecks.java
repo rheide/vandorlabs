@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 final class DuplifierReleaseRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("Duplifier release: "+message);}
     static void run(EntityPlayer player){
+        DuplifierMaskRuntimeChecks.run();
         World world=player.world;BlockPos source=new BlockPos(80,130,80),target=source.east(12);
         try{
             for(String kind:new String[]{"canopy","front_canopy_glass","large_front_canopy_glass","regular_canopy_glass","angled_front_1x1","angled_front_1x2","space_visor_2x1","space_visor_3x1","space_visor_5x1","space_visor_5x1_double_height"}){
@@ -55,6 +56,6 @@ final class DuplifierReleaseRuntimeChecks {
             ItemStack legacy=new ItemStack(ModItems.DUPLIFIER);NBTTagCompound mask=new NBTTagCompound();mask.setLong(DuplifierApplyOptions.TAG,0);mask.setInteger("DuplifierApplyOptionCount",63);legacy.setTagCompound(mask);
             require(DuplifierApplyOptions.mask(legacy)==Long.MIN_VALUE,"new configuration option preserves old disabled choices");DuplifierApplyOptions.setMask(legacy,0);require(DuplifierApplyOptions.mask(legacy)==0,"64-option disabled mask persists");
         }finally{for(BlockPos pos:BlockPos.getAllInBox(source.add(-8,-8,-8),target.add(8,8,8)))world.setBlockToAir(pos);}
-        System.out.println("[vandorlabs][reprolab] duplifier-release PASS canopy-motion shape hinges finishes layout channels follower-roots pilot-settings crafting largest-gear selective-64-bit-mask");
+        System.out.println("[vandorlabs][reprolab] duplifier-release PASS canopy-motion shape hinges finishes layout channels follower-roots pilot-settings crafting largest-gear scalable-mask legacy-bit-compatibility");
     }
 }

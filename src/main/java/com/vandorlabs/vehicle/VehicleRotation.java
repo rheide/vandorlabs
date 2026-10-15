@@ -216,6 +216,10 @@ public final class VehicleRotation {
                 entry.setInteger("X",next.getX());entry.setInteger("Y",next.getY());entry.setInteger("Z",next.getZ());if(entry.hasKey("Pos",4))entry.setLong("Pos",next.toLong());
                 if(entry.hasKey("Tile",10)){
                     NBTTagCompound saved=entry.getCompoundTag("Tile");saved.setInteger("x",next.getX());saved.setInteger("y",next.getY());saved.setInteger("z",next.getZ());
+                    if(saved.hasKey(com.vandorlabs.compat.RampStairs.STATE,8)){
+                        IBlockState stair=com.vandorlabs.persistence.LegacyBlockStates.decode(saved.getString(com.vandorlabs.compat.RampStairs.STATE));
+                        if(stair!=null)saved.setString(com.vandorlabs.compat.RampStairs.STATE,com.vandorlabs.persistence.LegacyBlockStates.encode(state(stair,rotation)));
+                    }
                     for(String direction:new String[]{"DiagonalFacing","DiagonalGroupFacing","GlassPanelFacing"})facing(saved,direction,rotation,true);
                     facing(saved,"MountFace",rotation,false);
                 }

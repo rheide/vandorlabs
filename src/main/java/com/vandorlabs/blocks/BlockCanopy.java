@@ -273,7 +273,16 @@ public final class BlockCanopy extends Block {
     public RayTraceResult collisionRayTrace(
             IBlockState s, World w, BlockPos p, Vec3d start, Vec3d end) {
         TileEntityCanopy t = TileEntityCanopy.at(w, p);
-        return t == null ? null : t.owner().trace(start, end);
+        if(t==null)return super.collisionRayTrace(s,w,p,start,end);
+        TileEntityCanopy owner=t.owner();
+        if(owner.draws())return owner.trace(start,end);
+        // A loaded orphan reservation must remain removable even when it has no
+        // visible owner. Never redirect its click to an unrelated canopy kind.
+        if(t.anchor!=null && !t.anchor.equals(p) && w.isBlockLoaded(t.anchor)){
+            TileEntityCanopy parent=TileEntityCanopy.at(w,t.anchor);
+            if(parent==null || parent.block()!=this)return super.collisionRayTrace(s,w,p,start,end);
+        }
+        return null;
     }
 
     public static final class CanopyItem extends ItemBlock {

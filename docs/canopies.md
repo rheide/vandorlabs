@@ -18,7 +18,9 @@ The base recipe has three glass blocks across the top, Programmable Matter Ingot
 
 Click a wall to mount an angled nose or Canopy with its rear against that wall. Long noses extend outward instead of requiring space inside the support. Click the underside of a ceiling to place either angled nose or Canopy upside down. The large windows mount against any of the six block faces: their broad rear opening stays centered on the clicked location and their smaller front projects outward, towards the player.
 
-Placement checks the complete owned footprint and editing permissions before writing blocks. Breaking an owned cell removes its component and returns one configured item in survival. Joined Canopies lose only the broken constituent and reconnect the survivors where possible. Pistons cannot move these assemblies.
+Placement checks the complete owned footprint and editing permissions before writing blocks. Breaking an owned cell removes its component and returns one configured item in survival. Joined Canopies lose only the broken constituent and reconnect the survivors where possible. Pistons cannot move these assemblies. Aim at the constituent you want to remove; picking follows that column even when the shared shell is open.
+
+Removing an open Front Canopy Glass or Large Front Canopy Glass releases its closed placement cells as well as its moved collision surfaces. Unrelated blocks and Programmable Ramp sections remain intact. Older orphan canopy cells become removable targets, and loaded followers with a missing owner are cleared within twenty world ticks. A remaining `controlled_ramp` cell belongs to a Programmable Ramp: retract or remove its controller to restore that platform.
 
 Canopy and Canopy Glass can share their open lower space with a Pilot Seat's backrest in either placement order. Hold the canopy item and click the seat's upper backrest area to place the shell; the seat passes that click through instead of boarding or opening its settings.
 
@@ -66,7 +68,7 @@ Choose **Sliding** or **Rear hinge** in the Canopy dialog. Place up to nine matc
 - **Long Angled** uses the two-block nose profile.
 - Long Canopy extends Flat, Angled and Long Angled with a flat rear block, preserving the nose angles. Its **Extra Long Angled** profile slopes across the complete three-block length.
 
-Both motions take sixteen ticks and can reverse during movement. Sliding lifts the shell by one pixel and carries it its full length (two or three blocks) in the selected direction. In the dialog, choose **Slide: Backward** (the default) or **Slide: Forward**. Directions follow the canopy’s front, including ceiling mounts. Close the canopy before changing direction; joined shells change together. Rear hinge raises the front through 105 degrees around the rear upper edge. The stationary mounts stay in place. Right-click an occupied cell or the actual moved shell to operate it. Enable **Redstone** to follow physical power or any configured comma-separated channel. The channel field accepts the same lists as other programmable blocks.
+Both motions take sixteen ticks and can reverse during movement. Sliding lifts the shell by one pixel and carries it its full length (two or three blocks) in the selected direction. In the dialog, choose **Slide: Backward** (the default) or **Slide: Forward**. Directions follow the canopy’s front, including ceiling mounts. Close the canopy before changing direction; joined shells change together. Rear hinge raises the front through 105 degrees around the rear upper edge. The stationary mounts stay in place. Right-click an occupied cell or the actual moved shell to operate it. Select **Trigger: redstone ON** or **Trigger: redstone OFF** to follow physical power or any configured comma-separated channel. **Disabled** retains manual control. The channel field accepts the same lists as other programmable blocks.
 
 | Width / profile | Sliding | Rear hinge |
 | --- | --- | --- |
@@ -102,7 +104,7 @@ The broad rear frame stays clear of its support at both shallow and deep setting
 | Floor, facing upward | ![Shallow front windows above the floor](images/gallery/canopies/front-floor-shallow.png) | ![Deep front windows above the floor](images/gallery/canopies/front-floor-deep.png) |
 | Ceiling, facing downward | ![Shallow front windows below the ceiling](images/gallery/canopies/front-ceiling-shallow.png) | ![Deep front windows below the ceiling](images/gallery/canopies/front-ceiling-deep.png) |
 
-Enable **Openable** and choose a **Left**, **Right**, **Top** or **Bottom** hinge. These directions follow the frame's local orientation, including floor and ceiling mounts. The complete frame rotates through 105 degrees. Enable **Redstone** and set channels to operate it remotely, or right-click it manually. Close the canopy before changing its hinge or opening mode. Deep or moved surfaces remain operable and configurable even when their anchor lies farther away; interaction validates the reached surface and intervening terrain.
+Enable **Openable** and choose a **Left**, **Right**, **Top** or **Bottom** hinge. These directions follow the frame's local orientation, including floor and ceiling mounts. The complete frame rotates through 105 degrees. Choose **Trigger: redstone ON** to open while powered, **Trigger: redstone OFF** to open while unpowered, or **Disabled** for manual control. Local physical power and any selected channel count as powered. The same trigger options apply to Canopy and Long Canopy; old configurations retain ON behavior. Trigger settings survive configured items, Duplifier copying, saving and captured vehicles. Close the canopy before changing its hinge or opening mode. Deep or moved surfaces remain operable and configurable even when their anchor lies farther away; interaction validates the reached surface and intervening terrain.
 
 | Large top hinge | 5 × 5 left hinge |
 | --- | --- |
@@ -110,7 +112,7 @@ Enable **Openable** and choose a **Left**, **Right**, **Top** or **Bottom** hing
 
 ## Taxi Mode and ownership
 
-Canopy and enabled large-window hinges remain manually openable aboard a Taxi Mode vehicle. Click the actual surface with an empty hand. Motion, collision, target, geometry, finish, mount and owned cells survive saving, parking and cardinal rotation. As with captured doors, the vehicle's block redstone simulation and settings menus resume after parking.
+Canopy and enabled large-window hinges remain manually openable aboard a Taxi Mode vehicle. Click the actual surface with an empty hand. Motion, collision, target, geometry, finish, mount and owned cells survive saving, parking and cardinal rotation. Captured canopies retain their selected ON/OFF polarity and subscribe to the parent world redstone channels. Physical block redstone simulation and settings menus resume after parking.
 
 The final registry IDs are `canopy`, `front_canopy_glass` (3 × 3) and `large_front_canopy_glass` (5 × 5). Retired canopy blocks and their assets are removed; renamed IDs have no remapping aliases.
 

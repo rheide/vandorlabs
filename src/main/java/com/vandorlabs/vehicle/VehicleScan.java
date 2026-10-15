@@ -180,7 +180,7 @@ public final class VehicleScan {
             }
             if(queue.isEmpty()) {
                 require(seats==1, "A craft must contain exactly one Pilot Seat.");
-                require(gears.size()>=3, "A craft needs at least three landing gear blocks.");
+                require(gears.size()>=3, "A craft needs at least three landing gear or wheel supports.");
                 origin=new BlockPos(minX,minY,minZ);
                 List<VehicleStructure.Cell> local=new ArrayList<>();
                 for(VehicleStructure.Cell cell:cells.values())local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,

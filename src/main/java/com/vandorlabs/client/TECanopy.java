@@ -50,7 +50,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         if(prepared==null || prepared.source!=source || !settings.equals(prepared.settings) || prepared.facing!=tile.facing() || prepared.width!=tile.width()){
             prepared=new Prepared();prepared.source=source;prepared.settings=settings;prepared.facing=tile.facing();prepared.width=tile.width();prepared.geometry=new CanopyRenderGeometry(source);CACHE.put(tile,prepared);
         }
-        List<CanopyMesh.Face> drawable=prepared.geometry.posed(tile.block().kind,prepared.width,tile.large,progress);
+        List<CanopyMesh.Face> drawable=prepared.geometry.posed(tile.block().kind,prepared.width,tile.large,progress,tile.centeredPlacement);
         if(prepared.drawable!=drawable){
             prepared.drawable=drawable;prepared.opaque.clear();prepared.glass.clear();prepared.progress=Double.NaN;
             for(CanopyMesh.Face f:drawable){

@@ -49,7 +49,7 @@ public final class VehicleTransfer {
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         VehicleFlight.requireThruster(structure);
         VehicleRotation.validate(structure,new VehicleWorld(world,structure));
-        if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear blocks.");
+        if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         EntityGroundVehicle entity=new EntityGroundVehicle(world);entity.install(structure);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
         net.minecraft.entity.Entity seated=null;com.vandorlabs.entity.EntityChairSeat oldSeat=null;

@@ -26,6 +26,8 @@ public class MessageRampController implements IMessage {
 
     private BlockPos pos;
     private int interpolation,escalator;
+    private boolean moat;
+    public MessageRampController withMoat(boolean value){moat=value;return this;}
     public MessageRampController withEscalator(int mode){escalator=mode;return this;}
     public MessageRampController withInterpolation(int style){interpolation=style;return this;}
     private int treadPixels,startOffset,drop,segments,direction,channel,travelAxis,speed;
@@ -100,6 +102,7 @@ public class MessageRampController implements IMessage {
         if(buf.readableBytes()>=8 && buf.getInt(buf.readerIndex())==0x52414D50){buf.readInt();interpolation=buf.readInt();}
         escalator=0;
         if(buf.readableBytes()>=8 && buf.getInt(buf.readerIndex())==0x45534341){buf.readInt();escalator=buf.readInt();}
+        moat=false;if(buf.readableBytes()>=5&&buf.getInt(buf.readerIndex())==0x4D4F4154){buf.readInt();moat=buf.readBoolean();}
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf buf) {
@@ -112,6 +115,7 @@ public class MessageRampController implements IMessage {
 
         buf.writeInt(0x52414D50);buf.writeInt(interpolation);
         buf.writeInt(0x45534341);buf.writeInt(escalator);
+        buf.writeInt(0x4D4F4154);buf.writeBoolean(moat);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
@@ -127,7 +131,7 @@ public class MessageRampController implements IMessage {
                 if (message.direction<0 || message.direction>3 || message.channel<0
                         || message.interpolation<0 || message.interpolation>2 || message.escalator<0 || message.escalator>2) return;
                 te.configureHalfOffsets(player,message.startHalfSteps,message.endHalfSteps,message.treadPixels,message.powerOn,message.slow,message.elevator,
-                        net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures,false,message.interpolation,message.escalator);
+                        net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures,false,message.interpolation,message.escalator,message.moat);
                 te.setRedstoneChannels(message.getRedstoneChannels());
                 player.connection.sendPacket(te.getUpdatePacket());
             });

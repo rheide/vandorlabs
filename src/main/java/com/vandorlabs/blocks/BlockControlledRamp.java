@@ -51,6 +51,11 @@ public class BlockControlledRamp extends BlockVandorDirectional {
         TileEntity te=world.getTileEntity(pos);
         if (te instanceof TileEntityControlledRamp) ((TileEntityControlledRamp)te).recoverOnEvent();
     }
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){
+        TileEntity raw=world.getTileEntity(pos);if(world.isRemote||!(raw instanceof TileEntityControlledRamp))return;
+        TileEntityControlledRamp part=(TileEntityControlledRamp)raw;
+        if(world.isBlockLoaded(part.controller)&&!(world.getTileEntity(part.controller) instanceof com.vandorlabs.tiles.TileEntityRampController))com.vandorlabs.ramp.ControllerRecovery.controllerChanged(world,part.controller);
+    }
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB entityBox,
             List<AxisAlignedBB> colliding,net.minecraft.entity.Entity entity,boolean actual) {
         TileEntity te=world.getTileEntity(pos);

@@ -50,7 +50,7 @@ public final class GuiDuplifier extends GuiContainer {
 
     private String optionLabel(int index) {
         return DuplifierApplyOptions.OPTIONS[index].label + ": "
-                + (DuplifierApplyOptions.enabled(DuplifierApplyOptions.mask(tool()), index)
+                + (DuplifierApplyOptions.enabled(DuplifierApplyOptions.maskWords(tool()), index)
                 ? "On" : "Off");
     }
 
@@ -88,7 +88,7 @@ public final class GuiDuplifier extends GuiContainer {
         } else if (button.id == 98) {
             DuplifierApplyOptions.setConnected(tool(), !DuplifierApplyOptions.connected(tool()));
             PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(
-                    DuplifierApplyOptions.mask(tool()), DuplifierApplyOptions.connected(tool())));
+                    DuplifierApplyOptions.maskWords(tool()), DuplifierApplyOptions.connected(tool())));
             button.displayString = connectedLabel();
         } else if (button.id >= 0 && button.id < DuplifierApplyOptions.PAGES.length) {
             page = button.id;
@@ -96,7 +96,7 @@ public final class GuiDuplifier extends GuiContainer {
         } else if (button.id >= OPTION_START
                 && button.id < OPTION_START + DuplifierApplyOptions.OPTIONS.length) {
             int index = button.id - OPTION_START;
-            long mask = DuplifierApplyOptions.mask(tool()) ^ (1L << index);
+            long[] mask = DuplifierApplyOptions.maskWords(tool());mask[index/64]^=1L<<(index%64);
             DuplifierApplyOptions.setMask(tool(), mask);
             PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(mask,
                     DuplifierApplyOptions.connected(tool())));

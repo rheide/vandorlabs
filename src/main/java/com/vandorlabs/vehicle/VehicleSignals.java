@@ -15,6 +15,7 @@ public final class VehicleSignals {
     private final EntityGroundVehicle craft;
     private final Map<RedstoneChannelMember,Link> links=new IdentityHashMap<>();
     private final Set<BlockPos> dirty=new LinkedHashSet<>();
+    private final Set<RedstoneScreenContents.Row> screenPulses=Collections.newSetFromMap(new IdentityHashMap<>());
     private boolean detached;
     private int revision=-1;
     VehicleSignals(EntityGroundVehicle craft){this.craft=craft;}
@@ -32,7 +33,7 @@ public final class VehicleSignals {
         public void setChannelLevel(int level){
             if(detached || craft.isDead || craft.ownershipBlocked)return;
             TileEntity tile=source.channelTile();BlockPos pos=tile.getPos();
-            if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=(TileEntityCanopy)tile;if(canopy.targetOpen!=(level>0))VehicleCanopies.toggle(craft,pos);}
+            if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=(TileEntityCanopy)tile;if(canopy.large.redstone && canopy.targetOpen!=((level>0)==canopy.large.activateOnPower))VehicleCanopies.toggle(craft,pos);}
             else if(tile instanceof TileEntityLandingGear){TileEntityLandingGear gear=(TileEntityLandingGear)tile;if(gear.getMode()!=0){
                 IBlockState state=craft.view.getBlockState(pos);boolean extend=gear.getMode()==1?level>0:level==0;
                 if(state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend){replaceState(pos,state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend));dirty.add(pos);}
@@ -102,17 +103,19 @@ public final class VehicleSignals {
                 for(int slot=0;slot<2;slot++)if(screen.hasRedstoneScreen(slot) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))for(RedstoneScreenContents.Row row:screen.redstoneScreen(slot).rows())add(wanted,row);
             }
         }
-        for(RedstoneChannelMember source:new ArrayList<>(links.keySet()))if(!wanted.contains(source)){Link old=links.remove(source);RedstoneChannels.unregister(old);}
+        for(RedstoneChannelMember source:new ArrayList<>(links.keySet()))if(!wanted.contains(source)){Link old=links.remove(source);RedstoneChannels.unregister(old);screenPulses.remove(source);}
         for(RedstoneChannelMember source:wanted)if(!links.containsKey(source)){
             Link link=source instanceof RedstoneChannelLatch?new LatchLink((RedstoneChannelLatch)source):new Link(source);links.put(source,link);RedstoneChannels.register(link);
+            if(source instanceof RedstoneScreenContents.Row&&((RedstoneScreenContents.Row)source).pulseUntil()>0)screenPulses.add((RedstoneScreenContents.Row)source);
         }
         }
+        if(!screenPulses.isEmpty())for(RedstoneScreenContents.Row row:new ArrayList<>(screenPulses))if(row.expirePulse(craft.world.getTotalWorldTime())){Link link=links.get(row);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(row.channelTile().getPos());screenPulses.remove(row);}
         for(BlockPos pos:new ArrayList<>(releases.keySet()))if(craft.world.getTotalWorldTime()>=releases.get(pos)){
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
         }
         flush();
     }
-    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();dirty.clear();releases.clear();}
+    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();dirty.clear();releases.clear();screenPulses.clear();}
     public void open(){detached=false;revision=-1;}
     public void persist(){if(!craft.world.isRemote && !detached)flush();}
     public static boolean supports(VehicleWorld world,BlockPos pos){
@@ -134,6 +137,7 @@ public final class VehicleSignals {
         for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);int index=RedstoneScreenInteractions.hitRow(state,tile,slot,eye,end,contents.rows().size());if(index<0)continue;
             RedstoneScreenContents.Row row=contents.rows().get(index);Link link=links.get(row);if(!(link instanceof LatchLink))return false;
+            if(row.pulse){contents.pulseRow(index);screenPulses.add(row);RedstoneChannels.inputChanged(link);dirty.add(pos);flush();return true;}
             int level;
             if(row.slider){double column=RedstoneScreenInteractions.hitColumn(state,tile,slot,eye,end);if(column<RedstoneScreenContents.SLIDER_LEFT || column>=RedstoneScreenContents.SLIDER_RIGHT)return false;
                 level=row.segmentValue((int)((column-RedstoneScreenContents.SLIDER_LEFT)*row.segments()/(RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT)));

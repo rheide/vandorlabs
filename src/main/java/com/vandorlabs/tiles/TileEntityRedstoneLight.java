@@ -305,7 +305,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         }
     }
 
-    private static int particleStyle(String id) {
+    public static int particleStyle(String id) {
         if (id.contains("rocket")) return 0;
         if (id.contains("ion")) return 1;
         if (id.contains("plasma") || id.contains("repulsor")) return 2;
@@ -313,7 +313,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         return 4;
     }
 
-    private static int particleColor(int style) {
+    public static int particleColor(int style) {
         switch (style) {
             case 0: return 0xFF8A24;
             case 2: return 0xC36AFF;
@@ -330,7 +330,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         }
     }
 
-    private static float particleSpeed(int style) {
+    public static float particleSpeed(int style) {
         switch (style) {
             case 0: return .25F;
             case 1: return .17F;

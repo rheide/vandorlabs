@@ -16,6 +16,7 @@ import java.util.*;
 public final class GuiRedstoneScreen extends GuiContainer {
     private final RedstoneScreenContents tile;
     private final List<Boolean> sliders=new ArrayList<>();
+    private final List<Boolean> pulses=new ArrayList<>();
     private final List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();
     private final List<String> labels=new ArrayList<>();
     private final List<ChannelList> channels=new ArrayList<>();
@@ -28,7 +29,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private boolean materials;
     public GuiRedstoneScreen(InventoryPlayer inventory,RedstoneScreenContents tile){
         super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;header=!com.vandorlabs.blocks.RedstoneScreenInteractions.half(tile.getBlockType(),tile.slot());title=tile.title();texture=tile.getHousingTexture();
-        for(int i=0;i<Math.min(tile.rows().size(),tile.maxRows());i++){RedstoneScreenContents.Row row=tile.rows().get(i);labels.add(row.label);channels.add(row.channels);sliders.add(row.slider);mins.add(row.min);maxs.add(row.max);}
+        for(int i=0;i<Math.min(tile.rows().size(),tile.maxRows());i++){RedstoneScreenContents.Row row=tile.rows().get(i);labels.add(row.label);channels.add(row.channels);sliders.add(row.slider);pulses.add(row.pulse);mins.add(row.min);maxs.add(row.max);}
         if(!labels.isEmpty())selected=0;
     }
     public void initGui(){
@@ -63,7 +64,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }
     private void load(){labelField.setText(selected<0?"":labels.get(selected));channelField.setText(selected<0?"0":channels.get(selected).toString());}
     private void refresh(){
-        for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Low: "+mins.get(selected):"High: "+maxs.get(selected);}}
+        for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(pulses.get(selected)?"Control: Pulse":sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Low: "+mins.get(selected):"High: "+maxs.get(selected);}}
 
         titleField.setVisible(header && !materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
@@ -80,11 +81,11 @@ public final class GuiRedstoneScreen extends GuiContainer {
             for(GuiButton b:buttonList)if(b.visible && a.id<b.id && a.x<b.x+b.width && a.x+a.width>b.x && a.y<b.y+b.height && a.y+a.height>b.y)throw new IllegalStateException("Row buttons overlap: "+a.id+"/"+b.id);
         }
     }
-    private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs));mc.player.closeScreen();}
+    private void send(){if(!store())return;texture=housing.selected();PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
-        if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
+        if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);pulses.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
         if(b.id==7 && selected>=0){
-            if(!store())return;sliders.set(selected,!sliders.get(selected));
+            if(!store())return;int type=GuiOptionCycle.next(pulses.get(selected)?2:sliders.get(selected)?1:0,3);sliders.set(selected,type==1);pulses.set(selected,type==2);
             if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>RedstoneScreenContents.SLIDER_LABEL || fontRenderer.getStringWidth(value)>RedstoneScreenContents.SLIDER_LABEL_WIDTH)value=value.substring(0,value.length()-1);labels.set(selected,value);}
             load();refresh();return;
         }
@@ -92,10 +93,10 @@ public final class GuiRedstoneScreen extends GuiContainer {
         if(b.id==9 && selected>=0){maxs.set(selected,GuiOptionCycle.next(maxs.get(selected),mins.get(selected)+2,15));refresh();return;}
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
-        else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);sliders.add(false);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
+        else if(b.id==2 && labels.size()<tile.maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);sliders.add(false);pulses.add(false);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
         else if(b.id==5 || b.id==6){
             int next=moveRow(labels,channels,selected,b.id==5?-1:1);
-            if(next!=selected){Collections.swap(sliders,selected,next);Collections.swap(mins,selected,next);Collections.swap(maxs,selected,next);}
+            if(next!=selected){Collections.swap(sliders,selected,next);Collections.swap(pulses,selected,next);Collections.swap(mins,selected,next);Collections.swap(maxs,selected,next);}
             if(next!=selected){
                 selected=next;scroll=Math.max(Math.min(scroll,selected),selected-visibleRows()+1);
                 load();refresh();

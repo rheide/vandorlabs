@@ -97,7 +97,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
 
     public TileEntityCanopy constituent() {
         TileEntityCanopy t = anchor == null || anchor.equals(pos) ? this : at(world, anchor);
-        return t == null || t.block()==null ? this : t;
+        return t == null || t.block()==null || t.block()!=block() ? this : t;
     }
 
     public TileEntityCanopy owner() {
@@ -303,7 +303,18 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
 
     public RayTraceResult trace(Vec3d start, Vec3d end) {
         // faces() already contains the animation pose, shared with the renderer.
-        return !draws() || block()==null?null:CanopyMesh.trace(faces(),"posed",width(),0,facing(),pos,start,end);
+        if(!draws() || block()==null)return null;
+        RayTraceResult hit=CanopyMesh.trace(faces(),"posed",width(),0,facing(),pos,start,end);
+        if(hit==null || !block().opening() || width()<=block().width)return hit;
+        // A joined shell draws once, but harvesting must address the constituent
+        // under the visible surface. Opening and ceiling transforms retain local X.
+        Vec3d right=new Vec3d(facing().rotateY().getDirectionVec());
+        double localX=hit.hitVec.subtract(new Vec3d(pos).addVector(.5,0,.5)).dotProduct(right)+.5;
+        int column=MathHelper.clamp(MathHelper.floor(localX),0,width()-1);
+        BlockPos selected=pos.offset(facing().rotateY(),column);
+        TileEntityCanopy member=at(world,selected);
+        return member!=null && member.constituent()==member && member.owner()==this
+                ?new RayTraceResult(hit.hitVec,hit.sideHit,selected):null;
     }
 
     public void removeAssembly() {
@@ -328,15 +339,31 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             for(TileEntityCanopy member:group)if(member!=base)member.tryPair();
         }
         BlockCanopy b = base.block();
-        if (b != null)
-            for (BlockPos cell : base.cells())
-                if (!cell.equals(pos)) {
-                    TileEntityCanopy t = at(world, cell);
-                    if (t != null && base.pos.equals(t.anchor)) {
-                        t.removing = true;
-                        world.setBlockToAir(cell);
-                    }
+        if(b==null)return;
+        // Older copies/resizes can retain matching helpers outside the recorded
+        // footprint. Collect before erasing the anchor, without loading chunks or
+        // treating foreign blocks (including ramp reservations) as canopy cells.
+        Set<BlockPos> footprint=new LinkedHashSet<>(base.cells());
+        int radius=Math.max(8,b.width+b.length+b.height);
+        for(int cx=(base.pos.getX()-radius)>>4;cx<=(base.pos.getX()+radius)>>4;cx++)
+            for(int cz=(base.pos.getZ()-radius)>>4;cz<=(base.pos.getZ()+radius)>>4;cz++){
+                net.minecraft.world.chunk.Chunk chunk=world.getChunkProvider().getLoadedChunk(cx,cz);
+                if(chunk==null)continue;
+                for(TileEntity raw:new ArrayList<>(chunk.getTileEntityMap().values()))if(raw instanceof TileEntityCanopy){
+                    TileEntityCanopy member=(TileEntityCanopy)raw;
+                    if(base.pos.equals(member.anchor) && member.block()==b)footprint.add(member.pos);
                 }
+            }
+        for(BlockPos cell:footprint){
+            TileEntityCanopy member=at(world,cell);
+            if(member!=null && base.pos.equals(member.anchor) && member.block()==b)member.removing=true;
+        }
+        for(BlockPos cell:footprint)if(!cell.equals(pos)){
+            TileEntityCanopy member=at(world,cell);
+            if(member!=null && base.pos.equals(member.anchor) && world.getBlockState(cell).getBlock()==b)
+                world.setBlockToAir(cell);
+        }
+
     }
 
     private boolean channelPowered,powerInitialized;
@@ -354,7 +381,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public void refreshPower(){
         if(world==null || world.isRemote || !draws() || !opening() || !large.redstone)return;
         com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);
-        boolean next=channelPowered || hasLocalRedstoneSignal();if(next!=targetOpen){targetOpen=next;sync();}
+        boolean next=(channelPowered || hasLocalRedstoneSignal())==large.activateOnPower;if(next!=targetOpen){targetOpen=next;sync();}
     }
     @Override public void onLoad(){super.onLoad();com.vandorlabs.redstone.RedstoneChannels.register(this);}
     @Override public void invalidate(){com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}

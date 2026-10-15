@@ -35,7 +35,10 @@ public final class VehicleEscalators {
         if(state==null)state=NBTUtil.readBlockState(tag.getCompoundTag(SaveSchema.Ramp.ORIGINAL));
         Map<BlockPos,NBTTagCompound> tiles=new HashMap<>();NBTTagList data=tag.getTagList("RampSourceTiles",10);
         for(int n=0;n<data.tagCount();n++){NBTTagCompound entry=data.getCompoundTagAt(n);tiles.put(position(entry),entry.getCompoundTag("Tile").copy());}
-        List<VehicleStructure.Cell> cells=new ArrayList<>();for(BlockPos p:ramp.vehicleSources())cells.add(new VehicleStructure.Cell(p,state,tiles.get(p)));return cells;
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(BlockPos p:ramp.vehicleSources()){
+            NBTTagCompound tile=tiles.get(p);IBlockState original=com.vandorlabs.compat.RampStairs.state(state,tile);
+            cells.add(new VehicleStructure.Cell(p,original,original.getBlock().hasTileEntity(original)?tile:null));
+        }return cells;
     }
     /** Return null for ordinary matching, or the virtual original for a saved escalator source. */
     public static VehicleStructure.Cell original(World world,VehicleStructure craft,BlockPos origin,BlockPos p){

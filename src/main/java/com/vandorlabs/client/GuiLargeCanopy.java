@@ -45,7 +45,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
             buttonList.add(layout.control(6,y,"Hinge: "+new String[]{"Left","Right","Top","Bottom"}[draft.hinge]));y+=22;
         }
         if(tile.resizable() || tile.block().opening()){
-            buttonList.add(layout.control(7,y,"Redstone: "+(draft.redstone?"On":"Off")));y+=22;
+            buttonList.add(layout.control(7,y,"Trigger: "+(!draft.redstone?"Disabled":draft.activateOnPower?"redstone ON":"redstone OFF")));y+=22;
             channelLabelX=layout.controlsX;channelLabelY=guiTop+y+5;channels=new GuiTextField(10,fontRenderer,layout.controlsX+48,guiTop+y,106,18);ChannelFields.configure(channels);channels.setText(text);
         }else channels=null;
         buttonList.add(layout.done(8));ready=true;
@@ -72,7 +72,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
             case 4:draft.angle=GuiOptionCycle.next(draft.angle,tile.block().length==3?4:3);break;
             case 5:draft.openable=!draft.openable;break;
             case 6:draft.hinge=GuiOptionCycle.next(draft.hinge,4);break;
-            case 7:draft.redstone=!draft.redstone;break;
+            case 7:int trigger=GuiOptionCycle.next(!draft.redstone?0:draft.activateOnPower?1:2,3);draft.redstone=trigger!=0;draft.activateOnPower=trigger!=2;break;
             case 8:apply();mc.player.closeScreen();return;
         }
         apply();initGui();
@@ -81,7 +81,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
         if(channels!=null)channels.mouseClicked(x,y,button);
         if(button==0)for(GuiButton control:buttonList)if(control instanceof GuiSlider && control.enabled && control.visible && x>=control.x && x<control.x+control.width && y>=control.y && y<control.y+control.height)sliderDragging=true;
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,6,11,12))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,11,12))return;
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int button){if(button==0){for(GuiButton control:buttonList)if(control instanceof GuiSlider)control.mouseReleased(x,y);sliderDragging=false;if(sliderDirty)apply();reconcile();}super.mouseReleased(x,y,button);}

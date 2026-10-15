@@ -45,6 +45,7 @@ public final class LargeCanopyRuntimeChecks {
     }
     private static double area(List<CanopyMesh.Face> faces){double result=0;for(CanopyMesh.Face face:faces)for(int i=1;i<face.vertices.length-1;i++)result+=face.vertices[i].subtract(face.vertices[0]).crossProduct(face.vertices[i+1].subtract(face.vertices[0])).lengthVector()/2;return result;}
     static void materialUvs(){
+        rearDepthSeparation();
         List<List<CanopyMesh.Face>> models=new ArrayList<>();
         for(int depth:new int[]{2,3})for(int width:new int[]{1,3,9})for(int angle=0;angle<(depth==3?4:3);angle++)models.add(OpeningCanopyGeometry.faces(width,depth,angle,false));
         for(int width:new int[]{3,5}){LargeCanopySettings settings=new LargeCanopySettings();settings.depth=80;models.add(LargeCanopyGeometry.faces(width,settings,true));}
@@ -60,6 +61,32 @@ public final class LargeCanopyRuntimeChecks {
         List<CanopyMesh.Face> tiles=CanopyMaterialUv.drawable(CanopyFinishes.faces(Collections.singletonList(panel),0,1,8,true));
         require(tiles.size()==6,"Tile repeats a 3x2 panel exactly six times at block scale");
         System.out.println("[vandorlabs][reprolab] canopy-material-uv PASS Fit-full-artwork Tile-block-scale atlas-clipping area-preserved profiles=3 widths=1,2,3 front-frames=3,5");
+    }
+    private static void rearDepthSeparation(){
+        int rearFaces=0;
+        for(int width:new int[]{3,5})for(int depth:new int[]{0,16,80})for(boolean anchored:new boolean[]{false,true}){
+            LargeCanopySettings settings=new LargeCanopySettings();settings.depth=depth;
+            List<CanopyMesh.Face> source=LargeCanopyGeometry.faces(width,settings,anchored);
+            List<AxisAlignedBB> physical=CanopyMesh.collision(source,"front_canopy_glass",width,0,EnumFacing.NORTH,BlockPos.ORIGIN);
+            CanopyRenderGeometry geometry=new CanopyRenderGeometry(source);List<CanopyMesh.Face> unshifted=geometry.faces(false);
+            List<CanopyMesh.Face> rendered=geometry.posed("front_canopy_glass",width,settings,0,anchored);
+            require(unshifted.size()==rendered.size(),"rear clearance preserves face topology");
+            double extent=Math.max(1D/64,depth/16D),rear=anchored?0:extent;
+            for(int f=0;f<unshifted.size();f++){
+                CanopyMesh.Face before=unshifted.get(f),after=rendered.get(f);boolean rearPlane=true;
+                require(before.material.equals(after.material)&&before.doubleSided==after.doubleSided&&before.uv.length==after.uv.length,"rear clearance preserves finish and transparency flags");
+                for(int v=0;v<before.vertices.length;v++){
+                    Vec3d a=before.vertices[v],b=after.vertices[v];rearPlane&=Math.abs(a.z-rear)<1e-10;
+                    require(a.x==b.x&&a.y==b.y,"rear clearance preserves horizontal joins and vertical seams");
+                    require(Math.abs(b.z-com.vandorlabs.render.FrontCanopyRenderDepth.coordinate(a.z,depth/16D,anchored))<1e-10,"real mesh uses bounded rear clearance");
+                    require(Arrays.equals(before.uv[v],after.uv[v]),"rear clearance preserves UVs exactly");
+                }
+                if(rearPlane){rearFaces++;for(Vec3d vertex:after.vertices)require(Math.abs(vertex.z-rear)>1D/1024,"rear rim is separated from a coplanar wall cap");}
+            }
+            require(physical.equals(CanopyMesh.collision(source,"front_canopy_glass",width,0,EnumFacing.NORTH,BlockPos.ORIGIN)),"drawing does not mutate physical collision mesh");
+        }
+        require(rearFaces>0,"regression includes actual rear-rim faces");
+        System.out.println("[vandorlabs][reprolab] canopy-rear-depth PASS real-mesh rear-wall-separation source-collision-unchanged exact-UVs shared-seams depth-extrema both-anchor-conventions rear-faces="+rearFaces);
     }
     public static void icons(Minecraft mc){
         for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockCanopy && LargeCanopySettings.supports(((BlockCanopy)block).kind))for(int depth:new int[]{0,16,80})for(int scale:new int[]{10,71,100})for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){

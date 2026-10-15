@@ -18,11 +18,13 @@ import java.util.*;
 /** Release regressions use actual item placement, dust, ownership and shared moving poses. */
 final class CanopyReleaseRuntimeChecks {
     private static int farUses;
+    private static double maxRearRenderGap;
     private static final BlockPos BASE=new BlockPos(80,100,80);
     private static void require(boolean value,String text){if(!value)throw new IllegalStateException("canopy 2.0: "+text);}
     private static void clear(World world){for(BlockPos p:BlockPos.getAllInBox(BASE.add(-10,-10,-10),BASE.add(10,10,10)))world.setBlockToAir(p);}
     private static LargeCanopySettings copy(LargeCanopySettings settings){NBTTagCompound tag=new NBTTagCompound();settings.write(tag);LargeCanopySettings result=new LargeCanopySettings();result.read(tag);return result;}
     static void run(EntityPlayerMP player) {
+        CanopyTriggerInversionChecks.run(player);
         World world=player.world;boolean sneak=player.isSneaking();ItemStack held=player.getHeldItemMainhand();float yaw=player.rotationYaw,pitch=player.rotationPitch;Vec3d originalPosition=player.getPositionVector();
         try {
             player.setSneaking(false);farUses=0;
@@ -94,7 +96,7 @@ final class CanopyReleaseRuntimeChecks {
             require(!new LargeCanopySettings().slideForward,"direction defaults backward");
             mountClearance();opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
         }finally{clear(world);player.setHeldItem(EnumHand.MAIN_HAND,held);player.setSneaking(sneak);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);}
-        System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 closed-glass-occlusion exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses);
+        System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 closed-glass-occlusion exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses+" max-render-pick-gap="+maxRearRenderGap);
     }
     private static void mountClearance(){
         for(int width:new int[]{3,5})for(int mount:new int[]{2,3})for(int depth:new int[]{0,1,15,16,17,64,79,80})for(int scale:new int[]{10,71,100}){
@@ -122,9 +124,15 @@ final class CanopyReleaseRuntimeChecks {
         require(hit!=null && hit.hitVec.squareDistanceTo(expected)<1e-12,"animated front pick matches panel "+detail);
         require(tile.boxes().stream().anyMatch(box->box.grow(1e-6).contains(expected)),"animated front collision follows panel "+detail);
         require(tile.getRenderBoundingBox().grow(1e-6).contains(expected),"animated front stays inside render bounds "+detail);
-        List<CanopyMesh.Face> rendered=new CanopyRenderGeometry(tile.baseFaces()).posed(tile.block().kind,tile.width(),tile.large,tile.progress);
+        List<CanopyMesh.Face> rendered=new CanopyRenderGeometry(tile.baseFaces()).posed(tile.block().kind,tile.width(),tile.large,tile.progress,tile.centeredPlacement);
         RayTraceResult drawn=CanopyMesh.trace(rendered,"posed",tile.width(),0,tile.facing(),tile.getPos(),start,end);
-        require(drawn!=null && drawn.hitVec.squareDistanceTo(expected)<1e-12,"animated front rendered surface matches picking "+detail);
+        double gap=drawn==null?Double.POSITIVE_INFINITY:drawn.hitVec.distanceTo(expected);
+        double inset=com.vandorlabs.render.FrontCanopyRenderDepth.REAR_CLEARANCE,extent=Math.max(1D/64,tile.large.depth/16D);
+        // The render-only affine compression changes a normal-ray intersection
+        // by at most inset / its minimum scale. Collision/picking remain exact above.
+        double allowed=LargeCanopySettings.supports(tile.block().kind)?inset/(1-inset/extent)+1e-7:1e-6;
+        maxRearRenderGap=Math.max(maxRearRenderGap,gap);
+        require(drawn!=null && gap<=allowed,"animated front rendered surface stays within declared rear clearance "+detail+" gap="+gap+" allowed="+allowed);
         List<CanopyMesh.Face> closed=tile.faces(0),posed=tile.faces();
         require(closed.size()==posed.size(),"hinge retains face topology "+detail);
         for(int f=0;f<posed.size();f++)for(int v=1;v<posed.get(f).vertices.length;v++){

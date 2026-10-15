@@ -230,7 +230,19 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         net.minecraft.world.World previousWorld=dispatcher.world;
         dispatcher.world=e.view;dispatcher.entityX=localCamera.x;dispatcher.entityY=localCamera.y;dispatcher.entityZ=localCamera.z;
         tiles(e,regions);
-        try {for(TileDraw draw:regions.tiles) {
+        // Glass never writes depth: draw opaque tile artwork first, then blend
+        // glazing from the far side of the craft toward the local camera.
+        List<TileDraw> orderedTiles=new ArrayList<>(regions.tiles);
+        orderedTiles.sort((a,b)->{
+            boolean glassA=glassRamp(a.tile),glassB=glassRamp(b.tile);
+            if(glassA!=glassB)return glassA?1:-1;
+            if(glassA){int distance=Double.compare(b.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),
+                    a.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z));if(distance!=0)return distance;}
+            // Equal-distance glazing still needs a stable blend order: integer
+            // alpha rounding must not depend on immutable snapshot insertion order.
+            return a.tile.getPos().compareTo(b.tile.getPos());
+        });
+        try {for(TileDraw draw:orderedTiles) {
             TileEntity tile=draw.tile;
             try {
                 net.minecraft.util.math.AxisAlignedBB box=tile.getRenderBoundingBox();
@@ -246,5 +258,9 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             }
         }}finally{dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
         GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
+    }
+    private static boolean glassRamp(TileEntity tile){
+        return tile instanceof com.vandorlabs.tiles.TileEntityControlledRamp
+                && com.vandorlabs.compat.RampMaterials.isFullGlass(((com.vandorlabs.tiles.TileEntityControlledRamp)tile).source);
     }
 }

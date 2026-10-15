@@ -20,6 +20,8 @@ public final class MessageRedstoneScreen implements IMessage {
     private final List<ChannelList> channels=new ArrayList<>();
     private boolean valid;
     private final List<Boolean> sliders=new ArrayList<>();
+    private final List<Boolean> pulses=new ArrayList<>();
+    public MessageRedstoneScreen withPulses(List<Boolean> values){pulses.clear();pulses.addAll(values);return this;}
     private final List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();
     public MessageRedstoneScreen withSliders(List<Boolean> sliders,List<Integer> mins,List<Integer> maxs){this.sliders.addAll(sliders);this.mins.addAll(mins);this.maxs.addAll(maxs);return this;}
 
@@ -41,9 +43,10 @@ public final class MessageRedstoneScreen implements IMessage {
         }
         for(int i=0;i<labels.size();i++){b.writeBoolean(sliders.size()>i && sliders.get(i));b.writeByte(mins.size()>i?mins.get(i):0);b.writeByte(maxs.size()>i?maxs.get(i):15);}
         byte[] heading=title.getBytes(StandardCharsets.UTF_8);b.writeByte(heading.length);b.writeBytes(heading);b.writeByte(slot);
+        b.writeInt(0x50554C53);for(int i=0;i<labels.size();i++)b.writeBoolean(pulses.size()>i&&pulses.get(i));
     }
     public void fromBytes(ByteBuf b){
-        valid=false;labels.clear();channels.clear();sliders.clear();mins.clear();maxs.clear();
+        valid=false;labels.clear();channels.clear();sliders.clear();pulses.clear();mins.clear();maxs.clear();
         try {
             pos=BlockPos.fromLong(b.readLong());housing=b.readInt();int count=b.readUnsignedByte();
             if(count>RedstoneScreenContents.MAX_ROWS)return;
@@ -62,7 +65,9 @@ public final class MessageRedstoneScreen implements IMessage {
             }
             int bytes=b.readUnsignedByte();if(bytes>RedstoneScreenContents.MAX_TITLE*4 || b.readableBytes()<bytes)return;
             title=b.readCharSequence(bytes,StandardCharsets.UTF_8).toString();
-            slot=b.readUnsignedByte();valid=slot<=1 && RedstoneScreenContents.validTitle(title) && !b.isReadable();
+            slot=b.readUnsignedByte();
+            if(b.isReadable()){if(b.readableBytes()!=4+count||b.readInt()!=0x50554C53)return;for(int i=0;i<count;i++){boolean pulse=b.readBoolean();if(pulse&&sliders.get(i))return;pulses.add(pulse);}}
+            valid=slot<=1 && RedstoneScreenContents.validTitle(title) && !b.isReadable();
         }catch(IndexOutOfBoundsException | IllegalArgumentException malformed){valid=false;}
     }
     public static final class Handler implements IMessageHandler<MessageRedstoneScreen,IMessage>{
@@ -78,7 +83,7 @@ public final class MessageRedstoneScreen implements IMessage {
                 net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();
                 for(int i=0;i<m.labels.size();i++){
                     net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();row.setString("Label",m.labels.get(i));com.vandorlabs.redstone.ChannelData.write(row,m.channels.get(i));
-                    row.setBoolean("Slider",m.sliders.get(i));row.setInteger("Min",m.mins.get(i));row.setInteger("Max",m.maxs.get(i));rows.appendTag(row);
+                    row.setBoolean("Slider",m.sliders.get(i));row.setBoolean("Pulse",m.pulses.size()>i&&m.pulses.get(i));row.setInteger("Min",m.mins.get(i));row.setInteger("Max",m.maxs.get(i));rows.appendTag(row);
                 }
                 if(contents.applyRowConfiguration(m.title,rows))container.getTileEntity().setHousingTexture(m.housing);
             });return null;

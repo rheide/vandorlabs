@@ -201,7 +201,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,8,9,10,11,12,13))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,8,9,10,11,12,13,15,16,18,19))return;
         if (housingList != null && housingList.click(x, y, button)) {
             sideTexture = housingList.selected();
             return;

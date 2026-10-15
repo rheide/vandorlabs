@@ -25,6 +25,21 @@ public final class VehicleRamps {
                 if(tile instanceof TileEntityControlledRamp&&((TileEntityControlledRamp)tile).controller.equals(at))removed.add(cell.pos);}
             Map<BlockPos,VehicleStructure.Cell> cells=new LinkedHashMap<>();
             for(VehicleStructure.Cell cell:craft.structure.cells)if(!removed.contains(cell.pos))cells.put(cell.pos,cell);
+            if(ramp.moat){
+                VehiclePose currentPose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
+                double centerX=craft.structure.bounds.maxX/2,centerZ=craft.structure.bounds.maxZ/2;
+                for(AxisAlignedBB swept:ramp.vehicleMoatSweep()){
+                    AxisAlignedBB inside=swept.grow(-1e-5);
+                    for(VehicleStructure.Cell fixed:cells.values())if(inside.intersects(new AxisAlignedBB(fixed.pos)))
+                        throw new IllegalArgumentException("Moat rotation crosses another vehicle component");
+                    AxisAlignedBB absolute=currentPose.world(swept,centerX,centerZ).grow(-1e-5);
+                    for(BlockPos p:BlockPos.getAllInBox(new BlockPos(absolute.minX,absolute.minY,absolute.minZ),new BlockPos(absolute.maxX,absolute.maxY,absolute.maxZ)))
+                        if(!craft.world.isBlockLoaded(p))throw new IllegalArgumentException("Moat rotation reaches unloaded terrain");
+                    if(!craft.world.getCollisionBoxes(craft,absolute).isEmpty())throw new IllegalArgumentException("Moat rotation is blocked by terrain");
+                    for(net.minecraft.entity.Entity entity:craft.world.getEntitiesWithinAABBExcludingEntity(craft,absolute))
+                        if(!craft.getPassengers().contains(entity)&&entity.canBeCollidedWith())throw new IllegalArgumentException("Moat rotation is blocked by an occupant");
+                }
+            }
             for(VehicleStructure.Cell part:parts){if(cells.containsKey(part.pos))throw new IllegalArgumentException("Ramp movement overlaps another vehicle component");cells.put(part.pos,part);}
             NBTTagCompound controller=ramp.writeToNBT(new NBTTagCompound());controller.setBoolean("ChannelSignal",powered);
             cells.put(at,new VehicleStructure.Cell(at,craft.structure.at(at).state,controller));

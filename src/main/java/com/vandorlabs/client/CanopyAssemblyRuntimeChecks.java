@@ -39,7 +39,7 @@ final class CanopyAssemblyRuntimeChecks {
                 require(TileEntityCanopy.at(world,pos).owner()==owner,"member resolves shared owner");
                 Vec3d top=CanopyMesh.rotate(new Vec3d(column+.5,3,.9),facing).add(new Vec3d(BASE));
                 RayTraceResult trace=owner.trace(top,top.addVector(0,-4,0));
-                require(trace!=null && trace.getBlockPos().equals(BASE),"exact glazing trace for each constituent");
+                require(trace!=null && trace.getBlockPos().equals(pos),"exact glazing trace addresses each constituent");
                 block.onBlockActivated(world,pos,state,null,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
                 for(int tick=0;tick<16;tick++)owner.update();
                 require(owner.progress==1,"each member opens shared shell");

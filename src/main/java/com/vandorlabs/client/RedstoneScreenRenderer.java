@@ -59,7 +59,7 @@ final class RedstoneScreenRenderer {
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             text(font,font.trimStringToWidth(row.label,row.slider?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
-            if(!row.slider)text(font,row.active()?"ON":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
+            if(!row.slider)text(font,row.active()?"ON":row.pulse?"GO":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
     }
