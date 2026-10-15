@@ -52,6 +52,7 @@ public final class VehicleRuntimeChecks {
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();world.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,state,player,new ItemStack(ModBlocks.PILOT_SEAT));
         ((TileEntityPilotSeat)world.getTileEntity(seat)).setTaxiMode(false);
         world.setBlockState(seat.east(),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
+        world.setBlockState(seat.east(2),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
         SignalSource source=new SignalSource();source.setWorld(world);source.setPos(base.west(3));com.vandorlabs.redstone.RedstoneChannels.register(source);
         try {
             TileEntityPilotSeat pilot=(TileEntityPilotSeat)world.getTileEntity(seat);pilot.setRedstoneChannel(5317);
@@ -146,6 +147,7 @@ public final class VehicleRuntimeChecks {
         }
         IBlockState seat=ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING,EnumFacing.EAST);
         w.setBlockState(SEAT,seat,3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,SEAT,seat,p,new ItemStack(ModBlocks.PILOT_SEAT));((TileEntityPilotSeat)w.getTileEntity(SEAT)).setTaxiMode(false);
+        w.setBlockState(ORIGIN.add(1,2,0),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),3);
         String[] engines={"rocket_thruster","ion_drive","plasma_vent","impulse_engine"};
         for(int i=0;i<engines.length;i++) {
             Block engine=Block.getBlockFromName("vandorlabs:"+engines[i]);require(engine instanceof BlockPropulsionLight,"propulsion fixture "+engines[i]);

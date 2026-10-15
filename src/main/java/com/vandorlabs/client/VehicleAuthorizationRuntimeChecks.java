@@ -32,7 +32,8 @@ public final class VehicleAuthorizationRuntimeChecks {
             require(upper!=null,"fixture must include generated upper ramp cells");
             Breaks denied=new Breaks(upper);MinecraftForge.EVENT_BUS.register(denied);
             try{
-                Class<?> type=Class.forName("com.vandorlabs.vehicle.VehicleService$Preview");java.lang.reflect.Constructor<?> constructor=type.getDeclaredConstructor(WorldServer.class,VehicleStructure.class,BlockPos.class,EntityGroundVehicle.class);constructor.setAccessible(true);Object preview=constructor.newInstance(player.getServerWorld(),craft,origin,null);java.lang.reflect.Field token=type.getDeclaredField("token");token.setAccessible(true);previews.put(player.getUniqueID(),preview);
+                require(craft.controller()!=null,"authorization fixture uses a genuine Vehicle Controller");
+                Class<?> type=Class.forName("com.vandorlabs.vehicle.VehicleService$Preview");java.lang.reflect.Constructor<?> constructor=type.getDeclaredConstructor(WorldServer.class,VehicleStructure.class,BlockPos.class,EntityGroundVehicle.class,String.class,boolean.class,BlockPos.class);constructor.setAccessible(true);Object preview=constructor.newInstance(player.getServerWorld(),craft,origin,null,"",true,craft.controller().pos);java.lang.reflect.Field token=type.getDeclaredField("token");token.setAccessible(true);previews.put(player.getUniqueID(),preview);
                 VehicleService.confirm(player,(UUID)token.get(preview));
             }finally{MinecraftForge.EVENT_BUS.unregister(denied);}
             require(denied.seen.contains(upper),"manual confirmation bypassed generated upper-cell protection");

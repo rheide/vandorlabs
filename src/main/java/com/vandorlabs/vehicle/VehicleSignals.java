@@ -185,7 +185,8 @@ public final class VehicleSignals {
     static void save(EntityGroundVehicle craft,BlockPos pos,NBTTagCompound data,IBlockState state){
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(pos)?new VehicleStructure.Cell(pos,state,data):cell);
         boolean geometry=craft.structure.at(pos).state!=state || craft.view.getTileEntity(pos) instanceof TileEntityLandingGear;
-        craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),geometry);
+        VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+        if(craft.view.getTileEntity(pos) instanceof TileEntityPilotSeat)craft.updateSettings(next);else craft.updateCanopies(next,geometry);
     }
     public static void apply(EntityGroundVehicle craft,VehicleNetwork.Packet packet){
         TileEntity tile=craft.view.getTileEntity(packet.origin);if(tile==null)return;

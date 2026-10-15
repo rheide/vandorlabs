@@ -34,10 +34,17 @@ public final class ItemConfigurizer extends Item {
     @Override public net.minecraft.util.ActionResult<net.minecraft.item.ItemStack> onItemRightClick(World world,EntityPlayer player,EnumHand hand) {
         com.vandorlabs.vehicle.EntityGroundVehicle craft=player.getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle?(com.vandorlabs.vehicle.EntityGroundVehicle)player.getRidingEntity():com.vandorlabs.vehicle.VehicleLookup.pointed(player);
         if(hand==EnumHand.MAIN_HAND && craft!=null) {
-            if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewParking((net.minecraft.entity.player.EntityPlayerMP)player,craft);
+            if(!world.isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)player,craft);
             return new net.minecraft.util.ActionResult<>(net.minecraft.util.EnumActionResult.SUCCESS,player.getHeldItem(hand));
         }
         return super.onItemRightClick(world,player,hand);
+    }
+    private static void configureCraft(net.minecraft.entity.player.EntityPlayerMP player,com.vandorlabs.vehicle.EntityGroundVehicle craft){
+        com.vandorlabs.vehicle.VehicleInteraction.Target target=com.vandorlabs.vehicle.VehicleInteraction.pointed(player);
+        if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.BOARD){
+            BlockPos seat=target.hit.cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER)?target.hit.cell.pos.down():target.hit.cell.pos;com.vandorlabs.vehicle.VehicleService.previewSeat(player,craft,seat);
+        }else if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.CONTROLLER)com.vandorlabs.vehicle.VehicleService.previewController(player,craft,target.hit.cell.pos);
+        else com.vandorlabs.vehicle.VehicleService.previewParking(player,craft);
     }
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH)
     public static void onArmorStand(PlayerInteractEvent.EntityInteractSpecific event) {
@@ -69,7 +76,7 @@ public final class ItemConfigurizer extends Item {
                 || event.getItemStack().getItem() != ModItems.CONFIGURIZER) return;
         World world = event.getWorld();
         com.vandorlabs.vehicle.EntityGroundVehicle craft=event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle?(com.vandorlabs.vehicle.EntityGroundVehicle)event.getEntityPlayer().getRidingEntity():com.vandorlabs.vehicle.VehicleLookup.pointed(event.getEntityPlayer());
-        if(craft!=null){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewParking((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),craft);return;}
+        if(craft!=null){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),craft);return;}
         BlockPos pos = ProgrammableTarget.settingsPos(world, event.getPos());
         IBlockState state = world.getBlockState(pos);
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat) {
@@ -82,6 +89,7 @@ public final class ItemConfigurizer extends Item {
             if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewAssembly((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),pos);
             return;
         }
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewController((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),pos);return;}
         TileEntity tile = world.getTileEntity(pos);
         int gui;
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && ((com.vandorlabs.tiles.TileEntityCanopy)tile).owner().configurable()){tile=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();pos=tile.getPos();gui=GuiHandler.GUI_LARGE_CANOPY;}

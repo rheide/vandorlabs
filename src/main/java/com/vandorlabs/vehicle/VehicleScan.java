@@ -22,7 +22,8 @@ public final class VehicleScan {
     private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
     private final Set<BlockPos> rampSections=new HashSet<>();
-    private int minX, minY, minZ, maxX, maxY, maxZ, seats,autopilots;
+    private int minX, minY, minZ, maxX, maxY, maxZ, seats,autopilots,controllers;
+    private BlockPos pilot;
     private Double gearBottomY;
     public BlockPos origin;
     public VehicleStructure result;
@@ -80,6 +81,7 @@ public final class VehicleScan {
                 require(!state.getMaterial().isLiquid() && block!=net.minecraft.init.Blocks.BEDROCK
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
                 TileEntity tile=world.getTileEntity(p);
+                if(block instanceof BlockVehicleController)require(++controllers<=1,"A craft can contain at most one Vehicle Controller.");
                 if(tile instanceof TileEntityAutopilot && !(tile instanceof TileEntityWaypoint))require(++autopilots<=1,"A craft can contain at most one Autopilot block.");
                 require(block.getRegistryName()!=null, "Unregistered block at "+p);
                 require(!block.hasTileEntity(state) || tile!=null, "Missing component data at "+p);
@@ -97,7 +99,7 @@ public final class VehicleScan {
                 cells.put(p,new VehicleStructure.Cell(p,state,data));
                 if(block instanceof BlockPilotSeat) {
                     boolean upper=state.getValue(BlockPilotSeat.UPPER);
-                    if(!upper)seats++;
+                    if(!upper){seats++;if(pilot==null || p.equals(start))pilot=p;}
                     if(!upper && BlockPilotSeat.canopyAbove(world,p))enqueue(p.up());
                     else linked(upper?p.down():p.up(),block);
                 } else if(block instanceof BlockBridgeChair || block instanceof BlockConnectedSeat) {
@@ -179,13 +181,13 @@ public final class VehicleScan {
                 if(!(block instanceof BlockControlledRamp))for(EnumFacing face:EnumFacing.values())if(touches(world,p,state,face))enqueue(p.offset(face));
             }
             if(queue.isEmpty()) {
-                require(seats==1, "A craft must contain exactly one Pilot Seat.");
+                require(seats>=1, "A craft must contain at least one Pilot Seat.");
                 require(gears.size()>=3, "A craft needs at least three landing gear or wheel supports.");
                 origin=new BlockPos(minX,minY,minZ);
                 List<VehicleStructure.Cell> local=new ArrayList<>();
                 for(VehicleStructure.Cell cell:cells.values())local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,
                         cell.tileData()==null?null:VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin))));
-                result=new VehicleStructure(local,start.subtract(origin),world.getBlockState(start).getValue(BlockPilotSeat.FACING),gears.size());
+                result=new VehicleStructure(local,pilot.subtract(origin),world.getBlockState(pilot).getValue(BlockPilotSeat.FACING),gears.size());
                 VehicleRotation.validate(result,new VehicleWorld(world,result));
                 result.encode(); // Enforce the byte limit before a preview or mutation.
             }

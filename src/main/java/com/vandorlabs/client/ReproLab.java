@@ -596,6 +596,10 @@ public class ReproLab {
             try {if(LargeCanopyVisualChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("large canopy live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.vehicleControllerChecksOnly")) {
+            try {if(VehicleControllerRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle Controller live checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.pilotInspectionChecksOnly")) {
             try {PilotInspectionChecks.tick(mc);}catch(Exception failure){throw new IllegalStateException("Pilot Seat inspection live checks",failure);}
             return;

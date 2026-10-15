@@ -64,13 +64,16 @@ public final class VehicleNetwork {
         send(player,snapshot,entity,token,origin,preview,parking,"");
     }
     public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking,String status) {
+        send(player,snapshot,entity,token,origin,preview,parking,status,false);
+    }
+    public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking,String status,boolean controller) {
         try {
             Entity raw=entity<0?null:player.world.getEntityByID(entity);
             byte[] bytes=!preview && raw instanceof EntityGroundVehicle && ((EntityGroundVehicle)raw).structure==snapshot
                     ?((EntityGroundVehicle)raw).snapshotBytes():snapshot.encode();
             for(int offset=0;offset<bytes.length;offset+=FRAGMENT) {
                 Packet p=new Packet(preview?PREVIEW:SNAPSHOT);p.entity=entity;p.token=token;p.origin=origin;p.flag=parking;p.total=bytes.length;p.offset=offset;
-                p.text=status; p.sequence=status.isEmpty()?0:-1;
+                p.text=status; p.sequence=status.isEmpty()?0:-1;p.forward=(byte)(controller?1:0);
                 p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));PacketHandler.INSTANCE.sendTo(p,player);
             }
         }catch(Exception e){error(player,"Cannot send craft: "+e.getMessage());}
@@ -78,5 +81,6 @@ public final class VehicleNetwork {
     public static void inspection(EntityPlayerMP player,BlockPos seat,String text) {
         Packet packet=new Packet(INSPECTION);packet.origin=seat;packet.text=text==null?"Inspection failed.":text.substring(0,Math.min(500,text.length()));PacketHandler.INSTANCE.sendTo(packet,player);
     }
+    public static void controllerInspection(EntityPlayerMP player,BlockPos pos,String text){Packet packet=new Packet(INSPECTION);packet.forward=1;packet.sequence=-1;packet.origin=pos;packet.text=text==null?"Inspection unavailable.":text.substring(0,Math.min(500,text.length()));PacketHandler.INSTANCE.sendTo(packet,player);}
     public static void error(EntityPlayerMP player,String text){Packet p=new Packet(ERROR);p.text=text.length()>500?text.substring(0,500):text;PacketHandler.INSTANCE.sendTo(p,player);}
 }

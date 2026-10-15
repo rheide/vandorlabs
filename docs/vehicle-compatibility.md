@@ -20,6 +20,14 @@ With the checked optional mods installed, Mekanism's replacement for `minecraft:
 
 The dependency-free checks use the actual registered block and tile classes. In particular, an unknown block's default no-op rotation is insufficient for a directional property. Horizontal facing and axis values must rotate correctly; a complete four-turn cycle must restore the state. Fixed non-cube decorations without an orientation representation are refused. The installed Mekanism energy-cube implementation interprets its side configuration using its facing; Immersive Engineering capacitors store explicit world-side keys. These formats require different adapters.
 
+## Vehicle Controller and pilot seats
+
+Place one Vehicle Controller in the connected craft and at least one complete Pilot Seat. Right-click the controller, use the Configurizer, or sneak-right-click to inspect the craft and assemble it. The captured controller provides parking controls. New assemblies require the controller; older captured craft can still be parked so a controller can be installed.
+
+Pilot Seat dialogs contain seat height and vehicle-mode settings and apply changes automatically. They do not assemble or park the craft. Multiple Pilot Seats are supported: right-click an empty seat to board it. The first seated pilot controls movement until they dismount, then control passes to the next seated pilot. Each occupant keeps their own seat position and height. Parking transfers seated occupants to their corresponding restored seats.
+
+Autopilot uses a cyan navigation texture, Waypoint an amber route marker, and Vehicle Controller a green chassis symbol.
+
 ## Limits and wheels
 
 `vandorlabs-blocks.cfg` has a `vehicles.maxBlocks` setting, default 4096 and range 1â€“32768. It limits new assemblies. Lowering it does not prevent existing vehicles from being restored. The 64-block limit on each axis, 4 MiB snapshot limit and collision-complexity limit still apply.

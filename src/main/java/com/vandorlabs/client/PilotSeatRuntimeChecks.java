@@ -138,12 +138,14 @@ public final class PilotSeatRuntimeChecks {
                 mc.gameSettings.thirdPersonView=2;
             }
             if (ticks == 175) {
-                mc.displayGuiScreen(new GuiRedstoneChannel((com.vandorlabs.tiles.TileEntityPilotSeat)mc.world.getTileEntity(POS)));
-                net.minecraft.client.gui.GuiButton height=new net.minecraft.client.gui.GuiButton(19,0,0,"");
-                ((GuiRedstoneChannel)mc.currentScreen).actionPerformed(height);
+                mc.getIntegratedServer().addScheduledTask(()->com.vandorlabs.vehicle.VehicleService.previewAssembly(mc.getIntegratedServer().getPlayerList().getPlayers().get(0),POS)).get();
+            }
+            if(ticks==185){
+                require(VehicleTaxiRuntimeChecks.previewLayout(mc).stream().noneMatch(button->button.id==0),"seat height panel has no controller conversion action");
+                VehicleTaxiRuntimeChecks.button(mc,5);
             }
             if (ticks == 195) {
-                require(mc.currentScreen instanceof GuiRedstoneChannel,"height dialog remains open");
+                VehicleTaxiRuntimeChecks.previewLayout(mc);
                 require(((com.vandorlabs.tiles.TileEntityPilotSeat)mc.world.getTileEntity(POS)).getHeight()==1,"live height reaches client before Close");
                 require(ModBlocks.PILOT_SEAT.getActualState(mc.world.getBlockState(POS),mc.world,POS).getValue(BlockPilotSeat.HEIGHT)==1,"live model actual state");
                 mc.getIntegratedServer().addScheduledTask(()->{

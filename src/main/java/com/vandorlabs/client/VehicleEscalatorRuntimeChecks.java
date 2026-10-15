@@ -62,6 +62,7 @@ public final class VehicleEscalatorRuntimeChecks {
         for(BlockPos p:BlockPos.getAllInBox(base.up(),base.add(3,1,2)))world.setBlockState(p,Blocks.STONE.getDefaultState(),2);
         world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),2);world.setBlockState(seat.up(),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.UPPER,true),2);
         world.setBlockState(base.add(1,2,1),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
+        world.setBlockState(base.add(1,2,0),net.minecraft.block.Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
         world.setBlockState(rampPos,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockRampController.FACING,EnumFacing.SOUTH),2);
         Map<BlockPos,NBTTagCompound> originalTiles=new LinkedHashMap<>();
         net.minecraft.block.Block sourceBlock=vanilla?Blocks.STONE:ModBlocks.PROGRAMMABLE_BLOCK;

@@ -52,19 +52,29 @@ public final class VehicleTransfer {
         if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         EntityGroundVehicle entity=new EntityGroundVehicle(world);entity.install(structure);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
-        net.minecraft.entity.Entity seated=null;com.vandorlabs.entity.EntityChairSeat oldSeat=null;
-        for(com.vandorlabs.entity.EntityChairSeat chair:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,new net.minecraft.util.math.AxisAlignedBB(origin.add(structure.seat)).grow(1)))
-            if(chair.getChairPos().equals(origin.add(structure.seat)) && !chair.getPassengers().isEmpty()){seated=chair.getPassengers().get(0);oldSeat=chair;break;}
+        Map<net.minecraft.entity.Entity,BlockPos> seated=new LinkedHashMap<>();
+        List<com.vandorlabs.entity.EntityChairSeat> oldSeats=new ArrayList<>();
+        for(com.vandorlabs.entity.EntityChairSeat chair:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,structure.bounds.offset(origin).grow(1))){
+            BlockPos local=chair.getChairPos().subtract(origin);
+            if(structure.pilotSeats().contains(local) && !chair.getPassengers().isEmpty())oldSeats.add(chair);
+        }
+        oldSeats.sort(java.util.Comparator.comparingInt(net.minecraft.entity.Entity::getEntityId));
+        for(com.vandorlabs.entity.EntityChairSeat chair:oldSeats)seated.put(chair.getPassengers().get(0),chair.getChairPos().subtract(origin));
         boolean expandedEscalator=VehicleEscalators.needsExpandedSnapshot(world,structure,origin);
         VehicleEscalators.WorldSnapshot expanded=expandedEscalator?VehicleEscalators.expandedWorldSnapshot(world,structure,origin):new VehicleEscalators.WorldSnapshot(structure,origin);
         if(actor!=null)for(VehicleStructure.Cell cell:expanded.structure.cells){BlockPos p=expanded.origin.add(cell.pos);VehicleService.permission((net.minecraft.entity.player.EntityPlayerMP)actor,p);}
         NBTTagCompound undo=record(structure,origin,entity,false);if(expandedEscalator){undo.setTag("AssemblyOriginal",expanded.structure.write());undo.setLong("AssemblyOriginalOrigin",expanded.origin.toLong());}write(world,undo);
         try {
-            if(seated!=null)seated.dismountRidingEntity();
+            for(net.minecraft.entity.Entity rider:seated.keySet())rider.dismountRidingEntity();
             blocks(world,expanded.structure,expanded.origin,false);
             entity.transferEpoch=VehicleOwnership.update(world,entity.getUniqueID(),1,true);
             if(!world.spawnEntity(entity))throw new IOException("Vehicle spawn was cancelled.");
-            if(seated!=null){seated.startRiding(entity,true);entity.updatePassenger(seated);if(oldSeat!=null)oldSeat.setDead();}
+            for(Map.Entry<net.minecraft.entity.Entity,BlockPos> rider:seated.entrySet()){
+                entity.assignSeat(rider.getKey(),rider.getValue());
+                if(!rider.getKey().startRiding(entity,true))throw new IOException("Could not transfer a seated pilot to the vehicle.");
+                entity.updatePassenger(rider.getKey());
+            }
+            for(com.vandorlabs.entity.EntityChairSeat chair:oldSeats)chair.setDead();
             flush(world);Files.delete(journal(world));return entity;
         }catch(Exception failure){entity.setDead();rollback(world,undo);throw failure;}
     }
@@ -80,8 +90,9 @@ public final class VehicleTransfer {
             if(target.getY()<0 || target.getY()>=world.getHeight() || !world.getWorldBorder().contains(target)
                     || !world.isBlockLoaded(target) || !world.isAirBlock(target))throw new IOException("Parking is blocked at "+target);
         }
-        net.minecraft.entity.Entity driver=entity.getControllingPassenger();
-        net.minecraft.entity.Entity relocate=keepSeated?driver:null;
+        Map<net.minecraft.entity.Entity,BlockPos> passengers=new LinkedHashMap<>();
+        for(net.minecraft.entity.Entity rider:entity.getPassengers())passengers.put(rider,entity.seatForPassenger(rider));
+        int parkingTurns=VehicleRotation.turns(entity.rotationYaw);
         NBTTagCompound undo=record(entity.structure,origin,entity,true);undo.setTag("ParkedCraft",placed.write());write(world,undo);
         entity.transferInProgress=true;WorldServer previousParkingMutation=MUTATING.get();MUTATING.set(world);
         try {
@@ -91,16 +102,24 @@ public final class VehicleTransfer {
             if(player!=null && net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent(replaced,
                     world.getBlockState(origin.down()),player,net.minecraft.util.EnumHand.MAIN_HAND)))throw new IOException("A protection rule prevented parking.");
             VehicleOwnership.update(world,entity.getUniqueID(),entity.transferEpoch+1,false);
-            if(relocate!=null)relocate.dismountRidingEntity();entity.setDead();
-            if(relocate!=null) {
-                com.vandorlabs.entity.EntityChairSeat seat=new com.vandorlabs.entity.EntityChairSeat(world,origin.add(placed.seat),com.vandorlabs.blocks.BlockPilotSeat.seatHeight(world,origin.add(placed.seat)));
-                seat.rotationYaw=placed.facing.getHorizontalAngle();
-                if(!world.spawnEntity(seat) || !relocate.startRiding(seat,true))throw new IOException("Could not transfer the pilot to the parked seat.");
-                seat.updatePassenger(relocate);
+            for(net.minecraft.entity.Entity rider:passengers.keySet())rider.dismountRidingEntity();
+            entity.setDead();
+            if(keepSeated)for(Map.Entry<net.minecraft.entity.Entity,BlockPos> rider:passengers.entrySet()){
+                BlockPos local=VehicleRotation.cell(rider.getValue(),(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns);
+                // Parking can rebase the hull when extending landing gear.
+                local=local.add(placed.seat.subtract(VehicleRotation.cell(entity.structure.seat,(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns)));
+                BlockPos at=origin.add(local);
+                com.vandorlabs.entity.EntityChairSeat seat=new com.vandorlabs.entity.EntityChairSeat(world,at,com.vandorlabs.blocks.BlockPilotSeat.seatHeight(world,at));
+                seat.rotationYaw=world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockPilotSeat.FACING).getHorizontalAngle();
+                if(!world.spawnEntity(seat) || !rider.getKey().startRiding(seat,true))throw new IOException("Could not transfer a pilot to the parked seat.");
+                seat.updatePassenger(rider.getKey());
             }
             flush(world);Files.delete(journal(world));
         }catch(Exception failure){rollback(world,undo);
-            net.minecraft.entity.Entity restored=world.getEntityFromUuid(entity.getUniqueID());if(driver!=null && restored instanceof EntityGroundVehicle)driver.startRiding(restored,true);
+            net.minecraft.entity.Entity restored=world.getEntityFromUuid(entity.getUniqueID());
+            if(restored instanceof EntityGroundVehicle)for(Map.Entry<net.minecraft.entity.Entity,BlockPos> rider:passengers.entrySet()){
+                ((EntityGroundVehicle)restored).assignSeat(rider.getKey(),rider.getValue());rider.getKey().startRiding(restored,true);
+            }
             throw failure;}finally{entity.transferInProgress=false;if(previousParkingMutation==null)MUTATING.remove();else MUTATING.set(previousParkingMutation);}
     }
     public static void recover(WorldServer world)throws Exception {

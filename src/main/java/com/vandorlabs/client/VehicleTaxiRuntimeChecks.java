@@ -34,6 +34,7 @@ public final class VehicleTaxiRuntimeChecks {
     private static UUID stalePreview;
     private static int modeUiStage;
     private static boolean invalidChannelDraft;
+    private static boolean parkingPanelRequested;
     private static final PoweredChannels powered=new PoweredChannels();
     private static final class PoweredChannels extends TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
         public TileEntity channelTile(){return this;}
@@ -82,6 +83,7 @@ public final class VehicleTaxiRuntimeChecks {
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();w.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,seat,state,p,new ItemStack(ModBlocks.PILOT_SEAT));
         require(((TileEntityPilotSeat)w.getTileEntity(seat)).isTaxiMode(),"new seats default to Taxi Mode");
         w.setBlockState(origin.add(1,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
+        w.setBlockState(origin.add(1,1,1),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
         TileEntityPilotSeat legacy=new TileEntityPilotSeat();legacy.readFromNBT(new NBTTagCompound());require(legacy.isTaxiMode(),"legacy seats default to Taxi Mode");
         BlockPos furnacePos=origin.add(2,2,0);w.setBlockState(furnacePos,Blocks.FURNACE.getDefaultState().withProperty(net.minecraft.block.BlockFurnace.FACING,EnumFacing.EAST),2);
         TileEntityFurnace furnace=(TileEntityFurnace)w.getTileEntity(furnacePos);furnace.setCustomInventoryName("Taxi furnace");
@@ -271,7 +273,7 @@ public final class VehicleTaxiRuntimeChecks {
                 require(commandPlan.structure.at(rotatedCommand).state.getBlock()==Blocks.COMMAND_BLOCK,"vanilla command block rotates with complete private data");
                 e.install(before);
                 e.rotationYaw=45;player(mc).dismountRidingEntity();require(!player(mc).isRiding() && e.taxiReturnPending,"45-degree exit allows dismount without losing snapshot");require(e.board(player(mc)),"reboard after noncardinal exit");
-                e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewParking(player(mc),e);
+                e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewSeat(player(mc),e,e.structure.seat);
             }).get();break;
             case 21: {
                 if(modeUiStage==0){previewLayout(mc);screenshot(mc,output,"shot_pilot_captured_preview.png");button(mc,6);modeUiStage++;phase--;break;}
@@ -291,7 +293,7 @@ public final class VehicleTaxiRuntimeChecks {
                 GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");
                 if(!invalidChannelDraft){channels.setText("1,,2");mc.currentScreen.updateScreen();invalidChannelDraft=true;phase--;break;}
                 List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");
-                require(controls.stream().noneMatch(b->b.id==3),"Save button removed");require(controls.stream().anyMatch(b->b.id==0 && !b.enabled),"invalid channel list disables conversion");
+                require(controls.stream().noneMatch(b->b.id==3),"Save button removed");require(controls.stream().noneMatch(b->b.id==0),"seat channel panel never contains controller conversion");
                 mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().toString().equals("5319"),"invalid draft never mutates craft")).get();
                 channels.setText("5318, 5317, 5318");mc.currentScreen.updateScreen();break;
             }
@@ -303,21 +305,23 @@ public final class VehicleTaxiRuntimeChecks {
                 require(com.vandorlabs.redstone.ChannelData.read(e.structure.at(e.structure.seat).tileData(),0).equals(pilot.getRedstoneChannels()),"authoritative seat snapshot and local view agree");
                 NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);
                 require(loaded.structure.write().equals(e.structure.write()),"edited channels survive entity save/reload");
-                VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=e.structure.seat;stale.text="999";VehicleService.configureChannels(player(mc),stale);
+                VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=BlockPos.ORIGIN;stale.text="999";VehicleService.configureChannels(player(mc),stale);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"superseded preview cannot edit channels");
                 require(((TileEntityPilotSeat)world(mc).getTileEntity(unrelatedSeat)).getRedstoneChannel()==777,"assembled settings never edit a real tile at the local seat coordinates");
-                VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=currentPreview;denied.entity=e.getEntityId();denied.origin=e.structure.seat;denied.text="999";
+                VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=currentPreview;denied.entity=e.getEntityId();denied.origin=BlockPos.ORIGIN;denied.text="999";
                 player(mc).setGameType(net.minecraft.world.GameType.ADVENTURE);
                 try{VehicleService.configureChannels(player(mc),denied);}finally{player(mc).setGameType(net.minecraft.world.GameType.CREATIVE);}
                 require(e.structure==loaded.structure || e.structure.write().equals(loaded.structure.write()),"denied settings preserve the authoritative snapshot");
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"protection rejects channel edits");
-                denied.origin=e.structure.seat.up();VehicleService.configureChannels(player(mc),denied);
+                denied.origin=BlockPos.ORIGIN.up();VehicleService.configureChannels(player(mc),denied);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"forged seat identity rejected");
             }).get();break;
             }
             case 26:require(ChannelFields.parse((GuiTextField)field(mc.currentScreen,"channels")).toString().equals("5317, 5318"),"integrated settings draft represents saved canonical list");break;
             case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"reboarding after non-cardinal exits keeps client able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
-            case 28:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();prepareExit(mc,0);button(mc,0);break;
+            case 28:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();
+                if(!parkingPanelRequested){prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);VehicleService.previewController(player(mc),e,e.structure.controller().pos);}).get();parkingPanelRequested=true;phase--;break;}
+                require(((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).forward==1,"dedicated controller parking panel");button(mc,0);break;
             case 29:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);com.vandorlabs.redstone.RedstoneChannels.unregister(powered);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
                 System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS unified-entry-preview no-save autoapply valid-channels invalid-draft-preserved mode-channel-child minimum-layout screenshots held-high-baseline stale-preview canonical-list stacked-gear-loop bounded-discovery default-on manual-off actual-boarding 90-270-parking 45-dismount-preserved repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;

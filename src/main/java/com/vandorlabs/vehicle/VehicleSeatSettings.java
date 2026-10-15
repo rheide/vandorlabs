@@ -21,8 +21,11 @@ public final class VehicleSeatSettings {
         return actual.equals(expected);
     }
     public static VehicleStructure replace(VehicleStructure structure,NBTTagCompound data,BlockPos translation) {
+        return replaceAt(structure,structure.seat,data,translation);
+    }
+    public static VehicleStructure replaceAt(VehicleStructure structure,BlockPos selected,NBTTagCompound data,BlockPos translation){
         List<VehicleStructure.Cell> cells=new ArrayList<>();
-        for(VehicleStructure.Cell cell:structure.cells)cells.add(cell.pos.equals(structure.seat)?
+        for(VehicleStructure.Cell cell:structure.cells)cells.add(cell.pos.equals(selected)?
                 new VehicleStructure.Cell(cell.pos,cell.state,VehicleTileData.translated(data,translation)):cell);
         return new VehicleStructure(cells,structure.seat,structure.facing,structure.gearCount);
     }

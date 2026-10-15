@@ -26,7 +26,7 @@ public final class VehicleInteraction {
         double nearest=terrain==null?reach*reach:start.squareDistanceTo(terrain.hitVec);
         Target target=null;
         for(EntityGroundVehicle craft:VehicleLookup.near(player.world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(.001))) {
-            VehicleSelection.Hit hit=VehicleSelection.trace(craft,start,end,nearest,player.getRidingEntity()==craft);
+            VehicleSelection.Hit hit=VehicleSelection.local(craft.structure,craft.view,craft.toLocal(start),craft.toLocal(end),nearest,player.getRidingEntity()==craft?craft.seatForPassenger(player):null);
             if(hit!=null){nearest=hit.distanceSq;target=new Target(craft,hit);}
         }
         if(target==null)return null;
@@ -45,6 +45,7 @@ public final class VehicleInteraction {
                 || target.hit.action==VehicleSelection.Action.CANOPY
                 || target.hit.action==VehicleSelection.Action.DOOR
                 || target.hit.action==VehicleSelection.Action.SCREEN && !player.isSneaking() && VehicleSignals.supports(target.craft.view,target.hit.cell.pos)
+                || target.hit.action==VehicleSelection.Action.CONTROLLER
                 || target.hit.action==VehicleSelection.Action.BOARD);
     }
     public static void receive(EntityPlayerMP player,VehicleNetwork.Packet packet) {
@@ -68,8 +69,11 @@ public final class VehicleInteraction {
         if(player.world.isRemote)return true;
         EntityPlayerMP server=(EntityPlayerMP)player;
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
-            VehicleService.previewParking(server,craft);return true;
+            if(target.hit.action==VehicleSelection.Action.BOARD){BlockPos seat=target.hit.cell.state.getValue(BlockPilotSeat.UPPER)?target.hit.cell.pos.down():target.hit.cell.pos;VehicleService.previewSeat(server,craft,seat);}
+            else if(target.hit.action==VehicleSelection.Action.CONTROLLER)VehicleService.previewController(server,craft,target.hit.cell.pos);
+            else VehicleService.previewParking(server,craft);return true;
         }
+        if(target.hit.action==VehicleSelection.Action.CONTROLLER){VehicleService.previewController(server,craft,target.hit.cell.pos);return true;}
         if(target.hit.action==VehicleSelection.Action.CANOPY) {
             if(!VehicleCanopies.toggle(craft,target.hit.cell.pos))VehicleNetwork.error(server,"This canopy has an incomplete captured group.");
             return true;
@@ -81,9 +85,9 @@ public final class VehicleInteraction {
         if(target.hit.action==VehicleSelection.Action.SCREEN)return craft.signals.click(target.hit.cell.pos,player);
         BlockPos seat=target.hit.cell.pos;
         if(target.hit.cell.state.getValue(BlockPilotSeat.UPPER))seat=seat.down();
-        if(!seat.equals(craft.structure.seat))return false;
-        if(player.isSneaking()){VehicleService.previewSeat(server,craft);return true;}
-        if(!craft.board(player))VehicleNetwork.error(server,"The Pilot Seat is occupied or cannot be boarded.");
+        if(!craft.structure.pilotSeats().contains(seat))return false;
+        if(player.isSneaking()){VehicleService.previewSeat(server,craft,seat);return true;}
+        if(!craft.board(player,seat))VehicleNetwork.error(server,"The Pilot Seat is occupied or cannot be boarded.");
         return true;
     }
 }

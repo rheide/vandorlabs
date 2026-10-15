@@ -49,6 +49,16 @@ public final class VehicleStructure {
         this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);
     }
     public Cell at(BlockPos pos){return byPosition.get(pos);}
+    public List<BlockPos> pilotSeats(){
+        List<BlockPos> result=new ArrayList<>();
+        for(Cell cell:cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat
+                && !cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER))result.add(cell.pos);
+        return Collections.unmodifiableList(result);
+    }
+    public Cell controller(){
+        for(Cell cell:cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)return cell;
+        return null;
+    }
     public boolean matches(World world,BlockPos origin) {
         for(Cell cell:cells) {
             BlockPos p=origin.add(cell.pos);

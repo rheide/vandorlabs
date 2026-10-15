@@ -28,15 +28,15 @@ public final class PilotInspectionChecks {
             if(oversized)for(int x=1;x<70;x++)player.world.setBlockState(POS.east(x),Blocks.IRON_BLOCK.getDefaultState(),3);
         });state=1;return;}
         if(state==1 && ticks>=25){if(!(mc.world.getTileEntity(POS) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)){require(ticks<200,"client seat tile did not arrive");return;}pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);VehicleService.previewAssembly(player,POS);});state=2;return;}
-        if(state==2 && ticks==40){boolean disabled=false;
-            for(GuiButton button:VehicleTaxiRuntimeChecks.previewLayout(mc)){if(button.id==0)disabled=!button.enabled;if(button.id==2||button.id==4||button.id==5||button.id==6)require(button.enabled,"independent settings disabled");}
-            require(disabled,"invalid assembly action must be disabled");GuiOptionCycleRuntimeChecks.check(mc);
+        if(state==2 && ticks==40){
+            for(GuiButton button:VehicleTaxiRuntimeChecks.previewLayout(mc)){require(button.id!=0,"seat settings never contain controller assembly actions");if(button.id==2||button.id==4||button.id==5||button.id==6)require(button.enabled,"independent settings disabled");}
+            GuiOptionCycleRuntimeChecks.check(mc);
             VehicleTaxiRuntimeChecks.screenshot(mc,new java.io.File(System.getProperty("vandorlabs.reprolab")),"shot_pilot_invalid_preview_"+scenario+".png");
             VehicleTaxiRuntimeChecks.button(mc,6);state=3;ticks=0;return;
         }
         if(state==3 && ticks==20){require(mc.currentScreen instanceof GuiPilotModes,"invalid scan still exposes mode-channel child");VehicleTaxiRuntimeChecks.screenshot(mc,new java.io.File(System.getProperty("vandorlabs.reprolab")),"shot_pilot_invalid_mode_channels_"+scenario+".png");VehicleTaxiRuntimeChecks.button(mc,4);state=4;ticks=0;return;}
         if(state==4 && ticks==20){VehicleTaxiRuntimeChecks.previewLayout(mc);VehicleTaxiRuntimeChecks.button(mc,5);VehicleTaxiRuntimeChecks.button(mc,4);state=5;ticks=0;return;}
         if(state==5 && ticks==20){pending=mc.getIntegratedServer().addScheduledTask(()->{com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)mc.getIntegratedServer().getWorld(0).getTileEntity(POS);require(seat.getHeight()==1,"height packet rejected after invalid scan");});VehicleTaxiRuntimeChecks.button(mc,1);scenario++;state=scenario<2?0:6;return;}
-        if(state==6 && ticks>=10){if(!CapturedPilotInspectionChecks.tick(mc))return;state=7;GuiOptionCycleRuntimeChecks.checkNewDialogs(mc);System.out.println("[vandorlabs][reprolab] pilot-inspection PASS invalid-and-oversized unified-preview disabled-assembly usable-trigger live-height no-save mode-channel-child screenshots");mc.shutdown();}
+        if(state==6 && ticks>=10){if(!CapturedPilotInspectionChecks.tick(mc))return;state=7;GuiOptionCycleRuntimeChecks.checkNewDialogs(mc);System.out.println("[vandorlabs][reprolab] pilot-inspection PASS disconnected-and-oversized seat-settings-only no-controller-action usable-trigger live-height no-save mode-channel-child screenshots");mc.shutdown();}
     }
 }

@@ -2,7 +2,9 @@
 
 ## 2.1
 
-- Add Moat drawbridge mode with upright storage, horizontal deployment and signed height offsets. Support full vanilla and Vandor glass blocks as transparent ramp materials, and shaped stairs across all ramp modes.
+- Add a separate Vehicle Controller for assembly and parking, retain Pilot Seat settings on seats, and support multiple Pilot Seats with the first seated pilot in control. Give Autopilot, Waypoint and Vehicle Controller distinct primary textures.
+
+- Make Moat mode capture a vertical source tower and pivot it as a straight drawbridge. Start/End offsets set stored/deployed angles; Tread px divides the animated full blocks and slabs. Preserve existing flat-source Moat journals until restored. Support full vanilla and Vandor glass blocks as transparent ramp materials, and shaped stairs across all ramp modes.
 - Unify Configurizer and sneak-right-click Pilot Seat settings, remove Save, and apply valid changes automatically. Keep mode-channel controls visible on smaller screens.
 - Allow stationary Hover turns and hold the craft in position after a manual pilot exit. Preserve each hover thruster family's particle style and color.
 - Add momentary Pulse rows alongside Toggle and Slider on Programmable Screens, Inputs, Consoles and their variants, including controls aboard vehicles.
