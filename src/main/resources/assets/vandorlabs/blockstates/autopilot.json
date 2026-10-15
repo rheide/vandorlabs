@@ -1,19 +1,19 @@
 {
   "variants": {
     "facing=north": {
-      "model": "vandorlabs:ramp_elevator_controller_off",
+      "model": "vandorlabs:autopilot",
       "y": 0
     },
     "facing=east": {
-      "model": "vandorlabs:ramp_elevator_controller_off",
+      "model": "vandorlabs:autopilot",
       "y": 90
     },
     "facing=south": {
-      "model": "vandorlabs:ramp_elevator_controller_off",
+      "model": "vandorlabs:autopilot",
       "y": 180
     },
     "facing=west": {
-      "model": "vandorlabs:ramp_elevator_controller_off",
+      "model": "vandorlabs:autopilot",
       "y": 270
     }
   }

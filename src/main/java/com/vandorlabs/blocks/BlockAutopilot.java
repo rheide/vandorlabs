@@ -9,7 +9,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Controller housing shared with the programmable ramp. */
+/** Distinct navigation computer and route-marker housings. */
 public final class BlockAutopilot extends BlockVandorDirectional {
     private final boolean waypoint;
     public BlockAutopilot(boolean waypoint){super(waypoint?"waypoint":"autopilot");this.waypoint=waypoint;}
