@@ -92,6 +92,7 @@ final class VehicleSignalRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] vehicle-channels PASS rotated-screen-buttons sliders world-latch door canopy lights gear extended-parking cleanup");
     }
     private static final class ExternalLatch extends TileEntity implements RedstoneChannelLatch{
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean on;ExternalLatch(WorldServer world){setWorld(world);}
         public TileEntity channelTile(){return this;}public int getRedstoneChannel(){return CHANNEL;}public void setRedstoneChannel(int ignored){}
         public boolean hasLocalRedstoneSignal(){return on;}public void setChannelSignal(boolean ignored){}public boolean isChannelLatch(){return true;}public boolean latchOn(){return on;}public void applyLinkedLatch(boolean value){on=value;}

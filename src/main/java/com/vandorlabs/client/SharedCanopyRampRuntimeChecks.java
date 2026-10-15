@@ -25,6 +25,7 @@ final class SharedCanopyRampRuntimeChecks {
         for(BlockPos at:BlockPos.getAllInBox(RAMP.add(-9,-4,-8),RAMP.add(9,13,12))){world.getChunkFromBlockCoords(at);world.setBlockToAir(at);}
     }
     private static final class Source extends TileEntity implements RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean high;public TileEntity channelTile(){return this;}public int getRedstoneChannel(){return 801;}public void setRedstoneChannel(int channel){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean value){}
         void power(boolean value){high=value;RedstoneChannels.inputChanged(this);}
     }

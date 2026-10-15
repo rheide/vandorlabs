@@ -116,7 +116,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private EnumFacing configuredFacing;
     private UUID owner;
     private int redstoneChannel;
-    private boolean channelSignal;
+    private boolean channelSignal,lifecycleDetached;
+    // Unregister synchronously notifies the removed channel member. Teardown must not start new movement.
+    private boolean acceptsWorldCommand(){return world!=null&&!world.isRemote&&!isInvalid()&&!lifecycleDetached&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&world.getTileEntity(pos)==this;}
     private boolean waitingForCanopy, canopyCommand, canopyRetry, requestingDeploy;
     private final Set<BlockPos> canopyBlockers=new HashSet<>();
     public boolean isWaitingForCanopy(){return waitingForCanopy;}
@@ -152,6 +154,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }
     @Override public void setChannelSignal(boolean powered) {
+        if(!acceptsWorldCommand())return;
         if (channelSignal == powered) return;
         channelSignal = powered;
         if (world != null && !world.isRemote) evaluateSignal(false);
@@ -328,6 +331,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         }
     }
     private boolean evaluateSignal(boolean force) {
+        if(!acceptsWorldCommand())return false;
         boolean desired=(hasLocalRedstoneSignal() || channelSignal)==activateOnPower;
         if (!force && signalKnown && desired==latched) return !error;
         signalKnown=true; latched=desired;
@@ -347,6 +351,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
 
     /** Public for the block event adapter and live-world regression checks. */
     public boolean request(boolean deploy) {
+        if(!acceptsWorldCommand())return false;
         if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
         if (world.isRemote || changing) return false;
         if(escalator!=0)deploy=true;
@@ -684,7 +689,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
     private void schedule() { if(!vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1); }
     @Override public void onLoad() {
-        super.onLoad();
+        lifecycleDetached=false;super.onLoad();
         if (!world.isRemote && !vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld)) {
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
             if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
@@ -694,9 +699,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             schedule();
         }
     }
-    @Override public void invalidate() { RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
+    @Override public void invalidate() { lifecycleDetached=true;RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() {
-        RampCanopyCoordination.clearRampWait(this);
+        lifecycleDetached=true;RampCanopyCoordination.clearRampWait(this);
         if(world!=null && !world.isRemote && beltRunning){beltRunning=false;beltTick=world.getTotalWorldTime();syncParts();}
         RedstoneChannels.unregister(this);com.vandorlabs.ramp.EscalatorActivity.unregister(this);super.onChunkUnload();
     }
@@ -706,7 +711,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     /** A scheduled tick is animation work or a one-shot load recovery, never idle polling. */
     public void scheduledTick() {
         if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld || com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
-        if (world.isRemote || changing) return;
+        if (!acceptsWorldCommand() || changing) return;
         if (recoveryPending) {
             if (recover(false)) evaluateSignal(true);
             return;

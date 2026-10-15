@@ -374,6 +374,7 @@ public class TileEntityControlledRamp extends TileEntity {
         if (world.getTileEntity(pos)==this) world.setBlockToAir(pos);
     }
     public void recoverOnEvent() {
+        if(world==null||isInvalid()||world.getTileEntity(pos)!=this)return;
         if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld || com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
         if (world.isRemote || !world.isBlockLoaded(controller)) return;
         TileEntity owner=world.getTileEntity(controller);

@@ -57,6 +57,23 @@ public final class DeferredTileLoad {
         }
     }
 
+    /** Transfer has installed every block; pending-aware identity is safe even inside a tile tick. */
+    public static void flushInstalled(World world,Iterable<net.minecraft.util.math.BlockPos> positions){
+        if(world.isRemote)return;
+        Map<TileEntity,Runnable> ready=new IdentityHashMap<>();
+        synchronized(PENDING){
+            Map<TileEntity,Runnable> actions=PENDING.get(world);if(actions==null)return;
+            for(net.minecraft.util.math.BlockPos pos:positions)if(world.isBlockLoaded(pos)){
+                TileEntity tile=world.getTileEntity(pos);Runnable action=actions.remove(tile);
+                if(action!=null)ready.put(tile,action);
+            }
+            if(actions.isEmpty())PENDING.remove(world);
+        }
+        for(Map.Entry<TileEntity,Runnable> entry:ready.entrySet()){
+            TileEntity tile=entry.getKey();if(!tile.isInvalid()&&tile.getWorld()==world&&world.getTileEntity(tile.getPos())==tile)entry.getValue().run();
+        }
+    }
+
     @SubscribeEvent public void worldUnload(WorldEvent.Unload event) {
         synchronized (PENDING) { PENDING.remove(event.getWorld()); }
     }

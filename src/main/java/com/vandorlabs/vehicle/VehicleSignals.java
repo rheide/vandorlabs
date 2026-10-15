@@ -24,6 +24,7 @@ public final class VehicleSignals {
         final RedstoneChannelMember source;final TileEntity anchor=new TileEntity(){};
         Link(RedstoneChannelMember source){this.source=source;anchor.setWorld(craft.world);}
         public TileEntity channelTile(){return anchor;}
+        public boolean isChannelMemberActive(){return !detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile();}
         public int getRedstoneChannel(){return source.getRedstoneChannel();}
         public ChannelList getRedstoneChannels(){return source.getRedstoneChannels();}
         public void setRedstoneChannel(int ignored){throw new UnsupportedOperationException();}

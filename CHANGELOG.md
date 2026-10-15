@@ -2,6 +2,9 @@
 
 ## 2.1
 
+- Settle redstone channels after vehicle transfers finish, discard callbacks to removed tiles, and preserve channel sources across assembly and parking. Prevent moving ramps, doors, trapdoors, lights and linked controls from reacting to partial transfers. Keep an extended Moat and its source journal together without leaving duplicate source blocks or ramp segments behind.
+- Publish the complete transferred block footprint before invalidating old tile entities, preventing neighbor lookups from recreating ghost tiles. Restore occupied seats after cancelled assembly and retain pilot assignments and return-seat settings during parking rollback.
+
 - Release canopy helper cells that are clear when fully open. Coordinate shared-channel ramps and canopies so ramps wait for opening clearance and canopy closure waits for ramp retraction, preserving both assemblies and unrelated blocks.
 - Restore queued canopy helper tiles correctly during normal world ticks, preventing unfinished helpers from blocking closure. Preserve manual commands until the next redstone input change, synchronize settled poses, and retain glazing joins while helpers are released. Skip ramp sweep checks when no ramp segments are nearby.
 

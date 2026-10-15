@@ -693,7 +693,9 @@ public class ReproLab {
         }
         if(Boolean.getBoolean("vandorlabs.existingWorldChecks")) {
             mc.displayGuiScreen(null);
-            if(++holdTicks==200){System.out.println("[vandorlabs][reprolab] existing-world-load PASS");mc.shutdown();}
+            holdTicks++;
+            if(Boolean.getBoolean("vandorlabs.checkVehicleParking"))try{if(!ExistingVehicleParkingChecks.tick(mc,holdTicks))return;}catch(Exception failure){throw new IllegalStateException("existing-world parking checks",failure);}
+            if(holdTicks>=200){System.out.println("[vandorlabs][reprolab] existing-world-load PASS");mc.shutdown();}
             return;
         }
         // launchIntegratedServer can install its post-load pause screen one

@@ -41,6 +41,10 @@ public final class RedstoneChannels {
         synchronized (NETWORKS) { NETWORKS.remove(event.getWorld()); }
     }
 
+    /** Nested conversions collect logical changes and deliver only their final installed state. */
+    public static void beginTransfer(World world){network(world).transferDepth++;}
+    public static void endTransfer(World world){Network network=existingNetwork(world);if(network==null||network.transferDepth<=0)throw new IllegalStateException("Unbalanced channel transaction");network.finishTransfer();}
+
     public static void register(RedstoneChannelMember member) {
         TileEntity tile = member.channelTile();
         if (tile.getWorld() == null || tile.getWorld().isRemote || member.getRedstoneChannels().isEmpty()) return;
@@ -97,6 +101,16 @@ public final class RedstoneChannels {
     }
 
     private static final class Network {
+        private int transferDepth;
+        private final Set<Integer> transferChannels=new java.util.LinkedHashSet<>();
+        private final Set<RedstoneChannelMember> transferAdded=identitySet();
+        private void finishTransfer(){
+            if(--transferDepth!=0)return;
+            Set<Integer> changed=new java.util.LinkedHashSet<>(transferChannels);Set<RedstoneChannelMember> added=identitySet();added.addAll(transferAdded);
+            transferChannels.clear();transferAdded.clear();
+            settle(changed,true,null);
+            SignalUpdateBatch.apply(()->{for(RedstoneChannelMember member:added)if(member.isChannelMemberActive())member.setChannelLevel(anyPowered(subscriptions.get(member)));});
+        }
         private final Map<Integer, Set<RedstoneChannelMember>> members=new java.util.HashMap<>();
         private final Map<RedstoneChannelMember,ChannelList> subscriptions=new IdentityHashMap<>();
         private final Map<Integer,RedstoneChannelMember> strongestSources=new java.util.HashMap<>();
@@ -131,12 +145,14 @@ public final class RedstoneChannels {
                 Set<RedstoneChannelMember> set=members.get(channel);
                 if(set!=null)set.remove(member);
             }
-            settle(changed,true,member);
+            transferAdded.remove(member);
+            settle(changed,true,null);
         }
 
         void inputChanged(RedstoneChannelMember member) {
             ChannelList channels=subscriptions.get(member);
             if(channels==null)return;
+            if(transferDepth>0){transferChannels.addAll(channels(channels));return;}
             Set<RedstoneChannelMember> notify=null;
             for(int i=0;i<channels.size();i++) {
                 int channel=channels.get(i);Set<RedstoneChannelMember> set=members.get(channel);
@@ -150,7 +166,7 @@ public final class RedstoneChannels {
             if(notify!=null) {
                 Set<RedstoneChannelMember> ready=notify;
                 SignalUpdateBatch.apply(()->{
-                    for(RedstoneChannelMember target:ready)target.setChannelLevel(anyPowered(subscriptions.get(target)));
+                    for(RedstoneChannelMember target:ready)if(subscriptions.containsKey(target)&&target.isChannelMemberActive())target.setChannelLevel(anyPowered(subscriptions.get(target)));
                 });
             }
         }
@@ -163,12 +179,13 @@ public final class RedstoneChannels {
         }
 
         private void settle(Set<Integer> changed,boolean syncLatches,RedstoneChannelMember addedOrRemoved) {
+            if(transferDepth>0){transferChannels.addAll(changed);if(addedOrRemoved!=null)transferAdded.add(addedOrRemoved);return;}
             SignalUpdateBatch.apply(()-> {
                 if(syncLatches) {
                     Set<RedstoneChannelMember> latches=identitySet();
                     for(int channel:changed) {
                         Set<RedstoneChannelMember> set=members.get(channel);boolean hasLatch=false;
-                        if(set!=null)for(RedstoneChannelMember member:new ArrayList<>(set))if(isLatch(member)) {
+                        if(set!=null)for(RedstoneChannelMember member:new ArrayList<>(set))if(member.isChannelMemberActive()&&isLatch(member)) {
                             hasLatch=true;latches.add(member);
                         }
                         if(!hasLatch)latchStates.remove(channel);
@@ -176,7 +193,7 @@ public final class RedstoneChannels {
                     // Mirror the complete list once, avoiding intermediate physical handle states.
                     for(RedstoneChannelMember member:latches) {
                         ChannelList channels=subscriptions.get(member);
-                        if(channels==null)continue;
+                        if(channels==null||!member.isChannelMemberActive())continue;
                         Map<Integer,Integer> levels=new java.util.HashMap<>();
                         for(int i=0;i<channels.size();i++)levels.put(channels.get(i),latchStates.getOrDefault(channels.get(i),0));
                         ((RedstoneChannelLatch)member).applyLinkedLevels(levels);
@@ -192,7 +209,7 @@ public final class RedstoneChannels {
                         members.remove(channel);powerSources.remove(channel);strongestSources.remove(channel);latchStates.remove(channel);
                     } else if(before!=reconcile(channel,set))notify.addAll(set);
                 }
-                for(RedstoneChannelMember member:notify)member.setChannelLevel(anyPowered(subscriptions.get(member)));
+                for(RedstoneChannelMember member:notify)if((subscriptions.containsKey(member)||member==addedOrRemoved)&&member.isChannelMemberActive())member.setChannelLevel(anyPowered(subscriptions.get(member)));
             });
         }
 
@@ -206,9 +223,10 @@ public final class RedstoneChannels {
         private int reconcile(int channel,Set<RedstoneChannelMember> set) {
             RedstoneChannelMember previous=strongestSources.get(channel);
             // A still-loaded maximum-strength source proves the maximum without a scan.
-            if(previous!=null && set.contains(previous) && previous.localSignalLevel(channel)==15){powerSources.put(channel,15);return 15;}
+            if(previous!=null && set.contains(previous) && previous.isChannelMemberActive() && previous.localSignalLevel(channel)==15){powerSources.put(channel,15);return 15;}
             int level=0;RedstoneChannelMember strongest=null;
             for(RedstoneChannelMember member:new ArrayList<>(set)) {
+                if(!member.isChannelMemberActive())continue;
                 int candidate=Math.max(0,Math.min(15,member.localSignalLevel(channel)));
                 if(candidate>level){level=candidate;strongest=member;}
                 if(level==15)break;

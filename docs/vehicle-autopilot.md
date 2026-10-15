@@ -1,6 +1,6 @@
 # Autopilot and waypoints
 
-Mount one Autopilot on the bottom of a vehicle. Its facing determines the initial route direction. Configure it with the Configurizer, or right-click in creative mode. Select the route block and metadata; **Use held block as route marker** copies a block from your main hand, or your off hand when the main hand holds the Configurizer. The default marker is white concrete.
+Mount one Autopilot on the bottom of a vehicle. Its facing determines the initial route direction. Right-click it or use the Configurizer to configure it. Choose the route block from the inventory sample picker; the selected block variant is retained. The default marker is white concrete.
 
 Build a continuous line of face-adjacent marker blocks on the ground, replacing selected markers with Waypoint Blocks. Routes support horizontal corners. Branches and gaps stop and disable the autopilot; it never guesses a branch. The first solid ground block below the controller must be a route marker or waypoint, with no more than 16 empty blocks between controller and ground. Unloaded terrain is not loaded by navigation.
 
@@ -10,4 +10,4 @@ Waypoints configure automatic departure, a delay in game ticks (20 ticks per sec
 
 Each waypoint can select Block, Taxi, or Hover as its stopped mode and Taxi or Hover for departure. Hover height is adjustable from 0 to 16 blocks, measured from the waypoint's top to the Autopilot sensor. The vehicle's hull and landing gear may extend below that height; mount the controller on the bottom of the craft and allow clearance for those parts. The controller detects route markers up to 16 blocks below it, matching the maximum waypoint hover height. Hover requires the usual propulsion and lift blocks. Block parking and departure retain protection checks and require the vehicle owner to be online in the same dimension; blocked departures remain parked and retry.
 
-Choose **Vehicle Status** in a programmable screen or console/input surface picker to display Block, Taxi, or Hover mode, hover clearance, and autopilot status. Click its autopilot row while in vehicle mode to toggle navigation. The Pilot Seat dialog's **Modes...** button configures separate optional Park, Taxi, and Hover channels; rising power selects that mode.
+Choose **Vehicle Status** in a programmable screen or console/input surface picker to display Block, Taxi, or Hover mode, hover clearance, and autopilot status. Click its autopilot row while in vehicle mode to toggle navigation. The Vehicle Controller dialog's **Mode channels...** button configures separate optional Park, Taxi, and Hover channels; rising power selects that mode.

@@ -15,6 +15,8 @@ import net.minecraft.world.World;
 public final class EntityGroundVehicle extends Entity implements net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData {
     private static final net.minecraft.network.datasync.DataParameter<NBTTagCompound> PILOT_SEATS=
             net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.COMPOUND_TAG);
+    NBTTagCompound occupiedSeatAssignments(){return dataManager.get(PILOT_SEATS).copy();}
+    void restoreSeatAssignments(NBTTagCompound assignments){dataManager.set(PILOT_SEATS,assignments.copy());}
     public BlockPos seatForPassenger(Entity passenger){
         NBTTagCompound seats=dataManager.get(PILOT_SEATS);String key=passenger.getUniqueID().toString();
         return seats.hasKey(key,4)?BlockPos.fromLong(seats.getLong(key)):structure.seat;

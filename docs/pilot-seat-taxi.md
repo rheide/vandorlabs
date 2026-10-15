@@ -26,6 +26,10 @@ Parking accepts headings within **12 degrees** of a multiple of 90 degrees. Succ
 
 Using **Park as blocks** while standing beside or inside an unoccupied craft keeps your position and does not seat you. A player already driving remains in the restored Pilot Seat.
 
+Vehicle transfers settle Vandor redstone channels after the complete structure is removed or restored. Removed tiles receive no further channel commands, and transferred channel sources retain their state. This prevents moving mechanisms and linked controls from responding to a partially converted craft.
+
+External blocks with tile entities require an explicit data and rotation adapter. The channel transaction does not intercept another mod's private unload hooks or network callbacks. Unsupported machines are rejected before assembly; ordinary tile-free building blocks must pass the state and rotation checks.
+
 Craft detection respects empty slab faces: a slab occupying the top half of its cell does not connect through its empty lower half to a hangar floor. Bottom slabs still contact the floor normally. Settled ramps and escalators can assemble while extended: the vehicle carries the actual extended segments, collision surfaces, source materials and recovery data. Escalators freeze at their captured tread position while driving. Detection includes only sections owned by a captured controller and never follows those sections into neighboring terrain. Vacated source positions remain recovery data rather than solid craft blocks. Parking keeps the extended pose and resumes normal redstone and nearby-player behavior. Cancelled transfers restore the original geometry and recovery data exactly.
 
 

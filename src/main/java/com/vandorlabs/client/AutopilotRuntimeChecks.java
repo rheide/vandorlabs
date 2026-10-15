@@ -81,6 +81,7 @@ final class AutopilotRuntimeChecks {
         for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(6,5,6)))world.setBlockToAir(p);
     }
     private static final class ModeSource extends net.minecraft.tileentity.TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         int channel=19202;boolean high;
         public net.minecraft.tileentity.TileEntity channelTile(){return this;}public int getRedstoneChannel(){return channel;}public void setRedstoneChannel(int value){channel=value;}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean ignored){}
         void power(boolean value){high=value;com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);}

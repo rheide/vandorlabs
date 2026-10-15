@@ -37,6 +37,7 @@ public final class VehicleTaxiRuntimeChecks {
     private static boolean parkingPanelRequested,taxiToggleApplied;
     private static final PoweredChannels powered=new PoweredChannels();
     private static final class PoweredChannels extends TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return 5317;}
         public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return com.vandorlabs.redstone.ChannelList.of(5317,5319);}

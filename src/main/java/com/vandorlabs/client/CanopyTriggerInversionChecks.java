@@ -24,6 +24,7 @@ final class CanopyTriggerInversionChecks {
     private static void clear(World world){for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-6,-2,-2),BASE.add(12,8,6)))world.setBlockToAir(pos);}
     private static LargeCanopySettings copy(LargeCanopySettings value){NBTTagCompound tag=new NBTTagCompound();value.write(tag);LargeCanopySettings result=new LargeCanopySettings();result.read(tag);return result;}
     private static final class Source extends net.minecraft.tileentity.TileEntity implements RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean high;public net.minecraft.tileentity.TileEntity channelTile(){return this;}public int getRedstoneChannel(){return CHANNEL;}public void setRedstoneChannel(int ignored){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean ignored){}
         void power(boolean value){high=value;RedstoneChannels.inputChanged(this);}
     }

@@ -4,6 +4,8 @@ Vehicle inspection checks rotation before it allows assembly. An unsupported blo
 
 The snapshot retains complete block properties and persistent tile NBT, including inventories, energy, owner information and saved configuration. Foreign machines do not run while carried. Restoring their saved data does not imply that a machine, cable, pipe or external network can function in a vehicle.
 
+Vehicle transfers defer Vandor channel settlement until the complete structure and its control sources have been handed over. This prevents callbacks to removed tiles and temporary signal changes during assembly, parking, or rollback. Another mod's unload hooks, network events, and ordinary neighbor behavior remain that mod's responsibility; passing the tile-free rotation checks is not a sandbox for those effects. For example, an active building material can still react to adjacent fire after placement. Use a dedicated adapter for machines or multiblocks whose behavior depends on world position or neighboring components.
+
 | Blocks | Vehicle eligibility |
 | --- | --- |
 | Vanilla blocks and Vandor Labs components | Supported by explicit state and tile adapters. Incomplete multiblocks and moving assemblies still prevent conversion. |

@@ -24,14 +24,14 @@ public final class ControllerRecovery {
     /** Block replacement can remove its tile before breakBlock gets the controller journal. */
     public static void controllerChanged(World world,net.minecraft.util.math.BlockPos controller){
         if(world==null||world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld||com.vandorlabs.vehicle.VehicleTransfer.isMutating(world))return;
-        for(TileEntityControlledRamp part:new ArrayList<>(LOADED))if(part.getWorld()==world&&!part.isInvalid()&&part.controller.equals(controller)&&world.isBlockLoaded(part.getPos()))world.scheduleUpdate(part.getPos(),world.getBlockState(part.getPos()).getBlock(),1);
+        for(TileEntityControlledRamp part:new ArrayList<>(LOADED))if(part.getWorld()==world&&!part.isInvalid()&&part.controller.equals(controller)&&world.isBlockLoaded(part.getPos())&&world.getTileEntity(part.getPos())==part)world.scheduleUpdate(part.getPos(),world.getBlockState(part.getPos()).getBlock(),1);
     }
     @SubscribeEvent public static void chunkLoaded(ChunkEvent.Load event) {
         World world=event.getWorld();
-        if (world.isRemote) return;
+        if (world.isRemote || com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)) return;
         for (TileEntityControlledRamp part:new ArrayList<>(LOADED)) {
             if (part.getWorld()==world && !part.isInvalid()
-                    && world.isBlockLoaded(part.getPos())
+                    && world.isBlockLoaded(part.getPos()) && world.getTileEntity(part.getPos())==part
                     && (part.controller.getX()>>4)==event.getChunk().x
                     && (part.controller.getZ()>>4)==event.getChunk().z)
                 world.scheduleUpdate(part.getPos(),world.getBlockState(part.getPos()).getBlock(),1);

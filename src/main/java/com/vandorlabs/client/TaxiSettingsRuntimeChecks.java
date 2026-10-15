@@ -16,6 +16,7 @@ import net.minecraft.world.WorldServer;
 public final class TaxiSettingsRuntimeChecks {
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("taxi settings: "+message);}
     private static final class Source extends TileEntity implements RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean high;public TileEntity channelTile(){return this;}public int getRedstoneChannel(){return 5341;}
         public void setRedstoneChannel(int channel){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean value){}
         void power(boolean value){high=value;RedstoneChannels.inputChanged(this);}

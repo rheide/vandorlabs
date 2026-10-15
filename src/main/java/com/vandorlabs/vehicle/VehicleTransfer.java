@@ -18,6 +18,12 @@ public final class VehicleTransfer {
     private static final ThreadLocal<WorldServer> MUTATING=new ThreadLocal<>();
     /** Prevent ramp neighbour callbacks from deploying outside an atomic transfer footprint. */
     public static boolean isMutating(net.minecraft.world.World world){return MUTATING.get()==world;}
+    /** Callback delivery resumes only after the complete nested conversion or rollback is installed. */
+    private static final class Transaction implements AutoCloseable {
+        private final WorldServer world,previous;
+        Transaction(WorldServer world){this.world=world;previous=MUTATING.get();com.vandorlabs.redstone.RedstoneChannels.beginTransfer(world);MUTATING.set(world);}
+        public void close(){if(previous==null)MUTATING.remove();else MUTATING.set(previous);com.vandorlabs.redstone.RedstoneChannels.endTransfer(world);}
+    }
     private static Path journal(WorldServer world) {
         return world.getSaveHandler().getWorldDirectory().toPath().resolve("data").resolve("vandorlabs-vehicle-"+world.provider.getDimension()+".nbt");
     }
@@ -40,6 +46,7 @@ public final class VehicleTransfer {
     private static NBTTagCompound record(VehicleStructure structure,BlockPos origin,EntityGroundVehicle entity,boolean park) {
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Craft",structure.write());
         tag.setLong("Origin",origin.toLong());tag.setUniqueId("Entity",entity.getUniqueID());tag.setBoolean("Parking",park);
+        tag.setTag("OccupiedPilotSeats",entity.occupiedSeatAssignments());if(entity.taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",entity.taxiReturnSeat.toLong());
         tag.setBoolean("TaxiReturnPending",entity.taxiReturnPending);if(entity.taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",entity.taxiReturnActor);
         tag.setTag("AutopilotNavigation",entity.autopilot.write());
         tag.setFloat("Yaw",entity.rotationYaw);tag.setDouble("X",entity.posX);tag.setDouble("Y",entity.posY);tag.setDouble("Z",entity.posZ);return tag;
@@ -64,11 +71,13 @@ public final class VehicleTransfer {
         VehicleEscalators.WorldSnapshot expanded=expandedEscalator?VehicleEscalators.expandedWorldSnapshot(world,structure,origin):new VehicleEscalators.WorldSnapshot(structure,origin);
         if(actor!=null)for(VehicleStructure.Cell cell:expanded.structure.cells){BlockPos p=expanded.origin.add(cell.pos);VehicleService.permission((net.minecraft.entity.player.EntityPlayerMP)actor,p);}
         NBTTagCompound undo=record(structure,origin,entity,false);if(expandedEscalator){undo.setTag("AssemblyOriginal",expanded.structure.write());undo.setLong("AssemblyOriginalOrigin",expanded.origin.toLong());}write(world,undo);
+        Transaction transaction=new Transaction(world);
         try {
             for(net.minecraft.entity.Entity rider:seated.keySet())rider.dismountRidingEntity();
             blocks(world,expanded.structure,expanded.origin,false);
             entity.transferEpoch=VehicleOwnership.update(world,entity.getUniqueID(),1,true);
             if(!world.spawnEntity(entity))throw new IOException("Vehicle spawn was cancelled.");
+            entity.signals.tick();
             for(Map.Entry<net.minecraft.entity.Entity,BlockPos> rider:seated.entrySet()){
                 entity.assignSeat(rider.getKey(),rider.getValue());
                 if(!rider.getKey().startRiding(entity,true))throw new IOException("Could not transfer a seated pilot to the vehicle.");
@@ -76,7 +85,26 @@ public final class VehicleTransfer {
             }
             for(com.vandorlabs.entity.EntityChairSeat chair:oldSeats)chair.setDead();
             flush(world);Files.delete(journal(world));return entity;
-        }catch(Exception failure){entity.setDead();rollback(world,undo);throw failure;}
+        }catch(Exception failure){
+            entity.setDead();rollback(world,undo);
+            try{restoreAssemblyPassengers(world,origin,seated,oldSeats);}catch(Exception seatingFailure){failure.addSuppressed(seatingFailure);}
+            throw failure;
+        }finally{transaction.close();}
+    }
+    /** Failed assembly returns riders in their original seat order, including late failures after chair retirement. */
+    private static void restoreAssemblyPassengers(WorldServer world,BlockPos origin,Map<net.minecraft.entity.Entity,BlockPos> seated,List<com.vandorlabs.entity.EntityChairSeat> originals)throws IOException{
+        for(Map.Entry<net.minecraft.entity.Entity,BlockPos> entry:seated.entrySet()){
+            net.minecraft.entity.Entity rider=entry.getKey();if(rider.isDead)continue;
+            BlockPos at=origin.add(entry.getValue());com.vandorlabs.entity.EntityChairSeat chair=null;
+            for(com.vandorlabs.entity.EntityChairSeat original:originals)if(!original.isDead&&original.getChairPos().equals(at)){chair=original;break;}
+            if(chair==null){
+                chair=new com.vandorlabs.entity.EntityChairSeat(world,at,com.vandorlabs.blocks.BlockPilotSeat.seatHeight(world,at));
+                chair.rotationYaw=world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockPilotSeat.FACING).getHorizontalAngle();
+                if(!world.spawnEntity(chair))throw new IOException("Could not restore the original pilot chair.");
+            }
+            rider.dismountRidingEntity();if(!rider.startRiding(chair,true))throw new IOException("Could not restore a seated pilot after failed assembly.");
+            chair.updatePassenger(rider);
+        }
     }
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player)throws Exception {
         park(world,entity,origin,player,true);
@@ -94,7 +122,7 @@ public final class VehicleTransfer {
         for(net.minecraft.entity.Entity rider:entity.getPassengers())passengers.put(rider,entity.seatForPassenger(rider));
         int parkingTurns=VehicleRotation.turns(entity.rotationYaw);
         NBTTagCompound undo=record(entity.structure,origin,entity,true);undo.setTag("ParkedCraft",placed.write());write(world,undo);
-        entity.transferInProgress=true;WorldServer previousParkingMutation=MUTATING.get();MUTATING.set(world);
+        entity.transferInProgress=true;Transaction transaction=new Transaction(world);
         try {
             java.util.List<net.minecraftforge.common.util.BlockSnapshot> replaced=new ArrayList<>();
             for(VehicleStructure.Cell cell:placed.cells)replaced.add(net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(world,origin.add(cell.pos)));
@@ -120,7 +148,7 @@ public final class VehicleTransfer {
             if(restored instanceof EntityGroundVehicle)for(Map.Entry<net.minecraft.entity.Entity,BlockPos> rider:passengers.entrySet()){
                 ((EntityGroundVehicle)restored).assignSeat(rider.getKey(),rider.getValue());rider.getKey().startRiding(restored,true);
             }
-            throw failure;}finally{entity.transferInProgress=false;if(previousParkingMutation==null)MUTATING.remove();else MUTATING.set(previousParkingMutation);}
+            throw failure;}finally{entity.transferInProgress=false;transaction.close();}
     }
     public static void recover(WorldServer world)throws Exception {
         if(!pending(world))return;
@@ -130,6 +158,7 @@ public final class VehicleTransfer {
         rollback(world,tag);
     }
     private static void rollback(WorldServer world,NBTTagCompound undo)throws Exception {
+        try(Transaction transaction=new Transaction(world)){
         VehicleStructure structure=VehicleStructure.read(undo.getCompoundTag("Craft"));BlockPos origin=BlockPos.fromLong(undo.getLong("Origin"));
         // Recovery alone may load the affected chunks: no transfer can have moved before its journal was retired.
         Set<Long> chunks=new HashSet<>();
@@ -142,21 +171,24 @@ public final class VehicleTransfer {
         if(undo.getBoolean("Parking")) {
             blocks(world,undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure,origin,false);
             EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);
+            restored.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));restored.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;
             restored.taxiReturnPending=undo.getBoolean("TaxiReturnPending");restored.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
             restored.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));
             restored.transferEpoch=VehicleOwnership.update(world,id,1,true);
             restored.rotationYaw=undo.getFloat("Yaw");
             restored.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(restored))throw new IOException("Recovery vehicle spawn cancelled; journal retained.");
+            restored.signals.tick();
         }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);}
         flush(world);Files.deleteIfExists(journal(world));
+        }
     }
     public static void blocks(WorldServer world,VehicleStructure structure,BlockPos origin,boolean place) {
-        long began=System.nanoTime();WorldServer previousMutation=MUTATING.get();MUTATING.set(world);
-        try{
+        long began=System.nanoTime();
+        try(Transaction transaction=new Transaction(world)){
         Set<Chunk> chunks=new HashSet<>();Map<BlockPos,IBlockState> previous=new LinkedHashMap<>();
         for(VehicleStructure.Cell cell:structure.cells) {
-            BlockPos p=origin.add(cell.pos);previous.put(p,world.getBlockState(p));world.removeTileEntity(p);
+            BlockPos p=origin.add(cell.pos);previous.put(p,world.getBlockState(p));
         }
         for(VehicleStructure.Cell cell:structure.cells) {
             BlockPos p=origin.add(cell.pos);Chunk chunk=world.getChunkFromBlockCoords(p);chunks.add(chunk);
@@ -164,6 +196,10 @@ public final class VehicleTransfer {
             if(sections[section]==Chunk.NULL_BLOCK_STORAGE)sections[section]=new ExtendedBlockStorage(section<<4,world.provider.hasSkyLight());
             sections[section].set(p.getX()&15,p.getY()&15,p.getZ()&15,place?cell.state:Blocks.AIR.getDefaultState());
         }
+        // Invalidation may inspect neighboring tile entities. Publish all final states
+        // first, so an already removed tile cannot be recreated from its old block.
+        // World.removeTileEntity also removes pending entries created during a tile tick.
+        for(BlockPos p:previous.keySet())world.removeTileEntity(p);
         if(place)for(VehicleStructure.Cell cell:structure.cells) if(cell.tileData()!=null) {
             BlockPos p=origin.add(cell.pos);NBTTagCompound restoredTag=VehicleEscalators.parked(VehicleTileData.translated(cell.tileData(),origin),world.getTotalWorldTime());
             TileEntity tile=TileEntity.create(world,restoredTag);
@@ -175,12 +211,13 @@ public final class VehicleTransfer {
             }
             world.setTileEntity(p,tile);tile.markDirty();
         }
+        if(place)com.vandorlabs.tiles.DeferredTileLoad.flushInstalled(world,previous.keySet());
         for(Chunk chunk:chunks){chunk.generateSkylightMap();chunk.markDirty();}
         for(Map.Entry<BlockPos,IBlockState> entry:previous.entrySet()) {
             BlockPos p=entry.getKey();world.checkLight(p);world.notifyBlockUpdate(p,entry.getValue(),world.getBlockState(p),3);
         }
         for(BlockPos p:previous.keySet())world.notifyNeighborsOfStateChange(p,world.getBlockState(p).getBlock(),false);
         timing(place?"restore-blocks-light-neighbors":"remove-blocks-light-neighbors",began);
-        }finally{if(previousMutation==null)MUTATING.remove();else MUTATING.set(previousMutation);}
+        }
     }
 }

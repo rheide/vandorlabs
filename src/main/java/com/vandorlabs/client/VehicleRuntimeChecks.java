@@ -40,6 +40,7 @@ public final class VehicleRuntimeChecks {
         require(scan.error==null && scan.result!=null,"scan: "+scan.error);return scan;
     }
     private static final class SignalSource extends net.minecraft.tileentity.TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean high;public net.minecraft.tileentity.TileEntity channelTile(){return this;}public int getRedstoneChannel(){return 5317;}public void setRedstoneChannel(int channel){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean signal){}
         void power(boolean on){high=on;com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);}
     }

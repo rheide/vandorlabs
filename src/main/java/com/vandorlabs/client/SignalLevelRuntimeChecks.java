@@ -95,6 +95,7 @@ public final class SignalLevelRuntimeChecks {
         }
     }
     private static final class Source extends TileEntity implements RedstoneChannelMember {
+        public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         int level;
         Source(World world,BlockPos pos){setWorld(world);setPos(pos);}
         public TileEntity channelTile(){return this;}

@@ -5,6 +5,12 @@ import net.minecraft.tileentity.TileEntity;
 /** A loaded tile that participates in its dimension's virtual redstone bus. */
 public interface RedstoneChannelMember {
     TileEntity channelTile();
+    /** Logical adapters must override this with the identity of their live source. */
+    default boolean isChannelMemberActive(){
+        TileEntity tile=channelTile();
+        return tile!=null && !tile.isInvalid() && tile.getWorld()!=null
+                && tile.getWorld().isBlockLoaded(tile.getPos()) && tile.getWorld().getTileEntity(tile.getPos())==tile;
+    }
     int getRedstoneChannel();
     void setRedstoneChannel(int channel);
     default ChannelList getRedstoneChannels(){return ChannelList.of(Math.max(0,getRedstoneChannel()));}
