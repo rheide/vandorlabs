@@ -35,6 +35,7 @@ public final class RegularDialogRuntimeChecks {
             WorldServer w=world(mc);for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-2,-4),POS.add(4,4,4)))w.setBlockToAir(at);
             for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-1,-4),POS.add(4,-1,4)))w.setBlockState(at,Blocks.STONE.getDefaultState(),3);
             w.setBlockState(POS,block().getDefaultState(),3);
+            if(scenario%4==3){p.inventory.setInventorySlotContents(9,new ItemStack(Blocks.WOOL,7,14));p.inventory.setInventorySlotContents(10,new ItemStack(net.minecraft.init.Items.APPLE,4));p.inventory.setInventorySlotContents(11,new ItemStack(Blocks.STAINED_GLASS,5,3));p.inventoryContainer.detectAndSendChanges();}
             if(scenario%4==0){BlockPos seat=POS.east();w.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,seat,w.getBlockState(seat),p,new ItemStack(ModBlocks.PILOT_SEAT));}
             if(scenario%4==1)((TileEntityRampController)w.getTileEntity(POS)).setOwner(p);
             double dy=.5-p.getEyeHeight();float pitch=(float)-Math.toDegrees(Math.atan2(dy,2.5));p.connection.setPlayerLocation(POS.getX()+.5,POS.getY(),POS.getZ()-2,0,pitch);
@@ -61,7 +62,7 @@ public final class RegularDialogRuntimeChecks {
         if(stage==1){require(frame<100,"correct dialog did not open; current="+(mc.currentScreen==null?"none":mc.currentScreen.getClass().getSimpleName()));if(!dialog(mc)||frame<6)return false;
             VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_regular_dialog_"+scenario+".png");
             if(scenario==1){RampModeRuntimeChecks.begin();stage=3;frame=0;return false;}
-            if(scenario%4==1)mouse(mc,18);else if(scenario%4==2){mouse(mc,3);mouse(mc,1);}else if(scenario%4==3){mouse(mc,0);mouse(mc,1);}else mc.player.closeScreen();
+            if(scenario%4==1)mouse(mc,18);else if(scenario%4==2){mouse(mc,3);mouse(mc,1);}else if(scenario%4==3){AutopilotPickerRuntimeChecks.check(mc,output);mouse(mc,0);mouse(mc,1);}else mc.player.closeScreen();
             stage=2;frame=0;return false;
         }
         if(stage==3){if(!RampModeRuntimeChecks.tick(mc,POS,output))return false;mouse(mc,18);stage=2;frame=0;return false;}
@@ -70,7 +71,7 @@ public final class RegularDialogRuntimeChecks {
                 net.minecraft.tileentity.TileEntity tile=world(mc).getTileEntity(POS);
                 if(scenario%4==1)require(tile instanceof TileEntityRampController&&!((TileEntityRampController)tile).matchTextures,"real ramp button packet saves without tool");
                 else if(scenario%4==2)require(tile instanceof TileEntityWaypoint&&!((TileEntityWaypoint)tile).autoDepart,"real waypoint Done packet saves without tool");
-                else if(scenario%4==3)require(tile instanceof TileEntityAutopilot&&((TileEntityAutopilot)tile).trigger==2,"real autopilot Done packet saves without tool");
+                else if(scenario%4==3)require(tile instanceof TileEntityAutopilot&&((TileEntityAutopilot)tile).trigger==2&&((TileEntityAutopilot)tile).marker.equals("minecraft:wool")&&((TileEntityAutopilot)tile).markerMeta==14&&((TileEntityAutopilot)tile).getRedstoneChannel()==28831,"real autopilot picker and Done packet save exact marker metadata and draft channels without tool");
             }).get();
             if(++scenario==16){mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.setGameType(GameType.CREATIVE);p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();}).get();System.out.println("[vandorlabs][reprolab] regular-dialog-client PASS four-blocks actual-right-click no-shift creative survival empty-hand Configurizer full-dialog-parity GUI-mouse-packet-saves reach-edit-spectator-protection");return true;}
             prepare(mc);
