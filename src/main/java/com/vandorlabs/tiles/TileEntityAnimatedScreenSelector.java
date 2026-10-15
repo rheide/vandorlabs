@@ -28,7 +28,7 @@ import java.util.Map;
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
     public static final int REDSTONE_SURFACE=-2;
     public static final int VEHICLE_SURFACE=-3;
-    public boolean hasVehicleStatus(int slot){return (slot==1?secondarySurface:primarySurface)==VEHICLE_SURFACE;}
+    public boolean hasVehicleStatus(int slot){return getSurfaceTexture(slot)==VEHICLE_SURFACE;}
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
     public RedstoneScreenContents redstoneScreen(int slot){
@@ -168,7 +168,11 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int primarySurface=-1,secondarySurface=-1;
     public int getSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
-        if(choice==REDSTONE_SURFACE){redstoneScreen(slot).setEnabled(true);return;}
+        if(choice==REDSTONE_SURFACE){
+            // The row control is the active surface, replacing Vehicle Status.
+            if((slot==1?secondarySurface:primarySurface)==VEHICLE_SURFACE){if(slot==1)secondarySurface=-1;else primarySurface=-1;settingsChanged();}
+            redstoneScreen(slot).setEnabled(true);return;
+        }
         if(controls[slot]!=null)controls[slot].setEnabled(false);
         int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
         if(getSurfaceTexture(slot)==next)return;
