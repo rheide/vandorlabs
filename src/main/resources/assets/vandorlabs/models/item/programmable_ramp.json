@@ -1,1 +1,60 @@
-{"parent":"vandorlabs:block/ramp_elevator_controller_off"}
+{
+  "parent": "vandorlabs:block/ramp_mode_ramp_off",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.52,
+        0.52,
+        0.52
+      ]
+    }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "vandorlabs:ramp_mode": 1
+      },
+      "model": "vandorlabs:item/ramp_mode_filled_ramp"
+    },
+    {
+      "predicate": {
+        "vandorlabs:ramp_mode": 2
+      },
+      "model": "vandorlabs:item/ramp_mode_lift"
+    },
+    {
+      "predicate": {
+        "vandorlabs:ramp_mode": 3
+      },
+      "model": "vandorlabs:item/ramp_mode_extend"
+    },
+    {
+      "predicate": {
+        "vandorlabs:ramp_mode": 4
+      },
+      "model": "vandorlabs:item/ramp_mode_escalator_up"
+    },
+    {
+      "predicate": {
+        "vandorlabs:ramp_mode": 5
+      },
+      "model": "vandorlabs:item/ramp_mode_escalator_down"
+    },
+    {
+      "predicate": {
+        "vandorlabs:ramp_mode": 6
+      },
+      "model": "vandorlabs:item/ramp_mode_moat"
+    }
+  ]
+}

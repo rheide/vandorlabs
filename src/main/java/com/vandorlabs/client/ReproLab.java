@@ -596,6 +596,10 @@ public class ReproLab {
             try {if(LargeCanopyVisualChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("large canopy live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.regularDialogChecksOnly")) {
+            try {if(!vehicleStatusStarted){RegularDialogRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(RegularDialogRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Regular right-click dialog live checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.vehicleControllerChecksOnly")) {
             try {if(VehicleControllerRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle Controller live checks",failure);}
             return;

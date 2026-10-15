@@ -13,7 +13,10 @@ public final class VehicleSeatSettings {
     }
     /** Seat edits need not reject unrelated machines changing inventory/burn time. */
     public static boolean matchesPlaced(VehicleStructure structure,net.minecraft.world.World world,BlockPos origin) {
-        VehicleStructure.Cell saved=structure.at(structure.seat);BlockPos at=origin.add(structure.seat);
+        return matchesPlacedAt(structure,world,origin,structure.seat);
+    }
+    public static boolean matchesPlacedAt(VehicleStructure structure,net.minecraft.world.World world,BlockPos origin,BlockPos selected){
+        VehicleStructure.Cell saved=structure.at(selected);BlockPos at=origin.add(selected);
         if(saved==null || !world.isBlockLoaded(at) || world.getBlockState(at)!=saved.state
                 || !(world.getTileEntity(at) instanceof com.vandorlabs.tiles.TileEntityPilotSeat) || saved.tileData()==null)return false;
         NBTTagCompound actual=VehicleTileData.translated(world.getTileEntity(at).writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin));

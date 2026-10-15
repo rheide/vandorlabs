@@ -19,7 +19,7 @@ import java.util.*;
 /** Real controller conversion and authoritative multi-seat passenger contracts. */
 public final class VehicleControllerRuntimeChecks {
     private static final BlockPos BASE=new BlockPos(200,121,200),CONTROL=BASE.up(2),FIRST=BASE.add(2,2,0),SECOND=BASE.add(5,2,0);
-    private static int state,ticks;private static boolean done;private static UUID craftId;
+    private static int state,ticks,standaloneStage;private static boolean done;private static UUID craftId;
     private static BlockPos parkedFirst,parkedSecond;
     private static final UUID CREW_A=UUID.fromString("625d9baf-3d0e-427a-8785-39c10ca5eb9a"),CREW_B=UUID.fromString("870c9095-c728-44fb-bd1e-8f4f3489de15");
     private static void require(boolean yes,String message){if(!yes)throw new IllegalStateException("vehicle-controller: "+message);}
@@ -47,7 +47,75 @@ public final class VehicleControllerRuntimeChecks {
         }
         VehicleScan multiple=new VehicleScan(world,CONTROL);for(int step=0;step<100&&!multiple.step(256);step++){}
         require(multiple.result!=null&&multiple.result.pilotSeats().size()==2,"connected controller accepts two pilot seats: "+multiple.error);
+        migrationChecks(world,multiple.result);
         actor.setPositionAndUpdate(CONTROL.getX()+.5,CONTROL.getY(),CONTROL.getZ()-2.5);
+    }
+    private static void standalone(Minecraft mc,File output)throws Exception{
+        BlockPos at=BASE.west(12);
+        if(standaloneStage==0){mc.getIntegratedServer().addScheduledTask(()->{
+            EntityPlayerMP actor=player(mc);actor.dismountRidingEntity();actor.setSneaking(false);actor.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+            for(BlockPos pos:BlockPos.getAllInBox(at.add(-2,-2,-2),at.add(2,3,2)))world(mc).setBlockToAir(pos);
+            // Support the observer independently: the controller itself must stay isolated.
+            for(BlockPos floor:BlockPos.getAllInBox(at.add(-1,-1,-3),at.add(1,-1,-1)))world(mc).setBlockState(floor,Blocks.STONE.getDefaultState(),2);
+            actor.capabilities.allowFlying=true;actor.capabilities.isFlying=true;actor.sendPlayerAbilities();
+            world(mc).setBlockState(at,controller().getDefaultState(),3);actor.setPositionAndUpdate(at.getX()+.5,at.getY(),at.getZ()-2);
+            VehicleService.previewController(actor,at);
+        }).get();standaloneStage=1;ticks=0;return;}
+        if(standaloneStage==1&&ticks>=40){
+            require(mc.currentScreen!=null&&header(mc).forward==1,"isolated controller opens settings despite missing Pilot Seat");
+            require(field(field(mc.currentScreen,"data"),"structure")==null,"invalid scan supplies real controller data without a fake hull");
+            require(buttons(mc).stream().anyMatch(b->b.id==0&&!b.enabled),"incomplete craft cannot assemble");
+            for(int id:new int[]{2,4,6})require(buttons(mc).stream().anyMatch(b->b.id==id&&b.enabled),"standalone control available: "+id);
+            GuiOptionCycleRuntimeChecks.check(mc);VehicleTaxiRuntimeChecks.type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"28811");mc.currentScreen.updateScreen();
+            standaloneStage=2;ticks=0;return;
+        }
+        if(standaloneStage==2&&ticks>=40){UUID token=header(mc).token;mc.getIntegratedServer().addScheduledTask(()->{
+            TileEntityVehicleController tile=(TileEntityVehicleController)world(mc).getTileEntity(at);require(player(mc).getDistanceSqToCenter(at)<=64,"standalone observer remains within settings reach: "+player(mc).getPositionVector());require(tile.getRedstoneChannel()==28811&&tile.controlsInitialized(),"standalone settings autoapply and initialize controls before seats exist");
+            NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
+            VehicleNetwork.Packet height=new VehicleNetwork.Packet(VehicleNetwork.HEIGHT);height.token=token;height.entity=-1;height.origin=at;height.strafe=3;VehicleService.configureHeight(player(mc),height);
+            require(before.equals(tile.writeToNBT(new NBTTagCompound())),"controller token rejects forged seat Height");
+            EntityPlayerMP actor=player(mc);double x=actor.posX,y=actor.posY,z=actor.posZ;actor.setPosition(x+100,y,z);
+            VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=token;denied.entity=-1;denied.origin=at;denied.text="28812";denied.forward=1;
+            try{VehicleService.configureChannels(actor,denied);}finally{actor.setPosition(x,y,z);}
+            require(before.equals(tile.writeToNBT(new NBTTagCompound())),"standalone settings reject out-of-reach packets");
+        }).get();VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_vehicle_controller_incomplete_settings.png");VehicleTaxiRuntimeChecks.button(mc,1);standaloneStage=3;ticks=0;return;}
+        if(standaloneStage==3&&ticks>=10){mc.getIntegratedServer().addScheduledTask(()->world(mc).setBlockToAir(at)).get();standaloneStage=4;ticks=0;}
+    }
+    private static void migrationChecks(WorldServer world,VehicleStructure original){
+        VehicleStructure.Cell control=original.controller(),primary=original.at(original.seat);
+        NBTTagCompound legacy=primary.tileData();legacy.setBoolean("TaxiMode",false);legacy.setInteger("PilotRedstoneMode",2);legacy.setInteger("PilotHeight",3);
+        com.vandorlabs.redstone.ChannelData.write(legacy,com.vandorlabs.redstone.ChannelList.of(28801,28802));
+        NBTTagCompound modes=new NBTTagCompound();com.vandorlabs.redstone.ChannelData.write(modes,com.vandorlabs.redstone.ChannelList.of(28803));legacy.setTag("VehicleModeChannels1",modes);
+        NBTTagCompound blank=control.tileData();blank.setBoolean("VehicleControllerControls",false);
+        VehicleStructure source=VehicleSeatSettings.replaceAt(original,primary.pos,legacy,BlockPos.ORIGIN);
+        source=VehicleSeatSettings.replaceAt(source,control.pos,blank,BlockPos.ORIGIN);
+        VehicleStructure migrated=VehicleControlSettings.migrate(source);
+        TileEntityVehicleController settings=new TileEntityVehicleController();settings.readFromNBT(migrated.controller().tileData());
+        require(settings.controlsInitialized()&&!settings.isTaxiMode()&&settings.getRedstoneMode()==2,"legacy controller controls imported once");
+        require(settings.getRedstoneChannels().toString().equals("28801, 28802")&&settings.modeChannels(1).toString().equals("28803"),"legacy toggle and mode channel lists preserved");
+        require(migrated.at(primary.pos).tileData().equals(legacy),"migration preserves independent selected seat height and full NBT");
+        require(VehicleControlSettings.migrate(migrated)==migrated,"initialized migration is idempotent");
+        settings.setTaxiMode(true);settings.setVehicleChannels(com.vandorlabs.redstone.ChannelList.of(28804),world);
+        VehicleStructure edited=VehicleSeatSettings.replaceAt(migrated,control.pos,settings.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN);
+        require(VehicleControlSettings.migrate(edited)==edited,"explicit controller choices never overwritten by legacy seat settings");
+        TileEntityVehicleController live=(TileEntityVehicleController)world.getTileEntity(CONTROL);
+        NBTTagCompound restore=live.writeToNBT(new NBTTagCompound());BlockPos origin=CONTROL.subtract(control.pos);
+        try{
+            // The scan saved an uninitialized controller before the player
+            // changed standalone settings, then completed after those edits.
+            live.readFromNBT(VehicleTileData.translated(blank,origin));
+            live.setTaxiMode(true);live.setVehicleChannels(com.vandorlabs.redstone.ChannelList.of(28821),world);
+            live.setModeChannels(2,com.vandorlabs.redstone.ChannelList.of(28822));live.configure(0,0,world);
+            NBTTagCompound explicit=live.writeToNBT(new NBTTagCompound());
+            VehicleStructure refreshed=VehicleControlSettings.migratePlaced(world,origin,source);
+            require(explicit.equals(live.writeToNBT(new NBTTagCompound())),"stale uninitialized scan never overwrites explicit live controller choices");
+            require(refreshed.controller().tileData().equals(VehicleTileData.translated(explicit,BlockPos.ORIGIN.subtract(origin))),"completed stale scan publishes current live controller NBT in local coordinates");
+            VehicleControlSettings.migratePlaced(world,origin,source);
+            require(explicit.equals(live.writeToNBT(new NBTTagCompound())),"repeated stale migration remains harmless");
+        }finally{live.readFromNBT(restore);live.markDirty();world.notifyBlockUpdate(CONTROL,world.getBlockState(CONTROL),world.getBlockState(CONTROL),2);}
+        EntityGroundVehicle saved=new EntityGroundVehicle(world);saved.install(source);NBTTagCompound tag=new NBTTagCompound();saved.writeToNBT(tag);
+        EntityGroundVehicle loaded=new EntityGroundVehicle(world);loaded.readFromNBT(tag);
+        require(loaded.structure.controller().tileData().getBoolean("VehicleControllerControls")&&loaded.structure.at(primary.pos).tileData().getInteger("PilotHeight")==3,"captured migration and independent height survive entity save");
     }
     private static void click(Minecraft mc)throws Exception{
         mc.player.setSneaking(false);mc.player.setPositionAndRotation(CONTROL.getX()+.5,CONTROL.getY(),CONTROL.getZ()-2.5,0,20);
@@ -60,10 +128,12 @@ public final class VehicleControllerRuntimeChecks {
         require(mc.currentScreen!=null&&mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview"),"controller opens integrated panel");
         require(header(mc).forward==1,"controller panel metadata distinct from seat");
         require(buttons(mc).stream().anyMatch(button->button.id==0&&button.enabled),"controller assembly action available");
-        require(buttons(mc).stream().noneMatch(button->button.id==2||button.id==4||button.id==5||button.id==6),"controller panel has no individual seat settings");
+        require(buttons(mc).stream().noneMatch(button->button.id==5),"controller has no individual seat Height setting");
+        for(int id:new int[]{2,4,6})require(buttons(mc).stream().anyMatch(button->button.id==id&&button.enabled),"controller owns Taxi, trigger and mode channels: "+id);
     }
     public static boolean tick(Minecraft mc,File output)throws Exception{
         if(done)return true;require(++ticks<400,"timeout state="+state);
+        if(standaloneStage<4){standalone(mc,output);return false;}
         if(state==0){mc.displayGuiScreen(null);VehicleControllerItemChecks.run(mc,output);mc.getIntegratedServer().addScheduledTask(()->setup(mc)).get();state=1;ticks=0;return false;}
         if(state==1&&ticks>=30){if(mc.world.getBlockState(CONTROL).getBlock()!=controller())return false;click(mc);state=2;ticks=0;return false;}
         if(state==2&&ticks>=30){panel(mc);VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_vehicle_controller_assembly.png");UUID token=header(mc).token;

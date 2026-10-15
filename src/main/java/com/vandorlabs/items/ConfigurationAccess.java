@@ -7,6 +7,14 @@ import net.minecraft.util.EnumHand;
 public final class ConfigurationAccess {
     private ConfigurationAccess() { }
 
+    /** Public block dialogs still require the normal reach and edit permissions. */
+    public static boolean canEditDialog(EntityPlayer player,net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos){
+        return player!=null&&!player.isDead&&!player.isSpectator()&&player.world==world
+                && world.isBlockLoaded(pos)&&player.getDistanceSq(pos)<=64
+                && player.canPlayerEdit(pos,net.minecraft.util.EnumFacing.UP,player.getHeldItemMainhand())
+                && world.isBlockModifiable(player,pos);
+    }
+
     public static boolean canConfigure(EntityPlayer player) {
         return player.capabilities.isCreativeMode
                 || player.getHeldItem(EnumHand.MAIN_HAND).getItem() == ModItems.CONFIGURIZER;

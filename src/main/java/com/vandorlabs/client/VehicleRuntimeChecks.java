@@ -55,7 +55,7 @@ public final class VehicleRuntimeChecks {
         world.setBlockState(seat.east(2),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
         SignalSource source=new SignalSource();source.setWorld(world);source.setPos(base.west(3));com.vandorlabs.redstone.RedstoneChannels.register(source);
         try {
-            TileEntityPilotSeat pilot=(TileEntityPilotSeat)world.getTileEntity(seat);pilot.setRedstoneChannel(5317);
+            TileEntityVehicleController pilot=(TileEntityVehicleController)world.getTileEntity(seat.east(2));pilot.setTaxiMode(false);pilot.setRedstoneChannel(5317);pilot.owner=player.getUniqueID();
             player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setPositionAndUpdate(seat.getX(),seat.getY(),seat.getZ());
             ModBlocks.PILOT_SEAT.onBlockActivated(world,seat,state,player,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F);
             require(player.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"pilot sits before channel assembly");
@@ -66,7 +66,7 @@ public final class VehicleRuntimeChecks {
             source.power(false);craft.onUpdate();source.power(true);craft.onUpdate();
             VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
             require(craft.isDead && player.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"second rising edge parks with pilot safely seated: dead="+craft.isDead+", riding="+player.getRidingEntity()+", y="+craft.posY+", dy="+craft.motionY);
-            TileEntityPilotSeat parked=(TileEntityPilotSeat)world.getTileEntity(seat);require(parked!=null && parked.getRedstoneChannel()==5317 && parked.owner.equals(player.getUniqueID()),"parking retains pilot channel and owner");
+            TileEntityVehicleController parked=(TileEntityVehicleController)world.getTileEntity(seat.east(2));require(parked!=null && parked.getRedstoneChannel()==5317 && parked.owner.equals(player.getUniqueID()),"parking retains controller channel and owner");
             parked.update();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
             require(world.getBlockState(seat).getBlock()==ModBlocks.PILOT_SEAT,"held high remains stable after parking");
             player.dismountRidingEntity();player.setPositionAndUpdate(4,101,8);

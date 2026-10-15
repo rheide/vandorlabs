@@ -175,12 +175,14 @@ public final class VehicleTaxiRuntimeChecks {
     private static List<GuiButton> previewControls(GuiScreen gui){
         List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
         require(controls.stream().noneMatch(b->"Save".equalsIgnoreCase(b.displayString)),"preview applies valid changes without a Save button");
+        boolean seatOnly=controls.stream().anyMatch(b->b.id==5);
+        if(seatOnly){require(controls.size()==2&&controls.stream().allMatch(b->b.id==1||b.id==5),"compact seat dialog contains only Height and Done");}
         GuiButton modes=null;
         for(GuiButton b:controls)if(b.visible){
             require(b.x>=0&&b.y>=0&&b.x+b.width<=gui.width&&b.y+b.height<=gui.height,"visible control fits screen: "+b.displayString);
             if(b.displayString.toLowerCase(java.util.Locale.ROOT).contains("mode channels"))modes=b;
         }
-        require(modes!=null&&modes.enabled&&modes.width>=140&&modes.height>=20,"mode channels is a prominent usable main control");
+        if(!seatOnly)require(modes!=null&&modes.enabled&&modes.width>=140&&modes.height>=20,"mode channels is a prominent usable main control");
         return controls;
     }
     static void screenshot(Minecraft mc,File output,String name)throws Exception{
@@ -202,7 +204,7 @@ public final class VehicleTaxiRuntimeChecks {
         mc.getIntegratedServer().addScheduledTask(()->{
             require(player(mc).getRidingEntity() instanceof EntityGroundVehicle,"Taxi Mode assembles and mounts through client block click");
             EntityGroundVehicle e=(EntityGroundVehicle)player(mc).getRidingEntity();craftId=e.getUniqueID();
-            require(e.structure.at(e.structure.seat).tileData().getBoolean("TaxiMode"),"saved automatic behavior");
+            require(VehicleTaxiMode.enabled(e.structure),"controller saves automatic behavior");
         }).get();
         require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"client riding identity synchronized");
     }
@@ -239,19 +241,19 @@ public final class VehicleTaxiRuntimeChecks {
         switch(phase++) {
             case 0:mc.getIntegratedServer().addScheduledTask(()->{try{setup(mc);}catch(Exception e){throw new IllegalStateException(e);}}).get();break;
             case 1:if(mc.world.getBlockState(seat).getBlock()!=ModBlocks.PILOT_SEAT){require(++dialogWait<16,"fixture chunks reach client");phase--;break;}blockClick(mc,true);break;
-            case 2:if(mc.currentScreen==null||!mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview")){require(++dialogWait<24,"placed pilot seat opens integrated preview");blockClick(mc,true);phase--;break;}previewLayout(mc);screenshot(mc,output,"shot_pilot_shift_preview.png");button(mc,2);break;
-            case 3:mc.getIntegratedServer().addScheduledTask(()->require(!((TileEntityPilotSeat)world(mc).getTileEntity(seat)).isTaxiMode(),"OFF setting saved through UI/network")).get();if(mc.currentScreen!=null){button(mc,1);phase--;break;}blockClick(mc,false);break;
-            case 4:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"manual mode sits without conversion");player(mc).dismountRidingEntity();player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewAssembly(player(mc),seat);}).get();break;
-            case 5:previewLayout(mc);screenshot(mc,output,"shot_pilot_configurizer_preview.png");require(field(mc.currentScreen,"channels") instanceof GuiTextField,"channels integrated into assembly dialog");button(mc,5);break;
-            case 6:mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)world(mc).getTileEntity(seat)).getHeight()==1,"assembly preview height applies immediately")).get();type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"5319");mc.currentScreen.updateScreen();break;
+            case 2:if(mc.currentScreen==null||!mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview")){require(++dialogWait<24,"placed pilot seat opens compact height dialog");blockClick(mc,true);phase--;break;}previewLayout(mc);screenshot(mc,output,"shot_pilot_shift_preview.png");button(mc,5);break;
+            case 3:mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)world(mc).getTileEntity(seat)).getHeight()==1,"independent seat height applies immediately");VehicleService.previewController(player(mc),origin.add(1,1,1));}).get();break;
+            case 4:previewLayout(mc);button(mc,2);break;
+            case 5:previewLayout(mc);screenshot(mc,output,"shot_pilot_controller_settings.png");require(field(mc.currentScreen,"channels") instanceof GuiTextField,"channels belong to controller dialog");type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"5319");mc.currentScreen.updateScreen();break;
+            case 6:mc.getIntegratedServer().addScheduledTask(()->{require(!((TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1))).isTaxiMode(),"controller Taxi OFF applies immediately");require(((TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1))).getRedstoneChannel()==5319,"controller channel edit applies");}).get();button(mc,1);break;
             case 7:mc.getIntegratedServer().addScheduledTask(()->{
-                TileEntityPilotSeat pilot=(TileEntityPilotSeat)world(mc).getTileEntity(seat);
+                TileEntityVehicleController pilot=(TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1));
                 require(pilot.getRedstoneChannel()==5319 && !player(mc).isRiding(),"assembly preview settings save placed seat without conversion on a held-high channel");
                 player(mc).setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
-            }).get();button(mc,1);break;
-            case 8:mc.getIntegratedServer().addScheduledTask(()->require(world(mc).getTileEntity(seat) instanceof TileEntityPilotSeat,"held-high edit does not queue automatic conversion")).get();break;
-            case 9:blockClick(mc,true);break;
-            case 10:previewLayout(mc);button(mc,2);break;
+            }).get();break;
+            case 8:mc.getIntegratedServer().addScheduledTask(()->require(world(mc).getTileEntity(seat) instanceof TileEntityPilotSeat,"held-high edit does not queue automatic conversion")).get();blockClick(mc,false);break;
+            case 9:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"controller OFF permits ordinary seating");player(mc).dismountRidingEntity();VehicleService.previewController(player(mc),origin.add(1,1,1));}).get();break;
+            case 10:previewLayout(mc);stalePreview=((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).token;button(mc,2);break;
             case 11:if(mc.currentScreen!=null){button(mc,1);phase--;break;}blockClick(mc,false);break;
             case 12:mounted(mc);prepareExit(mc,1);mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
             case 13:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"90-degree taxi exit restores blocks");require(placements==1,"immediate complete tile preservation audit");require(!player(mc).isRiding(),"automatic parking does not remount or loop");}).get();blockClick(mc,false);break;
@@ -273,47 +275,47 @@ public final class VehicleTaxiRuntimeChecks {
                 require(commandPlan.structure.at(rotatedCommand).state.getBlock()==Blocks.COMMAND_BLOCK,"vanilla command block rotates with complete private data");
                 e.install(before);
                 e.rotationYaw=45;player(mc).dismountRidingEntity();require(!player(mc).isRiding() && e.taxiReturnPending,"45-degree exit allows dismount without losing snapshot");require(e.board(player(mc)),"reboard after noncardinal exit");
-                e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewSeat(player(mc),e,e.structure.seat);
+                e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewController(player(mc),e,e.structure.controller().pos);
             }).get();break;
             case 21: {
                 if(modeUiStage==0){previewLayout(mc);screenshot(mc,output,"shot_pilot_captured_preview.png");button(mc,6);modeUiStage++;phase--;break;}
                 if(modeUiStage==1){require(mc.currentScreen instanceof GuiPilotModes,"mode channel child opens from preview");screenshot(mc,output,"shot_pilot_mode_channels.png");GuiTextField[] fields=(GuiTextField[])field(mc.currentScreen,"fields");type(mc,fields[1],"6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
-                if(modeUiStage==2){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).modeChannels(1).toString().equals("6123"),"child mode channels automatically apply")).get();((GuiTextField[])field(mc.currentScreen,"fields"))[1].setText("1,,2");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
-                if(modeUiStage==3){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).modeChannels(1).toString().equals("6123"),"invalid child draft preserves saved mode channels")).get();button(mc,4);modeUiStage++;phase--;break;}
+                if(modeUiStage==2){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"child mode channels automatically apply")).get();((GuiTextField[])field(mc.currentScreen,"fields"))[1].setText("1,,2");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
+                if(modeUiStage==3){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"invalid child draft preserves saved mode channels")).get();button(mc,4);modeUiStage++;phase--;break;}
                 previewLayout(mc);
-                Object data=field(mc.currentScreen,"data");stalePreview=((VehicleNetwork.Packet)field(data,"header")).token;
+                Object data=field(mc.currentScreen,"data");require(!stalePreview.equals(((VehicleNetwork.Packet)field(data,"header")).token),"new inspection supersedes planted controller preview");
                 break;
             }
             case 22: {
                 GuiOptionCycleRuntimeChecks.check(mc);
-                GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("5317, 5318");channels.setText("5319");button(mc,5);break;
+                GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");channels.setText("5317, 5318");channels.setText("5319");mc.currentScreen.updateScreen();break;
             }
-            case 23:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5319"),"live height preserves current channel text");mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getHeight()==2,"vehicle preview height applies immediately");require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().toString().equals("5319"),"valid channel draft automatically applies");}).get();break;
+            case 23:require(((GuiTextField)field(mc.currentScreen,"channels")).getText().equals("5319"),"controller preserves current channel draft");mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getHeight()==1,"controller edits preserve independent seat height");require(((TileEntityVehicleController)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).getRedstoneChannels().toString().equals("5319"),"controller channel draft automatically applies");}).get();break;
             case 24: {
                 GuiTextField channels=(GuiTextField)field(mc.currentScreen,"channels");
                 if(!invalidChannelDraft){channels.setText("1,,2");mc.currentScreen.updateScreen();invalidChannelDraft=true;phase--;break;}
                 List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");
-                require(controls.stream().noneMatch(b->b.id==3),"Save button removed");require(controls.stream().noneMatch(b->b.id==0),"seat channel panel never contains controller conversion");
-                mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.seat)).getRedstoneChannels().toString().equals("5319"),"invalid draft never mutates craft")).get();
+                require(controls.stream().noneMatch(b->b.id==3||b.id==5),"controller has no Save or seat Height button");
+                mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityVehicleController)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).getRedstoneChannels().toString().equals("5319"),"invalid controller draft never mutates craft")).get();
                 channels.setText("5318, 5317, 5318");mc.currentScreen.updateScreen();break;
             }
             case 25: {
-                Object data=field(mc.currentScreen,"data");UUID currentPreview=((VehicleNetwork.Packet)field(data,"header")).token;
+                Object data=field(mc.currentScreen,"data");UUID currentPreview=((VehicleNetwork.Packet)field(data,"header")).token;BlockPos selected=((VehicleStructure)field(data,"structure")).controller().pos;
                 mc.getIntegratedServer().addScheduledTask(()->{
-                EntityGroundVehicle e=craft(mc);TileEntityPilotSeat pilot=(TileEntityPilotSeat)e.view.getTileEntity(e.structure.seat);
+                EntityGroundVehicle e=craft(mc);TileEntityVehicleController pilot=(TileEntityVehicleController)e.view.getTileEntity(e.structure.controller().pos);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"actual settings packet saves canonical channel list");
-                require(com.vandorlabs.redstone.ChannelData.read(e.structure.at(e.structure.seat).tileData(),0).equals(pilot.getRedstoneChannels()),"authoritative seat snapshot and local view agree");
+                require(com.vandorlabs.redstone.ChannelData.read(e.structure.controller().tileData(),0).equals(pilot.getRedstoneChannels()),"authoritative seat snapshot and local view agree");
                 NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);
                 require(loaded.structure.write().equals(e.structure.write()),"edited channels survive entity save/reload");
-                VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=BlockPos.ORIGIN;stale.text="999";VehicleService.configureChannels(player(mc),stale);
+                VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=selected;stale.text="999";VehicleService.configureChannels(player(mc),stale);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"superseded preview cannot edit channels");
                 require(((TileEntityPilotSeat)world(mc).getTileEntity(unrelatedSeat)).getRedstoneChannel()==777,"assembled settings never edit a real tile at the local seat coordinates");
-                VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=currentPreview;denied.entity=e.getEntityId();denied.origin=BlockPos.ORIGIN;denied.text="999";
+                VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=currentPreview;denied.entity=e.getEntityId();denied.origin=selected;denied.text="999";
                 player(mc).setGameType(net.minecraft.world.GameType.ADVENTURE);
                 try{VehicleService.configureChannels(player(mc),denied);}finally{player(mc).setGameType(net.minecraft.world.GameType.CREATIVE);}
                 require(e.structure==loaded.structure || e.structure.write().equals(loaded.structure.write()),"denied settings preserve the authoritative snapshot");
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"protection rejects channel edits");
-                denied.origin=BlockPos.ORIGIN.up();VehicleService.configureChannels(player(mc),denied);
+                denied.origin=selected.up();VehicleService.configureChannels(player(mc),denied);
                 require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"forged seat identity rejected");
             }).get();break;
             }

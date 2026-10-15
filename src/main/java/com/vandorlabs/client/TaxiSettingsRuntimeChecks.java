@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.tiles.TileEntityPilotSeat;
+import com.vandorlabs.tiles.TileEntityVehicleController;
 import com.vandorlabs.vehicle.*;
 import com.vandorlabs.redstone.*;
 import net.minecraft.block.BlockSlab;
@@ -25,12 +26,12 @@ public final class TaxiSettingsRuntimeChecks {
         for(float yaw:new float[]{13,45,77,103,Float.NaN}){boolean refused=false;try{VehicleRotation.turns(yaw);}catch(IllegalArgumentException expected){refused=true;}require(refused,"noncardinal heading "+yaw);}
         BlockPos at=new BlockPos(320,102,160);world.getChunkFromBlockCoords(at.west(4));world.getChunkFromBlockCoords(at.east(4));
         Source source=new Source();source.setWorld(world);source.setPos(at.east(5));RedstoneChannels.register(source);
-        TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setWorld(world);seat.setPos(at);seat.setVehicleChannels(ChannelList.of(5341),world);
+        TileEntityVehicleController seat=new TileEntityVehicleController();seat.setWorld(world);seat.setPos(at);seat.setVehicleChannels(ChannelList.of(5341),world);
         try{
             seat.configure(1,0,world);require(seat.poll(world)==-1,"ON initial baseline");source.power(true);require(seat.poll(world)==1,"ON rising activation");require(seat.poll(world)==-1,"held signal does not retrigger");
             seat.configure(2,3,world);require(seat.poll(world)==-1,"OFF edit takes current baseline");source.power(false);require(seat.poll(world)==1,"OFF falling activation");
             seat.configure(0,2,world);source.power(true);require(seat.poll(world)==-1,"disabled ignores signal");
-            for(int height=0;height<4;height++){seat.configure(1,height,world);TileEntityPilotSeat copy=new TileEntityPilotSeat();copy.readFromNBT(seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.getHeight()==height && copy.getRedstoneMode()==1,"height and trigger save "+height);require(Math.abs(copy.seatHeight()-(7+height*2)/16D)<1e-9,"seat cushion height "+height);}
+            for(int height=0;height<4;height++){TileEntityPilotSeat heightSeat=new TileEntityPilotSeat();heightSeat.configure(1,height,world);TileEntityPilotSeat copy=new TileEntityPilotSeat();copy.readFromNBT(heightSeat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.getHeight()==height && copy.getRedstoneMode()==1,"height and trigger save "+height);require(Math.abs(copy.seatHeight()-(7+height*2)/16D)<1e-9,"seat cushion height "+height);}
             seat.setVehicleChannels(ChannelList.EMPTY,world);seat.configure(2,0,world);require(seat.poll(world)==-1,"channel zero cannot activate OFF trigger");
         }finally{RedstoneChannels.unregister(source);}
         for(BlockPos p:BlockPos.getAllInBox(at.add(-3,-2,-2),at.add(3,1,2)))world.setBlockToAir(p);

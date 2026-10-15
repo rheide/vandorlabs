@@ -135,6 +135,7 @@ public class MessageRedstoneChannel implements IMessage {
                         || (message.updateShape && (message.shape < 0 || message.shape > 2
                         || !player.capabilities.isCreativeMode))) return;
                 TileEntity tile = player.world.getTileEntity(message.pos);
+                if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat && !(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController))return;
                 if (!(tile instanceof RedstoneChannelMember)
                         || !(player.openContainer instanceof ContainerRedstoneChannel)) return;
                 ContainerRedstoneChannel container = (ContainerRedstoneChannel) player.openContainer;

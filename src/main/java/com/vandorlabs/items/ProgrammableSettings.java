@@ -140,7 +140,7 @@ public final class ProgrammableSettings {
         NBTTagCompound out = new NBTTagCompound();
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block))
             out.setTag(REDSTONE_ROWS,((TileEntityAnimatedScreenSelector)tile).redstoneConfiguration());
-        if (tile instanceof RedstoneChannelMember) {
+        if (tile instanceof RedstoneChannelMember && (!(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat) || tile instanceof com.vandorlabs.tiles.TileEntityVehicleController)) {
             ChannelList channels=((RedstoneChannelMember)tile).getRedstoneChannels();
             if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
             else out.setIntArray(CHANNEL,channels.toArray());
@@ -157,8 +157,10 @@ public final class ProgrammableSettings {
             if(canopy.resizable() || canopy.block().opening()){out.setInteger(TRIGGER,!canopy.large.redstone?0:canopy.large.activateOnPower?1:2);out.setIntArray(CHANNEL,canopy.large.channels.toArray());}
         } else if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){
             com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)tile;
-            out.setInteger(CHAIR_HEIGHT,seat.getHeight());out.setInteger(TRIGGER,seat.getRedstoneMode());
-            NBTTagCompound configuration=new NBTTagCompound();configuration.setBoolean("TaxiMode",seat.isTaxiMode());out.setTag(BLOCK_CONFIGURATION,configuration);
+            if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController){
+                out.setInteger(TRIGGER,seat.getRedstoneMode());NBTTagCompound configuration=new NBTTagCompound();configuration.setBoolean("TaxiMode",seat.isTaxiMode());
+                for(int mode=0;mode<3;mode++)configuration.setIntArray("VehicleModeChannels"+mode,seat.modeChannels(mode).toArray());out.setTag(BLOCK_CONFIGURATION,configuration);
+            }else out.setInteger(CHAIR_HEIGHT,seat.getHeight());
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
@@ -300,7 +302,7 @@ public final class ProgrammableSettings {
     public static net.minecraft.item.ItemStack applyToItem(net.minecraft.item.ItemStack input, NBTTagCompound values) {
         if (!(input.getItem() instanceof net.minecraft.item.ItemBlock)) return net.minecraft.item.ItemStack.EMPTY;
         Block block = ((net.minecraft.item.ItemBlock)input.getItem()).getBlock();
-        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor) && !(block instanceof com.vandorlabs.blocks.BlockCanopy) && !(block instanceof com.vandorlabs.blocks.BlockPilotSeat) && !(block instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear))
+        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor) && !(block instanceof com.vandorlabs.blocks.BlockCanopy) && !(block instanceof com.vandorlabs.blocks.BlockPilotSeat) && !(block instanceof com.vandorlabs.blocks.BlockVehicleController) && !(block instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear))
             return net.minecraft.item.ItemStack.EMPTY;
         TileEntity tile = block.createTileEntity(null, block.getStateFromMeta(input.getMetadata()));
         if (tile == null) return net.minecraft.item.ItemStack.EMPTY;
@@ -381,13 +383,15 @@ public final class ProgrammableSettings {
             return com.vandorlabs.canopy.LargeCanopyOwnership.apply(canopy,player,next);
         } else if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){
             com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)tile;
-            if(values.hasKey(CHAIR_HEIGHT) || values.hasKey(TRIGGER)){
-                int mode=number(values,TRIGGER,seat.getRedstoneMode()),height=number(values,CHAIR_HEIGHT,seat.getHeight());
-                if(mode<0 || mode>2 || height<0 || height>3)return false;
-                if(values.hasKey(CHANNEL))seat.setVehicleChannels(channels(values,seat),world);
-                seat.configure(mode,height,world);applicable=true;
-            }
-            if(values.hasKey(BLOCK_CONFIGURATION,10) && values.getCompoundTag(BLOCK_CONFIGURATION).hasKey("TaxiMode",1)){seat.setTaxiMode(values.getCompoundTag(BLOCK_CONFIGURATION).getBoolean("TaxiMode"));applicable=true;}
+            if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController){
+                if(values.hasKey(TRIGGER)){int mode=number(values,TRIGGER,seat.getRedstoneMode());if(mode<0 || mode>2)return false;seat.configure(mode,0,world);applicable=true;}
+                if(values.hasKey(BLOCK_CONFIGURATION,10)){
+                    NBTTagCompound config=values.getCompoundTag(BLOCK_CONFIGURATION);ChannelList[] modes=new ChannelList[3];
+                    try{for(int mode=0;mode<3;mode++)if(config.hasKey("VehicleModeChannels"+mode,11))modes[mode]=ChannelList.of(config.getIntArray("VehicleModeChannels"+mode));}catch(IllegalArgumentException invalid){return false;}
+                    if(config.hasKey("TaxiMode",1)){seat.setTaxiMode(config.getBoolean("TaxiMode"));applicable=true;}
+                    for(int mode=0;mode<3;mode++)if(modes[mode]!=null){seat.setModeChannels(mode,modes[mode]);applicable=true;}
+                }
+            }else if(values.hasKey(CHAIR_HEIGHT)){int height=number(values,CHAIR_HEIGHT,seat.getHeight());if(height<0 || height>3)return false;seat.setHeight(height);applicable=true;}
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
@@ -682,7 +686,7 @@ public final class ProgrammableSettings {
         }
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block) && values.hasKey(REDSTONE_ROWS,10))
             applicable|=((TileEntityAnimatedScreenSelector)tile).applyRedstoneConfiguration(values.getCompoundTag(REDSTONE_ROWS));
-        if (tile instanceof RedstoneChannelMember && values.hasKey(CHANNEL)) {
+        if (tile instanceof RedstoneChannelMember && (!(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat) || tile instanceof com.vandorlabs.tiles.TileEntityVehicleController) && values.hasKey(CHANNEL)) {
             ChannelList before=((RedstoneChannelMember)tile).getRedstoneChannels();
             ((RedstoneChannelMember) tile).setRedstoneChannels(channels(values,(RedstoneChannelMember)tile));
             if (world != null && tile instanceof TileEntityAnimatedScreenSelector

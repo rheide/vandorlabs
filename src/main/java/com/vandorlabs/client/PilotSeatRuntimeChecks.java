@@ -146,6 +146,7 @@ public final class PilotSeatRuntimeChecks {
             }
             if (ticks == 195) {
                 VehicleTaxiRuntimeChecks.previewLayout(mc);
+                shot(mc,output,"height_dialog");
                 require(((com.vandorlabs.tiles.TileEntityPilotSeat)mc.world.getTileEntity(POS)).getHeight()==1,"live height reaches client before Close");
                 require(ModBlocks.PILOT_SEAT.getActualState(mc.world.getBlockState(POS),mc.world,POS).getValue(BlockPilotSeat.HEIGHT)==1,"live model actual state");
                 mc.getIntegratedServer().addScheduledTask(()->{

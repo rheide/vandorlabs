@@ -16,7 +16,7 @@ public final class BlockAutopilot extends BlockVandorDirectional {
     public boolean hasTileEntity(IBlockState state){return true;}
     public TileEntity createTileEntity(World world,IBlockState state){return waypoint?new TileEntityWaypoint():new TileEntityAutopilot();}
     public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
-        if(hand!=EnumHand.MAIN_HAND||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return false;
+        if(hand!=EnumHand.MAIN_HAND||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))return false;
         if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_AUTOPILOT,world,pos.getX(),pos.getY(),pos.getZ());return true;
     }
     public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityAutopilot && !(tile instanceof TileEntityWaypoint))((TileEntityAutopilot)tile).refreshPower();}

@@ -20,7 +20,7 @@ final class GuiOptionCycleRuntimeChecks {
         else if(gui instanceof GuiRedstoneChannel)ids=new int[]{2,3,4,5,6,7,8,9,10,11,12,13,15,16,18,19};
         else if(gui instanceof GuiLargeCanopy)ids=new int[]{2,3,4,5,6,7,11,12};
         else if(gui instanceof GuiAutopilot)ids=new int[]{0,3,4,5,6};
-        else if(gui!=null&&gui.getClass().getName().endsWith("VehicleClient$Preview"))ids=new int[]{4,5};
+        else if(gui!=null&&gui.getClass().getName().endsWith("VehicleClient$Preview"))ids=find(gui,5)!=null?new int[]{5}:new int[]{2,4};
         else if(gui instanceof GuiRedstoneScreen)ids=new int[]{7,8,9};
         else if(gui instanceof GuiAnimatedScreenSelector || gui instanceof GuiProgrammableInput || gui instanceof GuiProgrammableHalfConsole)ids=new int[]{0,4,32};
         else if(gui instanceof GuiConnectedSeat)ids=new int[]{1};

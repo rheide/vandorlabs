@@ -188,6 +188,7 @@ public final class VehicleScan {
                 for(VehicleStructure.Cell cell:cells.values())local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,
                         cell.tileData()==null?null:VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin))));
                 result=new VehicleStructure(local,pilot.subtract(origin),world.getBlockState(pilot).getValue(BlockPilotSeat.FACING),gears.size());
+                result=VehicleControlSettings.migratePlaced(world,origin,result);
                 VehicleRotation.validate(result,new VehicleWorld(world,result));
                 result.encode(); // Enforce the byte limit before a preview or mutation.
             }

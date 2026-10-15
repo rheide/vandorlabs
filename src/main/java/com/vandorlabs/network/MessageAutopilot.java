@@ -18,7 +18,7 @@ public final class MessageAutopilot implements IMessage {
     public void toBytes(ByteBuf b){b.writeLong(pos.toLong());ByteBufUtils.writeTag(b,settings);}
     public static final class Handler implements IMessageHandler<MessageAutopilot,IMessage>{
         public IMessage onMessage(MessageAutopilot m,MessageContext context){net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->{
-            if(m.settings==null||m.pos==null||!player.world.isBlockLoaded(m.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player)||!(player.openContainer instanceof ContainerRedstoneChannel))return;
+            if(m.settings==null||m.pos==null||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,player.world,m.pos)||!(player.openContainer instanceof ContainerRedstoneChannel))return;
             ContainerRedstoneChannel c=(ContainerRedstoneChannel)player.openContainer;if(!(c.member instanceof TileEntityAutopilot)||player.world.getTileEntity(m.pos)!=c.member||!c.canInteractWith(player))return;
             TileEntityAutopilot tile=(TileEntityAutopilot)c.member;NBTTagCompound n=m.settings;ChannelList channels=ChannelData.read(n,0);
             if(tile instanceof TileEntityWaypoint){int delay=n.getInteger("WaypointDelay"),stop=n.getInteger("WaypointStop"),depart=n.getInteger("WaypointDepart"),height=n.getInteger("WaypointHeight");if(delay<0||delay>72000||stop<0||stop>2||depart<1||depart>2||height<0||height>16)return;TileEntityWaypoint w=(TileEntityWaypoint)tile;w.autoDepart=n.getBoolean("WaypointAuto");w.directSignal=n.getBoolean("WaypointDirect");w.delay=delay;w.stopMode=stop;w.departMode=depart;w.hoverHeight=height;}

@@ -10,6 +10,10 @@ import net.minecraft.world.World;
 /** Dedicated assembly and parking console; Pilot Seats keep their own settings. */
 public final class BlockVehicleController extends BlockVandorDirectional {
     public BlockVehicleController(){super("vehicle_controller");setHardness(5);setResistance(10);setHarvestLevel("pickaxe",1);}
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,net.minecraft.entity.EntityLivingBase placer,net.minecraft.item.ItemStack stack){
+        super.onBlockPlacedBy(world,pos,state,placer,stack);
+        if(!world.isRemote && world.getTileEntity(pos) instanceof com.vandorlabs.tiles.TileEntityVehicleController){com.vandorlabs.tiles.TileEntityVehicleController tile=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(pos);tile.owner=placer.getUniqueID();tile.markDirty();}
+    }
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new com.vandorlabs.tiles.TileEntityVehicleController();}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing face,float x,float y,float z){

@@ -17,8 +17,8 @@ public final class MessagePilotModes implements IMessage {
     public static final class Handler implements IMessageHandler<MessagePilotModes,IMessage>{
         public IMessage onMessage(MessagePilotModes m,MessageContext context){net.minecraft.entity.player.EntityPlayerMP p=context.getServerHandler().player;p.getServerWorld().addScheduledTask(()->{
             if(m.previewToken!=null){if(!m.open)com.vandorlabs.vehicle.VehicleService.configureModeChannels(p,m.previewToken,m.entity,m.pos,m.channels);return;}
-            if(m.pos==null||!p.world.isBlockLoaded(m.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(p)||!(p.openContainer instanceof ContainerRedstoneChannel))return;
-            ContainerRedstoneChannel c=(ContainerRedstoneChannel)p.openContainer;if(!(c.member instanceof TileEntityPilotSeat)||p.world.getTileEntity(m.pos)!=c.member||!c.canInteractWith(p))return;
+            if(m.pos==null||!p.world.isBlockLoaded(m.pos)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(p,p.world,m.pos)||!(p.openContainer instanceof ContainerRedstoneChannel))return;
+            ContainerRedstoneChannel c=(ContainerRedstoneChannel)p.openContainer;if(!(c.member instanceof com.vandorlabs.tiles.TileEntityVehicleController)||p.world.getTileEntity(m.pos)!=c.member||!c.canInteractWith(p))return;
             if(m.open){p.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PILOT_MODES,p.world,m.pos.getX(),m.pos.getY(),m.pos.getZ());return;}
             if(m.channels==null)return;for(ChannelList list:m.channels)if(list==null)return;
             for(int i=0;i<3;i++)((TileEntityPilotSeat)c.member).setModeChannels(i,m.channels[i]);

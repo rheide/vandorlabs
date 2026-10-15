@@ -25,7 +25,7 @@ public final class VehicleService {
     private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);}}
     public static void taxiAssembly(EntityPlayerMP player,BlockPos seat) {
         if(player.isSpectator() || !(player.world.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)
-                || !((com.vandorlabs.tiles.TileEntityPilotSeat)player.world.getTileEntity(seat)).isTaxiMode() || !seatedAt(player,seat))return;
+                || !seatedAt(player,seat))return;
         if(jobs.containsKey(player.getUniqueID()) || jobs.size()>=16)return;
         previews.remove(player.getUniqueID());Job job=new Job(player,seat);job.taxi=true;jobs.put(player.getUniqueID(),job);
         player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Taxi Mode: inspecting connected craft..."),true);
@@ -76,7 +76,7 @@ public final class VehicleService {
     private static void signal(WorldServer world,Signal signal) {
         com.vandorlabs.tiles.TileEntityPilotSeat seat=signal.seat;
         if(signal.craft!=null){
-            if(signal.craft.structure==null || !signal.craft.structure.pilotSeats().contains(seat.getPos()))return;
+            if(signal.craft.structure==null || !VehicleControlSettings.position(signal.craft.structure).equals(seat.getPos()))return;
             net.minecraft.tileentity.TileEntity current=signal.craft.view.getTileEntity(seat.getPos());
             if(!(current instanceof com.vandorlabs.tiles.TileEntityPilotSeat))return;
             com.vandorlabs.tiles.TileEntityPilotSeat live=(com.vandorlabs.tiles.TileEntityPilotSeat)current;
@@ -84,6 +84,7 @@ public final class VehicleService {
             for(int mode=0;mode<3;mode++)if(!live.modeChannels(mode).equals(seat.modeChannels(mode)))return;
             seat=live;
         }
+        if(signal.craft==null && !(seat instanceof com.vandorlabs.tiles.TileEntityVehicleController))return;
         if(signal.craft!=null && (signal.mode==1 || signal.mode==2)){
             EntityGroundVehicle craft=signal.craft;
             if(!craft.isDead && !craft.ownershipBlocked && !craft.setHover(signal.mode==2))
@@ -105,11 +106,12 @@ public final class VehicleService {
                 for(Job existing:jobs.values())if(existing.world==world && existing.scan.startPosition().equals(seat.getPos()))return;
                 Job job=new Job(player,seat.getPos());job.signal=true;job.requestedMode=signal.mode;jobs.put(UUID.randomUUID(),job);
             }
-        }catch(Exception e){VandorLabs.logger.warn("Pilot Seat signal failed: "+e.getMessage());VehicleNetwork.error(player,"Pilot Seat signal: "+e.getMessage());}
+        }catch(Exception e){VandorLabs.logger.warn("Vehicle Controller signal failed: "+e.getMessage());VehicleNetwork.error(player,"Vehicle Controller signal: "+e.getMessage());}
     }
     private static void assembleSignal(Job job) throws Exception {
         VehicleStructure structure=job.scan.result;WorldServer world=(WorldServer)job.world;BlockPos origin=job.scan.origin;
         require(structure.controller()!=null,"Install a Vehicle Controller before assembling a craft.");
+        require(!job.taxi || VehicleTaxiMode.enabled(structure),"Taxi Mode is disabled on the Vehicle Controller.");
         require(job.requestedMode!=2 || VehicleFlight.canHover(structure),"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
         for(BlockPos boundary:job.scan.airBoundary)require(world.isBlockLoaded(boundary) && world.isAirBlock(boundary),"Craft connections changed during signal scan.");
@@ -121,12 +123,13 @@ public final class VehicleService {
     private static final class Preview {
         final UUID token=UUID.randomUUID();final WorldServer world;VehicleStructure structure;final BlockPos origin;final EntityGroundVehicle entity;final long expires;
         final int turns;final boolean controller;final BlockPos selected;final String status;
+        net.minecraft.nbt.NBTTagCompound controlData;
         final Set<BlockPos> airBoundary=new HashSet<>();
         Preview(WorldServer world,VehicleStructure structure,BlockPos origin,EntityGroundVehicle entity,String status,boolean controller,BlockPos selected){
             this.world=world;this.structure=structure;this.origin=origin;this.entity=entity;this.status=status;this.controller=controller;this.selected=selected.toImmutable();
             turns=controller && entity!=null && status.isEmpty()?VehicleRotation.turns(entity.rotationYaw):-1;expires=world.getTotalWorldTime()+1200;
         }
-        Preview changed(VehicleStructure structure){Preview next=new Preview(world,structure,origin,entity,status,controller,selected);next.airBoundary.addAll(airBoundary);return next;}
+        Preview changed(VehicleStructure structure){Preview next=new Preview(world,structure,origin,entity,status,controller,selected);next.airBoundary.addAll(airBoundary);next.controlData=controlData==null?null:controlData.copy();return next;}
     }
     private static boolean tool(EntityPlayerMP p){return !p.isSpectator() && p.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER;}
     private static void require(boolean test,String message){if(!test)throw new IllegalArgumentException(message);}
@@ -187,14 +190,21 @@ public final class VehicleService {
         if(!preview.controller){VehicleStructure.Cell seat=preview.structure.at(preview.selected);return singleSeat(seat.state,seat.tileData(),BlockPos.ORIGIN.subtract(preview.selected));}
         return preview.entity==null || !preview.status.isEmpty()?preview.structure:VehicleRotation.plan(preview.entity).structure;
     }
-    private static void open(EntityPlayerMP player,Preview preview){jobs.remove(player.getUniqueID());previews.put(player.getUniqueID(),preview);VehicleNetwork.send(player,display(preview),preview.entity==null?-1:preview.entity.getEntityId(),preview.token,preview.origin,true,preview.entity!=null,preview.status,preview.controller);}
+    private static void open(EntityPlayerMP player,Preview preview){jobs.remove(player.getUniqueID());previews.put(player.getUniqueID(),preview);if(preview.structure==null){VehicleNetwork.controllerInspection(player,preview.origin,preview.status,preview.token,preview.controlData);return;}VehicleNetwork.send(player,display(preview),preview.entity==null?-1:preview.entity.getEntityId(),preview.token,preview.origin,true,preview.entity!=null,preview.status,preview.controller);}
+    private static void standaloneController(EntityPlayerMP player,BlockPos pos,String status){
+        try{require(!player.isDead&&!player.isSpectator()&&player.world.isBlockLoaded(pos)&&player.getDistanceSqToCenter(pos)<=64,"Move closer to the Vehicle Controller.");permission(player,pos);
+            net.minecraft.tileentity.TileEntity raw=player.world.getTileEntity(pos);require(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController,"Vehicle Controller missing.");
+            Preview preview=new Preview(player.getServerWorld(),null,pos,null,status==null?"Selection unavailable.":status,true,BlockPos.ORIGIN);
+            preview.controlData=raw.writeToNBT(new net.minecraft.nbt.NBTTagCompound());open(player,preview);
+        }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
+    }
     public static void confirm(EntityPlayerMP player,UUID token) {
         Preview preview=previews.get(player.getUniqueID());
         if(preview==null || !preview.token.equals(token))return;
         previews.remove(player.getUniqueID());
         try {
             require(!player.isSpectator() && !player.isDead && preview.world==player.world && preview.expires>=player.world.getTotalWorldTime(),"Preview expired; inspect the craft again.");
-            require(preview.controller && preview.status.isEmpty(),"Use the Vehicle Controller to assemble or park this craft.");
+            require(preview.controller && preview.structure!=null && preview.status.isEmpty(),"Use the Vehicle Controller to assemble or park this craft.");
             if(preview.entity!=null) {
                 Vec3d controllerPoint=preview.entity.toWorld(new Vec3d(preview.selected).addVector(.5,.5,.5));
                 require(player.getDistanceSq(controllerPoint.x,controllerPoint.y,controllerPoint.z)<=64,"Move closer to the Vehicle Controller.");permission(player,new BlockPos(controllerPoint));
@@ -233,6 +243,31 @@ public final class VehicleService {
         Preview preview=previews.get(player.getUniqueID());require(preview!=null && preview.token.equals(token) && !preview.controller && !player.isDead && !player.isSpectator() && preview.world==player.world && preview.expires>=player.world.getTotalWorldTime(),"Pilot Seat settings expired; inspect again.");
         require(entity==(preview.entity==null?-1:preview.entity.getEntityId()) && selected.equals(BlockPos.ORIGIN),"Pilot Seat identity changed.");return preview;
     }
+    private static BlockPos displaySelected(Preview preview){return preview.structure==null?preview.origin:preview.controller?VehicleControlSettings.position(display(preview)):BlockPos.ORIGIN;}
+    private static Preview controllerPreview(EntityPlayerMP player,UUID token,int entity,BlockPos selected){
+        Preview preview=previews.get(player.getUniqueID());
+        require(preview!=null && preview.token.equals(token) && preview.controller && !player.isDead && !player.isSpectator() && preview.world==player.world && preview.expires>=player.world.getTotalWorldTime(),"Vehicle Controller settings expired; inspect again.");
+        require(entity==(preview.entity==null?-1:preview.entity.getEntityId()) && selected.equals(displaySelected(preview)),"Vehicle Controller identity changed.");return preview;
+    }
+    private static boolean controllerSettingsMatch(net.minecraft.nbt.NBTTagCompound actual,net.minecraft.nbt.NBTTagCompound expected){
+        if(expected==null)return false;actual=actual.copy();expected=expected.copy();
+        actual.removeTag("VehicleSignalHigh");expected.removeTag("VehicleSignalHigh");
+        for(int i=0;i<3;i++){actual.getCompoundTag("VehicleModeChannels"+i).removeTag("High");expected.getCompoundTag("VehicleModeChannels"+i).removeTag("High");}
+        return actual.equals(expected);
+    }
+    private static com.vandorlabs.tiles.TileEntityPilotSeat editableController(EntityPlayerMP player,Preview preview){
+        if(preview.structure==null){
+            BlockPos at=preview.origin;require(player.world.isBlockLoaded(at)&&player.getDistanceSqToCenter(at)<=64,"Move closer to the Vehicle Controller.");permission(player,at);
+            net.minecraft.tileentity.TileEntity raw=player.world.getTileEntity(at);require(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController,"Vehicle Controller missing.");
+            require(controllerSettingsMatch(raw.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),preview.controlData),"Vehicle Controller settings changed; inspect again.");
+            return (com.vandorlabs.tiles.TileEntityVehicleController)raw;
+        }
+        require(preview.selected.equals(VehicleControlSettings.position(preview.structure)),"Vehicle Controller selection changed.");
+        net.minecraft.tileentity.TileEntity tile;
+        if(preview.entity==null){BlockPos at=preview.origin.add(preview.selected);require(player.getDistanceSqToCenter(at)<=64 && VehicleSeatSettings.matchesPlacedAt(preview.structure,player.world,preview.origin,preview.selected),"Vehicle Controller changed; inspect again.");permission(player,at);tile=player.world.getTileEntity(at);require(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController,"Vehicle Controller missing.");}
+        else{require(validCaptured(player,preview.entity) && preview.entity.structure==preview.structure,"Craft changed; inspect again.");Vec3d at=preview.entity.toWorld(new Vec3d(preview.selected).addVector(.5,.5,.5));require(player.getDistanceSq(at.x,at.y,at.z)<=64,"Move closer to the Vehicle Controller.");permission(player,new BlockPos(at));tile=preview.entity.view.getTileEntity(preview.selected);}
+        require(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat,"Vehicle Controller data missing.");return (com.vandorlabs.tiles.TileEntityPilotSeat)tile;
+    }
     private static com.vandorlabs.tiles.TileEntityPilotSeat editableSeat(EntityPlayerMP player,Preview preview){
         net.minecraft.tileentity.TileEntity tile;
         if(preview.entity==null){BlockPos at=preview.origin.add(preview.selected);require(player.getDistanceSqToCenter(at)<=64 && VehicleSeatSettings.matchesPlaced(preview.structure,player.world,preview.origin),"Pilot Seat changed; inspect again.");permission(player,at);tile=player.world.getTileEntity(at);}
@@ -240,6 +275,7 @@ public final class VehicleService {
         require(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat,"Pilot Seat data missing.");return (com.vandorlabs.tiles.TileEntityPilotSeat)tile;
     }
     private static void changedSeat(EntityPlayerMP player,Preview previous,com.vandorlabs.tiles.TileEntityPilotSeat seat){
+        if(previous.structure==null){Preview next=previous.changed(null);next.controlData=seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound());previews.put(player.getUniqueID(),next);previewSettingsAck(player,previous,next);return;}
         VehicleStructure changed=VehicleSeatSettings.replaceAt(previous.structure,previous.selected,seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),previous.entity==null?BlockPos.ORIGIN.subtract(previous.origin):BlockPos.ORIGIN);
         if(previous.entity!=null){EntityGroundVehicle craft=previous.entity;craft.updateSettings(changed);
             try{java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),bytes);
@@ -251,27 +287,27 @@ public final class VehicleService {
         Preview next=previous.changed(changed);previews.put(player.getUniqueID(),next);previewSettingsAck(player,previous,next);
     }
     public static void configureTaxi(EntityPlayerMP player,VehicleNetwork.Packet packet){
-        try{Preview preview=seatPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.tiles.TileEntityPilotSeat seat=editableSeat(player,preview);seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);}catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
+        try{Preview preview=controllerPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);}catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     public static void configureHeight(EntityPlayerMP player,VehicleNetwork.Packet packet){
         try{require(packet.strafe>=0 && packet.strafe<=3,"Invalid Pilot Seat height.");Preview preview=seatPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.tiles.TileEntityPilotSeat seat=editableSeat(player,preview);seat.setHeight(packet.strafe);changedSeat(player,preview,seat);}catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     public static void configureChannels(EntityPlayerMP player,VehicleNetwork.Packet packet){
         Preview preview=previews.get(player.getUniqueID());if(preview==null || !preview.token.equals(packet.token))return;
-        try{preview=seatPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.redstone.ChannelList channels=com.vandorlabs.redstone.ChannelList.parse(packet.text);
-            require(channels!=null && packet.forward>=0 && packet.forward<=2 && packet.strafe>=0 && packet.strafe<=3,"Invalid Pilot Seat settings.");
-            com.vandorlabs.tiles.TileEntityPilotSeat seat=editableSeat(player,preview);seat.setVehicleChannels(channels,player.world);seat.configure(packet.forward,packet.strafe,player.world);if(packet.sequence==1)seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);
+        try{preview=controllerPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.redstone.ChannelList channels=com.vandorlabs.redstone.ChannelList.parse(packet.text);
+            require(channels!=null && packet.forward>=0 && packet.forward<=2,"Invalid Vehicle Controller settings.");
+            com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);seat.setVehicleChannels(channels,player.world);seat.configure(packet.forward,seat.getHeight(),player.world);if(packet.sequence==1)seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);
         }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     private static void previewSettingsAck(EntityPlayerMP player,Preview previous,Preview next){
-        try{VehicleStructure display=display(next);net.minecraft.nbt.NBTTagCompound data=new net.minecraft.nbt.NBTTagCompound();data.setUniqueId("PreviewToken",next.token);data.setTag("Seat",display.at(display.seat).tileData());
+        try{net.minecraft.nbt.NBTTagCompound data=new net.minecraft.nbt.NBTTagCompound();data.setUniqueId("PreviewToken",next.token);data.setTag("Seat",next.structure==null?next.controlData.copy():display(next).at(displaySelected(next)).tileData());
             java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(data,bytes);
-            VehicleNetwork.Packet ack=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);ack.sequence=2;ack.entity=next.entity==null?-1:next.entity.getEntityId();ack.token=previous.token;ack.origin=BlockPos.ORIGIN;ack.data=bytes.toByteArray();com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(ack,player);
+            VehicleNetwork.Packet ack=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);ack.sequence=2;ack.entity=next.entity==null?-1:next.entity.getEntityId();ack.token=previous.token;ack.origin=displaySelected(next);ack.data=bytes.toByteArray();com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(ack,player);
         }catch(java.io.IOException failure){throw new IllegalStateException("Cannot acknowledge Pilot Seat settings",failure);}
     }
     public static void configureModeChannels(EntityPlayerMP player,UUID token,int entity,BlockPos selected,com.vandorlabs.redstone.ChannelList[] values){
         Preview preview=previews.get(player.getUniqueID());if(preview==null || !preview.token.equals(token))return;
-        try{preview=seatPreview(player,token,entity,selected);require(values!=null && values.length==3 && java.util.Arrays.stream(values).allMatch(java.util.Objects::nonNull),"Invalid mode channels.");com.vandorlabs.tiles.TileEntityPilotSeat seat=editableSeat(player,preview);for(int i=0;i<3;i++)seat.setModeChannels(i,values[i]);changedSeat(player,preview,seat);}
+        try{preview=controllerPreview(player,token,entity,selected);require(values!=null && values.length==3 && java.util.Arrays.stream(values).allMatch(java.util.Objects::nonNull),"Invalid mode channels.");com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);for(int i=0;i<3;i++)seat.setModeChannels(i,values[i]);changedSeat(player,preview,seat);}
         catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     public static void permission(EntityPlayerMP player,BlockPos p) {
@@ -348,13 +384,13 @@ public final class VehicleService {
             Job job=iterator.next();if(job.world!=world)continue;
             if(job.player.world!=job.world || job.player.isDead || job.player.isSpectator()
                     || job.taxi && (!seatedAt(job.player,job.scan.startPosition()) || !((job.world.getTileEntity(job.scan.startPosition())) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)
-                    || !((com.vandorlabs.tiles.TileEntityPilotSeat)job.world.getTileEntity(job.scan.startPosition())).isTaxiMode())
+                    )
                     || job.player.connection.netManager.isChannelOpen()==false || ++job.ticks>100){iterator.remove();continue;}
             if(workBudget<=0)break;workBudget-=256;
             if(!job.scan.step(256))continue;iterator.remove();
             if(VehicleDiagnostics.ENABLED)System.out.println("[vandorlabs] vehicle-scan ticks="+job.ticks+" cells="+(job.scan.result==null?0:job.scan.result.cells.size())+" accepted="+(job.scan.error==null));
-            if(job.scan.error!=null){if(!job.signal && !job.taxi)VehicleNetwork.controllerInspection(job.player,job.scan.startPosition(),job.scan.error);else VehicleNetwork.error(job.player,job.scan.error);continue;}
-            if(job.signal || job.taxi){try{assembleSignal(job);}catch(Exception e){VehicleNetwork.error(job.player,(job.taxi?"Taxi Mode: ":"Pilot Seat signal: ")+e.getMessage());}continue;}
+            if(job.scan.error!=null){if(!job.signal && !job.taxi)standaloneController(job.player,job.scan.startPosition(),job.scan.error);else VehicleNetwork.error(job.player,job.scan.error);continue;}
+            if(job.signal || job.taxi){try{assembleSignal(job);}catch(Exception e){VehicleNetwork.error(job.player,(job.taxi?"Taxi Mode: ":"Vehicle Controller signal: ")+e.getMessage());}continue;}
             Preview preview=new Preview(world,job.scan.result,job.scan.origin,null,"",true,job.scan.startPosition().subtract(job.scan.origin));previews.put(job.player.getUniqueID(),preview);
             preview.airBoundary.addAll(job.scan.airBoundary);
             VehicleNetwork.send(job.player,preview.structure,-1,preview.token,preview.origin,true,false,"",true);

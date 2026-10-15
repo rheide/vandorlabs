@@ -2,9 +2,11 @@
 
 ## 2.1
 
+- Keep Pilot Seat dialogs focused on seat height with a chair preview. Move every vehicle mode, Taxi option and redstone control to Vehicle Controller, alongside assembly inspection. Open Vehicle Controller, Programmable Ramp, Autopilot and Waypoint dialogs with ordinary right-click or the Configurizer. Show the selected Ramp mode on its front face.
+
 - Add a separate Vehicle Controller for assembly and parking, retain Pilot Seat settings on seats, and support multiple Pilot Seats with the first seated pilot in control. Give Autopilot, Waypoint and Vehicle Controller distinct primary textures.
 
-- Make Moat mode capture a vertical source tower and pivot it as a straight drawbridge. Start/End offsets set stored/deployed angles; Tread px divides the animated full blocks and slabs. Preserve existing flat-source Moat journals until restored. Support full vanilla and Vandor glass blocks as transparent ramp materials, and shaped stairs across all ramp modes.
+- Make Moat mode deploy a vertical source tower as native tread-sized chunks. Match the ordinary extended Ramp End-offset and per-tread height profile, retain slab halves and physical thickness, and use Start to skew the stored tower. Preserve existing flat-source and rigid Moat geometry and journals until restored. Support full vanilla and Vandor glass blocks as transparent ramp materials, and shaped stairs across all ramp modes.
 - Unify Configurizer and sneak-right-click Pilot Seat settings, remove Save, and apply valid changes automatically. Keep mode-channel controls visible on smaller screens.
 - Allow stationary Hover turns and hold the craft in position after a manual pilot exit. Preserve each hover thruster family's particle style and color.
 - Add momentary Pulse rows alongside Toggle and Slider on Programmable Screens, Inputs, Consoles and their variants, including controls aboard vehicles.

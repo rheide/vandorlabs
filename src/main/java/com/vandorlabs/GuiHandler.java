@@ -57,8 +57,8 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if(ID==GUI_PILOT_MODES){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat && com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return new ContainerRedstoneChannel((com.vandorlabs.tiles.TileEntityPilotSeat)tile);return null;}
-        if(ID==GUI_AUTOPILOT){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityAutopilot && com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return new ContainerRedstoneChannel((com.vandorlabs.tiles.TileEntityAutopilot)tile);return null;}
+        if(ID==GUI_PILOT_MODES){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))return new ContainerRedstoneChannel((com.vandorlabs.tiles.TileEntityPilotSeat)tile);return null;}
+        if(ID==GUI_AUTOPILOT){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityAutopilot && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))return new ContainerRedstoneChannel((com.vandorlabs.tiles.TileEntityAutopilot)tile);return null;}
         if(ID==GUI_LARGE_CANOPY){com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,new BlockPos(x,y,z));if(tile!=null && tile.owner().configurable())return new com.vandorlabs.container.ContainerLargeCanopy(tile);return null;}
         if (ID == GUI_PROGRAMMABLE_ARMOR) {
             com.vandorlabs.container.ContainerProgrammableArmor armor = com.vandorlabs.container.ContainerProgrammableArmor.resolve(player,world,x,y,z);
@@ -122,7 +122,7 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_RAMP_CONTROLLER) {
             TileEntity te=world.getTileEntity(new BlockPos(x,y,z));
-            if (te instanceof com.vandorlabs.tiles.TileEntityRampController)
+            if (te instanceof com.vandorlabs.tiles.TileEntityRampController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
                 return new com.vandorlabs.container.ContainerRampController((com.vandorlabs.tiles.TileEntityRampController)te);
         }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
@@ -138,8 +138,8 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if(ID==GUI_PILOT_MODES){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat && com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return new com.vandorlabs.client.GuiPilotModes((com.vandorlabs.tiles.TileEntityPilotSeat)tile);return null;}
-        if(ID==GUI_AUTOPILOT){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityAutopilot && com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return new com.vandorlabs.client.GuiAutopilot((com.vandorlabs.tiles.TileEntityAutopilot)tile);return null;}
+        if(ID==GUI_PILOT_MODES){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))return new com.vandorlabs.client.GuiPilotModes((com.vandorlabs.tiles.TileEntityPilotSeat)tile);return null;}
+        if(ID==GUI_AUTOPILOT){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityAutopilot && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))return new com.vandorlabs.client.GuiAutopilot((com.vandorlabs.tiles.TileEntityAutopilot)tile);return null;}
         if(ID==GUI_LARGE_CANOPY){com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,new BlockPos(x,y,z));if(tile!=null && tile.owner().configurable())return new com.vandorlabs.client.GuiLargeCanopy(tile);return null;}
         if (ID == GUI_PROGRAMMABLE_ARMOR) {
             com.vandorlabs.container.ContainerProgrammableArmor armor = com.vandorlabs.container.ContainerProgrammableArmor.resolve(player,world,x,y,z);
@@ -205,7 +205,7 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_RAMP_CONTROLLER) {
             TileEntity te=world.getTileEntity(new BlockPos(x,y,z));
-            if (te instanceof com.vandorlabs.tiles.TileEntityRampController)
+            if (te instanceof com.vandorlabs.tiles.TileEntityRampController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
                 return new com.vandorlabs.client.GuiRampController((com.vandorlabs.tiles.TileEntityRampController)te);
         }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {

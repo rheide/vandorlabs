@@ -81,6 +81,11 @@ public final class VehicleNetwork {
     public static void inspection(EntityPlayerMP player,BlockPos seat,String text) {
         Packet packet=new Packet(INSPECTION);packet.origin=seat;packet.text=text==null?"Inspection failed.":text.substring(0,Math.min(500,text.length()));PacketHandler.INSTANCE.sendTo(packet,player);
     }
-    public static void controllerInspection(EntityPlayerMP player,BlockPos pos,String text){Packet packet=new Packet(INSPECTION);packet.forward=1;packet.sequence=-1;packet.origin=pos;packet.text=text==null?"Inspection unavailable.":text.substring(0,Math.min(500,text.length()));PacketHandler.INSTANCE.sendTo(packet,player);}
+    public static void controllerInspection(EntityPlayerMP player,BlockPos pos,String text){Packet packet=new Packet(INSPECTION);packet.entity=-1;packet.forward=1;packet.sequence=-1;packet.origin=pos;packet.text=text==null?"Inspection unavailable.":text.substring(0,Math.min(500,text.length()));PacketHandler.INSTANCE.sendTo(packet,player);}
+    public static void controllerInspection(EntityPlayerMP player,BlockPos pos,String text,java.util.UUID token,net.minecraft.nbt.NBTTagCompound control){
+        try{Packet packet=new Packet(INSPECTION);packet.entity=-1;packet.forward=1;packet.sequence=-1;packet.origin=pos;packet.token=token;packet.text=text==null?"Inspection unavailable.":text.substring(0,Math.min(500,text.length()));
+            net.minecraft.nbt.NBTTagCompound data=new net.minecraft.nbt.NBTTagCompound();data.setUniqueId("PreviewToken",token);data.setTag("Seat",control.copy());java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(data,bytes);packet.data=bytes.toByteArray();PacketHandler.INSTANCE.sendTo(packet,player);
+        }catch(java.io.IOException failure){error(player,"Cannot send Vehicle Controller settings.");}
+    }
     public static void error(EntityPlayerMP player,String text){Packet p=new Packet(ERROR);p.text=text.length()>500?text.substring(0,500):text;PacketHandler.INSTANCE.sendTo(p,player);}
 }

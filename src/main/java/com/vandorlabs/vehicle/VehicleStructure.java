@@ -117,6 +117,10 @@ public final class VehicleStructure {
             NBTTagCompound b=blocks.getCompoundTagAt(i);int state=b.getInteger("State");
             if(state<0||state>=palette.tagCount())throw new IllegalArgumentException("Invalid vehicle palette index");
             NBTTagCompound saved=palette.getCompoundTagAt(state);
+            // Mode is a render-only Ramp property added after existing vehicle saves.
+            if("vandorlabs:programmable_ramp".equals(saved.getString("Name")) && !saved.getCompoundTag("Properties").hasKey("mode")){
+                saved=saved.copy();NBTTagCompound properties=saved.getCompoundTag("Properties");properties.setString("mode","0");saved.setTag("Properties",properties);
+            }
             net.minecraft.util.ResourceLocation name=new net.minecraft.util.ResourceLocation(saved.getString("Name"));
             if(!net.minecraft.block.Block.REGISTRY.containsKey(name))throw new IllegalArgumentException("Missing vehicle block "+name);
             IBlockState parsed=NBTUtil.readBlockState(saved);
