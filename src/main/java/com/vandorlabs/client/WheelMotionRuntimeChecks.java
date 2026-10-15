@@ -27,7 +27,8 @@ public final class WheelMotionRuntimeChecks {
     private static final BlockPos ROOT=new BlockPos(4,4,4);
     private static final int PIXELS=256;
     private static final String[] POSES={"parked","neutral","forward","reverse","left","right","stopped","Hover","Hover moved"};
-    private static int variant;
+    private static int variant,startupTicks,settledTicks;
+    private static BlockPos pendingParked;
     private static BlockTelescopicLandingGear gear;
     private static BufferedImage montage;
     private static BlockPos parked;
@@ -35,11 +36,9 @@ public final class WheelMotionRuntimeChecks {
     private static NBTTagCompound parkedTileBefore;
     private static void require(boolean yes,String message){if(!yes)throw new IllegalStateException("wheel motion: "+message);}
     public static void begin(Minecraft mc){
-        variant=0;gear=null;
+        variant=startupTicks=settledTicks=0;gear=null;parked=pendingParked=null;
         for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
         require(gear!=null,"landing gear registered");
-        parked=mc.player.getPosition().up(8).toImmutable();parkedBefore=mc.world.getBlockState(parked);
-        TileEntity old=mc.world.getTileEntity(parked);parkedTileBefore=old==null?null:old.writeToNBT(new NBTTagCompound());
         montage=new BufferedImage(POSES.length*PIXELS,8*(PIXELS+24),BufferedImage.TYPE_INT_RGB);
         directionMath(mc);
     }
@@ -129,13 +128,25 @@ public final class WheelMotionRuntimeChecks {
     private static int occupied(BufferedImage image){int count=0;for(int y=0;y<PIXELS;y++)for(int x=0;x<PIXELS;x++)if((image.getRGB(x,y)&0xffffff)!=0)count++;return count;}
     public static boolean tick(Minecraft mc,File output)throws Exception{
         if(variant>=8)return true;
+        if(parked==null){
+            require(++startupTicks<200,"spawn/reference chunk readiness timeout player="+mc.player.getPosition());
+            BlockPos candidate=mc.player.getPosition().up(8).toImmutable();
+            if(!mc.world.isBlockLoaded(mc.player.getPosition())||!mc.world.isBlockLoaded(candidate)){pendingParked=null;settledTicks=0;return false;}
+            if(!candidate.equals(pendingParked)){pendingParked=candidate;settledTicks=0;return false;}
+            if(++settledTicks<3)return false;
+            // A client player exists before its first authoritative spawn teleport.
+            // Keep the real placed reference in the settled, loaded spawn chunk.
+            parked=candidate;parkedBefore=mc.world.getBlockState(parked);TileEntity old=mc.world.getTileEntity(parked);parkedTileBefore=old==null?null:old.writeToNBT(new NBTTagCompound());
+        }
+        if(variant==0)WheelItemRuntimeChecks.run(mc,output);
         int kind=variant;VehicleStructure snapshot=snapshot(mc,kind);EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.install(snapshot);
         double baseX=parked.getX()-ROOT.getX(),baseY=parked.getY()-ROOT.getY(),baseZ=parked.getZ()-ROOT.getZ();craft.setPosition(baseX,baseY,baseZ);craft.lastTickPosX=baseX;craft.lastTickPosY=baseY;craft.lastTickPosZ=baseZ;
         craft.view.origin=new BlockPos(baseX,baseY,baseZ);finite(craft.getRenderBoundingBox(),"craft");
         VehicleStructure.Cell root=snapshot.at(ROOT);
         if(kind<3)textureBounds(mc,root.state);else finite(craft.view.getTileEntity(ROOT).getRenderBoundingBox(),"landing gear");
-        mc.world.setBlockState(parked,root.state,2);
-        if(kind>=3){require(mc.world.getBlockState(parked).getBlock()==gear,"parked reference state installed");TileEntity tile=mc.world.getTileEntity(parked);if(tile==null){tile=gear.createTileEntity(mc.world,root.state);mc.world.setTileEntity(parked,tile);}require(tile instanceof TileEntityLandingGear,"parked reference gear tile installed");NBTTagCompound tag=VehicleTileData.translated(root.tileData(),parked.subtract(ROOT));tile.readFromNBT(tag);}
+        boolean installed=mc.world.setBlockState(parked,root.state,2);
+        require(mc.world.getBlockState(parked)==root.state,"parked reference state installed kind="+kind+" at="+parked+" loaded="+mc.world.isBlockLoaded(parked)+" changed="+installed+" expected="+root.state+" actual="+mc.world.getBlockState(parked));
+        if(kind>=3){TileEntity tile=mc.world.getTileEntity(parked);if(tile==null){tile=gear.createTileEntity(mc.world,root.state);mc.world.setTileEntity(parked,tile);}require(tile instanceof TileEntityLandingGear,"parked reference gear tile installed");NBTTagCompound tag=VehicleTileData.translated(root.tileData(),parked.subtract(ROOT));tile.readFromNBT(tag);}
         VehicleWheelMotion.sample(craft,1);
         BufferedImage[] images=new BufferedImage[POSES.length];images[0]=render(mc,craft,kind,true,false);images[1]=render(mc,craft,kind,false,false);
         double[] travel={.29,-.29,.29,.29,.29,.7,1.0};float[] steering={0,0,-1,1,0,1,-1};

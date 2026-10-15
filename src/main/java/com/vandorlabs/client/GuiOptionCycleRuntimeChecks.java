@@ -20,7 +20,7 @@ final class GuiOptionCycleRuntimeChecks {
         else if(gui instanceof GuiRedstoneChannel)ids=new int[]{2,3,4,5,6,7,8,9,10,11,12,13,15,16,18,19};
         else if(gui instanceof GuiLargeCanopy)ids=new int[]{2,3,4,5,6,7,11,12};
         else if(gui instanceof GuiAutopilot)ids=new int[]{0,3,4,5,6};
-        else if(gui!=null&&gui.getClass().getName().endsWith("VehicleClient$Preview"))ids=find(gui,5)!=null?new int[]{5}:new int[]{2,4};
+        else if(gui!=null&&gui.getClass().getName().endsWith("VehicleClient$Preview"))ids=find(gui,5)!=null?new int[]{2,5}:new int[]{4};
         else if(gui instanceof GuiRedstoneScreen)ids=new int[]{7,8,9};
         else if(gui instanceof GuiAnimatedScreenSelector || gui instanceof GuiProgrammableInput || gui instanceof GuiProgrammableHalfConsole)ids=new int[]{0,4,32};
         else if(gui instanceof GuiConnectedSeat)ids=new int[]{1};
@@ -64,6 +64,12 @@ final class GuiOptionCycleRuntimeChecks {
         GuiRampController gui=new GuiRampController(controller);mc.displayGuiScreen(gui);
         Method mouse;try{mouse=GuiScreen.class.getDeclaredMethod("mouseClicked",int.class,int.class,int.class);}catch(NoSuchMethodException e){mouse=GuiScreen.class.getDeclaredMethod("func_73864_a",int.class,int.class,int.class);}mouse.setAccessible(true);
         String initial=find(gui,1).displayString;click(mouse,gui,find(gui,1),1);require(find(gui,1).displayString.equals("Mode: Moat"),"normal ramp reverses into Moat");
+        require(find(gui,19).enabled,"Moat exposes ordinary Ramp interpolation profiles");
+        String interpolation=find(gui,19).displayString;
+        for(int step=0;step<3;step++)click(mouse,gui,find(gui,19),0);
+        require(interpolation.equals(find(gui,19).displayString),"Moat cycles all three interpolation profiles");
+        click(mouse,gui,find(gui,19),1);require(!interpolation.equals(find(gui,19).displayString),"Moat interpolation supports reverse selection");
+        click(mouse,gui,find(gui,19),0);require(interpolation.equals(find(gui,19).displayString),"Moat interpolation reverse and forward restore the profile");
         click(mouse,gui,find(gui,1),0);require(initial.equals(find(gui,1).displayString),"Moat advances into normal ramp");
         for(int step=0;step<7;step++)click(mouse,gui,find(gui,1),0);require(initial.equals(find(gui,1).displayString),"seven forward modes wrap");
         for(int step=0;step<7;step++)click(mouse,gui,find(gui,1),1);require(initial.equals(find(gui,1).displayString),"seven reverse modes wrap");

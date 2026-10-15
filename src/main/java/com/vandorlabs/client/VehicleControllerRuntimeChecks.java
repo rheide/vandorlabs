@@ -65,7 +65,7 @@ public final class VehicleControllerRuntimeChecks {
             require(mc.currentScreen!=null&&header(mc).forward==1,"isolated controller opens settings despite missing Pilot Seat");
             require(field(field(mc.currentScreen,"data"),"structure")==null,"invalid scan supplies real controller data without a fake hull");
             require(buttons(mc).stream().anyMatch(b->b.id==0&&!b.enabled),"incomplete craft cannot assemble");
-            for(int id:new int[]{2,4,6})require(buttons(mc).stream().anyMatch(b->b.id==id&&b.enabled),"standalone control available: "+id);
+            for(int id:new int[]{4,6})require(buttons(mc).stream().anyMatch(b->b.id==id&&b.enabled),"standalone control available: "+id);
             GuiOptionCycleRuntimeChecks.check(mc);VehicleTaxiRuntimeChecks.type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"28811");mc.currentScreen.updateScreen();
             standaloneStage=2;ticks=0;return;
         }
@@ -91,7 +91,7 @@ public final class VehicleControllerRuntimeChecks {
         source=VehicleSeatSettings.replaceAt(source,control.pos,blank,BlockPos.ORIGIN);
         VehicleStructure migrated=VehicleControlSettings.migrate(source);
         TileEntityVehicleController settings=new TileEntityVehicleController();settings.readFromNBT(migrated.controller().tileData());
-        require(settings.controlsInitialized()&&!settings.isTaxiMode()&&settings.getRedstoneMode()==2,"legacy controller controls imported once");
+        require(settings.controlsInitialized()&&settings.getRedstoneMode()==2,"legacy controller controls imported once");
         require(settings.getRedstoneChannels().toString().equals("28801, 28802")&&settings.modeChannels(1).toString().equals("28803"),"legacy toggle and mode channel lists preserved");
         require(migrated.at(primary.pos).tileData().equals(legacy),"migration preserves independent selected seat height and full NBT");
         require(VehicleControlSettings.migrate(migrated)==migrated,"initialized migration is idempotent");
@@ -128,8 +128,8 @@ public final class VehicleControllerRuntimeChecks {
         require(mc.currentScreen!=null&&mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview"),"controller opens integrated panel");
         require(header(mc).forward==1,"controller panel metadata distinct from seat");
         require(buttons(mc).stream().anyMatch(button->button.id==0&&button.enabled),"controller assembly action available");
-        require(buttons(mc).stream().noneMatch(button->button.id==5),"controller has no individual seat Height setting");
-        for(int id:new int[]{2,4,6})require(buttons(mc).stream().anyMatch(button->button.id==id&&button.enabled),"controller owns Taxi, trigger and mode channels: "+id);
+        require(buttons(mc).stream().noneMatch(button->button.id==5||button.id==2),"controller has no individual seat Height or Taxi setting");
+        for(int id:new int[]{4,6})require(buttons(mc).stream().anyMatch(button->button.id==id&&button.enabled),"controller owns trigger and mode channels: "+id);
     }
     public static boolean tick(Minecraft mc,File output)throws Exception{
         if(done)return true;require(++ticks<400,"timeout state="+state);
@@ -200,6 +200,8 @@ public final class VehicleControllerRuntimeChecks {
     private static void passengers(Minecraft mc,EntityGroundVehicle craft){
         EntityPlayerMP first=player(mc),second=fake(mc,UUID.fromString("a829b83f-cf64-4e4a-809a-c3d8a9356b22"),"PilotPassenger");
         BlockPos a=FIRST.subtract(BASE),b=SECOND.subtract(BASE);
+        NBTTagCompound enabled=craft.structure.at(a).tileData();enabled.setBoolean("TaxiMode",true);craft.updateSettings(VehicleSeatSettings.replaceAt(craft.structure,a,enabled,BlockPos.ORIGIN));
+        require(VehicleTaxiMode.enabled(craft.structure,a)&&!VehicleTaxiMode.enabled(craft.structure,b),"seats retain independent automatic Taxi choices");
         require(craft.board(first,a)&&craft.board(second,b),"two people occupy two chosen seats");
         require(craft.getControllingPassenger()==first&&craft.seatForPassenger(first).equals(a)&&craft.seatForPassenger(second).equals(b),"first seated controls; mappings distinct");
         craft.updatePassenger(first);craft.updatePassenger(second);require(first.getPositionVector().squareDistanceTo(second.getPositionVector())>1,"passengers have distinct visible positions");
@@ -215,7 +217,10 @@ public final class VehicleControllerRuntimeChecks {
         first.dismountRidingEntity();require(craft.getControllingPassenger()==second&&craft.seatForPassenger(second).equals(b),"control hands to remaining passenger without moving seats");
         craft.input(first,24,(byte)1,(byte)0,false);craft.onUpdate();require(craft.acknowledgedInput()==-1,"departed driver loses control");
         craft.input(second,8,(byte)1,(byte)0,false);craft.onUpdate();require(craft.acknowledgedInput()==8,"new first passenger can drive after handoff");
-        second.dismountRidingEntity();require(craft.getPassengers().isEmpty(),"all passenger assignments release on exit");craft.stopForParking();
+        second.dismountRidingEntity();require(craft.getPassengers().isEmpty(),"all passenger assignments release on exit");
+        require(b.equals(craft.taxiReturnSeat)&&!craft.taxiReturnPending,"final controlling pilot's disabled seat prevents autopark despite primary seat enabled");
+        NBTTagCompound last=new NBTTagCompound();craft.writeToNBT(last);EntityGroundVehicle remembered=new EntityGroundVehicle(world(mc));remembered.readFromNBT(last);
+        require(b.equals(remembered.taxiReturnSeat),"remembered controlling seat survives save for pending parking retries");craft.stopForParking();
         hoverPassengerExit(mc,craft.structure);
     }
     /** Exercise the actual client tick with a local rider behind another pilot. */

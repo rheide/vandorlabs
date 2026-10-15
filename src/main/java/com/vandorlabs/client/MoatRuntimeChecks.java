@@ -40,12 +40,12 @@ final class MoatRuntimeChecks {
                 List<BlockPos> sources=new ArrayList<>();
                 for(int level=0;level<3;level++)for(int lane=0;lane<2;lane++){BlockPos source=root.offset(face).up(level).offset(face.rotateY(),lane);world.setBlockState(source,material,3);sources.add(source);}
                 require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true),"configure vertical source tower: "+ramp.status);
-                require(ramp.attached()&&!ramp.isOpen()&&!ramp.isMoving(),"off at zero holds an upright journal");
-                AxisAlignedBB closed=bounds(world,root);
+                require(!ramp.attached()&&!ramp.isOpen()&&!ramp.isMoving(),"off at zero retains ordinary editable upright source blocks");
+                AxisAlignedBB closed=new AxisAlignedBB(root.offset(face)).union(new AxisAlignedBB(root.offset(face).up(2).offset(face.rotateY())));
                 require(Math.abs(closed.maxY-(root.getY()+3))<1e-5,"three source levels retain their actual upright positions");
                 NBTTagCompound saved=ramp.writeToNBT(new NBTTagCompound());
-                require(saved.getBoolean("MoatVerticalSources"),"new capture journals explicitly identify vertical sources");
-                ramp.readFromNBT(saved);require(ramp.moat&&ramp.attached(),"controller reload retains mode and source journal");
+                require(saved.getInteger("MoatGeometryRevision")==2,"new settings select vertical tread-section revision");
+                ramp.readFromNBT(saved);require(ramp.moat&&!ramp.attached(),"inactive controller reload preserves editable source mode");
                 for(TileEntityControlledRamp part:parts(world,root)){
                     TileEntityControlledRamp copy=new TileEntityControlledRamp();copy.setWorld(world);copy.setPos(part.getPos());copy.readFromNBT(part.writeToNBT(new NBTTagCompound()));
                     require(copy.moat&&copy.verticalMoatSources&&copy.boxes(0).equals(part.boxes(0)),"saved generated cells retain vertical-source upright collision");
@@ -69,19 +69,20 @@ final class MoatRuntimeChecks {
                     require(contains(world,root,new Vec3d(point[0],point[1],point[2]))!=slab,"native top-slab lower-half gap is retained at horizontal endpoint");
                 }
                 ramp.setChannelSignal(false);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
-                require(ramp.attached()&&!ramp.isOpen()&&!ramp.isMoving(),"off signal returns upright without restoring flat sources");
+                require(!ramp.attached()&&!ramp.isOpen()&&!ramp.isMoving(),"off at zero restores editable upright sources");
                 require(ramp.recover(false),"explicit recovery succeeds");
                 for(BlockPos source:sources)require(world.getBlockState(source).equals(material),"original material and slab half restored");
                 require(parts(world,root).isEmpty(),"recovery clears every generated cell");
                 BlockPos obstacle=root.offset(face,2).up(2);world.setBlockState(obstacle,Blocks.DIAMOND_BLOCK.getDefaultState(),3);
-                require(!ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true),"swept interior obstruction rejects capture");
+                require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true),"inactive obstruction fixture settings");
+                require(!ramp.request(true),"swept interior obstruction rejects capture");
                 for(BlockPos source:sources)require(world.getBlockState(source).equals(material),"failed arc capture preserves source");
                 world.setBlockToAir(obstacle);
-                require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true),"retry after clearing arc");
+                require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true)&&ramp.request(true),"retry after clearing arc");
                 require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,false),"mode change safely restores journal");
                 require(!ramp.attached()&&parts(world,root).isEmpty(),"ordinary zero-offset off mode releases cells");
                 for(BlockPos source:sources)require(world.getBlockState(source).equals(material),"mode change restores original vertical tower");
-                require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true),"orphan fixture captures");
+                require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,true)&&ramp.request(true),"orphan fixture captures");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
                 List<TileEntityControlledRamp> owned=parts(world,root);
                 for(TileEntityControlledRamp part:owned){part.onLoad();part.recoverOnEvent();}
                 require(ramp.attached()&&!parts(world,root).isEmpty(),"legitimate cells survive recovery event");
@@ -95,6 +96,7 @@ final class MoatRuntimeChecks {
             angularAndTreads(world,owner,root);
             endpointParity(world,owner,root);
             carried(world);
+            MoatEditableSourceRuntimeChecks.run(world,owner);
             System.out.println("[vandorlabs][reprolab] moat-world PASS cardinal native-slab vertical-source ordinary-ramp-treads simultaneous-arc source-journal midpoint reload obstruction mode-reset cache orphan carried-endpoints legacy-flat-journal");
         }finally{
             if(world.getTileEntity(root) instanceof TileEntityRampController)((TileEntityRampController)world.getTileEntity(root)).recover(false);
@@ -124,17 +126,21 @@ final class MoatRuntimeChecks {
                 NBTTagCompound saved=part.writeToNBT(new NBTTagCompound());saved.setBoolean("MoatMode",true);saved.removeTag("MoatVerticalSources");part.readFromNBT(saved);
             }
             require(!ramp.writeToNBT(new NBTTagCompound()).getBoolean("MoatVerticalSources"),"unversioned controller retains legacy interpretation");
-            require(ramp.request(false),"old flat journal closes without vertical recapture: "+ramp.status);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
-            AxisAlignedBB closed=bounds(world,root);require(Math.abs(closed.minY-root.getY()-1)<1e-5&&Math.abs(closed.maxY-root.getY()-4)<1e-5,"legacy flat sources still become the original three-high raised wall");
+            require(ramp.request(false),"old flat journal closes without vertical recapture: "+ramp.status);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()/2);
+            require(ramp.attached()&&ramp.isMoving()&&ramp.pose(0)>0&&ramp.pose(0)<1,"legacy flat journal remains owned during closing motion");
+            AxisAlignedBB closed=bounds(world,root);double fraction=ramp.pose(0),eased=fraction*fraction*(3-2*fraction),angle=(1-eased)*Math.PI/2;
+            require(Math.abs(closed.minY-(root.getY()+1-Math.cos(angle)))<1e-5&&Math.abs(closed.maxY-(root.getY()+1+3*Math.sin(angle)))<1e-5,"legacy closing collision retains the exact saved near-top hinge and three-block flat source extent");
             ramp.readFromNBT(ramp.writeToNBT(new NBTTagCompound()));
             for(TileEntityControlledRamp part:parts(world,root)){
                 NBTTagCompound saved=part.writeToNBT(new NBTTagCompound());TileEntityControlledRamp loaded=new TileEntityControlledRamp();loaded.setWorld(world);loaded.setPos(part.getPos());loaded.readFromNBT(saved);
                 require(!loaded.verticalMoatSources&&loaded.boxes(0).equals(part.boxes(0)),"legacy cell reload keeps flat-source hinge/collision");
             }
-            require(ramp.request(true),"legacy saved wall reopens");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
+            require(ramp.request(true),"legacy saved mid-closing journal reopens without vertical recapture");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
             AxisAlignedBB open=bounds(world,root);require(Math.abs(open.minY-root.getY())<1e-5&&Math.abs(open.maxY-root.getY()-1)<1e-5,"legacy endpoint returns its original flat deck");
             if(face==EnumFacing.SOUTH)legacyCarried(world,root,ramp);
-            require(ramp.recover(false),"legacy flat journal recovery");
+            require(ramp.request(false),"legacy flat journal completes inactive restoration");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
+            require(!ramp.attached()&&!ramp.isMoving(),"legacy Start-zero inactive endpoint releases its original journal");
+            require(ramp.recover(false),"legacy flat journal recovery is idempotent after inactive restoration");
             for(BlockPos at:sources)require(world.getBlockState(at).equals(Blocks.PLANKS.getStateFromMeta(2)),"legacy recovery restores original flat source positions");
             require(parts(world,root).isEmpty(),"legacy recovery removes all reservations");
         }
@@ -166,14 +172,23 @@ final class MoatRuntimeChecks {
         int finest=0,coarsest=0;
         for(int pixels:new int[]{1,2,4,8,16}){
             TileEntityRampController ramp=tower(world,owner,root);
-            require(ramp.configureHalfOffsets(owner,0,0,pixels,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"every tread size captures vertical tower: "+pixels+" "+ramp.status);
+            require(ramp.configureHalfOffsets(owner,2,0,pixels,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"every tread size captures vertical tower: "+pixels+" "+ramp.status);
             ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()/2);
             double pose=ramp.pose(0);int pieces=0;
             for(TileEntityControlledRamp part:parts(world,root)){require(part.treadPixels==pixels,"saved segment size reaches every occupied cell");pieces+=part.geometry(0).size();}
             if(pixels==1)finest=pieces;if(pixels==16)coarsest=pieces;
-            for(double level:new double[]{.25,1.5,2.75}){
-                double[] point=com.vandorlabs.ramp.MoatGeometry.point(com.vandorlabs.ramp.RampGeometry.Direction.SOUTH,root.getY(),3,pixels,0,0,pose,false,0,root.getY()+(int)Math.floor(level),Math.min(com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels)-1,com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels)/2),root.getX()+.5,root.getY()+level,root.getZ()+1.5);
-                require(contains(world,root,new Vec3d(point[0],point[1],point[2])),"straight mid-rotation source center remains inside collision, tread="+pixels+" level="+level);
+            double pitch=pixels/16D;
+            for(TileEntityControlledRamp part:parts(world,root))for(AxisAlignedBB box:part.boxes(0))require(box.maxY-box.minY<=(1+pitch)/2+1e-7,"mid-motion tread sections stay thinner than whole blocks: "+pixels);
+            for(int row=0;row<3;row++)for(int index:new int[]{0,com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels)-1}){
+                com.vandorlabs.ramp.RampGeometry.Box shape=new com.vandorlabs.ramp.RampGeometry.Box(root.getX(),root.getY()+row,root.getZ()+1,root.getX()+1,root.getY()+row+1,root.getZ()+2);
+                com.vandorlabs.ramp.RampGeometry.Box local=com.vandorlabs.ramp.MoatGeometry.pieces(com.vandorlabs.ramp.RampGeometry.Direction.SOUTH,new com.vandorlabs.ramp.RampGeometry.Box(0,0,0,1,1,1),pixels).get(index),nativePiece=com.vandorlabs.ramp.MoatGeometry.world(local,root.getX(),root.getY()+row,root.getZ()+1);
+                com.vandorlabs.ramp.RampGeometry.Box middle=com.vandorlabs.ramp.MoatGeometry.transform(com.vandorlabs.ramp.RampGeometry.Direction.SOUTH,root.getY(),3,pixels,1,0,pose,false,0,root.getY()+row,index,nativePiece,shape);
+                require(contains(world,root,new Vec3d((middle.minX+middle.maxX)/2,(middle.minY+middle.maxY)/2,(middle.minZ+middle.maxZ)/2)),"actual mid-motion vertical section is collidable, tread="+pixels+" row="+row+" section="+index);
+            }
+            if(pixels==8){
+                NBTTagCompound prior=ramp.writeToNBT(new NBTTagCompound());prior.setInteger("MoatGeometryRevision",1);ramp.readFromNBT(prior);ramp.onLoad();ramp.scheduledTick();
+                require(ramp.writeToNBT(new NBTTagCompound()).getInteger("MoatGeometryRevision")==2&&ramp.vehicleSources().size()==3,"previous active native-section save upgrades reservations in place without losing original journal");
+                for(TileEntityControlledRamp part:parts(world,root))require(part.moatGeometryRevision==2,"previous active save rebuilds every generated section revision");
             }
             require(ramp.recover(false),"segmented midpoint recovery");
         }
@@ -189,7 +204,9 @@ final class MoatRuntimeChecks {
         }
         require(ramp.recover(false),"angular source recovery");
         ramp=tower(world,owner,root);
+        net.minecraft.entity.item.EntityItem loose=new net.minecraft.entity.item.EntityItem(world,root.getX()+.5,root.getY()+1.25,root.getZ()+.75,new net.minecraft.item.ItemStack(Blocks.COBBLESTONE));loose.setNoGravity(true);require(world.spawnEntity(loose),"loose-drop fixture spawn");
         require(ramp.configureHalfOffsets(owner,-2,4,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"negative Start leans toward its solid controller anchor: "+ramp.status);
+        require(!loose.isDead,"non-collidable loose drops do not block or get removed by negative Start");
         require(world.getTileEntity(root)==ramp&&world.getBlockState(root).getBlock()==ModBlocks.PROGRAMMABLE_RAMP,"negative Start preserves original anchor tile and block");
         AxisAlignedBB toward=bounds(world,root);require(toward.minZ<root.getZ()+1-1e-5,"negative Start actually extends behind the hinge above the anchor");
         ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
@@ -198,10 +215,13 @@ final class MoatRuntimeChecks {
         require(world.getTileEntity(root)==ramp&&ramp.attached()&&!ramp.isOpen(),"negative Start returns toward the intact anchor");
         require(ramp.recover(false)&&world.getTileEntity(root)==ramp,"negative Start source recovery retains controller");
         for(int level=0;level<3;level++)require(world.getBlockState(root.south().up(level)).getBlock()==Blocks.PLANKS,"negative Start recovery restores every tower source");
+        net.minecraft.entity.passive.EntityPig occupant=new net.minecraft.entity.passive.EntityPig(world);occupant.setPosition(root.getX()+.5,root.getY()+1.1,root.getZ()+.25);occupant.setNoGravity(true);require(world.spawnEntity(occupant),"solid occupant fixture spawn");
+        require(!ramp.configureHalfOffsets(owner,-2,4,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"negative Start still stops for a collidable living occupant");
+        occupant.setDead();loose.setDead();
     }
     private static void rigidVerticalJournal(World world,EntityPlayerMP owner,BlockPos root){
         TileEntityRampController ramp=tower(world,owner,root);
-        require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"old rigid fixture captures tower");
+        require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true)&&ramp.request(true),"old rigid fixture captures tower");
         NBTTagCompound old=ramp.writeToNBT(new NBTTagCompound());old.removeTag("MoatGeometryRevision");ramp.readFromNBT(old);
         for(TileEntityControlledRamp part:parts(world,root)){NBTTagCompound tag=part.writeToNBT(new NBTTagCompound());tag.removeTag("MoatGeometryRevision");part.readFromNBT(tag);}
         require(!ramp.usesNativeMoatGeometry()&&ramp.usesVerticalMoatSources(),"unversioned vertical save selects prior rigid format");
@@ -217,7 +237,7 @@ final class MoatRuntimeChecks {
         require(ramp.recover(false),"old rigid journal safely recovers with a foreign source-position block");require(world.getBlockState(obstructedSource).getBlock()==Blocks.DIAMOND_BLOCK,"old rigid recovery never overwrites unrelated source-position block");
         for(int row=0;row<2;row++)require(world.getBlockState(root.south().up(row)).getBlock()==Blocks.PLANKS,"old rigid journal restores unobstructed original tower blocks");
         world.setBlockState(obstructedSource,Blocks.PLANKS.getDefaultState(),3);
-        require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true)&&ramp.usesNativeMoatGeometry(),"fresh capture upgrades recovered rigid journal to native tread revision");require(ramp.recover(false),"upgraded source recovery");
+        require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true)&&ramp.request(true)&&ramp.usesNativeMoatGeometry(),"fresh settings upgrade recovered rigid journal to native tread revision");require(ramp.recover(false),"upgraded source recovery");
         System.out.println("[vandorlabs][reprolab] moat-rigid-save PASS absent-revision stationary-load collision reservations captured-endpoints foreign-block-preservation original-journal recovery fresh-capture-upgrade");
     }
     private static void rigidCarried(World world,BlockPos root,TileEntityRampController ramp){
@@ -238,7 +258,7 @@ final class MoatRuntimeChecks {
         return false;
     }
     private static void endpointParity(World world,EntityPlayerMP owner,BlockPos root){
-        for(EnumFacing face:EnumFacing.HORIZONTALS)for(int pixels:new int[]{1,2,4,8,16})for(int slab:new int[]{-1,0,8,16}){
+        for(EnumFacing face:EnumFacing.HORIZONTALS)for(int pixels:new int[]{1,2,4,8,16})for(int slab:new int[]{-1,0,8,16})for(int profile=0;profile<3;profile++){
             if(world.getTileEntity(root) instanceof TileEntityRampController)((TileEntityRampController)world.getTileEntity(root)).recover(false);
             for(BlockPos at:BlockPos.getAllInBox(root.add(-5,-4,-5),root.add(5,8,5)))world.setBlockToAir(at);
             BlockPos actor=root.offset(face.getOpposite(),2).up(2);owner.setPosition(actor.getX()+.5,actor.getY(),actor.getZ()+.5);
@@ -246,17 +266,20 @@ final class MoatRuntimeChecks {
             IBlockState material=slab==16?Blocks.OAK_STAIRS.getDefaultState().withProperty(net.minecraft.block.BlockStairs.FACING,face):slab<0?Blocks.PLANKS.getDefaultState():Blocks.STONE_SLAB.getStateFromMeta(slab);double low=slab==8?.5:0,high=slab==0?.5:1;
             for(int row=0;row<3;row++)world.setBlockState(root.offset(face).up(row),material,3);
             world.setBlockState(root.down(),Blocks.DIAMOND_BLOCK.getDefaultState(),3);world.setBlockState(root.down(2),Blocks.DIAMOND_BLOCK.getDefaultState(),3);
-            require(ramp.configureHalfOffsets(owner,0,-2,pixels,true,false,false,face,0,false,1,true,false,0,0,true),"End -1 tower captures with solid blocks underneath controller: "+ramp.status);
+            require(ramp.configureHalfOffsets(owner,0,-2,pixels,true,false,false,face,0,false,1,true,false,profile,0,true),"End -1 tower captures with solid blocks underneath controller: "+ramp.status);
             ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);require(ramp.isOpen()&&!ramp.isMoving()&&!ramp.error,"End -1 deploys without below-controller false obstruction: "+ramp.status);
             double volume=0;for(TileEntityControlledRamp part:parts(world,root))for(AxisAlignedBB box:part.boxes(0))volume+=(box.maxX-box.minX)*(box.maxY-box.minY)*(box.maxZ-box.minZ);
             require(Math.abs(volume-3*(slab==16?.75:high-low))<1e-6,"native tread/slab/stair volume equals ordinary deployed Ramp");
             for(int row=0;row<3;row++)for(int step=0;step<com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels);step++){
-                BlockPos virtual=root.offset(face,row+1);com.vandorlabs.ramp.RampGeometry.Box expected=com.vandorlabs.ramp.RampGeometry.movingTread(com.vandorlabs.ramp.RampGeometry.Direction.valueOf(face.name()),virtual.getX(),root.getY(),virtual.getZ(),low,high,row,3,0,-1,pixels,step,1,1,false,0,false,false,0);
+                BlockPos virtual=root.offset(face,row+1);com.vandorlabs.ramp.RampGeometry.Box expected=com.vandorlabs.ramp.RampGeometry.movingTread(com.vandorlabs.ramp.RampGeometry.Direction.valueOf(face.name()),virtual.getX(),root.getY(),virtual.getZ(),low,high,row,3,0,-1,pixels,step,1,1,false,0,false,false,profile);
+                int count=com.vandorlabs.ramp.ControllerPlatform.treadCount(pixels);double section=(row*count+step)/(double)(3*count-1),height=-com.vandorlabs.ramp.ControllerPlatform.profile(section,profile);
+                require(Math.abs(expected.minY-root.getY()-low-height)<1e-7,"three-block tower distributes End -1 across every tread section and selected interpolation");
+                if(slab!=16)require(!contains(world,root,new Vec3d((expected.minX+expected.maxX)/2,expected.maxY+.001,(expected.minZ+expected.maxZ)/2)),"actual three-block ramp top follows individual section height, not a whole-block offset");
                 if(slab!=16)for(double inset:new double[]{.15,.5,.85})require(contains(world,root,new Vec3d(expected.minX+(expected.maxX-expected.minX)*inset,expected.minY+(expected.maxY-expected.minY)*inset,expected.minZ+(expected.maxZ-expected.minZ)*inset)),"actual End -1 collision matches ordinary Ramp tread shape face="+face+" pixels="+pixels+" row="+row+" step="+step);
-                else for(com.vandorlabs.ramp.RampGeometry.Box nativeTread:com.vandorlabs.compat.RampStairs.treads(world,material,com.vandorlabs.ramp.RampGeometry.Direction.valueOf(face.name()),virtual,row,3,0,-1,pixels,1,false,0,false,false,0))require(contains(world,root,new Vec3d((nativeTread.minX+nativeTread.maxX)/2,(nativeTread.minY+nativeTread.maxY)/2,(nativeTread.minZ+nativeTread.maxZ)/2)),"actual stair End -1 matches native ordinary Ramp tread center");
+                else for(com.vandorlabs.ramp.RampGeometry.Box nativeTread:com.vandorlabs.compat.RampStairs.treads(world,material,com.vandorlabs.ramp.RampGeometry.Direction.valueOf(face.name()),virtual,row,3,0,-1,pixels,1,false,0,false,false,profile))require(contains(world,root,new Vec3d((nativeTread.minX+nativeTread.maxX)/2,(nativeTread.minY+nativeTread.maxY)/2,(nativeTread.minZ+nativeTread.maxZ)/2)),"actual stair End -1 matches native ordinary Ramp tread center");
             }
             require(world.getTileEntity(root)==ramp&&world.getBlockState(root.down()).getBlock()==Blocks.DIAMOND_BLOCK,"deployment preserves controller and blocks underneath");
-            ramp.setChannelSignal(false);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);require(ramp.recover(false),"End -1 recovery with support below controller");
+            ramp.setChannelSignal(false);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);require(!ramp.attached()&&ramp.recover(false),"End -1 inactive restoration with support below controller");
             for(int row=0;row<3;row++)require(world.getBlockState(root.offset(face).up(row)).getBlock()==material.getBlock()&&world.getBlockState(root.offset(face).up(row)).getBlock().getMetaFromState(world.getBlockState(root.offset(face).up(row)))==material.getBlock().getMetaFromState(material),"End -1 recovers original vertical native materials");
         }
         System.out.println("[vandorlabs][reprolab] moat-endpoint-parity PASS actual-world End-minus-one ordinary-ramp-treads all-pixels cardinal full-bottom-top-slabs native-stairs below-controller-solid-support source-recovery");
@@ -289,6 +312,9 @@ final class MoatRuntimeChecks {
             TileEntityRampController open=(TileEntityRampController)craft.view.getTileEntity(control);require(open.moat&&open.isOpen()&&open.endHalfSteps()==2,"carried settings survive endpoint replacement");
             for(VehicleStructure.Cell source:VehicleEscalators.originals(open))
                 if(source.state.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK)require(source.tileData()!=null,"carried journal retains programmable material NBT");
+            List<VehicleStructure.Cell> previousRevision=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){NBTTagCompound dataBefore=cell.tileData();net.minecraft.tileentity.TileEntity raw=craft.view.getTileEntity(cell.pos);if(dataBefore!=null&&(raw instanceof TileEntityRampController||raw instanceof TileEntityControlledRamp))dataBefore.setInteger("MoatGeometryRevision",1);previousRevision.add(new VehicleStructure.Cell(cell.pos,cell.state,dataBefore));}
+            craft.install(new VehicleStructure(previousRevision,craft.structure.seat,craft.structure.facing,craft.structure.gearCount));require(VehicleRamps.needsGeometryUpgrade(craft)&&((TileEntityRampController)craft.view.getTileEntity(control)).getRedstoneChannels().isEmpty(),"captured prior native save queues upgrade without subscribed channels");VehicleRamps.upgradeLoadedGeometry(craft);require(!VehicleRamps.needsGeometryUpgrade(craft),"captured no-channel prior native revision upgrades through installation load hook");
+            require(craft.view.getTileEntity(control).writeToNBT(new NBTTagCompound()).getInteger("MoatGeometryRevision")==2,"captured upgraded controller retains new vertical-section revision");
             NBTTagCompound saved=craft.structure.write();VehicleStructure restored=VehicleStructure.read(saved);VehicleWorld reload=new VehicleWorld(world,restored);
             require(((TileEntityRampController)reload.getTileEntity(control)).moat,"carried snapshot reload retains Moat");
             BlockPos obstruction=new BlockPos(craft.toWorld(new Vec3d(control.south(2).up(2))).addVector(.5,.5,.5));world.setBlockState(obstruction,Blocks.DIAMOND_BLOCK.getDefaultState(),3);

@@ -1,1 +1,124 @@
-{"parent":"vandorlabs:block/wheel_small","display":{"gui":{"rotation":[30,225,0],"translation":[0,0,0],"scale":[0.6,0.6,0.6]},"ground":{"scale":[0.25,0.25,0.25]},"fixed":{"scale":[0.4,0.4,0.4]}}}
+{
+  "parent": "vandorlabs:block/wheel_small",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        1.502563,
+        -0.751282,
+        1.301258
+      ],
+      "scale": [
+        0.531236,
+        0.531236,
+        0.531236
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        -0.905097,
+        4.0,
+        -0.905097
+      ],
+      "scale": [
+        0.32,
+        0.32,
+        0.32
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        -0.905097,
+        4.0,
+        -0.905097
+      ],
+      "scale": [
+        0.32,
+        0.32,
+        0.32
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        -0.905097,
+        0.874256,
+        -0.234256
+      ],
+      "scale": [
+        0.32,
+        0.32,
+        0.32
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        -0.905097,
+        0.874256,
+        -0.234256
+      ],
+      "scale": [
+        0.32,
+        0.32,
+        0.32
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        -0.0,
+        -0.0,
+        -1.6
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  }
+}

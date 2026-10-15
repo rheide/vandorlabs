@@ -2,7 +2,13 @@
 
 ## 2.1
 
-- Keep Pilot Seat dialogs focused on seat height with a chair preview. Move every vehicle mode, Taxi option and redstone control to Vehicle Controller, alongside assembly inspection. Open Vehicle Controller, Programmable Ramp, Autopilot and Waypoint dialogs with ordinary right-click or the Configurizer. Show the selected Ramp mode on its front face.
+- Restore editable source blocks when Moat is inactive at zero Start offset, and prevent controlled ramp segments from opening controller dialogs. Slice stored Moat towers vertically using Tread px and distribute deployed End offset across their full length, with all three Ramp interpolation profiles available.
+- Match all seven Ramp mode logos to the original angular housing corners, show the selected mode on top, and mark the active direction on the top, bottom and two side faces.
+- Choose Autopilot route markers from the inventory sample picker, retaining block variants and pending dialog settings.
+- Restore switching Vehicle Status screens to Redstone controls across screen, input and console surfaces, including the Half Console top.
+- Size Small, Medium and Large Wheel inventory icons progressively with padding, and reduce the held Large Wheel model.
+
+- Keep Pilot Seat height and automatic Taxi Mode in the compact chair-preview dialog. Put assembly inspection, redstone controls and explicit Park/Taxi/Hover mode-channel lists on Vehicle Controller. Open Vehicle Controller, Programmable Ramp, Autopilot and Waypoint dialogs with ordinary right-click or the Configurizer. Show the selected Ramp mode on its front face.
 
 - Add a separate Vehicle Controller for assembly and parking, retain Pilot Seat settings on seats, and support multiple Pilot Seats with the first seated pilot in control. Give Autopilot, Waypoint and Vehicle Controller distinct primary textures.
 

@@ -24,7 +24,7 @@ The dependency-free checks use the actual registered block and tile classes. In 
 
 Place one Vehicle Controller in the connected craft and at least one complete Pilot Seat. Right-click the controller, use the Configurizer, or sneak-right-click to inspect the craft and assemble it. The captured controller provides parking controls. New assemblies require the controller; older captured craft can still be parked so a controller can be installed.
 
-Pilot Seat dialogs contain seat height and vehicle-mode settings and apply changes automatically. They do not assemble or park the craft. Multiple Pilot Seats are supported: right-click an empty seat to board it. The first seated pilot controls movement until they dismount, then control passes to the next seated pilot. Each occupant keeps their own seat position and height. Parking transfers seated occupants to their corresponding restored seats.
+Pilot Seat dialogs contain independent seat height and automatic Taxi Mode settings and apply changes automatically. Explicit Park/Taxi/Hover channels and redstone trigger settings belong to Vehicle Controller. They do not assemble or park the craft. Multiple Pilot Seats are supported: right-click an empty seat to board it. The first seated pilot controls movement until they dismount, then control passes to the next seated pilot. Each occupant keeps their own seat position and height. Parking transfers seated occupants to their corresponding restored seats.
 
 Autopilot uses a cyan navigation texture, Waypoint an amber route marker, and Vehicle Controller a green chassis symbol.
 

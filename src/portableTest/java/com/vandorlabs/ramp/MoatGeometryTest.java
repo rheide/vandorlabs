@@ -13,7 +13,10 @@ public final class MoatGeometryTest {
             int dx=face==RampGeometry.Direction.EAST?1:face==RampGeometry.Direction.WEST?-1:0,dz=face==RampGeometry.Direction.SOUTH?1:face==RampGeometry.Direction.NORTH?-1:0;
             List<RampGeometry.Box> pieces=MoatGeometry.pieces(face,new RampGeometry.Box(0,slab[0],0,1,slab[1],1),pixels);require(pieces.size()==ControllerPlatform.treadCount(pixels),"native half slab keeps all horizontal treads");
             for(RampGeometry.Box piece:pieces){int step=MoatGeometry.step(face,piece,pixels);RampGeometry.Box original=MoatGeometry.world(piece,x,base+row,z);
-                same(MoatGeometry.transform(face,base,length,pixels,0,0,0,false,interpolation,base+row,step,original),original);
+                RampGeometry.Box nativeShape=new RampGeometry.Box(x,base+row+slab[0],z,x+1,base+row+slab[1],z+1);
+                RampGeometry.Box closed=MoatGeometry.transform(face,base,length,pixels,0,0,0,false,interpolation,base+row,step,original,nativeShape);same(closed,MoatGeometry.storedSection(face,original,nativeShape));close(closed.maxY-closed.minY,(slab[1]-slab[0])*pixels/16);
+                close(face==RampGeometry.Direction.EAST||face==RampGeometry.Direction.WEST?closed.maxX-closed.minX:closed.maxZ-closed.minZ,1);
+                RampGeometry.Box middle=MoatGeometry.transform(face,base,length,pixels,0,0,.5,false,interpolation,base+row,step,original,nativeShape);if(pixels<16)require(middle.maxY-middle.minY<slab[1]-slab[0]-1e-8,"mid-motion visibly preserves sections rather than whole source blocks");
                 for(double end:new double[]{-16,-1,0,1,16}){
                     RampGeometry.Box expected=RampGeometry.movingTread(face,x+dx*row,base,z+dz*row,slab[0],slab[1],row,length,0,end,pixels,step,1,1,false,RampGeometry.VERTICAL,false,false,interpolation);
                     same(MoatGeometry.transform(face,base,length,pixels,2,end,1,false,interpolation,base+row,step,original),expected);
@@ -23,7 +26,7 @@ public final class MoatGeometryTest {
                         same(MoatGeometry.sweep(face,base,length,pixels,start,end,.31,.31,false,interpolation,base+row,step,original),MoatGeometry.transform(face,base,length,pixels,start,end,.31,false,interpolation,base+row,step,original));
                     }
                     RampGeometry.Box sweep=MoatGeometry.sweep(face,base,length,pixels,0,end,0,1,false,interpolation,base+row,step,original);
-                    require(sweep.minY>=Math.min(original.minY,expected.minY)-1e-8,"never reserves below both actual endpoints");
+                    require(sweep.minY>=Math.min(closed.minY,expected.minY)-1e-8,"never reserves below both actual endpoints");
                     if(dx>0)require(sweep.minX>=x,"no under-anchor reservation");if(dx<0)require(sweep.maxX<=x+1,"no under-anchor reservation");if(dz>0)require(sweep.minZ>=z,"no under-anchor reservation");if(dz<0)require(sweep.maxZ<=z+1,"no under-anchor reservation");
                 }
             }

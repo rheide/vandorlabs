@@ -51,7 +51,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public int interpolation;
     public int escalator;
     public boolean moat,verticalMoatSources;
-    public int moatGeometryRevision=1;
+    public int moatGeometryRevision=2;
     public boolean usesNativeMoatGeometry(){return moat&&verticalMoatSources&&moatGeometryRevision>=1;}
     public boolean beltRunning;
     public boolean vehicleFrozen;
@@ -167,8 +167,8 @@ public class TileEntityControlledRamp extends TileEntity {
             for(BlockPos origin:origins){List<RampGeometry.Box> nativeShapes=RampStairs.supported(source)?RampStairs.boxes(world,sourceState(origin)):java.util.Collections.singletonList(new RampGeometry.Box(0,low,0,1,high,1));
                 for(RampGeometry.Box shape:nativeShapes)for(RampGeometry.Box piece:com.vandorlabs.ramp.MoatGeometry.pieces(direction(face),shape,treadPixels)){
                     int step=com.vandorlabs.ramp.MoatGeometry.step(direction(face),piece,treadPixels);RampGeometry.Box nativeBox=com.vandorlabs.ramp.MoatGeometry.world(piece,origin.getX(),origin.getY(),origin.getZ());
-                    RampGeometry.Box whole=com.vandorlabs.ramp.MoatGeometry.transform(direction(face),sourceY,length,treadPixels,startOffsetValue(),endOffsetValue(),pose,speed==0,interpolation,origin.getY(),step,nativeBox),clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
-                    if(clipped!=null){result.add(clipped);beltMaterials.put(clipped,origin);moatTextureOffsets.put(clipped,new double[]{whole.minX-nativeBox.minX,whole.minY-nativeBox.minY,whole.minZ-nativeBox.minZ});}
+                    RampGeometry.Box whole=com.vandorlabs.ramp.MoatGeometry.transform(direction(face),sourceY,length,treadPixels,startOffsetValue(),endOffsetValue(),pose,speed==0,interpolation,origin.getY(),step,nativeBox,moatGeometryRevision==1?nativeBox:com.vandorlabs.ramp.MoatGeometry.world(shape,origin.getX(),origin.getY(),origin.getZ())),clipped=RampGeometry.clip(whole,pos.getX(),pos.getY(),pos.getZ());
+                    if(clipped!=null){result.add(clipped);beltMaterials.put(clipped,origin);moatTextureOffsets.put(clipped,com.vandorlabs.ramp.MoatGeometry.point(direction(face),sourceY,length,treadPixels,startOffsetValue(),endOffsetValue(),pose,speed==0,interpolation,origin.getY(),step,0,0,0));}
                 }
             }
             return result;
@@ -451,7 +451,7 @@ public class TileEntityControlledRamp extends TileEntity {
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
-        moatGeometryRevision=Math.max(0,Math.min(1,tag.getInteger("MoatGeometryRevision")));vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");verticalMoatSources=tag.getBoolean("MoatVerticalSources");
+        moatGeometryRevision=Math.max(0,Math.min(2,tag.getInteger("MoatGeometryRevision")));vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");verticalMoatSources=tag.getBoolean("MoatVerticalSources");
         super.readFromNBT(tag);cachedBeltDistance=Double.NaN;beltMaterials.clear();
         escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
         beltRunning=tag.getBoolean("EscalatorRunning");beltDistance=tag.getDouble("EscalatorDistance");

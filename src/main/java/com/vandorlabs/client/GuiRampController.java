@@ -83,7 +83,7 @@ public class GuiRampController extends GuiContainer {
             if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
             if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
             if (b.id==18) b.displayString="Match textures: "+(matchTextures?"On":"Off");
-            if(b.id==19){b.enabled=!elevator&&!moat;b.displayString="Interpolation: "+new String[]{"Linear","Curve In","Curve Out"}[interpolation];}
+            if(b.id==19){b.enabled=!elevator;b.displayString="Interpolation: "+new String[]{"Linear","Curve In","Curve Out"}[interpolation];}
             if (b.id==17) {b.enabled=escalator==0&&!moat;b.displayString="Travel: "+(travelAxis==0?"up / down":"left / right");}
         }
     }

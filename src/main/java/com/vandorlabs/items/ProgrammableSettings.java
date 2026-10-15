@@ -158,9 +158,9 @@ public final class ProgrammableSettings {
         } else if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){
             com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)tile;
             if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController){
-                out.setInteger(TRIGGER,seat.getRedstoneMode());NBTTagCompound configuration=new NBTTagCompound();configuration.setBoolean("TaxiMode",seat.isTaxiMode());
+                out.setInteger(TRIGGER,seat.getRedstoneMode());NBTTagCompound configuration=new NBTTagCompound();
                 for(int mode=0;mode<3;mode++)configuration.setIntArray("VehicleModeChannels"+mode,seat.modeChannels(mode).toArray());out.setTag(BLOCK_CONFIGURATION,configuration);
-            }else out.setInteger(CHAIR_HEIGHT,seat.getHeight());
+            }else {out.setInteger(CHAIR_HEIGHT,seat.getHeight());NBTTagCompound configuration=new NBTTagCompound();configuration.setBoolean("TaxiMode",seat.isTaxiMode());out.setTag(BLOCK_CONFIGURATION,configuration);}
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
@@ -388,10 +388,10 @@ public final class ProgrammableSettings {
                 if(values.hasKey(BLOCK_CONFIGURATION,10)){
                     NBTTagCompound config=values.getCompoundTag(BLOCK_CONFIGURATION);ChannelList[] modes=new ChannelList[3];
                     try{for(int mode=0;mode<3;mode++)if(config.hasKey("VehicleModeChannels"+mode,11))modes[mode]=ChannelList.of(config.getIntArray("VehicleModeChannels"+mode));}catch(IllegalArgumentException invalid){return false;}
-                    if(config.hasKey("TaxiMode",1)){seat.setTaxiMode(config.getBoolean("TaxiMode"));applicable=true;}
                     for(int mode=0;mode<3;mode++)if(modes[mode]!=null){seat.setModeChannels(mode,modes[mode]);applicable=true;}
                 }
-            }else if(values.hasKey(CHAIR_HEIGHT)){int height=number(values,CHAIR_HEIGHT,seat.getHeight());if(height<0 || height>3)return false;seat.setHeight(height);applicable=true;}
+            }else {if(values.hasKey(CHAIR_HEIGHT)){int height=number(values,CHAIR_HEIGHT,seat.getHeight());if(height<0 || height>3)return false;seat.setHeight(height);applicable=true;}
+                NBTTagCompound config=values.getCompoundTag(BLOCK_CONFIGURATION);if(config.hasKey("TaxiMode",1)){seat.setTaxiMode(config.getBoolean("TaxiMode"));applicable=true;}}
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;

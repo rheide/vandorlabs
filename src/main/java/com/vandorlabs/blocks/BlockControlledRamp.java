@@ -97,13 +97,7 @@ public class BlockControlledRamp extends BlockVandorDirectional {
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,
             EnumHand hand,EnumFacing face,float hitX,float hitY,float hitZ) {
-        TileEntity te=world.getTileEntity(pos);
-        if (te instanceof TileEntityControlledRamp) {
-            BlockPos controller=((TileEntityControlledRamp)te).controller;
-            if (world.isBlockLoaded(controller) && world.getBlockState(controller).getBlock() instanceof BlockRampController)
-                return world.getBlockState(controller).getBlock().onBlockActivated(world,controller,
-                        world.getBlockState(controller),player,hand,face,hitX,hitY,hitZ);
-        }
+        // Generated platform cells are surfaces, never controller interaction proxies.
         return true;
     }
     @Override public Item getItemDropped(IBlockState state,Random rand,int fortune) { return net.minecraft.init.Items.AIR; }

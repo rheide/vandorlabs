@@ -5,6 +5,8 @@ import math
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1] / "src/main/resources/assets/vandorlabs"
+spans=[]
+held_sizes=[]
 for size in ("small", "medium", "large"):
     name = "wheel_" + size
     model = json.loads((root / "models/block" / (name + ".json")).read_text())
@@ -47,5 +49,11 @@ for size in ("small", "medium", "large"):
     bounds = [min(p[axis] for p in projected) for axis in range(2)] + [
         max(p[axis] for p in projected) for axis in range(2)]
     assert all(abs(v) < 7 for v in bounds), (name, bounds)
+    spans.append(max(bounds[2]-bounds[0],bounds[3]-bounds[1]))
+    for hand in ("firstperson_righthand","firstperson_lefthand","thirdperson_righthand","thirdperson_lefthand"):
+        assert max(item["display"][hand]["scale"]) <= .33, (name,hand)
+    held_sizes.append((32 if size=="large" else 16 if size=="medium" else 12)*item["display"]["firstperson_righthand"]["scale"][0])
     print(name, "PASS explicit in-sprite UVs and GUI bounds", [round(v, 2) for v in bounds])
-print("PASS wheel variants retain at least one pixel of GUI padding on every side")
+assert all(b-a>1.5 for a,b in zip(spans,spans[1:])),spans
+assert held_sizes[0]<held_sizes[1]<held_sizes[2]<6,held_sizes
+print("PASS distinct Small/Medium/Large GUI sizes, padded edges and reduced held geometry",spans,held_sizes)

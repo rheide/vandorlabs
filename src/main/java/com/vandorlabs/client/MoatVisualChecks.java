@@ -37,10 +37,13 @@ final class MoatVisualChecks {
         return fixture(mc,face,pose,start,end,sourceState,6,true);
     }
     private static VehicleWorld fixture(Minecraft mc,EnumFacing face,double pose,int start,int end,IBlockState sourceState,int mode,boolean tiledSides){
+        return fixture(mc,face,pose,start,end,sourceState,mode,tiledSides,8);
+    }
+    private static VehicleWorld fixture(Minecraft mc,EnumFacing face,double pose,int start,int end,IBlockState sourceState,int mode,boolean tiledSides,int pixels){
         List<VehicleStructure.Cell> originals=new ArrayList<>();BlockPos root=new BlockPos(5,2,5);
         originals.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         TileEntityRampController controller=new TileEntityRampController();controller.setPos(root);controller.moat=mode==6;controller.elevator=mode==2||mode==3;controller.extendSegments=mode==1||mode==3;
-        NBTTagCompound data=controller.writeToNBT(new NBTTagCompound());data.setInteger("StartOffsetHalfSteps",start);data.setInteger("EndOffsetHalfSteps",end);
+        NBTTagCompound data=controller.writeToNBT(new NBTTagCompound());data.setInteger("TreadPixels",pixels);data.setInteger("StartOffsetHalfSteps",start);data.setInteger("EndOffsetHalfSteps",end);
         originals.add(new VehicleStructure.Cell(root,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,face),data));
         for(int row=1;row<=3;row++)for(int lane=0;lane<2;lane++){
             BlockPos p=(mode==6?root.offset(face).up(row-1):root.offset(face,row)).offset(face.rotateY(),lane);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(p);tile.setHousingTexture(CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(Blocks.GOLD_BLOCK)));tile.setSlabTileSides(tiledSides);
@@ -107,10 +110,26 @@ final class MoatVisualChecks {
         if(done)return true;glCheckpoint("matrix entry / preexisting");GuiOptionCycleRuntimeChecks.checkMoatMode(mc);BufferedImage montage=new BufferedImage(SIZE*5,(SIZE+24)*4,BufferedImage.TYPE_INT_RGB);Graphics2D g=montage.createGraphics();g.setColor(Color.WHITE);int row=0;
         for(EnumFacing face:EnumFacing.HORIZONTALS){BufferedImage closed=null;for(int col=0;col<5;col++){double pose=col<3?col*.5:col==3?0:1;int start=col==3?-1:0,end=col==4?3:0;BufferedImage image=draw(mc,fixture(mc,face,pose,start,end),face);if(col==0)closed=image;else{int changed=0;for(int y=0;y<SIZE;y++)for(int x=0;x<SIZE;x++)if(closed.getRGB(x,y)!=image.getRGB(x,y))changed++;require(changed>100,"pose or signed offset visibly changed: "+face+" column="+col);}g.drawImage(image,col*SIZE,row*(SIZE+24)+24,null);g.drawString(face+" "+new String[]{"closed","midpoint","open","stored -0.5","deployed +1.5"}[col],col*SIZE+6,row*(SIZE+24)+17);}row++;}
         g.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_moat_cardinal_endpoints.png"));glCheckpoint("gold endpoint matrix complete");
-        Exception[] failure={null};collect("ordinary Ramp endpoint parity",()->endpointParity(mc,output),failure);collect("glass transmission",()->glass(mc,output),failure);collect("captured glass order",()->capturedGlass(mc,output),failure);collect("stair shapes",()->stairs(mc,output),failure);collect("stair side mapping",()->stairFinishes(mc,output),failure);if(failure[0]!=null)throw failure[0];
+        Exception[] failure={null};collect("vertical tread sections",()->verticalSections(mc,output),failure);collect("ordinary Ramp endpoint parity",()->endpointParity(mc,output),failure);collect("glass transmission",()->glass(mc,output),failure);collect("captured glass order",()->capturedGlass(mc,output),failure);collect("stair shapes",()->stairs(mc,output),failure);collect("stair side mapping",()->stairFinishes(mc,output),failure);if(failure[0]!=null)throw failure[0];
         done=true;System.out.println("[vandorlabs][reprolab] moat-client PASS textured-TESR cardinal closed-mid-open signed-offsets source-material screenshots");return true;
     }
     private interface VisualCheck{void run()throws Exception;}
+    private static void verticalSections(Minecraft mc,File output)throws Exception{
+        BufferedImage montage=new BufferedImage(SIZE*4,(SIZE+24)*2,BufferedImage.TYPE_INT_RGB);Graphics2D graphics=montage.createGraphics();graphics.setColor(Color.WHITE);int row=0;
+        for(double pose:new double[]{.35,.65}){
+            BufferedImage coarse=draw(mc,fixture(mc,EnumFacing.SOUTH,pose,0,0,null,6,true,16),EnumFacing.SOUTH);int col=0;
+            for(int pixels:new int[]{1,4,8,16}){
+                VehicleWorld view=fixture(mc,EnumFacing.SOUTH,pose,0,0,null,6,true,pixels);double maximumHeight=0;int pieces=0;
+                for(net.minecraft.tileentity.TileEntity raw:view.tiles.values())if(raw instanceof TileEntityControlledRamp)for(com.vandorlabs.ramp.RampGeometry.Box box:((TileEntityControlledRamp)raw).geometry(0)){maximumHeight=Math.max(maximumHeight,box.maxY-box.minY);pieces++;}
+                require(pieces>0,"mid-motion selected tread sections have actual geometry");if(pixels<16)require(maximumHeight<.99,"fine mid-motion TESR consumes thin section bounds instead of whole blocks");
+                BufferedImage image=draw(mc,view,EnumFacing.SOUTH);int changed=0;for(int y=0;y<SIZE;y++)for(int x=0;x<SIZE;x++)if(image.getRGB(x,y)!=coarse.getRGB(x,y))changed++;
+                if(pixels<16)require(changed>100,"selected vertical tread size visibly differs from whole moving blocks: "+pixels+" changed="+changed);
+                graphics.drawImage(image,col*SIZE,row*(SIZE+24)+24,null);graphics.drawString("Tread "+pixels+"px / motion "+pose,col*SIZE+6,row*(SIZE+24)+17);col++;
+            }
+            row++;
+        }
+        graphics.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_moat_vertical_tread_sections_midmotion.png"));System.out.println("[vandorlabs][reprolab] moat-tread-render PASS actual-TESR vertical-sections 1-4-8-16px two-midmotion-poses visible-chunk-differences");
+    }
     private static void endpointParity(Minecraft mc,File output)throws Exception{
         BufferedImage montage=new BufferedImage(SIZE*2,(SIZE+24)*12,BufferedImage.TYPE_INT_RGB);Graphics2D graphics=montage.createGraphics();graphics.setColor(Color.WHITE);int row=0,maxDifferent=0;
         for(EnumFacing face:EnumFacing.HORIZONTALS)for(int material=0;material<3;material++){

@@ -55,12 +55,12 @@ public final class RampStairs {
     public static List<RampGeometry.Box> moat(World world,IBlockState state,RampGeometry.Direction face,int hinge,int baseY,int length,int pixels,double start,double end,double pose,boolean fast,BlockPos source){return moat(world,state,face,hinge,baseY,length,pixels,start,end,pose,fast,0,source);}
     public static List<RampGeometry.Box> moat(World world,IBlockState state,RampGeometry.Direction face,int hinge,int baseY,int length,int pixels,double start,double end,double pose,boolean fast,int interpolation,BlockPos source){
         List<RampGeometry.Box> result=new ArrayList<>();
-        for(RampGeometry.Box shape:boxes(world,state))for(RampGeometry.Box piece:MoatGeometry.pieces(face,shape,pixels))result.add(MoatGeometry.transform(face,baseY,length,pixels,start,end,pose,fast,interpolation,source.getY(),MoatGeometry.step(face,piece,pixels),MoatGeometry.world(piece,source.getX(),source.getY(),source.getZ())));
+        for(RampGeometry.Box shape:boxes(world,state))for(RampGeometry.Box piece:MoatGeometry.pieces(face,shape,pixels))result.add(MoatGeometry.transform(face,baseY,length,pixels,start,end,pose,fast,interpolation,source.getY(),MoatGeometry.step(face,piece,pixels),MoatGeometry.world(piece,source.getX(),source.getY(),source.getZ()),MoatGeometry.world(shape,source.getX(),source.getY(),source.getZ())));
         return result;
     }
     public static List<RampGeometry.Box> moatSweeps(World world,IBlockState state,RampGeometry.Direction face,int baseY,int length,int pixels,double start,double end,double from,double to,boolean fast,int interpolation,BlockPos source){
         List<RampGeometry.Box> result=new ArrayList<>();
-        for(RampGeometry.Box shape:boxes(world,state))for(RampGeometry.Box piece:MoatGeometry.pieces(face,shape,pixels))result.add(MoatGeometry.sweep(face,baseY,length,pixels,start,end,from,to,fast,interpolation,source.getY(),MoatGeometry.step(face,piece,pixels),MoatGeometry.world(piece,source.getX(),source.getY(),source.getZ())));
+        for(RampGeometry.Box shape:boxes(world,state))for(RampGeometry.Box piece:MoatGeometry.pieces(face,shape,pixels))result.add(MoatGeometry.sweep(face,baseY,length,pixels,start,end,from,to,fast,interpolation,source.getY(),MoatGeometry.step(face,piece,pixels),MoatGeometry.world(piece,source.getX(),source.getY(),source.getZ()),MoatGeometry.world(shape,source.getX(),source.getY(),source.getZ())));
         return result;
     }
     public static List<RampGeometry.Box> legacyMoat(World world,IBlockState state,RampGeometry.Direction face,int hinge,int sourceY,double high,double start,double end,double pose,boolean fast,BlockPos source){

@@ -223,21 +223,26 @@ controller. It does not unfold one row at a time.
 Start skews the stored sections toward or away from the controller. End sets
 the deployed ramp height using exactly the ordinary Ramp tread profile. For
 example, End -1 produces the same descending treads as an ordinary deployed
-Ramp with End -1. Tread px selects the same 1, 2, 4, 8 or 16 pixel section widths;
-Interpolation applies the same spatial profile as the ordinary ramp.
+Ramp with End -1. Tread px cuts full source blocks vertically into 1, 2, 4, 8 or 16 pixel sections,
+which become matching horizontal Ramp treads. Partial slab and stair cuboids
+scale those sections to preserve both native endpoints.
+Interpolation offers the same three spatial profiles as the ordinary ramp.
 
 Full blocks, slabs, stairs and saved programmable finishes retain their native
-horizontal solids, orientation and thickness throughout movement. Top slabs
+solids, orientation and thickness at both endpoints. Top slabs
 remain top slabs; stair facing and corner shapes remain unchanged. Sections
-move simultaneously along curved paths while keeping their native orientation.
+move simultaneously along curved paths, changing from vertical source cuts
+into horizontal treads.
 Source facing, slab halves and all source tile settings return exactly when the
 mechanism is recovered.
 
 Keep the actual tread paths and endpoints clear. Terrain, occupants, protected
 blocks and unloaded chunks can prevent movement. Blocks directly underneath
 the controller are outside the normal outward motion and may remain in place.
-The solid controller stays in place as the anchor. The off state retains the
-source journal, including at Start zero. Changing mode or removing the controller
+The solid controller stays in place as the anchor. At Start zero, switching off
+restores ordinary editable source blocks; the next activation rescans their
+current extent and settings. Nonzero Start retains controlled source sections
+and their journal. Changing mode or removing the controller
 restores the original upright source tower when its cells are clear. Carried
 vehicles switch between checked endpoints on channel edges and check individual
 tread paths against terrain and other components. Settled mechanisms do not scan

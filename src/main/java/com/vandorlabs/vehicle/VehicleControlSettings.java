@@ -16,7 +16,7 @@ public final class VehicleControlSettings {
         if(data.getBoolean("VehicleControllerControls"))return structure;
         NBTTagCompound legacy=structure.at(structure.seat).tileData();
         if(legacy!=null){
-            for(String key:new String[]{"RedstoneChannels","TaxiMode","PilotRedstoneMode","VehicleSignalHigh","VehicleModeChannels0","VehicleModeChannels1","VehicleModeChannels2"})
+            for(String key:new String[]{"RedstoneChannels","PilotRedstoneMode","VehicleSignalHigh","VehicleModeChannels0","VehicleModeChannels1","VehicleModeChannels2"})
                 if(legacy.hasKey(key))data.setTag(key,legacy.getTag(key).copy());
             if(!data.hasUniqueId("VehicleOwner")&&legacy.hasUniqueId("VehicleOwner"))data.setUniqueId("VehicleOwner",legacy.getUniqueId("VehicleOwner"));
         }

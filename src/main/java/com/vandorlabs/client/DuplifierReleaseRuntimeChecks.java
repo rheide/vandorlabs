@@ -15,6 +15,22 @@ import net.minecraft.world.World;
 /** Configuration transfers exercise the actual tool and configured-item paths. */
 final class DuplifierReleaseRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("Duplifier release: "+message);}
+    private static void controller(World world,BlockPos source,BlockPos target,EntityPlayer player){
+        world.setBlockState(source,ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),2);world.setBlockState(target,ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),2);
+        TileEntityVehicleController from=(TileEntityVehicleController)world.getTileEntity(source),to=(TileEntityVehicleController)world.getTileEntity(target);
+        from.owner=player.getUniqueID();from.setTaxiMode(false);from.configure(2,0,world);from.setHeight(3);from.setVehicleChannels(ChannelList.of(443,444),world);
+        ChannelList[] modes={ChannelList.of(445),ChannelList.of(446,447),ChannelList.of(448)};for(int mode=0;mode<3;mode++)from.setModeChannels(mode,modes[mode]);
+        NBTTagCompound settings=ProgrammableSettings.capture(world,source);
+        require(!settings.hasKey(ProgrammableSettings.CHAIR_HEIGHT)&&!settings.getCompoundTag(ProgrammableSettings.BLOCK_CONFIGURATION).hasKey("TaxiMode"),"controller capture excludes seat Height and Taxi");
+        require(ProgrammableSettings.apply(world,target,settings,player),"controller world copy apply");
+        require(to.getRedstoneMode()==2&&to.getRedstoneChannels().equals(from.getRedstoneChannels())&&to.getHeight()==0&&to.isTaxiMode(),"controller copy transfers trigger and toggle channels independently from seat settings");
+        for(int mode=0;mode<3;mode++)require(to.modeChannels(mode).equals(modes[mode]),"controller world mode channels "+mode);
+        ItemStack item=ProgrammableSettings.applyToItem(new ItemStack(ModBlocks.VEHICLE_CONTROLLER),settings);require(!item.isEmpty(),"controller configured item");
+        NBTTagCompound data=item.getSubCompound("BlockEntityTag");require(data!=null&&!data.hasUniqueId("VehicleOwner"),"controller configured item has no copied world owner");
+        TileEntityVehicleController crafted=new TileEntityVehicleController();crafted.readFromNBT(data);
+        require(crafted.controlsInitialized()&&crafted.getRedstoneMode()==2&&crafted.getRedstoneChannels().equals(from.getRedstoneChannels())&&crafted.getHeight()==0&&crafted.isTaxiMode(),"controller item persists trigger and toggle channels only");
+        for(int mode=0;mode<3;mode++)require(crafted.modeChannels(mode).equals(modes[mode]),"controller item mode channels "+mode);
+    }
     static void run(EntityPlayer player){
         DuplifierMaskRuntimeChecks.run();
         World world=player.world;BlockPos source=new BlockPos(80,130,80),target=source.east(12);
@@ -47,15 +63,17 @@ final class DuplifierReleaseRuntimeChecks {
             TileEntityPilotSeat seat=(TileEntityPilotSeat)world.getTileEntity(source);seat.configure(2,3,world);seat.setTaxiMode(false);seat.setVehicleChannels(ChannelList.of(433,434),world);
             NBTTagCompound captured=ProgrammableSettings.capture(world,source);
             require(ProgrammableSettings.apply(world,target,captured,player),"pilot apply");TileEntityPilotSeat copy=(TileEntityPilotSeat)world.getTileEntity(target);
-            require(copy.getHeight()==3 && copy.getRedstoneMode()==2 && !copy.isTaxiMode() && copy.getRedstoneChannels().equals(seat.getRedstoneChannels()),"all pilot settings");
+            require(copy.getHeight()==3 && !copy.isTaxiMode() && copy.getRedstoneMode()==1 && copy.getRedstoneChannels().isEmpty(),"pilot transfers Height and Taxi without legacy redstone controls");
+            require(!captured.hasKey(ProgrammableSettings.TRIGGER)&&!captured.hasKey(ProgrammableSettings.CHANNEL),"seat capture excludes moved controller redstone settings");
             ItemStack crafted=ProgrammableSettings.applyToItem(new ItemStack(ModBlocks.PILOT_SEAT),captured);require(!crafted.isEmpty(),"pilot configured item");
-            NBTTagCompound data=crafted.getSubCompound("BlockEntityTag");require(data.getInteger("PilotHeight")==3 && data.getInteger("PilotRedstoneMode")==2 && !data.getBoolean("TaxiMode") && !data.hasUniqueId("VehicleOwner"),"pilot item settings without owner");
+            NBTTagCompound data=crafted.getSubCompound("BlockEntityTag");require(data.getInteger("PilotHeight")==3 && data.getInteger("PilotRedstoneMode")==1 && com.vandorlabs.redstone.ChannelData.read(data,0).isEmpty() && !data.getBoolean("TaxiMode") && !data.hasUniqueId("VehicleOwner"),"pilot item transfers only Height and Taxi without owner");
+            controller(world,source,target,player);
             Block gear=Block.getBlockFromName("vandorlabs:landing_gear");require(gear!=null,"gear exists");
             NBTTagCompound gearSettings=new NBTTagCompound();gearSettings.setInteger(ProgrammableSettings.GEAR_SIZE,4);gearSettings.setInteger(ProgrammableSettings.GEAR_LENGTH,64);gearSettings.setInteger(ProgrammableSettings.GEAR_MODE,2);gearSettings.setIntArray(ProgrammableSettings.CHANNEL,new int[]{435,436});
             crafted=ProgrammableSettings.applyToItem(new ItemStack(gear),gearSettings);require(!crafted.isEmpty() && crafted.getSubCompound("BlockEntityTag").getInteger("GearSize")==4,"largest gear configured item");
             ItemStack legacy=new ItemStack(ModItems.DUPLIFIER);NBTTagCompound mask=new NBTTagCompound();mask.setLong(DuplifierApplyOptions.TAG,0);mask.setInteger("DuplifierApplyOptionCount",63);legacy.setTagCompound(mask);
             require(DuplifierApplyOptions.mask(legacy)==Long.MIN_VALUE,"new configuration option preserves old disabled choices");DuplifierApplyOptions.setMask(legacy,0);require(DuplifierApplyOptions.mask(legacy)==0,"64-option disabled mask persists");
         }finally{for(BlockPos pos:BlockPos.getAllInBox(source.add(-8,-8,-8),target.add(8,8,8)))world.setBlockToAir(pos);}
-        System.out.println("[vandorlabs][reprolab] duplifier-release PASS canopy-motion shape hinges finishes layout channels follower-roots pilot-settings crafting largest-gear scalable-mask legacy-bit-compatibility");
+        System.out.println("[vandorlabs][reprolab] duplifier-release PASS canopy-motion shape hinges finishes layout channels follower-roots pilot-height-taxi controller-trigger-toggle-three-mode-channels world-item-copy crafting largest-gear scalable-mask legacy-bit-compatibility");
     }
 }

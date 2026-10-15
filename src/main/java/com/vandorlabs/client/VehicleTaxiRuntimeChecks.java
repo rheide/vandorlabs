@@ -34,7 +34,7 @@ public final class VehicleTaxiRuntimeChecks {
     private static UUID stalePreview;
     private static int modeUiStage;
     private static boolean invalidChannelDraft;
-    private static boolean parkingPanelRequested;
+    private static boolean parkingPanelRequested,taxiToggleApplied;
     private static final PoweredChannels powered=new PoweredChannels();
     private static final class PoweredChannels extends TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
         public TileEntity channelTile(){return this;}
@@ -176,7 +176,7 @@ public final class VehicleTaxiRuntimeChecks {
         List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
         require(controls.stream().noneMatch(b->"Save".equalsIgnoreCase(b.displayString)),"preview applies valid changes without a Save button");
         boolean seatOnly=controls.stream().anyMatch(b->b.id==5);
-        if(seatOnly){require(controls.size()==2&&controls.stream().allMatch(b->b.id==1||b.id==5),"compact seat dialog contains only Height and Done");}
+        if(seatOnly){require(controls.size()==3&&controls.stream().allMatch(b->b.id==1||b.id==2||b.id==5),"compact seat dialog contains Height, Taxi and Done");}
         GuiButton modes=null;
         for(GuiButton b:controls)if(b.visible){
             require(b.x>=0&&b.y>=0&&b.x+b.width<=gui.width&&b.y+b.height<=gui.height,"visible control fits screen: "+b.displayString);
@@ -204,7 +204,7 @@ public final class VehicleTaxiRuntimeChecks {
         mc.getIntegratedServer().addScheduledTask(()->{
             require(player(mc).getRidingEntity() instanceof EntityGroundVehicle,"Taxi Mode assembles and mounts through client block click");
             EntityGroundVehicle e=(EntityGroundVehicle)player(mc).getRidingEntity();craftId=e.getUniqueID();
-            require(VehicleTaxiMode.enabled(e.structure),"controller saves automatic behavior");
+            require(VehicleTaxiMode.enabled(e.structure),"pilot seat saves automatic behavior");
         }).get();
         require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"client riding identity synchronized");
     }
@@ -242,23 +242,22 @@ public final class VehicleTaxiRuntimeChecks {
             case 0:mc.getIntegratedServer().addScheduledTask(()->{try{setup(mc);}catch(Exception e){throw new IllegalStateException(e);}}).get();break;
             case 1:if(mc.world.getBlockState(seat).getBlock()!=ModBlocks.PILOT_SEAT){require(++dialogWait<16,"fixture chunks reach client");phase--;break;}blockClick(mc,true);break;
             case 2:if(mc.currentScreen==null||!mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview")){require(++dialogWait<24,"placed pilot seat opens compact height dialog");blockClick(mc,true);phase--;break;}previewLayout(mc);screenshot(mc,output,"shot_pilot_shift_preview.png");button(mc,5);break;
-            case 3:mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)world(mc).getTileEntity(seat)).getHeight()==1,"independent seat height applies immediately");VehicleService.previewController(player(mc),origin.add(1,1,1));}).get();break;
+            case 3:mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)world(mc).getTileEntity(seat)).getHeight()==1,"independent seat height applies immediately");}).get();break;
             case 4:previewLayout(mc);button(mc,2);break;
-            case 5:previewLayout(mc);screenshot(mc,output,"shot_pilot_controller_settings.png");require(field(mc.currentScreen,"channels") instanceof GuiTextField,"channels belong to controller dialog");type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"5319");mc.currentScreen.updateScreen();break;
-            case 6:mc.getIntegratedServer().addScheduledTask(()->{require(!((TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1))).isTaxiMode(),"controller Taxi OFF applies immediately");require(((TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1))).getRedstoneChannel()==5319,"controller channel edit applies");}).get();button(mc,1);break;
+            case 5:mc.getIntegratedServer().addScheduledTask(()->{require(!((TileEntityPilotSeat)world(mc).getTileEntity(seat)).isTaxiMode(),"seat Taxi OFF applies immediately");VehicleService.previewController(player(mc),origin.add(1,1,1));}).get();break;
+            case 6:previewLayout(mc);screenshot(mc,output,"shot_pilot_controller_settings.png");type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"5319");mc.currentScreen.updateScreen();break;
             case 7:mc.getIntegratedServer().addScheduledTask(()->{
-                TileEntityVehicleController pilot=(TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1));
-                require(pilot.getRedstoneChannel()==5319 && !player(mc).isRiding(),"assembly preview settings save placed seat without conversion on a held-high channel");
-                player(mc).setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
-            }).get();break;
+                TileEntityVehicleController controller=(TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1));
+                require(controller.getRedstoneChannel()==5319&&!player(mc).isRiding(),"controller channels apply without conversion on held-high input");player(mc).setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+            }).get();button(mc,1);break;
             case 8:mc.getIntegratedServer().addScheduledTask(()->require(world(mc).getTileEntity(seat) instanceof TileEntityPilotSeat,"held-high edit does not queue automatic conversion")).get();blockClick(mc,false);break;
-            case 9:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"controller OFF permits ordinary seating");player(mc).dismountRidingEntity();VehicleService.previewController(player(mc),origin.add(1,1,1));}).get();break;
+            case 9:mc.getIntegratedServer().addScheduledTask(()->{require(player(mc).getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"seat Taxi OFF permits ordinary seating");player(mc).dismountRidingEntity();VehicleService.previewAssembly(player(mc),seat);}).get();break;
             case 10:previewLayout(mc);stalePreview=((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).token;button(mc,2);break;
             case 11:if(mc.currentScreen!=null){button(mc,1);phase--;break;}blockClick(mc,false);break;
             case 12:mounted(mc);prepareExit(mc,1);mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
             case 13:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"90-degree taxi exit restores blocks");require(placements==1,"immediate complete tile preservation audit");require(!player(mc).isRiding(),"automatic parking does not remount or loop");}).get();blockClick(mc,false);break;
             case 14:mounted(mc);prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{world(mc).setBlockState(blocker,Blocks.STONE.getDefaultState(),2);player(mc).dismountRidingEntity();}).get();break;
-            case 15:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"obstructed taxi exit keeps full craft and retry state");require(world(mc).getBlockState(blocker).getBlock()==Blocks.STONE,"parking never overwrites obstacles");NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);require(loaded.taxiReturnPending && loaded.taxiReturnActor.equals(player(mc).getUniqueID()),"pending parking survives entity reload");world(mc).setBlockToAir(blocker);}).get();break;
+            case 15:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"obstructed taxi exit keeps full craft and retry state");require(world(mc).getBlockState(blocker).getBlock()==Blocks.STONE,"parking never overwrites obstacles");NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);require(loaded.taxiReturnPending && loaded.taxiReturnActor.equals(player(mc).getUniqueID())&&loaded.taxiReturnSeat.equals(e.taxiReturnSeat),"pending parking and controlling seat survive entity reload");world(mc).setBlockToAir(blocker);}).get();break;
             case 16:if(!mc.getIntegratedServer().callFromMainThread(()->placements==2 && (craft(mc)==null || craft(mc).isDead)).get()){require(++parkingWait<40,"clearing obstruction automatically restores blocks");phase--;break;}parkingWait=0;blockClick(mc,false);break;
             case 17:mounted(mc);prepareExit(mc,3);cancelOnce=true;mc.getIntegratedServer().addScheduledTask(()->player(mc).dismountRidingEntity()).get();break;
             case 18:mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);require(rollbackSeen && e!=null && e.taxiReturnPending && e.structure.write().equals(unrotated.write()),"cancelled rotated placement rolls back to intact returnable craft");require(!VehicleTransfer.pending(world(mc)),"rollback retires recovery journal");rollbackSeen=false;world(mc).setBlockToAir(blocker);}).get();break;
@@ -320,8 +319,8 @@ public final class VehicleTaxiRuntimeChecks {
             }).get();break;
             }
             case 26:require(ChannelFields.parse((GuiTextField)field(mc.currentScreen,"channels")).toString().equals("5317, 5318"),"integrated settings draft represents saved canonical list");break;
-            case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"reboarding after non-cardinal exits keeps client able to steer");require(mc.currentScreen!=null && mc.currentScreen.getClass().getName().contains("VehicleClient$Preview"),"Configurator parking dialog");button(mc,2);break;
-            case 28:mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();
+            case 27:require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"reboarding after non-cardinal exits keeps client able to steer");mc.getIntegratedServer().addScheduledTask(()->VehicleService.previewSeat(player(mc),craft(mc),craft(mc).structure.seat)).get();break;
+            case 28:if(!taxiToggleApplied){previewLayout(mc);button(mc,2);taxiToggleApplied=true;phase--;break;}mc.getIntegratedServer().addScheduledTask(()->require(!VehicleTaxiMode.enabled(craft(mc).structure),"assembled Taxi Mode OFF synchronized")).get();
                 if(!parkingPanelRequested){prepareExit(mc,0);mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle e=craft(mc);VehicleService.previewController(player(mc),e,e.structure.controller().pos);}).get();parkingPanelRequested=true;phase--;break;}
                 require(((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).forward==1,"dedicated controller parking panel");button(mc,0);break;
             case 29:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);com.vandorlabs.redstone.RedstoneChannels.unregister(powered);}).get();

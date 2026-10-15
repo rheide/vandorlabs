@@ -45,11 +45,12 @@ final class RampModeRuntimeChecks {
             String power=active?"on":"off",arrow="vandorlabs:block/ramp_elevator_controller_top_"+power;
             require(model.getQuads(state,facing.getOpposite(),0).stream().anyMatch(q->q.getSprite().getIconName().equals("vandorlabs:block/ramp_elevator_controller_back_"+power)),"housing power texture retained");
             require(model.getQuads(state,EnumFacing.UP,0).stream().anyMatch(q->q.getSprite().getIconName().equals(expected)),"top carries the current mode logo");
-            for(EnumFacing side:EnumFacing.values())if(side!=facing){
+            require(model.getQuads(state,facing.getOpposite(),0).stream().noneMatch(q->q.getSprite().getIconName().equals(arrow)),"port/indicator face has no added arrow");
+            for(EnumFacing side:EnumFacing.values())if(side!=facing&&side!=facing.getOpposite()){
                 BakedQuad badge=null;for(BakedQuad quad:model.getQuads(state,side,0))if(quad.getSprite().getIconName().equals(arrow)){require(badge==null,"exactly one arrow per nonfront face");badge=quad;}
                 require(badge!=null,"directional arrow on "+side+" front="+facing);
-                Vec3d direction=arrowDirection(badge),wanted=side==facing.getOpposite()?new Vec3d(0,1,0):new Vec3d(facing.getDirectionVec());
-                require(direction.normalize().dotProduct(wanted)>.999,"arrow points toward front (rear wraps upward) side="+side+" front="+facing+" actual="+direction);
+                Vec3d direction=arrowDirection(badge),wanted=new Vec3d(facing.getDirectionVec());
+                require(direction.normalize().dotProduct(wanted)>.999,"arrow points toward mode-logo face side="+side+" front="+facing+" actual="+direction);
                 int[] vertices=badge.getVertexData();int stride=vertices.length/4;for(int vertex=0;vertex<4;vertex++){
                     Vec3d point=new Vec3d(Float.intBitsToFloat(vertices[vertex*stride]),Float.intBitsToFloat(vertices[vertex*stride+1]),Float.intBitsToFloat(vertices[vertex*stride+2]));
                     double plane=side.getAxis()==EnumFacing.Axis.X?point.x:side.getAxis()==EnumFacing.Axis.Y?point.y:point.z;
@@ -60,7 +61,7 @@ final class RampModeRuntimeChecks {
         NBTTagCompound data=VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(pos));
         VehicleStructure captured=new VehicleStructure(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,actual,data),new VehicleStructure.Cell(BlockPos.ORIGIN.east(),ModBlocks.PILOT_SEAT.getDefaultState(),null)),BlockPos.ORIGIN.east(),EnumFacing.NORTH,1);
         VehicleWorld view=new VehicleWorld(mc.world,captured);require(block.getActualState(actual,view,BlockPos.ORIGIN).getValue(BlockRampController.MODE)==mode,"captured controller resolves same mode");
-        if(mode==6){items(mc,output);faceOverview(mc,output);System.out.println("[vandorlabs][reprolab] ramp-mode-front PASS seven-real-GUI-packet-modes four-facings powered-housing top-mode-logo five-oriented-arrow-faces separated-overlays captured-models seven-configured-item-padding screenshot");return true;}
+        if(mode==6){items(mc,output);faceOverview(mc,output);System.out.println("[vandorlabs][reprolab] ramp-mode-front PASS seven-real-GUI-packet-modes four-facings powered-housing top-mode-logo four-oriented-arrow-faces port-face-no-arrow separated-overlays captured-models seven-configured-item-padding screenshot");return true;}
         GuiScreen gui=mc.currentScreen;java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
         GuiButton button=null;for(GuiButton candidate:buttons)if(candidate.id==1)button=candidate;require(button!=null&&button.enabled,"mode cycle button available");
         net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class).invoke(gui,button.x+button.width/2,button.y+button.height/2,0);

@@ -29,12 +29,12 @@ public final class PilotInspectionChecks {
         });state=1;return;}
         if(state==1 && ticks>=25){if(!(mc.world.getTileEntity(POS) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)){require(ticks<200,"client seat tile did not arrive");return;}pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);VehicleService.previewAssembly(player,POS);});state=2;return;}
         if(state==2 && ticks==40){
-            for(GuiButton button:VehicleTaxiRuntimeChecks.previewLayout(mc))require(button.id==1||button.id==5,"seat dialog contains height only");
+            for(GuiButton button:VehicleTaxiRuntimeChecks.previewLayout(mc))require(button.id==1||button.id==2||button.id==5,"seat dialog contains height and Taxi only");
             GuiOptionCycleRuntimeChecks.check(mc);
             VehicleTaxiRuntimeChecks.screenshot(mc,new java.io.File(System.getProperty("vandorlabs.reprolab")),"shot_pilot_invalid_preview_"+scenario+".png");
             VehicleTaxiRuntimeChecks.button(mc,5);state=3;ticks=0;return;
         }
         if(state==3 && ticks==20){pending=mc.getIntegratedServer().addScheduledTask(()->{com.vandorlabs.tiles.TileEntityPilotSeat seat=(com.vandorlabs.tiles.TileEntityPilotSeat)mc.getIntegratedServer().getWorld(0).getTileEntity(POS);require(seat.getHeight()==1,"independent height applies without craft scan");});VehicleTaxiRuntimeChecks.button(mc,1);scenario++;state=scenario<2?0:4;return;}
-        if(state==4 && ticks>=10){if(!CapturedPilotInspectionChecks.tick(mc))return;state=5;GuiOptionCycleRuntimeChecks.checkNewDialogs(mc);System.out.println("[vandorlabs][reprolab] pilot-inspection PASS disconnected-and-oversized compact-height-only no-controller-controls live-height captured-independent-seats screenshots");mc.shutdown();}
+        if(state==4 && ticks>=10){if(!CapturedPilotInspectionChecks.tick(mc))return;state=5;GuiOptionCycleRuntimeChecks.checkNewDialogs(mc);System.out.println("[vandorlabs][reprolab] pilot-inspection PASS disconnected-and-oversized compact-height-and-Taxi no-controller-controls live-height captured-independent-seats screenshots");mc.shutdown();}
     }
 }

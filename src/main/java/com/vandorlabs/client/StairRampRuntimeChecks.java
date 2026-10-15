@@ -34,6 +34,12 @@ final class StairRampRuntimeChecks {
         require(count>0&&total>0,"generated collision cells exist");return total;
     }
     private static void clear(World world){if(world.getTileEntity(ROOT) instanceof TileEntityRampController)((TileEntityRampController)world.getTileEntity(ROOT)).recover(false);for(BlockPos p:BlockPos.getAllInBox(ROOT.add(-4,-4,-4),ROOT.add(5,8,7)))world.setBlockToAir(p);}
+    private static final class CornerPreflightController extends TileEntityRampController{
+        private final Map<BlockPos,IBlockState> expected;private final Set<BlockPos> checked=new HashSet<>();
+        CornerPreflightController(Map<BlockPos,IBlockState> expected){this.expected=expected;}
+        @Override protected IBlockState capturedSourceState(BlockPos source){IBlockState state=super.capturedSourceState(source);IBlockState actual=expected.get(source);if(actual!=null&&getWorld().getBlockState(source).getBlock()==actual.getBlock()){require(state.getValue(BlockStairs.SHAPE)==actual.getValue(BlockStairs.SHAPE),"capture collision preflight uses actual retained inner/outer shape before source replacement");checked.add(source);if(checked.containsAll(expected.keySet()))throw new PreflightComplete();}return state;}
+    }
+    private static final class PreflightComplete extends RuntimeException{}
     private static double sample(World world,EntityPlayerMP owner,IBlockState material,int mode,int corner){
         clear(world);world.setBlockState(ROOT,ModBlocks.PROGRAMMABLE_RAMP.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),3);List<BlockPos> sources=new ArrayList<>();
         if(corner==0){for(int row=1;row<=3;row++)for(int lane=0;lane<2;lane++){BlockPos p=(mode==6?ROOT.south().up(row-1):ROOT.south(row)).east(lane);world.setBlockState(p,material,3);sources.add(p);}}
@@ -43,8 +49,14 @@ final class StairRampRuntimeChecks {
         Map<BlockPos,IBlockState> actual=new LinkedHashMap<>();double nativeVolume=0;
         for(BlockPos p:sources){IBlockState state=world.getBlockState(p).getActualState(world,p);actual.put(p,state);if(material.getBlock() instanceof BlockStairs){List<AxisAlignedBB> nativeBoxes=new ArrayList<>();for(RampGeometry.Box box:RampStairs.boxes(world,state))nativeBoxes.add(new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ));nativeVolume+=volume(nativeBoxes);if(corner!=0)require(state.getValue(BlockStairs.SHAPE)!=BlockStairs.EnumShape.STRAIGHT,"neighbor produces actual inner/outer corner");}else nativeVolume++;}
         TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(ROOT);boolean lift=mode==2||mode==3,fill=mode==1||mode==3;int escalator=mode==4?1:mode==5?2:0;
+        if(mode==6&&corner!=0&&material.getBlock() instanceof BlockStairs){
+            NBTTagCompound initial=ramp.writeToNBT(new NBTTagCompound());CornerPreflightController probe=new CornerPreflightController(actual);probe.setWorld(world);probe.setPos(ROOT);probe.readFromNBT(initial);world.setTileEntity(ROOT,probe);
+            try{probe.configureHalfOffsets(owner,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true);probe.request(true);throw new IllegalStateException("corner preflight was not reached");}catch(PreflightComplete completed){require(probe.checked.containsAll(sources),"all corner sources checked before mutation");}
+            for(BlockPos source:sources)require(world.getBlockState(source).getBlock()==material.getBlock(),"preflight probe leaves original source blocks untouched");
+            world.removeTileEntity(ROOT);ramp=new TileEntityRampController();ramp.setWorld(world);ramp.setPos(ROOT);ramp.readFromNBT(initial);world.setTileEntity(ROOT,ramp);
+        }
         require(ramp.configureHalfOffsets(owner,0,mode==6?0:2,8,true,false,lift,EnumFacing.SOUTH,0,fill,1,true,false,0,escalator,mode==6),"configure mode="+mode+" material="+material+" corner="+corner+" status="+ramp.status);
-        if(mode==6)require(Math.abs(cells(world)-nativeVolume)<1e-5,"upright wall retains exact native stair volume");
+        if(mode==6)require(!ramp.attached(),"inactive zero-Start source remains editable native stairs");
         ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);require(ramp.attached()&&ramp.isOpen(),"channel deploys every mode");double generated=cells(world);
         if(mode==2||mode==6)require(Math.abs(generated-nativeVolume)<1e-5,"rigid lift/bridge preserves native solid volume mode="+mode+" native="+nativeVolume+" generated="+generated);
         if(material.getBlock() instanceof BlockStairs){int restored=0;for(VehicleStructure.Cell source:VehicleEscalators.originals(ramp)){IBlockState retained=RampStairs.state(source.state,source.tileData());require(retained.getValue(BlockStairs.FACING)==actual.get(source.pos).getValue(BlockStairs.FACING)&&retained.getValue(BlockStairs.HALF)==actual.get(source.pos).getValue(BlockStairs.HALF)&&retained.getValue(BlockStairs.SHAPE)==actual.get(source.pos).getValue(BlockStairs.SHAPE),"journal retains facing, half and neighbor corner");if(finishes.containsKey(source.pos)){NBTTagCompound genuine=source.tileData();genuine.removeTag(RampStairs.STATE);require(finishes.get(source.pos).equals(genuine),"journal retains complete programmable source NBT apart from retained shape marker");}restored++;}require(restored==sources.size(),"all stair originals journaled");}

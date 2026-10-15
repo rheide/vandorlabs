@@ -34,6 +34,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean transferInProgress;
     public boolean taxiReturnPending;
     public java.util.UUID taxiReturnActor;
+    public BlockPos taxiReturnSeat;
     public long taxiNextAttempt;
     public long taxiNextWarning;
     private byte forward, strafe;
@@ -144,17 +145,19 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     private float propulsion;
     private NBTTagCompound unavailable;
+    private boolean rampGeometryUpgradePending;
     public EntityGroundVehicle(World world){super(world);setSize(1,1);isImmuneToFire=true;preventEntitySpawning=true;}
     public void install(VehicleStructure snapshot) {
         snapshot=VehicleControlSettings.migrate(snapshot);
         if(!world.isRemote && structure!=null && !structure.seat.equals(snapshot.seat)){
-            BlockPos shift=snapshot.seat.subtract(structure.seat);
+            BlockPos shift=snapshot.seat.subtract(structure.seat);if(taxiReturnSeat!=null)taxiReturnSeat=taxiReturnSeat.add(shift);
             NBTTagCompound assignments=dataManager.get(PILOT_SEATS).copy();
             for(String key:assignments.getKeySet())if(assignments.hasKey(key,4))assignments.setLong(key,BlockPos.fromLong(assignments.getLong(key)).add(shift).toLong());
             dataManager.set(PILOT_SEATS,assignments);
         }
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=new VehicleCollision(view);encoded=null;
         view.craft=this;view.hover=hover;if(!world.isRemote)view.controlUpdates=signals::changed;
+        rampGeometryUpgradePending=!world.isRemote&&VehicleRamps.needsGeometryUpgrade(this);
         setPosition(posX,posY,posZ);
     }
     /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
@@ -175,8 +178,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA)VehicleNetwork.request(this);}
-    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
-    @Override protected void readEntityFromNBT(NBTTagCompound tag){dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));autopilot.read(tag.getCompoundTag("AutopilotNavigation"));for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception e){unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;}
+    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
+    @Override protected void readEntityFromNBT(NBTTagCompound tag){dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));autopilot.read(tag.getCompoundTag("AutopilotNavigation"));for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception e){unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;}
     @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
         if(getControllingPassenger()!=player || !serverInputs.offer(sequence,forward,strafe,brake))return;
@@ -221,13 +224,14 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public double getMountedYOffset(){return 0;}
     @Override protected void removePassenger(Entity passenger) {
         boolean wasDriver=getControllingPassenger()==passenger;
+        if(wasDriver&&structure!=null)taxiReturnSeat=seatForPassenger(passenger);
         super.removePassenger(passenger);
         if(!world.isRemote)assignSeat(passenger,null);
         if(wasDriver){serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;forward=strafe=0;vertical=0;verticalAt=-100;}
         if(world.isRemote || collision==null)return;
         if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
         com.vandorlabs.entity.SafeDismount.move(passenger,com.vandorlabs.entity.SafeDismount.find(world,passenger,getEntityBoundingBox()),getEntityBoundingBox());
-        if(!transferInProgress && !isDead && passenger instanceof EntityPlayerMP && getPassengers().isEmpty() && !hover && !autopilot.enabled() && VehicleTaxiMode.enabled(structure))
+        if(!transferInProgress && !isDead && passenger instanceof EntityPlayerMP && getPassengers().isEmpty() && !hover && !autopilot.enabled() && VehicleTaxiMode.enabled(structure,taxiReturnSeat))
             VehicleService.taxiParking((EntityPlayerMP)passenger,this);
     }
     public void stopForParking(){forward=strafe=0;brake=true;driveSpeed=0;steering=0;motionX=motionY=motionZ=0;pendingInputs.clear();serverInputs.clear();nextPrediction=null;}
@@ -248,6 +252,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean stopped(){return motionX*motionX+motionY*motionY+motionZ*motionZ<.0001;}
     @Override public void onUpdate() {
         super.onUpdate();rotationPitch=prevRotationPitch=0;
+        if(rampGeometryUpgradePending&&!world.isRemote&&structure!=null){rampGeometryUpgradePending=false;VehicleRamps.upgradeLoadedGeometry(this);rampGeometryUpgradePending=false;}
         VehicleCanopies.tick(this);
         signals.tick();VehicleLandingGear.tick(this);
         if(world.isRemote) {

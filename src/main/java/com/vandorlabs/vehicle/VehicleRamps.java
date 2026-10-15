@@ -9,11 +9,22 @@ import java.util.*;
 /** Event-driven ramp endpoints built and checked before publishing a replacement snapshot. */
 public final class VehicleRamps {
     private VehicleRamps(){}
+    /** One installation event queues at most one checked migration attempt. */
+    public static boolean needsGeometryUpgrade(EntityGroundVehicle craft){
+        if(craft.view==null)return false;
+        for(TileEntity tile:craft.view.tiles.values())if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;if(ramp.attached()&&ramp.usesNativeMoatGeometry()&&ramp.moatGeometryRevision()==1)return true;}
+        return false;
+    }
+    public static void upgradeLoadedGeometry(EntityGroundVehicle craft){
+        List<BlockPos> selected=new ArrayList<>();for(TileEntity tile:craft.view.tiles.values())if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;if(ramp.attached()&&ramp.usesNativeMoatGeometry()&&ramp.moatGeometryRevision()==1)selected.add(tile.getPos().subtract(craft.structure.seat));}
+        for(BlockPos relative:selected){BlockPos at=relative.add(craft.structure.seat);TileEntity tile=craft.view.getTileEntity(at);if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;if(ramp.moatGeometryRevision()==1)signal(craft,at,ramp.isOpen()==ramp.activateOnPower);}}
+    }
     public static boolean signal(EntityGroundVehicle craft,BlockPos at,boolean powered){
         TileEntity raw=craft.view.getTileEntity(at);if(!(raw instanceof TileEntityRampController))return false;
         NBTTagCompound old=raw.writeToNBT(new NBTTagCompound());
         boolean deploy=powered==old.getBoolean("ActivateOnPower");
-        if(old.getBoolean("SignalKnown")&&old.getBoolean("Latched")==deploy)return false;
+        boolean upgrade=old.getBoolean("MoatMode")&&old.getBoolean("MoatVerticalSources")&&old.getInteger("MoatGeometryRevision")==1;
+        if(old.getBoolean("SignalKnown")&&old.getBoolean("Latched")==deploy&&!upgrade)return false;
         try{
             // The clone can discover an unexpanded platform and assemble new cells,
             // while the authoritative world and live control subscriptions remain untouched.

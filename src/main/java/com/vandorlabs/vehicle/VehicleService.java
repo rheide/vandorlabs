@@ -26,7 +26,7 @@ public final class VehicleService {
     public static void taxiAssembly(EntityPlayerMP player,BlockPos seat) {
         if(player.isSpectator() || !(player.world.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)
                 || !seatedAt(player,seat))return;
-        if(jobs.containsKey(player.getUniqueID()) || jobs.size()>=16)return;
+        if(!((com.vandorlabs.tiles.TileEntityPilotSeat)player.world.getTileEntity(seat)).isTaxiMode() || jobs.containsKey(player.getUniqueID()) || jobs.size()>=16)return;
         previews.remove(player.getUniqueID());Job job=new Job(player,seat);job.taxi=true;jobs.put(player.getUniqueID(),job);
         player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Taxi Mode: inspecting connected craft..."),true);
     }
@@ -44,7 +44,7 @@ public final class VehicleService {
         boolean first=craft.taxiNextAttempt==0;craft.taxiNextAttempt=world.getTotalWorldTime()+20;
         EntityPlayerMP player=craft.taxiReturnActor==null?null:world.getMinecraftServer().getPlayerList().getPlayerByUUID(craft.taxiReturnActor);
         if(player==null || player.world!=world || player.isDead || player.isSpectator())return;
-        if(!VehicleTaxiMode.enabled(craft.structure)){craft.taxiReturnPending=false;return;}
+        if(!VehicleTaxiMode.enabled(craft.structure,craft.taxiReturnSeat)){craft.taxiReturnPending=false;return;}
         try {
             craft.stopForParking();VehicleRotation.Plan plan=VehicleRotation.plan(craft);BlockPos origin=plan.origin;
             validateParking(player,craft,origin,true,false);
@@ -58,7 +58,7 @@ public final class VehicleService {
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityBeingMounted();EntityPlayerMP player=(EntityPlayerMP)event.getEntityMounting();
         if(craft.hover && player.isSneaking() && !craft.flightDismount && !craft.transferInProgress){event.setCanceled(true);return;}
         if(craft.hover || craft.autopilot.enabled())return;
-        if(craft.transferInProgress || craft.isDead || player.isDead || !player.connection.netManager.isChannelOpen() || !VehicleTaxiMode.enabled(craft.structure))return;
+        if(craft.transferInProgress || craft.isDead || player.isDead || !player.connection.netManager.isChannelOpen() || !VehicleTaxiMode.enabled(craft.structure,craft.seatForPassenger(player)))return;
         try{VehicleRotation.plan(craft);}catch(IllegalArgumentException failure){if(craft.world.getTotalWorldTime()>=craft.taxiNextWarning){craft.taxiNextWarning=craft.world.getTotalWorldTime()+20;VehicleNetwork.error(player,"Exited Taxi Mode; craft was not converted back: "+failure.getMessage()+" Reboard to align it, or use the Configurizer.");}}
     }
     private static final java.util.ArrayDeque<Signal> signals=new java.util.ArrayDeque<>();
@@ -111,7 +111,7 @@ public final class VehicleService {
     private static void assembleSignal(Job job) throws Exception {
         VehicleStructure structure=job.scan.result;WorldServer world=(WorldServer)job.world;BlockPos origin=job.scan.origin;
         require(structure.controller()!=null,"Install a Vehicle Controller before assembling a craft.");
-        require(!job.taxi || VehicleTaxiMode.enabled(structure),"Taxi Mode is disabled on the Vehicle Controller.");
+        require(!job.taxi || VehicleTaxiMode.enabled(structure,job.scan.startPosition().subtract(origin)),"Taxi Mode is disabled on the Pilot Seat.");
         require(job.requestedMode!=2 || VehicleFlight.canHover(structure),"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
         for(BlockPos boundary:job.scan.airBoundary)require(world.isBlockLoaded(boundary) && world.isAirBlock(boundary),"Craft connections changed during signal scan.");
@@ -287,7 +287,7 @@ public final class VehicleService {
         Preview next=previous.changed(changed);previews.put(player.getUniqueID(),next);previewSettingsAck(player,previous,next);
     }
     public static void configureTaxi(EntityPlayerMP player,VehicleNetwork.Packet packet){
-        try{Preview preview=controllerPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);}catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
+        try{Preview preview=seatPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.tiles.TileEntityPilotSeat seat=editableSeat(player,preview);seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);}catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     public static void configureHeight(EntityPlayerMP player,VehicleNetwork.Packet packet){
         try{require(packet.strafe>=0 && packet.strafe<=3,"Invalid Pilot Seat height.");Preview preview=seatPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.tiles.TileEntityPilotSeat seat=editableSeat(player,preview);seat.setHeight(packet.strafe);changedSeat(player,preview,seat);}catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
@@ -296,7 +296,7 @@ public final class VehicleService {
         Preview preview=previews.get(player.getUniqueID());if(preview==null || !preview.token.equals(packet.token))return;
         try{preview=controllerPreview(player,packet.token,packet.entity,packet.origin);com.vandorlabs.redstone.ChannelList channels=com.vandorlabs.redstone.ChannelList.parse(packet.text);
             require(channels!=null && packet.forward>=0 && packet.forward<=2,"Invalid Vehicle Controller settings.");
-            com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);seat.setVehicleChannels(channels,player.world);seat.configure(packet.forward,seat.getHeight(),player.world);if(packet.sequence==1)seat.setTaxiMode(packet.flag);changedSeat(player,preview,seat);
+            com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);seat.setVehicleChannels(channels,player.world);seat.configure(packet.forward,seat.getHeight(),player.world);changedSeat(player,preview,seat);
         }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     private static void previewSettingsAck(EntityPlayerMP player,Preview previous,Preview next){
