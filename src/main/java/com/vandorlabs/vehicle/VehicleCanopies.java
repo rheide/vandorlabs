@@ -28,7 +28,7 @@ public final class VehicleCanopies {
             if(!(part instanceof TileEntityCanopy))return null;
             TileEntityCanopy member=(TileEntityCanopy)part;
             if(member.constituent()!=member || member.owner()!=owner)return null;
-            for(BlockPos pos:member.cells()){
+            for(BlockPos pos:member.reservedCells()){
                 VehicleStructure.Cell cell=craft.structure.at(pos);
                 TileEntity proxy=craft.view.getTileEntity(pos);
                 if(cell==null || cell.state.getBlock()!=owner.block()

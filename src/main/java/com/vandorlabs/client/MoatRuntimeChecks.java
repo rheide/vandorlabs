@@ -97,6 +97,7 @@ final class MoatRuntimeChecks {
             endpointParity(world,owner,root);
             carried(world);
             MoatEditableSourceRuntimeChecks.run(world,owner);
+            SharedCanopyRampRuntimeChecks.run(world,owner);
             System.out.println("[vandorlabs][reprolab] moat-world PASS cardinal native-slab vertical-source ordinary-ramp-treads simultaneous-arc source-journal midpoint reload obstruction mode-reset cache orphan carried-endpoints legacy-flat-journal");
         }finally{
             if(world.getTileEntity(root) instanceof TileEntityRampController)((TileEntityRampController)world.getTileEntity(root)).recover(false);

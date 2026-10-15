@@ -249,6 +249,12 @@ tread paths against terrain and other components. Settled mechanisms do not scan
 or animate while idle. Earlier flat-source and rigid vertical-source Moat journals retain their original
 geometry until recovered; new captures use the upright tower layout.
 
+An opening canopy and ramp can share a redstone channel. The canopy releases
+helper cells that its fully open shell no longer occupies. The ramp waits for
+that clearance before extending. On the opposite signal, the canopy waits for
+the ramp to retract before reclaiming its closed footprint. A foreign solid
+block still prevents closure or ramp movement; neither mechanism replaces it.
+
 Full glass platforms support vanilla Glass, all Stained Glass colors, and every Vandor cockpit glass variant. Source transparency and exact material/color survive deployment, copying, rotation and recovery. Glass panes, thin Programmable Glass panels and canopies keep their own geometry and are excluded from platform capture.
 
 Vanilla stairs and Programmable Stairs are supported in ramp, filled ramp, lift, extend, both escalator directions and Moat modes. Captured stairs retain their facing, top/bottom half and inner/outer corner shape, with collision following the moving steps. Programmable finishes and source tile settings survive copying, vehicle rotation and recovery. Platform selection still requires matching source block states and, when enabled, matching finishes.

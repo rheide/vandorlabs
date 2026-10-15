@@ -49,14 +49,33 @@ public final class LargeCanopyOwnership {
             for(int column=0;column<tile.width()/block.width;column++){
                 TileEntityCanopy constituent=TileEntityCanopy.at(world,tile.getPos().offset(tile.facing().rotateY(),column*block.width));
                 if(constituent==null || constituent.owner()!=tile)return false;
-                for(BlockPos cell:constituent.cells()){
+                for(BlockPos cell:constituent.reservedCells()){
                     TileEntityCanopy member=TileEntityCanopy.at(world,cell);
                     if(member==null || member.owner()!=tile || !editable(world,player,cell))return false;
                     members.add(member);
                 }
             }
             for(TileEntityCanopy member:members){member.large.read(nextTag);member.sync();}
-            tile.setRedstoneChannels(nextSettings.channels);tile.refreshPower();return true;
+            tile.reservationGeometryChanged();tile.setRedstoneChannels(nextSettings.channels);tile.refreshPower();return true;
+        }
+        if(tile.hasReleasedCells()){
+            boolean sameShape=nextSettings.depth==tile.large.depth&&nextSettings.scale==tile.large.scale&&nextSettings.mount==tile.large.mount&&nextSettings.hinge==tile.large.hinge&&nextSettings.openable==tile.large.openable&&nextSettings.motion==tile.large.motion&&nextSettings.slideForward==tile.large.slideForward&&nextSettings.angle==tile.large.angle;
+            if(sameShape){
+                for(BlockPos cell:tile.reservedCells()){TileEntityCanopy member=TileEntityCanopy.at(world,cell);if(!world.isBlockLoaded(cell)||member==null||member.constituent()!=tile||!editable(world,player,cell))return false;}
+                for(BlockPos cell:tile.reservedCells()){TileEntityCanopy member=TileEntityCanopy.at(world,cell);member.large.read(nextTag);member.sync();}
+                tile.reservationGeometryChanged();tile.setRedstoneChannels(nextSettings.channels);tile.refreshPower();return true;
+            }
+            // Size/shape edits may reacquire only air; a foreign ramp or placed
+            // block keeps its exact state and makes the edit fail without resize.
+            Set<BlockPos> existing=new HashSet<>(tile.cells());
+            for(BlockPos cell:existing){
+                if(!world.isBlockLoaded(cell)||!editable(world,player,cell))return false;
+                if(!tile.isReleasedCell(cell)){TileEntityCanopy member=TileEntityCanopy.at(world,cell);if(world.getBlockState(cell).getBlock()!=block||member==null||!tile.getPos().equals(member.anchor))return false;}
+            }
+            for(BlockPos cell:shellCells(block,tile.getPos(),tile.facing(),nextSettings,tile.centeredPlacement))
+                if(!world.isBlockLoaded(cell)||!editable(world,player,cell)||!existing.contains(cell)&&!available(block,world,cell))return false;
+            if(!CanopyReservations.restoreFootprint(tile))return false;
+            tile.reservationGeometryChanged();
         }
         Set<BlockPos> old=new HashSet<>(tile.cells());List<BlockPos> next=shellCells(block,tile.getPos(),tile.facing(),nextSettings,tile.centeredPlacement);
         for(BlockPos cell:old){TileEntityCanopy member=TileEntityCanopy.at(world,cell);if(!world.isBlockLoaded(cell) || world.getBlockState(cell).getBlock()!=block || member==null || !tile.getPos().equals(member.anchor) || !editable(world,player,cell))return false;}
@@ -70,7 +89,7 @@ public final class LargeCanopyOwnership {
             for(BlockPos cell:old)if(!next.contains(cell)){TileEntityCanopy member=TileEntityCanopy.at(world,cell);member.removing=true;if(!world.setBlockToAir(cell))throw new IllegalStateException("Canopy contraction was refused");}
             tile.setFootprint(next);tile.large.read(nextTag);net.minecraft.nbt.NBTTagCompound settings=new net.minecraft.nbt.NBTTagCompound();tile.large.write(settings);
             for(BlockPos cell:next){TileEntityCanopy member=TileEntityCanopy.at(world,cell);member.large.read(settings);member.hollowPlacement=true;member.sync();}
-            tile.removing=false;tile.setRedstoneChannels(nextSettings.channels);tile.refreshPower();tile.sync();world.notifyNeighborsOfStateChange(tile.getPos(),block,false);return true;
+            tile.removing=false;tile.reservationGeometryChanged();tile.setRedstoneChannels(nextSettings.channels);tile.refreshPower();tile.sync();world.notifyNeighborsOfStateChange(tile.getPos(),block,false);return true;
         }catch(RuntimeException failure){
             for(BlockPos cell:affected){TileEntityCanopy member=TileEntityCanopy.at(world,cell);if(member!=null)member.removing=true;}
             for(Map.Entry<BlockPos,net.minecraft.block.state.IBlockState> entry:before.entrySet()){BlockPos cell=entry.getKey();world.setBlockState(cell,entry.getValue(),2);net.minecraft.tileentity.TileEntity member=world.getTileEntity(cell);if(member!=null && data.containsKey(cell)){member.readFromNBT(data.get(cell));member.markDirty();if(member instanceof TileEntityCanopy){((TileEntityCanopy)member).removing=false;((TileEntityCanopy)member).sync();}}}

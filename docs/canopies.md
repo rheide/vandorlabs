@@ -70,6 +70,10 @@ Choose **Sliding** or **Rear hinge** in the Canopy dialog. Place up to nine matc
 
 Both motions take sixteen ticks and can reverse during movement. Sliding lifts the shell by one pixel and carries it its full length (two or three blocks) in the selected direction. In the dialog, choose **Slide: Backward** (the default) or **Slide: Forward**. Directions follow the canopy’s front, including ceiling mounts. Close the canopy before changing direction; joined shells change together. Rear hinge raises the front through 105 degrees around the rear upper edge. The stationary mounts stay in place. Right-click an occupied cell or the actual moved shell to operate it. Select **Trigger: redstone ON** or **Trigger: redstone OFF** to follow physical power or any configured comma-separated channel. **Disabled** retains manual control. The channel field accepts the same lists as other programmable blocks.
 
+Manual operation remains available with a redstone trigger enabled. A manual command lasts until the input changes or the trigger settings change; updates to the canopy's helper blocks do not repeat the current redstone command.
+
+Fully open canopies release helper cells that contain no part of the open shell. A ramp on the same channel waits for that clearance before extending. When closing, the canopy waits for the ramp to retract or for any placed obstruction to be removed, then restores its helpers and completes the animation. Foreign blocks are preserved.
+
 | Width / profile | Sliding | Rear hinge |
 | --- | --- | --- |
 | Single / Flat | ![Single flat sliding Canopy](images/gallery/canopies/slide-1.gif) | ![Single flat rear-hinged Canopy](images/gallery/canopies/hinge-1.gif) |

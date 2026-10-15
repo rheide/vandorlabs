@@ -207,7 +207,7 @@ public final class VehicleRotation {
             IBlockState original=com.vandorlabs.persistence.LegacyBlockStates.decode(data.getString(key));
             if(original!=null){IBlockState rotated=state(original,rotation);data.setString(key,com.vandorlabs.persistence.LegacyBlockStates.encode(rotated));data.setTag(key.equals("OriginalState")?"Original":"Source",NBTUtil.writeBlockState(new NBTTagCompound(),rotated));}
         }
-        for(String key:new String[]{"Sources","Cells","Origins","RampSourceTiles"}){
+        for(String key:new String[]{"Sources","Cells","Origins","RampSourceTiles","RampCanopyBlockers"}){
             NBTTagList list=data.getTagList(key,10);
             for(int n=0;n<list.tagCount();n++){
                 NBTTagCompound entry=list.getCompoundTagAt(n);

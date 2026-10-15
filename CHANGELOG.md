@@ -2,6 +2,9 @@
 
 ## 2.1
 
+- Release canopy helper cells that are clear when fully open. Coordinate shared-channel ramps and canopies so ramps wait for opening clearance and canopy closure waits for ramp retraction, preserving both assemblies and unrelated blocks.
+- Restore queued canopy helper tiles correctly during normal world ticks, preventing unfinished helpers from blocking closure. Preserve manual commands until the next redstone input change, synchronize settled poses, and retain glazing joins while helpers are released. Skip ramp sweep checks when no ramp segments are nearby.
+
 - Restore editable source blocks when Moat is inactive at zero Start offset, and prevent controlled ramp segments from opening controller dialogs. Slice stored Moat towers vertically using Tread px and distribute deployed End offset across their full length, with all three Ramp interpolation profiles available.
 - Match all seven Ramp mode logos to the original angular housing corners, show the selected mode on top, and mark the active direction on the top, bottom and two side faces.
 - Choose Autopilot route markers from the inventory sample picker, retaining block variants and pending dialog settings.

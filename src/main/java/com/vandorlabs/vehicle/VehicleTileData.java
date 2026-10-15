@@ -21,7 +21,7 @@ public final class VehicleTileData {
             result.setTag("TrapdoorAssembly",after);
         }
         if(result.hasKey("ControllerVersion") || result.hasKey("Controller")) {
-            for(String key:new String[]{"Sources","Cells","Origins","RampSourceTiles"}) {
+            for(String key:new String[]{"Sources","Cells","Origins","RampSourceTiles","RampCanopyBlockers"}) {
                 NBTTagList list=result.getTagList(key,10);
                 for(int n=0;n<list.tagCount();n++) {
                     NBTTagCompound entry=list.getCompoundTagAt(n);

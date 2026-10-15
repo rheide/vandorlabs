@@ -130,7 +130,7 @@ public final class VehicleScan {
                 if(tile instanceof TileEntityCanopy) {
                     TileEntityCanopy canopy=((TileEntityCanopy)tile).constituent();
                     require(Math.abs(canopy.progress-(canopy.targetOpen?1:0))<.001, "Wait for the canopy to stop moving.");
-                    for(BlockPos member:canopy.cells())linked(member,block);
+                    for(BlockPos member:canopy.reservedCells())linked(member,block);
                     if(canopy.pair!=null)linked(canopy.pair,block);
                 }
                 if(tile instanceof TileEntityProgrammableTrapdoor && data!=null) {

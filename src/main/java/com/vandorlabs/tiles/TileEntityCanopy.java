@@ -48,7 +48,19 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         return posedFaces;
     }
     private List<BlockPos> ownedCells;
-    public void setFootprint(List<BlockPos> cells){ownedCells=new ArrayList<>(cells);markDirty();}
+    private final Set<Integer> releasedHelpers=new HashSet<>();
+    public boolean waitingForReservations;
+    private boolean reservationReview=true,closeReservationRetry=true;
+    public List<TileEntityCanopy> reservationMembers(){return members();}
+    public boolean isReleasedCell(BlockPos cell){int index=cells().indexOf(cell);return index>=0&&releasedHelpers.contains(index);}
+    public boolean hasReleasedCells(){return !releasedHelpers.isEmpty();}
+    public boolean hasSavedFootprint(){return ownedCells!=null&&!ownedCells.isEmpty();}
+    public List<BlockPos> reservedCells(){List<BlockPos> result=new ArrayList<>();for(BlockPos cell:cells())if(!isReleasedCell(cell))result.add(cell);return result;}
+    public void releasedCell(BlockPos cell,boolean released){int index=cells().indexOf(cell);if(index>=0){if(released)releasedHelpers.add(index);else releasedHelpers.remove(index);markDirty();}}
+    public void retryReservationClose(){closeReservationRetry=true;}
+    public void reservationGeometryChanged(){reservationReview=true;closeReservationRetry=true;}
+
+    public void setFootprint(List<BlockPos> cells){ownedCells=new ArrayList<>(cells);releasedHelpers.clear();reservationGeometryChanged();markDirty();}
     public List<BlockPos> cells(){return cells(large);}
     public List<BlockPos> cells(com.vandorlabs.canopy.LargeCanopySettings settings){
         if(block()==null)return Collections.emptyList();
@@ -151,7 +163,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
                     bit == 1
                             ? f.rotateYCCW()
                             : bit == 2 ? f.rotateY() : bit == 4 ? f : f.getOpposite();
-            TileEntityCanopy t = at(world, pos.offset(dir, bit == 8 ? b.length : 1));
+            TileEntityCanopy t = com.vandorlabs.canopy.CanopyReservations.logicalAt(world, pos.offset(dir, bit == 8 ? b.length : 1));
             boolean regular=b.kind.equals("regular_canopy_glass");
             if(regular && t!=null)t=t.constituent();
             if(b.opening() && bit==8 && t!=null && t.facing()==f.getOpposite())t=t.constituent();
@@ -175,7 +187,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         int result=mask();EnumFacing f=facing();
         for(int bit:new int[]{1,2,4,8})if((result&bit)!=0){
             EnumFacing dir=bit==1?f.rotateYCCW():bit==2?f.rotateY():bit==4?f:f.getOpposite();
-            TileEntityCanopy neighbor=at(world,pos.offset(dir));
+            TileEntityCanopy neighbor=com.vandorlabs.canopy.CanopyReservations.logicalAt(world,pos.offset(dir));
             if(neighbor!=null && neighbor.constituent().block()!=null && neighbor.constituent().block().opening())result&=~bit;
         }
         return result;
@@ -212,6 +224,8 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         if (!draws() || !opening()) return;
         if (!targetOpen && !clearance()) return;
         targetOpen = !targetOpen;
+        reservationGeometryChanged();
+        com.vandorlabs.canopy.CanopyReservations.targetChanged(this);
         sync();
     }
 
@@ -234,10 +248,27 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
                 && world.getTotalWorldTime() % 20 == 0
                 && repairMembership()) return;
         if (!draws() || block() == null || !opening()) return;
+        if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){
+            if(!world.isRemote){
+                if(targetOpen && waitingForReservations){waitingForReservations=false;reservationReview=true;com.vandorlabs.canopy.CanopyReservations.clearWait(this);sync();}
+                if(targetOpen && progress==1 && reservationReview){reservationReview=false;com.vandorlabs.canopy.CanopyReservations.releaseOpen(this);}
+                boolean released=reservationMembers().stream().anyMatch(TileEntityCanopy::hasReleasedCells);
+                if(!targetOpen && (progress>0||released) && closeReservationRetry){
+                    closeReservationRetry=false;boolean blocked=!com.vandorlabs.canopy.CanopyReservations.prepareClose(this);
+                    // A closed snapshot parked after moving in vehicle mode may
+                    // lack its released helpers. Reopen safely if foreign cells
+                    // prevent restoring the closed footprint, then wait to close.
+                    if(blocked&&progress==0){previous=progress=1;waitingForReservations=true;sync();}
+                    else if(blocked!=waitingForReservations){waitingForReservations=blocked;sync();}
+                }
+            }
+            if(waitingForReservations)return;
+        }
         float next = Math.max(0, Math.min(1, progress + (targetOpen ? 1 : -1) / 16F));
         if (next != progress) {
             progress = next;
-            if (!world.isRemote) markDirty();
+            if (!world.isRemote){markDirty();if(progress==1){reservationReview=false;com.vandorlabs.canopy.CanopyReservations.releaseOpen(this);}if(progress==0||progress==1){com.vandorlabs.canopy.CanopyReservations.targetChanged(this);sync();}}
+
         }
     }
 
@@ -266,7 +297,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
             }
             if(broken){for(TileEntityCanopy member:members()){member.pair=null;member.joinedWidth=1;member.progress=member.previous=0;member.targetOpen=false;member.sync();}}
         }
-        for (BlockPos cell : cells())
+        for (BlockPos cell : reservedCells())
             if (world.isBlockLoaded(cell)) {
                 TileEntityCanopy member = at(world, cell);
                 if (member == null || member.block() != block() || !pos.equals(member.anchor)) {
@@ -329,9 +360,11 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     }
 
     private void removeAssemblyWithState() {
+        if(removing)return; // Deliberate helper release/rollback never delegates teardown to its live root.
         TileEntityCanopy base = constituent();
         if (base.removing || base.anchor != null && !base.anchor.equals(base.pos)) return;
         base.removing = true;
+        com.vandorlabs.canopy.CanopyReservations.removed(base);
         TileEntityCanopy owner = base.owner();
         if(owner.pair!=null) {
             List<TileEntityCanopy> group=owner.members();
@@ -367,11 +400,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     }
 
     private boolean channelPowered,powerInitialized;
+    private boolean effectivePowerKnown,lastEffectivePower,lastPowerPolarity;
     public TileEntity channelTile(){return this;}
     public int getRedstoneChannel(){return large.channels.first();}
     public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return draws() && opening() && large.redstone?large.channels:com.vandorlabs.redstone.ChannelList.EMPTY;}
     public void setRedstoneChannel(int channel){setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(Math.max(0,channel)));}
-    public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList channels){large.channels=channels;com.vandorlabs.redstone.RedstoneChannels.register(this);sync();}
+    public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList channels){effectivePowerKnown=false;large.channels=channels;com.vandorlabs.redstone.RedstoneChannels.register(this);sync();}
     public boolean hasLocalRedstoneSignal(){
         if(!draws() || !opening() || !large.redstone)return false;
         for(TileEntityCanopy member:members())for(BlockPos cell:member.cells())if(com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,cell))return true;
@@ -381,11 +415,17 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public void refreshPower(){
         if(world==null || world.isRemote || !draws() || !opening() || !large.redstone)return;
         com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);
-        boolean next=(channelPowered || hasLocalRedstoneSignal())==large.activateOnPower;if(next!=targetOpen){targetOpen=next;sync();}
+        boolean powered=channelPowered || hasLocalRedstoneSignal();
+        // Footprint updates notify neighbors, but an unchanged input is not a new command.
+        // Manual opening/closing therefore lasts until the next genuine power edge.
+        if(effectivePowerKnown && powered==lastEffectivePower && lastPowerPolarity==large.activateOnPower)return;
+        effectivePowerKnown=true;lastEffectivePower=powered;lastPowerPolarity=large.activateOnPower;
+        markDirty();
+        boolean next=powered==large.activateOnPower;if(next!=targetOpen){targetOpen=next;reservationGeometryChanged();com.vandorlabs.canopy.CanopyReservations.targetChanged(this);sync();}
     }
-    @Override public void onLoad(){super.onLoad();com.vandorlabs.redstone.RedstoneChannels.register(this);}
-    @Override public void invalidate(){com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
-    @Override public void onChunkUnload(){com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
+    @Override public void onLoad(){super.onLoad();reservationGeometryChanged();com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);}
+    @Override public void invalidate(){com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
+    @Override public void onChunkUnload(){com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound n) {
         super.writeToNBT(n);
@@ -400,8 +440,10 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         if (block() != null) {n.setInteger("CanopyMask", mask());n.setInteger("CanopyRoofMask",roofMask());n.setInteger("CanopyWidth",width());}
         if(configurable())large.write(n);
         if(ownedCells!=null){int[] offsets=new int[ownedCells.size()*3];int i=0;for(BlockPos cell:ownedCells){BlockPos delta=cell.subtract(pos);offsets[i++]=delta.getX();offsets[i++]=delta.getY();offsets[i++]=delta.getZ();}n.setIntArray("CanopyFootprint",offsets);}
+        n.setIntArray("CanopyReleasedHelpers",releasedHelpers.stream().mapToInt(Integer::intValue).toArray());n.setBoolean("CanopyWaitingForReservations",waitingForReservations);
         n.setBoolean("CenteredPlacement",centeredPlacement);
         n.setBoolean("HollowPlacement",hollowPlacement);
+        n.setBoolean("CanopyPowerKnown",effectivePowerKnown);n.setBoolean("CanopyLastPower",lastEffectivePower);n.setBoolean("CanopyLastPolarity",lastPowerPolarity);
         n.setBoolean("Open", targetOpen);
         n.setFloat("Progress", progress);
         return n;
@@ -413,6 +455,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         large.read(n);
         ownedCells=null;
         if(n.hasKey("CanopyFootprint",11)){int[] offsets=n.getIntArray("CanopyFootprint");if(offsets.length>0 && offsets.length<=3000 && offsets.length%3==0){ownedCells=new ArrayList<>();for(int i=0;i<offsets.length;i+=3)if(Math.abs(offsets[i])<=8 && Math.abs(offsets[i+1])<=8 && Math.abs(offsets[i+2])<=8)ownedCells.add(pos.add(offsets[i],offsets[i+1],offsets[i+2]));}}
+        releasedHelpers.clear();for(int index:n.getIntArray("CanopyReleasedHelpers"))if(index>=0&&index<1000)releasedHelpers.add(index);waitingForReservations=n.getBoolean("CanopyWaitingForReservations");reservationGeometryChanged();
         centeredPlacement=n.getBoolean("CenteredPlacement");
         hollowPlacement=n.getBoolean("HollowPlacement");
         anchor =
@@ -424,6 +467,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
                         ? pos.add(BlockPos.fromLong(n.getLong("PairOffset")))
                         : n.hasKey("Pair") ? BlockPos.fromLong(n.getLong("Pair")) : null;
         joinedWidth=n.hasKey("CanopyWidth",3)?Math.max(1,Math.min(9,n.getInteger("CanopyWidth"))):pair==null?1:2;
+        effectivePowerKnown=n.getBoolean("CanopyPowerKnown");lastEffectivePower=n.getBoolean("CanopyLastPower");lastPowerPolarity=n.getBoolean("CanopyLastPolarity");
         targetOpen = n.getBoolean("Open");
         progress = previous = Math.max(0, Math.min(1, n.getFloat("Progress")));
         cachedKey = null;

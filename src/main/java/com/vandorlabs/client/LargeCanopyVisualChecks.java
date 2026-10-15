@@ -13,10 +13,12 @@ import java.io.File;
 import java.util.concurrent.Future;
 /** Dedicated feature regression: no full kit gallery. */
 public final class LargeCanopyVisualChecks {
+    private static boolean powerChecksDone;
     private static int state,ticks,frameScene;private static Future<?> pending;private static final BlockPos POS=new BlockPos(40,20,40);
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("large-canopy-live: "+text);}
     public static boolean tick(Minecraft mc,File output)throws Exception{
         if(mc.world==null || mc.player==null || mc.getIntegratedServer()==null)return false;
+        if(!powerChecksDone){if(!CanopyPowerLoopRuntimeChecks.tick(mc,output))return false;powerChecksDone=true;}
         if(pending!=null){if(!pending.isDone())return false;pending.get();pending=null;ticks=0;}
         ticks++;if(state==0 && ticks==1)mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
         if(state==0 && ticks==80){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);CanopyReleaseRuntimeChecks.run(player);DuplifierRuntimeChecks.run(player);DuplifierReleaseRuntimeChecks.run(player);MaterialRuntimeChecks.run(player);GlassAppearanceRuntimeChecks.run(player);JoinedGlassRuntimeChecks.run(player);LargeCanopyRuntimeChecks.run(player);CanopyOpacityRuntimeChecks.run();VehicleCanopyRuntimeChecks.check(player.world);player.inventory.setInventorySlotContents(player.inventory.currentItem,new ItemStack(ModItems.CONFIGURIZER));player.setPositionAndUpdate(40.5,20,38.5);player.capabilities.allowFlying=true;player.capabilities.isFlying=true;player.sendPlayerAbilities();});state=7;return false;}

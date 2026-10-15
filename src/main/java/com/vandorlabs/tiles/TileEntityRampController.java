@@ -9,6 +9,7 @@ import com.vandorlabs.blocks.BlockRampController;
 import com.vandorlabs.blocks.BlockVandorDirectional;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.ramp.ControllerPlatform;
+import com.vandorlabs.ramp.RampCanopyCoordination;
 import com.vandorlabs.ramp.RampGeometry;
 import com.vandorlabs.ramp.VerticalBounds;
 import com.vandorlabs.persistence.NbtPrimitiveData;
@@ -116,6 +117,33 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private UUID owner;
     private int redstoneChannel;
     private boolean channelSignal;
+    private boolean waitingForCanopy, canopyCommand, canopyRetry, requestingDeploy;
+    private final Set<BlockPos> canopyBlockers=new HashSet<>();
+    public boolean isWaitingForCanopy(){return waitingForCanopy;}
+    /** Called only by a changed reservation owner or the one-shot load check. */
+    public void retryCanopyCommand(){if(waitingForCanopy && world!=null && !world.isRemote){canopyRetry=true;schedule();}}
+    private void clearCanopyCommand(){
+        boolean previous=waitingForCanopy;
+        waitingForCanopy=false;canopyRetry=false;canopyBlockers.clear();
+        RampCanopyCoordination.clearRampWait(this);
+        if(previous)RampCanopyCoordination.changed(world,pos);
+    }
+    private boolean waitForCanopies(Set<BlockPos> blockers){
+        waitingForCanopy=true;canopyCommand=requestingDeploy;canopyBlockers.clear();canopyBlockers.addAll(blockers);
+        error=false;status="Waiting for canopy to open";
+        RampCanopyCoordination.waitingRamp(this,canopyBlockers);sync();return false;
+    }
+    private TileEntityCanopy cooperativeCanopy(BlockPos cell){
+        TileEntityCanopy part=TileEntityCanopy.at(world,cell);
+        TileEntityCanopy canopy=part==null?null:part.owner();
+        if(canopy==null || canopy.removing || !canopy.opening() || part.anchor==null || cell.equals(part.anchor))return null;
+        boolean shared=!channels.intersect(canopy.getRedstoneChannels()).isEmpty();
+        boolean expected=shared && (requestingDeploy ? activateOnPower==canopy.large.activateOnPower : activateOnPower!=canopy.large.activateOnPower);
+        if(!canopy.targetOpen && !expected)return null;
+        if(canopy.progress>=1)for(AxisAlignedBB box:canopy.boxes())if(box.intersects(new AxisAlignedBB(cell)))return null;
+        return canopy;
+    }
+
 
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return redstoneChannel; }
@@ -170,7 +198,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 && player.canPlayerEdit(pos,EnumFacing.UP,player.getHeldItemMainhand())
                 && world.isBlockModifiable(player,pos);
     }
-    private boolean fail(String reason) { error=true; status=reason; sync(); return false; }
+    private boolean fail(String reason) { clearCanopyCommand();error=true; status=reason; sync(); return false; }
     private boolean hold(String reason) {
         if (moving) startPose=ControllerPlatform.pose(startPose,open,lastStepTick-startTick,duration);
         moving=false; syncParts(); releaseExcept(occupied(startPose,startPose));
@@ -322,6 +350,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
         if (world.isRemote || changing) return false;
         if(escalator!=0)deploy=true;
+        clearCanopyCommand();requestingDeploy=deploy;
         if (recoveryPending && !recover(false)) return false;
         if (!attached()) {
             if (!deploy && startHalfSteps==0) { open=false; moving=false; error=false; status="Retracted"; sync(); return true; }
@@ -417,12 +446,17 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         sources.addAll(selected);sourceTiles.clear();sourceTiles.putAll(capturedTiles); verticalMoatSources=moat;moatGeometryRevision=2; original=material; low=bounds.minY; high=bounds.maxY;
         length=moat?selected.stream().mapToInt(BlockPos::getY).max().getAsInt()-sourceBaseY()+1:max-min+1; minAlong=min; duration=ControllerPlatform.duration(length,
                 (int)Math.ceil(Math.abs(endOffsetValue()-startOffsetValue())),speed);
+        Set<BlockPos> canopyObstacles=new HashSet<>();
         for (BlockPos p:occupied(0,1)) {
             if (!VerticalBounds.legacy(world.getHeight()).contains(p.getY())) { sources.clear();sourceTiles.clear(); return fail("Travel exceeds world height"); }
             if (!world.isBlockLoaded(p)) { sources.clear();sourceTiles.clear(); return fail("Load all platform chunks first"); }
             if (actor!=null && (!actor.canPlayerEdit(p,EnumFacing.UP,actor.getHeldItemMainhand())
                     || !world.isBlockModifiable(actor,p))) { sources.clear();sourceTiles.clear(); return fail("No permission to move this platform"); }
-            if (!selected.contains(p) && !world.isAirBlock(p)) { sources.clear();sourceTiles.clear(); return fail("Movement path is obstructed"); }
+            if (!selected.contains(p) && !world.isAirBlock(p)) {
+                TileEntityCanopy canopy=cooperativeCanopy(p);
+                if(canopy==null){sources.clear();sourceTiles.clear();return fail("Movement path is obstructed");}
+                canopyObstacles.add(canopy.getPos());
+            }
         }
         // Preserve full-column clearance, using the source's actual thickness.
         // A top slab moved down 2.5 blocks touches the ground in the third
@@ -439,6 +473,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         || !world.isBlockModifiable(actor,p))) { sources.clear();sourceTiles.clear(); return fail("No permission to move this platform"); }
                 if (!selected.contains(p) && !world.isAirBlock(p)) { sources.clear();sourceTiles.clear(); return fail("Movement path is obstructed"); }
             }
+        if(!canopyObstacles.isEmpty()){sources.clear();sourceTiles.clear();return waitForCanopies(canopyObstacles);}
         startPose=0; moving=false; open=false; startTick=world.getTotalWorldTime();
         changing=true; markDirty();
         try {
@@ -578,6 +613,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
 
     private boolean reserveStep(double from,double to) {
         Set<BlockPos> needed=occupied(from,to);
+        Set<BlockPos> canopyObstacles=new HashSet<>();
         EntityPlayer actor=owner==null?null:world.getPlayerEntityByUUID(owner);
         for (BlockPos p:needed) {
             if (!world.isBlockLoaded(p)) return fail("Movement waits for platform chunks");
@@ -587,10 +623,15 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                     return fail("Platform was changed; remove controller to recover");
                 continue;
             }
-            if (!world.isAirBlock(p)) return fail("Movement path is obstructed");
+            if (!world.isAirBlock(p)) {
+                TileEntityCanopy canopy=cooperativeCanopy(p);
+                if(canopy==null)return fail("Movement path is obstructed");
+                canopyObstacles.add(canopy.getPos());
+            }
             if (actor!=null && (!actor.canPlayerEdit(p,EnumFacing.UP,actor.getHeldItemMainhand())
                     || !world.isBlockModifiable(actor,p))) return fail("No permission to move this platform");
         }
+        if(!canopyObstacles.isEmpty())return waitForCanopies(canopyObstacles);
         Set<BlockPos> added=new HashSet<>();
         changing=true;
         try {
@@ -608,6 +649,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
 
     private void releaseExcept(Set<BlockPos> keep) {
+        boolean released=false;
         changing=true;
         try {
             for (BlockPos p:new HashSet<>(cells)) if (!keep.contains(p)) {
@@ -615,9 +657,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 TileEntity te=world.getTileEntity(p);
                 if (te instanceof TileEntityControlledRamp && ((TileEntityControlledRamp)te).belongsTo(pos))
                     world.setBlockState(p,Blocks.AIR.getDefaultState(),3);
-                cells.remove(p);
+                cells.remove(p);released=true;
             }
         } finally { changing=false; markDirty(); }
+        if(released)RampCanopyCoordination.changed(world,pos);
     }
 
     private String validateParts() {
@@ -646,16 +689,19 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
             if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
             needsLoadCheck=true;
+            if(waitingForCanopy){RampCanopyCoordination.waitingRamp(this,canopyBlockers);canopyRetry=true;}
+            RampCanopyCoordination.changed(world,pos);
             schedule();
         }
     }
-    @Override public void invalidate() { RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
+    @Override public void invalidate() { RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() {
+        RampCanopyCoordination.clearRampWait(this);
         if(world!=null && !world.isRemote && beltRunning){beltRunning=false;beltTick=world.getTotalWorldTime();syncParts();}
         RedstoneChannels.unregister(this);com.vandorlabs.ramp.EscalatorActivity.unregister(this);super.onChunkUnload();
     }
     public void resumeAfterLoad() {
-        if (!world.isRemote && (moving || beltRunning || escalator!=0 || recoveryPending || legacy || usesNativeMoatGeometry()&&moatGeometryRevision==1)) schedule();
+        if (!world.isRemote && (moving || beltRunning || escalator!=0 || recoveryPending || legacy || waitingForCanopy || usesNativeMoatGeometry()&&moatGeometryRevision==1)) schedule();
     }
     /** A scheduled tick is animation work or a one-shot load recovery, never idle polling. */
     public void scheduledTick() {
@@ -685,12 +731,22 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             // One-shot migration also releases old full-column locks on stationary saves.
             if (attached() && !moving) releaseExcept(occupied(startPose,startPose));
         }
+        if(canopyRetry && waitingForCanopy){
+            canopyRetry=false;
+            boolean desired=(hasLocalRedstoneSignal()||channelSignal)==activateOnPower;
+            if(desired!=canopyCommand){clearCanopyCommand();request(desired);}
+            else {
+                boolean loaded=true;for(BlockPos blocker:canopyBlockers)if(!world.isBlockLoaded(blocker))loaded=false;
+                if(loaded)request(canopyCommand);
+            }
+        }
         if(escalator!=0 && !moving && attached()) {
             if(beltRunning)stepEscalator();
             return;
         }
         if (!moving || !attached()) return;
         if (world.getTotalWorldTime()==lastStepTick) { schedule(); return; }
+        requestingDeploy=open;
         double previous=ControllerPlatform.pose(startPose,open,lastStepTick-startTick,duration);
         double current=pose(0);
         double next=pose(1);
@@ -1092,6 +1148,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     /** Restore originals and erase only cells owned by this controller.
      * Unexpected foreign blocks are preserved; displaced originals are refunded once. */
     public boolean recover(boolean forceLoad) {
+        clearCanopyCommand();
         if (world.isRemote) return false;
         for (BlockPos cell:cells) {
             if (forceLoad) world.getChunkFromBlockCoords(cell);
@@ -1136,10 +1193,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             recoveryPending=false; open=false; startPose=0;
             error=false; status="Retracted"; sync();
             for (BlockPos p:changed) world.notifyNeighborsOfStateChange(p,world.getBlockState(p).getBlock(),false);
+            RampCanopyCoordination.changed(world,pos);
             return true;
         } finally { changing=false; markDirty(); }
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        tag.setBoolean("RampCanopyWaiting",waitingForCanopy);tag.setBoolean("RampCanopyCommand",canopyCommand);
+        NBTTagList blockers=new NBTTagList();for(BlockPos blocker:canopyBlockers)blockers.appendTag(writePosition(blocker));tag.setTag("RampCanopyBlockers",blockers);
         tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
         super.writeToNBT(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
@@ -1181,6 +1241,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
         super.readFromNBT(tag);
+        RampCanopyCoordination.clearRampWait(this);waitingForCanopy=tag.getBoolean("RampCanopyWaiting");canopyCommand=tag.getBoolean("RampCanopyCommand");requestingDeploy=canopyCommand;canopyRetry=false;
+        canopyBlockers.clear();NBTTagList blockers=tag.getTagList("RampCanopyBlockers",10);for(int i=0;i<Math.min(2176,blockers.tagCount());i++)canopyBlockers.add(readPosition(blockers.getCompoundTagAt(i)));
         moatGeometryRevision=Math.max(0,Math.min(2,tag.getInteger("MoatGeometryRevision")));verticalMoatSources=tag.getBoolean("MoatVerticalSources");vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");
         escalator=Math.max(0,Math.min(2,tag.getInteger("EscalatorMode")));
         beltDistance=tag.getDouble("EscalatorDistance");if(!Double.isFinite(beltDistance))beltDistance=0;
