@@ -11,6 +11,11 @@ public final class VehicleFlight {
         String name=block.getRegistryName().getResourcePath();
         return name.startsWith("antigravity_plate") || name.startsWith("repulsor_array") || name.startsWith("vertical_hover_thruster");
     }
+    public static boolean exhaust(net.minecraft.block.Block block){
+        if(!(block instanceof BlockPropulsionLight)||block.getRegistryName()==null)return false;
+        String name=block.getRegistryName().getResourcePath();
+        return !name.startsWith("antigravity_plate")&&!name.startsWith("repulsor_array");
+    }
     public static void requireThruster(VehicleStructure structure){
         if(structure.hasThruster)return;
         throw new IllegalArgumentException("Taxi and Hover require at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine.");

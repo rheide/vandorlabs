@@ -31,7 +31,7 @@ public final class VehicleRotation {
         Plan parking=VehicleLandingGear.parking(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
         // Retraction can lower the chassis onto the ground. Keep its support height
         // when extending the restored feet, then validate the raised hull normally.
-        VehicleCollision extended=new VehicleCollision(new VehicleWorld(craft.world,parking.structure));
+        VehicleCollision extended=VehicleTransfer.geometry(craft.world,parking.structure);
         int supportedY=(int)Math.round(craft.posY+craft.collision.bounds.minY-extended.bounds.minY);
         return new Plan(parking.structure,new BlockPos(parking.origin.getX(),Math.max(parking.origin.getY(),supportedY),parking.origin.getZ()));
     }

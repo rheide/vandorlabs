@@ -17,13 +17,28 @@ public final class VehicleOwnership {
         return ledger;
     }
     public static long update(WorldServer w,UUID id,long atLeast,boolean active)throws IOException {
+        Long prepared=VehicleTransfer.preparedOwnership(w,id,active);if(prepared!=null)return prepared;
+        Update update=prepare(w,id,atLeast,active);update.write();update.publish(w);return update.epoch;
+    }
+    static final class Update {
+        final Path file;final NBTTagCompound before,next;final UUID id;final boolean active;final long epoch;
+        Update(Path file,NBTTagCompound before,NBTTagCompound next,UUID id,boolean active,long epoch){this.file=file;this.before=before;this.next=next;this.id=id;this.active=active;this.epoch=epoch;}
+        void write()throws IOException{store(file,next);}
+        void restore()throws IOException{store(file,before);}
+        void publish(WorldServer world){ledgers.put(world,next);}
+        void restoreMemory(WorldServer world){ledgers.put(world,before);}
+    }
+    static Update prepare(WorldServer w,UUID id,long atLeast,boolean active)throws IOException {
         NBTTagCompound before=ledger(w),next=before.copy();String key=id.toString();
         long epoch=Math.max(atLeast,before.getCompoundTag(key).getLong("Epoch")+1);
         NBTTagCompound entry=new NBTTagCompound();entry.setLong("Epoch",epoch);entry.setBoolean("Active",active);next.setTag(key,entry);
-        Path file=path(w),tmp=file.resolveSibling(file.getFileName()+".tmp");Files.createDirectories(file.getParent());
+        return new Update(path(w),before.copy(),next,id,active,epoch);
+    }
+    private static void store(Path file,NBTTagCompound next)throws IOException {
+        Path tmp=file.resolveSibling(file.getFileName()+".tmp");Files.createDirectories(file.getParent());
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(next,bytes);
         try(FileOutputStream out=new FileOutputStream(tmp.toFile())){out.write(bytes.toByteArray());out.getFD().sync();}
-        Files.move(tmp,file,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);ledgers.put(w,next);return epoch;
+        Files.move(tmp,file,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void joining(net.minecraftforge.event.entity.EntityJoinWorldEvent event) {
         if(event.getWorld().isRemote || !(event.getEntity() instanceof EntityGroundVehicle))return;

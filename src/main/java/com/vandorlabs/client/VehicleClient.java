@@ -146,6 +146,7 @@ public final class VehicleClient {
         jumpDown=jump;
         VehicleNetwork.Packet flight=new VehicleNetwork.Packet(VehicleNetwork.FLIGHT);flight.entity=p.entity;flight.token=p.token;
         flight.sequence=entity.hover && mc.currentScreen==null && mc.gameSettings.keyBindSprint.isKeyDown() && mc.gameSettings.keyBindSneak.isKeyDown()?1:0;
+        flight.strafe=(byte)(driver&&mc.currentScreen==null&&mc.gameSettings.keyBindSprint.isKeyDown()?1:0);
         flight.flag=driver&&toggle;flight.forward=driver?(byte)((jump?1:0)-(mc.currentScreen==null && mc.gameSettings.keyBindSneak.isKeyDown()?1:0)):0;
         PacketHandler.INSTANCE.sendToServer(flight);
         if(driver){entity.predict(p.sequence,p.forward,p.strafe,p.flag);PacketHandler.INSTANCE.sendToServer(p);}

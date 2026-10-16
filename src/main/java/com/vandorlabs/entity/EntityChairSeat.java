@@ -70,7 +70,7 @@ public class EntityChairSeat extends Entity {
 
     @Override protected void removePassenger(Entity passenger) {
         super.removePassenger(passenger);
-        if(!world.isRemote && chairPos!=null) {
+        if(!world.isRemote && chairPos!=null && !com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)) {
             net.minecraft.util.math.AxisAlignedBB shape=world.getBlockState(chairPos).getBoundingBox(world,chairPos);
             net.minecraft.util.math.AxisAlignedBB bounds=shape==null?new net.minecraft.util.math.AxisAlignedBB(chairPos):shape.offset(chairPos);
             SafeDismount.move(passenger,SafeDismount.find(world,passenger,bounds),bounds);

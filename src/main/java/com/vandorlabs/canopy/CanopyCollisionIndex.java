@@ -12,10 +12,6 @@ public final class CanopyCollisionIndex {
     private final AxisAlignedBB bounds;
     private final int minX,minY,minZ,nx,ny,nz;
     private final int[] offsets,references,oversized;
-    private static final class Matches {
-        int[] indices=new int[16];int size,examined;
-        void add(int index){if(size==indices.length)indices=Arrays.copyOf(indices,size*2);indices[size++]=index;}
-    }
     public CanopyCollisionIndex(List<AxisAlignedBB> boxes){
         this.boxes=boxes;
         if(boxes.isEmpty()){bounds=null;minX=minY=minZ=nx=ny=nz=0;offsets=references=oversized=null;return;}
@@ -49,9 +45,18 @@ public final class CanopyCollisionIndex {
         if(query.minX<=bounds.minX&&query.minY<=bounds.minY&&query.minZ<=bounds.minZ&&query.maxX>=bounds.maxX&&query.maxY>=bounds.maxY&&query.maxZ>=bounds.maxZ){output.addAll(boxes);return 0;}
         if(offsets==null){for(AxisAlignedBB b:boxes)if(b.intersects(query))output.add(b);return boxes.size();}
         int ax=Math.max(0,cell(query.minX)-minX),bx=Math.min(nx-1,cell(query.maxX)-minX),ay=Math.max(0,cell(query.minY)-minY),by=Math.min(ny-1,cell(query.maxY)-minY),az=Math.max(0,cell(query.minZ)-minZ),bz=Math.min(nz-1,cell(query.maxZ)-minZ);
-        Matches matches=new Matches();
-        for(int z=az;z<=bz;z++)for(int y=ay;y<=by;y++)for(int x=ax;x<=bx;x++){int bucket=(z*ny+y)*nx+x;for(int at=offsets[bucket];at<offsets[bucket+1];at++){int index=references[at];matches.examined++;if(boxes.get(index).intersects(query))matches.add(index);}}
-        for(int index:oversized){matches.examined++;if(boxes.get(index).intersects(query))matches.add(index);}
-        Arrays.sort(matches.indices,0,matches.size);int previous=-1;for(int i=0;i<matches.size;i++){int index=matches.indices[i];if(index!=previous)output.add(boxes.get(index));previous=index;}return matches.examined;
+        // A box may occur in hundreds of grid buckets. Test it once and emit
+        // matching indices in source order without sorting duplicated candidates.
+        BitSet visited=new BitSet(),matches=new BitSet();int examined=0;
+        for(int z=az;z<=bz;z++)for(int y=ay;y<=by;y++)for(int x=ax;x<=bx;x++){
+            int bucket=(z*ny+y)*nx+x;
+            for(int at=offsets[bucket];at<offsets[bucket+1];at++){
+                int index=references[at];if(visited.get(index))continue;visited.set(index);examined++;
+                if(boxes.get(index).intersects(query))matches.set(index);
+            }
+        }
+        for(int index:oversized){examined++;if(boxes.get(index).intersects(query))matches.set(index);}
+        for(int index=matches.nextSetBit(0);index>=0;index=matches.nextSetBit(index+1))output.add(boxes.get(index));
+        return examined;
     }
 }

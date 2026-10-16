@@ -21,6 +21,12 @@ public class TileEntityAutopilot extends TileEntity implements RedstoneChannelMe
     public boolean departureDirect=true;
     public net.minecraft.util.math.BlockPos departureWaypoint;
     public boolean enabled(){return enabled;}
+    public void pulseDeparture(){
+        setEnabled(true);
+        if(departureSeat!=null&&world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){
+            departureDirect=true;departureAt=world.getTotalWorldTime()+1;world.scheduleUpdate(pos,getBlockType(),1);changed();
+        }
+    }
     public boolean powered(){return trigger==2?!high:trigger==1&&high;}
     public void setEnabled(boolean value){if(enabled==value)return;enabled=value;status=value?"Following route":"Off";if(value&&departureSeat!=null&&world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){departureDirect=true;departureAt=world.getTotalWorldTime()+1;world.scheduleUpdate(pos,getBlockType(),1);}changed();}
     public void setStatus(String value){if(!status.equals(value)){status=value;changed();}}

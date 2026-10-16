@@ -70,7 +70,9 @@ final class VehicleSignalRuntimeChecks {
             // A world-side latch shares the same bank, even after the craft moves.
             ExternalLatch external=new ExternalLatch(world);RedstoneChannels.register(external);
             try{craft.setPosition(432,170,88);RedstoneChannels.latchChanged(external,false);craft.signals.tick();
-                require(!craft.view.getBlockState(doorPos).getValue(BlockDoor.OPEN) && !craft.view.getBlockState(gearPos).getValue(BlockTelescopicLandingGear.EXTENDED),"world latch closes moving door and retracts gear");
+                require(!craft.view.getBlockState(doorPos).getValue(BlockDoor.OPEN) && craft.view.getBlockState(gearPos).getValue(BlockTelescopicLandingGear.EXTENDED),"Taxi closes the door but keeps ground supports extended");
+                craft.hover=true;craft.view.hover=true;RedstoneChannels.latchChanged(external,true);craft.signals.tick();RedstoneChannels.latchChanged(external,false);craft.signals.tick();
+                require(!craft.view.getBlockState(gearPos).getValue(BlockTelescopicLandingGear.EXTENDED),"Hover accepts redstone gear retraction");craft.hover=false;craft.view.hover=false;
                 require(!row.active(),"world latch updates onboard row highlight");
                 require(!craft.view.getBlockState(propulsionPos).getValue(BlockPropulsionLight.POWERED),"explicit propulsion channel turns off despite movement brightness");
             }finally{RedstoneChannels.unregister(external);}

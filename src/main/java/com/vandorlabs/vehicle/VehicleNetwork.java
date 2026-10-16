@@ -43,7 +43,7 @@ public final class VehicleNetwork {
                 Entity raw=player.world.getEntityByID(message.entity);
                 if(!(raw instanceof EntityGroundVehicle) || !raw.getUniqueID().equals(message.token))return;
                 EntityGroundVehicle vehicle=(EntityGroundVehicle)raw;
-                if(message.type==FLIGHT){if(message.sequence==1){vehicle.exitFlight(player);return;}vehicle.flightInput(player,message.forward,message.flag);return;}
+                if(message.type==FLIGHT){if(message.sequence==1){vehicle.exitFlight(player);return;}if(message.strafe==0||message.strafe==1)vehicle.flightInput(player,message.forward,message.flag,message.strafe==1);return;}
                 if(message.type==INPUT){if(!VehicleNetworkLab.input(player,message,vehicle))vehicle.input(player,message.sequence,message.forward,message.strafe,message.flag);}
                 else if(player.getDistanceSq(vehicle)<256*256 && vehicle.structure!=null && VehicleService.allowSnapshot(player,vehicle))
                     send(player,vehicle.structure,vehicle.getEntityId(),vehicle.getUniqueID(),new BlockPos(vehicle),false,false);

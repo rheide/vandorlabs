@@ -15,6 +15,7 @@ public final class VehicleSignals {
     private final EntityGroundVehicle craft;
     private final Map<RedstoneChannelMember,Link> links=new IdentityHashMap<>();
     private final Set<BlockPos> dirty=new LinkedHashSet<>();
+    private final Map<Link,Integer> deferredLevels=new IdentityHashMap<>();
     private final Set<RedstoneScreenContents.Row> screenPulses=Collections.newSetFromMap(new IdentityHashMap<>());
     private boolean detached;
     private int revision=-1;
@@ -33,11 +34,12 @@ public final class VehicleSignals {
         public void setChannelSignal(boolean on){setChannelLevel(on?15:0);}
         public void setChannelLevel(int level){
             if(detached || craft.isDead || craft.ownershipBlocked)return;
+            if(craft.transferInProgress){deferredLevels.put(this,level);return;}
             TileEntity tile=source.channelTile();BlockPos pos=tile.getPos();
             if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=(TileEntityCanopy)tile;if(canopy.large.redstone && canopy.targetOpen!=((level>0)==canopy.large.activateOnPower))VehicleCanopies.toggle(craft,pos);}
             else if(tile instanceof TileEntityLandingGear){TileEntityLandingGear gear=(TileEntityLandingGear)tile;if(gear.getMode()!=0){
                 IBlockState state=craft.view.getBlockState(pos);boolean extend=gear.getMode()==1?level>0:level==0;
-                if(state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend){replaceState(pos,state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend));dirty.add(pos);}
+                if(state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend)VehicleLandingGear.setExtended(craft,pos,extend);
             }}
             else if(tile instanceof TileEntityRampController){VehicleRamps.signal(craft,pos,level>0);}
             else if(VehicleDoors.supports(tile.getBlockType())){
@@ -89,6 +91,8 @@ public final class VehicleSignals {
     public void tick(){
         if(craft.ownershipBlocked){close();return;}
         if(craft.world.isRemote || craft.view==null || craft.isDead || detached || craft.ownershipBlocked)return;
+        if(craft.transferInProgress)return;
+        if(!deferredLevels.isEmpty()){Map<Link,Integer> pending=new IdentityHashMap<>(deferredLevels);deferredLevels.clear();for(Map.Entry<Link,Integer> entry:pending.entrySet())if(entry.getKey().isChannelMemberActive())entry.getKey().setChannelLevel(entry.getValue());}
         if(revision!=craft.view.tileRevision){
         revision=craft.view.tileRevision;
         Set<RedstoneChannelMember> wanted=Collections.newSetFromMap(new IdentityHashMap<>());
@@ -116,7 +120,7 @@ public final class VehicleSignals {
         }
         flush();
     }
-    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();dirty.clear();releases.clear();screenPulses.clear();}
+    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();}
     public void open(){detached=false;revision=-1;}
     public void persist(){if(!craft.world.isRemote && !detached)flush();}
     public static boolean supports(VehicleWorld world,BlockPos pos){
@@ -134,7 +138,10 @@ public final class VehicleSignals {
         double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d eye=player.getPositionEyes(1),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));eye=craft.toLocal(eye).subtract(new Vec3d(pos));end=craft.toLocal(end).subtract(new Vec3d(pos));
         tick();
-        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot) && RedstoneScreenInteractions.hitRow(state,tile,slot,eye,end,1)>=0){craft.autopilot.toggle();return true;}
+        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
+            int action=RedstoneScreenInteractions.statusAction(state,tile,slot,eye,end);if(action<0)continue;
+            VehicleStatus.activate(craft.view,pos,player,action);return true;
+        }
         for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);int index=RedstoneScreenInteractions.hitRow(state,tile,slot,eye,end,contents.rows().size());if(index<0)continue;
             RedstoneScreenContents.Row row=contents.rows().get(index);Link link=links.get(row);if(!(link instanceof LatchLink))return false;
@@ -193,7 +200,13 @@ public final class VehicleSignals {
         TileEntity tile=craft.view.getTileEntity(packet.origin);if(tile==null)return;
         try{NBTTagCompound data=net.minecraft.nbt.CompressedStreamTools.readCompressed(new ByteArrayInputStream(packet.data));
             if(!data.getString("id").equals(tile.writeToNBT(new NBTTagCompound()).getString("id")))return;
-            tile.readFromNBT(data);save(craft,packet.origin,data,net.minecraft.block.Block.getStateById(packet.sequence));tile.updateContainingBlockInfo();
+            if(tile instanceof TileEntityLandingGear){
+                TileEntityLandingGear gear=(TileEntityLandingGear)tile;float previous=gear.progress;tile.readFromNBT(data);float authoritative=gear.progress;gear.progress=gear.previous=previous;
+                VehicleLandingGear.correct(craft,packet.origin,authoritative);
+                List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(packet.origin)?new VehicleStructure.Cell(cell.pos,net.minecraft.block.Block.getStateById(packet.sequence),gear.writeToNBT(new NBTTagCompound())):cell);
+                craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),false);
+            }else{tile.readFromNBT(data);save(craft,packet.origin,data,net.minecraft.block.Block.getStateById(packet.sequence));}
+            tile.updateContainingBlockInfo();
         }catch(IOException | RuntimeException error){VehicleCompatibility.warn(tile.getBlockType(),"control update",error);}
     }
 }

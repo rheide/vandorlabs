@@ -34,7 +34,7 @@ final class VehicleCanopyColdCacheRuntimeChecks {
             TileEntityCanopy tile=shell(craft);tile.targetOpen=false;VehicleCanopies.tick(craft);
             Field field=VehicleCollisionCache.class.getDeclaredField("pending");field.setAccessible(true);Future<?> original=(Future<?>)field.get(craft.collisionCache);require(original!=null,"cold step schedules actual pure geometry work");original.cancel(false);
             FutureTask<Object> failure=new FutureTask<>(()->{throw marker;});failure.run();field.set(craft.collisionCache,failure);
-            long misses=craft.collisionCache.misses();VehicleCanopies.tick(craft);require(tile.progress==15/16F,"failed or rejected preparation falls back without permanently holding animation");require(craft.collisionCache.misses()>misses&&craft.collisionCache.fallbacks()>0,"failure uses exact fresh fallback");exact(craft,"failure "+marker.getClass().getSimpleName());
+            long misses=craft.collisionCache.misses();VehicleCanopies.tick(craft);require(tile.progress==1,"failed preparation retains the last exact pose");require(craft.collisionCache.misses()==misses&&craft.collisionCache.fallbacks()==0,"failure never rebuilds collision on the tick thread");exact(craft,"failure "+marker.getClass().getSimpleName());
         }finally{craft.setDead();}
     }
     static void run(EntityGroundVehicle source)throws Exception{
@@ -46,7 +46,7 @@ final class VehicleCanopyColdCacheRuntimeChecks {
             long deadline=System.nanoTime()+6_000_000_000L;while(tile.progress>0&&System.nanoTime()<deadline){Thread.sleep(2);VehicleCanopies.tick(packet);packet.collisionCache.tick(packet.view);}
             require(tile.progress==0&&packet.collisionCache.misses()==misses,"authoritative cold endpoint also avoids synchronous subdivision");exact(packet,"authoritative endpoint");
             failed(source,new IllegalStateException("expected isolated worker failure"));failed(source,new RejectedExecutionException("expected rejected preparation"));
-            System.out.println("[vandorlabs][reprolab] vehicle-canopy-cold-cache PASS checks="+checks+" immediate-close no-prewarm-wait noncanonical-progress exact-physical-pose 1/16-speed authoritative-endpoint failed-and-rejected-worker exact-fallback");
+            System.out.println("[vandorlabs][reprolab] vehicle-canopy-cold-cache PASS checks="+checks+" immediate-close no-prewarm-wait noncanonical-progress exact-physical-pose 1/16-speed authoritative-endpoint failed-and-rejected-worker holds-exact-pose no-synchronous-fallback");
         }finally{cold.setDead();fractional.setDead();packet.setDead();}
     }
 }

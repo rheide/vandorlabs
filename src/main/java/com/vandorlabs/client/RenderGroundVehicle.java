@@ -25,7 +25,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     private static String percentile(String label,long[] samples,int count){if(count==0)return label+"=none";long[] sorted=Arrays.copyOf(samples,Math.min(count,samples.length));Arrays.sort(sorted);return label+"-us[p50/p95/p99]="+sorted[sorted.length/2]/1000+"/"+sorted[(sorted.length-1)*95/100]/1000+"/"+sorted[(sorted.length-1)*99/100]/1000;}
     public static String profile(){return !VehicleDiagnostics.ENABLED?"disabled":percentile("frame-interval",frameSamples,frameCount)+" "+percentile("mesh-work",meshSamples,meshCount)+" "+percentile("upload",uploadSamples,uploadCount);}
     public static int fallbackDraws(){return fallbackDraws;}
-    public static void beginFrame(){if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=tileDraws=0;buildNanos=2000000;buildCells=512;}
+    public static void beginFrame(){TECanopy.cleanup();if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=tileDraws=0;buildNanos=2000000;buildCells=512;}
     private static long buildNanos;private static int buildCells;
     public static void renderMissing(float partial) {
         Minecraft mc=Minecraft.getMinecraft();

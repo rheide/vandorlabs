@@ -28,7 +28,7 @@ public final class VehicleCollisionCache {
     private VehicleWorld warmView;
     private int nextPose,weight;
     private long generation,hits,misses,waits,fallbacks;
-    private boolean asyncUnavailable;
+    private boolean asyncUnavailable,uncached;
     private long waitingSince;
     private String failure="";
     public long waits(){return waits;}
@@ -74,12 +74,13 @@ public final class VehicleCollisionCache {
         if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;return !ramp.isMoving()&&ramp.writeToNBT(new NBTTagCompound()).getBoolean("VehicleRampFrozen");}
         return true;
     }
-    private Description describe(VehicleWorld view){
+    private Description describe(VehicleWorld view){return describe(view,true);}
+    private Description describe(VehicleWorld view,boolean requireSupported){
         if(view==null||view.structure==null)return null;
         NBTTagCompound signature=new NBTTagCompound();signature.setBoolean("Hover",view.hover);signature.setLong("Seat",view.structure.seat.toLong());signature.setInteger("Facing",view.structure.facing.getIndex());
         NBTTagList blocks=new NBTTagList();List<VehicleStructure.Cell> cells=new ArrayList<>();List<Integer> poses=new ArrayList<>();BlockPos owner=null;int movingOwners=0;
         for(VehicleStructure.Cell cell:view.structure.cells){
-            TileEntity tile=view.getTileEntity(cell.pos);if(!supported(view,cell,tile)){bypass=String.valueOf(cell.state.getBlock().getRegistryName())+"/"+cell.state.getBlock().getClass().getSimpleName();return null;}
+            TileEntity tile=view.getTileEntity(cell.pos);if(requireSupported&&!supported(view,cell,tile)){bypass=String.valueOf(cell.state.getBlock().getRegistryName())+"/"+cell.state.getBlock().getClass().getSimpleName();return null;}
             NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
             cells.add(new VehicleStructure.Cell(cell.pos,cell.state,data));
             NBTTagCompound entry=new NBTTagCompound();entry.setLong("Pos",cell.pos.toLong());entry.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),cell.state));
@@ -91,6 +92,7 @@ public final class VehicleCollisionCache {
                     normalized.removeTag("CanopyPowerKnown");normalized.removeTag("CanopyLastPower");normalized.removeTag("CanopyLastPolarity");
                     if(canopy.draws()&&canopy.opening()){poses.add(Float.floatToIntBits(canopy.progress));owner=canopy.getPos();movingOwners++;}
                 }
+                if(tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot()){normalized.removeTag("Progress");normalized.removeTag("LastSignal");poses.add(Float.floatToIntBits(((TileEntityLandingGear)tile).progress));entry.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),cell.state.withProperty(com.vandorlabs.blocks.BlockTelescopicLandingGear.EXTENDED,true)));}
                 entry.setTag("Tile",normalized);
             }
             blocks.appendTag(entry);
@@ -101,7 +103,7 @@ public final class VehicleCollisionCache {
     private void accept(Description description,VehicleWorld view){
         if(parent==view.parent&&configuration!=null&&configuration.equals(description.configuration))return;
         clear();parent=view.parent;configuration=description.configuration;
-        if(description.owner!=null){warmSnapshot=description.snapshot;warmOwner=description.owner;nextPose=0;}
+        if(!uncached&&description.owner!=null){warmSnapshot=description.snapshot;warmOwner=description.owner;nextPose=0;}
     }
     private void put(Pose pose,VehicleCollision.Geometry geometry){
         if(!geometry.cacheable||geometry.boxes.size()>MAX_BOXES)return;
@@ -111,7 +113,7 @@ public final class VehicleCollisionCache {
     public void reset(VehicleWorld view,VehicleCollision baseline){clear();Description description=describe(view);if(description!=null){accept(description,view);put(description.pose,baseline.geometry());}}
     public void restart(VehicleWorld view){clear();Description description=describe(view);if(description!=null)accept(description,view);}
     public VehicleCollision collision(VehicleWorld view){
-        long signatureStart=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);if(signatureStart!=0)sample(view,"cache-signature",System.nanoTime()-signatureStart);if(description==null){clear();misses++;return new VehicleCollision(view);}
+        long signatureStart=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);if(signatureStart!=0)sample(view,"cache-signature",System.nanoTime()-signatureStart);if(description==null){if(uncached){Description current=describe(view,false);poll();VehicleCollision.Geometry prepared=current==null?null:entries.remove(current.pose);if(prepared!=null&&configuration.equals(current.configuration)){weight-=prepared.boxes.size();hits++;return new VehicleCollision(prepared);}}clear();misses++;return new VehicleCollision(view);}
         accept(description,view);poll();VehicleCollision.Geometry found=entries.get(description.pose);
         if(found!=null){hits++;sample(view,"cache-hit-count",1);return new VehicleCollision(found);}
         misses++;sample(view,"cache-miss-count",1);VehicleCollision result=new VehicleCollision(view);put(description.pose,result.geometry());return result;
@@ -124,7 +126,14 @@ public final class VehicleCollisionCache {
     }
     private void fail(String reason){asyncUnavailable=true;failure=reason;warmSnapshot=null;warmView=null;}
     private static List<TileEntityCanopy> openingOwners(VehicleWorld view){List<TileEntityCanopy> result=new ArrayList<>();for(VehicleStructure.Cell cell:view.structure.cells){TileEntity tile=view.getTileEntity(cell.pos);if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=(TileEntityCanopy)tile;if(canopy.draws()&&canopy.opening())result.add(canopy);}}return result;}
-    /** Keep the current exact pose while cold future geometry is prepared; unsupported adapters stay synchronous. */
+    private static List<TileEntity> animatedOwners(VehicleWorld view){
+        List<TileEntity> result=new ArrayList<>();for(VehicleStructure.Cell cell:view.structure.cells){TileEntity tile=view.getTileEntity(cell.pos);
+            if(tile instanceof TileEntityCanopy&&((TileEntityCanopy)tile).draws()&&((TileEntityCanopy)tile).opening()||tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot())result.add(tile);}
+        return result;
+    }
+    private static float progress(TileEntity tile){return tile instanceof TileEntityCanopy?((TileEntityCanopy)tile).progress:((TileEntityLandingGear)tile).progress;}
+    private static Pose pose(VehicleWorld view,Map<BlockPos,Float> desired){List<Integer> values=new ArrayList<>();for(TileEntity tile:animatedOwners(view))values.add(Float.floatToIntBits(desired.getOrDefault(tile.getPos(),progress(tile))));return new Pose(values);}
+    /** Keep the last exact physical pose until the next pose is prepared. */
     public boolean readyForCanopyStep(VehicleWorld view){
         long discovery=VehicleAnimationDiagnostics.start(view.craft);
         Map<BlockPos,Float> desired=new HashMap<>();for(TileEntityCanopy tile:openingOwners(view))desired.put(tile.getPos(),Math.max(0,Math.min(1,tile.progress+(tile.targetOpen?1:-1)/16F)));
@@ -135,23 +144,23 @@ public final class VehicleCollisionCache {
         long started=VehicleAnimationDiagnostics.start(view.craft);try{return readyPose(view,desired);}finally{VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-total",started);}
     }
     private boolean readyPose(VehicleWorld view,Map<BlockPos,Float> desired){
-        long described=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-describe",described);if(description==null){clear();fallbacks++;return true;}
+        long described=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-describe",described);if(description==null){description=describe(view,false);uncached=true;if(description==null)return false;}else uncached=false;
         long checked=VehicleAnimationDiagnostics.start(view.craft);accept(description,view);poll();VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-accept-poll",checked);
-        checked=VehicleAnimationDiagnostics.start(view.craft);List<Integer> values=new ArrayList<>();for(TileEntityCanopy tile:openingOwners(view))values.add(Float.floatToIntBits(desired.containsKey(tile.getPos())?desired.get(tile.getPos()):tile.progress));Pose pose=new Pose(values);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-pose-vector",checked);
+        checked=VehicleAnimationDiagnostics.start(view.craft);Pose pose=pose(view,desired);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-pose-vector",checked);
         if(entries.containsKey(pose)){waitingSince=0;return true;}
-        if(asyncUnavailable){fallbacks++;sample(view,"cache-async-fallback-count",1);return true;}
+        if(asyncUnavailable){waits++;return false;}
         long now=System.nanoTime();if(waitingSince==0)waitingSince=now;
-        if(now-waitingSince>6_000_000_000L){fail("preparation wait budget exceeded");fallbacks++;return true;}
-        if(pending!=null&&!pose.equals(pendingPose)){pending.cancel(false);pending=null;pendingPose=null;}
+        // Queue pressure must never turn a deferred collision build into tick-thread work.
+        if(pending!=null&&!pose.equals(pendingPose)){waits++;return false;}
         if(pending==null){long queued=VehicleAnimationDiagnostics.start(view.craft);queue(view,description,pose);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-queue",queued);}
-        if(asyncUnavailable){fallbacks++;return true;}
+        if(asyncUnavailable){waits++;return false;}
         waits++;sample(view,"cache-animation-wait-count",1);return false;
     }
     private void queue(VehicleWorld view,Description description,Pose pose){
         if(pending!=null||WORKER.getQueue().remainingCapacity()==0)return;
         if(warmView==null){long cloned=VehicleAnimationDiagnostics.start(view.craft);warmView=new VehicleWorld(view.parent,description.snapshot);warmView.hover=view.hover;VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-view-create",cloned);}
-        long configured=VehicleAnimationDiagnostics.start(view.craft);List<TileEntityCanopy> owners=openingOwners(warmView);if(owners.size()!=pose.values.length){fail("canopy owner count changed");return;}
-        for(int i=0;i<owners.size();i++)owners.get(i).progress=Float.intBitsToFloat(pose.values[i]);
+        long configured=VehicleAnimationDiagnostics.start(view.craft);List<TileEntity> owners=animatedOwners(warmView);if(owners.size()!=pose.values.length){fail("canopy owner count changed");return;}
+        for(int i=0;i<owners.size();i++){TileEntity tile=owners.get(i);float value=Float.intBitsToFloat(pose.values[i]);if(tile instanceof TileEntityCanopy)((TileEntityCanopy)tile).progress=value;else ((TileEntityLandingGear)tile).progress=value;}
         VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-owner-configure",configured);
         long started=VehicleAnimationDiagnostics.start(view.craft);
         VehicleCollision.DeferredRaw raw=VehicleCollision.defer(warmView,MAX_RAW_BOXES);sample(view,"cache-mainthread-collect",started==0?0:System.nanoTime()-started);
@@ -162,10 +171,10 @@ public final class VehicleCollisionCache {
     /** One future pose, closest to the real current endpoint/direction, without a Cartesian product. */
     public void tick(VehicleWorld view){
         poll();if(warmSnapshot==null||asyncUnavailable||pending!=null||WORKER.getQueue().remainingCapacity()==0)return;
-        Description current=describe(view);if(current==null){clear();return;}accept(current,view);if(warmSnapshot==null)return;
+        Description current=describe(view);if(current==null){return;}accept(current,view);if(warmSnapshot==null)return;
         List<TileEntityCanopy> owners=openingOwners(view);if(owners.size()!=1)return;TileEntityCanopy owner=owners.get(0);
         int at=Math.round(owner.progress*16),direction=owner.progress<=0?1:owner.progress>=1?-1:owner.targetOpen?1:-1;
-        for(int offset=1;offset<=17;offset++){Pose pose=new Pose(Float.floatToIntBits(Math.floorMod(at+direction*offset,17)/16F));if(!entries.containsKey(pose)){queue(view,current,pose);return;}}
+        for(int offset=1;offset<=17;offset++){Pose pose=pose(view,Collections.singletonMap(owner.getPos(),Math.floorMod(at+direction*offset,17)/16F));if(!entries.containsKey(pose)){queue(view,current,pose);return;}}
         warmView=null;warmSnapshot=null;nextPose=17;
     }
 }

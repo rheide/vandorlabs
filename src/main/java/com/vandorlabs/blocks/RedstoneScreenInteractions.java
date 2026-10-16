@@ -27,8 +27,9 @@ public final class RedstoneScreenInteractions {
         // A rotation packet updates yaw/pitch before the server's next head-animation tick.
         // Use those authoritative view angles for a click delivered in the same tick.
         Vec3d end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
-        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)&&hitRow(state,tile,slot,eye,end,1)>=0){
-            if(!world.isRemote){com.vandorlabs.tiles.TileEntityAutopilot controller=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);if(controller!=null&&world.isBlockModifiable(player,controller.getPos())&&player.canPlayerEdit(controller.getPos(),EnumFacing.UP,player.getHeldItemMainhand()))controller.setEnabled(!controller.enabled());}return true;
+        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)){
+            int action=statusAction(state,tile,slot,eye,end);if(action<0)continue;
+            if(!world.isRemote)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,player,action);return true;
         }
         for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);
@@ -102,6 +103,14 @@ public final class RedstoneScreenInteractions {
     }
     public static int hitRow(IBlockState state,Vec3d start,Vec3d end,int count){
         return hitRow(state,null,0,start,end,count);
+    }
+    /** 0 toggles autopilot, 1..3 select Block/Taxi/Hover, 4 pulses departure. */
+    public static int statusAction(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end){
+        int row=hitRow(state,tile,slot,start,end,4);
+        double x=hitColumn(state,tile,slot,start,end);
+        if(row==0)return 0;
+        if(row==1){for(int mode=0;mode<3;mode++)if(x>=6+mode*39&&x<43+mode*39)return mode+1;}
+        return row==3&&x<48?4:-1;
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){
         ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);

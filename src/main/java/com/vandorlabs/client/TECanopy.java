@@ -25,10 +25,18 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
     private static final class Prepared {
         List<CanopyMesh.Face> source,drawable;String settings;CanopyRenderGeometry geometry;net.minecraft.util.EnumFacing facing;int width;double progress=Double.NaN;
         final List<DrawFace> opaque=new ArrayList<>(),glass=new ArrayList<>();
+        final net.minecraft.client.renderer.vertex.VertexBuffer solidBuffer=new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        final net.minecraft.client.renderer.vertex.VertexBuffer glassBuffer=new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        boolean solidDirty=true,glassDirty=true;
+        DrawFace[] glassOrder;
+        java.lang.ref.WeakReference<TileEntityCanopy> owner;
+        void delete(){solidBuffer.deleteGlBuffers();glassBuffer.deleteGlBuffers();}
     }
     private static final Map<TileEntityCanopy,Prepared> CACHE=new WeakHashMap<>();
     private static final Map<String,net.minecraft.client.renderer.texture.TextureAtlasSprite> SPRITES=new HashMap<>();
-    static void invalidate(){CACHE.clear();SPRITES.clear();}
+    private static final Set<Prepared> BUFFERS=Collections.newSetFromMap(new IdentityHashMap<Prepared,Boolean>());
+    static void cleanup(){Iterator<Prepared> it=BUFFERS.iterator();while(it.hasNext()){Prepared p=it.next();TileEntityCanopy tile=p.owner.get();if(tile==null||tile.isInvalid()||(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).parent:tile.getWorld())!=Minecraft.getMinecraft().world){p.delete();it.remove();if(tile!=null)CACHE.remove(tile);}}}
+    static void invalidate(){for(Prepared p:BUFFERS)p.delete();BUFFERS.clear();CACHE.clear();SPRITES.clear();}
 
     @Override
     public void render(
@@ -53,7 +61,8 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         String settings=tile.large.key();
         Prepared prepared=CACHE.get(tile);
         if(prepared==null || prepared.source!=source || !settings.equals(prepared.settings) || prepared.facing!=tile.facing() || prepared.width!=tile.width()){
-            prepared=new Prepared();prepared.source=source;prepared.settings=settings;prepared.facing=tile.facing();prepared.width=tile.width();prepared.geometry=new CanopyRenderGeometry(source);CACHE.put(tile,prepared);
+            if(prepared!=null){prepared.delete();BUFFERS.remove(prepared);}
+            prepared=new Prepared();prepared.owner=new java.lang.ref.WeakReference<>(tile);BUFFERS.add(prepared);prepared.source=source;prepared.settings=settings;prepared.facing=tile.facing();prepared.width=tile.width();prepared.geometry=new CanopyRenderGeometry(source);CACHE.put(tile,prepared);
         }
         List<CanopyMesh.Face> drawable=prepared.geometry.posed(tile.block().kind,prepared.width,tile.large,progress,tile.centeredPlacement);
         if(prepared.drawable!=drawable){
@@ -66,12 +75,15 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         }
         if(prepared.progress!=progress){
             orient(prepared.opaque,prepared.facing);orient(prepared.glass,prepared.facing);prepared.progress=progress;
+            prepared.solidDirty=prepared.glassDirty=true;
         }
         List<DrawFace> opaque=prepared.opaque,glass=prepared.glass;
         Vec3d camera=new Vec3d(rendererDispatcher.entityX-tile.getPos().getX(),rendererDispatcher.entityY-tile.getPos().getY(),rendererDispatcher.entityZ-tile.getPos().getZ());
         if(pass!=0){
             for(DrawFace face:glass)face.distance=face.center.squareDistanceTo(camera);
             glass.sort((a, b) -> Double.compare(b.distance, a.distance));
+            if(prepared.glassOrder==null||prepared.glassOrder.length!=glass.size())prepared.glassDirty=true;
+            else for(int i=0;i<glass.size();i++)if(prepared.glassOrder[i]!=glass.get(i)){prepared.glassDirty=true;break;}
         }
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();
@@ -84,13 +96,13 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         GlStateManager.disableBlend();GlStateManager.depthMask(true);
-        if(pass!=1)draw(opaque);
+        if(pass!=1){drawCached(opaque,prepared.solidBuffer,prepared.solidDirty);prepared.solidDirty=!OpenGlHelper.useVbo();}
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(
                 GlStateManager.SourceFactor.SRC_ALPHA,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.depthMask(false);
-        if(pass!=0)draw(glass);
+        if(pass!=0){drawCached(glass,prepared.glassBuffer,prepared.glassDirty);if(prepared.glassDirty)prepared.glassOrder=glass.toArray(new DrawFace[0]);prepared.glassDirty=!OpenGlHelper.useVbo();}
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();
         GlStateManager.enableLighting();
@@ -113,6 +125,24 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         if(faces.isEmpty())return;
         BufferBuilder b = Tessellator.getInstance().getBuffer();
         b.begin(org.lwjgl.opengl.GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        emit(b,faces);
+        Tessellator.getInstance().draw();
+    }
+    private void drawCached(List<DrawFace> faces,net.minecraft.client.renderer.vertex.VertexBuffer buffer,boolean dirty){
+        if(faces.isEmpty())return;
+        if(!OpenGlHelper.useVbo()){draw(faces);return;}
+        if(dirty){BufferBuilder b=new BufferBuilder(4096);b.begin(org.lwjgl.opengl.GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);emit(b,faces);b.finishDrawing();buffer.bufferData(b.getByteBuffer());}
+        buffer.bindBuffer();
+        int stride=DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL.getNextOffset();
+        GlStateManager.glEnableClientState(org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY);GlStateManager.glVertexPointer(3,org.lwjgl.opengl.GL11.GL_FLOAT,stride,0);
+        OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.glEnableClientState(org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY);GlStateManager.glTexCoordPointer(2,org.lwjgl.opengl.GL11.GL_FLOAT,stride,12);
+        GlStateManager.glEnableClientState(org.lwjgl.opengl.GL11.GL_COLOR_ARRAY);GlStateManager.glColorPointer(4,org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,stride,20);
+        GlStateManager.glEnableClientState(org.lwjgl.opengl.GL11.GL_NORMAL_ARRAY);org.lwjgl.opengl.GL11.glNormalPointer(org.lwjgl.opengl.GL11.GL_BYTE,stride,24L);
+        buffer.drawArrays(org.lwjgl.opengl.GL11.GL_QUADS);buffer.unbindBuffer();
+        GlStateManager.glDisableClientState(org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY);GlStateManager.glDisableClientState(org.lwjgl.opengl.GL11.GL_TEXTURE_COORD_ARRAY);GlStateManager.glDisableClientState(org.lwjgl.opengl.GL11.GL_COLOR_ARRAY);GlStateManager.glDisableClientState(org.lwjgl.opengl.GL11.GL_NORMAL_ARRAY);
+        GlStateManager.resetColor();
+    }
+    private void emit(BufferBuilder b,List<DrawFace> faces){
         for (DrawFace draw : faces) {
             CanopyMesh.Face f = draw.source;
             net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=SPRITES.get(f.material);
@@ -127,7 +157,6 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
                 if(f.doubleSided){vertex(b,draw,sprite,i+1,-1);vertex(b,draw,sprite,i,-1);vertex(b,draw,sprite,0,-1);vertex(b,draw,sprite,0,-1);}
             }
         }
-        Tessellator.getInstance().draw();
     }
 
     private void vertex(BufferBuilder b,DrawFace f,net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,int index,int sign){

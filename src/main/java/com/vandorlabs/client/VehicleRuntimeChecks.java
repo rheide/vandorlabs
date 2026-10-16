@@ -60,15 +60,15 @@ public final class VehicleRuntimeChecks {
             player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setPositionAndUpdate(seat.getX(),seat.getY(),seat.getZ());
             ModBlocks.PILOT_SEAT.onBlockActivated(world,seat,state,player,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F);
             require(player.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"pilot sits before channel assembly");
-            source.power(true);pilot.update();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
+            VehicleTransferRuntimeChecks.slowDisk(world,()->{source.power(true);pilot.update();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));},()->player.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat&&world.getBlockState(seat).getBlock()==ModBlocks.PILOT_SEAT);
             require(player.getRidingEntity() instanceof EntityGroundVehicle,"rising channel signal assembles with seated pilot");
-            EntityGroundVehicle craft=(EntityGroundVehicle)player.getRidingEntity();for(int settle=0;settle<30;settle++)craft.onUpdate();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
+            EntityGroundVehicle craft=(EntityGroundVehicle)player.getRidingEntity();for(int settle=0;settle<30;settle++)craft.onUpdate();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));VehicleTransferRuntimeChecks.drain(world);
             require(!craft.isDead,"held high signal does not toggle repeatedly");
             source.power(false);craft.onUpdate();source.power(true);craft.onUpdate();
-            VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
+            VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));VehicleTransferRuntimeChecks.drain(world);
             require(craft.isDead && player.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat,"second rising edge parks with pilot safely seated: dead="+craft.isDead+", riding="+player.getRidingEntity()+", y="+craft.posY+", dy="+craft.motionY);
             TileEntityVehicleController parked=(TileEntityVehicleController)world.getTileEntity(seat.east(2));require(parked!=null && parked.getRedstoneChannel()==5317 && parked.owner.equals(player.getUniqueID()),"parking retains controller channel and owner");
-            parked.update();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
+            parked.update();VehicleService.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));VehicleTransferRuntimeChecks.drain(world);
             require(world.getBlockState(seat).getBlock()==ModBlocks.PILOT_SEAT,"held high remains stable after parking");
             player.dismountRidingEntity();player.setPositionAndUpdate(4,101,8);
         }finally{com.vandorlabs.redstone.RedstoneChannels.unregister(source);}

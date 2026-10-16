@@ -17,7 +17,8 @@ public final class VehicleAutopilot {
     private long arrived;
     private EnumFacing direction;
     private boolean departurePulsed;
-    private boolean journey;
+    private boolean journey,parkingQueued;
+    private static final java.util.Set<TileEntityAutopilot> queuedDepartures=java.util.Collections.newSetFromMap(new java.util.WeakHashMap<TileEntityAutopilot,Boolean>());
     private static final double LOOKAHEAD=2.5;
     private static final int LOOKAHEAD_CELLS=6;
     private static final java.util.Map<TileEntityAutopilot,VehicleScan> departures=new java.util.WeakHashMap<>();
@@ -40,6 +41,14 @@ public final class VehicleAutopilot {
     public boolean enabled(){TileEntityAutopilot tile=controller();return tile!=null&&tile.enabled();}
     private void reset(){target=previous=waiting=departed=null;direction=null;departurePulsed=false;journey=false;}
     public void toggle(){TileEntityAutopilot tile=controller();if(tile!=null){tile.setEnabled(!tile.enabled());reset();}}
+    public void pulseDeparture(){
+        TileEntityAutopilot tile=controller();if(tile==null)return;
+        if(!tile.enabled()||!journey){reset();journey=true;}
+        tile.setEnabled(true);
+        BlockPos under=ground(craft.toWorld(new Vec3d(tile.getPos()).addVector(.5,0,.5)));
+        if(under!=null&&craft.world.getTileEntity(under) instanceof TileEntityWaypoint){departed=under;waiting=null;}
+        tile.setStatus("Following route");
+    }
     private boolean route(BlockPos p){
         if(!craft.world.isBlockLoaded(p))return false;
         IBlockState state=craft.world.getBlockState(p);if(craft.world.getTileEntity(p) instanceof TileEntityWaypoint)return true;
@@ -134,11 +143,14 @@ public final class VehicleAutopilot {
         return true;
     }
     private boolean park(TileEntityWaypoint waypoint){
+        if(parkingQueued)return true;
         TileEntity raw=craft.view.getTileEntity(craft.structure.seat);if(!(raw instanceof TileEntityPilotSeat))return false;
         java.util.UUID owner=((TileEntityPilotSeat)raw).owner;
         net.minecraft.entity.player.EntityPlayerMP player=owner==null?null:craft.world.getMinecraftServer().getPlayerList().getPlayerByUUID(owner);
         if(player==null||player.world!=craft.world){controller.setStatus("Waiting for owner");return false;}
-        try{
+        parkingQueued=true;
+        VehicleTransfer.submit((net.minecraft.world.WorldServer)craft.world,()->{
+            if(craft.isDead||player.world!=craft.world)throw new IllegalArgumentException("Parking owner or craft unavailable");
             craft.stopForParking();craft.signals.persist();VehicleRotation.Plan plan=VehicleRotation.plan(craft);
             VehicleService.validateParking(player,craft,plan.origin,true,false);
             BlockPos placedController=plan.origin.add(VehicleRotation.cell(controller.getPos(),(int)craft.structure.bounds.maxX,(int)craft.structure.bounds.maxZ,VehicleRotation.turns(craft.rotationYaw)));
@@ -147,12 +159,12 @@ public final class VehicleAutopilot {
             placed.departureSeat=plan.origin.add(plan.structure.seat);placed.departureOwner=owner;placed.departureMode=waypoint.departMode;placed.departureHeight=waypoint.hoverHeight;
             placed.departureDirect=waypoint.directSignal;placed.departureWaypoint=waypoint.getPos();
             placed.departureAt=waypoint.autoDepart?craft.world.getTotalWorldTime()+Math.max(1,waypoint.delay):Long.MAX_VALUE;
-            placed.changed();if(placed.departureAt!=Long.MAX_VALUE)craft.world.scheduleUpdate(placedController,placed.getBlockType(),Math.max(1,waypoint.delay));return true;
-        }catch(Exception error){controller.setStatus("Parking blocked");return false;}
+            placed.changed();if(placed.departureAt!=Long.MAX_VALUE)craft.world.scheduleUpdate(placedController,placed.getBlockType(),Math.max(1,waypoint.delay));
+        },error->{parkingQueued=false;controller.setStatus("Parking blocked");});return true;
     }
     /** Only occupied waypoint departures schedule work; unoccupied markers never tick. */
     public static void depart(TileEntityAutopilot tile){
-        if(!tile.enabled()||tile.departureAt<=0||tile.departureSeat==null||tile.getWorld().isRemote)return;
+        if(queuedDepartures.contains(tile)||!tile.enabled()||tile.departureAt<=0||tile.departureSeat==null||tile.getWorld().isRemote)return;
         net.minecraft.world.WorldServer world=(net.minecraft.world.WorldServer)tile.getWorld();
         if(world.getTotalWorldTime()<tile.departureAt){world.scheduleUpdate(tile.getPos(),tile.getBlockType(),(int)Math.min(1200,tile.departureAt-world.getTotalWorldTime()));return;}
         if(!tile.departureDirect){tile.departureAt=Long.MAX_VALUE;tile.changed();TileEntity marker=tile.departureWaypoint==null?null:world.getTileEntity(tile.departureWaypoint);if(marker instanceof TileEntityWaypoint)((TileEntityWaypoint)marker).emit();return;}
@@ -165,13 +177,18 @@ public final class VehicleAutopilot {
             VehicleStructure.Cell controllerCell=scan.result.at(tile.getPos().subtract(scan.origin));
             if(controllerCell==null||controllerCell.state.getBlock()!=tile.getBlockType())throw new IllegalArgumentException("Waypoint controller moved or was copied");
             VehicleFlight.requireThruster(scan.result);if(tile.departureMode==2&&!VehicleFlight.canHover(scan.result))throw new IllegalArgumentException("Hover requires three lift blocks");
-            if(!scan.result.matches(world,scan.origin))throw new IllegalArgumentException("Craft changed during departure");
-            for(BlockPos p:scan.airBoundary)if(!world.isBlockLoaded(p)||!world.isAirBlock(p))throw new IllegalArgumentException("Craft connections changed");
-            if(!VehicleService.clearOfPeople(world,new VehicleCollision(new VehicleWorld(world,scan.result)),scan.origin,owner))throw new IllegalArgumentException("Departure area is occupied");
-            VehicleService.authorizeAssembly(owner,scan.result,scan.origin);
+            final VehicleScan ready=scan;queuedDepartures.add(tile);
+            VehicleTransfer.submit(world,ready.result,ready.origin,()->{
+            if(world.getTileEntity(tile.getPos())!=tile||owner.world!=world)throw new IllegalArgumentException("Departure owner or controller unavailable");
+            if(!ready.result.matches(world,ready.origin))throw new IllegalArgumentException("Craft changed during departure");
+            for(BlockPos p:ready.airBoundary)if(!world.isBlockLoaded(p)||!world.isAirBlock(p))throw new IllegalArgumentException("Craft connections changed");
+            if(!VehicleService.clearOfPeople(world,VehicleTransfer.geometry(world,ready.result),ready.origin,owner))throw new IllegalArgumentException("Departure area is occupied");
+            VehicleService.authorizeAssembly(owner,ready.result,ready.origin);
+            EntityGroundVehicle craft=VehicleTransfer.assemble(world,ready.result,ready.origin,owner);
             TileEntity marker=tile.departureWaypoint==null?null:world.getTileEntity(tile.departureWaypoint);if(marker instanceof TileEntityWaypoint)((TileEntityWaypoint)marker).emit();
-            EntityGroundVehicle craft=VehicleTransfer.assemble(world,scan.result,scan.origin,owner);
             if(tile.departureMode==2&&craft.setHover(true))craft.hoverTarget=tile.departureWaypoint==null?craft.posY+tile.departureHeight-craft.groundClearance():tile.departureWaypoint.getY()+1+tile.departureHeight-craft.autopilot.controller().getPos().getY();
+            queuedDepartures.remove(tile);
+            },error->{queuedDepartures.remove(tile);tile.setStatus("Departure blocked");world.scheduleUpdate(tile.getPos(),tile.getBlockType(),100);});
         }catch(Exception error){tile.setStatus("Departure blocked");world.scheduleUpdate(tile.getPos(),tile.getBlockType(),100);}
     }
 }

@@ -20,18 +20,21 @@ See [Pilot Seat and Taxi Mode](../pilot-seat-taxi.md) and [vehicle compatibility
 
 ## Hover where you leave it
 
-Fit the required propulsion and at least three supported lift blocks, then double-tap **Space** in Taxi mode to enter Hover. Antigravity Plates, Repulsor Arrays, and Vertical Hover Thrusters provide lift; their particles retain the selected thruster family's appearance.
+Fit the required propulsion and at least three supported lift blocks, then double-tap **Space** in Taxi mode to enter Hover. Antigravity Plates, Repulsor Arrays, and Vertical Hover Thrusters provide lift. Forward movement while holding Sprint emits sparse particles matching each thruster family; ordinary movement emits none. Antigravity Plates and Repulsor Arrays do not emit forward exhaust.
 
 | Input | Hover action |
 | --- | --- |
 | W / S | Move forward or backward |
 | A / D | Turn, including while stationary |
+| Sprint | Increase cruising speed by 25% |
 | Space | Rise |
 | Crouch | Descend |
 | Release Space and Crouch | Hold altitude |
 | Sprint + Crouch | Leave the seat |
 
-A manually piloted craft stops and holds its position, heading, and height when the pilot exits. An enabled Autopilot continues its journey. To park, descend to less than two blocks above solid ground, double-tap Space to select Taxi, then use the normal parking controls. Hover cannot convert directly to blocks.
+A manually piloted craft stops and holds its position, heading, and height when the pilot exits. An enabled Autopilot continues its journey. To park, fully extend the landing gear and descend to within three blocks of solid ground, double-tap Space to select Taxi, then use the normal parking controls. Hover cannot convert directly to blocks.
+
+Landing gear follows its redstone channels and animates with matching collision in Taxi and Hover. It can retract only in Hover, and extension stops when terrain obstructs the feet. Gear no longer retracts automatically with altitude. Hover controls use the latest input state so delayed commands do not keep movement queued after release.
 
 Small, Medium, and Large Wheels now roll with travel, reverse with the craft, and swivel with steering. Their inventory icons show distinct sizes with padding, and the held Large Wheel no longer dominates the view.
 
@@ -43,7 +46,7 @@ Autopilot uses the same forward direction as manual Pilot Seat driving. It looks
 
 Waypoints can wait for a signal or depart automatically after a delay. They can select Block, Taxi, or Hover for the stop, then Taxi or Hover for departure. Hover stops support heights up to sixteen blocks. A pulse starts a journey to a waypoint; a continuously active signal can continue through stops.
 
-Choose **Vehicle Status** on a Programmable Screen, Input, or Console surface to show the current vehicle mode, clearance, and navigation status. Click its Autopilot row aboard the craft to control navigation. A surface can switch back to ordinary artwork or Redstone controls whenever needed.
+Choose **Vehicle Status** on a Programmable Screen, Input, or Console surface to show the current vehicle mode, clearance, and navigation status. Click its Autopilot row to toggle navigation, or **Next >** to activate departure from the current waypoint, including when parked as blocks. The **Block**, **Taxi**, and **Hover** buttons switch modes directly from the surface, highlighting the active mode and preserving normal permission, gear, clearance, and parking checks. The controls also fit half-height inputs and consoles. A surface can switch back to ordinary artwork or Redstone controls whenever needed.
 
 See the [Autopilot and Waypoint guide](../vehicle-autopilot.md) for route construction and departure settings.
 
@@ -83,8 +86,10 @@ Compatibility remains specific to each block. Supported external machines retain
 
 Vehicle movement also spends less time rebuilding canopy collision geometry and querying nearby terrain. Canopy animations, ramp materials, landing gear, and console rendering avoid repeated allocations and lookups while preserving their shapes and materials.
 
-Conversion builds the craft's current collision shape before driving. On supported craft with one opening canopy assembly, its poses prepare incrementally afterward, with canopy subdivision and coordinate merging on a background worker and a bounded cache for reuse. An immediate opening or closing request can briefly hold the current pose until the next collision shape is ready, while driving continues. Changes to captured blocks or settings discard outdated preparation. Unsupported configurations still use freshly computed collision geometry. Pilot Seat controls and automatic Taxi Mode behavior stay the same.
+Conversion prepares collision geometry and durable recovery records on bounded workers before changing world ownership. Lighting and neighbor updates are deferred, and affected chunks are checkpointed incrementally without waiting for disk on the server thread. The craft stays still until the handoff is complete; clients receive this hold before predicting movement. Source machines pause while assembly is pending and resume if it is cancelled.
 
-Canopy collision queries use a spatial index so thruster particles and nearby entities test only relevant surfaces, preserving the existing collision shape.
+Conversion builds the craft's current collision shape before driving. On supported craft with one opening canopy assembly, its poses prepare incrementally afterward, with canopy subdivision and coordinate merging on a background worker and a bounded cache for reuse. An immediate opening or closing request can briefly hold the current pose until the next collision shape is ready, while driving continues. Changes to captured blocks or settings discard outdated preparation. Collision preparation retains the last exact pose until its replacement is ready, without falling back to a blocking rebuild after a worker delay or failure.
+
+Canopy collision queries use a spatial index and deduplicate candidates before testing, so particles and nearby entities examine only relevant surfaces while preserving the existing collision shape. Canopy rendering reuses vertex buffers, and selection rays transform into the local canopy pose to avoid rebuilding its surfaces for each ray.
 
 See the [complete changelog](../../CHANGELOG.md) for fixes and smaller changes.

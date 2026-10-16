@@ -189,10 +189,12 @@ public final class CanopyMesh {
         return trace(MODELS.get(model),kind,width,progress,facing,pos,start,end);
     }
     public static RayTraceResult trace(List<Face> faces,String kind,int width,double progress,EnumFacing facing,BlockPos pos,Vec3d start,Vec3d end) {
+        boolean posed="posed".equals(kind);
+        if(posed){EnumFacing inverse=facing==EnumFacing.EAST?EnumFacing.WEST:facing==EnumFacing.WEST?EnumFacing.EAST:facing;start=rotate(start.subtract(new Vec3d(pos)),inverse);end=rotate(end.subtract(new Vec3d(pos)),inverse);}
         Vec3d direction=end.subtract(start);double nearest=Double.POSITIVE_INFINITY;RayTraceResult result=null;
         for(Face face:faces) {
-            Vec3d[] vertices=new Vec3d[face.vertices.length];
-            for(int i=0;i<vertices.length;i++)vertices[i]=rotate(pose(face.vertices[i],kind,width,progress,face.group.equals("shell")),facing).add(new Vec3d(pos));
+            Vec3d[] vertices=posed?face.vertices:new Vec3d[face.vertices.length];
+            if(!posed)for(int i=0;i<vertices.length;i++)vertices[i]=rotate(pose(face.vertices[i],kind,width,progress,face.group.equals("shell")),facing).add(new Vec3d(pos));
             for(int i=1;i<vertices.length-1;i++) {
                 Vec3d a=vertices[0],edge1=vertices[i].subtract(a),edge2=vertices[i+1].subtract(a),cross=direction.crossProduct(edge2);
                 double determinant=edge1.dotProduct(cross);if(Math.abs(determinant)<1e-10)continue;
@@ -204,7 +206,9 @@ public final class CanopyMesh {
                 if(distance<0 || distance>1 || distance>=nearest)continue;
                 nearest=distance;Vec3d normal=edge1.crossProduct(edge2);
                 if(normal.dotProduct(direction)>0)normal=normal.scale(-1);
-                result=new RayTraceResult(start.add(direction.scale(distance)),EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z),pos);
+                Vec3d hit=start.add(direction.scale(distance));
+                if(posed){hit=rotate(hit,facing).add(new Vec3d(pos));normal=rotate(normal.addVector(.5,0,.5),facing).subtract(.5,0,.5);}
+                result=new RayTraceResult(hit,EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z),pos);
             }
         }
         return result;

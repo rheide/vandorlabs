@@ -33,7 +33,7 @@ final class AutopilotRuntimeChecks {
         stop.stopMode=2;stop.hoverHeight=8;craft.hover=true;craft.view.hover=true;craft.hoverTarget=base.getY()+8;craft.setPosition(craft.posX,base.getY()+8,craft.posZ);
         for(int i=0;i<10;i++)craft.autopilot.tick();require(controller.enabled()&&controller.status.equals("Parked at waypoint")&&craft.hover,"stopped Hover waypoint remains active above four blocks");
         craft.hover=false;craft.view.hover=false;craft.setPosition(craft.posX,base.getY(),craft.posZ);stop.stopMode=1;
-        controller.setChannelSignal(true);for(int i=0;i<10;i++)craft.autopilot.tick();require(craft.rotationYaw>0&&craft.rotationYaw<90,"midcorner reload fixture");craft=reload(craft);controller=craft.autopilot.controller();for(int i=0;i<90;i++)craft.autopilot.tick();
+        craft.autopilot.pulseDeparture();require(!controller.powered(),"screen departure does not latch redstone high");for(int i=0;i<10;i++)craft.autopilot.tick();require(craft.rotationYaw>0&&craft.rotationYaw<90,"midcorner reload fixture");craft=reload(craft);controller=craft.autopilot.controller();for(int i=0;i<90;i++)craft.autopilot.tick();
         require(!controller.enabled()&&controller.status.equals("End of route")&&Math.abs(craft.posZ-base.getZ()-3)<.025,"held signal passes waypoint, turns corner and stops at route end");
         craft.rotationYaw=0;craft.setPosition(base.getX(),base.getY()+16,base.getZ());controller.setEnabled(true);craft.autopilot.tick();require(controller.enabled(),"route accepts exactly sixteen blocks of sensor clearance");
         controller.setEnabled(false);craft.autopilot.tick();world.setBlockState(base.add(0,-1,1),Blocks.CONCRETE.getDefaultState(),2);craft.rotationYaw=90;craft.setPosition(base.getX(),base.getY()+16,base.getZ());controller.setEnabled(true);craft.autopilot.tick();require(craft.posZ>base.getZ()+.01,"restart derives route direction from current facing");
@@ -114,7 +114,7 @@ final class AutopilotRuntimeChecks {
         net.minecraft.entity.player.EntityPlayerMP owner=world.getMinecraftServer().getPlayerList().getPlayers().get(0);
         net.minecraft.block.Block gear=null;for(net.minecraft.block.Block b:net.minecraft.block.Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}require(gear!=null,"gear fixture");
         for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(6,5,6)))world.setBlockToAir(p);
-        for(BlockPos offset:Arrays.asList(BlockPos.ORIGIN,new BlockPos(2,0,0),new BlockPos(0,0,2))){BlockPos at=base.add(offset);world.setBlockState(at,gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0);}
+        for(BlockPos offset:Arrays.asList(BlockPos.ORIGIN,new BlockPos(2,0,0),new BlockPos(0,0,2))){BlockPos at=base.add(offset);world.setBlockState(at,gear.getDefaultState().withProperty(BlockTelescopicLandingGear.EXTENDED,true),2);((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0);}
         for(BlockPos offset:Arrays.asList(new BlockPos(0,1,0),new BlockPos(0,1,1),new BlockPos(0,1,2)))world.setBlockState(base.add(offset),Blocks.STONE.getDefaultState(),2);
         world.setBlockState(base.add(2,1,0),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
         for(BlockPos offset:Arrays.asList(new BlockPos(1,1,1),new BlockPos(2,1,1),new BlockPos(1,1,2)))world.setBlockState(base.add(offset),net.minecraft.block.Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState(),2);
@@ -131,10 +131,10 @@ final class AutopilotRuntimeChecks {
         require(craft.autopilot.enabled()&&craft.autopilot.controller().status.equals("Parked at waypoint")&&craft.hoverTarget==targetHeight,"sixteen-block Hover stop with gear below sensor remains parked without resetting height or timer");
         require(Math.abs(craft.toWorld(new net.minecraft.util.math.Vec3d(craft.autopilot.controller().getPos())).y-waypointPos.getY()-1-16)<.001,"waypoint height measures sensor clearance above waypoint top");
         craft.setPosition(base.getX(),base.getY(),base.getZ());require(craft.setHover(false),"fixture descends to Taxi before Block stop");waypoint.stopMode=0;waypoint.autoDepart=true;
-        craft.autopilot.tick();require(craft.isDead,"Block waypoint restores actual blocks");
+        craft.autopilot.tick();VehicleTransferRuntimeChecks.drain(world);require(craft.isDead,"Block waypoint restores actual blocks");
         TileEntityAutopilot parked=(TileEntityAutopilot)world.getTileEntity(controllerPos);require(parked!=null&&parked.departureSeat!=null,"Block stop persists pending departure");
         NBTTagCompound saved=parked.writeToNBT(new NBTTagCompound());TileEntityAutopilot restored=new TileEntityAutopilot();restored.readFromNBT(saved);require(restored.departureSeat.equals(seatPos)&&owner.getUniqueID().equals(restored.departureOwner),"pending departure survives save");
-        parked.departureAt=world.getTotalWorldTime();for(int i=0;i<100&&world.getTileEntity(controllerPos)==parked;i++)VehicleAutopilot.depart(parked);
+        parked.departureAt=Long.MAX_VALUE;parked.departureDirect=false;parked.pulseDeparture();require(parked.enabled()&&parked.departureDirect&&parked.departureAt==world.getTotalWorldTime()+1,"screen pulse reschedules already-enabled Block departure");parked.departureAt=world.getTotalWorldTime();for(int i=0;i<100&&world.getTileEntity(controllerPos)==parked;i++){VehicleAutopilot.depart(parked);VehicleTransferRuntimeChecks.drain(world);}
         EntityGroundVehicle departed=null;for(EntityGroundVehicle candidate:VehicleLookup.loaded(world))if(candidate!=craft&&candidate.getEntityBoundingBox().grow(2).contains(new net.minecraft.util.math.Vec3d(base).addVector(1,1,1)))departed=candidate;
         require(departed!=null&&!departed.isDead&&departed.autopilot.enabled(),"timed Block waypoint reassembles with autopilot enabled");departed.setDead();
         for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(6,5,6)))world.setBlockToAir(p);

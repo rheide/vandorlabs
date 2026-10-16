@@ -35,6 +35,7 @@ public final class VehicleAuthorizationRuntimeChecks {
                 require(craft.controller()!=null,"authorization fixture uses a genuine Vehicle Controller");
                 Class<?> type=Class.forName("com.vandorlabs.vehicle.VehicleService$Preview");java.lang.reflect.Constructor<?> constructor=type.getDeclaredConstructor(WorldServer.class,VehicleStructure.class,BlockPos.class,EntityGroundVehicle.class,String.class,boolean.class,BlockPos.class);constructor.setAccessible(true);Object preview=constructor.newInstance(player.getServerWorld(),craft,origin,null,"",true,craft.controller().pos);java.lang.reflect.Field token=type.getDeclaredField("token");token.setAccessible(true);previews.put(player.getUniqueID(),preview);
                 VehicleService.confirm(player,(UUID)token.get(preview));
+                VehicleTransferRuntimeChecks.drain(player.getServerWorld());
             }finally{MinecraftForge.EVENT_BUS.unregister(denied);}
             require(denied.seen.contains(upper),"manual confirmation bypassed generated upper-cell protection");
             require(expanded.structure.matches(player.world,expanded.origin) && !VehicleTransfer.pending(player.getServerWorld()),"cancelled protection changed expanded blocks or left a transfer journal");

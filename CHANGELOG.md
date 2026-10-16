@@ -2,11 +2,18 @@
 
 ## 2.1
 
+- Add a **Next >** departure button to Vehicle Status screens, plus side-by-side **Block**, **Taxi**, and **Hover** mode buttons. Retain permission and mode-transition checks on full and half-height screens, inputs, and consoles.
+- Allow Hover-to-Taxi transitions within three blocks of solid ground only with fully extended landing gear. Support redstone-controlled gear animation and matching collision in both modes, allow retraction only in Hover, and stop extension at obstacles instead of clipping through terrain. Remove automatic altitude-based gear retraction.
+- Boost Hover cruising speed by 25% while holding Sprint. Emit sparse, family-specific thruster particles only during forward Sprint movement in Hover; exclude Antigravity Plates and Repulsor Arrays from forward exhaust.
+- Apply the latest Hover input instead of replaying stale queued commands. Discard movement input during conversion and synchronize the conversion hold before client prediction resumes.
+- Move vehicle collision preparation and transfer journal/ownership writes onto bounded workers. Keep durable preparation ahead of world mutation, defer lighting and neighbor notifications, and checkpoint affected chunks incrementally without waiting for disk on the server thread. Pause source machine ticking during pending assembly and restore it when assembly is cancelled.
+- Reuse canopy vertex buffers and trace selection rays in canopy-local coordinates. Deduplicate spatial collision candidates before testing them, and avoid repeated parking collision builds during seat exit and mode requests.
+
 - Prepare cold vehicle canopy animation poses before advancing their collision shape, including immediate closure on boarding. For supported configurations, perform canopy collision subdivision and merging on the bounded worker; keep the current pose while preparation is pending.
 - Index canopy collision boxes spatially so particles and nearby entities only test relevant surfaces. Reject canopy selection rays outside the posed geometry bounds while preserving exact hits and collision shapes.
 - Align Autopilot forward travel with manual Pilot Seat driving and use bounded route lookahead for smoother headings along stair-step diagonal routes. Preserve marker traversal, waypoint stops and junction safeguards.
 - Reduce canopy animation stalls in vehicle mode by grouping and deduplicating collision boxes with primitive tables, retaining the same ordered collision geometry at every animation step.
-- Prepare collision poses for supported single-canopy assemblies incrementally after vehicle conversion, merging captured coordinates on a bounded background worker. Reuse bounded geometry caches while block states and settings match, discard stale preparation after changes, and retain exact fresh collision for unsupported configurations or preparation failures. Cache immutable seat, controller and propulsion indexes with each vehicle snapshot.
+- Prepare collision poses for supported single-canopy assemblies incrementally after vehicle conversion, merging captured coordinates on a bounded background worker. Reuse bounded geometry caches while block states and settings match, discard stale preparation after changes, and retain the last exact pose until replacement collision is ready, including after preparation failures. Cache immutable seat, controller and propulsion indexes with each vehicle snapshot.
 - Render canopy glazing after opaque walls, screens and other tile artwork, preserving tint when viewed from either side of the pane in block and vehicle modes.
 - Keep third-person cameras outside parked Pilot Seat cockpits while preserving collision with surrounding terrain, and correct the front-view camera extension for captured vehicles.
 - Put Park, Taxi and Hover channel fields directly on Vehicle Controller, with an adjacent switch button for each mode and the current mode disabled. Apply channel changes before switching modes.
@@ -48,7 +55,7 @@
 
 - Remove the clicked constituent of joined Canopies; correct Wheel texture UVs and animate vehicle tyres and steering. Restore previous-value right-clicks across Pilot Seat, canopy, Autopilot and Waypoint controls.
 
-- Add Hover mode with altitude hold, lift requirements, safe Taxi transitions, automatic landing-gear retraction and optional Park/Taxi/Hover channels. Captured switches, buttons and analog controls share the world's channel network.
+- Add Hover mode with altitude hold, lift requirements, safe Taxi transitions, redstone-controlled landing gear and optional Park/Taxi/Hover channels. Captured switches, buttons and analog controls share the world's channel network.
 - Add Autopilot and Waypoint blocks, configurable route markers, pulse journeys, delayed departures and Vehicle Status screens. Stop at route gaps, ambiguous junctions, obstacles and out-of-range terrain.
 - Add slab-mounted Small, Medium and Large Wheels, configurable vehicle block limits, early rotation checks and conservative support for modded building blocks. Repair newly copied ramp journals and missing landing-gear reservations; allow channel-controlled ramp endpoints aboard vehicles.
 - Add Long Canopy with a three-block depth and four profiles. Both opening canopy sizes join up to nine columns with shared materials and opening motion.

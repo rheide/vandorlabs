@@ -33,14 +33,14 @@ public final class VehicleStructure {
     private final Map<BlockPos,Cell> byPosition;
     private final List<BlockPos> pilotSeats;
     private final Cell controller;
-    public final List<Cell> liftCells;
+    public final List<Cell> liftCells,exhaustCells;
     public final boolean hasThruster;
 
     public VehicleStructure(List<Cell> cells,BlockPos seat,EnumFacing facing,int gearCount) {
         if(cells.isEmpty()||cells.size()>MAX_BLOCKS||!facing.getAxis().isHorizontal()||gearCount<1)
             throw new IllegalArgumentException("Invalid vehicle structure");
         Map<BlockPos,Cell> positions=new LinkedHashMap<>();
-        List<BlockPos> seats=new ArrayList<>();List<Cell> lifts=new ArrayList<>();boolean thruster=false;Cell control=null;
+        List<BlockPos> seats=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>();boolean thruster=false;Cell control=null;
         int x=0,y=0,z=0;
         for(Cell cell:cells) {
             if(cell.pos.getX()<0||cell.pos.getY()<0||cell.pos.getZ()<0
@@ -50,13 +50,14 @@ public final class VehicleStructure {
             if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat
                     && !cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER))seats.add(cell.pos);
             if(control==null&&cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)control=cell;
+            if(VehicleFlight.exhaust(cell.state.getBlock()))exhausts.add(cell);
             if(VehicleFlight.lift(cell.state.getBlock()))lifts.add(cell);
             else if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
         }
         if(!positions.containsKey(seat)||!(positions.get(seat).state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat))
             throw new IllegalArgumentException("Missing pilot seat");
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);
-        this.pilotSeats=Collections.unmodifiableList(seats);this.controller=control;this.liftCells=Collections.unmodifiableList(lifts);this.hasThruster=thruster;
+        this.pilotSeats=Collections.unmodifiableList(seats);this.controller=control;this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;
         this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);
     }
     public Cell at(BlockPos pos){return byPosition.get(pos);}

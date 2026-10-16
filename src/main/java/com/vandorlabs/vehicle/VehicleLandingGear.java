@@ -9,34 +9,60 @@ import java.util.*;
 /** Restore fully extended gear as part of the checked, atomic parking footprint. */
 public final class VehicleLandingGear {
     private VehicleLandingGear(){}
-    public static void retract(EntityGroundVehicle craft){
+    private static final Map<EntityGroundVehicle,Map<BlockPos,Float>> corrections=new WeakHashMap<>();
+    static void correct(EntityGroundVehicle craft,BlockPos pos,float progress){corrections.computeIfAbsent(craft,k->new LinkedHashMap<>()).put(pos,progress);}
+    public static boolean extended(EntityGroundVehicle craft){
+        if(craft.view==null)return false;
+        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){TileEntityLandingGear tile=(TileEntityLandingGear)raw;
+            if(tile.isRoot()&&(!craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED)||Math.abs(tile.progress-tile.getExtensionPixels()/16F)>.0001F))return false;}
+        return true;
+    }
+    public static boolean setExtended(EntityGroundVehicle craft,BlockPos pos,boolean extend){
+        if(craft.world.isRemote||craft.transferInProgress||craft.ownershipBlocked||!extend&&!craft.hover)return false;
+        net.minecraft.tileentity.TileEntity raw=craft.view.getTileEntity(pos);if(!(raw instanceof TileEntityLandingGear)||!((TileEntityLandingGear)raw).isRoot())return false;
         List<VehicleStructure.Cell> cells=new ArrayList<>();boolean changed=false;
-        for(VehicleStructure.Cell cell:craft.structure.cells){
-            if(cell.state.getBlock() instanceof BlockTelescopicLandingGear && !cell.state.getValue(BlockTelescopicLandingGear.LOWER) && cell.state.getValue(BlockTelescopicLandingGear.EXTENDED)){
-                cells.add(new VehicleStructure.Cell(cell.pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,false),cell.tileData()));changed=true;
-            }else cells.add(cell);
-        }
-        if(changed)craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
-        // Share the same cover predicate as placed gear; the captured world is read-only.
-        for(net.minecraft.tileentity.TileEntity raw:new ArrayList<>(craft.view.tiles.values()))if(raw instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor){
-            com.vandorlabs.tiles.TileEntityProgrammableTrapdoor cover=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)raw;
-            if(cover.isCover()){
-                boolean open=com.vandorlabs.tiles.LandingGearCovers.needsOpen(cover);
-                boolean actual=raw.getBlockType().getActualState(craft.view.getBlockState(raw.getPos()),craft.view,raw.getPos()).getValue(net.minecraft.block.BlockDoor.OPEN);
-                if(open!=actual)VehicleDoors.toggle(craft,raw.getPos());
-            }
+        for(VehicleStructure.Cell cell:craft.structure.cells){if(cell.pos.equals(pos)&&cell.state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend){cells.add(new VehicleStructure.Cell(pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend),((TileEntityLandingGear)raw).writeToNBT(new NBTTagCompound())));changed=true;}else cells.add(cell);}
+        if(changed){craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),false);craft.signals.changed(pos);}
+        return true;
+    }
+    public static void refreshSignals(EntityGroundVehicle craft){
+        if(craft.world.isRemote||craft.view==null)return;
+        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){TileEntityLandingGear gear=(TileEntityLandingGear)raw;
+            if(!gear.isRoot()||gear.getMode()==0||gear.getRedstoneChannels().isEmpty())continue;
+            boolean powered=false;for(int i=0;i<gear.getRedstoneChannels().size();i++)powered|=com.vandorlabs.redstone.RedstoneChannels.level(craft.world,gear.getRedstoneChannels().get(i))>0;
+            setExtended(craft,gear.getPos(),gear.getMode()==1?powered:!powered);
         }
     }
     public static void tick(EntityGroundVehicle craft){
-        if(craft.view==null || craft.ownershipBlocked)return;
-        Set<BlockPos> changed=new HashSet<>();
+        if(craft.view==null||craft.ownershipBlocked||craft.transferInProgress)return;
+        Map<BlockPos,Float> desired=new LinkedHashMap<>();
+        if(craft.world.isRemote){Map<BlockPos,Float> pending=corrections.get(craft);if(pending!=null)desired.putAll(pending);}
         for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){
-            TileEntityLandingGear tile=(TileEntityLandingGear)raw;float before=tile.progress;tile.update();if(before!=tile.progress)changed.add(tile.getPos());
+            TileEntityLandingGear tile=(TileEntityLandingGear)raw;if(!tile.isRoot())continue;tile.previous=tile.progress;
+            if(craft.world.isRemote)continue;
+            boolean extend=craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED);
+            float target=extend?tile.getExtensionPixels()/16F:0;
+            // Taxi may finish an extension, but cannot retract its ground supports.
+            if(!craft.hover&&target<tile.progress)continue;
+            float next=tile.progress<target?Math.min(target,tile.progress+.05F):Math.max(target,tile.progress-.05F);
+            if(next==tile.progress)continue;
+            if(!craft.world.isRemote&&next>tile.progress){
+                float before=tile.progress;tile.progress=next;boolean blocked=false;
+                try{VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
+                    for(net.minecraft.util.math.AxisAlignedBB box:((BlockTelescopicLandingGear)tile.getBlockType()).vehicleBoxes(craft.view,tile.getPos()))
+                        if(!craft.world.getCollisionBoxes(craft,pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2).shrink(1e-6)).isEmpty()){blocked=true;break;}
+                }finally{tile.progress=before;}
+                if(blocked)continue;
+            }
+            desired.put(tile.getPos(),next);
         }
-        if(changed.isEmpty())return;
+        if(desired.isEmpty()||!craft.collisionCache.readyForCanopyPose(craft.view,desired))return;
+        for(Map.Entry<BlockPos,Float> entry:desired.entrySet())((TileEntityLandingGear)craft.view.getTileEntity(entry.getKey())).progress=entry.getValue();
+        if(craft.world.isRemote)corrections.remove(craft);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
-        for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(changed.contains(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound())):cell);
+        for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound())):cell);
         craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
+        if(!craft.world.isRemote)for(BlockPos pos:desired.keySet())craft.signals.changed(pos);
     }
     public static VehicleRotation.Plan parking(VehicleStructure source,BlockPos origin){
         Map<BlockPos,VehicleStructure.Cell> cells=new LinkedHashMap<>();
