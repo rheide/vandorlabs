@@ -16,7 +16,11 @@ import java.util.*;
 public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLandingGear> {
     private static final double[] WHEEL_CENTERS={.25,.375,.4375,-.125},WHEEL_RADII={.25,.375,.4375,.875};
     private static final Map<IBakedModel,IBakedModel[]> wheelModels=new IdentityHashMap<>();
-    static void clearWheelModels(){wheelModels.clear();}
+    private static final Map<IBakedModel,int[]> modelVertices=new IdentityHashMap<>();
+    private static final EnumFacing[] SIDES=EnumFacing.values();
+    static boolean cacheModels=true;
+    static int modelBuilds;
+    static void clearWheelModels(){wheelModels.clear();modelVertices.clear();}
     static IBakedModel wheelPart(IBakedModel model,boolean tyre){
         IBakedModel[] parts=wheelModels.computeIfAbsent(model,m->new IBakedModel[]{new WheelPart(m,false),new WheelPart(m,true)});
         return parts[tyre?1:0];
@@ -99,5 +103,20 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         Minecraft mc=Minecraft.getMinecraft();
         draw(mc.getRenderItem().getItemModelMesher().getModelManager().getModel(model));
     }
-    private void draw(IBakedModel model){Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(model,1,1,1,1);}
+    private void draw(IBakedModel model){
+        boolean stable=model instanceof WheelPart?DoorQuadPlan.stableQuads(((WheelPart)model).original):DoorQuadPlan.stableQuads(model);
+        // Shader formats and dynamic model implementations retain their renderer path.
+        if(!cacheModels||!stable||net.minecraft.client.renderer.vertex.DefaultVertexFormats.ITEM.getNextOffset()!=28){Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(model,1,1,1,1);return;}
+        int[] data=modelVertices.get(model);
+        if(data==null){
+            BufferBuilder prepared=new BufferBuilder(4096);prepared.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.ITEM);
+            for(EnumFacing side:SIDES)prepare(prepared,model.getQuads(null,side,0));prepare(prepared,model.getQuads(null,null,0));
+            prepared.finishDrawing();data=new int[prepared.getVertexCount()*7];prepared.getByteBuffer().asIntBuffer().get(data);modelVertices.put(model,data);modelBuilds++;
+        }
+        if(data.length==0)return;
+        BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.ITEM);buffer.addVertexData(data);Tessellator.getInstance().draw();
+    }
+    private static void prepare(BufferBuilder buffer,List<BakedQuad> quads){
+        for(BakedQuad quad:quads){buffer.addVertexData(quad.getVertexData());buffer.putColorRGB_F4(1,1,1);net.minecraft.util.math.Vec3i normal=quad.getFace().getDirectionVec();buffer.putNormal(normal.getX(),normal.getY(),normal.getZ());}
+    }
 }

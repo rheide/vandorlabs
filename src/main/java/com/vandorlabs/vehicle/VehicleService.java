@@ -388,7 +388,7 @@ public final class VehicleService {
         for(AxisAlignedBB box:parkedGeometry.boxes)
             require(player.world.getCollisionBoxes(entity,box.offset(origin).shrink(1e-6)).isEmpty(),"Snapped craft geometry overlaps an obstacle.");
     }
-    private static Entity[] assemblyAllowed(World world,VehicleStructure structure,BlockPos origin,Entity actor){
+    static Entity[] assemblyAllowed(World world,VehicleStructure structure,BlockPos origin,Entity actor){
         java.util.List<Entity> allowed=new ArrayList<>();allowed.add(actor);
         for(com.vandorlabs.entity.EntityChairSeat chair:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,structure.bounds.offset(origin).grow(1)))
             if(structure.pilotSeats().contains(chair.getChairPos().subtract(origin)))allowed.addAll(chair.getPassengers());
@@ -407,7 +407,7 @@ public final class VehicleService {
         if(before!=null && now-before<1500 || requests.size()>1024)return false;requests.put(key,now);return true;
     }
     @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event) {
-        VehicleLookup.unload(event.getWorld());
+        VehicleLookup.unload(event.getWorld());VehicleAutopilot.unload(event.getWorld());
         if(event.getWorld() instanceof WorldServer)VehicleTransfer.unload((WorldServer)event.getWorld());
         jobs.values().removeIf(job->job.world==event.getWorld());previews.values().removeIf(preview->preview.world==event.getWorld());
         signals.removeIf(signal->(signal.craft==null?signal.seat.getWorld():signal.craft.world)==event.getWorld());

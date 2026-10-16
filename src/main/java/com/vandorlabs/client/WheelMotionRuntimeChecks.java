@@ -148,6 +148,14 @@ public final class WheelMotionRuntimeChecks {
         require(mc.world.getBlockState(parked)==root.state,"parked reference state installed kind="+kind+" at="+parked+" loaded="+mc.world.isBlockLoaded(parked)+" changed="+installed+" expected="+root.state+" actual="+mc.world.getBlockState(parked));
         if(kind>=3){TileEntity tile=mc.world.getTileEntity(parked);if(tile==null){tile=gear.createTileEntity(mc.world,root.state);mc.world.setTileEntity(parked,tile);}require(tile instanceof TileEntityLandingGear,"parked reference gear tile installed");NBTTagCompound tag=VehicleTileData.translated(root.tileData(),parked.subtract(ROOT));tile.readFromNBT(tag);}
         VehicleWheelMotion.sample(craft,1);
+        if(kind>=3){
+            BufferedImage reference;
+            TELandingGear.cacheModels=false;try{reference=render(mc,craft,kind,false,false);}finally{TELandingGear.cacheModels=true;}
+            BufferedImage cached=render(mc,craft,kind,false,false);require(difference(reference,cached,false)==0,"prepared gear vertices match vanilla pixels kind="+kind);
+            int builds=TELandingGear.modelBuilds;render(mc,craft,kind,false,false);require(TELandingGear.modelBuilds==builds,"warm gear draw reuses prepared vertices");
+            TELandingGear.clearWheelModels();cached=render(mc,craft,kind,false,false);require(TELandingGear.modelBuilds>builds&&difference(reference,cached,false)==0,"gear model reload rebuilds identical vertices");
+            System.out.println("[vandorlabs][reprolab] gear-prepared-model PASS size="+kind+" exact-vanilla-pixels warm-reuse reload-invalidation");
+        }
         BufferedImage[] images=new BufferedImage[POSES.length];images[0]=render(mc,craft,kind,true,false);images[1]=render(mc,craft,kind,false,false);
         double[] travel={.29,-.29,.29,.29,.29,.7,1.0};float[] steering={0,0,-1,1,0,1,-1};
         for(int p=2;p<POSES.length;p++){

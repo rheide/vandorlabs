@@ -39,6 +39,18 @@ public final class CanopyCollisionIndex {
     }
     private static int cell(double coordinate){return MathHelper.floor(coordinate*SCALE);}
     public AxisAlignedBB bounds(){return bounds;}
+    /** Allocation-free existence query for canopy sweeps; touching faces remain clear. */
+    public boolean intersects(AxisAlignedBB query){
+        if(bounds==null||!bounds.intersects(query))return false;
+        if(offsets==null){for(AxisAlignedBB box:boxes)if(box.intersects(query))return true;return false;}
+        int ax=Math.max(0,cell(query.minX)-minX),bx=Math.min(nx-1,cell(query.maxX)-minX),ay=Math.max(0,cell(query.minY)-minY),by=Math.min(ny-1,cell(query.maxY)-minY),az=Math.max(0,cell(query.minZ)-minZ),bz=Math.min(nz-1,cell(query.maxZ)-minZ);
+        for(int z=az;z<=bz;z++)for(int y=ay;y<=by;y++)for(int x=ax;x<=bx;x++){
+            int bucket=(z*ny+y)*nx+x;
+            for(int at=offsets[bucket];at<offsets[bucket+1];at++)if(boxes.get(references[at]).intersects(query))return true;
+        }
+        for(int index:oversized)if(boxes.get(index).intersects(query))return true;
+        return false;
+    }
     /** Exact tests returned for deterministic performance checks. Oversized shapes use a bounded fallback. */
     public int addIntersecting(AxisAlignedBB query,List<AxisAlignedBB> output){
         if(bounds==null||!bounds.intersects(query))return 0;

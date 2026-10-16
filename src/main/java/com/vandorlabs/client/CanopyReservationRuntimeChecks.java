@@ -62,6 +62,6 @@ final class CanopyReservationRuntimeChecks {
             System.out.println("[vandorlabs][reprolab] canopy-released-reservation PASS denied-shape-edit-exact-snapshot no-reacquire-before-permission parked-closed-NBT air-reacquire foreign-block-safe-wait removal-retry");
         }finally{actor.setGameType(game);actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);clear(world);world.setTotalWorldTime(time);actor.setPosition(before.x,before.y,before.z);}
     }
-    private static void advance(World world,TileEntityCanopy root,int ticks){for(int i=0;i<ticks;i++){world.setTotalWorldTime(world.getTotalWorldTime()+1);root.update();}}
+    private static void advance(World world,TileEntityCanopy root,int ticks){for(int i=0;i<ticks;i++){world.setTotalWorldTime(world.getTotalWorldTime()+1);CanopyPreparationRuntimeChecks.await(root);root.update();}}
     private static void clear(World world){for(BlockPos cell:BlockPos.getAllInBox(POS.add(-7,-3,-4),POS.add(9,13,8))){world.getChunkFromBlockCoords(cell);world.setBlockToAir(cell);}}
 }

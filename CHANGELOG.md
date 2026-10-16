@@ -2,6 +2,10 @@
 
 ## 2.1
 
+- Replace canopy closure's nested sweep/ramp comparisons with cached spatial queries while retaining exact touching margins. Prepare cold swept geometry on a bounded worker and hold the safe pose until ready, without waiting on the server thread. Build cold canopy collision indexes on a bounded worker, retaining exact ordered collision checks while preparation is pending. Remove temporary vectors from canopy triangle picking, and reuse prepared landing-gear model vertices with resource-reload invalidation.
+- Start Autopilot from outside a block-mode craft through bounded discovery and protected queued assembly. Report missing route markers beneath the sensor and other blocked-start reasons instead of claiming to follow a route while stationary.
+- Smooth repeating diagonal route steps with a longer lookahead while retaining the existing lookahead for single 90-degree corners. Allow an unambiguous side continuation when starting at a corner, preserve repeated closed-loop travel, and retain manual waypoint stops.
+
 - Add a **Next >** departure button to Vehicle Status screens, plus side-by-side **Block**, **Taxi**, and **Hover** mode buttons. Retain permission and mode-transition checks on full and half-height screens, inputs, and consoles.
 - Allow Hover-to-Taxi transitions within three blocks of solid ground only with fully extended landing gear. Support redstone-controlled gear animation and matching collision in both modes, allow retraction only in Hover, and stop extension at obstacles instead of clipping through terrain. Remove automatic altitude-based gear retraction.
 - Boost Hover cruising speed by 25% while holding Sprint. Emit sparse, family-specific thruster particles only during forward Sprint movement in Hover; exclude Antigravity Plates and Repulsor Arrays from forward exhaust.

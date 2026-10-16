@@ -45,7 +45,7 @@ final class SharedCanopyRampRuntimeChecks {
             actor.setPosition(RAMP.getX()+.5,RAMP.getY()+2,RAMP.getZ()-2);
             TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(RAMP);
             require(ramp.configureHalfOffsets(actor,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"configure exact two-high tower");ramp.setRedstoneChannels(ChannelList.of(801));
-            actor.setPosition(RAMP.getX()-8,RAMP.getY()+8,RAMP.getZ()-6);canopy.update();
+            actor.setPosition(RAMP.getX()-8,RAMP.getY()+8,RAMP.getZ()-6);CanopyPreparationRuntimeChecks.await(canopy);canopy.update();
             signal(ramp,canopy,true,order,source);signal(ramp,canopy,false,order,source);
             for(int tick=0;tick<32;tick++)advance(world,canopy,ramp,rampFirst);
             require(!ramp.attached()&&!ramp.isWaitingForCanopy()&&canopy.progress==0,"rapid on/off cancels pending deployment without consuming sources");
@@ -99,5 +99,5 @@ final class SharedCanopyRampRuntimeChecks {
             require(rotated.write().equals(craft.structure.write()),"four vehicle turns preserve released canopy ownership and source settings");
         }finally{craft.setDead();}
     }
-    private static void advance(World world,TileEntityCanopy canopy,TileEntityRampController ramp,boolean rampFirst){world.setTotalWorldTime(world.getTotalWorldTime()+1);if(rampFirst){ramp.scheduledTick();canopy.update();}else{canopy.update();ramp.scheduledTick();}}
+    private static void advance(World world,TileEntityCanopy canopy,TileEntityRampController ramp,boolean rampFirst){world.setTotalWorldTime(world.getTotalWorldTime()+1);if(rampFirst){ramp.scheduledTick();CanopyPreparationRuntimeChecks.await(canopy);canopy.update();}else{CanopyPreparationRuntimeChecks.await(canopy);canopy.update();ramp.scheduledTick();}}
 }

@@ -82,6 +82,10 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     private String cachedKey;
     private com.vandorlabs.canopy.CanopyCollisionIndex collisionIndex;
     private List<AxisAlignedBB> indexedBoxes;
+    private static final java.util.concurrent.ThreadPoolExecutor INDEX_WORKER=new java.util.concurrent.ThreadPoolExecutor(1,1,30,java.util.concurrent.TimeUnit.SECONDS,new java.util.concurrent.ArrayBlockingQueue<Runnable>(2),task->{Thread thread=new Thread(task,"Vandor canopy collision index");thread.setDaemon(true);return thread;},new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
+    private java.util.concurrent.Future<com.vandorlabs.canopy.CanopyCollisionIndex> pendingIndex;
+    private boolean indexFailed;
+    private AxisAlignedBB collisionBounds;
     private List<CanopyMesh.Face> boundsFaces;
     private BlockPos boundsPos;
     private EnumFacing boundsFacing;
@@ -343,15 +347,30 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
 
     private com.vandorlabs.canopy.CanopyCollisionIndex collisionIndex(){
         List<AxisAlignedBB> current=boxes();
-        if(collisionIndex==null||indexedBoxes!=current){collisionIndex=new com.vandorlabs.canopy.CanopyCollisionIndex(current);indexedBoxes=current;}
+        if(indexedBoxes!=current){cancelIndex();indexedBoxes=current;collisionIndex=null;collisionBounds=null;indexFailed=false;}
+        if(collisionIndex==null&&!indexFailed){
+            if(pendingIndex==null&&INDEX_WORKER.getQueue().remainingCapacity()>0){
+                // The captured list and its boxes are immutable; workers never access this tile or world.
+                try{pendingIndex=INDEX_WORKER.submit(()->new com.vandorlabs.canopy.CanopyCollisionIndex(current));}catch(java.util.concurrent.RejectedExecutionException busy){}
+            }
+            if(pendingIndex!=null&&pendingIndex.isDone()){
+                try{collisionIndex=pendingIndex.get();}catch(InterruptedException interrupted){Thread.currentThread().interrupt();indexFailed=true;}catch(java.util.concurrent.ExecutionException|java.util.concurrent.CancellationException failed){indexFailed=true;}
+                pendingIndex=null;
+            }
+        }
         return collisionIndex;
     }
+    private void cancelIndex(){if(pendingIndex!=null){pendingIndex.cancel(false);if(pendingIndex instanceof Runnable)INDEX_WORKER.remove((Runnable)pendingIndex);pendingIndex=null;}}
     /** Exact region query for small entities and particles; geometry and ordering are unchanged. */
     public int addCollisionBoxes(AxisAlignedBB query,List<AxisAlignedBB> output){
         if(!draws()||block()==null)return 0;
         // A miss should not tessellate collision geometry just to reject it.
         AxisAlignedBB geometry=geometryBounds();if(geometry==null||!geometry.grow(resizable()?1D/16+.0020001:.0020001).intersects(query))return 0;
-        return collisionIndex().addIntersecting(query,output);
+        com.vandorlabs.canopy.CanopyCollisionIndex index=collisionIndex();
+        if(index!=null)return index.addIntersecting(query,output);
+        // Exact, ordered collision remains available under queue pressure; never wait for an index.
+        for(AxisAlignedBB box:indexedBoxes)if(box.intersects(query))output.add(box);
+        return indexedBoxes.size();
     }
     private AxisAlignedBB geometryBounds(){
         List<CanopyMesh.Face> geometry=faces();EnumFacing direction=facing();
@@ -364,7 +383,14 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         return posedBounds;
     }
     public AxisAlignedBB selectionBounds() {
-        AxisAlignedBB bounds=collisionIndex().bounds();return bounds==null?new AxisAlignedBB(pos):bounds;
+        com.vandorlabs.canopy.CanopyCollisionIndex index=collisionIndex();
+        if(index!=null){AxisAlignedBB bounds=index.bounds();return bounds==null?new AxisAlignedBB(pos):bounds;}
+        if(collisionBounds==null&&!indexedBoxes.isEmpty()){
+            AxisAlignedBB first=indexedBoxes.get(0);double x0=first.minX,y0=first.minY,z0=first.minZ,x1=first.maxX,y1=first.maxY,z1=first.maxZ;
+            for(int i=1;i<indexedBoxes.size();i++){AxisAlignedBB box=indexedBoxes.get(i);x0=Math.min(x0,box.minX);y0=Math.min(y0,box.minY);z0=Math.min(z0,box.minZ);x1=Math.max(x1,box.maxX);y1=Math.max(y1,box.maxY);z1=Math.max(z1,box.maxZ);}
+            collisionBounds=new AxisAlignedBB(x0,y0,z0,x1,y1,z1);
+        }
+        return collisionBounds==null?new AxisAlignedBB(pos):collisionBounds;
     }
 
     public RayTraceResult trace(Vec3d start, Vec3d end) {
@@ -460,8 +486,8 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         boolean next=powered==large.activateOnPower;if(next!=targetOpen){targetOpen=next;reservationGeometryChanged();com.vandorlabs.canopy.CanopyReservations.targetChanged(this);sync();}
     }
     @Override public void onLoad(){super.onLoad();reservationGeometryChanged();com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);}
-    @Override public void invalidate(){com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
-    @Override public void onChunkUnload(){com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
+    @Override public void invalidate(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
+    @Override public void onChunkUnload(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound n) {
         super.writeToNBT(n);

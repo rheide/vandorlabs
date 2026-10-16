@@ -16,8 +16,27 @@ import java.util.*;
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class CanopyReservations {
     private static final Map<World,Map<BlockPos,List<WeakReference<TileEntityCanopy>>>> WAITS=new WeakHashMap<>();
-    private static final Map<TileEntityCanopy,SweepCache> SWEEPS=new WeakHashMap<>();
-    private static final class SweepCache{final String key;final List<AxisAlignedBB> boxes;SweepCache(String key,List<AxisAlignedBB> boxes){this.key=key;this.boxes=boxes;}}
+    private static final Map<TileEntityCanopy,SweepCache> SWEEPS=new LinkedHashMap<TileEntityCanopy,SweepCache>(8,.75F,true);
+    private static final Map<TileEntityCanopy,PendingSweep> PENDING=new WeakHashMap<>();
+    private static final java.util.concurrent.ThreadPoolExecutor WORKER=new java.util.concurrent.ThreadPoolExecutor(1,1,30,java.util.concurrent.TimeUnit.SECONDS,new java.util.concurrent.ArrayBlockingQueue<Runnable>(4),task->{Thread thread=new Thread(task,"Vandor canopy closure");thread.setDaemon(true);return thread;},new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
+    private static final class SweepCache{final String key;final List<AxisAlignedBB> boxes;final CanopyCollisionIndex index;SweepCache(String key,List<AxisAlignedBB> boxes){this.key=key;this.boxes=Collections.unmodifiableList(boxes);index=new CanopyCollisionIndex(this.boxes);}}
+    private static final class PendingSweep{final String key;java.util.concurrent.Future<SweepCache> future;boolean failed;PendingSweep(String key){this.key=key;}}
+    /** A worker receives only copied mesh coordinates and settings, never a world or tile. */
+    private static final class SweepSource{
+        final String key,kind;final int width;final net.minecraft.util.EnumFacing facing;final BlockPos pos;final com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();final List<CanopyMesh.Face> faces=new ArrayList<>();final double progress;
+        SweepSource(TileEntityCanopy owner,String key,double progress){
+            this.key=key;this.progress=progress;kind=owner.block().kind;width=owner.width();facing=owner.facing();pos=owner.getPos().toImmutable();net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();owner.large.write(tag);settings.read(tag);
+            for(CanopyMesh.Face face:owner.baseFaces()){CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=face.vertices.clone();copy.group=face.group;faces.add(copy);}
+        }
+        SweepCache build(){
+            List<AxisAlignedBB> result=new ArrayList<>(faces.size()*64);
+            for(int sample=0;sample<64;sample++)for(CanopyMesh.Face face:faces){
+                AxisAlignedBB local=CanopyPose.sweptBounds(face,kind,width,settings,progress*sample/64,progress*(sample+1D)/64);
+                Vec3d a=CanopyMesh.rotate(new Vec3d(local.minX,local.minY,local.minZ),facing),b=CanopyMesh.rotate(new Vec3d(local.maxX,local.maxY,local.maxZ),facing);result.add(new AxisAlignedBB(a,b).offset(pos));
+            }
+            return new SweepCache(key,result);
+        }
+    }
     private CanopyReservations(){}
     /** Logical seams survive an intentionally absent physical helper. */
     public static TileEntityCanopy logicalAt(net.minecraft.world.IBlockAccess access,BlockPos pos){
@@ -44,7 +63,7 @@ public final class CanopyReservations {
     }
     public static void targetChanged(TileEntityCanopy owner){if(real(owner))RampCanopyCoordination.changed(owner.getWorld(),owner.getPos());}
     public static void loaded(TileEntityCanopy owner){if(real(owner)){TileEntityCanopy root=owner.owner();root.reservationGeometryChanged();targetChanged(root);}}
-    public static void removed(TileEntityCanopy owner){if(real(owner)){clearWait(owner);targetChanged(owner);}}
+    public static void removed(TileEntityCanopy owner){cancel(owner);SWEEPS.remove(owner);if(real(owner)){clearWait(owner);targetChanged(owner);}}
     private static TileEntityCanopy pendingAware(World world,BlockPos cell){TileEntity tile=world.getTileEntity(cell);return tile instanceof TileEntityCanopy&&!tile.isInvalid()?(TileEntityCanopy)tile:null;}
     // Mutation paths must see World.addedTileEntityList while tile ticks are in
     // progress. The general at() accessor intentionally reads only chunk maps.
@@ -106,18 +125,40 @@ public final class CanopyReservations {
             return false;
         }
     }
-    public static List<AxisAlignedBB> closingSweep(TileEntityCanopy owner){return closingSweep(owner,owner.progress);}
-    private static List<AxisAlignedBB> closingSweep(TileEntityCanopy owner,double progress){
-        String key=owner.getPos()+":"+owner.facing()+":"+owner.width()+":"+owner.centeredPlacement+":"+owner.hollowPlacement+":"+owner.large.key()+":"+owner.model()+":"+owner.mask();
-        SweepCache cached=progress==1?SWEEPS.get(owner):null;if(cached!=null&&cached.key.equals(key))return cached.boxes;
-        List<AxisAlignedBB> result=new ArrayList<>();int samples=64;
-        for(int sample=0;sample<samples;sample++)for(CanopyMesh.Face face:owner.baseFaces()){
-            AxisAlignedBB local=CanopyPose.sweptBounds(face,owner.block().kind,owner.width(),owner.large,progress*sample/samples,progress*(sample+1D)/samples);
-            Vec3d a=CanopyMesh.rotate(new Vec3d(local.minX,local.minY,local.minZ),owner.facing()),b=CanopyMesh.rotate(new Vec3d(local.maxX,local.maxY,local.maxZ),owner.facing());
-            result.add(new AxisAlignedBB(a,b).offset(owner.getPos()));
+    private static String sweepKey(TileEntityCanopy owner){return owner.getPos()+":"+owner.facing()+":"+owner.width()+":"+owner.centeredPlacement+":"+owner.hollowPlacement+":"+owner.large.key()+":"+owner.model()+":"+owner.mask();}
+    private static void cache(TileEntityCanopy owner,SweepCache sweep){SWEEPS.put(owner,sweep);while(SWEEPS.size()>8)SWEEPS.remove(SWEEPS.keySet().iterator().next());}
+    private static void cancel(TileEntityCanopy owner){PendingSweep pending=PENDING.remove(owner);if(pending!=null&&pending.future!=null){pending.future.cancel(false);if(pending.future instanceof Runnable)WORKER.remove((Runnable)pending.future);}}
+    private static SweepCache readySweep(TileEntityCanopy owner){
+        String key=sweepKey(owner);SweepCache cached=SWEEPS.get(owner);if(cached!=null&&cached.key.equals(key))return cached;
+        PendingSweep pending=PENDING.get(owner);if(pending!=null&&!pending.key.equals(key)){cancel(owner);pending=null;}
+        if(pending==null){pending=new PendingSweep(key);PENDING.put(owner,pending);}
+        if(pending.failed)return null;
+        if(pending.future==null&&WORKER.getQueue().remainingCapacity()>0){
+            SweepSource source=new SweepSource(owner,key,1);try{pending.future=WORKER.submit(source::build);}catch(java.util.concurrent.RejectedExecutionException busy){return null;}
         }
-        if(progress==1)SWEEPS.put(owner,new SweepCache(key,Collections.unmodifiableList(result)));
-        return result;
+        if(pending.future==null||!pending.future.isDone())return null;
+        try{SweepCache result=pending.future.get();PENDING.remove(owner);cache(owner,result);owner.retryReservationClose();return result;}
+        catch(Exception failure){pending.failed=true;pending.future=null;com.vandorlabs.VandorLabs.logger.error("Canopy closure preparation failed; holding safe pose at "+owner.getPos(),failure);return null;}
+    }
+    /** Opt-in geometry reference; live closure always uses readySweep's nonblocking worker. */
+    public static List<AxisAlignedBB> closingSweep(TileEntityCanopy owner){
+        String key=sweepKey(owner);SweepCache cached=SWEEPS.get(owner);if(owner.progress==1&&cached!=null&&cached.key.equals(key))return cached.boxes;
+        SweepCache built=new SweepSource(owner,key,owner.progress).build();if(owner.progress==1)cache(owner,built);return built.boxes;
+    }
+    public static boolean preparingClose(TileEntityCanopy owner){if(!PENDING.containsKey(owner))return false;readySweep(owner);return PENDING.containsKey(owner);}
+    @SubscribeEvent public static void tick(net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent event){
+        if(event.world.isRemote||event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END||PENDING.isEmpty())return;int queued=0;
+        for(TileEntityCanopy owner:new ArrayList<>(PENDING.keySet())){
+            if(owner.getWorld()!=event.world)continue;
+            if(owner.isInvalid()||!event.world.isBlockLoaded(owner.getPos())||event.world.getTileEntity(owner.getPos())!=owner){cancel(owner);continue;}
+            PendingSweep pending=PENDING.get(owner);if(pending==null||pending.failed)continue;
+            if(pending.future!=null&&pending.future.isDone()){if(readySweep(owner)!=null)owner.retryReservationClose();}
+            else if(pending.future==null&&queued<4&&WORKER.getQueue().remainingCapacity()>0){queued++;owner.retryReservationClose();}
+        }
+    }
+    @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){
+        for(TileEntityCanopy owner:new ArrayList<>(PENDING.keySet()))if(owner.getWorld()==event.getWorld())cancel(owner);
+        SWEEPS.keySet().removeIf(owner->owner.getWorld()==event.getWorld());WAITS.remove(event.getWorld());
     }
     private static void considerPartner(TileEntityCanopy owner,TileEntityRampController ramp,Map<BlockPos,TileEntityRampController> partners){
         if(ramp.moat&&ramp.attached()&&(ramp.isMoving()||ramp.isOpen())&&!ramp.getRedstoneChannels().intersect(owner.getRedstoneChannels()).isEmpty())partners.put(ramp.getPos(),ramp);
@@ -151,19 +192,18 @@ public final class CanopyReservations {
                 }
             }
         }
-        List<AxisAlignedBB> sweep=candidates.isEmpty()&&partners.isEmpty()?Collections.emptyList():closingSweep(owner,1);
+        CanopyCollisionIndex sweep=null;
+        if(!candidates.isEmpty()||!partners.isEmpty()){SweepCache cached=readySweep(owner);if(cached==null){RampCanopyCoordination.waitingCanopy(owner,partners.keySet());return false;}sweep=cached.index;}
         // A shared Moat's currently empty arc is not permission to close midway.
         // Its persistent source journal proves the complete path until retraction
         // finishes, including after either mechanism is reloaded.
         for(TileEntityRampController ramp:partners.values()){boolean crosses=false;
-            for(AxisAlignedBB path:ramp.vehicleMoatSweep()){for(AxisAlignedBB shell:sweep)if(shell.intersects(path.shrink(1e-7))){crosses=true;break;}if(crosses)break;}
+            for(AxisAlignedBB path:ramp.vehicleMoatSweep())if(sweep.intersects(path.shrink(1e-7))){crosses=true;break;}
             if(crosses){blocked.add(ramp.getPos());ramps.add(ramp.getPos());}
         }
         if(!candidates.isEmpty()){
-            for(AxisAlignedBB swept:sweep)for(java.util.Iterator<Map.Entry<BlockPos,List<AxisAlignedBB>>> pending=candidates.entrySet().iterator();pending.hasNext();){
-                Map.Entry<BlockPos,List<AxisAlignedBB>> candidate=pending.next();
-                for(AxisAlignedBB physical:candidate.getValue())if(swept.intersects(physical.shrink(1e-7))){blocked.add(candidate.getKey());pending.remove();break;}
-            }
+            for(Map.Entry<BlockPos,List<AxisAlignedBB>> candidate:candidates.entrySet())
+                for(AxisAlignedBB physical:candidate.getValue())if(sweep.intersects(physical.shrink(1e-7))){blocked.add(candidate.getKey());break;}
         }
         if(blocked.isEmpty()){if(restoreFootprint(owner))return true;for(TileEntityCanopy member:owner.reservationMembers())for(BlockPos cell:member.cells())if(member.isReleasedCell(cell))blocked.add(cell);}
         Map<BlockPos,List<WeakReference<TileEntityCanopy>>> waits=WAITS.computeIfAbsent(world,k->new HashMap<>());

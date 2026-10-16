@@ -40,7 +40,7 @@ final class AutopilotRuntimeChecks {
         craft.setPosition(base.getX(),base.getY()+17,base.getZ());craft.autopilot.tick();require(!controller.enabled()&&controller.status.equals("Ground out of range"),"route disables above sixteen blocks of sensor clearance");
         TileEntityAnimatedScreenSelector screen=new TileEntityAnimatedScreenSelector();screen.setSurfaceTexture(0,TileEntityAnimatedScreenSelector.VEHICLE_SURFACE);NBTTagCompound saved=screen.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);require(restored.hasVehicleStatus(0),"Vehicle Status screen choice persists");
         craft.setDead();for(BlockPos p:BlockPos.getAllInBox(base.add(-4,-1,-4),base.add(10,5,10)))world.setBlockToAir(p);
-        headingAndLookahead(world,base.add(100,0,0));modeChannels();blockWaypoint(world,base.add(40,0,0));
+        headingAndLookahead(world,base.add(100,0,0));diagonalAndLoop(world,base.add(160,0,0));modeChannels();blockWaypoint(world,base.add(40,0,0));
         com.vandorlabs.VandorLabs.logger.info("Autopilot runtime checks PASS: pulse, waypoint stop, held signal, corner, route end, clearance, Pilot Seat heading, granular lookahead, waypoint boundary, collision, status persistence, mode channels and Block departure");
     }
     private static EntityGroundVehicle routeCraft(WorldServer world,BlockPos base,EnumFacing forward,float yaw){return routeCraft(world,base,forward,yaw,false);}
@@ -138,6 +138,50 @@ final class AutopilotRuntimeChecks {
         EntityGroundVehicle departed=null;for(EntityGroundVehicle candidate:VehicleLookup.loaded(world))if(candidate!=craft&&candidate.getEntityBoundingBox().grow(2).contains(new net.minecraft.util.math.Vec3d(base).addVector(1,1,1)))departed=candidate;
         require(departed!=null&&!departed.isDead&&departed.autopilot.enabled(),"timed Block waypoint reassembles with autopilot enabled");departed.setDead();
         for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(6,5,6)))world.setBlockToAir(p);
+    }
+    private static void diagonalAndLoop(WorldServer world,BlockPos base)throws Exception{
+        clearRoute(world,base);BlockPos at=base.down();marker(world,at);for(int i=0;i<10;i++){at=at.east();marker(world,at);at=at.south();marker(world,at);}
+        EntityGroundVehicle craft=routeCraft(world,base,EnumFacing.EAST,0);java.lang.reflect.Method method=VehicleAutopilot.class.getDeclaredMethod("lookahead",net.minecraft.util.math.Vec3d.class);method.setAccessible(true);
+        double newLow=360,newHigh=-360,oldLow=360,oldHigh=-360;
+        try{for(int tick=0;tick<100;tick++){
+            craft.autopilot.tick();require(craft.autopilot.enabled(),"diagonal route remains active");if(tick<25||tick>80)continue;
+            net.minecraft.util.math.Vec3d sensor=sensor(craft),smooth=(net.minecraft.util.math.Vec3d)method.invoke(craft.autopilot,sensor),original=legacyLookahead(craft,sensor);
+            double newer=Math.toDegrees(Math.atan2(smooth.z-sensor.z,smooth.x-sensor.x)),older=Math.toDegrees(Math.atan2(original.z-sensor.z,original.x-sensor.x));
+            newLow=Math.min(newLow,newer);newHigh=Math.max(newHigh,newer);oldLow=Math.min(oldLow,older);oldHigh=Math.max(oldHigh,older);
+        }}finally{craft.setDead();}
+        require(oldHigh-oldLow>3&&newHigh-newLow<(oldHigh-oldLow)*.5,"diagonal steering wobble reduced: "+(newHigh-newLow)+" / "+(oldHigh-oldLow));
+        clearRoute(world,base);for(int x=0;x<=5;x++)marker(world,base.down().east(x));for(int z=1;z<=5;z++)marker(world,base.down().east(5).south(z));
+        craft=routeCraft(world,base.east(3),EnumFacing.EAST,0);
+        try{craft.autopilot.tick();net.minecraft.util.math.Vec3d position=sensor(craft),aim=(net.minecraft.util.math.Vec3d)method.invoke(craft.autopilot,position);require(aim.squareDistanceTo(legacyLookahead(craft,position))<1e-18,"single 90-degree corner keeps original lookahead");}finally{craft.setDead();}
+        clearRoute(world,base);for(int x=0;x<=6;x++){marker(world,base.down().east(x));marker(world,base.down().east(x).south(6));}for(int z=1;z<6;z++){marker(world,base.down().south(z));marker(world,base.down().east(6).south(z));}
+        world.setBlockState(base.down().east(3),ModBlocks.WAYPOINT.getDefaultState(),2);TileEntityWaypoint waypoint=(TileEntityWaypoint)world.getTileEntity(base.down().east(3));waypoint.stopMode=1;waypoint.autoDepart=true;waypoint.delay=0;waypoint.directSignal=true;
+        craft=routeCraft(world,base.east(6),EnumFacing.EAST,0);
+        try{craft.autopilot.tick();require(craft.autopilot.enabled()&&craft.autopilot.write().getInteger("Direction")==EnumFacing.SOUTH.getHorizontalIndex(),"starting on a corner follows the unambiguous side instead of finishing");}finally{craft.setDead();}
+        craft=routeCraft(world,base,EnumFacing.EAST,0);int laps=0;BlockPos before=base.down();
+        try{for(int tick=0;tick<900;tick++){craft.autopilot.tick();require(craft.autopilot.enabled(),"closed loop never finishes on a revisited marker: "+craft.autopilot.controller().status);BlockPos under=new BlockPos(sensor(craft)).down();if(under.equals(base.down())&&!before.equals(under))laps++;before=under;if(tick==400)craft=reload(craft);}}finally{craft.setDead();clearRoute(world,base);}
+        require(laps>=3,"closed loop completes repeated laps after reload: "+laps);
+        System.out.println("[vandorlabs][reprolab] autopilot-loop-smoothing PASS laps="+laps+" diagonal-angle-span="+(newHigh-newLow)+" legacy="+(oldHigh-oldLow)+" exact-single-corner-lookahead automatic-waypoint reload");
+    }
+    private static boolean fixtureRoute(WorldServer world,BlockPos pos){return world.isBlockLoaded(pos)&&(world.getBlockState(pos).getBlock()==Blocks.CONCRETE||world.getTileEntity(pos) instanceof TileEntityWaypoint);}
+    private static net.minecraft.util.math.Vec3d legacyLookahead(EntityGroundVehicle craft,net.minecraft.util.math.Vec3d sensor){
+        NBTTagCompound state=craft.autopilot.write();BlockPos target=BlockPos.fromLong(state.getLong("Target")),previous=state.hasKey("Previous",4)?BlockPos.fromLong(state.getLong("Previous")):null;EnumFacing direction=EnumFacing.getHorizontal(state.getInteger("Direction"));
+        net.minecraft.util.math.Vec3d point=new net.minecraft.util.math.Vec3d(target).addVector(.5,0,.5);double remaining=2.5;
+        double first=Math.hypot(point.x-sensor.x,point.z-sensor.z);
+        if(first>=remaining)return sensor.addVector((point.x-sensor.x)*remaining/first,0,(point.z-sensor.z)*remaining/first);
+        remaining-=first;BlockPos at=target,last=previous;
+        java.util.Set<BlockPos> visited=new java.util.HashSet<>();if(last!=null)visited.add(last);visited.add(at);
+        for(int step=0;step<6&&remaining>0;step++){
+            if(!craft.world.isBlockLoaded(at))return point;
+            // Every waypoint remains an exact arrival/stop boundary, even if a
+            // held signal currently permits passing it.
+            if(craft.world.getTileEntity(at) instanceof TileEntityWaypoint)return point;
+            BlockPos next=null;int options=0;
+            for(EnumFacing face:EnumFacing.HORIZONTALS){BlockPos candidate=at.offset(face);if(candidate.equals(last)||!fixtureRoute((WorldServer)craft.world,candidate))continue;if(last==null&&face!=direction)continue;next=candidate;options++;}
+            if(options!=1||visited.contains(next))return point;
+            double fraction=Math.min(1,remaining);point=point.addVector((next.getX()-at.getX())*fraction,0,(next.getZ()-at.getZ())*fraction);
+            if(remaining<=1)return point;remaining--;last=at;at=next;visited.add(at);
+        }
+        return point;
     }
     private static final class ModeSource extends net.minecraft.tileentity.TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
         public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}

@@ -191,27 +191,30 @@ public final class CanopyMesh {
     public static RayTraceResult trace(List<Face> faces,String kind,int width,double progress,EnumFacing facing,BlockPos pos,Vec3d start,Vec3d end) {
         boolean posed="posed".equals(kind);
         if(posed){EnumFacing inverse=facing==EnumFacing.EAST?EnumFacing.WEST:facing==EnumFacing.WEST?EnumFacing.EAST:facing;start=rotate(start.subtract(new Vec3d(pos)),inverse);end=rotate(end.subtract(new Vec3d(pos)),inverse);}
-        Vec3d direction=end.subtract(start);double nearest=Double.POSITIVE_INFINITY;RayTraceResult result=null;
+        double dx=end.x-start.x,dy=end.y-start.y,dz=end.z-start.z,nearest=Double.POSITIVE_INFINITY;
+        double normalX=0,normalY=0,normalZ=0;
         for(Face face:faces) {
             Vec3d[] vertices=posed?face.vertices:new Vec3d[face.vertices.length];
             if(!posed)for(int i=0;i<vertices.length;i++)vertices[i]=rotate(pose(face.vertices[i],kind,width,progress,face.group.equals("shell")),facing).add(new Vec3d(pos));
+            if(vertices.length<3)continue;Vec3d a=vertices[0];
+            double rx=start.x-a.x,ry=start.y-a.y,rz=start.z-a.z;
             for(int i=1;i<vertices.length-1;i++) {
-                Vec3d a=vertices[0],edge1=vertices[i].subtract(a),edge2=vertices[i+1].subtract(a),cross=direction.crossProduct(edge2);
-                double determinant=edge1.dotProduct(cross);if(Math.abs(determinant)<1e-10)continue;
-                double inverse=1/determinant;Vec3d relative=start.subtract(a);
-                double u=relative.dotProduct(cross)*inverse;if(u< -1e-8 || u>1+1e-8)continue;
-                Vec3d q=relative.crossProduct(edge1);double v=direction.dotProduct(q)*inverse;
-                if(v< -1e-8 || u+v>1+1e-8)continue;
-                double distance=edge2.dotProduct(q)*inverse;
-                if(distance<0 || distance>1 || distance>=nearest)continue;
-                nearest=distance;Vec3d normal=edge1.crossProduct(edge2);
-                if(normal.dotProduct(direction)>0)normal=normal.scale(-1);
-                Vec3d hit=start.add(direction.scale(distance));
-                if(posed){hit=rotate(hit,facing).add(new Vec3d(pos));normal=rotate(normal.addVector(.5,0,.5),facing).subtract(.5,0,.5);}
-                result=new RayTraceResult(hit,EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z),pos);
+                Vec3d b=vertices[i],c=vertices[i+1];
+                double ex=b.x-a.x,ey=b.y-a.y,ez=b.z-a.z,fx=c.x-a.x,fy=c.y-a.y,fz=c.z-a.z;
+                double cx=dy*fz-dz*fy,cy=dz*fx-dx*fz,cz=dx*fy-dy*fx;
+                double determinant=ex*cx+ey*cy+ez*cz;if(Math.abs(determinant)<1e-10)continue;
+                double inverse=1/determinant,u=(rx*cx+ry*cy+rz*cz)*inverse;if(u< -1e-8 || u>1+1e-8)continue;
+                double qx=ry*ez-rz*ey,qy=rz*ex-rx*ez,qz=rx*ey-ry*ex;
+                double v=(dx*qx+dy*qy+dz*qz)*inverse;if(v< -1e-8 || u+v>1+1e-8)continue;
+                double distance=(fx*qx+fy*qy+fz*qz)*inverse;if(distance<0 || distance>1 || distance>=nearest)continue;
+                nearest=distance;normalX=ey*fz-ez*fy;normalY=ez*fx-ex*fz;normalZ=ex*fy-ey*fx;
+                if(normalX*dx+normalY*dy+normalZ*dz>0){normalX=-normalX;normalY=-normalY;normalZ=-normalZ;}
             }
         }
-        return result;
+        if(!Double.isFinite(nearest))return null;
+        Vec3d hit=new Vec3d(start.x+dx*nearest,start.y+dy*nearest,start.z+dz*nearest),normal=new Vec3d(normalX,normalY,normalZ);
+        if(posed){hit=rotate(hit,facing).add(new Vec3d(pos));normal=rotate(normal.addVector(.5,0,.5),facing).subtract(.5,0,.5);}
+        return new RayTraceResult(hit,EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z),pos);
     }
 
     private static void subdivide(List<AxisAlignedBB> boxes,Vec3d a,Vec3d b,Vec3d c,int depth,BlockPos pos){
