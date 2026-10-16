@@ -22,7 +22,7 @@ final class AutopilotRuntimeChecks {
         TileEntityWaypoint stop=(TileEntityWaypoint)world.getTileEntity(waypoint);stop.autoDepart=false;
         TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setPos(new BlockPos(0,1,0));
         TileEntityAutopilot autopilot=new TileEntityAutopilot();autopilot.setPos(BlockPos.ORIGIN);
-        java.util.List<VehicleStructure.Cell> cells=Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.AUTOPILOT.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST),autopilot.writeToNBT(new NBTTagCompound())),new VehicleStructure.Cell(new BlockPos(0,1,0),ModBlocks.PILOT_SEAT.getDefaultState(),seat.writeToNBT(new NBTTagCompound())));
+        java.util.List<VehicleStructure.Cell> cells=Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.AUTOPILOT.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.WEST),autopilot.writeToNBT(new NBTTagCompound())),new VehicleStructure.Cell(new BlockPos(0,1,0),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING,EnumFacing.EAST),seat.writeToNBT(new NBTTagCompound())));
         EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,new BlockPos(0,1,0),EnumFacing.EAST,1));craft.setPosition(base.getX(),base.getY(),base.getZ());
         TileEntityAutopilot controller=craft.autopilot.controller();controller.setChannelSignal(true);controller.setChannelSignal(false);
         require(controller.enabled(),"short pulse latches journey");
@@ -40,8 +40,67 @@ final class AutopilotRuntimeChecks {
         craft.setPosition(base.getX(),base.getY()+17,base.getZ());craft.autopilot.tick();require(!controller.enabled()&&controller.status.equals("Ground out of range"),"route disables above sixteen blocks of sensor clearance");
         TileEntityAnimatedScreenSelector screen=new TileEntityAnimatedScreenSelector();screen.setSurfaceTexture(0,TileEntityAnimatedScreenSelector.VEHICLE_SURFACE);NBTTagCompound saved=screen.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);require(restored.hasVehicleStatus(0),"Vehicle Status screen choice persists");
         craft.setDead();for(BlockPos p:BlockPos.getAllInBox(base.add(-4,-1,-4),base.add(10,5,10)))world.setBlockToAir(p);
-        modeChannels();blockWaypoint(world,base.add(40,0,0));
-        com.vandorlabs.VandorLabs.logger.info("Autopilot runtime checks PASS: pulse, waypoint stop, held signal, corner, route end, clearance, status persistence, mode channels and Block departure");
+        headingAndLookahead(world,base.add(100,0,0));modeChannels();blockWaypoint(world,base.add(40,0,0));
+        com.vandorlabs.VandorLabs.logger.info("Autopilot runtime checks PASS: pulse, waypoint stop, held signal, corner, route end, clearance, Pilot Seat heading, granular lookahead, waypoint boundary, collision, status persistence, mode channels and Block departure");
+    }
+    private static EntityGroundVehicle routeCraft(WorldServer world,BlockPos base,EnumFacing forward,float yaw){return routeCraft(world,base,forward,yaw,false);}
+    private static EntityGroundVehicle routeCraft(WorldServer world,BlockPos base,EnumFacing forward,float yaw,boolean asymmetric){
+        TileEntityAutopilot tile=new TileEntityAutopilot();tile.setPos(BlockPos.ORIGIN);BlockPos seatPos=BlockPos.ORIGIN.up();TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setPos(seatPos);
+        List<VehicleStructure.Cell> cells=new ArrayList<>(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.AUTOPILOT.getDefaultState().withProperty(BlockVandorDirectional.FACING,forward.getOpposite()),tile.writeToNBT(new NBTTagCompound())),new VehicleStructure.Cell(seatPos,ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.FACING,forward),seat.writeToNBT(new NBTTagCompound()))));if(asymmetric)cells.add(new VehicleStructure.Cell(new BlockPos(4,0,2),Blocks.IRON_BLOCK.getDefaultState(),null));
+        EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,seatPos,forward,1));craft.rotationYaw=yaw;craft.setPosition(base.getX(),base.getY(),base.getZ());craft.autopilot.controller().setEnabled(true);return craft;
+    }
+    private static void clearRoute(WorldServer world,BlockPos base){for(BlockPos p:BlockPos.getAllInBox(base.add(-12,-1,-12),base.add(12,5,12)))world.setBlockToAir(p);}
+    private static void marker(WorldServer world,BlockPos p){world.setBlockState(p,Blocks.CONCRETE.getDefaultState(),2);}
+    private static net.minecraft.util.math.Vec3d sensor(EntityGroundVehicle craft){return craft.toWorld(new net.minecraft.util.math.Vec3d(craft.autopilot.controller().getPos()).addVector(.5,0,.5));}
+    private static void headingAndLookahead(WorldServer world,BlockPos base)throws Exception{
+        for(EnumFacing forward:EnumFacing.HORIZONTALS){
+            clearRoute(world,base);for(int step=0;step<=3;step++)marker(world,base.down().offset(forward,step));EntityGroundVehicle craft=routeCraft(world,base,forward,0);
+            try{craft.autopilot.tick();require(sensor(craft).subtract(new net.minecraft.util.math.Vec3d(base).addVector(.5,0,.5)).dotProduct(new net.minecraft.util.math.Vec3d(forward.getDirectionVec()))>.01,"oppositely facing Autopilot follows Pilot Seat forward "+forward);for(int n=0;n<50&&craft.autopilot.enabled();n++)craft.autopilot.tick();require(!craft.autopilot.enabled()&&craft.autopilot.controller().status.equals("End of route")&&sensor(craft).distanceTo(new net.minecraft.util.math.Vec3d(base.offset(forward,3)).addVector(.5,0,.5))<.025,"cardinal Pilot Seat route completes forward "+forward);}finally{craft.setDead();}
+        }
+        clearRoute(world,base);for(int step=0;step<=3;step++)marker(world,base.down().offset(EnumFacing.EAST,step));EntityGroundVehicle rotated=routeCraft(world,base,EnumFacing.NORTH,90);try{rotated.autopilot.tick();require(rotated.posX>base.getX()+.01&&Math.abs(rotated.rotationYaw-90)<.001,"rotated Pilot Seat forward agrees with manual drive");}finally{rotated.setDead();}
+        // A staircase remains a face-connected route. Steering anticipates its
+        // average direction without ever moving the sensor across diagonal gaps.
+        for(EnumFacing forward:EnumFacing.HORIZONTALS){
+            clearRoute(world,base);List<BlockPos> route=new ArrayList<>();BlockPos at=base.down();route.add(at);marker(world,at);EnumFacing side=forward.rotateY();
+            for(int i=0;i<8;i++){at=at.offset(forward);route.add(at);marker(world,at);at=at.offset(side);route.add(at);marker(world,at);}
+            BlockPos stopPos=route.get(8);world.setBlockState(stopPos,ModBlocks.WAYPOINT.getDefaultState(),2);TileEntityWaypoint waypoint=(TileEntityWaypoint)world.getTileEntity(stopPos);waypoint.stopMode=1;waypoint.autoDepart=false;
+            EntityGroundVehicle craft=routeCraft(world,base,forward,0,true);require(craft.structure.bounds.maxX==5&&craft.structure.bounds.maxZ==3,"sensor is displaced two blocks from the asymmetric hull pivot");int granularMoving=0;Set<Integer> headings=new HashSet<>();boolean restored=false;
+            try{
+                for(int n=0;n<320&&!craft.autopilot.controller().status.equals("Parked at waypoint");n++){
+                    net.minecraft.util.math.Vec3d before=sensor(craft);float yaw=craft.rotationYaw;craft.autopilot.tick();net.minecraft.util.math.Vec3d after=sensor(craft);
+                    require(craft.autopilot.enabled(),"stair-step route stays enabled before waypoint "+forward+" status="+craft.autopilot.controller().status);
+                    require(route.contains(new BlockPos(after.x,base.getY()-1,after.z)),"lookahead sensor stays over exact marked cells "+forward+" at="+after);
+                    require(Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(craft.rotationYaw-yaw))<=3.001,"lookahead yaw change is bounded");
+                    if(after.distanceTo(before)>.001&&Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(craft.rotationYaw)%90)>.5){granularMoving++;headings.add(Math.round(craft.rotationYaw));}
+                    if(n==0)require(after.distanceTo(before)>.01&&craft.rotationYaw>0&&craft.rotationYaw<90,"lookahead steers and advances together instead of stopping for a cardinal turn");
+                    if(n==20){craft=reload(craft);restored=true;}
+                }
+                require(restored&&granularMoving>20&&headings.size()>8,"staircase has granular moving headings and survives midroute reload "+forward);
+                require(craft.autopilot.controller().status.equals("Parked at waypoint")&&sensor(craft).distanceTo(new net.minecraft.util.math.Vec3d(stopPos).addVector(.5,1,.5))<.025,"lookahead reaches exact waypoint center "+forward);
+                net.minecraft.util.math.Vec3d stopped=sensor(craft);for(int n=0;n<10;n++)craft.autopilot.tick();require(sensor(craft).distanceTo(stopped)<1e-8,"lookahead never crosses stopped waypoint");
+                craft.autopilot.controller().setChannelSignal(true);for(int n=0;n<320&&craft.autopilot.enabled();n++)craft.autopilot.tick();require(!craft.autopilot.enabled()&&craft.autopilot.controller().status.equals("End of route")&&sensor(craft).distanceTo(new net.minecraft.util.math.Vec3d(route.get(route.size()-1)).addVector(.5,1,.5))<.025,"held signal resumes staircase and stops at exact route end "+forward);
+            }finally{craft.setDead();}
+        }
+        clearRoute(world,base);for(int i=0;i<=4;i++)marker(world,base.down().east(i));marker(world,base.down().east(2).north());EntityGroundVehicle fork=routeCraft(world,base,EnumFacing.EAST,0);try{for(int n=0;n<80&&fork.autopilot.enabled();n++)fork.autopilot.tick();require(!fork.autopilot.enabled()&&fork.autopilot.controller().status.equals("Ambiguous route")&&Math.abs(fork.posX-base.getX()-2)<.025,"lookahead cannot select or cut across a fork");}finally{fork.setDead();}
+        clearRoute(world,base);for(int i=0;i<=3;i++)marker(world,base.down().east(i));world.setBlockState(base.east(),Blocks.STONE.getDefaultState(),2);EntityGroundVehicle blocked=routeCraft(world,base,EnumFacing.EAST,0);try{for(int n=0;n<40;n++)blocked.autopilot.tick();require(blocked.autopilot.enabled()&&blocked.autopilot.controller().status.equals("Blocked")&&sensor(blocked).x<base.getX()+1,"lookahead preserves collision stop");require(world.getBlockState(base.east()).getBlock()==Blocks.STONE,"blocking world terrain remains intact");}finally{blocked.setDead();clearRoute(world,base);}
+        clearRoute(world,base);for(int i=0;i<=3;i++)marker(world,base.down().east(i));BlockPos bodyObstacle=base.add(5,0,2);world.setBlockState(bodyObstacle,Blocks.STONE.getDefaultState(),2);EntityGroundVehicle asymmetric=routeCraft(world,base,EnumFacing.EAST,0,true);try{for(int n=0;n<12;n++)asymmetric.autopilot.tick();require(asymmetric.autopilot.enabled()&&asymmetric.autopilot.controller().status.equals("Blocked")&&Math.abs(sensor(asymmetric).x-base.getX()-.5)<.001,"far asymmetric hull component stops against physical terrain while sensor route is clear");require(world.isAirBlock(base.east())&&world.getBlockState(bodyObstacle).getBlock()==Blocks.STONE,"physical hull obstacle stays intact outside sensor path");}finally{asymmetric.setDead();clearRoute(world,base);}
+        unloadedLookaheadTarget(world);
+        com.vandorlabs.VandorLabs.logger.info("Autopilot heading/lookahead PASS: four cardinal primary-seat directions, rotated facing, all-cardinal asymmetric-hull staircase granular moving yaw, exact off-pivot marker sensor, stopped waypoint, held departure, midroute save, fork, collision and unloaded saved-target no-load guard");
+    }
+    private static void unloadedLookaheadTarget(WorldServer world)throws Exception{
+        BlockPos edge=null,target=null;EnumFacing direction=null;
+        // Find a real loaded/unloaded boundary without requesting either chunk.
+        outer:for(net.minecraft.world.chunk.Chunk chunk:world.getChunkProvider().getLoadedChunks())for(EnumFacing face:EnumFacing.HORIZONTALS){
+            if(world.getChunkProvider().getLoadedChunk(chunk.x+face.getFrontOffsetX(),chunk.z+face.getFrontOffsetZ())!=null)continue;
+            BlockPos candidate=new BlockPos((chunk.x<<4)+(face.getFrontOffsetX()>0?15:face.getFrontOffsetX()<0?0:8),100,(chunk.z<<4)+(face.getFrontOffsetZ()>0?15:face.getFrontOffsetZ()<0?0:8));
+            if(!world.isBlockLoaded(candidate)||world.isBlockLoaded(candidate.offset(face)))continue;edge=candidate;target=candidate.offset(face);direction=face;break outer;
+        }
+        require(target!=null,"loaded world has an unloaded neighboring route boundary");int chunks=world.getChunkProvider().getLoadedChunkCount();EntityGroundVehicle craft=routeCraft(world,edge,direction,0);
+        try{
+            NBTTagCompound navigation=new NBTTagCompound();navigation.setInteger("Schema",1);navigation.setBoolean("Journey",true);navigation.setLong("Previous",edge.toLong());navigation.setLong("Target",target.toLong());navigation.setInteger("Direction",direction.getHorizontalIndex());craft.autopilot.read(navigation);require(craft.autopilot.write().getLong("Target")==target.toLong(),"saved target fixture remains initialized across unloaded boundary");
+            java.lang.reflect.Method lookahead=VehicleAutopilot.class.getDeclaredMethod("lookahead",net.minecraft.util.math.Vec3d.class);lookahead.setAccessible(true);net.minecraft.util.math.Vec3d aim=(net.minecraft.util.math.Vec3d)lookahead.invoke(craft.autopilot,sensor(craft));
+            require(aim.distanceTo(new net.minecraft.util.math.Vec3d(target).addVector(.5,0,.5))<1e-12,"lookahead stops before tile lookup on unloaded saved target");require(!world.isBlockLoaded(target)&&world.getChunkProvider().getLoadedChunkCount()==chunks,"lookahead never forces saved target chunk to load");
+        }finally{craft.setDead();}
     }
     private static EntityGroundVehicle reload(EntityGroundVehicle previous){
         previous.signals.persist();NBTTagCompound navigation=previous.autopilot.write();EntityGroundVehicle restored=new EntityGroundVehicle(previous.world);restored.install(previous.structure);restored.rotationYaw=previous.rotationYaw;restored.setPosition(previous.posX,previous.posY,previous.posZ);restored.hover=previous.hover;restored.view.hover=previous.hover;restored.hoverTarget=previous.hoverTarget;restored.autopilot.read(navigation);previous.setDead();return restored;

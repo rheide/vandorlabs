@@ -80,6 +80,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public float previous, progress;
     private List<AxisAlignedBB> cached;
     private String cachedKey;
+    private com.vandorlabs.canopy.CanopyCollisionIndex collisionIndex;
+    private List<AxisAlignedBB> indexedBoxes;
+    private List<CanopyMesh.Face> boundsFaces;
+    private BlockPos boundsPos;
+    private EnumFacing boundsFacing;
+    private AxisAlignedBB posedBounds;
     // Chunk#setBlockState installs the replacement before invoking breakBlock.
     // Retain its supplied old state only for the synchronous teardown window.
     private IBlockState removalState;
@@ -319,30 +325,52 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
 
     public List<AxisAlignedBB> boxes() {
         if (!draws() || block() == null) return Collections.emptyList();
-        String key = model() + ":" + mask() + ":" + centeredPlacement + ":" + hollowPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
+        List<CanopyMesh.Face> geometry=faces();
+        String key = pos + ":" + baseKey + ":" + model() + ":" + mask() + ":" + centeredPlacement + ":" + hollowPlacement + ":" + (configurable()?large.key():"") + ":" + width() + ":" + progress + ":" + facing();
         if (!key.equals(cachedKey)) {
-            cached = resizable()?CanopyMesh.windowCollision(faces(),facing(),pos):
+            cached = resizable()?CanopyMesh.windowCollision(geometry,facing(),pos):
                     CanopyMesh.collision(
-                            faces(),
+                            geometry,
                             "posed",
                             width(),
                             0,
                             facing(),
                             pos);
-            cachedKey = key;
+            collisionIndex=null;cachedKey = key;
         }
         return cached;
     }
 
+    private com.vandorlabs.canopy.CanopyCollisionIndex collisionIndex(){
+        List<AxisAlignedBB> current=boxes();
+        if(collisionIndex==null||indexedBoxes!=current){collisionIndex=new com.vandorlabs.canopy.CanopyCollisionIndex(current);indexedBoxes=current;}
+        return collisionIndex;
+    }
+    /** Exact region query for small entities and particles; geometry and ordering are unchanged. */
+    public int addCollisionBoxes(AxisAlignedBB query,List<AxisAlignedBB> output){
+        if(!draws()||block()==null)return 0;
+        // A miss should not tessellate collision geometry just to reject it.
+        AxisAlignedBB geometry=geometryBounds();if(geometry==null||!geometry.grow(resizable()?1D/16+.0020001:.0020001).intersects(query))return 0;
+        return collisionIndex().addIntersecting(query,output);
+    }
+    private AxisAlignedBB geometryBounds(){
+        List<CanopyMesh.Face> geometry=faces();EnumFacing direction=facing();
+        if(boundsFaces!=geometry||boundsFacing!=direction||!pos.equals(boundsPos)){
+            double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
+            for(CanopyMesh.Face face:geometry)for(Vec3d point:face.vertices){minX=Math.min(minX,point.x);minY=Math.min(minY,point.y);minZ=Math.min(minZ,point.z);maxX=Math.max(maxX,point.x);maxY=Math.max(maxY,point.y);maxZ=Math.max(maxZ,point.z);}
+            posedBounds=geometry.isEmpty()?null:new AxisAlignedBB(CanopyMesh.rotate(new Vec3d(minX,minY,minZ),direction),CanopyMesh.rotate(new Vec3d(maxX,maxY,maxZ),direction)).offset(pos);
+            boundsFaces=geometry;boundsFacing=direction;boundsPos=pos.toImmutable();
+        }
+        return posedBounds;
+    }
     public AxisAlignedBB selectionBounds() {
-        AxisAlignedBB bounds=null;
-        for(AxisAlignedBB box:boxes())bounds=bounds==null?box:bounds.union(box);
-        return bounds==null?new AxisAlignedBB(pos):bounds;
+        AxisAlignedBB bounds=collisionIndex().bounds();return bounds==null?new AxisAlignedBB(pos):bounds;
     }
 
     public RayTraceResult trace(Vec3d start, Vec3d end) {
         // faces() already contains the animation pose, shared with the renderer.
         if(!draws() || block()==null)return null;
+        AxisAlignedBB bounds=geometryBounds();if(bounds==null||!CanopyMesh.intersectsRay(bounds.grow(1e-6),start,end))return null;
         RayTraceResult hit=CanopyMesh.trace(faces(),"posed",width(),0,facing(),pos,start,end);
         if(hit==null || !block().opening() || width()<=block().width)return hit;
         // A joined shell draws once, but harvesting must address the constituent

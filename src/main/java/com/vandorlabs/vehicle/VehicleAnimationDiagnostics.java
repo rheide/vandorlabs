@@ -9,6 +9,7 @@ public final class VehicleAnimationDiagnostics {
     public static volatile String phase="setup";
     private static final Map<String,List<Long>> samples=new TreeMap<>();
     private VehicleAnimationDiagnostics(){}
+    public static void selectInstall(EntityGroundVehicle craft){if(ENABLED&&selected==null&&!craft.world.isRemote&&"boarding-coldclose".equals(phase))selected=craft.getUniqueID();}
     public static long start(EntityGroundVehicle craft){return ENABLED&&craft!=null&&craft.getUniqueID().equals(selected)?System.nanoTime():0;}
     public static void elapsed(EntityGroundVehicle craft,String name,long start){if(start!=0)value((craft.world.isRemote?"client/":"server/")+name,System.nanoTime()-start);}
     public static void value(String name,long value){valueAt(phase,name,value);}

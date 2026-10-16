@@ -1,7 +1,6 @@
 package com.vandorlabs.vehicle;
 
 import com.vandorlabs.tiles.*;
-import com.vandorlabs.blocks.BlockVandorDirectional;
 import com.vandorlabs.redstone.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -9,7 +8,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.*;
 
-/** Route work is bounded to one downward ray and the three next route cells. */
+/** Bounded route sensing keeps the sensor on adjacent cells while looking ahead for steering. */
 public final class VehicleAutopilot {
     private final EntityGroundVehicle craft;
     private TileEntityAutopilot controller;
@@ -19,6 +18,8 @@ public final class VehicleAutopilot {
     private EnumFacing direction;
     private boolean departurePulsed;
     private boolean journey;
+    private static final double LOOKAHEAD=2.5;
+    private static final int LOOKAHEAD_CELLS=6;
     private static final java.util.Map<TileEntityAutopilot,VehicleScan> departures=new java.util.WeakHashMap<>();
     public VehicleAutopilot(EntityGroundVehicle craft){this.craft=craft;}
     public net.minecraft.nbt.NBTTagCompound write(){
@@ -61,7 +62,7 @@ public final class VehicleAutopilot {
         if(!route(under)){stop("Route lost");return true;}
         if(departed!=null&&!under.equals(departed))departed=null;
         if(controller.departureSeat!=null){departed=under;controller.departureSeat=null;controller.departureAt=0;controller.changed();}
-        if(direction==null||target==null){EnumFacing front=craft.view.getBlockState(controller.getPos()).getValue(BlockVandorDirectional.FACING);double a=Math.toRadians(craft.rotationYaw);direction=EnumFacing.getFacingFromVector((float)(front.getFrontOffsetX()*Math.cos(a)-front.getFrontOffsetZ()*Math.sin(a)),0,(float)(front.getFrontOffsetX()*Math.sin(a)+front.getFrontOffsetZ()*Math.cos(a)));}
+        if(direction==null||target==null){EnumFacing front=craft.structure.facing;double a=Math.toRadians(craft.rotationYaw);direction=EnumFacing.getFacingFromVector((float)(front.getFrontOffsetX()*Math.cos(a)-front.getFrontOffsetZ()*Math.sin(a)),0,(float)(front.getFrontOffsetX()*Math.sin(a)+front.getFrontOffsetZ()*Math.cos(a)));}
         if(target==null)target=under;
         double dx=target.getX()+.5-sensor.x,dz=target.getZ()+.5-sensor.z,distance=Math.hypot(dx,dz);
         if(distance<.025){
@@ -84,16 +85,22 @@ public final class VehicleAutopilot {
             previous=target;target=next;direction=EnumFacing.getFacingFromVector(target.getX()-previous.getX(),0,target.getZ()-previous.getZ());
             dx=target.getX()+.5-sensor.x;dz=target.getZ()+.5-sensor.z;distance=Math.hypot(dx,dz);controller.setStatus("Following route");
         }
-        // Rotate about the sensor so a corner does not sweep it off its route.
-        EnumFacing front=craft.view.getBlockState(controller.getPos()).getValue(BlockVandorDirectional.FACING);
-        float desired=(float)Math.toDegrees(Math.atan2(direction.getFrontOffsetZ(),direction.getFrontOffsetX())-Math.atan2(front.getFrontOffsetZ(),front.getFrontOffsetX()));
+        // The captured Pilot Seat defines forward, exactly as manual driving does.
+        // Anticipate unambiguous bends, but move the sensor along the actual route
+        // segments rather than taking a diagonal shortcut across unmarked ground.
+        Vec3d aim=lookahead(sensor);EnumFacing front=craft.structure.facing;
+        double headingX=aim.x-sensor.x,headingZ=aim.z-sensor.z;
+        if(Math.hypot(headingX,headingZ)<1e-6){headingX=direction.getFrontOffsetX();headingZ=direction.getFrontOffsetZ();}
+        float desired=(float)Math.toDegrees(Math.atan2(headingZ,headingX)-Math.atan2(front.getFrontOffsetZ(),front.getFrontOffsetX()));
         craft.collision.begin(craft.world,craft);
         try{
             float delta=MathHelper.clamp(MathHelper.wrapDegrees(desired-craft.rotationYaw),-3,3);
             float yaw=craft.collision.turn(craft.world,craft,craft.posX,craft.posY,craft.posZ,craft.rotationYaw,delta);
             VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw);Vec3d after=pose.world(local,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
             boolean turning=Math.abs(MathHelper.wrapDegrees(desired-craft.rotationYaw))>.1;
-            double mx=turning?sensor.x-after.x:dx*Math.min(.12,distance)/distance,mz=turning?sensor.z-after.z:dz*Math.min(.12,distance)/distance;
+            double speed=.12*Math.max(.25,Math.cos(Math.toRadians(MathHelper.wrapDegrees(desired-yaw))));
+            double fraction=distance<1e-9?0:Math.min(speed,distance)/distance;
+            double mx=sensor.x-after.x+dx*fraction,mz=sensor.z-after.z+dz*fraction;
             if(!craft.collision.loaded(craft.world,craft.posX,craft.posY,craft.posZ,mx,0,mz,yaw)){controller.setStatus("Waiting for terrain");return true;}
             double x=craft.collision.clip(craft.world,craft,craft.posX,craft.posY,craft.posZ,mx,0,yaw);
             double z=craft.collision.clip(craft.world,craft,craft.posX+x,craft.posY,craft.posZ,mz,2,yaw);
@@ -101,6 +108,25 @@ public final class VehicleAutopilot {
             craft.rotationYaw=yaw;craft.setPosition(craft.posX+x,craft.posY,craft.posZ+z);craft.motionX=x;craft.motionZ=z;craft.velocityChanged=true;
         }finally{craft.collision.end();}
         return true;
+    }
+    private Vec3d lookahead(Vec3d sensor){
+        Vec3d point=new Vec3d(target).addVector(.5,0,.5);double remaining=LOOKAHEAD;
+        double first=Math.hypot(point.x-sensor.x,point.z-sensor.z);
+        if(first>=remaining)return sensor.addVector((point.x-sensor.x)*remaining/first,0,(point.z-sensor.z)*remaining/first);
+        remaining-=first;BlockPos at=target,last=previous;
+        java.util.Set<BlockPos> visited=new java.util.HashSet<>();if(last!=null)visited.add(last);visited.add(at);
+        for(int step=0;step<LOOKAHEAD_CELLS&&remaining>0;step++){
+            if(!craft.world.isBlockLoaded(at))return point;
+            // Every waypoint remains an exact arrival/stop boundary, even if a
+            // held signal currently permits passing it.
+            if(craft.world.getTileEntity(at) instanceof TileEntityWaypoint)return point;
+            BlockPos next=null;int options=0;
+            for(EnumFacing face:EnumFacing.HORIZONTALS){BlockPos candidate=at.offset(face);if(candidate.equals(last)||!route(candidate))continue;if(last==null&&face!=direction)continue;next=candidate;options++;}
+            if(options!=1||visited.contains(next))return point;
+            double fraction=Math.min(1,remaining);point=point.addVector((next.getX()-at.getX())*fraction,0,(next.getZ()-at.getZ())*fraction);
+            if(remaining<=1)return point;remaining--;last=at;at=next;visited.add(at);
+        }
+        return point;
     }
     private boolean applyMode(int mode,int height){
         if(mode==2){if(!craft.setHover(true))return false;craft.hoverTarget=target==null?craft.posY+height-craft.groundClearance():target.getY()+1+height-controller.getPos().getY();}

@@ -39,6 +39,8 @@ Small, Medium, and Large Wheels now roll with travel, reverse with the craft, an
 
 Mount Autopilot on the underside of the craft and lay a continuous route of face-adjacent marker blocks. Replace selected markers with Waypoints to define stops. The sensor follows the first solid surface below it, within sixteen blocks, and stops at gaps, ambiguous junctions, or obstacles rather than choosing a branch.
 
+Autopilot uses the same forward direction as manual Pilot Seat driving. It looks ahead along the route for smoother headings on stair-step diagonal paths, while keeping the sensor on the marker line and respecting waypoint stops.
+
 Waypoints can wait for a signal or depart automatically after a delay. They can select Block, Taxi, or Hover for the stop, then Taxi or Hover for departure. Hover stops support heights up to sixteen blocks. A pulse starts a journey to a waypoint; a continuously active signal can continue through stops.
 
 Choose **Vehicle Status** on a Programmable Screen, Input, or Console surface to show the current vehicle mode, clearance, and navigation status. Click its Autopilot row aboard the craft to control navigation. A surface can switch back to ordinary artwork or Redstone controls whenever needed.
@@ -81,6 +83,8 @@ Compatibility remains specific to each block. Supported external machines retain
 
 Vehicle movement also spends less time rebuilding canopy collision geometry and querying nearby terrain. Canopy animations, ramp materials, landing gear, and console rendering avoid repeated allocations and lookups while preserving their shapes and materials.
 
-Conversion builds the craft's current collision shape before driving. On supported craft with one opening canopy assembly, its poses prepare incrementally afterward, with coordinate merging on a background worker and a bounded cache for reuse. Changes to captured blocks or settings discard outdated preparation. Unprepared or unsupported configurations still use freshly computed collision geometry. Pilot Seat controls and automatic Taxi Mode behavior stay the same.
+Conversion builds the craft's current collision shape before driving. On supported craft with one opening canopy assembly, its poses prepare incrementally afterward, with canopy subdivision and coordinate merging on a background worker and a bounded cache for reuse. An immediate opening or closing request can briefly hold the current pose until the next collision shape is ready, while driving continues. Changes to captured blocks or settings discard outdated preparation. Unsupported configurations still use freshly computed collision geometry. Pilot Seat controls and automatic Taxi Mode behavior stay the same.
+
+Canopy collision queries use a spatial index so thruster particles and nearby entities test only relevant surfaces, preserving the existing collision shape.
 
 See the [complete changelog](../../CHANGELOG.md) for fixes and smaller changes.

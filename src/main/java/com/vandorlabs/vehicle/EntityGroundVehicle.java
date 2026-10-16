@@ -151,6 +151,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private boolean rampGeometryUpgradePending;
     public EntityGroundVehicle(World world){super(world);setSize(1,1);isImmuneToFire=true;preventEntitySpawning=true;}
     public void install(VehicleStructure snapshot) {
+        VehicleAnimationDiagnostics.selectInstall(this);long installSample=VehicleAnimationDiagnostics.start(this);
+        VehicleCanopies.forget(this);
         snapshot=VehicleControlSettings.migrate(snapshot);
         if(!world.isRemote && structure!=null && !structure.seat.equals(snapshot.seat)){
             BlockPos shift=snapshot.seat.subtract(structure.seat);if(taxiReturnSeat!=null)taxiReturnSeat=taxiReturnSeat.add(shift);
@@ -163,6 +165,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         collisionCache.reset(view,collision);
         rampGeometryUpgradePending=!world.isRemote&&VehicleRamps.needsGeometryUpgrade(this);
         setPosition(posX,posY,posZ);
+        VehicleAnimationDiagnostics.elapsed(this,"install-full",installSample);
     }
     /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
     public void updateCanopies(VehicleStructure snapshot,boolean moved){
@@ -219,8 +222,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         return true;
     }
     @Override public void onAddedToWorld(){super.onAddedToWorld();signals.open();VehicleLookup.update(this);}
-    @Override public void onRemovedFromWorld(){collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
-    @Override public void setDead(){collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
+    @Override public void onRemovedFromWorld(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
+    @Override public void setDead(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
             Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger);

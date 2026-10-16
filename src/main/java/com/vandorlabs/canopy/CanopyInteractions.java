@@ -44,8 +44,7 @@ public final class CanopyInteractions {
     @SubscribeEvent
     public void collision(GetCollisionBoxesEvent event) {
         for (TileEntityCanopy t : owners(event.getWorld(), event.getAabb()))
-            for (AxisAlignedBB box : t.boxes())
-                if (box.intersects(event.getAabb())) event.getCollisionBoxesList().add(box);
+            t.addCollisionBoxes(event.getAabb(),event.getCollisionBoxesList());
     }
 
     public static RayTraceResult trace(World world, Vec3d start, Vec3d end) {

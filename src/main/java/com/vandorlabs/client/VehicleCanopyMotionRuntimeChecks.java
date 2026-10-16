@@ -40,7 +40,7 @@ final class VehicleCanopyMotionRuntimeChecks {
             }
             require(selectable,"actual nondegenerate shell surface has canopy interaction: "+owner.block().kind+" width="+owner.width());
             require(VehicleCanopies.toggle(craft,hit),"captured canopy toggles");
-            for(int tick=0;tick<5;tick++)VehicleCanopies.tick(craft);
+            for(int tick=0;tick<5;tick++)VehicleCanopyTestSteps.step(craft);
             require(owner.progress==5/16F && owner.targetOpen,"opening progresses");
             require(craft.view==originalView && craft.view.getTileEntity(owner.getPos())==owner,"live view and interpolation tile retained");
             require(craft.collision!=closed,"moving shell rebuilds collision");
@@ -50,13 +50,13 @@ final class VehicleCanopyMotionRuntimeChecks {
             TileEntityCanopy resumed=((TileEntityCanopy)late.view.getTileEntity(hit)).owner();
             require(resumed.progress==owner.progress && resumed.targetOpen && resumed.large.slideForward==owner.large.slideForward && resumed.large.tileMaterial==owner.large.tileMaterial,"save and late tracker retain current and target pose");
             require(VehicleCanopies.toggle(craft,hit),"mid-animation reversal");
-            for(int tick=0;tick<5;tick++)VehicleCanopies.tick(craft);
+            for(int tick=0;tick<5;tick++)VehicleCanopyTestSteps.step(craft);
             require(owner.progress==0 && !owner.targetOpen,"reversal closes in five ticks");
             require(VehicleCanopies.toggle(craft,hit),"reopen");
-            for(int tick=0;tick<16;tick++)VehicleCanopies.tick(craft);
+            for(int tick=0;tick<16;tick++)VehicleCanopyTestSteps.step(craft);
             require(owner.progress==1 && owner.previous==15/16F,"full animation preserves final interpolation");
             VehicleCollision settled=craft.collision;
-            VehicleCanopies.tick(craft);
+            VehicleCanopyTestSteps.step(craft);
             require(craft.collision==settled,"settled canopy has no collision rebuild");
             require(owner.previous==1,"settled interpolation catches up");
             net.minecraft.nbt.NBTTagCompound parked=craft.structure.at(owner.getPos()).tileData();

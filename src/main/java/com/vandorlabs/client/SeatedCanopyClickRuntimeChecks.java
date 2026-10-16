@@ -46,7 +46,7 @@ final class SeatedCanopyClickRuntimeChecks {
             serverCraft=new EntityGroundVehicle(world);serverCraft.install(new VehicleStructure(cells,SEAT.subtract(origin),EnumFacing.NORTH,1));
             for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(154,39,154),new BlockPos(166,39,166)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
             serverCraft.setPosition(160,40,160);require(world.spawnEntity(serverCraft),"craft spawns");require(serverCraft.board(player),"captured seat boards");serverCraft.updatePassenger(player);
-            capturedCanopy=CANOPY.subtract(origin);require(VehicleCanopies.toggle(serverCraft,capturedCanopy),"captured canopy opens");for(int tick=0;tick<16;tick++)VehicleCanopies.tick(serverCraft);
+            capturedCanopy=CANOPY.subtract(origin);require(VehicleCanopies.toggle(serverCraft,capturedCanopy),"captured canopy opens");for(int tick=0;tick<16;tick++)VehicleCanopyTestSteps.step(serverCraft);
         }
         player.connection.setPlayerLocation(player.posX,player.posY,player.posZ,0,-30);
     }

@@ -172,6 +172,18 @@ public final class CanopyMesh {
         boxes.addAll(rails);return boxes;
     }
 
+    /** Inclusive segment broadphase; parallel and zero-length rays retain exact picking semantics. */
+    public static boolean intersectsRay(AxisAlignedBB bounds,Vec3d start,Vec3d end){
+        double low=0,high=1;
+        for(int axis=0;axis<3;axis++){
+            double from=axis==0?start.x:axis==1?start.y:start.z,to=axis==0?end.x:axis==1?end.y:end.z;
+            double min=axis==0?bounds.minX:axis==1?bounds.minY:bounds.minZ,max=axis==0?bounds.maxX:axis==1?bounds.maxY:bounds.maxZ,delta=to-from;
+            if(delta==0){if(from<min||from>max)return false;continue;}
+            double a=(min-from)/delta,b=(max-from)/delta;if(a>b){double swap=a;a=b;b=swap;}low=Math.max(low,a);high=Math.min(high,b);if(low>high)return false;
+        }
+        return true;
+    }
+
     /** Exact face picking avoids treating subdivided collision boxes as selectable pixels. */
     public static RayTraceResult trace(String model,String kind,int width,double progress,EnumFacing facing,BlockPos pos,Vec3d start,Vec3d end) {
         return trace(MODELS.get(model),kind,width,progress,facing,pos,start,end);

@@ -77,6 +77,71 @@ public final class VehicleCollision {
         return new Raw(all,view.structure.bounds.maxX/2,view.structure.bounds.maxZ/2,PROFILE?System.nanoTime()-profileStart:0,diagnostic==0?null:diagnosticSide,complete);
     }
     static VehicleCollision prepare(Raw raw){return new VehicleCollision(raw,false);}
+    /** Copied face coordinates and ordinary boxes, captured on the world thread. */
+    static final class DeferredRaw {
+        final List<DeferredPart> parts;final double pivotX,pivotZ;
+        DeferredRaw(List<DeferredPart> parts,double x,double z){this.parts=Collections.unmodifiableList(parts);pivotX=x;pivotZ=z;}
+    }
+    private static final class DeferredPart {
+        final List<AxisAlignedBB> boxes;final List<com.vandorlabs.canopy.CanopyMesh.Face> faces;
+        final boolean window;final net.minecraft.util.EnumFacing facing;final BlockPos pos;final int width;
+        DeferredPart(List<AxisAlignedBB> boxes){this.boxes=Collections.unmodifiableList(new ArrayList<>(boxes));faces=null;window=false;facing=null;pos=null;width=0;}
+        DeferredPart(com.vandorlabs.tiles.TileEntityCanopy owner){
+            boxes=null;window=owner.resizable();facing=owner.facing();pos=owner.getPos().toImmutable();width=owner.width();
+            List<com.vandorlabs.canopy.CanopyMesh.Face> copied=new ArrayList<>();
+            for(com.vandorlabs.canopy.CanopyMesh.Face original:owner.faces()){
+                com.vandorlabs.canopy.CanopyMesh.Face copy=new com.vandorlabs.canopy.CanopyMesh.Face();
+                copy.vertices=original.vertices.clone();copy.group=window?"":original.group;copy.glazing=original.glazing;copy.baseMaterial=original.baseMaterial;copied.add(copy);
+            }
+            faces=Collections.unmodifiableList(copied);
+        }
+    }
+    static DeferredRaw defer(VehicleWorld view,int maximum){
+        List<DeferredPart> parts=new ArrayList<>();Set<BlockPos> owners=new HashSet<>();AxisAlignedBB query=view.structure.bounds.grow(16);long bound=0;
+        for(VehicleStructure.Cell cell:view.structure.cells){
+            List<AxisAlignedBB> boxes=new ArrayList<>();DeferredPart captured;
+            try{
+                if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy){
+                    net.minecraft.tileentity.TileEntity raw=view.getTileEntity(cell.pos);if(!(raw instanceof com.vandorlabs.tiles.TileEntityCanopy))continue;
+                    com.vandorlabs.tiles.TileEntityCanopy owner=((com.vandorlabs.tiles.TileEntityCanopy)raw).owner();if(!owner.draws()||!owners.add(owner.getPos()))continue;
+                    captured=new DeferredPart(owner);
+                    for(com.vandorlabs.canopy.CanopyMesh.Face face:captured.faces){
+                        if(captured.window&&!face.glazing&&!"glass".equals(face.baseMaterial))continue;
+                        bound+=face.vertices.length;
+                    }
+                }else{
+                    if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear)boxes.addAll(((com.vandorlabs.blocks.BlockTelescopicLandingGear)cell.state.getBlock()).vehicleBoxes(view,cell.pos));
+                    else cell.state.addCollisionBoxToList(view,cell.pos,query,boxes,null,false);
+                    for(AxisAlignedBB box:boxes)if(box.getClass()!=AxisAlignedBB.class)return null;
+                    bound+=boxes.size();captured=new DeferredPart(boxes);
+                }
+            }catch(RuntimeException|LinkageError failure){return null;}
+            if(bound>maximum)return null;parts.add(captured);
+        }
+        return new DeferredRaw(parts,view.structure.bounds.maxX/2,view.structure.bounds.maxZ/2);
+    }
+    static Geometry prepare(DeferredRaw deferred,int maximum){
+        List<AxisAlignedBB> all=new ArrayList<>();
+        for(DeferredPart part:deferred.parts){
+            if(part.boxes!=null)all.addAll(part.boxes);
+            else{
+                Set<AxisAlignedBB> rails=new HashSet<>();
+                for(com.vandorlabs.canopy.CanopyMesh.Face face:part.faces){
+                    if(part.window&&!face.glazing&&!"glass".equals(face.baseMaterial))continue;
+                    all.addAll(com.vandorlabs.canopy.CanopyMesh.collision(Collections.singletonList(face),"posed",part.width,0,part.facing,part.pos));
+                    if(all.size()+rails.size()>maximum)throw new IllegalArgumentException("Deferred collision exceeds its coordinate budget.");
+                    if(part.window)for(int i=0;i<face.vertices.length;i++){
+                        Vec3d a=com.vandorlabs.canopy.CanopyMesh.rotate(face.vertices[i],part.facing),b=com.vandorlabs.canopy.CanopyMesh.rotate(face.vertices[(i+1)%face.vertices.length],part.facing);
+                        int steps=Math.max(1,(int)Math.ceil(a.distanceTo(b)*8));
+                        for(int step=0;step<steps;step++){Vec3d from=a.add(b.subtract(a).scale(step/(double)steps)),to=a.add(b.subtract(a).scale((step+1D)/steps));rails.add(new AxisAlignedBB(from,to).grow(1D/16+.002).offset(part.pos));if(all.size()+rails.size()>maximum)throw new IllegalArgumentException("Deferred rails exceed their coordinate budget.");}
+                    }
+                }
+                all.addAll(rails);
+            }
+            if(all.size()>maximum)throw new IllegalArgumentException("Deferred collision exceeds its coordinate budget.");
+        }
+        return prepare(new Raw(all,deferred.pivotX,deferred.pivotZ,0,null,true)).geometry();
+    }
     private VehicleCollision(Raw raw,boolean reference){
         List<AxisAlignedBB> all=raw.boxes;pivotX=raw.pivotX;pivotZ=raw.pivotZ;collectionNanos=raw.collectionNanos;cached=false;cacheable=raw.complete;
         long diagnostic=raw.diagnosticSide==null?0:1;String diagnosticSide=raw.diagnosticSide;PrimitiveProfile primitiveProfile=diagnostic==0?null:new PrimitiveProfile();

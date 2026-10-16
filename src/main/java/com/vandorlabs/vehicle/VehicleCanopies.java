@@ -11,6 +11,8 @@ import java.util.*;
 /** Explicit canopy motion in the local vehicle world; unrelated tiles never tick. */
 public final class VehicleCanopies {
     private VehicleCanopies() {}
+    public static void forget(EntityGroundVehicle craft){corrections.remove(craft);}
+    private static final Map<EntityGroundVehicle,Map<BlockPos,Float>> corrections=Collections.synchronizedMap(new WeakHashMap<EntityGroundVehicle,Map<BlockPos,Float>>());
     public static boolean supports(Block block) {
         return block instanceof BlockCanopy && (((BlockCanopy) block).opening() || com.vandorlabs.canopy.LargeCanopySettings.supports(((BlockCanopy)block).kind));
     }
@@ -63,13 +65,29 @@ public final class VehicleCanopies {
         if(target<0 || target>1 || !Float.isFinite(progress) || progress<0 || progress>1)return false;
         TileEntityCanopy tile=owner(craft,pos);
         if(tile==null || !tile.getPos().equals(pos))return false;
-        boolean moved=tile.progress!=progress;
-        tile.targetOpen=target==1;tile.previous=tile.progress=progress;
+        tile.targetOpen=target==1;
+        Map<BlockPos,Float> desired=corrections.get(craft);if(desired==null)desired=new LinkedHashMap<>();else desired=new LinkedHashMap<>(desired);
+        desired.put(pos,progress);
+        boolean correctionMoves=false;for(Map.Entry<BlockPos,Float> entry:desired.entrySet()){TileEntityCanopy member=owner(craft,entry.getKey());if(member!=null&&member.progress!=entry.getValue())correctionMoves=true;}
+        if(correctionMoves&&!craft.collisionCache.readyForCanopyPose(craft.view,desired)){
+            corrections.put(craft,desired);save(craft,false);return true;
+        }
+        corrections.remove(craft);boolean moved=false;
+        for(Map.Entry<BlockPos,Float> correction:desired.entrySet()){TileEntityCanopy member=owner(craft,correction.getKey());if(member!=null){moved|=member.progress!=correction.getValue();member.previous=member.progress=correction.getValue();}}
         save(craft,moved);
         return true;
     }
     public static void tick(EntityGroundVehicle craft){
         if(craft.structure==null || craft.view==null || craft.ownershipBlocked)return;
+        for(TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityCanopy)((TileEntityCanopy)raw).previous=((TileEntityCanopy)raw).progress;
+        Map<BlockPos,Float> correction=corrections.get(craft);
+        if(correction!=null){
+            if(!craft.collisionCache.readyForCanopyPose(craft.view,correction))return;
+            boolean corrected=false;for(Map.Entry<BlockPos,Float> entry:correction.entrySet()){TileEntityCanopy member=owner(craft,entry.getKey());if(member!=null){corrected|=member.progress!=entry.getValue();member.previous=member.progress=entry.getValue();}}
+            corrections.remove(craft);if(corrected)save(craft,true);
+        }
+        boolean anyMoving=false;for(TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityCanopy){TileEntityCanopy tile=(TileEntityCanopy)raw;if(tile.draws()&&tile.block()!=null&&tile.opening()&&tile.progress!=(tile.targetOpen?1:0)){anyMoving=true;break;}}
+        if(anyMoving&&!craft.collisionCache.readyForCanopyStep(craft.view))return;
         boolean changed=false;int moving=0;
         List<TileEntityCanopy> settled=new ArrayList<>();
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityCanopy){

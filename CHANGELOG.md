@@ -2,8 +2,11 @@
 
 ## 2.1
 
+- Prepare cold vehicle canopy animation poses before advancing their collision shape, including immediate closure on boarding. For supported configurations, perform canopy collision subdivision and merging on the bounded worker; keep the current pose while preparation is pending.
+- Index canopy collision boxes spatially so particles and nearby entities only test relevant surfaces. Reject canopy selection rays outside the posed geometry bounds while preserving exact hits and collision shapes.
+- Align Autopilot forward travel with manual Pilot Seat driving and use bounded route lookahead for smoother headings along stair-step diagonal routes. Preserve marker traversal, waypoint stops and junction safeguards.
 - Reduce canopy animation stalls in vehicle mode by grouping and deduplicating collision boxes with primitive tables, retaining the same ordered collision geometry at every animation step.
-- Prepare collision poses for supported single-canopy assemblies incrementally after vehicle conversion, merging captured coordinates on a bounded background worker. Reuse bounded geometry caches while block states and settings match, discard stale preparation after changes, and retain exact fresh collision for unsupported or unprepared configurations. Cache immutable seat, controller and propulsion indexes with each vehicle snapshot.
+- Prepare collision poses for supported single-canopy assemblies incrementally after vehicle conversion, merging captured coordinates on a bounded background worker. Reuse bounded geometry caches while block states and settings match, discard stale preparation after changes, and retain exact fresh collision for unsupported configurations or preparation failures. Cache immutable seat, controller and propulsion indexes with each vehicle snapshot.
 - Render canopy glazing after opaque walls, screens and other tile artwork, preserving tint when viewed from either side of the pane in block and vehicle modes.
 - Keep third-person cameras outside parked Pilot Seat cockpits while preserving collision with surrounding terrain, and correct the front-view camera extension for captured vehicles.
 - Put Park, Taxi and Hover channel fields directly on Vehicle Controller, with an adjacent switch button for each mode and the current mode disabled. Apply channel changes before switching modes.

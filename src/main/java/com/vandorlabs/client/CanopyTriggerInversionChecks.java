@@ -70,9 +70,9 @@ final class CanopyTriggerInversionChecks {
         EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,seat,EnumFacing.NORTH,1));craft.setPosition(304,120,80);craft.rotationYaw=37;
         try{
             craft.signals.tick();TileEntityCanopy tile=(TileEntityCanopy)craft.view.getTileEntity(BlockPos.ORIGIN);require(tile.targetOpen,"captured OFF opens on low "+kind);
-            source.power(true);require(!tile.targetOpen,"captured OFF closes on high "+kind);for(int tick=0;tick<16;tick++)VehicleCanopies.tick(craft);require(tile.progress==0,"captured closes completely "+kind);
+            source.power(true);require(!tile.targetOpen,"captured OFF closes on high "+kind);for(int tick=0;tick<16;tick++)VehicleCanopyTestSteps.step(craft);require(tile.progress==0,"captured closes completely "+kind);
             NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());craft.setDead();craft=new EntityGroundVehicle(world);craft.readFromNBT(saved);craft.signals.tick();tile=(TileEntityCanopy)craft.view.getTileEntity(BlockPos.ORIGIN);require(!tile.large.activateOnPower && !tile.targetOpen,"captured save/reload retains inversion "+kind);
-            source.power(false);require(tile.targetOpen,"reloaded captured OFF opens on falling channel "+kind);for(int tick=0;tick<16;tick++)VehicleCanopies.tick(craft);require(tile.progress==1,"captured opens completely "+kind);
+            source.power(false);require(tile.targetOpen,"reloaded captured OFF opens on falling channel "+kind);for(int tick=0;tick<16;tick++)VehicleCanopyTestSteps.step(craft);require(tile.progress==1,"captured opens completely "+kind);
             for(VehicleStructure.Cell cell:craft.structure.cells)if(cell.state.getBlock() instanceof BlockCanopy)require(!cell.tileData().getBoolean("CanopyActivateOnPower"),"captured snapshot retains constituent OFF "+kind);
         }finally{craft.setDead();source.power(false);}
     }
