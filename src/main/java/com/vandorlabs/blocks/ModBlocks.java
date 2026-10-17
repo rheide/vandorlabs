@@ -180,6 +180,9 @@ public class ModBlocks {
         }
         // Hand-maintained custom blocks with bespoke assets in
         // src/main/resources.
+        add(new BlockNonWheeledLandingGear("ski_landing_gear",true,false));
+        add(new BlockNonWheeledLandingGear("landing_strut",false,false));
+        add(new BlockNonWheeledLandingGear("angled_landing_strut",false,true));
         add(new BlockConstructorCore("assembly_press",4,3));
         add(new BlockConstructorCore("synthesis_tower",3,5));
         add(new BlockConstructorCore("enclosed_gantry",5,3));
@@ -482,15 +485,16 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);
                 if (block instanceof BlockTelescopicLandingGear) {
+                    String gearName=block.getRegistryName().getResourcePath();
                     for (String size : new String[]{"small","medium","large","extra_large"}) {
-                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,"landing_gear_"+size));
-                        for (String group : new String[]{"fixed", "wheel", "piston"})
-                            ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,"landing_gear_"+size+"_"+group));
+                        ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,gearName+"_"+size));
+                        for (String group : (block instanceof BlockNonWheeledLandingGear?new String[]{"fixed","wheel","piston","nose_front","nose_rear"}:new String[]{"fixed", "wheel", "piston"}))
+                            ModelLoader.registerItemVariants(item, new ResourceLocation(VandorLabs.MODID,gearName+"_"+size+"_"+group));
                     }
                     ModelLoader.setCustomMeshDefinition(item, stack -> {
                         net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
                         int size=tag==null?0:Math.max(0,Math.min(BlockTelescopicLandingGear.SIZES.length-1,tag.getInteger("GearSize")));
-                        return new ModelResourceLocation("vandorlabs:landing_gear_"+BlockTelescopicLandingGear.SIZES[Math.min(size,3)],"inventory");
+                        return new ModelResourceLocation("vandorlabs:"+gearName+"_"+BlockTelescopicLandingGear.SIZES[Math.min(size,3)],"inventory");
                     });
                     continue;
                 }

@@ -34,7 +34,7 @@ final class VehicleMoatTransferRuntimeChecks {
         for(BlockPos at:BlockPos.getAllInBox(BASE.add(-12,-2,-4),BASE.add(10,9,10))){world.getChunkFromBlockCoords(at);world.setBlockToAir(at);}
         for(BlockPos floor:BlockPos.getAllInBox(BASE.add(-2,-1,-2),BASE.add(9,-1,8)))world.setBlockState(floor,Blocks.STONE.getDefaultState(),2);
         actor.capabilities.allowFlying=true;actor.capabilities.isFlying=true;actor.sendPlayerAbilities();
-        Block gear=null;for(Block candidate:Block.REGISTRY)if(candidate instanceof BlockTelescopicLandingGear){gear=candidate;break;}require(gear!=null,"gear registered");
+        Block gear=null;for(Block candidate:Block.REGISTRY)if(candidate instanceof BlockTelescopicLandingGear && !(candidate instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=candidate;break;}require(gear!=null,"gear registered");
         for(int x:new int[]{0,3,6}){world.setBlockState(BASE.east(x),gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(BASE.east(x))).configure(0,0,0,0);}
         for(int x=0;x<=6;x++)for(int z=0;z<=1;z++)world.setBlockState(BASE.add(x,1,z),Blocks.IRON_BLOCK.getDefaultState(),2);
         world.setBlockState(CONTROL,ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),3);

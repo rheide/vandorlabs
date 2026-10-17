@@ -35,7 +35,7 @@ final class VehicleSignalRuntimeChecks {
         TileEntitySpaceDoor doorTile=new TileEntitySpaceDoor();doorTile.setRedstoneChannel(CHANNEL);NBTTagCompound doorTag=doorTile.writeToNBT(new NBTTagCompound());doorTag.setInteger("SpaceDoorTrigger",1);doorTile.readFromNBT(doorTag);
         cells.add(cell(doorPos,door.getDefaultState().withProperty(BlockDoor.HALF,BlockDoor.EnumDoorHalf.LOWER),doorTile));
         cells.add(cell(doorPos.up(),door.getDefaultState().withProperty(BlockDoor.HALF,BlockDoor.EnumDoorHalf.UPPER),new TileEntitySpaceDoor()));
-        BlockTelescopicLandingGear gear=null;for(Block candidate:Block.REGISTRY)if(candidate instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)candidate;break;}require(gear!=null,"gear registered");
+        BlockTelescopicLandingGear gear=null;for(Block candidate:Block.REGISTRY)if(candidate instanceof BlockTelescopicLandingGear && !(candidate instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=(BlockTelescopicLandingGear)candidate;break;}require(gear!=null,"gear registered");
         TileEntityLandingGear gearTile=new TileEntityLandingGear();gearTile.setRedstoneChannel(CHANNEL);cells.add(cell(gearPos,gear.getDefaultState(),gearTile));
         BlockCanopy canopy=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
         for(BlockPos pos:canopy.cells(canopyPos,EnumFacing.NORTH,canopy.length)){

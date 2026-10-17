@@ -14,7 +14,7 @@ import net.minecraft.world.*;
 import java.util.*;
 
 /** A mount and up to four owned cells reserved for its moving piston and wheel. */
-public final class BlockTelescopicLandingGear extends BlockLandingGear {
+public class BlockTelescopicLandingGear extends BlockLandingGear {
     public static final PropertyBool LOWER=PropertyBool.create("lower"),EXTENDED=PropertyBool.create("extended");
     public static final String[] SIZES={"small","medium","large","extra_large","extra_large_2x2"};
     private final List<List<List<AxisAlignedBB>>> geometry=new ArrayList<>();
@@ -24,7 +24,7 @@ public final class BlockTelescopicLandingGear extends BlockLandingGear {
         super(name);
         for(String size:SIZES){
             List<List<AxisAlignedBB>> groups=new ArrayList<>();
-            for(String group:new String[]{"fixed","wheel","piston"})groups.add(loadParts("item/landing_gear_"+(size.equals("extra_large_2x2")?"extra_large":size)+"_"+group));
+            for(String group:new String[]{"fixed","wheel","piston"})groups.add(loadParts("item/"+name+"_"+(size.equals("extra_large_2x2")?"extra_large":size)+"_"+group));
             geometry.add(groups);
         }
         setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(LOWER,false).withProperty(EXTENDED,false));

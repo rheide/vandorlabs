@@ -82,6 +82,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public final VehicleAutopilot autopilot=new VehicleAutopilot(this);
     public double groundClearance(){if(world.getTotalWorldTime()-clearanceAt>=5){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();}return clearance;}
     public boolean setHover(boolean value){
+        if(!value && structure!=null && structure.hasNonWheeledGear)return false;
         if(value==hover)return true;
         if(value && (!VehicleFlight.canHover(structure)))return false;
         if(value)try{VehicleFlight.requireThruster(structure);}catch(IllegalArgumentException unavailable){return false;}
@@ -94,7 +95,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle){flightInput(player,direction,toggle,false);}
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle,boolean sprint){
         if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled())return;
-        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.":"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
+        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.hasNonWheeledGear?"Ski and landing strut craft cannot use Taxi; select Park on the Vehicle Controller near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         vertical=direction;flightSprint=sprint;verticalAt=world.getTotalWorldTime();
     }
     public void autopilotControls(byte f,byte s,boolean b){forward=f;strafe=s;brake=b;}

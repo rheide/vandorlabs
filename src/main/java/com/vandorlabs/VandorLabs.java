@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.2";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t204";
+    public static final String BUILD_ID = "t205";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -77,6 +77,7 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityHexTank.class,"vandorlabs:hex_tank");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructor.class,"vandorlabs:constructor");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructorPart.class,"vandorlabs:constructor_part");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySkiLandingGear.class,"vandorlabs:ski_landing_gear");
         PacketHandler.register();
         logger.info("Vandor Labs pre-initialization: engaging warp drive...");
     }

@@ -68,7 +68,7 @@ public final class VehicleTaxiRuntimeChecks {
         WorldServer w=world(mc);TaxiSettingsRuntimeChecks.run(w);EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
         p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(origin.add(-12,-1,-12),origin.add(20,-1,20)))w.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
-        Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}
+        Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear && !(b instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=b;break;}
         require(gear!=null,"landing gear fixture");VehicleGearRuntimeChecks.run(w,(BlockTelescopicLandingGear)gear);
         w.setBlockState(origin,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(origin)).configure(0,0,0,0);
         for(int x=0;x<=8;x++)w.setBlockState(origin.add(x,1,0),Blocks.STONE.getDefaultState(),2);

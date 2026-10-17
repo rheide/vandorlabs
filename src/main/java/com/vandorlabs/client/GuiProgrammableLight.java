@@ -62,10 +62,10 @@ public final class GuiProgrammableLight extends GuiContainer {
                 .custom(value->{if(editingOff)offSelected=value;else selected=value;send();});
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housing,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        buttonList.add(layout.tab(90,0,3,"ON texture"));buttonList.add(layout.tab(91,1,3,"OFF texture"));buttonList.add(layout.tab(92,2,3,"Housing"));
+        buttonList.add(layout.tab(90,0,3,"ON"));buttonList.add(layout.tab(91,1,3,"OFF"));buttonList.add(layout.tab(92,2,3,"Housing"));
         buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
-        buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
+        if(editingOff){GuiButton automatic=layout.control(105,96,offSelected<0?"OFF: Automatic":"Use automatic OFF");automatic.enabled=offSelected>=0;buttonList.add(automatic);}else buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
     private String brightnessLabel(){return signalBrightness?"Brightness: Signal + offset":"Brightness: Slider";}
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
@@ -109,7 +109,7 @@ public final class GuiProgrammableLight extends GuiContainer {
             throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104))return;
         int before=faceList.selected();
-        if(textureTab<2 && faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){if(editingOff)offSelected=faceList.selected();else selected=faceList.selected();send();}return;}
+        if(textureTab<2 && faceList.click(mouseX,mouseY,button)){if(faceList.picked()){if(editingOff)offSelected=faceList.selected();else selected=faceList.selected();send();}return;}
         if (textureTab==2 && housingList.click(mouseX, mouseY, button)) {
             if (housing != housingList.selected()) {
                 housing = housingList.selected();
@@ -151,6 +151,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==105){offSelected=-1;send();initGui();return;}
         if(button.id>=90 && button.id<=92){textureTab=button.id-90;editingOff=textureTab==1;initGui();return;}
         if (button.id == 101) {
             join = !join;

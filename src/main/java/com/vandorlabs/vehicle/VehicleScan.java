@@ -147,8 +147,15 @@ public final class VehicleScan {
                             require(world.getBlockState(member).getValue(BlockWheel.PART)==n&&world.getBlockState(member).getValue(BlockWheel.FACING)==state.getValue(BlockWheel.FACING),"Incomplete wheel ownership.");}}
                     continue;
                 }
+                if(block instanceof BlockNonWheeledLandingGear){
+                    // Follow runner/pad connections, while ordinary terrain still terminates here.
+                    for(EnumFacing side:EnumFacing.values()){
+                        BlockPos next=p.offset(side);if(world.isBlockLoaded(next) && world.getBlockState(next).getBlock() instanceof BlockNonWheeledLandingGear)enqueue(next);
+                    }
+                }
                 if(block instanceof BlockTelescopicLandingGear) {
-                    TileEntityLandingGear root=((BlockTelescopicLandingGear)block).root(world,p);
+                    BlockPos control=block instanceof BlockNonWheeledLandingGear?((BlockNonWheeledLandingGear)block).connectedRoot(world,p):p;
+                    TileEntityLandingGear root=((BlockTelescopicLandingGear)block).root(world,control);
                     require(root!=null, "Orphaned landing gear.");
                     if(gears.add(root.getPos())) {
                         boolean extended=world.getBlockState(root.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED);

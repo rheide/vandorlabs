@@ -73,6 +73,12 @@ public final class VehicleLandingGear {
         int minX=0,minY=0,minZ=0;
         for(VehicleStructure.Cell cell:source.cells){
             if(!(cell.state.getBlock() instanceof BlockTelescopicLandingGear) || cell.state.getValue(BlockTelescopicLandingGear.LOWER))continue;
+            VehicleStructure.Cell below=source.at(cell.pos.down());
+            if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear && ((com.vandorlabs.blocks.BlockNonWheeledLandingGear)cell.state.getBlock()).ski && below!=null && below.state.getBlock()==cell.state.getBlock()){
+                BlockPos belowRoot=below.pos;NBTTagCompound owner=below.tileData();
+                if(below.state.getValue(BlockTelescopicLandingGear.LOWER) && owner!=null)belowRoot=below.pos.add(owner.getInteger("GearOwnerX"),owner.getInteger("GearOwnerDistance"),owner.getInteger("GearOwnerZ"));
+                if(belowRoot.getY()<cell.pos.getY())continue;
+            }
             NBTTagCompound tag=cell.tileData();if(tag==null)throw new IllegalArgumentException("Landing gear is missing its configuration.");
             int size=tag.getInteger("GearSize"),pixels=tag.hasKey("ExtensionPixels")?tag.getInteger("ExtensionPixels"):16;
             int count=(int)Math.ceil(pixels/16D)+(size>=3?1:0),radius=size>=3?1:0,minimum=size==4?0:-radius;
@@ -87,7 +93,7 @@ public final class VehicleLandingGear {
                             || !p.add(owner.getInteger("GearOwnerX"),owner.getInteger("GearOwnerDistance"),owner.getInteger("GearOwnerZ")).equals(cell.pos))
                         throw new IllegalArgumentException("Extended landing gear overlaps another craft block.");
                 }
-                TileEntityLandingGear part=new TileEntityLandingGear();part.setPos(p);part.setOwner(cell.pos);
+                TileEntityLandingGear part=(TileEntityLandingGear)cell.state.getBlock().createTileEntity(null,cell.state.withProperty(BlockTelescopicLandingGear.LOWER,true));part.setPos(p);part.setOwner(cell.pos);
                 cells.put(p,new VehicleStructure.Cell(p,cell.state.withProperty(BlockTelescopicLandingGear.LOWER,true).withProperty(BlockTelescopicLandingGear.EXTENDED,true),part.writeToNBT(new NBTTagCompound())));
                 minX=Math.min(minX,p.getX());minY=Math.min(minY,p.getY());minZ=Math.min(minZ,p.getZ());
             }

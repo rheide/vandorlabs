@@ -112,7 +112,7 @@ final class AutopilotRuntimeChecks {
     }
     private static void blockWaypoint(WorldServer world,BlockPos base)throws Exception{
         net.minecraft.entity.player.EntityPlayerMP owner=world.getMinecraftServer().getPlayerList().getPlayers().get(0);
-        net.minecraft.block.Block gear=null;for(net.minecraft.block.Block b:net.minecraft.block.Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}require(gear!=null,"gear fixture");
+        net.minecraft.block.Block gear=null;for(net.minecraft.block.Block b:net.minecraft.block.Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear && !(b instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=b;break;}require(gear!=null,"gear fixture");
         for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(6,5,6)))world.setBlockToAir(p);
         for(BlockPos offset:Arrays.asList(BlockPos.ORIGIN,new BlockPos(2,0,0),new BlockPos(0,0,2))){BlockPos at=base.add(offset);world.setBlockState(at,gear.getDefaultState().withProperty(BlockTelescopicLandingGear.EXTENDED,true),2);((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0);}
         for(BlockPos offset:Arrays.asList(new BlockPos(0,1,0),new BlockPos(0,1,1),new BlockPos(0,1,2)))world.setBlockState(base.add(offset),Blocks.STONE.getDefaultState(),2);

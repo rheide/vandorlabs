@@ -57,7 +57,7 @@ public final class VehicleEscalatorRuntimeChecks {
         EntityPlayerMP player=world.getMinecraftServer().getPlayerList().getPlayers().get(0);
         net.minecraft.util.math.Vec3d originalPosition=player.getPositionVector();boolean originallyFlying=player.capabilities.isFlying;
         player.capabilities.isFlying=true;player.setPosition(rampPos.getX()-2,rampPos.getY()+2,rampPos.getZ()+.5);
-        BlockTelescopicLandingGear gear=null;for(net.minecraft.block.Block block:net.minecraft.block.Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
+        BlockTelescopicLandingGear gear=null;for(net.minecraft.block.Block block:net.minecraft.block.Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=(BlockTelescopicLandingGear)block;break;}
         require(gear!=null,"registered gear");for(int x=0;x<3;x++){BlockPos at=base.east(x);world.setBlockState(at,gear.getDefaultState(),2);require(((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0),"retracted gear");}
         for(BlockPos p:BlockPos.getAllInBox(base.up(),base.add(3,1,2)))world.setBlockState(p,Blocks.STONE.getDefaultState(),2);
         world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),2);world.setBlockState(seat.up(),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.UPPER,true),2);

@@ -15,7 +15,7 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.world.World;
 
 /** Progress is extension distance in blocks. Lower cells only store their owner. */
-public final class TileEntityLandingGear extends TileEntity implements ITickable, RedstoneChannelMember {
+public class TileEntityLandingGear extends TileEntity implements ITickable, RedstoneChannelMember {
     private ChannelList channels=ChannelList.EMPTY;
     @Override public ChannelList getRedstoneChannels(){return channels;}
 
@@ -49,6 +49,7 @@ public final class TileEntityLandingGear extends TileEntity implements ITickable
         return nextChannel>=0 && configure(nextMode,ChannelList.of(nextChannel),pixels,nextSize);
     }
     public boolean configure(int nextMode,ChannelList nextChannel,int pixels,int nextSize){
+        if(getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear && nextSize!=0 && nextSize!=4)return false;
         if(nextSize<0||nextSize>=BlockTelescopicLandingGear.SIZES.length||!isRoot()||nextMode<0||nextMode>2||nextChannel==null||pixels<0||pixels>64||pixels%8!=0)return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
         boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);

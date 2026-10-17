@@ -34,7 +34,7 @@ public final class VehicleControllerRuntimeChecks {
         actor.capabilities.allowFlying=true;actor.capabilities.isFlying=true;actor.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(10,6,5)))world.setBlockToAir(pos);
         for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(10,-1,5)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
-        Block gear=null;for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=block;break;}require(gear!=null,"landing gear registered");
+        Block gear=null;for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=block;break;}require(gear!=null,"landing gear registered");
         for(int x:new int[]{0,3,6}){world.setBlockState(BASE.east(x),gear.getDefaultState(),2);((TileEntityLandingGear)world.getTileEntity(BASE.east(x))).configure(0,0,0,0);}
         for(int x=0;x<=6;x++)for(int z=0;z<=1;z++)world.setBlockState(BASE.add(x,1,z),Blocks.IRON_BLOCK.getDefaultState(),2);
         world.setBlockState(CONTROL,controller().getDefaultState(),3);

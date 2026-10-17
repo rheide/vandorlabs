@@ -42,3 +42,11 @@ The Vehicle Controller dialog assigns separate optional channel lists to **Park*
 See [Autopilot and waypoints](vehicle-autopilot.md) for route markers, timed stops and the Vehicle Status screen. Autopilot owns movement while enabled and continues after the pilot exits.
 
 Vehicle conversion prepares collision geometry and writes recovery records on bounded background workers. The server rechecks the craft before committing, then spreads lighting, neighbor updates and affected-chunk checkpoints across ticks. It does not force a world-wide save for each boarding or parking operation. A craft stays stationary until its checkpoint completes; slow storage delays that transfer without making the server wait for disk I/O. Animation retains its last exact collision pose while preparation is pending.
+
+## Skis and landing struts
+
+Ski Landing Gear, Landing Struts, and Angled Landing Struts share the wheeled gear's extension slider, redstone channels, and On/Off/Disabled trigger modes. Choose Small (one block) or Large (2x2) in the Configurizer dialog. The angled strut points toward its placement direction.
+
+Matching skis join end-to-end when their size, facing axis, and extension agree. Vertical ski columns share the lowest runner's extension controls; upper runners remain part of the fixed column. Detection follows connected ski sections without following the terrain beneath them.
+
+Any ski or strut disables Taxi for the complete vehicle, including mixed wheel/strut builds. Install three lift blocks and a vehicle thruster; assembly enters Hover directly. Extend the gear, stop within three blocks of solid ground, and select Park on the Vehicle Controller to return directly to blocks. Taxi buttons and automatic Taxi boarding remain unavailable for these craft.

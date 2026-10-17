@@ -12,7 +12,7 @@ public final class BlockCategories {
         if(id.contains("glass"))return "glass";
         if(id.contains("door"))return "doors";
         if(id.contains("ramp"))return "ramps";
-        if(id.equals("vehicle_controller")||id.equals("pilot_seat")||id.equals("landing_gear")||id.startsWith("wheel_"))return "vehicle_controls";
+        if(id.equals("vehicle_controller")||id.equals("pilot_seat")||id.contains("landing_gear")||id.contains("landing_strut")||id.startsWith("wheel_"))return "vehicle_controls";
         if(id.contains("chair")||id.contains("seat"))return "seating";
         if(id.startsWith("rocket_thruster")||id.startsWith("ion_drive")||id.startsWith("plasma_vent")
                 ||id.startsWith("impulse_engine")||id.equals("antigravity_plate")

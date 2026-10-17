@@ -700,3 +700,10 @@ task testCompactReentry(type: Exec) {
     commandLine pythonExecutable, 'tools/test_compact_reentry.py'
 }
 check.dependsOn testCompactReentry
+
+task testNonWheeledGearModels(type: Exec) {
+    group = 'verification'
+    description = 'Check every ski/strut item projection, UVs and motion groups'
+    commandLine pythonExecutable, 'tools/test_non_wheeled_gear.py'
+}
+check.dependsOn testNonWheeledGearModels

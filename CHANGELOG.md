@@ -3,6 +3,7 @@
 ## 2.2
 
 - Add the sunlight-powered Programmable Matter Infuser with redstone fuel, iron input, hopper automation, and a creative-only Infuser Core. Remove direct ingot crafting.
+- Add connecting Ski Landing Gear and straight/angled Landing Struts, with Small and 2x2 sizes, shared extension controls, and Hover-only vehicle conversion.
 - Add Programmable Matter Blocks with reversible nine-ingot packing.
 - Add Assembly Press, Synthesis Tower, and Enclosed Gantry models assembled from creative-only cores and matter-block frames. Dismantling restores the frame.
 - Add vertically connected Hexagonal Fuel Tanks with fluid-level windows and configurable casings, plus directional Forge Energy Battery Blocks.

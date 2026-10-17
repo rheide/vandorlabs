@@ -26,11 +26,23 @@ public class BlockLandingGear extends BlockVandorDirectional {
         try {
             for (JsonElement raw : modelElements("vandorlabs:"+model,0)) {
                 JsonObject e = raw.getAsJsonObject(); JsonArray a = e.getAsJsonArray("from"), b = e.getAsJsonArray("to");
-                result.add(new AxisAlignedBB(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16,
-                        b.get(0).getAsDouble()/16,b.get(1).getAsDouble()/16,b.get(2).getAsDouble()/16));
+                AxisAlignedBB bounds=new AxisAlignedBB(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16,
+                        b.get(0).getAsDouble()/16,b.get(1).getAsDouble()/16,b.get(2).getAsDouble()/16);
+                if(e.has("rotation"))bounds=rotatedBounds(bounds,e.getAsJsonObject("rotation"));
+                result.add(bounds);
             }
         } catch (IOException e) { throw new IllegalStateException("Cannot load gear geometry " + model, e); }
         return result;
+    }
+    private static AxisAlignedBB rotatedBounds(AxisAlignedBB box,JsonObject rotation){
+        JsonArray origin=rotation.getAsJsonArray("origin");double ox=origin.get(0).getAsDouble()/16,oy=origin.get(1).getAsDouble()/16,oz=origin.get(2).getAsDouble()/16;
+        double angle=Math.toRadians(rotation.get("angle").getAsDouble()),c=Math.cos(angle),s=Math.sin(angle);String axis=rotation.get("axis").getAsString();
+        double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
+        for(double px:new double[]{box.minX,box.maxX})for(double py:new double[]{box.minY,box.maxY})for(double pz:new double[]{box.minZ,box.maxZ}){
+            double x=px-ox,y=py-oy,z=pz-oz,rx=x,ry=y,rz=z;
+            if("x".equals(axis)){ry=y*c-z*s;rz=y*s+z*c;}else if("y".equals(axis)){rx=x*c+z*s;rz=-x*s+z*c;}else{rx=x*c-y*s;ry=x*s+y*c;}
+            rx+=ox;ry+=oy;rz+=oz;minX=Math.min(minX,rx);maxX=Math.max(maxX,rx);minY=Math.min(minY,ry);maxY=Math.max(maxY,ry);minZ=Math.min(minZ,rz);maxZ=Math.max(maxZ,rz);
+        }return new AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ);
     }
     private static JsonArray modelElements(String model,int depth)throws IOException {
         if(depth>16)throw new IOException("Cyclic gear model inheritance: "+model);

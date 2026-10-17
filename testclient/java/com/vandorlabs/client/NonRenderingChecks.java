@@ -233,7 +233,21 @@ public final class NonRenderingChecks {
                 net.minecraft.util.math.AxisAlignedBB box){return Collections.emptyList();}
         @Override public boolean spawnEntity(net.minecraft.entity.Entity entity){loadedEntityList.add(entity);return true;}
         @Override public BlockPos getSpawnPoint(){return new BlockPos(0,64,0);}
-        @Override protected net.minecraft.world.chunk.IChunkProvider createChunkProvider(){return null;}
+        @Override protected net.minecraft.world.chunk.IChunkProvider createChunkProvider(){
+            return new net.minecraft.world.chunk.IChunkProvider(){
+                public net.minecraft.world.chunk.Chunk getLoadedChunk(int x,int z){
+                    if(!isChunkLoaded(x,z,true))return null;
+                    return new net.minecraft.world.chunk.Chunk(MemoryWorld.this,x,z){
+                        @Override public Map<BlockPos,TileEntity> getTileEntityMap(){return tiles;}
+                    };
+                }
+                public net.minecraft.world.chunk.Chunk provideChunk(int x,int z){return getLoadedChunk(x,z);}
+                public boolean tick(){return false;}
+                public String makeString(){return "MemoryWorld";}
+                public boolean isChunkGeneratedAt(int x,int z){return isChunkLoaded(x,z,true);}
+            };
+        }
+        @Override public net.minecraft.world.chunk.IChunkProvider getChunkProvider(){return createChunkProvider();}
         @Override protected boolean isChunkLoaded(int x,int z,boolean empty){return !chunkLimit || x==0&&z==0;}
         private void loaded(BlockPos p){if(!isBlockLoaded(p))throw new IllegalStateException("read unloaded chunk "+p);}
         @Override public IBlockState getBlockState(BlockPos p){stateReads++;loaded(p);return states.getOrDefault(p,Blocks.AIR.getDefaultState());}

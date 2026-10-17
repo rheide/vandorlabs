@@ -40,8 +40,10 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
     public void render(TileEntityLandingGear tile,double x,double y,double z,float partial,int stage,float alpha) {
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock() instanceof BlockTelescopicLandingGear) || state.getValue(BlockTelescopicLandingGear.LOWER)) return;
-        ModelResourceLocation FIXED=RenderIdentifierCache.gear(tile.getSize(),false);
-        ModelResourceLocation WHEEL=RenderIdentifierCache.gear(tile.getSize(),true);
+        String family=state.getBlock().getRegistryName().getResourcePath();
+        boolean nonWheeled=state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear;
+        ModelResourceLocation FIXED=RenderIdentifierCache.gear(family,tile.getSize(),false);
+        ModelResourceLocation WHEEL=RenderIdentifierCache.gear(family,tile.getSize(),true);
         float anchor=BlockTelescopicLandingGear.pistonAnchor(tile.getSize());
         float pistonLength=BlockTelescopicLandingGear.pistonLength(tile.getSize());
         float t=tile.previous+(tile.progress-tile.previous)*partial;
@@ -56,7 +58,9 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         draw(FIXED);
         GlStateManager.pushMatrix();GlStateManager.translate(0,-t,0);
         com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
-        if(craft==null)draw(WHEEL);
+        if(craft==null || nonWheeled){draw(WHEEL);
+            if(nonWheeled){com.vandorlabs.blocks.BlockNonWheeledLandingGear block=(com.vandorlabs.blocks.BlockNonWheeledLandingGear)state.getBlock();if(block.ski){for(boolean front:new boolean[]{false,true})if(!block.connectedEnd(tile.getWorld(),tile.getPos(),front))draw(RenderIdentifierCache.gearTip(family,tile.getSize(),front));}}
+        }
         else {
             int size=Math.min(3,tile.getSize());double center=WHEEL_CENTERS[size],radius=WHEEL_RADII[size];
             IBakedModel wheel=Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getModelManager().getModel(WHEEL);
@@ -67,7 +71,7 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
             draw(wheelPart(wheel,true));
         }
         GlStateManager.popMatrix();
-        drawArm(anchor, anchor-pistonLength-t,tile.getSize()>=3);
+        drawArm(anchor, anchor-pistonLength-t,tile.getSize()>=3 && !nonWheeled);
         GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
     }

@@ -130,12 +130,13 @@ public final class VehicleRuntimeChecks {
     }
     private static void server(Minecraft mc) throws Exception {
         WorldServer w=mc.getIntegratedServer().getWorld(0);EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+        NonWheeledGearRuntimeChecks.run(w,p);
         chunkSerialization(w);
         VehicleSignalRuntimeChecks.run(w,p);
         extendedHull(w,p);
         p.dismountRidingEntity();p.setSneaking(false);p.setPositionAndUpdate(4,101,8);p.capabilities.isFlying=true;p.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(0,100,0),new BlockPos(48,100,32)))w.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
-        Block gear=null;for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=block;break;}
+        Block gear=null;for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=block;break;}
         require(gear!=null,"registered landing gear");
         w.setWorldTime(6000);w.getGameRules().setOrCreateGameRule("doMobSpawning","false");
         for(int x=0;x<3;x++)for(int z=0;z<3;z++) {

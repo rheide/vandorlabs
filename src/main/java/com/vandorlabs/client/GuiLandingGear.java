@@ -33,13 +33,13 @@ public final class GuiLandingGear extends GuiContainer {
         length.displayString=lengthLabel(tile.getExtensionPixels());
         buttonList.add(length);buttonList.add(new GuiButton(3,guiLeft+14,guiTop+180,252,20,"Done"));
     }
-    private String sizeLabel(){String name=(size==4?"extra large (2×2)":com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES[size]).replace('_',' ');return "Size: "+Character.toUpperCase(name.charAt(0))+name.substring(1);}
+    private String sizeLabel(){if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)return size==4?"Size: Large (2x2)":"Size: Small (1 block)";String name=(size==4?"extra large (2×2)":com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES[size]).replace('_',' ');return "Size: "+Character.toUpperCase(name.charAt(0))+name.substring(1);}
     private static String lengthLabel(int pixels){return "Extended length: "+(pixels/16D)+" blocks";}
     private void submit(){
         ChannelList value=ChannelFields.parse(channel);if(value==null)return;
         PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),mode,value.first(),length.getValueInt()*8,size).withChannels(value));mc.player.closeScreen();
     }
-    protected void actionPerformed(GuiButton b){if(b.id==0){mode=GuiOptionCycle.next(mode,3);buttonList.get(0).displayString="Redstone: "+MODES[mode];}else if(b.id==4){size=GuiOptionCycle.next(size,com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES.length);for(GuiButton button:buttonList)if(button.id==4)button.displayString=sizeLabel();
+    protected void actionPerformed(GuiButton b){if(b.id==0){mode=GuiOptionCycle.next(mode,3);buttonList.get(0).displayString="Redstone: "+MODES[mode];}else if(b.id==4){size=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear?(size==0?4:0):GuiOptionCycle.next(size,com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES.length);for(GuiButton button:buttonList)if(button.id==4)button.displayString=sizeLabel();
             PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),-1,0,length.getValueInt()*8,size));
         }else if(b.id==3)submit();}
     protected void keyTyped(char c,int key)throws IOException{if(key==Keyboard.KEY_RETURN){submit();return;}if(!channel.textboxKeyTyped(c,key))super.keyTyped(c,key);}

@@ -92,6 +92,7 @@ public final class ItemConfigurizer extends Item {
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewController((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),pos);return;}
         TileEntity tile = world.getTileEntity(pos);
         int gui;
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){pos=((com.vandorlabs.blocks.BlockNonWheeledLandingGear)state.getBlock()).connectedRoot(world,pos);tile=world.getTileEntity(pos);}
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && ((com.vandorlabs.tiles.TileEntityCanopy)tile).owner().configurable()){tile=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();pos=tile.getPos();gui=GuiHandler.GUI_LARGE_CANOPY;}
         else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) gui = GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR;
         else if (tile instanceof TileEntitySpaceDoor) gui = GuiHandler.GUI_SPACE_DOOR;

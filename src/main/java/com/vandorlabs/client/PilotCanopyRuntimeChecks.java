@@ -18,7 +18,7 @@ final class PilotCanopyRuntimeChecks {
     static void run(World world,EntityPlayerMP player){
         BlockPilotSeat seat=(BlockPilotSeat)ModBlocks.PILOT_SEAT;
         BlockTelescopicLandingGear gear=null;
-        for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
+        for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=(BlockTelescopicLandingGear)block;break;}
         require(gear!=null,"registered landing gear");
         int count=0;
         for(Block raw:Block.REGISTRY)if(raw instanceof BlockCanopy){

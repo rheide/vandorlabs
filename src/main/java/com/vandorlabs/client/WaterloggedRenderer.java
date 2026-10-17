@@ -15,6 +15,8 @@ final class WaterloggedRenderer {
         List<AxisAlignedBB> cells=WaterloggedParts.gaps(tile.getWorld(),tile.getPos());
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/water_still");
         int color=net.minecraft.world.biome.BiomeColorHelper.getWaterColorAtPos(tile.getWorld(),tile.getPos());
+        float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
+        GlStateManager.resetColor();GlStateManager.color(1,1,1,1);
         GlStateManager.pushMatrix();GlStateManager.translate(x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ());
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);GlStateManager.disableLighting();GlStateManager.disableCull();
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
@@ -26,6 +28,6 @@ final class WaterloggedRenderer {
                 for(int i=0;i<4;i++){double[] v=face[i];buffer.pos(v[0],v[1],v[2]).tex(sprite.getInterpolatedU(i<2?0:16),sprite.getInterpolatedV(i==0||i==3?0:16)).color(color>>16&255,color>>8&255,color&255,175).endVertex();}
             }
         }
-        tess.draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.disableBlend();GlStateManager.popMatrix();
+        tess.draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.disableBlend();GlStateManager.resetColor();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
     }
 }

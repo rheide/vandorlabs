@@ -140,8 +140,6 @@ public class ReproLab {
         // Shot Y is player-feet Y.  Subtract the normal 1.62-block eye
         // height so a zero-pitch view is centered on the block.
         double eyeLevelFeet = BCY - 1.62D;
-        SHOTS.add(new Shot("utility22_blocks",137,24,115,-35,20));
-        for(int i=0;i<3;i++)SHOTS.add(new Shot("utility22_constructor_"+i,137+i*10,25,127,-35,20));
         for (int group=0;group<4;group++) {
             for (String pose : new String[]{"closed","opening_mid","open"})
                 SHOTS.add(new Shot("controller_"+group+"_"+pose,36+group*8,28,10,-135,30));
@@ -447,6 +445,14 @@ public class ReproLab {
             for (String pose : new String[]{"off", "on"})
                 SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
+        SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
+        SHOTS.add(new Shot("utility22_waterlogged",143,24,116,0,24));
+        for(int i=0;i<3;i++)SHOTS.add(new Shot("utility22_constructor_"+i,137+i*10,25,127,-35,20));
+        for(String pose:new String[]{"retracted","extended"}){
+            SHOTS.add(new Shot("utility22_gear_small_"+pose,194,32,112,0,22));
+            SHOTS.add(new Shot("utility22_gear_large_"+pose,194,33,117,0,24));
+        }
+        SHOTS.add(new Shot("utility22_gear_joined",214,33,112,40,20));
         SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
                 GALLERY_Y+3D,-98D,0,2));
 
@@ -830,7 +836,7 @@ public class ReproLab {
                 } else beginShot(mc,firstShot,true);
                 state = 3;
                 holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly") || Boolean.getBoolean("vandorlabs.storageChecksOnly")
-                        || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
+                        || SHOTS.get(shotIndex).name.startsWith("utility22_") || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
                 break;
             case 3:
                 if(pendingGallery!=null) {
@@ -851,6 +857,7 @@ public class ReproLab {
                 // Never save the previous camera's framebuffer under this shot's name.
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.equals("utility22_blocks"))UtilityItemRuntimeChecks.checkTankRenderState(mc);
                 if(s.name.startsWith("gallery_acceptance_") && !ConnectionAcceptance.ready(mc.world,s.name,GALLERY_X,GALLERY_Y)) {
                     if(++pendingGalleryTicks>400)throw new IllegalStateException("Acceptance fixture did not synchronize: "+s.name);
                     break;
@@ -887,7 +894,7 @@ public class ReproLab {
                 if (shotIndex < SHOTS.size()) {
                     Shot next = SHOTS.get(shotIndex);
                     beginShot(mc, next, false);
-                    holdTicks = next.name.equals("gallery_v12_gear_four") ? 100
+                    holdTicks = next.name.startsWith("utility22_") || next.name.equals("gallery_v12_gear_four") ? 100
                             : next.name.endsWith("opening_mid") ? 4
                             : Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly") ? 4
                             : next.name.startsWith("gallery_") ? 60
@@ -2077,7 +2084,9 @@ public class ReproLab {
                 UtilityStorageRuntimeChecks.run(world);
                 ConstructorRuntimeChecks.run(world);
                 WaterloggedRuntimeChecks.run(world);
+                try{NonWheeledGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("non-wheeled landing gear",failure); }
                 UtilityVisualFixtures.build(world);
+                GearVisualFixtures.build(world);
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
@@ -2092,7 +2101,7 @@ public class ReproLab {
             StorageRuntimeChecks.server(world,serverPlayer);
         });
         ScreenRuntimeChecks.checkClientPlacement(mc);
-        try{UtilityItemRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
+        try{UtilityItemRuntimeChecks.run(mc,outDir);GearItemRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
         CustomMaterialRuntimeChecks.run(mc.player);
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{
@@ -2992,6 +3001,7 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        if(s.name.startsWith("utility22_gear_"))onServer(mc,()->GearVisualFixtures.pose(mc.getIntegratedServer().getWorld(0),s.name.endsWith("extended")));
         if(s.name.startsWith("gallery_acceptance_")) {
             mc.setIngameNotInFocus();
             mc.world.setWorldTime(6000);

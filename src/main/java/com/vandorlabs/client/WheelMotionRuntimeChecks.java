@@ -37,7 +37,7 @@ public final class WheelMotionRuntimeChecks {
     private static void require(boolean yes,String message){if(!yes)throw new IllegalStateException("wheel motion: "+message);}
     public static void begin(Minecraft mc){
         variant=startupTicks=settledTicks=0;gear=null;parked=pendingParked=null;
-        for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
+        for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=(BlockTelescopicLandingGear)block;break;}
         require(gear!=null,"landing gear registered");
         montage=new BufferedImage(POSES.length*PIXELS,8*(PIXELS+24),BufferedImage.TYPE_INT_RGB);
         directionMath(mc);

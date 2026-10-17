@@ -1,0 +1,8 @@
+{
+  "textures": {
+    "metal": "vandorlabs:blocks/matter/casing",
+    "rubber": "vandorlabs:blocks/landing_gear/rubber",
+    "particle": "vandorlabs:blocks/matter/casing"
+  },
+  "elements": []
+}

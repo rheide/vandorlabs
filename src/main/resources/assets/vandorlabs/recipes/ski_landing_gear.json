@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IMI",
+    " P ",
+    "IWI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "W": {
+      "item": "minecraft:wooden_slab",
+      "data": 0
+    }
+  },
+  "result": {
+    "item": "vandorlabs:ski_landing_gear"
+  }
+}

@@ -20,6 +20,8 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
     }
     private static void window(BufferBuilder b,TextureAtlasSprite s,int color,double minY,double maxY,double z){quad(b,s,color,new double[][]{{.34,maxY,z},{.34,minY,z},{.66,minY,z},{.66,maxY,z}});}
     @Override public void render(TileEntityHexTank tile,double x,double y,double z,float partial,int stage,float alpha){
+        float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
+        GlStateManager.resetColor();GlStateManager.color(1,1,1,1);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.disableLighting();GlStateManager.disableCull();
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
         EnumFacing facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
@@ -32,6 +34,6 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
         FluidStack fluid=tile.tank.getFluid();
         if(fluid!=null && fluid.amount>0){TextureAtlasSprite contents=sprite(fluid.getFluid().getStill(fluid).toString());int color=fluid.getFluid().getColor(fluid);double top=.2+.6*Math.min(1,fluid.amount/(double)TileEntityHexTank.CAPACITY);
             window(b,contents,color,.2,top,.0605);window(b,contents,color,.2,top,.9395);}
-        t.draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
+        t.draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.resetColor();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();
     }
 }

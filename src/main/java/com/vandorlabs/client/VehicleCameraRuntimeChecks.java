@@ -47,7 +47,7 @@ final class VehicleCameraRuntimeChecks {
             for(BlockPos at:BlockPos.getAllInBox(BASE.add(-14,-2,-14),BASE.add(18,8,22)))w.setBlockToAir(at);
             for(BlockPos at:BlockPos.getAllInBox(BASE.add(-14,-2,-14),BASE.add(18,-2,22)))w.setBlockState(at,Blocks.STONE.getDefaultState(),2);
             for(BlockPos at:BlockPos.getAllInBox(BASE,BASE.add(6,0,8)))w.setBlockState(at,Blocks.IRON_BLOCK.getDefaultState(),2);
-            Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear){gear=b;break;}require(gear!=null,"gear registered");for(BlockPos at:new BlockPos[]{BASE.down(),BASE.east(6).down(),BASE.south(8).down()}){w.setBlockState(at,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(at)).configure(0,0,0,0);}
+            Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear && !(b instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=b;break;}require(gear!=null,"gear registered");for(BlockPos at:new BlockPos[]{BASE.down(),BASE.east(6).down(),BASE.south(8).down()}){w.setBlockState(at,gear.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(at)).configure(0,0,0,0);}
             w.setBlockState(SEAT,ModBlocks.PILOT_SEAT.getDefaultState(),2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,SEAT,w.getBlockState(SEAT),p,new ItemStack(ModBlocks.PILOT_SEAT));((TileEntityPilotSeat)w.getTileEntity(SEAT)).setTaxiMode(false);
             w.setBlockState(CONTROL,Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);w.setBlockState(BASE.add(4,1,3),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
             // Both native third-person rays hit these connected cockpit windows.

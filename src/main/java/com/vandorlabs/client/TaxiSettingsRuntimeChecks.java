@@ -39,7 +39,7 @@ public final class TaxiSettingsRuntimeChecks {
         for(BlockPos p:BlockPos.getAllInBox(at.add(-3,-2,-2),at.add(3,-2,2)))world.setBlockState(p,Blocks.STONE.getDefaultState(),2);
         world.setBlockState(at,ModBlocks.PILOT_SEAT.getDefaultState(),2);world.setBlockState(at.up(),ModBlocks.PILOT_SEAT.getDefaultState().withProperty(BlockPilotSeat.UPPER,true),2);
         world.setBlockState(at.down(),Blocks.STONE_SLAB.getDefaultState().withProperty(BlockSlab.HALF,BlockSlab.EnumBlockHalf.TOP),2);
-        BlockTelescopicLandingGear gear=null;for(net.minecraft.block.Block block:net.minecraft.block.Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=(BlockTelescopicLandingGear)block;break;}
+        BlockTelescopicLandingGear gear=null;for(net.minecraft.block.Block block:net.minecraft.block.Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=(BlockTelescopicLandingGear)block;break;}
         require(gear!=null,"telescopic landing gear fixture");BlockPos gearPos=at.down().east();
         world.setBlockState(gearPos,gear.getDefaultState().withProperty(BlockTelescopicLandingGear.LOWER,false).withProperty(BlockTelescopicLandingGear.EXTENDED,false),2);
         com.vandorlabs.tiles.TileEntityLandingGear gearTile=(com.vandorlabs.tiles.TileEntityLandingGear)world.getTileEntity(gearPos);

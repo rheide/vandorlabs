@@ -1,0 +1,78 @@
+{
+  "textures": {
+    "metal": "vandorlabs:blocks/matter/casing",
+    "rubber": "vandorlabs:blocks/landing_gear/rubber",
+    "particle": "vandorlabs:blocks/matter/casing"
+  },
+  "elements": [
+    {
+      "name": "front_tip",
+      "from": [
+        -4,
+        1,
+        -8
+      ],
+      "to": [
+        20,
+        3,
+        -5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "down": {
+          "texture": "#metal",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

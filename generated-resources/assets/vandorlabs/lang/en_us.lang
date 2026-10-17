@@ -543,3 +543,7 @@ tile.vandorlabs.battery_block.name=Battery Block
 tile.vandorlabs.assembly_press_core.name=Assembly Press Core
 tile.vandorlabs.synthesis_tower_core.name=Synthesis Tower Core
 tile.vandorlabs.enclosed_gantry_core.name=Enclosed Gantry Core
+
+tile.vandorlabs.ski_landing_gear.name=Ski Landing Gear
+tile.vandorlabs.landing_strut.name=Landing Strut
+tile.vandorlabs.angled_landing_strut.name=Angled Landing Strut

@@ -87,7 +87,7 @@ final class SharedCanopyRampRuntimeChecks {
         world.setBlockState(CANOPY.west(),Blocks.STONE.getDefaultState(),3);
         world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),3);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,world.getBlockState(seat),actor,new ItemStack(ModBlocks.PILOT_SEAT));
         world.setBlockState(seat.down().north(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),3);world.setBlockState(seat.down().south(3),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),3);
-        Block gear=null;for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear){gear=block;break;}require(gear!=null,"vehicle support fixture available");
+        Block gear=null;for(Block block:Block.REGISTRY)if(block instanceof BlockTelescopicLandingGear && !(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=block;break;}require(gear!=null,"vehicle support fixture available");
         for(int dx=0;dx<3;dx++){BlockPos at=seat.add(dx,-2,0);world.setBlockState(at,gear.getDefaultState(),3);((TileEntityLandingGear)world.getTileEntity(at)).configure(0,0,0,0);}
         VehicleScan scan=new VehicleScan(world,seat);for(int n=0;n<300&&!scan.step(256);n++){}
         require(scan.result!=null,"opened released canopy scans with actual retained helpers: "+scan.error);
