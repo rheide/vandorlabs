@@ -52,7 +52,9 @@ final class HousingTextureList {
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
         else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,label.apply(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
-        categories.addAll(groups.keySet());categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
+        Set<String> paths=new HashSet<>(groups.keySet());
+        for(String path:new ArrayList<>(paths))while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));paths.add(path);}
+        categories.addAll(paths);categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
         for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
         setSelected(selected);
     }
@@ -151,15 +153,17 @@ final class HousingTextureList {
                     && com.vandorlabs.items.ItemProgrammableArmor.validTexture(choice))?choice:-1;
         missing=!nativeOptions && choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
         selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE?VEHICLE_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
-        Option option=options.get(selected);if(option!=null)expanded.add(option.category);rebuild();
+        Option option=options.get(selected);if(option!=null){String path=option.category;expanded.add(path);while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));expanded.add(path);}}rebuild();
         int index=rows.indexOf(selected);scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
     }
     private void rebuild() {
         rows.clear();
         for(int c=0;c<categories.size();c++) {
-            String category=categories.get(c);rows.add(-c-1);
+            String category=categories.get(c);
+            if(!parentsExpanded(category))continue;
+            rows.add(-c-1);
             if(expanded.contains(category)) {
-                for(Option option:groups.get(category))rows.add(option.choice);
+                for(Option option:groups.getOrDefault(category,Collections.emptyList()))rows.add(option.choice);
             }
         }
         if(customConsumer!=null)rows.add(CUSTOM_ROW);
@@ -167,6 +171,11 @@ final class HousingTextureList {
         if(vehicleAction!=null)rows.add(VEHICLE_ROW);
         scroll=Math.min(scroll,maxScroll());
     }
+    private boolean parentsExpanded(String path){
+        while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));if(!expanded.contains(path))return false;}
+        return true;
+    }
+    private static int indent(String path){return Math.min(48,8*(path.length()-path.replace("/", "").length()));}
     /** Pin the category of the first visible texture into the top row. */
     private int visibleChoice(int row) {
         int choice=rows.get(scroll+row);
@@ -243,7 +252,7 @@ final class HousingTextureList {
             }
             else if(choice<0) {
                 String category=categories.get(-choice-1);
-                font.drawStringWithShadow(font.trimStringToWidth((expanded.contains(category)?"- ":"+ ")+category,width-6),x+3,yy+7,0xFFABCFE8);
+                font.drawStringWithShadow(font.trimStringToWidth((expanded.contains(category)?"- ":"+ ")+category.substring(category.lastIndexOf('/')+1),width-6-indent(category)),x+3+indent(category),yy+7,0xFFABCFE8);
             } else {
                 com.google.gson.JsonObject metadata=nativeOptions?null:ScreenHousingTextures.entry(ScreenHousingTextures.choiceAt(choice));
                 if(metadata!=null && metadata.has("design") && (metadata.get("design").getAsInt()==15 || metadata.get("design").getAsInt()==16)){

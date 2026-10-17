@@ -49,6 +49,19 @@ public final class FilesystemTextureChecks {
             NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);
             require(restored.getHousingTexture()==absent && restored.getSurfaceTexture(0)==blue,"NBT retained absent peer choices");
             HousingTextureList list=new HousingTextureList(0,0,120,absent);require(list.selected()==absent,"opening a missing selection replaced its identity");list.click(10,1,0);require(list.selected()==absent,"expanding a category replaced a missing selection");
+            HousingTextureList nested=new HousingTextureList(0,0,180,red);
+            java.lang.reflect.Field cat=HousingTextureList.class.getDeclaredField("categories"),rows=HousingTextureList.class.getDeclaredField("rows"),exp=HousingTextureList.class.getDeclaredField("expanded");
+            cat.setAccessible(true);rows.setAccessible(true);exp.setAccessible(true);
+            java.util.List<?> categories=(java.util.List<?>)cat.get(nested);
+            java.util.Set<?> expanded=(java.util.Set<?>)exp.get(nested);
+            require(categories.contains("Engineering") && categories.contains("Engineering/Panels"),"parent folders missing");
+            require(expanded.contains("Engineering") && expanded.contains("Engineering/Panels"),"selection did not open ancestors");
+            int local=ScreenHousingTextures.localIndex(red);
+            require(((java.util.List<?>)rows.get(nested)).contains(local),"selected nested texture hidden");
+            expanded.remove("Engineering");
+            java.lang.reflect.Method rebuild=HousingTextureList.class.getDeclaredMethod("rebuild");rebuild.setAccessible(true);rebuild.invoke(nested);
+            require(!((java.util.List<?>)rows.get(nested)).contains(local),"collapsed parent retains child texture");
+            require(nested.selected()==red,"collapsing parent changed saved selection");
             require(new FaceTextures(true,new int[]{blue,red,absent,-1,-1,-1}).choice(2)==absent,"per-face identity");
             System.out.println("PASS: filesystem categories, stable identities, missing-peer fallback and saved choices");
         }finally{try(java.util.stream.Stream<Path> paths=Files.walk(root)){paths.sorted(java.util.Comparator.reverseOrder()).forEach(p->{try{Files.delete(p);}catch(java.io.IOException e){throw new RuntimeException(e);}});}}
