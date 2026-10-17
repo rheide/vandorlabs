@@ -532,3 +532,14 @@ tile.vandorlabs.wheel_large.name=Large Wheel
 tile.vandorlabs.autopilot.name=Autopilot
 tile.vandorlabs.waypoint.name=Waypoint Block
 tile.vandorlabs.vehicle_controller.name=Vehicle Controller
+
+tile.vandorlabs.programmable_matter_infuser.name=Programmable Matter Infuser
+tile.vandorlabs.programmable_matter_block.name=Programmable Matter Block
+item.vandorlabs.infuser_core.name=Infuser Core
+
+tile.vandorlabs.hexagonal_fuel_tank.name=Hexagonal Fuel Tank
+tile.vandorlabs.battery_block.name=Battery Block
+
+tile.vandorlabs.assembly_press_core.name=Assembly Press Core
+tile.vandorlabs.synthesis_tower_core.name=Synthesis Tower Core
+tile.vandorlabs.enclosed_gantry_core.name=Enclosed Gantry Core

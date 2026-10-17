@@ -9,7 +9,11 @@ import net.minecraft.world.EnumSkyBlock;
 /** Per-block artwork, switch state and emitted light level. */
 public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelector {
     private int texture;
-    private int faceTexture=-1;
+    private int faceTexture=-1,offFaceTexture=-1;
+    public int getOffFaceTexture(){return offFaceTexture;}
+    public void setOffFaceTexture(int choice){int next=choice<0?-1:ScreenHousingTextures.clamp(choice);if(offFaceTexture!=next){offFaceTexture=next;changed();}}
+    public String activeFaceTexture(){boolean lit=isOn() && getLightLevel()>0;return !lit && offFaceTexture>=0?ScreenHousingTextures.texture(offFaceTexture):ScreenHousingTextures.texture(getFaceTexture(),lit);}
+
     public int getFaceTexture(){return faceTexture<0?ScreenHousingTextures.lightIndex(texture):faceTexture;}
     public void setFaceTexture(int choice){int next=ScreenHousingTextures.clamp(choice);if(faceTexture==next)return;faceTexture=next;changed();}
     private int lightLevel = 15;
@@ -169,6 +173,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         super.writeToNBT(tag);
         tag.setInteger("LightTexture", texture);
         tag.setInteger("LightFaceTexture",faceTexture);
+        tag.setInteger("LightOffFaceTexture",offFaceTexture);
         tag.setInteger("LightLevel", lightLevel);
         tag.setBoolean("SignalBrightness",signalBrightness);tag.setInteger("LightOffset",lightOffset);tag.setInteger("JoinedSignalLevel",joinedLevel);
         tag.setBoolean("LightOn", on);
@@ -181,6 +186,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
         signalBrightness=tag.getBoolean("SignalBrightness");lightOffset=Math.max(-15,Math.min(15,tag.getInteger("LightOffset")));joinedLevel=Math.max(0,Math.min(15,tag.getInteger("JoinedSignalLevel")));
+        offFaceTexture=tag.hasKey("LightOffFaceTexture",3) && tag.getInteger("LightOffFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("LightOffFaceTexture")):-1;
         faceTexture=tag.hasKey("LightFaceTexture",3) && tag.getInteger("LightFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("LightFaceTexture")):-1;
         texture = ProgrammableLightTextures.clamp(tag.getInteger("LightTexture"));
         lightLevel = tag.hasKey("LightLevel", 3)

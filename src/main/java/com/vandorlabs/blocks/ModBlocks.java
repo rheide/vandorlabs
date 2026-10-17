@@ -180,6 +180,14 @@ public class ModBlocks {
         }
         // Hand-maintained custom blocks with bespoke assets in
         // src/main/resources.
+        add(new BlockConstructorCore("assembly_press",4,3));
+        add(new BlockConstructorCore("synthesis_tower",3,5));
+        add(new BlockConstructorCore("enclosed_gantry",5,3));
+        addNoItem(new BlockConstructorPart());
+        add(new BlockBattery());
+        add(new BlockHexTank());
+        add(new BlockMatterInfuser());
+        add(new BlockVandor("programmable_matter_block"));
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
@@ -445,6 +453,7 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/matter/port"));
         for(int size=0;size<2;size++)for(int tint=0;tint<3;tint++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
             event.getMap().registerSprite(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.texture(id,size,tint)));
         for (String face : new String[]{"front","back","left","right","top","bottom"})

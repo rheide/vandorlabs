@@ -31,6 +31,8 @@ public final class MessageProgrammableLight implements IMessage {
     public MessageProgrammableLight withSignalBrightness(boolean enabled,int offset){this.signalBrightness=enabled;this.offset=offset;return this;}
     private BlockPos pos;
     private int texture;
+    private int offTexture=-1;
+    public MessageProgrammableLight withOffTexture(int choice){offTexture=choice;return this;}
     private int level;
     private boolean join;
     private int channel;
@@ -75,6 +77,7 @@ public final class MessageProgrammableLight implements IMessage {
         small=buf.readBoolean();tileSides=buf.readBoolean();
 
         signalBrightness=buf.readBoolean();offset=buf.readInt();
+        offTexture=buf.readInt();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
         invalidChannels|=offset< -15 || offset>15;
     }
@@ -89,6 +92,7 @@ public final class MessageProgrammableLight implements IMessage {
         buf.writeBoolean(small);buf.writeBoolean(tileSides);
 
         buf.writeBoolean(signalBrightness);buf.writeInt(offset);
+        buf.writeInt(offTexture);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
 
     }
@@ -114,6 +118,8 @@ public final class MessageProgrammableLight implements IMessage {
                         || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
                         || !(player.world.getBlockState(msg.pos).getBlock()
                         instanceof com.vandorlabs.blocks.BlockProgrammableLight)) return;
+                if(msg.offTexture< -1 || msg.offTexture>=0 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.offTexture))return;
+                ((TileEntityProgrammableLight)tile).setOffFaceTexture(msg.offTexture);
                 ((TileEntityProgrammableLight)tile).configureSignalBrightness(msg.signalBrightness,msg.offset);
                 ((TileEntityProgrammableLight)tile).setSmallInput(msg.small);
                 ((TileEntityProgrammableLight)tile).setSlabTileSides(msg.tileSides);

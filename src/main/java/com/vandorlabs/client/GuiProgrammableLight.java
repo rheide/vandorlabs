@@ -23,7 +23,8 @@ import java.io.IOException;
 /** Texture picker with a live preview and a 0 to 15 light level slider. */
 public final class GuiProgrammableLight extends GuiContainer {
     private final TileEntityProgrammableLight tile;
-    private int selected;
+    private int selected,offSelected;
+    private boolean editingOff;
     private int level,offset;
     private boolean signalBrightness;
     private boolean join;
@@ -41,7 +42,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
         this.tile = tile;
         small=tile.isSmallInput();tileSides=tile.isSlabTileSides();
-        selected = tile.getFaceTexture();
+        selected = tile.getFaceTexture();offSelected=tile.getOffFaceTexture();
         level = tile.getConfiguredLightLevel();offset=tile.getLightOffset();signalBrightness=tile.isSignalBrightness();
         join = tile.isJoin();
         housing = tile.getHousingTexture();
@@ -56,18 +57,18 @@ public final class GuiProgrammableLight extends GuiContainer {
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+177,154,18);
         ChannelFields.configure(channelField);
         channelField.setText(tile.getRedstoneChannels().toString());
-        java.util.function.IntPredicate include=choice->!ScreenHousingTextures.isLightOff(choice) && (HousingTextureList.generalTexture(choice) || "Lights".equals(ScreenHousingTextures.category(choice)));
-        faceList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,selected,8,null,include).visibleRows(layout.rows(true))
-                .custom(value->{selected=value;tile.setFaceTexture(value);send();});
+        java.util.function.IntPredicate include=choice->(editingOff || !ScreenHousingTextures.isLightOff(choice)) && (HousingTextureList.generalTexture(choice) || "Lights".equals(ScreenHousingTextures.category(choice)));
+        faceList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,editingOff && offSelected>=0?offSelected:selected,8,null,include).visibleRows(layout.rows(true))
+                .custom(value->{if(editingOff)offSelected=value;else selected=value;send();});
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housing,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        buttonList.add(layout.tab(90,0,2,"Light texture"));buttonList.add(layout.tab(91,1,2,"Housing"));
+        buttonList.add(layout.tab(90,0,3,"ON texture"));buttonList.add(layout.tab(91,1,3,"OFF texture"));buttonList.add(layout.tab(92,2,3,"Housing"));
         buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
         buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
     private String brightnessLabel(){return signalBrightness?"Brightness: Signal + offset":"Brightness: Slider";}
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==90 || b.id==91)b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
     private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
     private String sidesLabel(){return "Side layout: "+(tileSides?"Tile":"Fit");}
@@ -89,9 +90,9 @@ public final class GuiProgrammableLight extends GuiContainer {
         int channel = channel();
         if (channel < 0) return;
         tile.setSmallInput(small);tile.setSlabTileSides(tileSides);
-        tile.configureSignalBrightness(signalBrightness,offset);tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, ChannelFields.parse(channelField), housing, trigger);
+        tile.setOffFaceTexture(offSelected);tile.configureSignalBrightness(signalBrightness,offset);tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, ChannelFields.parse(channelField), housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
-                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,offset));
+                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,offset).withOffTexture(offSelected));
     }
 
     private void setLevelFromMouse(int mouseX) {
@@ -108,8 +109,8 @@ public final class GuiProgrammableLight extends GuiContainer {
             throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104))return;
         int before=faceList.selected();
-        if(textureTab==0 && faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){selected=faceList.selected();send();}return;}
-        if (textureTab==1 && housingList.click(mouseX, mouseY, button)) {
+        if(textureTab<2 && faceList.click(mouseX,mouseY,button)){if(before!=faceList.selected()){if(editingOff)offSelected=faceList.selected();else selected=faceList.selected();send();}return;}
+        if (textureTab==2 && housingList.click(mouseX, mouseY, button)) {
             if (housing != housingList.selected()) {
                 housing = housingList.selected();
                 send();
@@ -143,14 +144,14 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        if(textureTab==0)faceList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
-        if(textureTab==1)housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
+        if(textureTab<2)faceList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,Mouse.getEventDWheel());
+        if(textureTab==2)housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1,
                 Mouse.getEventDWheel());
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id==90 || button.id==91){textureTab=button.id-90;refreshTabs();return;}
+        if(button.id>=90 && button.id<=92){textureTab=button.id-90;editingOff=textureTab==1;initGui();return;}
         if (button.id == 101) {
             join = !join;
             button.displayString = joinLabel();
@@ -199,7 +200,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),guiLeft+12,guiTop+8,0xFFFFFF);
-        if(textureTab==0)faceList.draw(fontRenderer,mouseX,mouseY);else housingList.draw(fontRenderer,mouseX,mouseY);
+        if(textureTab<2)faceList.draw(fontRenderer,mouseX,mouseY);else housingList.draw(fontRenderer,mouseX,mouseY);
         fontRenderer.drawString((signalBrightness?"Signal offset":I18n.format("gui.vandorlabs.light.level"))+": "+(signalBrightness?offset:level),layout.controlsX,guiTop+124,0xDAE8F0);
         int sliderX=layout.controlsX+8;
         drawRect(sliderX,guiTop+142,sliderX+SLIDER_W,guiTop+148,0xFF555560);

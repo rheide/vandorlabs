@@ -24,6 +24,7 @@ public class ClientProxy extends CommonProxy {
     @Override public String customTexture(int choice){return com.vandorlabs.client.CustomBlockTextures.texture(choice);}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
+        com.vandorlabs.client.constructors.UniversalConstructorModelCache.preInit();
         RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.vehicle.EntityGroundVehicle.class, com.vandorlabs.client.RenderGroundVehicle::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class, RenderChairSeat::new);
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.DiagonalWallMeshCache.Events());
@@ -93,6 +94,8 @@ public class ClientProxy extends CommonProxy {
                 new com.vandorlabs.client.TEProgrammableGlass());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityControlledRamp.class, new TEControlledRamp());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityAnimatedScreenSelector.class, new TEAnimatedScreenSelector());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityHexTank.class,new com.vandorlabs.client.TEHexTank());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityConstructor.class,new com.vandorlabs.client.constructors.TEConstructor());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableTrigger.class,
                 new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableLight.class,

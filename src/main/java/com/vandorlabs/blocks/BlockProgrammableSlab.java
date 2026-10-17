@@ -104,4 +104,8 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
 
     @Override public int getLightValue(IBlockState state, IBlockAccess world,
             BlockPos pos) { return 0; }
+
+    @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}
+    @Override public Boolean isAABBInsideLiquid(World world,BlockPos pos,AxisAlignedBB box){return WaterloggedParts.intersects(world,pos,box,net.minecraft.block.material.Material.WATER);}
+    @Override public Boolean isEntityInsideMaterial(IBlockAccess world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,double height,net.minecraft.block.material.Material material,boolean head){return WaterloggedParts.entity(world,pos,entity,height,material,head);}
 }

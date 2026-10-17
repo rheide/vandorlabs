@@ -37,7 +37,7 @@ public final class ArmorTextureSampler {
         if(target instanceof com.vandorlabs.tiles.TileEntityProgrammableLight) {
             com.vandorlabs.tiles.TileEntityProgrammableLight light=(com.vandorlabs.tiles.TileEntityProgrammableLight)target;
             if(face==listed.getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING))
-                return com.vandorlabs.tiles.ScreenHousingTextures.texture(light.getFaceTexture(),light.isOn() && light.getLightLevel()>0);
+                return light.activeFaceTexture();
             return com.vandorlabs.tiles.ScreenHousingTextures.texture(light.getHousingTexture());
         }
         if(target instanceof com.vandorlabs.tiles.TileEntityProgrammableTrigger)

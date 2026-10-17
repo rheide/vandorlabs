@@ -1,0 +1,52 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "particle": "vandorlabs:blocks/matter/casing",
+    "down": "vandorlabs:blocks/matter/casing",
+    "up": "vandorlabs:blocks/matter/lens",
+    "north": "vandorlabs:blocks/matter/front",
+    "south": "vandorlabs:blocks/matter/casing",
+    "east": "vandorlabs:blocks/matter/casing",
+    "west": "vandorlabs:blocks/matter/casing"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#down",
+          "cullface": "down"
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up"
+        },
+        "north": {
+          "texture": "#north",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south"
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west"
+        }
+      }
+    }
+  ]
+}

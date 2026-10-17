@@ -24,27 +24,17 @@ final class ItemRuntimeChecks {
                 "ingot registration");
         require(!Block.REGISTRY.containsKey(id), "ingot must not be a block");
         IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
-        require(recipe != null, "ingot recipe loaded");
+        require(recipe == null, "retired direct ingot recipe still loaded");
         InventoryCrafting grid = new InventoryCrafting(new Container() {
             @Override public boolean canInteractWith(EntityPlayer player) { return true; }
         }, 3, 3);
-        Item[] ingredients = {Items.CLAY_BALL, Items.IRON_INGOT, Items.CLAY_BALL,
-                Items.GOLD_INGOT, Items.REDSTONE, Items.GOLD_INGOT,
-                Items.CLAY_BALL, Items.IRON_INGOT, Items.CLAY_BALL};
-        for (int i = 0; i < ingredients.length; i++)
-            grid.setInventorySlotContents(i, new ItemStack(ingredients[i]));
-        require(recipe.matches(grid, player.world), "specified shaped recipe matches");
-        ItemStack result = CraftingManager.findMatchingResult(grid, player.world);
-        require(result.getItem() == ModItems.PROGRAMMABLE_MATTER_INGOT && result.getCount() == 1,
-                "crafting yields one ingot");
-        for (int i = 0; i < ingredients.length; i++) {
-            grid.setInventorySlotContents(i, ItemStack.EMPTY);
-            require(!recipe.matches(grid, player.world), "missing ingredient accepted at " + i);
-            grid.setInventorySlotContents(i, new ItemStack(ingredients[i]));
-        }
-        grid.setInventorySlotContents(1, new ItemStack(Items.GOLD_INGOT));
-        grid.setInventorySlotContents(3, new ItemStack(Items.IRON_INGOT));
-        require(!recipe.matches(grid, player.world), "wrong ingredient positions accepted");
+        for(int i=0;i<9;i++)grid.setInventorySlotContents(i,new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        ItemStack packed=CraftingManager.findMatchingResult(grid,player.world);
+        require(!packed.isEmpty() && packed.getItem()==Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:programmable_matter_block")) && packed.getCount()==1,"nine ingots pack one matter block");
+        for(int i=0;i<9;i++)grid.setInventorySlotContents(i,ItemStack.EMPTY);grid.setInventorySlotContents(0,packed);
+        ItemStack unpacked=CraftingManager.findMatchingResult(grid,player.world);
+        require(unpacked.getItem()==ModItems.PROGRAMMABLE_MATTER_INGOT && unpacked.getCount()==9,"matter block unpacks to nine ingots");
+        ItemStack result=new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT);
         Minecraft mc = Minecraft.getMinecraft();
         require(mc.getRenderItem().getItemModelMesher().getItemModel(result)
                 != mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),

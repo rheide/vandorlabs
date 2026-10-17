@@ -52,6 +52,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
 
     @Override public boolean shouldRenderInPass(int pass) {
+        if(waterlogged && world!=null && com.vandorlabs.blocks.WaterloggedParts.supports(world.getBlockState(pos)))return pass==1;
         if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
         if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1;
@@ -195,6 +196,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int housingTexture;
     private int sideTexture=-1;
     private FaceTextures faceTextures = FaceTextures.DEFAULT;
+    private boolean waterlogged;
+    public boolean isWaterlogged(){return waterlogged;}
+    public void setWaterlogged(boolean value){if(waterlogged==value)return;waterlogged=value;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     private boolean slabTileSides;
     private boolean surfaceTileSides=true;
     public boolean isSurfaceTileSides(){return surfaceTileSides;}
@@ -521,6 +525,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
         compound.setIntArray("FaceTextures", faceTextures.choices());
         compound.setInteger("SideTexture",sideTexture);
+        compound.setBoolean("Waterlogged",waterlogged);
         compound.setBoolean("SlabTileSides", slabTileSides);
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
@@ -538,6 +543,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
         int previousSide=sideTexture;
+        waterlogged=compound.getBoolean("Waterlogged");
         boolean previousSlabSides = slabTileSides;
         boolean previousSurfaceSides=surfaceTileSides;
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");

@@ -22,6 +22,7 @@ public final class ModItems {
             .setRegistryName(VandorLabs.MODID, "industrial_alloy_ingot")
             .setUnlocalizedName("vandorlabs.industrial_alloy_ingot")
             .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+    public static final Item INFUSER_CORE = new Item().setRegistryName(VandorLabs.MODID,"infuser_core").setUnlocalizedName("vandorlabs.infuser_core").setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
     public static final Item CONFIGURIZER = new ItemConfigurizer();
     public static final Item DUPLIFIER = new ItemDuplifier();
 
@@ -36,6 +37,7 @@ public final class ModItems {
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
+        event.getRegistry().register(INFUSER_CORE);
         event.getRegistry().register(CONFIGURIZER);
         event.getRegistry().register(DUPLIFIER);
         event.getRegistry().register(PROGRAMMABLE_HELMET);
@@ -52,6 +54,7 @@ public final class ModItems {
                 new ModelResourceLocation(PROGRAMMABLE_MATTER_INGOT.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(INDUSTRIAL_ALLOY_INGOT, 0,
                 new ModelResourceLocation(INDUSTRIAL_ALLOY_INGOT.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(INFUSER_CORE,0,new ModelResourceLocation(INFUSER_CORE.getRegistryName(),"inventory"));
         ModelLoader.setCustomModelResourceLocation(CONFIGURIZER, 0,
                 new ModelResourceLocation(CONFIGURIZER.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_HELMET, 0,

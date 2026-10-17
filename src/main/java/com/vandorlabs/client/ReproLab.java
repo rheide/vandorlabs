@@ -140,6 +140,8 @@ public class ReproLab {
         // Shot Y is player-feet Y.  Subtract the normal 1.62-block eye
         // height so a zero-pitch view is centered on the block.
         double eyeLevelFeet = BCY - 1.62D;
+        SHOTS.add(new Shot("utility22_blocks",137,24,115,-35,20));
+        for(int i=0;i<3;i++)SHOTS.add(new Shot("utility22_constructor_"+i,137+i*10,25,127,-35,20));
         for (int group=0;group<4;group++) {
             for (String pose : new String[]{"closed","opening_mid","open"})
                 SHOTS.add(new Shot("controller_"+group+"_"+pose,36+group*8,28,10,-135,30));
@@ -2071,6 +2073,11 @@ public class ReproLab {
                 LargeDoorRuntimeChecks.run(world,serverPlayer);
                 DisplayTableRuntimeChecks.run(world, serverPlayer);
                 ChairRuntimeChecks.run(world, serverPlayer);
+                MatterInfuserRuntimeChecks.run(world);
+                UtilityStorageRuntimeChecks.run(world);
+                ConstructorRuntimeChecks.run(world);
+                WaterloggedRuntimeChecks.run(world);
+                UtilityVisualFixtures.build(world);
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
@@ -2085,6 +2092,7 @@ public class ReproLab {
             StorageRuntimeChecks.server(world,serverPlayer);
         });
         ScreenRuntimeChecks.checkClientPlacement(mc);
+        try{UtilityItemRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
         CustomMaterialRuntimeChecks.run(mc.player);
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{

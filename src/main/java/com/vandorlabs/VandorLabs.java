@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.2";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t202";
+    public static final String BUILD_ID = "t204";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -72,6 +72,11 @@ public class VandorLabs {
                 com.vandorlabs.vehicle.EntityGroundVehicle.class, "ground_vehicle", 2, this, 128, 2, true);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCanopy.class,"vandorlabs:canopy");
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new com.vandorlabs.canopy.CanopyInteractions());
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityMatterInfuser.class,"vandorlabs:programmable_matter_infuser");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityBattery.class,"vandorlabs:battery");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityHexTank.class,"vandorlabs:hex_tank");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructor.class,"vandorlabs:constructor");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructorPart.class,"vandorlabs:constructor_part");
         PacketHandler.register();
         logger.info("Vandor Labs pre-initialization: engaging warp drive...");
     }

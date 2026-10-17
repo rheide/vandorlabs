@@ -1,26 +1,26 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "CIC",
-    "GRG",
-    "CIC"
+    "IGI",
+    "ICI",
+    "IRI"
   ],
   "key": {
-    "C": {
-      "item": "minecraft:clay_ball"
-    },
     "I": {
       "item": "minecraft:iron_ingot"
     },
     "G": {
-      "item": "minecraft:gold_ingot"
+      "item": "minecraft:glass"
+    },
+    "C": {
+      "item": "vandorlabs:infuser_core"
     },
     "R": {
       "item": "minecraft:redstone"
     }
   },
   "result": {
-    "item": "vandorlabs:programmable_matter_ingot",
+    "item": "vandorlabs:programmable_matter_infuser",
     "count": 1
   }
 }

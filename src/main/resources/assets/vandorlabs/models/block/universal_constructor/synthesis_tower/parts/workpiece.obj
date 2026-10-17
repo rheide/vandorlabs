@@ -1,0 +1,31 @@
+# MCTrek Universal Constructors - Minecraft 1.12.2 / Forge OBJ
+# 1 OBJ unit = 1 block. +X east, +Y up, +Z rear; front is north/-Z.
+# Standard bottom-origin OBJ V: load in Forge with custom flip-v=true.
+mtllib materials.mtl
+o synthesis_tower_workpiece
+v 1.125 3.75 1.25
+v 1.875 3.75 1.25
+v 1.875 3 1.25
+v 1.125 3 1.25
+v 1.875 3.75 2
+v 1.125 3.75 2
+v 1.125 3 2
+v 1.875 3 2
+vt 0.30468750 0.65625000
+vt 0.35156250 0.65625000
+vt 0.35156250 0.60937500
+vt 0.30468750 0.60937500
+vn 0 0 -1
+vn 0 0 1
+vn -1 0 0
+vn 1 0 0
+vn 0 1 0
+vn 0 -1 0
+g workpiece__optional_suspended_workpiece
+usemtl atlas
+f 1/1/1 2/2/1 3/3/1 4/4/1
+f 5/1/2 6/2/2 7/3/2 8/4/2
+f 6/1/3 1/2/3 4/3/3 7/4/3
+f 2/1/4 5/2/4 8/3/4 3/4/4
+f 6/1/5 5/2/5 2/3/5 1/4/5
+f 4/1/6 3/2/6 8/3/6 7/4/6

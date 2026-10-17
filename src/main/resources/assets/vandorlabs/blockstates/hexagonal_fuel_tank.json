@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:hexagonal_fuel_tank"
+    },
+    "facing=east": {
+      "model": "vandorlabs:hexagonal_fuel_tank"
+    },
+    "facing=south": {
+      "model": "vandorlabs:hexagonal_fuel_tank"
+    },
+    "facing=west": {
+      "model": "vandorlabs:hexagonal_fuel_tank"
+    },
+    "facing=up": {
+      "model": "vandorlabs:hexagonal_fuel_tank"
+    },
+    "facing=down": {
+      "model": "vandorlabs:hexagonal_fuel_tank"
+    }
+  }
+}

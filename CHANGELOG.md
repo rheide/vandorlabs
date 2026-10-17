@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2
+
+- Add the sunlight-powered Programmable Matter Infuser with redstone fuel, iron input, hopper automation, and a creative-only Infuser Core. Remove direct ingot crafting.
+- Add Programmable Matter Blocks with reversible nine-ingot packing.
+- Add Assembly Press, Synthesis Tower, and Enclosed Gantry models assembled from creative-only cores and matter-block frames. Dismantling restores the frame.
+- Add vertically connected Hexagonal Fuel Tanks with fluid-level windows and configurable casings, plus directional Forge Energy Battery Blocks.
+- Allow independent ON and OFF artwork on Programmable Lights.
+- Expand filesystem texture subfolders as nested picker categories.
+- Add water-filled variants of Programmable Slabs and Stairs using water and empty buckets.
+
+See [matter and storage](docs/matter-and-storage.md) and [Universal Constructors](docs/universal-constructors.md).
+
 ## 2.1
 
 - Replace canopy closure's nested sweep/ramp comparisons with cached spatial queries while retaining exact touching margins. Prepare cold swept geometry on a bounded worker and hold the safe pose until ready, without waiting on the server thread. Build cold canopy collision indexes on a bounded worker, retaining exact ordered collision checks while preparation is pending. Remove temporary vectors from canopy triangle picking, and reuse prepared landing-gear model vertices with resource-reload invalidation.

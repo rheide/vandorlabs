@@ -370,6 +370,7 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
+        if(te.isWaterlogged() && com.vandorlabs.blocks.WaterloggedParts.supports(state)){WaterloggedRenderer.render(te,x,y,z);return;}
         if (!(state.getBlock() instanceof BlockAnimatedScreenSelector)) {
             return;
         }
@@ -389,8 +390,7 @@ public class TEAnimatedScreenSelector
             setNeighborWorldLight(te);
             TextureAtlasSprite housing = wallSprite(te);
             TextureAtlasSprite face = Minecraft.getMinecraft().getTextureMapBlocks()
-                    .getAtlasSprite(ScreenHousingTextures.texture(
-                            light.getFaceTexture(), light.isOn() && light.getLightLevel() > 0));
+                    .getAtlasSprite(light.activeFaceTexture());
             // Cull outward back faces so hidden rear housing cannot compete
             // with the artwork when distance reduces depth-buffer precision.
             GlStateManager.enableCull();

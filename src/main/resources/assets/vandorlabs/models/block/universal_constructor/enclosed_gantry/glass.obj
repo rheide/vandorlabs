@@ -1,0 +1,51 @@
+# MCTrek Universal Constructors - Minecraft 1.12.2 / Forge OBJ
+# 1 OBJ unit = 1 block. +X east, +Y up, +Z rear; front is north/-Z.
+# Standard bottom-origin OBJ V: load in Forge with custom flip-v=true.
+mtllib materials.mtl
+o enclosed_gantry_glass
+v 0.6875 2.9375 0.5
+v 4.3125 2.9375 0.5
+v 4.3125 1.125 0.5
+v 0.6875 1.125 0.5
+v 4.3125 2.9375 2.625
+v 0.6875 2.9375 2.625
+v 0.6875 1.125 2.625
+v 4.3125 1.125 2.625
+vt 0.49218750 0.80468750
+vt 0.71875000 0.80468750
+vt 0.71875000 0.69140625
+vt 0.49218750 0.69140625
+vt 0.73437500 0.80468750
+vt 0.86718750 0.80468750
+vt 0.86718750 0.69140625
+vt 0.73437500 0.69140625
+vt 0.00781250 0.80468750
+vt 0.23437500 0.80468750
+vt 0.23437500 0.67187500
+vt 0.00781250 0.67187500
+vn 0 0 -1
+vn 0 0 1
+vn 1 0 0
+vn -1 0 0
+vn 0 1 0
+vn 0 -1 0
+g glass__chamber_front_glass
+usemtl atlas
+f 1/1/1 2/2/1 3/3/1 4/4/1
+f 4/4/2 3/3/2 2/2/2 1/1/2
+g glass__chamber_rear_glass
+usemtl atlas
+f 5/1/2 6/2/2 7/3/2 8/4/2
+f 8/4/1 7/3/1 6/2/1 5/1/1
+g glass__chamber_left_glass
+usemtl atlas
+f 2/5/3 5/6/3 8/7/3 3/8/3
+f 3/8/4 8/7/4 5/6/4 2/5/4
+g glass__chamber_right_glass
+usemtl atlas
+f 6/5/4 1/6/4 4/7/4 7/8/4
+f 7/8/3 4/7/3 1/6/3 6/5/3
+g glass__chamber_roof_glass
+usemtl atlas
+f 6/9/5 5/10/5 2/11/5 1/12/5
+f 1/12/6 2/11/6 5/10/6 6/9/6

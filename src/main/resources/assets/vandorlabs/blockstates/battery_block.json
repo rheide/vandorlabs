@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:battery_block",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "vandorlabs:battery_block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "vandorlabs:battery_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:battery_block",
+      "y": 270
+    }
+  }
+}
