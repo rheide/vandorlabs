@@ -65,3 +65,12 @@ Shift-right-click a world block face with armor to copy the displayed artwork in
 Programmable armor also offers all fifteen light designs as separate static **On** and **Off** textures under **Lights**. These choices change artwork without emitting light. Use a Configurizer on an armor stand to edit a mounted piece directly.
 
 The armor picker includes **Custom...** with the same non-consuming block/door inventory sampler as Programmable Blocks. These selections persist on the armor and copy unchanged through the Duplifier. Native armor role designs adapt to the destination armor piece instead.
+# Runtime texture resolution
+
+Built-in single-block artwork uses a maximum of 128 pixels per block edge.
+Two-block doors use 128 by 256 pixels; square double-door artwork may use
+256 by 256 pixels. Smaller native pixel-art textures retain their resolution.
+Model UV atlases and animation sheets retain their authored layouts and frame
+counts. Texture pickers expose one resolution; old saved size choices resolve
+to the standard artwork without changing their material or design IDs.
+

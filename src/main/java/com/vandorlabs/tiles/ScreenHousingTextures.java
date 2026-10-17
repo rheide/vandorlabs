@@ -127,9 +127,18 @@ public final class ScreenHousingTextures {
                 if(target<0)throw new IllegalStateException("Missing texture alias: "+alias);
                 REDIRECTS.put(LEGACY_COUNT+i,target);
             }
+            if(e.has("detail") && e.get("detail").getAsInt()>0){
+                for(int j=0;j<EXTRAS.size();j++){
+                    com.google.gson.JsonObject low=EXTRAS.get(j);
+                    if(!low.has("detail") || low.get("detail").getAsInt()!=0)continue;
+                    boolean same=e.has("design") && low.has("design") && e.get("design").equals(low.get("design"))
+                            || e.has("textureFamily") && low.has("textureFamily") && e.get("textureFamily").equals(low.get("textureFamily"));
+                    if(same){REDIRECTS.put(LEGACY_COUNT+i,LEGACY_COUNT+j);break;}
+                }
+            }
         }
         DEFAULT_STORAGE=screenIndex("storage/cabinet_front");
-        DEFAULT_TRAPDOOR=screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4");
+        DEFAULT_TRAPDOOR=textureIndex(screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4"));
         if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");
         // Keep saved choice numbers while omitting retired artwork from the runtime JAR.
         for(int i=0;i<BUILTIN_COUNT;i++)if(!visible(i))TEXTURES[i]=TEXTURES[0];
@@ -152,7 +161,7 @@ public final class ScreenHousingTextures {
         return index<LEGACY_COUNT && MENU.has(IDS[index])?MENU.getAsJsonObject(IDS[index]):entry(choice);
     }
     public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}
-    public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.get("label").getAsString();}
+    public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.has("detail")?e.get("label").getAsString().replaceFirst(" (Small|Medium|Large)$",""):e.get("label").getAsString();}
     public static boolean visible(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("hidden") || !e.get("hidden").getAsBoolean();}
     public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
     /** Storage sets use their front as the ordinary shared material thumbnail. */
@@ -195,6 +204,7 @@ public final class ScreenHousingTextures {
 
     /** Artwork lookups accept catalog positions as well as stable external choice IDs. */
     private static int textureIndex(int choice){return localIndex(REDIRECTS.getOrDefault(choice,choice));}
+    public static int canonicalChoice(int choice){return textureIndex(choice);}
 
     public static int clamp(int choice) {
         return validChoice(choice) ? REDIRECTS.getOrDefault(choice,choice) : 0;

@@ -19,14 +19,14 @@ public final class ProgrammableStairsModel implements IBakedModel {
     private final int itemFinish;
     private final int itemSide;
     private final FaceTextures itemFaces;
-    private final boolean itemTile;
+    private final int itemLayout;
     private final Map<BakedQuad,Map<Integer,BakedQuad>> cache=new java.util.concurrent.ConcurrentHashMap<>();
-    public ProgrammableStairsModel(IBakedModel base) { this(base,0,-1,FaceTextures.DEFAULT,false); }
-    private ProgrammableStairsModel(IBakedModel base,int finish,int sideFinish,FaceTextures faces,boolean tile) {
-        this.base=base;itemFinish=finish;itemSide=sideFinish;itemFaces=faces;itemTile=tile;
+    public ProgrammableStairsModel(IBakedModel base) { this(base,0,-1,FaceTextures.DEFAULT,0); }
+    private ProgrammableStairsModel(IBakedModel base,int finish,int sideFinish,FaceTextures faces,int layout) {
+        this.base=base;itemFinish=finish;itemSide=sideFinish;itemFaces=faces;itemLayout=layout;
     }
     public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed) {
-        int finish=itemFinish,sideFinish=itemSide;FaceTextures faces=itemFaces;boolean tile=itemTile;
+        int finish=itemFinish,sideFinish=itemSide;FaceTextures faces=itemFaces;int layout=itemLayout;
         EnumFacing facing=EnumFacing.EAST; // vanilla item stairs rise towards +X
         if (state!=null) facing=state.getValue(BlockStairs.FACING);
         if (state instanceof IExtendedBlockState) {
@@ -35,7 +35,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
             Integer value=e.getValue(ProgrammableHousingState.FINISH);
             if(value!=null)finish=value;
             if(e.getValue(ProgrammableHousingState.FACES)!=null)faces=e.getValue(ProgrammableHousingState.FACES);
-            tile=Objects.equals(e.getValue(ProgrammableHousingState.TILE_SIDES),1);
+            Integer sampled=e.getValue(ProgrammableHousingState.TILE_SIDES);if(sampled!=null)layout=sampled;
         }
         List<BakedQuad> result=new ArrayList<>();
         for(BakedQuad quad:base.getQuads(state,side,seed)) {
@@ -44,25 +44,33 @@ public final class ProgrammableStairsModel implements IBakedModel {
             if(local.getAxis()!=EnumFacing.Axis.Y)
                 for(int i=0;i<((facing.getOpposite().getHorizontalIndex()+2)&3);i++)local=local.rotateYCCW();
             int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(local.getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish));
-            final int key=texture*2+(tile?1:0);final boolean repeat=tile;
+            final int key=texture*3+layout;final int mode=layout;
             result.add(cache.computeIfAbsent(quad,q->new java.util.concurrent.ConcurrentHashMap<>())
-                    .computeIfAbsent(key,k->retexture(quad,texture,repeat)));
+                    .computeIfAbsent(key,k->retexture(quad,texture,mode)));
         }
         return result;
     }
-    private static BakedQuad retexture(BakedQuad quad,int texture,boolean tile) {
+    private static BakedQuad retexture(BakedQuad quad,int texture,int layout) {
         TextureAtlasSprite old=quad.getSprite(),next=Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(ScreenHousingTextures.texture(texture));
         int[] data=quad.getVertexData().clone();int stride=data.length/4;
-        float[] u=new float[4],v=new float[4];float lo=16,hi=0;
+        float[] u=new float[4],v=new float[4];float lo=16,hi=0,ulo=16,uhi=0;
         for(int i=0;i<4;i++) {
             u[i]=(Float.intBitsToFloat(data[i*stride+4])-old.getMinU())/(old.getMaxU()-old.getMinU())*16;
             v[i]=(Float.intBitsToFloat(data[i*stride+5])-old.getMinV())/(old.getMaxV()-old.getMinV())*16;
-            lo=Math.min(lo,v[i]);hi=Math.max(hi,v[i]);
+            lo=Math.min(lo,v[i]);hi=Math.max(hi,v[i]);ulo=Math.min(ulo,u[i]);uhi=Math.max(uhi,u[i]);
         }
+        double unitU=1D/16,unitV=1D/16,aspect=UnifiedTextureSprites.aspect(next);
+        for(int a=0;a<4;a++)for(int b=0;b<4;b++){
+            double length=0;for(int axis=0;axis<3;axis++){double delta=Float.intBitsToFloat(data[a*stride+axis])-Float.intBitsToFloat(data[b*stride+axis]);length+=delta*delta;}length=Math.sqrt(length);
+            if(Math.abs(u[a]-u[b])>1e-6 && Math.abs(v[a]-v[b])<1e-6)unitU=length/Math.abs(u[a]-u[b]);
+            if(Math.abs(v[a]-v[b])>1e-6 && Math.abs(u[a]-u[b])<1e-6)unitV=length/Math.abs(v[a]-v[b]);
+        }
+        boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(uhi-ulo)*unitU,(hi-lo)*unitV,aspect);
         for(int i=0;i<4;i++) {
-            float vv=!tile&&quad.getFace().getAxis()!=EnumFacing.Axis.Y&&hi>lo?(v[i]-lo)*16/(hi-lo):v[i];
-            data[i*stride+4]=Float.floatToRawIntBits(next.getInterpolatedU(u[i]));
+            double uu=layout==2 && fit && uhi>ulo?(u[i]-ulo)*16/(uhi-ulo):layout==0?u[i]:com.vandorlabs.render.TextureLayoutMode.tileU(u[i],aspect);
+            double vv=fit && hi>lo && (layout==2 || quad.getFace().getAxis()!=EnumFacing.Axis.Y)?(v[i]-lo)*16/(hi-lo):layout==0?v[i]:com.vandorlabs.render.TextureLayoutMode.tileV(v[i],aspect);
+            data[i*stride+4]=Float.floatToRawIntBits(next.getInterpolatedU(uu));
             data[i*stride+5]=Float.floatToRawIntBits(next.getInterpolatedV(vv));
         }
         return new BakedQuad(data,quad.getTintIndex(),quad.getFace(),next,quad.shouldApplyDiffuseLighting(),quad.getFormat());
@@ -77,7 +85,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
             NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
             if(tag==null)return original;
             return new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
-                    tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.getBoolean("SlabTileSides"));
+                    tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):tag.getBoolean("SlabTileSides")?1:0);
         }
     };}
 }

@@ -24,8 +24,11 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     protected int texture=ScreenHousingTextures.DEFAULT_TRAPDOOR,position,channel,trigger=SpaceDoorData.TRIGGER_REDSTONE_ON;
     protected boolean sliding,slideIntoWall,slideOverSurface,channelSignal,powerKnown,lastPower,configuring;
     private boolean tileTexture=true;
+    private int textureLayout=-1;
+    public int getTextureLayout(){return textureLayout<0?(tileTexture?1:0):textureLayout;}
+    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");setTileTexture(mode==1);textureLayout=mode;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     public boolean isTileTexture(){return tileTexture;}
-    public void setTileTexture(boolean value){tileTexture=value;sync();}
+    public void setTileTexture(boolean value){textureLayout=-1;tileTexture=value;sync();}
     protected BlockPos partner,squareOrigin;
     // Immutable membership can be shared by loaded leaves after exact validation.
     protected java.util.List<BlockPos> assembly=java.util.Collections.emptyList();
@@ -337,7 +340,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         NBTTagCompound tag=new NBTTagCompound();
         tag.setInteger("housingTexture",texture);tag.setInteger("TrapdoorPosition",position);
         if(canOffsetClosedLeaf())tag.setInteger("TrapdoorCoverFacing",coverFacing().getHorizontalIndex());
-        tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setBoolean("TrapdoorSlideIntoWall",slideIntoWall);tag.setBoolean("TrapdoorSlideOverSurface",slideOverSurface);tag.setInteger("TrapdoorTrigger",trigger);
+        tag.setBoolean("TrapdoorTileTexture",tileTexture);tag.setInteger("TrapdoorTextureLayout",getTextureLayout());tag.setBoolean("TrapdoorCover",cover);tag.setBoolean("TrapdoorSliding",sliding);tag.setBoolean("TrapdoorSlideIntoWall",slideIntoWall);tag.setBoolean("TrapdoorSlideOverSurface",slideOverSurface);tag.setInteger("TrapdoorTrigger",trigger);
         tag.setInteger("RedstoneChannel",channel);ChannelData.write(tag,channels);return tag;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
@@ -356,6 +359,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         texture=tag.hasKey("housingTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("housingTexture")):ScreenHousingTextures.DEFAULT_TRAPDOOR;
         position=Math.max(0,Math.min(2,tag.getInteger("TrapdoorPosition")));
         tileTexture=!tag.hasKey("TrapdoorTileTexture",1) || tag.getBoolean("TrapdoorTileTexture");
+        textureLayout=tag.hasKey("TrapdoorTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("TrapdoorTextureLayout"))?tag.getInteger("TrapdoorTextureLayout"):-1;
         cover=tag.getBoolean("TrapdoorCover") && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);
         coverFacing=EnumFacing.getHorizontal(tag.getInteger("TrapdoorCoverFacing"));
         sliding=tag.getBoolean("TrapdoorSliding");

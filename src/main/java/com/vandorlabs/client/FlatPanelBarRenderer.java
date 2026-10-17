@@ -52,11 +52,11 @@ final class FlatPanelBarRenderer {
         result.opacity=GlassMaterials.opacity(wall.getGlassMaterial(),wall.getGlassTint());result.solidPane=wall.getGlassMaterial()>=0 && result.opacity==1;return result;
     }
     private static StaticSurfaceMesh glassMesh(TileEntityProgrammableGlass tile,IBlockState state,StaticSurfaceMesh mesh){
-        if(tile.getMaterial()<0 || !tile.isStretch())return mesh;
+        if(tile.getMaterial()<0)return mesh;
         GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(tile);
         if(PanelJoins.flatFacing(state,tile.getWorld(),tile.getPos())!=PanelJoins.facing(state))layout=new GlassSurfaceGroups.Layout(layout.columns-1-layout.column,layout.row,layout.columns,layout.rows);
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(tile.getMaterial()));
-        return GlassSurfaceMapping.map(mesh,sprite,layout,false,0,0);
+        return GlassSurfaceMapping.map(mesh,sprite,layout,false,0,0,tile.getTextureLayout());
     }
     private static final class BarKey {
         final TextureAtlasSprite wall,metal;final int shape;

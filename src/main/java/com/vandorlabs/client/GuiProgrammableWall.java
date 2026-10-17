@@ -55,7 +55,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     private int shade;
     private int shape;
     private boolean join;
-    private boolean tileSides;
+    private int textureLayout;
     private boolean fullWidth;
     private int listX;
     private int listY;
@@ -82,7 +82,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         shade = tile.getGlassShade();
         shape = tile.getPortholeShape();
         join = tile.isJoinPortholes();
-        tileSides = tile.isSlabTileSides();
+        textureLayout = tile.getMainTextureLayout();
         fullWidth = tile.isDiagonalFullWidth();
         xSize = 340;
         ySize = porthole ? 272 : slab || diagonal ? 216 : 190;
@@ -132,7 +132,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             GuiButton reset=new GuiButton(128,controlsX,y,controlsWidth,20,"Use default side texture");
             reset.enabled=tile.getSideTexture()>=0;buttonList.add(reset);y+=24;
         }
-        if (slab) { buttonList.add(new GuiButton(103,controlsX,y,controlsWidth,20,slabSidesLabel())); y+=24; }
+        if (!glassSurface() && (slab || fullBlock || tile.getBlockType() instanceof BlockProgrammableWall)) { buttonList.add(new GuiButton(103,controlsX,y,controlsWidth,20,slabSidesLabel())); y+=24; }
         if (porthole) {
             buttonList.add(new GuiButton(102,controlsX,y,controlsWidth,20,joinLabel())); y+=24;
             buttonList.add(new GuiButton(104,controlsX,y,controlsWidth,20,shapeLabel())); y+=24;
@@ -153,7 +153,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             if(diagonalGlass)buttonList.add(new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare"));
             y+=24;
             if(tile.getGlassMaterial()>=0){
-                buttonList.add(new GuiButton(115,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Texture: ")+(tile.isGlassStretch()?"Stretch":"Tile")));
+                buttonList.add(new GuiButton(115,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Texture: ")+(tile.getGlassTextureLayout()==2?(diagonalGlass?"Fit":"Fit (aspect)"):tile.getGlassTextureLayout()==1?"Tile":"Stretch")));
                 if(diagonalGlass)buttonList.add(new GuiButton(116,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,"Join: "+(tile.isGlassTextureJoin()?"On":"Off")));y+=24;
             }
         }
@@ -163,7 +163,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
     private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
     private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
-    private String slabSidesLabel() { return "Side layout: " + (tileSides ? "Tile" : "Fit"); }
+    private String slabSidesLabel() { return "Texture: " + com.vandorlabs.render.TextureLayoutMode.label(textureLayout); }
     private String slopeLabel() {
         net.minecraft.block.state.IBlockState state = tile.getWorld().getBlockState(tile.getPos());
         net.minecraft.util.EnumFacing direction = state.getValue(BlockProgrammableWall.FACING);
@@ -180,7 +180,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
-                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()).withLayout(tile.isGlassStretch(),tile.isGlassTextureJoin()));
+                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()).withLayout(tile.getGlassTextureLayout(),tile.isGlassTextureJoin()));
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -227,7 +227,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
         if(glassSurface() && (button.id==115 || button.id==116)){
-            tile.setGlassLayout(button.id==115?!tile.isGlassStretch():tile.isGlassStretch(),button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());sendPortholeSettings();initGui();return;
+            int mode=button.id==115?GuiOptionCycle.next(tile.getGlassTextureLayout(),3):tile.getGlassTextureLayout();tile.setGlassLayout(mode!=1,button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());tile.setGlassTextureLayout(mode);sendPortholeSettings();initGui();return;
         }
         if(glassSurface() && (button.id==113 || button.id==114)) {
             tile.setGlassAppearance(button.id==113?GuiOptionCycle.next(tile.getGlassTint(),3):tile.getGlassTint(),
@@ -286,11 +286,11 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             sendPortholeSettings();
         }
         if (button.id == 103) {
-            tileSides = !tileSides;
-            tile.setSlabTileSides(tileSides);
+            textureLayout = GuiOptionCycle.next(textureLayout,3);
+            tile.setMainTextureLayout(textureLayout);
             button.displayString = slabSidesLabel();
             PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(
-                    tile.getPos(), tileSides));
+                    tile.getPos(), textureLayout));
         }
         if (button.id == 104) {
             shape = GuiOptionCycle.next(shape,SHAPES.length);

@@ -707,3 +707,10 @@ task testNonWheeledGearModels(type: Exec) {
     commandLine pythonExecutable, 'tools/test_non_wheeled_gear.py'
 }
 check.dependsOn testNonWheeledGearModels
+
+task testTextureLayouts(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.TextureLayoutModeTest'
+}
+check.dependsOn testTextureLayouts

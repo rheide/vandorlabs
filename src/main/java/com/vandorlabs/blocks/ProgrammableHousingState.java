@@ -46,7 +46,7 @@ public final class ProgrammableHousingState {
         TileEntityAnimatedScreenSelector tile = raw instanceof TileEntityAnimatedScreenSelector
                 ? (TileEntityAnimatedScreenSelector)raw : null;
         int finish = tile == null ? 0 : tile.getHousingTexture();
-        int tileSides = tile != null && tile.isSlabTileSides() ? 1 : 0;
+        int tileSides = tile != null ? tile.getMainTextureLayout() : 0;
         int visible = 63;
         BlockSlab.EnumBlockHalf half = slab ? state.getValue(BlockProgrammableSlab.HALF) : null;
         BlockPos.MutableBlockPos next=new BlockPos.MutableBlockPos();

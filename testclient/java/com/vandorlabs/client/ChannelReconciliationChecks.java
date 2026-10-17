@@ -53,7 +53,7 @@ final class ChannelReconciliationChecks {
     private static void require(boolean value,String message){if(!value)throw new AssertionError(message);}
     private static final class Member extends TileEntity implements RedstoneChannelMember {
         boolean on,signal;int reads;
-        Member(NonRenderingChecks.MemoryWorld world,int index){setWorld(world);setPos(new BlockPos(index,100,0));}
+        Member(NonRenderingChecks.MemoryWorld world,int index){setWorld(world);setPos(new BlockPos(index,100,0));world.tiles.put(getPos(),this);}
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return 14004;}
         public void setRedstoneChannel(int value){throw new UnsupportedOperationException();}

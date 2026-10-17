@@ -23,6 +23,8 @@ public class MessageSpaceDoor implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private int layout=0;
+    public MessageSpaceDoor withTextureLayout(int mode){layout=mode;tileTexture=mode==1;return this;}
     private BlockPos pos;
     private int design,detail,channel,slideDirection,trigger,depth,faceTexture=-1;
     private boolean framed,tileTexture;
@@ -38,7 +40,7 @@ public class MessageSpaceDoor implements IMessage {
         this.panel=panel;
     }
     public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,int depth,boolean sliding,boolean hinges,int trigger,boolean panel,int faceTexture){this(pos,design,detail,framed,channel,slideDirection,depth,sliding,hinges,trigger,panel);this.faceTexture=faceTexture;}
-    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,int depth,boolean sliding,boolean hinges,int trigger,boolean panel,int faceTexture,boolean tileTexture){this(pos,design,detail,framed,channel,slideDirection,depth,sliding,hinges,trigger,panel,faceTexture);this.tileTexture=tileTexture;}
+    public MessageSpaceDoor(BlockPos pos,int design,int detail,boolean framed,int channel,int slideDirection,int depth,boolean sliding,boolean hinges,int trigger,boolean panel,int faceTexture,boolean tileTexture){this(pos,design,detail,framed,channel,slideDirection,depth,sliding,hinges,trigger,panel,faceTexture);this.tileTexture=tileTexture;this.layout=tileTexture?1:0;}
     @Override public void fromBytes(ByteBuf b) {
         pos=BlockPos.fromLong(b.readLong()); design=b.readInt(); detail=b.readInt(); framed=b.readBoolean(); channel=b.readInt();
         slideDirection=b.readInt();
@@ -48,7 +50,7 @@ public class MessageSpaceDoor implements IMessage {
         trigger=b.readInt();
         panel=b.readBoolean();faceTexture=b.readInt();tileTexture=b.readBoolean();
 
-        channels=ChannelData.read(b,channel);invalidChannels=channels==null;
+        layout=b.readUnsignedByte();channels=ChannelData.read(b,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
@@ -59,13 +61,13 @@ public class MessageSpaceDoor implements IMessage {
         b.writeInt(trigger);
         b.writeBoolean(panel);b.writeInt(faceTexture);b.writeBoolean(tileTexture);
 
-        ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        b.writeByte(layout<0?(tileTexture?1:0):layout);ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if (!TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
+                if (!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
                         || !SpaceDoorData.validTrigger(m.trigger)
                         || m.faceTexture< -1 || (m.faceTexture!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.faceTexture))
                         || m.depth<0 || m.depth>2 || m.channel<0 || m.pos==null || m.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
@@ -82,12 +84,12 @@ public class MessageSpaceDoor implements IMessage {
                     other=(TileEntitySpaceDoor)player.world.getTileEntity(mate);
                     if (!other.usable(player)) return;
                 }
-                tile.setFaceTexture(m.faceTexture);tile.setTileTexture(m.tileTexture);
+                tile.setFaceTexture(m.faceTexture);tile.setTextureLayout(m.layout);
                 tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                 tile.setPlacementDepth(m.depth);
                 tile.setRedstoneChannels(m.getRedstoneChannels());
                 if (other!=null) {
-                    other.setFaceTexture(m.faceTexture);other.setTileTexture(m.tileTexture);
+                    other.setFaceTexture(m.faceTexture);other.setTextureLayout(m.layout);
                     other.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                     other.setPlacementDepth(m.depth);
                     other.setRedstoneChannels(m.getRedstoneChannels());

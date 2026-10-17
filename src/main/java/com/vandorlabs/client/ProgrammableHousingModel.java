@@ -77,7 +77,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
                 == BlockSlab.EnumBlockHalf.TOP;
         if((visible&63)==0)return Collections.emptyList();
         boolean uniform=!faces.enabled && (!slab || sideFinish<0 || sideFinish==finish);
-        long listKey=(((((long)finish*6+facing.getIndex())*2+(upper?1:0))*2+(tileSides!=0?1:0))*64)+(visible&63);
+        long listKey=(((((long)finish*6+facing.getIndex())*2+(upper?1:0))*3+tileSides)*64)+(visible&63);
         if(uniform) {
             List<BakedQuad> cached=faceLists.getIfPresent(listKey);
             if(cached!=null)return cached;
@@ -88,7 +88,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             if ((visible & (1 << worldFace.getIndex())) == 0) continue;
             int texture = faces.texture(FACE[local].getIndex(), slab && FACE[local].getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish);
             final boolean storageSet = storage && !(faces.enabled && faces.choice(FACE[local].getIndex()) >= 0);
-            result.add(face(texture,facing,upper,tileSides!=0,local,storageSet));
+            result.add(face(texture,facing,upper,tileSides,local,storageSet));
         }
         if(uniform) {
             result=Collections.unmodifiableList(result);
@@ -97,19 +97,19 @@ public final class ProgrammableHousingModel implements IBakedModel {
         return result;
     }
 
-    private BakedQuad face(int texture,EnumFacing facing,boolean upper,boolean tiled,int local,boolean storageSet) {
-        long key=(((((long)texture*6+facing.getIndex())*2+(upper?1:0))*2+(tiled?1:0))*6+local)*2+(storageSet?1:0);
+    private BakedQuad face(int texture,EnumFacing facing,boolean upper,int layout,int local,boolean storageSet) {
+        long key=(((((long)texture*6+facing.getIndex())*2+(upper?1:0))*3+layout)*6+local)*2+(storageSet?1:0);
         BakedQuad cached=variants.get(key);
         if(cached!=null)return cached;
-        BakedQuad built=build(texture,facing,upper,tiled,local,storageSet);
+        BakedQuad built=build(texture,facing,upper,layout,local,storageSet);
         BakedQuad raced=variants.putIfAbsent(key,built);
         return raced==null?built:raced;
     }
 
-    private BakedQuad build(int finish, EnumFacing facing, boolean upper, boolean tileSides, int i, boolean storageSet) {
+    private BakedQuad build(int finish, EnumFacing facing, boolean upper, int layout, int i, boolean storageSet) {
         TextureAtlasSprite sprite = sprites.apply(storageSet ? ScreenHousingTextures.storageTexture(finish, FACE[i]) : ScreenHousingTextures.texture(finish));
-        ScreenHousingMesh mesh = slab ? ScreenHousingMesh.slab(upper, tileSides)
-                : ScreenHousingMesh.cube();
+        ScreenHousingMesh mesh = (slab ? ScreenHousingMesh.slab(upper, true)
+                : ScreenHousingMesh.cube()).textureLayout(layout,UnifiedTextureSprites.aspect(sprite));
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
 
             int[] data = new int[28];

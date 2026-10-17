@@ -31,6 +31,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     private int housing;
     private int trigger;
     private boolean small,tileSides;
+    private int textureLayout;
     private HousingTextureList housingList,faceList;
     private GuiTextField channelField;
     private boolean draggingLevel;
@@ -41,7 +42,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     public GuiProgrammableLight(InventoryPlayer inventory, TileEntityProgrammableLight tile) {
         super(new ContainerAnimatedScreenSelector(inventory, tile));
         this.tile = tile;
-        small=tile.isSmallInput();tileSides=tile.isSlabTileSides();
+        small=tile.isSmallInput();tileSides=tile.isSlabTileSides();textureLayout=tile.getMainTextureLayout();
         selected = tile.getFaceTexture();offSelected=tile.getOffFaceTexture();
         level = tile.getConfiguredLightLevel();offset=tile.getLightOffset();signalBrightness=tile.isSignalBrightness();
         join = tile.isJoin();
@@ -71,7 +72,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
     private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
-    private String sidesLabel(){return "Side layout: "+(tileSides?"Tile":"Fit");}
+    private String sidesLabel(){return "Side layout: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
 
     private String joinLabel() {
         return "Join: "
@@ -89,10 +90,10 @@ public final class GuiProgrammableLight extends GuiContainer {
     private void send() {
         int channel = channel();
         if (channel < 0) return;
-        tile.setSmallInput(small);tile.setSlabTileSides(tileSides);
+        tile.setSmallInput(small);tile.setMainTextureLayout(textureLayout);
         tile.setOffFaceTexture(offSelected);tile.configureSignalBrightness(signalBrightness,offset);tile.setFaceTexture(selected);tile.configure(tile.getTexture(), level, join, ChannelFields.parse(channelField), housing, trigger);
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableLight(
-                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,offset).withOffTexture(offSelected));
+                tile.getPos(), selected, level, join, channel, housing, trigger,small,tileSides).withChannels(ChannelFields.parse(channelField)).withSignalBrightness(signalBrightness,offset).withOffTexture(offSelected).withTextureLayout(textureLayout));
     }
 
     private void setLevelFromMouse(int mouseX) {
@@ -159,7 +160,7 @@ public final class GuiProgrammableLight extends GuiContainer {
             send();
         }
         if(button.id==103){small=!small;button.displayString=sizeLabel();send();}
-        if(button.id==104){tileSides=!tileSides;button.displayString=sidesLabel();send();}
+        if(button.id==104){textureLayout=GuiOptionCycle.next(textureLayout,3);tileSides=textureLayout==1;button.displayString=sidesLabel();send();}
         if (button.id == 102) {
             int choice=GuiOptionCycle.next(signalBrightness?3:trigger,4);signalBrightness=choice==3;trigger=signalBrightness?2:choice;
             button.displayString = triggerLabel();

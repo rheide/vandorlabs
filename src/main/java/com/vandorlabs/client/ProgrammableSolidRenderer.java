@@ -34,8 +34,9 @@ final class ProgrammableSolidRenderer {
         TextureAtlasSprite housing = TEAnimatedScreenSelector.wallSprite(tile);
         ScreenHousingMesh mesh = state.getBlock() instanceof BlockProgrammableSlab
                 ? ScreenHousingMesh.slab(state.getValue(BlockProgrammableSlab.HALF)
-                        == BlockSlab.EnumBlockHalf.TOP, tile.isSlabTileSides())
+                        == BlockSlab.EnumBlockHalf.TOP, true)
                 : ScreenHousingMesh.cube();
+        mesh=mesh.textureLayout(tile.getMainTextureLayout(),UnifiedTextureSprites.aspect(housing));
         int visible=light ? TEAnimatedScreenSelector.lightVisibleFaces(tile,facing)
                 & cameraFaces(facing,x,y,z) : 63;
         for (int i=0;i<mesh.quads.length;i++) {

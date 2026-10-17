@@ -16,6 +16,7 @@ import java.io.IOException;
 
 /** List selector with server-authoritative live updates, like programmable screens. */
 public class GuiSpaceDoor extends GuiMaterialPicker {
+    private int textureLayout;
     private final TileEntitySpaceDoor tile;
     private HousingTextureList textureList;
     private ProgrammableDialogLayout layout;
@@ -26,13 +27,13 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     private boolean framed,hinges,panel,tileTexture;
     private GuiTextField channelField;
     private GuiButton done,motionButton,hingeButton;
-    private static final String[] SIZES={"Size: Small","Size: Large"};
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
         this.tile=tile;
-        faceTexture=tile.getFaceTexture();tileTexture=tile.isTileTexture();
-        design=tile.getDesign(); detail=tile.getDetail(); framed=tile.isFramed();
+        faceTexture=tile.getFaceTexture();tileTexture=tile.isTileTexture();textureLayout=tile.getTextureLayout();
+        design=tile.getDesign(); detail=0; framed=tile.isFramed();
+        faceTexture=HousingTextureList.doorSizeChoice(faceTexture,0);
         motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
         depth=tile.getPlacementDepth();
         hinges=tile.hasHinges();
@@ -50,7 +51,6 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
-        buttonList.add(layout.control(11,50,SIZES[detail]));
         buttonList.add(layout.control(12,70,framed?"Frame: Framed":"Frame: Bare"));
         buttonList.add(layout.control(16,90,triggerLabel()));buttonList.add(layout.control(13,110,depthLabel()));
         hingeButton=layout.choice(15,0,2,130,"");buttonList.add(hingeButton);updateHingeButton();
@@ -70,7 +70,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 :trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Trigger: Redstone OFF"
                 :"Trigger: Disabled";
     }
-    private String layoutLabel(){return "Face texture: "+(tileTexture?"Tile":"Fit");}
+    private String layoutLabel(){return "Face texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String depthLabel() {
         return "Position: " + new String[]{"Middle", "Near", "Far"}[depth];
     }
@@ -83,7 +83,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         if (channel()>=0) {lastValidChannels=ChannelFields.parse(channelField);lastValidChannel=lastValidChannels.first();}
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels));
+                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels).withTextureLayout(textureLayout));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
@@ -93,12 +93,11 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
             motionButton.displayString=motion.label;
             updateHingeButton();
         }
-        else if (button.id==11) { detail=GuiOptionCycle.next(detail,SIZES.length); faceTexture=HousingTextureList.doorSizeChoice(faceTexture,detail);initGui(); }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
         else if (button.id==13) { depth=GuiOptionCycle.next(depth,3); button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
         else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); button.displayString=triggerLabel(); }
-        else if(button.id==18){tileTexture=!tileTexture;tile.setTileTexture(tileTexture);button.displayString=layoutLabel();}
+        else if(button.id==18){textureLayout=GuiOptionCycle.next(textureLayout,3);tileTexture=textureLayout==1;tile.setTextureLayout(textureLayout);button.displayString=layoutLabel();}
         else if (button.id==17) { panel=!panel; button.displayString=panel?"Panel: On":"Panel: Off"; }
         else return;
         sendUpdate();

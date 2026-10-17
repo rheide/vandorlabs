@@ -200,9 +200,19 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public boolean isWaterlogged(){return waterlogged;}
     public void setWaterlogged(boolean value){if(waterlogged==value)return;waterlogged=value;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     private boolean slabTileSides;
+    private int mainTextureLayout=-1,surfaceTextureLayout=-1,glassTextureLayout=-1;
+    public int getMainTextureLayout(){return mainTextureLayout<0?(slabTileSides?1:0):mainTextureLayout;}
+    public int getSurfaceTextureLayout(){return surfaceTextureLayout<0?(surfaceTileSides?1:0):surfaceTextureLayout;}
+    public int getGlassTextureLayout(){return glassTextureLayout<0?(glassStretch?0:1):glassTextureLayout;}
+    public void setMainTextureLayout(int mode){checkLayout(mode);setSlabTileSides(mode==1);mainTextureLayout=mode;layoutChanged();}
+    public void setSurfaceTextureLayout(int mode){checkLayout(mode);setSurfaceTileSides(mode==1);surfaceTextureLayout=mode;layoutChanged();}
+    public void setGlassTextureLayout(int mode){checkLayout(mode);setGlassLayout(mode!=1,glassTextureJoin);glassTextureLayout=mode;layoutChanged();}
+    private static void checkLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");}
+    private static int layoutValue(net.minecraft.nbt.NBTTagCompound tag,String key){int value=tag.getInteger(key);return tag.hasKey(key,3) && com.vandorlabs.render.TextureLayoutMode.valid(value)?value:-1;}
+    private void layoutChanged(){settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     private boolean surfaceTileSides=true;
     public boolean isSurfaceTileSides(){return surfaceTileSides;}
-    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value)return;surfaceTileSides=value;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
+    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value && surfaceTextureLayout<0)return;surfaceTextureLayout=-1;surfaceTileSides=value;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
     private boolean diagonalFullWidth;
     private boolean diagonalHalfHeight;
     private int diagonalFill;
@@ -212,7 +222,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean glassStretch,glassTextureJoin=true;
     public boolean isGlassStretch(){return glassStretch;}
     public boolean isGlassTextureJoin(){return glassTextureJoin;}
-    public void setGlassLayout(boolean stretch,boolean join){if(glassStretch==stretch && glassTextureJoin==join)return;glassStretch=stretch;glassTextureJoin=join;settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setGlassLayout(boolean stretch,boolean join){if(glassStretch==stretch && glassTextureJoin==join && glassTextureLayout<0)return;glassTextureLayout=-1;glassStretch=stretch;glassTextureJoin=join;settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public int getGlassMaterial(){return glassMaterial;}
     public void setGlassMaterial(int value){if(GlassMaterials.valid(value) && glassMaterial!=value){glassMaterial=value;settingsChanged();}}
     private boolean glassFramed=true;
@@ -319,7 +329,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 world.getBlockState(pos), 3);
     }
     public void setSlabTileSides(boolean tileSides) {
-        if (slabTileSides == tileSides) return;
+        if (slabTileSides == tileSides && mainTextureLayout<0) return;
+        mainTextureLayout=-1;
         slabTileSides = tileSides;
         settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
@@ -527,6 +538,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("SideTexture",sideTexture);
         compound.setBoolean("Waterlogged",waterlogged);
         compound.setBoolean("SlabTileSides", slabTileSides);
+        compound.setInteger("MainTextureLayout",getMainTextureLayout());compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
@@ -545,6 +557,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         int previousSide=sideTexture;
         waterlogged=compound.getBoolean("Waterlogged");
         boolean previousSlabSides = slabTileSides;
+        int oldMainLayout=getMainTextureLayout(),oldSurfaceLayout=getSurfaceTextureLayout(),oldGlassLayout=getGlassTextureLayout();
+        mainTextureLayout=layoutValue(compound,"MainTextureLayout");surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=layoutValue(compound,"GlassTextureLayout");
         boolean previousSurfaceSides=surfaceTileSides;
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");
         boolean previousHalfHeight = diagonalHalfHeight;
@@ -610,7 +624,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         diagonalJoin=Math.max(0,Math.min(11,compound.getInteger("DiagonalJoin")));
         diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
         if (world != null && world.isRemote
-                && (!previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
+                && (oldMainLayout!=getMainTextureLayout() || oldSurfaceLayout!=getSurfaceTextureLayout() || oldGlassLayout!=getGlassTextureLayout() || !previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
                 || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade || previousPortholeJoin!=joinPortholes))
         {

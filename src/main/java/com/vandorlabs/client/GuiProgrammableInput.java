@@ -83,7 +83,7 @@ public class GuiProgrammableInput extends GuiContainer {
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=91)b.enabled=b.id-90!=textureTab;}
 
-    private String sidesLabel(){return "Wall texture: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
+    private String sidesLabel(){return "Wall texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
         for (GuiButton button : buttonList) {
             if(button.id==4){button.displayString=(screenList.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab==0 && screenList.hasPair();}
@@ -189,7 +189,7 @@ public class GuiProgrammableInput extends GuiContainer {
         if(button.id>=90 && button.id<=91){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
         if(button.id==4){if(!screenList.hasPair())return;screenList.setFramed(!screenList.framed());chooseArtwork(screenList);return;}
-        if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
+        if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.getSurfaceTextureLayout()));return;}
         if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;

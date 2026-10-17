@@ -80,7 +80,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
                 || ((TileEntityProgrammableGlass) te).isJoin());
         settings.setInteger("Tint",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getTint():1);
         settings.setInteger("Material",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getMaterial():-1);
-        settings.setBoolean("Stretch",te instanceof TileEntityProgrammableGlass && ((TileEntityProgrammableGlass)te).isStretch());
+        settings.setBoolean("Stretch",te instanceof TileEntityProgrammableGlass && ((TileEntityProgrammableGlass)te).isStretch());settings.setInteger("LayoutMode",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getTextureLayout():1);
         settings.setBoolean("Framed",!(te instanceof TileEntityProgrammableGlass)||((TileEntityProgrammableGlass)te).isFramed());
         stack.setTagInfo("ProgrammableGlassSettings", settings);
         return stack;
@@ -104,7 +104,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);
             ((TileEntityProgrammableGlass)te).setMaterial(settings!=null && settings.hasKey("Material",3)?settings.getInteger("Material"):-1);
-            ((TileEntityProgrammableGlass)te).setStretch(settings!=null && settings.getBoolean("Stretch"));
+            ((TileEntityProgrammableGlass)te).setTextureLayout(settings!=null && settings.hasKey("LayoutMode",3)?settings.getInteger("LayoutMode"):settings!=null && settings.getBoolean("Stretch")?0:1);
             ((TileEntityProgrammableGlass)te).setJoin(join);
             ((TileEntityProgrammableGlass)te).setAppearance(settings==null||!settings.hasKey("Tint",3)?1:settings.getInteger("Tint"),settings==null||!settings.hasKey("Framed")||settings.getBoolean("Framed"));
         }

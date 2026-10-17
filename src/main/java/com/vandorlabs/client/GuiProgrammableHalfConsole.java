@@ -83,7 +83,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
-    private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
+    private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
         for (GuiButton button : buttonList) {
             if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}
@@ -167,7 +167,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if(button.id>=90 && button.id<=92){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
         if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;if(!picker.hasPair())return;picker.setFramed(!picker.framed());chooseArtwork(picker,textureTab==1?1:0);return;}
-        if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.isSurfaceTileSides()));return;}
+        if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.getSurfaceTextureLayout()));return;}
         if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;

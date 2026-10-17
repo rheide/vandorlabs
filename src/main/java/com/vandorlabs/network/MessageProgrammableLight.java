@@ -39,6 +39,8 @@ public final class MessageProgrammableLight implements IMessage {
     private int housing;
     private int trigger;
     private boolean small,tileSides;
+    private int layout=-1;
+    public MessageProgrammableLight withTextureLayout(int layout){this.layout=layout;tileSides=layout==1;return this;}
 
     public MessageProgrammableLight() { }
     public MessageProgrammableLight(BlockPos pos, int texture, int level,
@@ -57,7 +59,7 @@ public final class MessageProgrammableLight implements IMessage {
         this(pos,texture,level,join,channel,housing,trigger,false,true);
     }
     public MessageProgrammableLight(BlockPos pos,int texture,int level,boolean join,int channel,int housing,int trigger,boolean small,boolean tileSides) {
-        this.small=small;this.tileSides=tileSides;
+        this.small=small;this.tileSides=tileSides;this.layout=tileSides?1:0;
         this.pos = pos;
         this.texture = texture;
         this.level = level;
@@ -78,6 +80,7 @@ public final class MessageProgrammableLight implements IMessage {
 
         signalBrightness=buf.readBoolean();offset=buf.readInt();
         offTexture=buf.readInt();
+        layout=buf.readUnsignedByte();
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
         invalidChannels|=offset< -15 || offset>15;
     }
@@ -93,6 +96,7 @@ public final class MessageProgrammableLight implements IMessage {
 
         buf.writeBoolean(signalBrightness);buf.writeInt(offset);
         buf.writeInt(offTexture);
+        buf.writeByte(layout<0?(tileSides?1:0):layout);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
 
     }
@@ -101,7 +105,7 @@ public final class MessageProgrammableLight implements IMessage {
         @Override public IMessage onMessage(MessageProgrammableLight msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (msg.pos == null || msg.getRedstoneChannels()==null || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(msg.trigger)
+                if (!com.vandorlabs.render.TextureLayoutMode.valid(msg.layout) || msg.pos == null || msg.getRedstoneChannels()==null || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(msg.trigger)
                         || msg.texture < 0
                         || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(msg.texture)
                         || msg.housing < 0
@@ -122,7 +126,7 @@ public final class MessageProgrammableLight implements IMessage {
                 ((TileEntityProgrammableLight)tile).setOffFaceTexture(msg.offTexture);
                 ((TileEntityProgrammableLight)tile).configureSignalBrightness(msg.signalBrightness,msg.offset);
                 ((TileEntityProgrammableLight)tile).setSmallInput(msg.small);
-                ((TileEntityProgrammableLight)tile).setSlabTileSides(msg.tileSides);
+                ((TileEntityProgrammableLight)tile).setMainTextureLayout(msg.layout);
                 ((TileEntityProgrammableLight)tile).setFaceTexture(msg.texture);
                 ((TileEntityProgrammableLight) tile).configure(
                         ((TileEntityProgrammableLight)tile).getTexture(), msg.level, msg.join, msg.getRedstoneChannels(), msg.housing, msg.trigger);

@@ -398,7 +398,7 @@ public class TEAnimatedScreenSelector
             int visible=lightVisibleFaces(light,state.getValue(BlockAnimatedScreenSelector.FACING));
             net.minecraft.util.math.AxisAlignedBB box=com.vandorlabs.blocks.ProgrammableLightShape.local(state,light.isSmallInput());
             double minX=box.minX*16,maxX=box.maxX*16,minY=box.minY*16,maxY=box.maxY*16,minZ=box.minZ*16,maxZ=box.maxZ*16;
-            renderLightHousing(housing,visible,minX,minY,minZ,maxX,maxY,maxZ,light.isSlabTileSides());
+            renderLightHousing(housing,visible,minX,minY,minZ,maxX,maxY,maxZ,light.getMainTextureLayout());
             if ((visible & (1 << EnumFacing.NORTH.getIndex())) != 0)
                 renderProgrammableLightFace(face, lightGroup(light, state), te.getPos(),minX,maxX,minY,maxY,minZ);
             GlStateManager.cullFace(GlStateManager.CullFace.BACK);
@@ -413,7 +413,7 @@ public class TEAnimatedScreenSelector
             setNeighborWorldLight(te);
             boolean upper = state.getValue(com.vandorlabs.blocks.BlockProgrammableSlab.HALF)
                     == net.minecraft.block.BlockSlab.EnumBlockHalf.TOP;
-            renderSlab(wallSprite(te), upper, te.isSlabTileSides());
+            renderSlab(wallSprite(te), upper, te.getMainTextureLayout());
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
@@ -423,7 +423,7 @@ public class TEAnimatedScreenSelector
             GlStateManager.disableLighting();
             bindAtlas();
             setNeighborWorldLight(te);
-            renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
+            renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getMainTextureLayout());
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
@@ -455,7 +455,7 @@ public class TEAnimatedScreenSelector
             GlStateManager.disableLighting();
             boolean ceiling=state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER);
             GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
-            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).sideLayout(te.isSurfaceTileSides()),ceiling);
+            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wallSprite(te))),ceiling);
             if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
                 GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
             }
@@ -512,7 +512,7 @@ public class TEAnimatedScreenSelector
         } else {
             bindAtlas();
             setWorldLight(te);
-            renderWallBox(wallSprite(te), 0, 0, 0, 16, 16, 16);
+            renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getSurfaceTextureLayout());
         }
         if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
             if(te.hasVehicleStatus(0))RedstoneScreenRenderer.drawVehicle(te,state,0);else RedstoneScreenRenderer.draw(te.redstoneScreen(0),state);
@@ -636,8 +636,8 @@ public class TEAnimatedScreenSelector
         InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
                 ?InputSurfaceLayout.ceilingInput(false,small,te.getCeilingPosition(2))
                 :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
-        renderWallBox(wall,wall,true,layout.housing.x0,layout.housing.y0,layout.housing.z0,
-                layout.housing.x1,layout.housing.y1,layout.housing.z1,te.isSurfaceTileSides());
+        renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
+                layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
         if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
     }
 
@@ -652,8 +652,8 @@ public class TEAnimatedScreenSelector
                 ?InputSurfaceLayout.ceilingInput(true,false,te.getCeilingPosition(1))
                 :InputSurfaceLayout.fullInput(keyboard,upper);
         bindAtlas();
-        renderWallBox(wall,wall,true,layout.housing.x0,layout.housing.y0,layout.housing.z0,
-                layout.housing.x1,layout.housing.y1,layout.housing.z1,te.isSurfaceTileSides());
+        renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
+                layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
         if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindScreenSurface(te));
     }
 
@@ -692,8 +692,8 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
-        renderWallBox(wall,wall,true,0,0,0,16,1,16,te.isSurfaceTileSides());
-        drawWallMesh(wall,ScreenHousingMesh.halfConsole().sideLayout(te.isSurfaceTileSides()));
+        renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
+        drawWallMesh(wall,ScreenHousingMesh.halfConsole().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
         if(!redstoneFace(te,0))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));
         if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));
@@ -784,8 +784,12 @@ public class TEAnimatedScreenSelector
     }
 
     private static void renderSlab(TextureAtlasSprite sprite, boolean upper,
-            boolean tileSides) {
-        drawWallMesh(sprite, ScreenHousingMesh.slab(upper, tileSides));
+            int layout) {
+        drawWallMesh(sprite, ScreenHousingMesh.slab(upper, true).textureLayout(layout,UnifiedTextureSprites.aspect(sprite)));
+    }
+
+    private static void renderHousingBox(TextureAtlasSprite sprite,double x0,double y0,double z0,double x1,double y1,double z1,int layout){
+        drawWallMesh(sprite,ScreenHousingMesh.box(x0,y0,z0,x1,y1,z1).textureLayout(layout,UnifiedTextureSprites.aspect(sprite)));
     }
 
     /** Broad faces use the selected wall art; exposed thickness uses frame metal. */
@@ -821,8 +825,8 @@ public class TEAnimatedScreenSelector
                 (float) (combined % 65536), (float) (combined / 65536));
 
         TextureAtlasSprite wall = wallSprite(te);
-        renderWallBox(wall,wall,true,0,0,0,16,1,16,te.isSurfaceTileSides());
-        drawWallMesh(wall,ScreenHousingMesh.console().sideLayout(te.isSurfaceTileSides()));
+        renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
+        drawWallMesh(wall,ScreenHousingMesh.console().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
@@ -862,7 +866,7 @@ public class TEAnimatedScreenSelector
             GlStateManager.depthMask(te.getGlassMaterial()>=0 && opacity==1);
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             StaticSurfaceMesh pane=DiagonalWallMeshCache.get(te,state,glass,glass);
-            if(te.getGlassMaterial()>=0 && te.isGlassStretch())pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0);
+            if(te.getGlassMaterial()>=0)pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0,te.getGlassTextureLayout());
             pane.drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);
             Tessellator.getInstance().draw();
             GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
@@ -899,7 +903,9 @@ public class TEAnimatedScreenSelector
             GlStateManager.scale((flat.right()-flat.left())/16,1,1);
         }
         buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        DiagonalWallMeshCache.get(te,state,wall,metal,porthole).draw(buf,
+        StaticSurfaceMesh wallMesh=DiagonalWallMeshCache.get(te,state,wall,metal,porthole);
+        if(te.getMainTextureLayout()!=0)wallMesh=GlassSurfaceMapping.map(wallMesh,wall,GlassSurfaceGroups.mainLayout(te),false,0,0,te.getMainTextureLayout());
+        wallMesh.draw(buf,
                 (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
         Tessellator.getInstance().draw();
         if(bentPorthole) {
@@ -1106,8 +1112,9 @@ public class TEAnimatedScreenSelector
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
         if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
         if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
-        return com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(root, a, next, b,
-                at.isDiagonalHalfHeight() ? 2 : at.isDiagonalFullWidth() ? 1 : 0);
+        int mode=at.isDiagonalHalfHeight()?2:at.isDiagonalFullWidth()?1:0;
+        return com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(root,a,next,b,mode)
+                || com.vandorlabs.blocks.DiagonalPanelGeometry.rowsMeet(root,a,next,b,mode);
     }
 
     private static Set<BlockPos> collectDiagonalPortholes(World world,BlockPos root) {
@@ -1123,7 +1130,7 @@ public class TEAnimatedScreenSelector
             for(boolean positive:new boolean[]{false,true})candidates.addAll(
                     com.vandorlabs.blocks.DiagonalPanelGeometry.rowCandidates(pos,state,mode,positive));
             for(BlockPos next:candidates) {
-                if(members.contains(next)||!compatiblePorthole(world,root,next))continue;
+                if(members.contains(next)||!compatiblePorthole(world,pos,next))continue;
                 members.add(next);queue.add(next);
                 if(members.size()>=LoadedPlaneConnections.LIMIT)break;
             }
@@ -1435,21 +1442,9 @@ public class TEAnimatedScreenSelector
     }
 
     private static void renderLightHousing(TextureAtlasSprite sprite,int visible,
-            double x0,double y0,double z0,double x1,double y1,double z1,boolean tileSides) {
-        double u=tileSides?x1-x0:16,v=tileSides?y1-y0:16,w=tileSides?z1-z0:16;
-        BufferBuilder b=Tessellator.getInstance().getBuffer();
-        b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        if ((visible & (1 << EnumFacing.UP.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1,0,0,u,w);
-        if ((visible & (1 << EnumFacing.DOWN.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0,0,0,w,v);
-        if ((visible & (1 << EnumFacing.WEST.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0,0,0,w,v);
-        if ((visible & (1 << EnumFacing.EAST.getIndex())) != 0)
-            spriteQuad(b,sprite,x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1,0,0,w,v);
-        if ((visible & (1 << EnumFacing.SOUTH.getIndex())) != 0)
-            spriteQuad(b,sprite,x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1,0,0,u,v);
-        Tessellator.getInstance().draw();
+            double x0,double y0,double z0,double x1,double y1,double z1,int layout) {
+        ScreenHousingMesh mesh=ScreenHousingMesh.box(x0,y0,z0,x1,y1,z1).textureLayout(layout,UnifiedTextureSprites.aspect(sprite));
+        drawWallMesh(sprite,mesh.boxFaces(visible & ~(1<<EnumFacing.NORTH.getIndex())));
     }
 
     private static void renderProgrammableLightFace(TextureAtlasSprite face,

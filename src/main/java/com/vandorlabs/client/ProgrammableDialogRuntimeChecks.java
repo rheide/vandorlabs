@@ -65,15 +65,8 @@ final class ProgrammableDialogRuntimeChecks {
                     }
                 }
                 if(gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableTrapdoor) {
-                    Field detail=gui.getClass().getDeclaredField(gui instanceof GuiSpaceDoor?"detail":"doorDetail");detail.setAccessible(true);
-                    int initial=detail.getInt(gui),sizeId=gui instanceof GuiSpaceDoor?11:9;
-                    GuiButton sizeButton=null;for(GuiButton b:buttons)if(b.id==sizeId)sizeButton=b;
-                    require(sizeButton!=null,"missing door size button");
-                    for(int step=1;step<=3;step++) {
-                        click(gui,sizeButton.x+sizeButton.width/2,sizeButton.y+sizeButton.height/2);
-                        require(detail.getInt(gui)==(initial+step)%2,"door size button failed");
-                        for(Field f:gui.getClass().getDeclaredFields()){f.setAccessible(true);Object value=f.get(gui);if(value instanceof HousingTextureList)checkDoorDesigns((HousingTextureList)value,gui instanceof GuiSpaceDoor);}
-                    }
+                    int sizeId=gui instanceof GuiSpaceDoor?11:9;
+                    require(buttons.stream().noneMatch(b->b.id==sizeId),"obsolete texture size button");
                 }
                 // Exercise tabs through the actual mouse path, then restore the original tab.
                 Field tab=null;try{tab=gui.getClass().getDeclaredField("textureTab");tab.setAccessible(true);}catch(NoSuchFieldException ignored){}

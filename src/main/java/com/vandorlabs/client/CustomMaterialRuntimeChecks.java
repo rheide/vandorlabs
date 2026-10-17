@@ -25,8 +25,8 @@ final class CustomMaterialRuntimeChecks {
             if("Trapdoors".equals(ScreenHousingTextures.category(i))) {
                 require(ScreenHousingTextures.label(i)!=null && ScreenHousingTextures.label(i).replaceFirst(" (Small|Large)$","").length()<=20,"hatch label still too long");hatchNames++;
             }
-        require(hatchNames==16 && "Armored Hatch Large".equals(ScreenHousingTextures.label(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"short hatch labels/default");
-        System.out.println("[vandorlabs][reprolab] short-trapdoor-labels PASS eight designs, two artwork sizes");
+        require(hatchNames==16 && "Armored Hatch".equals(ScreenHousingTextures.label(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"short hatch labels/default");
+        System.out.println("[vandorlabs][reprolab] short-trapdoor-labels PASS eight designs, stable legacy aliases");
         for(net.minecraft.block.Block hatch:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_TRAPDOOR,ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR}) {
             net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(new ItemStack(hatch),mc.world,player);
             require(model.getParticleTexture().getIconName().equals(ScreenHousingTextures.fullTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR)),"plain hatch item uses old default artwork");

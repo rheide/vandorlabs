@@ -15,7 +15,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
             "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight","slim_glass"};
     public static final int FIRST_DOUBLE_DESIGN=21, DEFAULT_LARGE_DESIGN=23;
-    public static final String[] DETAILS={"low","medium"};
+    public static final String[] DETAILS={"low","low"};
     private static final ResourceLocation[] MOTION_MODELS = new ResourceLocation[4];
     private static final java.util.concurrent.atomic.AtomicReferenceArray<BlockSpaceDoor>
             RESOLVED_MODELS = new java.util.concurrent.atomic.AtomicReferenceArray<>(4);
@@ -26,8 +26,11 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     private int design=2, detail=1,faceTexture=-1;
     private boolean tileTexture;
+    private int textureLayout=-1;
+    public int getTextureLayout(){return textureLayout<0?(tileTexture?1:0):textureLayout;}
+    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");setTileTexture(mode==1);textureLayout=mode;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     public boolean isTileTexture(){return tileTexture;}
-    public void setTileTexture(boolean value){if(tileTexture==value)return;tileTexture=value;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
+    public void setTileTexture(boolean value){if(tileTexture==value && textureLayout<0)return;textureLayout=-1;tileTexture=value;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
     public int getFaceTexture(){return faceTexture;}
     public void setFaceTexture(int choice){faceTexture=choice<0?-1:ScreenHousingTextures.clamp(choice);markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
 
@@ -144,7 +147,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         super.writeToNBT(tag);
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
-        tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);
+        tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);tag.setInteger("DoorTextureLayout",getTextureLayout());
         tag.setInteger("SpaceDoorPlacementDepth", placementDepth);
         return tag;
     }
@@ -154,13 +157,13 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         NBTTagCompound tag=new NBTTagCompound();
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
-        tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);
+        tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);tag.setInteger("DoorTextureLayout",getTextureLayout());
         tag.setInteger("SpaceDoorChannel",getRedstoneChannel());
         com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());
         return tag;
     }
     public void applyItemSettings(NBTTagCompound tag) {
-        setTileTexture(tag.getBoolean("DoorTileTexture"));
+        setTextureLayout(tag.hasKey("DoorTextureLayout",3)?tag.getInteger("DoorTextureLayout"):tag.getBoolean("DoorTileTexture")?1:0);
         setFaceTexture(tag.hasKey("DoorFaceTexture",3)?tag.getInteger("DoorFaceTexture"):-1);
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
@@ -170,6 +173,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
         tileTexture=tag.getBoolean("DoorTileTexture");
+        textureLayout=tag.hasKey("DoorTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("DoorTextureLayout"))?tag.getInteger("DoorTextureLayout"):-1;
         faceTexture=tag.hasKey("DoorFaceTexture",3) && tag.getInteger("DoorFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("DoorFaceTexture")):-1;
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));

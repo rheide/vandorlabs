@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage two artwork tiers and compact inherited model geometry without changing IDs."""
+"""Stage 128 pixels per block and compact inherited geometry without changing IDs."""
 import argparse, collections, hashlib, json, shutil
 from pathlib import Path
 from PIL import Image
@@ -16,6 +16,31 @@ def resized(path,size):
     with Image.open(path) as source:
         image=source.convert('RGBA').convert('RGBa').resize((size,size),Image.Resampling.LANCZOS).convert('RGBA')
     image.save(path,optimize=True)
+
+def standardize(textures,catalog):
+    """Keep UV atlases/native pixel art; use 128px per authored block face."""
+    doubles={e['source'] for e in catalog if e.get('category')=='Double Doors'}
+    changed=0
+    for path in (textures/'blocks').rglob('*.png'):
+        rel=path.relative_to(textures/'blocks').as_posix()
+        metadata=path.with_suffix('.png.mcmeta')
+        animated=metadata.exists() and 'animation' in json.loads(metadata.read_text())
+        if 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/')) or animated:continue
+        with Image.open(path) as source:
+            w,h=source.size
+            # Tall doors cover two blocks; square double doors cover four.
+            span=2 if rel[:-4] in doubles or h==2*w else 1
+            limit=128*span
+            if max(w,h)<=limit:continue
+            scale=limit/max(w,h);size=(round(w*scale),round(h*scale))
+            image=source.convert('RGBA').convert('RGBa').resize(size,Image.Resampling.LANCZOS).convert('RGBA')
+        image.save(path,optimize=True);changed+=1
+    # The old detail paths remain resource-pack aliases with identical pixels.
+    for family in ('space_doors','cargo_doors','glass_doors','programmable_glass'):
+        for master in (textures/'blocks'/family/'medium').glob('*.png'):
+            low=master.parent.parent/'low'/master.name
+            if low.exists():shutil.copyfile(master,low)
+    print('Standard artwork: 128 pixels/block;',changed,'images reduced; UV atlases and animation sheets preserved')
 
 def redirect_dynmap(text,aliases):
     import re
@@ -61,6 +86,7 @@ def stage(directory, models_staged=False):
     low=textures/'blocks/space_doors/low/glass_tile.png'
     shutil.copyfile(pane,low);resized(low,256)
     catalog=json.loads((directory/'data/unified_textures.json').read_text())
+    standardize(textures,catalog)
     aliases=texture_aliases(catalog)
     for tier in ('low','medium'):
         for suffix in ('_mild','_strong'):

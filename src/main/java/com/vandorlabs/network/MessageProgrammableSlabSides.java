@@ -15,19 +15,24 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public final class MessageProgrammableSlabSides implements IMessage {
     private BlockPos pos;
     private boolean tileSides;
+    private int layout;
 
     public MessageProgrammableSlabSides() { }
     public MessageProgrammableSlabSides(BlockPos pos, boolean tileSides) {
         this.pos = pos;
         this.tileSides = tileSides;
+        this.layout=tileSides?1:0;
     }
+    public MessageProgrammableSlabSides(BlockPos pos,int layout){this.pos=pos;this.layout=layout;this.tileSides=layout==1;}
     @Override public void fromBytes(ByteBuf buf) {
         pos = BlockPos.fromLong(buf.readLong());
         tileSides = buf.readBoolean();
+        layout=buf.isReadable()?buf.readUnsignedByte():tileSides?1:0;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
         buf.writeBoolean(tileSides);
+        buf.writeByte(layout);
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableSlabSides, IMessage> {
@@ -44,10 +49,10 @@ public final class MessageProgrammableSlabSides implements IMessage {
                 TileEntity tile = player.world.getTileEntity(msg.pos);
                 if (tile != container.getTileEntity() || !container.canInteractWith(player))
                     return;
-                if(!(tile instanceof TileEntityAnimatedScreenSelector))return;
-                if(tile.getBlockType()==ModBlocks.PROGRAMMABLE_SLAB || tile.getBlockType()==ModBlocks.PROGRAMMABLE_STAIRS)
-                    ((TileEntityAnimatedScreenSelector) tile).setSlabTileSides(msg.tileSides);
-                else ((TileEntityAnimatedScreenSelector) tile).setSurfaceTileSides(msg.tileSides);
+                if(!(tile instanceof TileEntityAnimatedScreenSelector) || !com.vandorlabs.render.TextureLayoutMode.valid(msg.layout))return;
+                if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableBlock || tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableWall || tile.getBlockType()==ModBlocks.PROGRAMMABLE_SLAB || tile.getBlockType()==ModBlocks.PROGRAMMABLE_STAIRS)
+                    ((TileEntityAnimatedScreenSelector) tile).setMainTextureLayout(msg.layout);
+                else ((TileEntityAnimatedScreenSelector) tile).setSurfaceTextureLayout(msg.layout);
             });
             return null;
         }

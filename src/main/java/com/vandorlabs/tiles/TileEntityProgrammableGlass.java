@@ -14,8 +14,11 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     private int shade;
     private int material=-1;
     private boolean stretch;
+    private int textureLayout=-1;
+    public int getTextureLayout(){return textureLayout<0?(stretch?0:1):textureLayout;}
+    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");setStretch(mode!=1);textureLayout=mode;markDirty();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public boolean isStretch(){return stretch;}
-    public void setStretch(boolean value){if(stretch==value)return;stretch=value;markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setStretch(boolean value){if(stretch==value && textureLayout<0)return;textureLayout=-1;stretch=value;markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public int getMaterial(){return material;}
     public void setMaterial(int value){
         if(!GlassMaterials.valid(value) || material==value)return;
@@ -86,6 +89,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         tag.setInteger("GlassShade", shade);
         tag.setInteger("GlassMaterial",material);
         tag.setBoolean("GlassStretch",stretch);
+        tag.setInteger("GlassTextureLayout",getTextureLayout());
         tag.setInteger("GlassTint", tint);
         tag.setBoolean("GlassFramed", framed);
         tag.setInteger("GlassSize", size);
@@ -98,6 +102,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         restored = true;
         material=tag.hasKey("GlassMaterial",3)?GlassMaterials.clamp(tag.getInteger("GlassMaterial")):-1;
         stretch=tag.getBoolean("GlassStretch");
+        textureLayout=tag.hasKey("GlassTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("GlassTextureLayout"))?tag.getInteger("GlassTextureLayout"):-1;
         tint=tag.hasKey("GlassTint",3)?GlassTextures.clampTint(tag.getInteger("GlassTint")):1;
         framed=!tag.hasKey("GlassFramed") || tag.getBoolean("GlassFramed");
         shade = GlassTextures.clamp(tag.getInteger("GlassShade"));

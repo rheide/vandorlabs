@@ -54,11 +54,10 @@ with ZipFile(jar) as archive:
                 assert x0>0 and y0>0 and x1<16 and y1<16,name
             elif '/textures/items/' in name:assert image.size==(128,128),name
             elif '/textures/models/armor/roles/' in name:assert image.size==(64,32),name
-            if '/imported/trapdoors/' in name:assert image.size==((128,128) if name.endswith('_small.png') else (256,256)),name
+            if '/imported/trapdoors/' in name:assert image.size==(128,128),name
         assert not any(path in name for path in ['/textures/blocks/space_doors/high/','/textures/blocks/cargo_doors/high/','/models/block/detailed_doors/high/','/models/item/detailed_doors/high/'])
     pane=lambda tier:Image.open(io.BytesIO(archive.read(prefix+'textures/blocks/space_doors/'+tier+'/glass_tile.png'))).convert('RGBA')
-    small,large=pane('low'),pane('medium');assert small.size==(256,256) and large.size==(512,512)
-    expected=large.convert('RGBa').resize((256,256),Image.Resampling.LANCZOS).convert('RGBA')
-    assert small.tobytes()==expected.tobytes(),'Pane pattern/UV density differs across sizes'
+    small,large=pane('low'),pane('medium');assert small.size==(128,128) and large.size==(128,128)
+    assert small.tobytes()==large.tobytes(),'Legacy pane aliases must use the standard pixels'
     assert sum(e.get('hidden',False) and 'alias' in e for e in entries)==29
 print('PASS:',checked,'packaged models preserve geometry/UVs/materials after shared-parent expansion; references resolve, High resources absent, hatch/icon sizes and matched pane pattern verified')

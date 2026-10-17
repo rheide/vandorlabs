@@ -30,7 +30,7 @@ public final class RampMaterials {
             TileEntityAnimatedScreenSelector x=(TileEntityAnimatedScreenSelector)a,y=(TileEntityAnimatedScreenSelector)b;
             if(world.getBlockState(seed).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                     && x.getSideTexture()!=y.getSideTexture())return false;
-            if (x.isSlabTileSides()!=y.isSlabTileSides()) return false;
+            if (x.getMainTextureLayout()!=y.getMainTextureLayout()) return false;
             for (int face=0;face<6;face++)
                 if (x.getFaceTextures().texture(face,x.getHousingTexture())
                         != y.getFaceTextures().texture(face,y.getHousingTexture())) return false;

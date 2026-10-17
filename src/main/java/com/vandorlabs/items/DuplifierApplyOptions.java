@@ -50,7 +50,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.PORTHOLE_SHAPE, "Porthole Shape", 2),
             option(ProgrammableSettings.GLASS_SIZE, "Glass Size", 2),
             option(ProgrammableSettings.SIDE_TEXTURE,"Side Texture",2),
-            option(ProgrammableSettings.SLAB_TILE_SIDES, "Slab Side Layout", 2),
+            option(ProgrammableSettings.SLAB_TILE_SIDES, "Texture Layout", 2),
             option(ProgrammableSettings.CHAIR_STYLE, "Chair Style", 2),
             option(ProgrammableSettings.CHAIR_HEIGHT, "Chair Height", 2),
             option(ProgrammableSettings.SWITCH_ROTATION, "Switch Rotation", 2),
@@ -145,6 +145,9 @@ public final class DuplifierApplyOptions {
             if (!enabled(mask, i)) selected.removeTag(OPTIONS[i].key);
         if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
+        if(!selected.hasKey(ProgrammableSettings.SLAB_TILE_SIDES))selected.removeTag(ProgrammableSettings.TEXTURE_LAYOUT);
+        if(!selected.hasKey(ProgrammableSettings.DOOR_TILE_TEXTURE))selected.removeTag(ProgrammableSettings.DOOR_TEXTURE_LAYOUT);
+        if(!selected.hasKey(ProgrammableSettings.TRAPDOOR_TILE_TEXTURE))selected.removeTag(ProgrammableSettings.TRAPDOOR_TEXTURE_LAYOUT);
         if (!selected.hasKey(ProgrammableSettings.GLASS_MATERIAL)) selected.removeTag(ProgrammableSettings.GLASS_LAYOUT);
         if (!selected.hasKey(ProgrammableSettings.RAMP_START)) selected.removeTag(ProgrammableSettings.RAMP_START_HALF);
         if (!selected.hasKey(ProgrammableSettings.RAMP_END)) selected.removeTag(ProgrammableSettings.RAMP_END_HALF);

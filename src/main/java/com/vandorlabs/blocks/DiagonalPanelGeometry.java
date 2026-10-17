@@ -41,6 +41,12 @@ public final class DiagonalPanelGeometry {
         return false;
     }
 
+    public static boolean rowsMeet(BlockPos a,IBlockState as,BlockPos b,IBlockState bs,int mode){
+        EnumFacing row=mode==2?as.getValue(BlockProgrammableWall.FACING).getOpposite():EnumFacing.UP;
+        int delta=PanelPlane.axis(b.subtract(a),row);
+        if(Math.abs(delta)!=1 || PanelPlane.axis(b.subtract(a),as.getValue(BlockProgrammableWall.FACING).rotateY())!=0)return false;
+        return endsMeet(a,as,b,bs,mode,delta>0);
+    }
     /** End cross-sections may meet at either a straight continuation or a bend. */
     private static boolean endsMeet(BlockPos a,IBlockState as,BlockPos b,IBlockState bs,int mode,boolean upper) {
         EnumFacing af=as.getValue(BlockProgrammableWall.FACING),bf=bs.getValue(BlockProgrammableWall.FACING);

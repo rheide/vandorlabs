@@ -40,6 +40,34 @@ public final class ScreenHousingMesh {
         }
         return result;
     }
+    private final java.util.Map<String,ScreenHousingMesh> layouts=new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<Integer,ScreenHousingMesh> masks=new java.util.concurrent.ConcurrentHashMap<>();
+    public ScreenHousingMesh boxFaces(int visible){
+        if(quads.length!=6)throw new IllegalStateException("Box faces required");ScreenHousingMesh found=masks.get(visible);if(found!=null)return found;
+        int[] direction={1,0,4,5,2,3};java.util.List<Face> faces=new java.util.ArrayList<>();for(int i=0;i<6;i++)if((visible&(1<<direction[i]))!=0)faces.add(quads[i]);
+        found=new ScreenHousingMesh(faces.toArray(new Face[0]),new Face[0]);masks.put(visible,found);return found;
+    }
+    /** Select fitting per physical face; rectangular artwork tiles at its own aspect. */
+    public ScreenHousingMesh textureLayout(int mode,double aspect){
+        if(!TextureLayoutMode.valid(mode) || !(aspect>0) || !Double.isFinite(aspect))throw new IllegalArgumentException("Invalid texture layout");
+        if(mode==TextureLayoutMode.STRETCH)return sideLayout(false);
+        if(mode==TextureLayoutMode.TILE && Math.abs(aspect-1)<1e-9)return this;
+        String key=mode+":"+aspect;ScreenHousingMesh found=layouts.get(key);if(found!=null)return found;
+        found=new ScreenHousingMesh(layoutFaces(quads,mode,aspect),layoutFaces(triangles,mode,aspect));if(layouts.size()>64)layouts.clear();layouts.put(key,found);return found;
+    }
+    private static Face[] layoutFaces(Face[] faces,int mode,double aspect){
+        Face[] result=new Face[faces.length];
+        for(int f=0;f<faces.length;f++){
+            Face face=faces[f];double minU=Double.POSITIVE_INFINITY,maxU=Double.NEGATIVE_INFINITY,minV=minU,maxV=maxU,unitU=1,unitV=1;
+            for(Vertex a:face.vertices){minU=Math.min(minU,a.u);maxU=Math.max(maxU,a.u);minV=Math.min(minV,a.v);maxV=Math.max(maxV,a.v);
+                for(Vertex b:face.vertices){double du=Math.abs(a.u-b.u),dv=Math.abs(a.v-b.v),length=Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z));if(du>1e-8 && dv<1e-8)unitU=length/du;if(dv>1e-8 && du<1e-8)unitV=length/dv;}
+            }
+            boolean fit=TextureLayoutMode.fit(mode,(maxU-minU)*unitU,(maxV-minV)*unitV,aspect);Vertex[] vertices=new Vertex[face.vertices.length];
+            for(int i=0;i<vertices.length;i++){Vertex v=face.vertices[i];double u=fit && maxU>minU?(v.u-minU)*16/(maxU-minU):TextureLayoutMode.tileU(v.u,aspect),vv=fit && maxV>minV?(v.v-minV)*16/(maxV-minV):TextureLayoutMode.tileV(v.v,aspect);vertices[i]=new Vertex(v.x,v.y,v.z,u,vv);}
+            result[f]=new Face(vertices);
+        }
+        return result;
+    }
 
     private static final ScreenHousingMesh CUBE=buildBox(0,16,0,16);
     private static final ScreenHousingMesh[] SLABS = {
@@ -51,6 +79,19 @@ public final class ScreenHousingMesh {
     private static final ScreenHousingMesh DIAGONAL_INVERTED=buildDiagonal(true);
 
     public static ScreenHousingMesh cube() { return CUBE; }
+    private static final java.util.Map<String,ScreenHousingMesh> BOXES=new java.util.concurrent.ConcurrentHashMap<>();
+    public static ScreenHousingMesh box(double x0,double y0,double z0,double x1,double y1,double z1){
+        String key=x0+":"+y0+":"+z0+":"+x1+":"+y1+":"+z1;ScreenHousingMesh found=BOXES.get(key);if(found!=null)return found;
+        double w=x1-x0,h=y1-y0,d=z1-z0;
+        found=new ScreenHousingMesh(new Face[]{
+            quad(x0,y1,z0,x1,y1,z0,x1,y1,z1,x0,y1,z1,0,0,w,d),
+            quad(x0,y0,z1,x1,y0,z1,x1,y0,z0,x0,y0,z0,0,0,w,d),
+            quad(x0,y1,z0,x0,y1,z1,x0,y0,z1,x0,y0,z0,0,0,d,h),
+            quad(x1,y1,z1,x1,y1,z0,x1,y0,z0,x1,y0,z1,0,0,d,h),
+            quad(x1,y1,z0,x0,y1,z0,x0,y0,z0,x1,y0,z0,0,0,w,h),
+            quad(x0,y1,z1,x1,y1,z1,x1,y0,z1,x0,y0,z1,0,0,w,h)
+        },new Face[0]);if(BOXES.size()>128)BOXES.clear();BOXES.put(key,found);return found;
+    }
     public static ScreenHousingMesh slab(boolean upper, boolean tileSides) {
         return SLABS[(upper?2:0)+(tileSides?1:0)];
     }

@@ -56,6 +56,7 @@ public final class ProgrammableSettings {
     public static final String GLASS_SIZE = "glass_size";
     public static final String SIDE_TEXTURE="side_texture";
     public static final String SLAB_TILE_SIDES = "slab_tile_sides";
+    public static final String TEXTURE_LAYOUT="texture_layout",DOOR_TEXTURE_LAYOUT="door_texture_layout",TRAPDOOR_TEXTURE_LAYOUT="trapdoor_texture_layout";
     public static final String DIAGONAL_FULL_WIDTH = "diagonal_full_width";
     public static final String TRIGGER_ON_TEXTURE = "trigger_on_texture";
     public static final String PRIMARY_SURFACE="primary_surface", SECONDARY_SURFACE="secondary_surface";
@@ -168,7 +169,7 @@ public final class ProgrammableSettings {
                 NBTTagCompound geometry=new NBTTagCompound();geometry.setInteger("mode",hatch.getPosition());out.setTag(DIAGONAL_GEOMETRY,geometry);
             } else out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
             if(hatch.canOffsetClosedLeaf())out.setInteger(TRAPDOOR_COVER_FACING,hatch.coverFacing().getHorizontalIndex());
-            out.setBoolean(TRAPDOOR_SLIDE_OVER_SURFACE,hatch.isSlideOverSurface());out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
+            out.setBoolean(TRAPDOOR_SLIDE_OVER_SURFACE,hatch.isSlideOverSurface());out.setBoolean(TRAPDOOR_TILE_TEXTURE,hatch.isTileTexture());out.setInteger(TRAPDOOR_TEXTURE_LAYOUT,hatch.getTextureLayout());out.setBoolean(TRAPDOOR_COVER,hatch.isCover());out.setBoolean(DOOR_SLIDING,hatch.isSliding());if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)out.setBoolean(TRAPDOOR_SLIDE_INTO_WALL,hatch.isSlideIntoWall());out.setInteger(TRIGGER,hatch.getTrigger());
         } else if (tile instanceof TileEntityProgrammableLight) {
             TileEntityProgrammableLight light = (TileEntityProgrammableLight) tile;
             out.setInteger(WALL_TEXTURE, light.getHousingTexture());
@@ -177,7 +178,7 @@ public final class ProgrammableSettings {
             out.setInteger(LIGHT_FACE_TEXTURE,light.getFaceTexture());
             out.setInteger(LIGHT_LEVEL, light.getConfiguredLightLevel());
             NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("Brightness",light.isSignalBrightness());signal.setInteger("Offset",light.getLightOffset());out.setTag(SIGNAL_SETTINGS,signal);
-            out.setBoolean(SMALL_INPUT,light.isSmallInput());out.setBoolean(SLAB_TILE_SIDES,light.isSlabTileSides());
+            out.setBoolean(SMALL_INPUT,light.isSmallInput());out.setBoolean(SLAB_TILE_SIDES,light.isSlabTileSides());out.setInteger(TEXTURE_LAYOUT,light.getMainTextureLayout());
             out.setInteger(TRIGGER, light.getTrigger());
             out.setBoolean(JOIN, light.isJoin());
             out.setBoolean(ACTIVE, light.isManualOn());
@@ -212,8 +213,9 @@ public final class ProgrammableSettings {
                 out.setBoolean(SMALL_INPUT, screen.isSmallInput());
                 out.setInteger(WALL_POSITION, screen.getWallPosition(1));
             }
-            if (block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block))
-                out.setBoolean(SLAB_TILE_SIDES, isDisplay(block)?screen.isSurfaceTileSides():screen.isSlabTileSides());
+            if (block instanceof BlockProgrammableBlock || block instanceof BlockProgrammableWall || block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block)){
+                out.setBoolean(SLAB_TILE_SIDES, isDisplay(block)?screen.isSurfaceTileSides():screen.isSlabTileSides());out.setInteger(TEXTURE_LAYOUT,isDisplay(block)?screen.getSurfaceTextureLayout():screen.getMainTextureLayout());
+            }
             if (block instanceof BlockProgrammableWall
                     && ((BlockProgrammableWall) block).isDiagonalShape())
             {
@@ -228,7 +230,7 @@ public final class ProgrammableSettings {
                 out.setInteger(PORTHOLE_SHAPE, screen.getPortholeShape());
                 out.setInteger(GLASS_SHADE, screen.getGlassShade());
                 out.setInteger(GLASS_TINT,screen.getGlassTint());out.setInteger(GLASS_MATERIAL,screen.getGlassMaterial());
-                NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Stretch",screen.isGlassStretch());layout.setBoolean("TextureJoin",screen.isGlassTextureJoin());out.setTag(GLASS_LAYOUT,layout);
+                NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Stretch",screen.isGlassStretch());layout.setInteger("Mode",screen.getGlassTextureLayout());layout.setBoolean("TextureJoin",screen.isGlassTextureJoin());out.setTag(GLASS_LAYOUT,layout);
                 if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)out.setBoolean(FRAMED,screen.isGlassFramed());
             }
         } else if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
@@ -247,11 +249,11 @@ public final class ProgrammableSettings {
             out.setInteger(GLASS_SIZE, glass.getSize());
             out.setInteger(GLASS_TINT,glass.getTint());out.setBoolean(FRAMED,glass.isFramed());
             out.setInteger(GLASS_MATERIAL,glass.getMaterial());
-            NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Stretch",glass.isStretch());out.setTag(GLASS_LAYOUT,layout);
+            NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Stretch",glass.isStretch());layout.setInteger("Mode",glass.getTextureLayout());out.setTag(GLASS_LAYOUT,layout);
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
             out.setInteger(TRIGGER, door.getTrigger());
-            out.setBoolean(DOOR_TILE_TEXTURE,door.isTileTexture());out.setInteger(DOOR_DESIGN, door.getDesign());out.setInteger(DOOR_FACE_TEXTURE,door.getFaceTexture());
+            out.setBoolean(DOOR_TILE_TEXTURE,door.isTileTexture());out.setInteger(DOOR_TEXTURE_LAYOUT,door.getTextureLayout());out.setInteger(DOOR_DESIGN, door.getDesign());out.setInteger(DOOR_FACE_TEXTURE,door.getFaceTexture());
             out.setInteger(DOOR_DETAIL, door.getDetail());
             out.setBoolean(FRAMED, door.isFramed());
             out.setInteger(DOOR_SLIDE_DIRECTION, door.getSlideDirection());
@@ -316,7 +318,7 @@ public final class ProgrammableSettings {
             ((TileEntityProgrammableGlass)tile).setSize(glass.getInteger("Size"));
             ((TileEntityProgrammableGlass)tile).setShade(glass.getInteger("Shade"));
             ((TileEntityProgrammableGlass)tile).setMaterial(glass.hasKey("Material",3)?glass.getInteger("Material"):-1);
-            ((TileEntityProgrammableGlass)tile).setStretch(glass.getBoolean("Stretch"));
+            ((TileEntityProgrammableGlass)tile).setTextureLayout(glass.hasKey("LayoutMode",3)?glass.getInteger("LayoutMode"):glass.getBoolean("Stretch")?0:1);
             ((TileEntityProgrammableGlass)tile).setJoin(!glass.hasKey("Join") || glass.getBoolean("Join"));
             ((TileEntityProgrammableGlass)tile).setAppearance(glass.hasKey("Tint",3)?glass.getInteger("Tint"):1,!glass.hasKey("Framed")||glass.getBoolean("Framed"));
         }
@@ -339,7 +341,7 @@ public final class ProgrammableSettings {
             NBTTagCompound settings = new NBTTagCompound();
             settings.setInteger("Size", glass.getSize());settings.setInteger("Shade",glass.getShade());settings.setBoolean("Join",glass.isJoin());settings.setInteger("Tint",glass.getTint());settings.setBoolean("Framed",glass.isFramed());
             settings.setInteger("Material",glass.getMaterial());
-            settings.setBoolean("Stretch",glass.isStretch());
+            settings.setBoolean("Stretch",glass.isStretch());settings.setInteger("LayoutMode",glass.getTextureLayout());
             output.setTagInfo("ProgrammableGlassSettings",settings);
         }
         if (tile instanceof TileEntityRampController) output.setTagInfo("CopiedRampSettings", values.copy());
@@ -362,6 +364,8 @@ public final class ProgrammableSettings {
     private static boolean applyToTile(World world, BlockPos pos, NBTTagCompound values,
             EntityPlayer player, TileEntity tile, Block block) {
         if (tile == null || values == null || values.hasNoTags()) return false;
+        for(String key:new String[]{TEXTURE_LAYOUT,DOOR_TEXTURE_LAYOUT,TRAPDOOR_TEXTURE_LAYOUT})if(values.hasKey(key,3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getInteger(key)))return false;
+        if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Mode",3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getCompoundTag(GLASS_LAYOUT).getInteger("Mode")))return false;
         boolean applicable = false;
         if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
@@ -405,7 +409,7 @@ public final class ProgrammableSettings {
                             || !world.isBlockModifiable(player,leaf.getPos()))return false;
                 com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.configureGroup(leaves,()->{
                 for(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor leaf:leaves){
-                    if(values.hasKey(TRAPDOOR_TILE_TEXTURE,1))leaf.setTileTexture(values.getBoolean(TRAPDOOR_TILE_TEXTURE));
+                    if(values.hasKey(TRAPDOOR_TILE_TEXTURE,1))leaf.setTileTexture(values.getBoolean(TRAPDOOR_TILE_TEXTURE));if(values.hasKey(TRAPDOOR_TEXTURE_LAYOUT,3))leaf.setTextureLayout(values.getInteger(TRAPDOOR_TEXTURE_LAYOUT));
                     if(values.hasKey(TRAPDOOR_COVER,1))leaf.setCover(values.getBoolean(TRAPDOOR_COVER));
                     if(values.hasKey(TRAPDOOR_COVER_FACING,3))leaf.setHingeFacing(EnumFacing.getHorizontal(values.getInteger(TRAPDOOR_COVER_FACING)));
                     if(!diagonal && values.hasKey(DOOR_SLIDING,1) && values.hasKey(TRAPDOOR_SLIDE_OVER_SURFACE,1))leaf.setSlideOverSurface(values.getBoolean(TRAPDOOR_SLIDE_OVER_SURFACE));
@@ -456,7 +460,7 @@ public final class ProgrammableSettings {
                     && values.hasKey(PRIMARY_TEXTURE, 3))
                 primary = values.getInteger(PRIMARY_TEXTURE);
             if(values.hasKey(SMALL_INPUT,1))light.setSmallInput(values.getBoolean(SMALL_INPUT));
-            if(values.hasKey(SLAB_TILE_SIDES,1))light.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES));
+            if(values.hasKey(SLAB_TILE_SIDES,1))light.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES));if(values.hasKey(TEXTURE_LAYOUT,3))light.setMainTextureLayout(values.getInteger(TEXTURE_LAYOUT));
             if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);light.configureSignalBrightness(signal.getBoolean("Brightness"),signal.getInteger("Offset"));}
             light.configure(primary, number(values, LIGHT_LEVEL, light.getConfiguredLightLevel()),
                     flag(values, JOIN, light.isJoin()),
@@ -531,8 +535,8 @@ public final class ProgrammableSettings {
                     screen.setWallPosition(values.getInteger(WALL_POSITION)); applicable = true;
                 }
             }
-            if ((block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block)) && values.hasKey(SLAB_TILE_SIDES, 1)) {
-                if(isDisplay(block))screen.setSurfaceTileSides(values.getBoolean(SLAB_TILE_SIDES));else screen.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES)); applicable = true;
+            if ((block instanceof BlockProgrammableBlock || block instanceof BlockProgrammableWall || block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block)) && (values.hasKey(SLAB_TILE_SIDES, 1) || values.hasKey(TEXTURE_LAYOUT,3))) {
+                if(values.hasKey(TEXTURE_LAYOUT,3)){if(isDisplay(block))screen.setSurfaceTextureLayout(values.getInteger(TEXTURE_LAYOUT));else screen.setMainTextureLayout(values.getInteger(TEXTURE_LAYOUT));}else if(isDisplay(block))screen.setSurfaceTileSides(values.getBoolean(SLAB_TILE_SIDES));else screen.setSlabTileSides(values.getBoolean(SLAB_TILE_SIDES)); applicable = true;
             }
             if (block instanceof BlockProgrammableWall
                     && ((BlockProgrammableWall) block).isDiagonalShape()
@@ -566,7 +570,7 @@ public final class ProgrammableSettings {
             }
             if(isPorthole(block) || block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass){
                 if(values.hasKey(GLASS_MATERIAL,3)){screen.setGlassMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
-                if(values.hasKey(GLASS_LAYOUT,10)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);screen.setGlassLayout(layout.hasKey("Stretch",1)?layout.getBoolean("Stretch"):screen.isGlassStretch(),layout.hasKey("TextureJoin",1)?layout.getBoolean("TextureJoin"):screen.isGlassTextureJoin());applicable=true;}
+                if(values.hasKey(GLASS_LAYOUT,10)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);screen.setGlassLayout(layout.hasKey("Stretch",1)?layout.getBoolean("Stretch"):screen.isGlassStretch(),layout.hasKey("TextureJoin",1)?layout.getBoolean("TextureJoin"):screen.isGlassTextureJoin());if(layout.hasKey("Mode",3))screen.setGlassTextureLayout(layout.getInteger("Mode"));applicable=true;}
             }
             if (applicable && world != null && screen.getSettingsRevision()!=before) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
@@ -576,7 +580,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass = (TileEntityProgrammableGlass) tile;
             if(values.hasKey(GLASS_MATERIAL,3)){glass.setMaterial(values.getInteger(GLASS_MATERIAL));applicable=true;}
-            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Stretch",1)){glass.setStretch(values.getCompoundTag(GLASS_LAYOUT).getBoolean("Stretch"));applicable=true;}
+            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Stretch",1)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);glass.setTextureLayout(layout.hasKey("Mode",3)?layout.getInteger("Mode"):layout.getBoolean("Stretch")?0:1);applicable=true;}
             if (values.hasKey(JOIN, 1)) {
                 glass.setJoin(values.getBoolean(JOIN)); applicable = true;
             }
@@ -592,7 +596,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
-            if(values.hasKey(DOOR_TILE_TEXTURE,1)){door.setTileTexture(values.getBoolean(DOOR_TILE_TEXTURE));applicable=true;}
+            if(values.hasKey(DOOR_TILE_TEXTURE,1)){door.setTileTexture(values.getBoolean(DOOR_TILE_TEXTURE));applicable=true;}if(values.hasKey(DOOR_TEXTURE_LAYOUT,3)){door.setTextureLayout(values.getInteger(DOOR_TEXTURE_LAYOUT));applicable=true;}
             if(values.hasKey(DOOR_FACE_TEXTURE,3)){door.setFaceTexture(values.getInteger(DOOR_FACE_TEXTURE));applicable=true;}
             int trigger = number(values, TRIGGER, door.getTrigger());
             if (!SpaceDoorData.validTrigger(trigger)) trigger = door.getTrigger();

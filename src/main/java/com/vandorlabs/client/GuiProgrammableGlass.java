@@ -10,12 +10,12 @@ import java.io.IOException;
 /** Glass finishes use the same scrollable thumbnail picker as programmable walls. */
 public final class GuiProgrammableGlass extends GuiMaterialPicker {
     private final TileEntityProgrammableGlass tile;
-    private int size,shade,tint,material;
+    private int size,shade,tint,material,textureLayout;
     private boolean join,framed,stretch;
     private HousingTextureList textures;
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));this.tile=tile;
-        size=tile.getSize();shade=tile.getShade();join=tile.isJoin();tint=tile.getTint();framed=tile.isFramed();material=tile.getMaterial();stretch=tile.isStretch();
+        textureLayout=tile.getTextureLayout();size=0;shade=tile.getShade();join=tile.isJoin();tint=tile.getTint();framed=tile.isFramed();material=tile.getMaterial();stretch=tile.isStretch();
     }
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
@@ -23,22 +23,20 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
         xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();
         textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+30,layout.controlsX-guiLeft-31,shade,material)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
-        buttonList.add(new GuiButton(0,layout.controlsX,guiTop+30,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Size: "+(size==0?"Small":"Large")));
         buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
         buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
         buttonList.add(new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare"));
-        if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+(stretch?"Stretch":"Tile")));
+        if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout)));
         buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
     }
     void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;send();initGui();}
-    private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setStretch(stretch);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withStretch(stretch));}
+    private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setTextureLayout(textureLayout);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withTextureLayout(textureLayout));}
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==2){mc.player.closeScreen();return;}
-        if(button.id==0)size=GuiOptionCycle.next(size,2);
         if(button.id==3)join=!join;
         if(button.id==4)tint=GuiOptionCycle.next(tint,3);
         if(button.id==5)framed=!framed;
-        if(button.id==6)stretch=!stretch;
+        if(button.id==6){textureLayout=GuiOptionCycle.next(textureLayout,3);stretch=textureLayout!=1;}
         send();initGui();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {

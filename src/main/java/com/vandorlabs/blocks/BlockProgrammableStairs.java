@@ -40,7 +40,7 @@ public final class BlockProgrammableStairs extends BlockStairs {
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
         return HousingBlockState.sample((IExtendedBlockState)state,tile==null?0:tile.getHousingTexture(),
                 tile==null?-1:tile.getSideTexture(),tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures(),
-                tile!=null&&tile.isSlabTileSides()?1:0,63,0);
+                tile==null?0:tile.getMainTextureLayout(),63,0);
     }
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,

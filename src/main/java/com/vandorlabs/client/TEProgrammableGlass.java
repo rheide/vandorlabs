@@ -36,6 +36,15 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
     private static final double PANE_NEAR = 7D / 16D;
     private static final double PANE_FAR = 9D / 16D;
+    private static StaticSurfaceMesh materialPlane;
+    private static StaticSurfaceMesh materialPlane(){
+        if(materialPlane==null){StaticSurfaceMesh.Capture buffer=StaticSurfaceMesh.capture();
+            for(boolean near:new boolean[]{true,false}){
+                double z=(near?PANE_NEAR+.0001:PANE_FAR-.0001)*16;int[] order=near?new int[]{0,3,2,1}:new int[]{0,1,2,3};
+                for(int index:order){double px=index==1 || index==2?16:0,py=index<2?0:16;buffer.pos(px,py,z).tex(px/16,1-py/16).normal(0,0,near?-1:1).endVertex();}
+            }materialPlane=buffer.finish();
+        }return materialPlane;
+    }
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null) return;
@@ -72,9 +81,8 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         double inset=tile.getMaterial()<0?0:.0001;
-        GlassSurfaceGroups.Layout layout=material!=null && tile.isStretch()?GlassSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
-        pane(b,PANE_NEAR+inset,1,1,1,opacity,material,layout);
-        pane(b,PANE_FAR-inset,1,1,1,opacity,material,layout);
+        if(material==null){pane(b,PANE_NEAR+inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));pane(b,PANE_FAR-inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));}
+        else{GlStateManager.scale(1F/16,1F/16,1F/16);GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()).drawColored(b,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);}
         Tessellator.getInstance().draw();
         GlStateManager.enableCull();
         GlStateManager.depthMask(true);
@@ -90,11 +98,11 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
             com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner,double x,double y,double z) {
         CornerMeshes meshes=meshes(tile,state,corner);
         StaticSurfaceMesh mesh=meshes.pane;
-        if(tile.getMaterial()>=0 && tile.isStretch()){
+        if(tile.getMaterial()>=0){
             net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tile.getMaterial()));
             GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(tile);
             if(com.vandorlabs.blocks.PanelJoins.flatFacing(state,tile.getWorld(),tile.getPos())!=com.vandorlabs.blocks.PanelJoins.facing(state))layout=new GlassSurfaceGroups.Layout(layout.columns-1-layout.column,layout.row,layout.columns,layout.rows);
-            mesh=GlassSurfaceMapping.map(mesh,sprite,layout,false,0,0);
+            mesh=GlassSurfaceMapping.map(mesh,sprite,layout,false,0,0,tile.getTextureLayout());
         }
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0),sky=light/65536,block=light%65536;
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);

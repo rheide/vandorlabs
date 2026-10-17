@@ -19,7 +19,9 @@ public final class MessageProgrammableGlass implements IMessage {
     private int tint=1;
     private int material=-1;
     private boolean stretch;
-    public MessageProgrammableGlass withStretch(boolean stretch){this.stretch=stretch;return this;}
+    private int layout=1;
+    public MessageProgrammableGlass withTextureLayout(int layout){this.layout=layout;this.stretch=layout!=1;return this;}
+    public MessageProgrammableGlass withStretch(boolean stretch){this.layout=stretch?0:1;this.stretch=stretch;return this;}
     public MessageProgrammableGlass withMaterial(int material){this.material=material;return this;}
     private boolean framed=true;
     public MessageProgrammableGlass() {}
@@ -33,15 +35,16 @@ public final class MessageProgrammableGlass implements IMessage {
         tint=b.isReadable()?b.readUnsignedByte():1;framed=!b.isReadable()||b.readBoolean();
         material=b.readableBytes()>=4?b.readInt():-1;
         stretch=b.isReadable() && b.readBoolean();
+        layout=b.isReadable()?b.readUnsignedByte():stretch?0:1;
     }
     @Override public void toBytes(ByteBuf b) {
-        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);b.writeInt(material);b.writeBoolean(stretch);
+        b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);b.writeInt(material);b.writeBoolean(stretch);b.writeByte(layout<0?(stretch?0:1):layout);
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(() -> {
-                if (!com.vandorlabs.tiles.GlassMaterials.valid(msg.material) || !com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || msg.size < 0 || msg.size > 2
+                if (!com.vandorlabs.render.TextureLayoutMode.valid(msg.layout) || !com.vandorlabs.tiles.GlassMaterials.valid(msg.material) || !com.vandorlabs.tiles.GlassTextures.validTint(msg.tint) || msg.pos == null || msg.size < 0 || msg.size > 2
                         || !com.vandorlabs.tiles.GlassTextures.valid(msg.shade)
                         || !player.world.isBlockLoaded(msg.pos)
                         || !(player.openContainer instanceof ContainerProgrammableGlass)) return;
@@ -61,7 +64,7 @@ public final class MessageProgrammableGlass implements IMessage {
                     ((TileEntityProgrammableGlass) updated).setSize(msg.size);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
                     ((TileEntityProgrammableGlass) updated).setMaterial(msg.material);
-                    ((TileEntityProgrammableGlass) updated).setStretch(msg.stretch);
+                    ((TileEntityProgrammableGlass) updated).setTextureLayout(msg.layout);
                     ((TileEntityProgrammableGlass) updated).setJoin(msg.join);
                     ((TileEntityProgrammableGlass) updated).setAppearance(msg.tint,msg.framed);
                 }

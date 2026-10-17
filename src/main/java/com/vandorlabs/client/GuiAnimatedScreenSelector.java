@@ -201,7 +201,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?92:91))b.enabled=b.id-90!=textureTab;}
 
-    private String sidesLabel(){return "Sides: "+(te.isSurfaceTileSides()?"Tile":"Fit");}
+    private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
         redstoneButton.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
@@ -235,7 +235,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void actionPerformed(GuiButton button) {
         if(button.id>=90 && button.id<=(console?92:91)){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
-        if(button.id==32){te.setSurfaceTileSides(!te.isSurfaceTileSides());button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.isSurfaceTileSides()));return;}
+        if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.getSurfaceTextureLayout()));return;}
         switch (button.id) {
             case 0:
                 {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
