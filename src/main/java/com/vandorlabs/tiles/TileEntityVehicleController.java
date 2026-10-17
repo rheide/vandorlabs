@@ -6,7 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 /** Persistent vehicle controls. Pilot Seat's older codec remains the migration format. */
-public final class TileEntityVehicleController extends TileEntityPilotSeat {
+public class TileEntityVehicleController extends TileEntityPilotSeat {
     private boolean initialized;
     private VehicleScan migration;
     private long retry;

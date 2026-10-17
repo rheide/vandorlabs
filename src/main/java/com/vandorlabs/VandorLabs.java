@@ -47,6 +47,8 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWaypoint.class,"vandorlabs:waypoint");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityPilotSeat.class,"vandorlabs:pilot_seat");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityVehicleController.class,"vandorlabs:vehicle_controller");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCockpit.class,"vandorlabs:cockpit");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCockpitPart.class,"vandorlabs:cockpit_part");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLandingGear.class, "vandorlabs:landing_gear");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor.class, "vandorlabs:programmable_trapdoor");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor.class,"vandorlabs:programmable_diagonal_trapdoor");

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "chair_siderests",
+  "units_per_block": 16,
+  "static_model": "vandorlabs:block/cockpits/chair_siderests/static.obj",
+  "poses": {
+    "off": "vandorlabs:block/cockpits/chair_siderests/off.obj",
+    "low": "vandorlabs:block/cockpits/chair_siderests/low.obj",
+    "medium": "vandorlabs:block/cockpits/chair_siderests/medium.obj",
+    "high": "vandorlabs:block/cockpits/chair_siderests/high.obj"
+  },
+  "render_bounds_blocks": [
+    -0.25,
+    0.0,
+    0.04375,
+    1.25,
+    1.375,
+    0.91875
+  ],
+  "parts": [
+    {
+      "id": "slider_left",
+      "model": "vandorlabs:block/cockpits/chair_siderests/slider_left.obj",
+      "pivot": [
+        -0.15,
+        0.66875,
+        0.5625
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "values": [
+        0.0,
+        -0.0625,
+        -0.125,
+        -0.1875
+      ]
+    },
+    {
+      "id": "slider_right",
+      "model": "vandorlabs:block/cockpits/chair_siderests/slider_right.obj",
+      "pivot": [
+        0.025,
+        0.66875,
+        0.5625
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "values": [
+        0.0,
+        -0.0625,
+        -0.125,
+        -0.1875
+      ]
+    }
+  ]
+}

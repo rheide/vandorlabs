@@ -1,0 +1,345 @@
+{
+  "bounds_model_pixels": [
+    -4.0,
+    0.0,
+    0.7,
+    20.0,
+    22.0,
+    14.7
+  ],
+  "bounds_blocks": [
+    -0.25,
+    0.0,
+    0.04375,
+    1.25,
+    1.375,
+    0.91875
+  ],
+  "width_depth_height_blocks": [
+    1.5,
+    0.875,
+    1.375
+  ],
+  "anchor": [
+    0,
+    0,
+    0
+  ],
+  "facing": "north",
+  "rotation_pivot_blocks": [
+    0.5,
+    0,
+    0.5
+  ],
+  "reserved_cells": [
+    [
+      -1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      1,
+      0,
+      0
+    ]
+  ],
+  "reservation_method": "union of conservative per-part AABB cells; render only once at the anchor",
+  "collision_boxes": [
+    {
+      "part": "chair",
+      "box": "chair_base",
+      "min": [
+        0.1875,
+        0.0,
+        0.1875
+      ],
+      "max": [
+        0.8125,
+        0.09375,
+        0.84375
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_pedestal",
+      "min": [
+        0.3125,
+        0.09375,
+        0.3125
+      ],
+      "max": [
+        0.6875,
+        0.3625,
+        0.71875
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_seat_pan",
+      "min": [
+        0.125,
+        0.3625,
+        0.046875
+      ],
+      "max": [
+        0.875,
+        0.4625,
+        0.85
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_seat_pad",
+      "min": [
+        0.175,
+        0.4625,
+        0.078125
+      ],
+      "max": [
+        0.825,
+        0.5375,
+        0.775
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_front_band",
+      "min": [
+        0.175,
+        0.4,
+        0.04375
+      ],
+      "max": [
+        0.825,
+        0.453125,
+        0.05625
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_back_shell",
+      "min": [
+        0.125,
+        0.4625,
+        0.75
+      ],
+      "max": [
+        0.875,
+        1.375,
+        0.90625
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_back_padding",
+      "min": [
+        0.1875,
+        0.575,
+        0.73
+      ],
+      "max": [
+        0.8125,
+        1.30625,
+        0.750625
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_lumbar",
+      "min": [
+        0.1875,
+        0.53125,
+        0.7
+      ],
+      "max": [
+        0.8125,
+        0.6875,
+        0.73125
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_back_rear",
+      "min": [
+        0.1875,
+        0.51875,
+        0.90625
+      ],
+      "max": [
+        0.8125,
+        1.30625,
+        0.91875
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "left_siderest",
+      "min": [
+        -0.25,
+        0.0,
+        0.0625
+      ],
+      "max": [
+        0.125,
+        0.65625,
+        0.90625
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "left_siderest_top",
+      "min": [
+        -0.25,
+        0.5875,
+        0.05625
+      ],
+      "max": [
+        0.125,
+        0.65625,
+        0.90625
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "left_siderest_edge",
+      "min": [
+        -0.25,
+        0.65625,
+        0.8
+      ],
+      "max": [
+        0.125,
+        0.68125,
+        0.90625
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "slider_left_rim",
+      "min": [
+        -0.2,
+        0.65625,
+        0.1875
+      ],
+      "max": [
+        -0.1,
+        0.665625,
+        0.675
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "slider_left_slot",
+      "min": [
+        -0.18625,
+        0.665625,
+        0.2
+      ],
+      "max": [
+        -0.11375,
+        0.667188,
+        0.6625
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "slider_right_rim",
+      "min": [
+        -0.025,
+        0.65625,
+        0.1875
+      ],
+      "max": [
+        0.075,
+        0.665625,
+        0.675
+      ]
+    },
+    {
+      "part": "siderest_left",
+      "box": "slider_right_slot",
+      "min": [
+        -0.01125,
+        0.665625,
+        0.2
+      ],
+      "max": [
+        0.06125,
+        0.667188,
+        0.6625
+      ]
+    },
+    {
+      "part": "siderest_right",
+      "box": "right_siderest",
+      "min": [
+        0.875,
+        0.0,
+        0.0625
+      ],
+      "max": [
+        1.25,
+        0.65625,
+        0.90625
+      ]
+    },
+    {
+      "part": "siderest_right",
+      "box": "right_siderest_top",
+      "min": [
+        0.875,
+        0.5875,
+        0.05625
+      ],
+      "max": [
+        1.25,
+        0.65625,
+        0.90625
+      ]
+    },
+    {
+      "part": "siderest_right",
+      "box": "right_siderest_edge",
+      "min": [
+        0.875,
+        0.65625,
+        0.8
+      ],
+      "max": [
+        1.25,
+        0.68125,
+        0.90625
+      ]
+    },
+    {
+      "part": "siderest_right",
+      "box": "touch_right_single_rim",
+      "min": [
+        0.896875,
+        0.65125,
+        0.1125
+      ],
+      "max": [
+        1.228125,
+        0.661875,
+        0.75625
+      ]
+    }
+  ],
+  "collision_note": "Conservative per-cuboid transformed AABBs; split/clip to cell when installing. Do not make the full multiblock one solid collision box.",
+  "seat_position_blocks": [
+    0.5,
+    0.5375,
+    0.40625
+  ]
+}

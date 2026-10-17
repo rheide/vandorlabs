@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "cockpit_a",
+  "units_per_block": 16,
+  "static_model": "vandorlabs:block/cockpits/cockpit_a/static.obj",
+  "poses": {
+    "off": "vandorlabs:block/cockpits/cockpit_a/off.obj",
+    "low": "vandorlabs:block/cockpits/cockpit_a/low.obj",
+    "medium": "vandorlabs:block/cockpits/cockpit_a/medium.obj",
+    "high": "vandorlabs:block/cockpits/cockpit_a/high.obj"
+  },
+  "render_bounds_blocks": [
+    0.015625,
+    0.0,
+    -0.98543409,
+    1.984375,
+    1.325,
+    0.91875
+  ],
+  "parts": [
+    {
+      "id": "throttle_left",
+      "model": "vandorlabs:block/cockpits/cockpit_a/throttle_left.obj",
+      "pivot": [
+        0.259375,
+        0.66875,
+        0.5
+      ],
+      "type": "rotation",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "values": [
+        22.5,
+        0,
+        -22.5,
+        -45
+      ]
+    }
+  ]
+}

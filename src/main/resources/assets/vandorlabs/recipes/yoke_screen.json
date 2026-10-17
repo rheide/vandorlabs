@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " S ",
+    "IRI",
+    "III"
+  ],
+  "key": {
+    "S": {
+      "item": "vandorlabs:programmable_viewscreen"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:yoke_screen"
+  }
+}

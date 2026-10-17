@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 /** Shared simulation-pose selection for validated craft interaction packets. */
 public final class VehicleSelection {
     private VehicleSelection() {}
-    public enum Action { SURFACE, BOARD, DOOR, CANOPY, SCREEN, CONTROLLER }
+    public enum Action { SURFACE, BOARD, DOOR, CANOPY, SCREEN, CONTROLLER, COCKPIT }
 
     public static final class Hit {
         public final VehicleStructure.Cell cell;
@@ -21,7 +21,8 @@ public final class VehicleSelection {
             this.cell = cell;
             this.local = local;
             this.distanceSq = distanceSq;
-            action = cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController ? Action.CONTROLLER
+            action = cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPeripheral ? Action.COCKPIT
+                    : cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController ? Action.CONTROLLER
                     : cell.state.getBlock() instanceof BlockPilotSeat ? Action.BOARD
                     : VehicleCanopies.supports(cell.state.getBlock()) ? Action.CANOPY
                     : VehicleDoors.supports(cell.state.getBlock())
@@ -42,6 +43,7 @@ public final class VehicleSelection {
             // The occupied seat surrounds the pilot's eyes; its selection box must
             // not swallow clicks aimed at the canopy, doors or controls above it.
             if(riderSeat!=null && cell.state.getBlock() instanceof BlockPilotSeat
+                    && !(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit)
                     && (cell.pos.equals(riderSeat) || cell.pos.equals(riderSeat.up())))continue;
             VehicleStructure.Cell selected=cell;
             IBlockState state = view.getBlockState(cell.pos);
@@ -61,6 +63,7 @@ public final class VehicleSelection {
                 if (hit != null) hit = new RayTraceResult(hit.hitVec, hit.sideHit, selected.pos);
             }
             if (hit == null || !finite(hit.hitVec)) continue;
+            if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPart){com.vandorlabs.tiles.TileEntityCockpit root=com.vandorlabs.cockpit.CockpitAssembly.root(view,cell.pos);if(root==null)continue;selected=structure.at(root.getPos());if(selected==null)continue;}
             double distance = start.squareDistanceTo(hit.hitVec);
             // Terrain at the same distance wins, preventing clicks through a touching wall.
             if (distance < limitSq && (nearest == null || distance < nearest.distanceSq))

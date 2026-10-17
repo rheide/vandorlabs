@@ -1,0 +1,71 @@
+package com.vandorlabs.cockpit;
+
+import com.google.gson.*;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.*;
+import java.io.*;
+import java.util.*;
+
+/** Server-safe authored reservation, seating, collision and interactive planes. */
+public final class CockpitData {
+    public static final String[] IDS={"cockpit_a","cockpit_b","chair_siderests","yoke_screen"};
+    private static final Map<String,CockpitData> CACHE=new HashMap<>();
+    public final String id;
+    public final List<BlockPos> cells=new ArrayList<>();
+    public final List<AxisAlignedBB> boxes=new ArrayList<>();
+    public final List<Surface> surfaces=new ArrayList<>();
+    public final List<String> controls=new ArrayList<>();
+    public final Map<String,Vec3d> pivots=new LinkedHashMap<>();
+    public final AxisAlignedBB bounds;
+    public final Vec3d seat;
+    public final double riderY;
+    private static JsonObject json(String id,String file){
+        String path="/assets/vandorlabs/cockpits/"+id+"/"+file+".json";
+        try(InputStream in=CockpitData.class.getResourceAsStream(path)){
+            if(in==null)throw new IllegalArgumentException("Missing cockpit metadata "+path);
+            return new JsonParser().parse(new InputStreamReader(in,"UTF-8")).getAsJsonObject();
+        }catch(IOException e){throw new IllegalStateException(e);}
+    }
+    private static Vec3d vector(JsonArray a){return new Vec3d(a.get(0).getAsDouble(),a.get(1).getAsDouble(),a.get(2).getAsDouble());}
+    private static AxisAlignedBB box(JsonArray a){return new AxisAlignedBB(a.get(0).getAsDouble(),a.get(1).getAsDouble(),a.get(2).getAsDouble(),a.get(3).getAsDouble(),a.get(4).getAsDouble(),a.get(5).getAsDouble());}
+    private CockpitData(String id){
+        this.id=id;JsonObject assembly=json(id,"assembly");
+        bounds=box(assembly.getAsJsonArray("bounds_blocks"));
+        seat=assembly.get("seat_position_blocks").isJsonNull()?null:vector(assembly.getAsJsonArray("seat_position_blocks"));
+        riderY=assembly.has("rider_entity_origin_blocks")?vector(assembly.getAsJsonArray("rider_entity_origin_blocks")).y:seat==null?0:seat.y-.4890625;
+        for(JsonElement e:assembly.getAsJsonArray("reserved_cells")){Vec3d v=vector(e.getAsJsonArray());cells.add(new BlockPos(v));}
+        for(JsonElement e:assembly.getAsJsonArray("collision_boxes")){JsonObject b=e.getAsJsonObject();boxes.add(new AxisAlignedBB(vector(b.getAsJsonArray("min")),vector(b.getAsJsonArray("max"))));}
+        for(JsonElement e:json(id,"surfaces").getAsJsonArray("surfaces"))surfaces.add(new Surface(e.getAsJsonObject()));
+        for(JsonElement e:json(id,"rig").getAsJsonArray("parts")){JsonObject part=e.getAsJsonObject();String name=part.get("id").getAsString();controls.add(name);pivots.put(name,vector(part.getAsJsonArray("pivot")));}
+        if(cells.isEmpty() || boxes.isEmpty())throw new IllegalArgumentException("Empty cockpit "+id);
+    }
+    public static synchronized CockpitData get(String id){
+        if(!Arrays.asList(IDS).contains(id))throw new IllegalArgumentException("Unknown cockpit "+id);
+        CockpitData found=CACHE.get(id);if(found==null){found=new CockpitData(id);CACHE.put(id,found);}return found;
+    }
+    /** Rotate about the kit's fixed (0.5,0,0.5) anchor pivot. */
+    public static Vec3d rotate(Vec3d p,EnumFacing facing){
+        switch(facing){case EAST:return new Vec3d(1-p.z,p.y,p.x);case SOUTH:return new Vec3d(1-p.x,p.y,1-p.z);case WEST:return new Vec3d(p.z,p.y,1-p.x);default:return p;}
+    }
+    public static Vec3d unrotate(Vec3d p,EnumFacing facing){return rotate(p,facing==EnumFacing.EAST?EnumFacing.WEST:facing==EnumFacing.WEST?EnumFacing.EAST:facing);}
+    public static AxisAlignedBB rotate(AxisAlignedBB b,EnumFacing facing){
+        Vec3d a=rotate(new Vec3d(b.minX,b.minY,b.minZ),facing),c=rotate(new Vec3d(b.maxX,b.maxY,b.maxZ),facing);
+        return new AxisAlignedBB(a,c);
+    }
+    public BlockPos cell(BlockPos root,BlockPos cell,EnumFacing facing){return root.add(new BlockPos(rotate(new Vec3d(cell).addVector(.5,0,.5),facing)));}
+    public List<BlockPos> cells(BlockPos root,EnumFacing facing){List<BlockPos> result=new ArrayList<>();for(BlockPos cell:cells)result.add(cell(root,cell,facing));return result;}
+    public static final class Surface {
+        public final String id,role;
+        public final Vec3d origin,u,v,normal;
+        public final double offset;
+        Surface(JsonObject e){id=e.get("id").getAsString();role=e.get("role").getAsString();origin=vector(e.getAsJsonArray("origin_blocks"));u=vector(e.getAsJsonArray("u_vector_blocks"));v=vector(e.getAsJsonArray("v_vector_blocks"));normal=vector(e.getAsJsonArray("normal"));offset=e.get("overlay_offset_blocks").getAsDouble();}
+        public Vec3d point(double x,double y){return origin.add(u.scale(x)).add(v.scale(y)).add(normal.scale(offset));}
+        /** Returns normalized artwork coordinates for a front-side ray hit. */
+        public double[] hit(Vec3d start,Vec3d end){
+            Vec3d delta=end.subtract(start);double dot=delta.dotProduct(normal);if(dot>=-1e-9)return null;
+            double t=origin.subtract(start).dotProduct(normal)/dot;if(t<0 || t>1)return null;
+            Vec3d p=start.add(delta.scale(t)).subtract(origin);double x=p.dotProduct(u)/u.lengthSquared(),y=p.dotProduct(v)/v.lengthSquared();
+            return x>=0 && x<=1 && y>=0 && y<=1?new double[]{x,y,t}:null;
+        }
+    }
+}

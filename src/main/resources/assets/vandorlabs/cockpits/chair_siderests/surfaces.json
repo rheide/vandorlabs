@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "model": "chair_siderests",
+  "units": "blocks",
+  "surfaces": [
+    {
+      "id": "touch_right_single",
+      "role": "touch",
+      "node": "siderest_right",
+      "origin_blocks": [
+        0.915625,
+        0.6634375,
+        0.7375
+      ],
+      "u_vector_blocks": [
+        0.29375,
+        0.0,
+        0.0
+      ],
+      "v_vector_blocks": [
+        0.0,
+        0.0,
+        -0.60625
+      ],
+      "normal": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "corners_blocks": [
+        [
+          0.915625,
+          0.6634375,
+          0.7375
+        ],
+        [
+          1.209375,
+          0.6634375,
+          0.7375
+        ],
+        [
+          1.209375,
+          0.6634375,
+          0.13125
+        ],
+        [
+          0.915625,
+          0.6634375,
+          0.13125
+        ]
+      ],
+      "size_model_pixels": [
+        4.7,
+        9.7
+      ],
+      "overlay_offset_blocks": 0.0015625,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    }
+  ]
+}

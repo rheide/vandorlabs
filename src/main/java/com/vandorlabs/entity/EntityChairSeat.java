@@ -34,6 +34,7 @@ public class EntityChairSeat extends Entity {
         setPosition(chairPos.getX() + 0.5D,
                 chairPos.getY() + seatY + 0.35D - RIDER_PELVIS_OFFSET,
                 chairPos.getZ() + 0.5D);
+        cockpitOffset();
     }
 
     public BlockPos getChairPos() { return chairPos; }
@@ -43,10 +44,16 @@ public class EntityChairSeat extends Entity {
         setPosition(chairPos.getX() + 0.5D,
                 chairPos.getY() + seatY + 0.35D - RIDER_PELVIS_OFFSET,
                 chairPos.getZ() + 0.5D);
+        cockpitOffset();
         for (Entity passenger : getPassengers()) updatePassenger(passenger);
     }
 
     @Override protected void entityInit() { }
+    private void cockpitOffset(){
+        if(chairPos==null || !(world.getTileEntity(chairPos) instanceof com.vandorlabs.tiles.TileEntityCockpit))return;
+        com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)world.getTileEntity(chairPos);if(cockpit.data().seat==null)return;
+        net.minecraft.util.math.Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.data().seat,cockpit.facing());setPosition(chairPos.getX()+at.x,posY,chairPos.getZ()+at.z);
+    }
 
     @Override
     public void onUpdate() {

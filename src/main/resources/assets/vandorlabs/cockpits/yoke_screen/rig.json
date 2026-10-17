@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "yoke_screen",
+  "units_per_block": 16,
+  "static_model": "vandorlabs:block/cockpits/yoke_screen/static.obj",
+  "poses": {
+    "off": "vandorlabs:block/cockpits/yoke_screen/off.obj"
+  },
+  "render_bounds_blocks": [
+    0.0625,
+    0.0,
+    0.03019091,
+    0.9375,
+    0.98805717,
+    0.9375
+  ],
+  "parts": []
+}

@@ -97,10 +97,18 @@ public final class VehicleScan {
                     data=VehicleEscalators.paused(data);data.setDouble("EscalatorDistance",((TileEntityRampController)owner).beltDistance(0));
                 }
                 cells.put(p,new VehicleStructure.Cell(p,state,data));
+                if(tile instanceof TileEntityCockpit){
+                    TileEntityCockpit cockpit=(TileEntityCockpit)tile;
+                    for(BlockPos member:cockpit.data().cells(p,cockpit.facing()))if(!member.equals(p)){
+                        require(world.isBlockLoaded(member),"Cockpit touches an unloaded chunk.");TileEntity part=world.getTileEntity(member);
+                        require(part instanceof TileEntityCockpitPart && ((TileEntityCockpitPart)part).anchor.equals(p),"Incomplete cockpit reservation.");enqueue(member);
+                    }
+                }else if(tile instanceof TileEntityCockpitPart){TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(world,p);require(cockpit!=null,"Orphaned cockpit reservation.");enqueue(cockpit.getPos());}
                 if(block instanceof BlockPilotSeat) {
                     boolean upper=state.getValue(BlockPilotSeat.UPPER);
                     if(!upper){seats++;if(pilot==null || p.equals(start))pilot=p;}
-                    if(!upper && BlockPilotSeat.canopyAbove(world,p))enqueue(p.up());
+                    if(block instanceof BlockCockpit){}
+                    else if(!upper && BlockPilotSeat.canopyAbove(world,p))enqueue(p.up());
                     else linked(upper?p.down():p.up(),block);
                 } else if(block instanceof BlockBridgeChair || block instanceof BlockConnectedSeat) {
                     linked(state.getValue(BlockBridgeChair.UPPER)?p.down():p.up(),block);

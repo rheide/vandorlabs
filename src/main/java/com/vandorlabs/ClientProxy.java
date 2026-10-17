@@ -24,6 +24,8 @@ public class ClientProxy extends CommonProxy {
     @Override public String customTexture(int choice){return com.vandorlabs.client.CustomBlockTextures.texture(choice);}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
+        com.vandorlabs.client.cockpits.CockpitModels.install();
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.CockpitItemModels());
         com.vandorlabs.client.constructors.UniversalConstructorModelCache.preInit();
         RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.vehicle.EntityGroundVehicle.class, com.vandorlabs.client.RenderGroundVehicle::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class, RenderChairSeat::new);
@@ -73,6 +75,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCockpit.class,new com.vandorlabs.client.TECockpit());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.VehicleClient());
         ((net.minecraft.client.resources.IReloadableResourceManager)net.minecraft.client.Minecraft.getMinecraft().getResourceManager())
                 .registerReloadListener(manager->{com.vandorlabs.client.RenderGroundVehicle.reload();TEAnimatedScreenSelector.clearCache();});

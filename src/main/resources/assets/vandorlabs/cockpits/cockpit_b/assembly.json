@@ -1,0 +1,739 @@
+{
+  "bounds_model_pixels": [
+    0.23,
+    0.0,
+    -15.766945,
+    31.77,
+    21.2,
+    14.7
+  ],
+  "bounds_blocks": [
+    0.014375,
+    0.0,
+    -0.98543409,
+    1.985625,
+    1.325,
+    0.91875
+  ],
+  "width_depth_height_blocks": [
+    1.9712,
+    1.9042,
+    1.325
+  ],
+  "anchor": [
+    0,
+    0,
+    0
+  ],
+  "facing": "north",
+  "rotation_pivot_blocks": [
+    0.5,
+    0,
+    0.5
+  ],
+  "reserved_cells": [
+    [
+      0,
+      0,
+      -1
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      -1
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      1,
+      0,
+      -1
+    ],
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      -1
+    ],
+    [
+      1,
+      1,
+      0
+    ]
+  ],
+  "reservation_method": "union of conservative per-part AABB cells; render only once at the anchor",
+  "collision_boxes": [
+    {
+      "part": "chair",
+      "box": "chair_base",
+      "min": [
+        0.6875,
+        0.0,
+        0.1875
+      ],
+      "max": [
+        1.3125,
+        0.09375,
+        0.84375
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_pedestal",
+      "min": [
+        0.8125,
+        0.09375,
+        0.3125
+      ],
+      "max": [
+        1.1875,
+        0.3625,
+        0.71875
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_seat_pan",
+      "min": [
+        0.625,
+        0.3625,
+        0.046875
+      ],
+      "max": [
+        1.375,
+        0.4625,
+        0.85
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_seat_pad",
+      "min": [
+        0.675,
+        0.4625,
+        0.078125
+      ],
+      "max": [
+        1.325,
+        0.5375,
+        0.775
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_front_band",
+      "min": [
+        0.675,
+        0.4,
+        0.04375
+      ],
+      "max": [
+        1.325,
+        0.453125,
+        0.05625
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_back_shell",
+      "min": [
+        0.625,
+        0.4625,
+        0.75
+      ],
+      "max": [
+        1.375,
+        1.325,
+        0.90625
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_back_padding",
+      "min": [
+        0.6875,
+        0.575,
+        0.73
+      ],
+      "max": [
+        1.3125,
+        1.29375,
+        0.750625
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_lumbar",
+      "min": [
+        0.6875,
+        0.53125,
+        0.7
+      ],
+      "max": [
+        1.3125,
+        0.6875,
+        0.73125
+      ]
+    },
+    {
+      "part": "chair",
+      "box": "chair_back_rear",
+      "min": [
+        0.6875,
+        0.51875,
+        0.90625
+      ],
+      "max": [
+        1.3125,
+        1.30625,
+        0.91875
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_pedestal",
+      "min": [
+        0.875,
+        0.0,
+        -0.40625
+      ],
+      "max": [
+        1.125,
+        0.4375,
+        -0.15625
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_base",
+      "min": [
+        0.84375,
+        0.4375,
+        -0.4375
+      ],
+      "max": [
+        1.15625,
+        0.5,
+        -0.125
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_socket",
+      "min": [
+        0.90625,
+        0.5,
+        -0.375
+      ],
+      "max": [
+        1.09375,
+        0.521875,
+        -0.1875
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_stalk",
+      "min": [
+        0.95625,
+        0.521875,
+        -0.321875
+      ],
+      "max": [
+        1.04375,
+        0.71875,
+        -0.240625
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_grip",
+      "min": [
+        0.928125,
+        0.671875,
+        -0.35
+      ],
+      "max": [
+        1.071875,
+        0.75625,
+        -0.2125
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_amber_cap",
+      "min": [
+        0.940625,
+        0.75625,
+        -0.340625
+      ],
+      "max": [
+        1.059375,
+        0.78125,
+        -0.221875
+      ]
+    },
+    {
+      "part": "front_support",
+      "box": "front_post_9.25",
+      "min": [
+        0.578125,
+        0.0,
+        -0.8125
+      ],
+      "max": [
+        0.671875,
+        0.825,
+        -0.734375
+      ]
+    },
+    {
+      "part": "front_support",
+      "box": "front_post_21.25",
+      "min": [
+        1.328125,
+        0.0,
+        -0.8125
+      ],
+      "max": [
+        1.421875,
+        0.825,
+        -0.734375
+      ]
+    },
+    {
+      "part": "front_support",
+      "box": "front_crossbar",
+      "min": [
+        0.578125,
+        0.7625,
+        -0.8125
+      ],
+      "max": [
+        1.421875,
+        0.825,
+        -0.71875
+      ]
+    },
+    {
+      "part": "screen_center",
+      "box": "screen_center_housing",
+      "min": [
+        0.5625,
+        0.808258,
+        -0.981761
+      ],
+      "max": [
+        1.4375,
+        1.303682,
+        -0.70958
+      ]
+    },
+    {
+      "part": "screen_center",
+      "box": "screen_center_rear",
+      "min": [
+        0.590625,
+        0.828262,
+        -0.985434
+      ],
+      "max": [
+        1.409375,
+        1.244213,
+        -0.801183
+      ]
+    },
+    {
+      "part": "screen_left",
+      "box": "screen_left_housing",
+      "min": [
+        0.032024,
+        0.815904,
+        -0.638027
+      ],
+      "max": [
+        0.640998,
+        1.32317,
+        -0.177002
+      ]
+    },
+    {
+      "part": "screen_left",
+      "box": "screen_left_rear",
+      "min": [
+        0.051663,
+        0.840166,
+        -0.632136
+      ],
+      "max": [
+        0.570924,
+        1.277467,
+        -0.27025
+      ]
+    },
+    {
+      "part": "shelf_left",
+      "box": "shelf_left_slab",
+      "min": [
+        0.097586,
+        0.753125,
+        -0.524469
+      ],
+      "max": [
+        0.728976,
+        0.81875,
+        -0.024619
+      ]
+    },
+    {
+      "part": "shelf_left",
+      "box": "shelf_left_front_edge",
+      "min": [
+        0.208524,
+        0.784375,
+        -0.33232
+      ],
+      "max": [
+        0.728976,
+        0.81875,
+        -0.024619
+      ]
+    },
+    {
+      "part": "shelf_left",
+      "box": "touch_left_forward_rim",
+      "min": [
+        0.158751,
+        0.814688,
+        -0.454154
+      ],
+      "max": [
+        0.683437,
+        0.825312,
+        -0.067871
+      ]
+    },
+    {
+      "part": "shelf_left",
+      "box": "shelf_left_outer_leg",
+      "min": [
+        0.117256,
+        0.0,
+        -0.285713
+      ],
+      "max": [
+        0.223251,
+        0.753125,
+        -0.173998
+      ]
+    },
+    {
+      "part": "screen_right",
+      "box": "screen_right_housing",
+      "min": [
+        1.359002,
+        0.815904,
+        -0.638027
+      ],
+      "max": [
+        1.967976,
+        1.32317,
+        -0.177002
+      ]
+    },
+    {
+      "part": "screen_right",
+      "box": "screen_right_rear",
+      "min": [
+        1.429076,
+        0.840166,
+        -0.632136
+      ],
+      "max": [
+        1.948337,
+        1.277467,
+        -0.27025
+      ]
+    },
+    {
+      "part": "shelf_right",
+      "box": "shelf_right_slab",
+      "min": [
+        1.271024,
+        0.753125,
+        -0.524469
+      ],
+      "max": [
+        1.902414,
+        0.81875,
+        -0.024619
+      ]
+    },
+    {
+      "part": "shelf_right",
+      "box": "shelf_right_front_edge",
+      "min": [
+        1.271024,
+        0.784375,
+        -0.33232
+      ],
+      "max": [
+        1.791476,
+        0.81875,
+        -0.024619
+      ]
+    },
+    {
+      "part": "shelf_right",
+      "box": "touch_right_forward_rim",
+      "min": [
+        1.316563,
+        0.814688,
+        -0.454154
+      ],
+      "max": [
+        1.841249,
+        0.825312,
+        -0.067871
+      ]
+    },
+    {
+      "part": "shelf_right",
+      "box": "shelf_right_outer_leg",
+      "min": [
+        1.776749,
+        0.0,
+        -0.285713
+      ],
+      "max": [
+        1.882744,
+        0.753125,
+        -0.173998
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "left_armrest_top",
+      "min": [
+        0.015625,
+        0.55625,
+        0.09375
+      ],
+      "max": [
+        0.4375,
+        0.65625,
+        0.90625
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "left_pod",
+      "min": [
+        0.034375,
+        0.0,
+        0.21875
+      ],
+      "max": [
+        0.41875,
+        0.55625,
+        0.90625
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "left_pod_accent",
+      "min": [
+        0.014375,
+        0.125,
+        0.3125
+      ],
+      "max": [
+        0.01875,
+        0.4375,
+        0.79375
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "touch_left_aux_rim",
+      "min": [
+        0.060625,
+        0.65125,
+        0.110625
+      ],
+      "max": [
+        0.401875,
+        0.661875,
+        0.239375
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "throttle_left_slot_rim",
+      "min": [
+        0.078125,
+        0.65625,
+        0.26875
+      ],
+      "max": [
+        0.190625,
+        0.665625,
+        0.71875
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "throttle_left_slot",
+      "min": [
+        0.091875,
+        0.665625,
+        0.28125
+      ],
+      "max": [
+        0.176875,
+        0.667188,
+        0.70625
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "throttle_right_slot_rim",
+      "min": [
+        0.271875,
+        0.65625,
+        0.26875
+      ],
+      "max": [
+        0.384375,
+        0.665625,
+        0.71875
+      ]
+    },
+    {
+      "part": "armrest_left",
+      "box": "throttle_right_slot",
+      "min": [
+        0.285625,
+        0.665625,
+        0.28125
+      ],
+      "max": [
+        0.370625,
+        0.667188,
+        0.70625
+      ]
+    },
+    {
+      "part": "armrest_right",
+      "box": "right_armrest_top",
+      "min": [
+        1.5625,
+        0.55625,
+        0.09375
+      ],
+      "max": [
+        1.984375,
+        0.65625,
+        0.90625
+      ]
+    },
+    {
+      "part": "armrest_right",
+      "box": "right_pod",
+      "min": [
+        1.58125,
+        0.0,
+        0.21875
+      ],
+      "max": [
+        1.965625,
+        0.55625,
+        0.90625
+      ]
+    },
+    {
+      "part": "armrest_right",
+      "box": "right_pod_accent",
+      "min": [
+        1.98125,
+        0.125,
+        0.3125
+      ],
+      "max": [
+        1.985625,
+        0.4375,
+        0.79375
+      ]
+    },
+    {
+      "part": "armrest_right",
+      "box": "touch_right_keyboard_rim",
+      "min": [
+        1.590625,
+        0.65125,
+        0.125
+      ],
+      "max": [
+        1.95,
+        0.661875,
+        0.54375
+      ]
+    },
+    {
+      "part": "armrest_right",
+      "box": "touch_right_trackpad_rim",
+      "min": [
+        1.590625,
+        0.65125,
+        0.559375
+      ],
+      "max": [
+        1.95,
+        0.661875,
+        0.85
+      ]
+    }
+  ],
+  "collision_note": "Conservative per-cuboid transformed AABBs; split/clip to cell when installing. Do not make the full multiblock one solid collision box.",
+  "seat_position_blocks": [
+    1,
+    0.5375,
+    0.58125
+  ],
+  "footprint_blocks": {
+    "width": 2,
+    "depth": 2
+  },
+  "anchor_role": "rear-left lower block for NORTH-facing placement; chair centered between the rear two blocks",
+  "seat_position_role": "cushion surface reference, not the rider entity origin",
+  "rider_hip_blocks": [
+    1.0,
+    0.7525,
+    0.58125
+  ],
+  "rider_entity_origin_blocks": [
+    1.0,
+    0.0484375,
+    0.58125
+  ],
+  "rider_eye_blocks": [
+    1.0,
+    1.6684375,
+    0.58125
+  ],
+  "rider_reference": "Vanilla Minecraft 1.12.2 classic player, riding, full outer skin, ordinary eye height; see validation/player_reference.json",
+  "rider_position_note": "Place the passenger entity at rider_entity_origin_blocks after facing rotation. Account for the mount and passenger Y offsets. Do not use the hip or cushion point as entity Y.",
+  "clear_armrest_width_model_pixels": 18
+}

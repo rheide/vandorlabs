@@ -1,0 +1,214 @@
+{
+  "bounds_model_pixels": [
+    1.0,
+    0.0,
+    0.483055,
+    15.0,
+    15.808915,
+    15.0
+  ],
+  "bounds_blocks": [
+    0.0625,
+    0.0,
+    0.03019091,
+    0.9375,
+    0.98805717,
+    0.9375
+  ],
+  "width_depth_height_blocks": [
+    0.875,
+    0.9073,
+    0.9881
+  ],
+  "anchor": [
+    0,
+    0,
+    0
+  ],
+  "facing": "north",
+  "rotation_pivot_blocks": [
+    0.5,
+    0,
+    0.5
+  ],
+  "reserved_cells": [
+    [
+      0,
+      0,
+      0
+    ]
+  ],
+  "reservation_method": "union of conservative per-part AABB cells; render only once at the anchor",
+  "collision_boxes": [
+    {
+      "part": "base",
+      "box": "base_foot",
+      "min": [
+        0.0625,
+        0.0,
+        0.0625
+      ],
+      "max": [
+        0.9375,
+        0.0625,
+        0.9375
+      ]
+    },
+    {
+      "part": "base",
+      "box": "screen_support",
+      "min": [
+        0.125,
+        0.0625,
+        0.125
+      ],
+      "max": [
+        0.875,
+        0.45,
+        0.25
+      ]
+    },
+    {
+      "part": "base",
+      "box": "screen_shelf",
+      "min": [
+        0.0625,
+        0.45,
+        0.19375
+      ],
+      "max": [
+        0.9375,
+        0.509375,
+        0.4625
+      ]
+    },
+    {
+      "part": "base",
+      "box": "touch_center_strip_rim",
+      "min": [
+        0.11375,
+        0.504375,
+        0.28875
+      ],
+      "max": [
+        0.88625,
+        0.515,
+        0.4175
+      ]
+    },
+    {
+      "part": "screen_center",
+      "box": "screen_center_housing",
+      "min": [
+        0.0625,
+        0.492633,
+        0.033864
+      ],
+      "max": [
+        0.9375,
+        0.988057,
+        0.306045
+      ]
+    },
+    {
+      "part": "screen_center",
+      "box": "screen_center_rear",
+      "min": [
+        0.090625,
+        0.512637,
+        0.030191
+      ],
+      "max": [
+        0.909375,
+        0.928588,
+        0.214442
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_pedestal",
+      "min": [
+        0.375,
+        0.0,
+        0.5625
+      ],
+      "max": [
+        0.625,
+        0.2,
+        0.8125
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_base",
+      "min": [
+        0.34375,
+        0.2,
+        0.53125
+      ],
+      "max": [
+        0.65625,
+        0.2625,
+        0.84375
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_socket",
+      "min": [
+        0.40625,
+        0.2625,
+        0.59375
+      ],
+      "max": [
+        0.59375,
+        0.284375,
+        0.78125
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_stalk",
+      "min": [
+        0.45625,
+        0.284375,
+        0.646875
+      ],
+      "max": [
+        0.54375,
+        0.439062,
+        0.728125
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_grip",
+      "min": [
+        0.428125,
+        0.399219,
+        0.61875
+      ],
+      "max": [
+        0.571875,
+        0.470938,
+        0.75625
+      ]
+    },
+    {
+      "part": "control_yoke",
+      "box": "yoke_amber_cap",
+      "min": [
+        0.440625,
+        0.470938,
+        0.628125
+      ],
+      "max": [
+        0.559375,
+        0.492188,
+        0.746875
+      ]
+    }
+  ],
+  "collision_note": "Conservative per-cuboid transformed AABBs; split/clip to cell when installing. Do not make the full multiblock one solid collision box.",
+  "seat_position_blocks": null
+}

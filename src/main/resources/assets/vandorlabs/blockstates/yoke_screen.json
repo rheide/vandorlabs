@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:constructor_empty"
+    },
+    "facing=south": {
+      "model": "vandorlabs:constructor_empty"
+    },
+    "facing=east": {
+      "model": "vandorlabs:constructor_empty"
+    },
+    "facing=west": {
+      "model": "vandorlabs:constructor_empty"
+    }
+  }
+}

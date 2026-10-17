@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "model": "yoke_screen",
+  "units": "blocks",
+  "surfaces": [
+    {
+      "id": "touch_center_strip",
+      "role": "touch",
+      "node": "base",
+      "origin_blocks": [
+        0.125,
+        0.5165625,
+        0.40625
+      ],
+      "u_vector_blocks": [
+        0.75,
+        0.0,
+        0.0
+      ],
+      "v_vector_blocks": [
+        0.0,
+        0.0,
+        -0.10625
+      ],
+      "normal": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "corners_blocks": [
+        [
+          0.125,
+          0.5165625,
+          0.40625
+        ],
+        [
+          0.875,
+          0.5165625,
+          0.40625
+        ],
+        [
+          0.875,
+          0.5165625,
+          0.3
+        ],
+        [
+          0.125,
+          0.5165625,
+          0.3
+        ]
+      ],
+      "size_model_pixels": [
+        12.0,
+        1.7
+      ],
+      "overlay_offset_blocks": 0.0015625,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "screen_center",
+      "role": "screen",
+      "node": "screen_center",
+      "origin_blocks": [
+        0.125,
+        0.58445781,
+        0.28357058
+      ],
+      "u_vector_blocks": [
+        0.75,
+        0.0,
+        0.0
+      ],
+      "v_vector_blocks": [
+        0.0,
+        0.34645482,
+        -0.14350629
+      ],
+      "normal": [
+        0.0,
+        0.38268343,
+        0.92387953
+      ],
+      "corners_blocks": [
+        [
+          0.125,
+          0.58445781,
+          0.28357058
+        ],
+        [
+          0.875,
+          0.58445781,
+          0.28357058
+        ],
+        [
+          0.875,
+          0.93091264,
+          0.14006429
+        ],
+        [
+          0.125,
+          0.93091264,
+          0.14006429
+        ]
+      ],
+      "size_model_pixels": [
+        12.0,
+        6.0
+      ],
+      "overlay_offset_blocks": 0.0015625,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    }
+  ]
+}

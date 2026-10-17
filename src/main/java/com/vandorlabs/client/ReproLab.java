@@ -453,6 +453,7 @@ public class ReproLab {
             SHOTS.add(new Shot("utility22_gear_large_"+pose,194,33,117,0,24));
         }
         SHOTS.add(new Shot("utility22_gear_joined",214,33,112,40,20));
+        for(int i=0;i<4;i++)SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,33,124,145,20));
         SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
                 GALLERY_Y+3D,-98D,0,2));
 
@@ -2084,9 +2085,11 @@ public class ReproLab {
                 UtilityStorageRuntimeChecks.run(world);
                 ConstructorRuntimeChecks.run(world);
                 WaterloggedRuntimeChecks.run(world);
+                try{CockpitRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("cockpit integration",failure);}
                 try{NonWheeledGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("non-wheeled landing gear",failure); }
                 UtilityVisualFixtures.build(world);
                 GearVisualFixtures.build(world);
+                CockpitVisualFixtures.build(world);
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
@@ -2101,7 +2104,7 @@ public class ReproLab {
             StorageRuntimeChecks.server(world,serverPlayer);
         });
         ScreenRuntimeChecks.checkClientPlacement(mc);
-        try{UtilityItemRuntimeChecks.run(mc,outDir);GearItemRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
+        try{UtilityItemRuntimeChecks.run(mc,outDir);GearItemRuntimeChecks.run(mc,outDir);CockpitItemRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
         CustomMaterialRuntimeChecks.run(mc.player);
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{

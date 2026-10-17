@@ -211,6 +211,8 @@ public class ModBlocks {
         PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
         PILOT_SEAT = add(new BlockPilotSeat());
         VEHICLE_CONTROLLER = add(new BlockVehicleController());
+        for(String id:com.vandorlabs.cockpit.CockpitData.IDS)if(id.equals("yoke_screen"))add(new BlockCockpitPeripheral(id));else add(new BlockCockpit(id));
+        addNoItem(new BlockCockpitPart());
         add(new BlockWheel("wheel_small",0));
         add(new BlockWheel("wheel_medium",1));
         add(new BlockWheel("wheel_large",2));
@@ -439,6 +441,7 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
+                        : block instanceof BlockCockpit || block instanceof BlockCockpitPeripheral ? new com.vandorlabs.items.ItemCockpit(block)
                         : block instanceof BlockCanopy ? new BlockCanopy.CanopyItem((BlockCanopy)block)
                         : block == PROGRAMMABLE_HALF_CONSOLE
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)

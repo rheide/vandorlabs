@@ -55,6 +55,7 @@ public final class VehicleStructure {
             if(VehicleFlight.lift(cell.state.getBlock()))lifts.add(cell);
             else if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
         }
+        if(control==null)for(Cell cell:cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit){control=cell;break;}
         if(!positions.containsKey(seat)||!(positions.get(seat).state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat))
             throw new IllegalArgumentException("Missing pilot seat");
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);

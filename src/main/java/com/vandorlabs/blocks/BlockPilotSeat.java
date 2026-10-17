@@ -12,7 +12,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
 /** Pilot seat with an invisible upper cell reserving the backrest. */
-public final class BlockPilotSeat extends BlockVandorDirectional {
+public class BlockPilotSeat extends BlockVandorDirectional {
     public static final net.minecraft.block.properties.PropertyInteger HEIGHT=net.minecraft.block.properties.PropertyInteger.create("height",0,3);
     public static final net.minecraft.block.properties.PropertyInteger ARMS=net.minecraft.block.properties.PropertyInteger.create("arms",0,3);
     public static final PropertyBool UPPER = BlockBridgeChair.UPPER;
@@ -21,7 +21,10 @@ public final class BlockPilotSeat extends BlockVandorDirectional {
     private static final AxisAlignedBB BACK = new AxisAlignedBB(-.125, 0, 0, 1.125, .75, 1.125);
 
     public BlockPilotSeat() {
-        super("pilot_seat");
+        this("pilot_seat");
+    }
+    protected BlockPilotSeat(String name) {
+        super(name);
         setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(UPPER, false).withProperty(HEIGHT,0).withProperty(ARMS,0));
         setLightOpacity(0);
     }
