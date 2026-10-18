@@ -10,7 +10,7 @@ import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.*;
 
-/** Frozen 1.3 world-query path for tracing and offset collision equivalence. */
+/** Legacy world-query algorithm with current sliding/cover eligibility for collision equivalence. */
 public final class ReferenceOffsetTrapdoorInteractions {
     public static final ReferenceOffsetTrapdoorInteractions INSTANCE=new ReferenceOffsetTrapdoorInteractions();
     private ReferenceOffsetTrapdoorInteractions() { }
@@ -18,7 +18,7 @@ public final class ReferenceOffsetTrapdoorInteractions {
     private static TileEntityProgrammableTrapdoor leaf(World world,BlockPos pos) {
         if(!world.isBlockLoaded(pos) || !(world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor))return null;
         TileEntity tile=world.getTileEntity(pos);
-        return tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor)?(TileEntityProgrammableTrapdoor)tile:null;
+        return tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).isSliding() || ((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor)?(TileEntityProgrammableTrapdoor)tile:null;
     }
     public static AxisAlignedBB bounds(TileEntityProgrammableTrapdoor leaf) {
         return leaf.getWorld().getBlockState(leaf.getPos()).getBoundingBox(leaf.getWorld(),leaf.getPos()).offset(leaf.getPos());
@@ -58,7 +58,7 @@ public final class ReferenceOffsetTrapdoorInteractions {
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
         for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
-            TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null || !leaf.isCover() && !leaf.isSlideOverSurface())continue;
+            TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null || !leaf.isSliding() && !leaf.isCover() && !leaf.isSlideOverSurface())continue;
             AxisAlignedBB box=bounds(leaf);
             if(box.intersects(query) && !boxes.contains(box))boxes.add(box);
         }

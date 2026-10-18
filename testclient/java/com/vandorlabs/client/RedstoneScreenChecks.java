@@ -20,7 +20,7 @@ final class RedstoneScreenChecks {
         require(!screen.rows().get(0).active(),"new rows active");
         screen.toggleRow(0);require(RedstoneChannels.allPowered(world,ChannelList.of(41,42)),"row did not power all channels");
         require(screen.rows().get(0).active() && screen.rows().get(1).active(),"overlapping rows did not highlight");
-        Receiver receiver=new Receiver();receiver.setWorld(world);receiver.setPos(pos.east());RedstoneChannels.register(receiver);int edges=receiver.edges;
+        Receiver receiver=new Receiver();receiver.setWorld(world);receiver.setPos(pos.east());world.tiles.put(receiver.getPos(),receiver);RedstoneChannels.register(receiver);int edges=receiver.edges;
         screen.configureRows(Arrays.asList("Door bank","Lights","Unlinked"),Arrays.asList(ChannelList.of(41,42),ChannelList.of(42),ChannelList.EMPTY),0);
         require(receiver.edges==edges && receiver.powered,"editing a label interrupted a powered channel");
         screen.toggleRow(1);require(RedstoneChannels.allPowered(world,ChannelList.of(41)) && !RedstoneChannels.allPowered(world,ChannelList.of(42)),"overlap bridged independent channels");
@@ -64,13 +64,13 @@ final class RedstoneScreenChecks {
         long escalatorBit=optionBit(com.vandorlabs.items.ProgrammableSettings.RAMP_ESCALATOR);
         long tintBit=optionBit(com.vandorlabs.items.ProgrammableSettings.GLASS_TINT);
         net.minecraft.nbt.NBTTagCompound root=new net.minecraft.nbt.NBTTagCompound();root.setLong(com.vandorlabs.items.DuplifierApplyOptions.TAG,0);tool.setTagCompound(root);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(rowBit|interpolationBit|signalBit|armorBit|escalatorBit|tintBit),"legacy mask did not enable new options");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==newOptionsFrom(Long.numberOfTrailingZeros(rowBit)),"legacy mask did not enable new options");
         root.setInteger("DuplifierApplyOptionCount",Long.numberOfTrailingZeros(rowBit)+1);
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(interpolationBit|signalBit|armorBit|escalatorBit|tintBit),"counted screen-era mask changed existing choices");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==newOptionsFrom(Long.numberOfTrailingZeros(rowBit)+1),"counted screen-era mask changed existing choices");
         root.setInteger("DuplifierApplyOptionCount",Long.numberOfTrailingZeros(escalatorBit));
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==(escalatorBit|tintBit),"pre-escalator mask did not enable new choices");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==newOptionsFrom(Long.numberOfTrailingZeros(escalatorBit)),"pre-escalator mask did not enable new choices");
         root.setInteger("DuplifierApplyOptionCount",Long.numberOfTrailingZeros(tintBit));
-        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==tintBit,"pre-tint mask changed existing choices");
+        require(com.vandorlabs.items.DuplifierApplyOptions.mask(tool)==newOptionsFrom(Long.numberOfTrailingZeros(tintBit)),"pre-tint mask changed existing choices");
         com.vandorlabs.items.DuplifierApplyOptions.setMask(tool,com.vandorlabs.items.DuplifierApplyOptions.ALL & ~escalatorBit);
         require((com.vandorlabs.items.DuplifierApplyOptions.mask(tool)&escalatorBit)==0,"deliberate escalator exclusion lost");
         root=new net.minecraft.nbt.NBTTagCompound();root.setLong(com.vandorlabs.items.DuplifierApplyOptions.TAG,0);tool.setTagCompound(root);
@@ -91,12 +91,13 @@ final class RedstoneScreenChecks {
             if(com.vandorlabs.items.DuplifierApplyOptions.OPTIONS[i].key.equals(key))return 1L<<i;
         throw new IllegalStateException("Missing Duplifier option "+key);
     }
+    private static long newOptionsFrom(int index){return index>=64?0:com.vandorlabs.items.DuplifierApplyOptions.ALL&(-1L<<index);}
     private static void updates(){
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(0,100,0);
         world.setBlockState(pos,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),2);
         RedstoneScreenContents screen=((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).redstoneScreen(0);
         screen.configureRows(Arrays.asList("Both","Second"),Arrays.asList(ChannelList.of(41,42),ChannelList.of(42)),0);
-        PhysicalSource source=new PhysicalSource();source.setWorld(world);source.setPos(pos.east());RedstoneChannels.register(source);
+        PhysicalSource source=new PhysicalSource();source.setWorld(world);source.setPos(pos.east());world.tiles.put(source.getPos(),source);RedstoneChannels.register(source);
         require(screen.rows().get(0).active() && screen.rows().get(1).active(),"physical source not highlighted");
         int before=world.updates,dirty=world.dirty;
         RedstoneChannels.latchChanged(screen.rows().get(0),true);

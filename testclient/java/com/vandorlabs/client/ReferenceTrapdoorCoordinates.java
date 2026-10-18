@@ -31,6 +31,8 @@ final class ReferenceTrapdoorCoordinates {
             double u=(widthX?tile.getPos().getX()+closed[i][0]:tile.getPos().getZ()+closed[i][2]);
             double v=tall?tile.getPos().getY()+closed[i][1]:widthX?tile.getPos().getZ()+closed[i][2]:tile.getPos().getX()+closed[i][0];
             double mappedU=u-minU,mappedV=tall?maxV-v:v-minV;
+            // Tile density follows physical slope length for ordinary square artwork.
+            if(tile.isTileTexture() && !door && diagonal)mappedV*=Math.sqrt(tile.getPosition()==1?2:1.25);
             if(tile.isTileTexture()){if(door){mappedV/=2;if(maxV-minV<1.5)mappedV+=.5;}}
             else{mappedU/=maxU-minU;mappedV/=maxV-minV;if(door && maxV-minV<1.5)mappedV=.5+.5*mappedV;}
             uv[i]=new double[]{mappedU,tall?mappedV:(i&2)==0?0:1,tall?(i&4)==0?0:1:mappedV};

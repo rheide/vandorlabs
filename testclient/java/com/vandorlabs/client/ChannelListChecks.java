@@ -150,7 +150,7 @@ final class ChannelListChecks {
     }
     private static class Member extends TileEntity implements RedstoneChannelMember {
         ChannelList channels;boolean on,signal;
-        Member(NonRenderingChecks.MemoryWorld world,int index,ChannelList channels){setWorld(world);setPos(new BlockPos(index,100,0));this.channels=channels;}
+        Member(NonRenderingChecks.MemoryWorld world,int index,ChannelList channels){setWorld(world);setPos(new BlockPos(index,100,0));this.channels=channels;world.tiles.put(getPos(),this);}
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
