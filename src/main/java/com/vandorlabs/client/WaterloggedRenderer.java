@@ -19,7 +19,9 @@ final class WaterloggedRenderer {
         GlStateManager.resetColor();GlStateManager.color(1,1,1,1);
         GlStateManager.pushMatrix();GlStateManager.translate(x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ());
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);GlStateManager.disableLighting();GlStateManager.disableCull();
-        int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
+        // Stairs can occlude their own cell's skylight; the contained water is
+        // exposed in the empty quarter, so use the same neighboring light as its housing.
+        int light=TEAnimatedScreenSelector.neighborLight(tile);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
         Tessellator tess=Tessellator.getInstance();BufferBuilder buffer=tess.getBuffer();buffer.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR);
         for(AxisAlignedBB raw:cells){AxisAlignedBB a=raw.shrink(.0005);double[][][] faces={{{a.minX,a.maxY,a.minZ},{a.minX,a.maxY,a.maxZ},{a.maxX,a.maxY,a.maxZ},{a.maxX,a.maxY,a.minZ}},{{a.minX,a.minY,a.minZ},{a.maxX,a.minY,a.minZ},{a.maxX,a.minY,a.maxZ},{a.minX,a.minY,a.maxZ}},{{a.minX,a.maxY,a.minZ},{a.minX,a.minY,a.minZ},{a.minX,a.minY,a.maxZ},{a.minX,a.maxY,a.maxZ}},{{a.maxX,a.maxY,a.minZ},{a.maxX,a.maxY,a.maxZ},{a.maxX,a.minY,a.maxZ},{a.maxX,a.minY,a.minZ}},{{a.minX,a.maxY,a.minZ},{a.maxX,a.maxY,a.minZ},{a.maxX,a.minY,a.minZ},{a.minX,a.minY,a.minZ}},{{a.minX,a.maxY,a.maxZ},{a.minX,a.minY,a.maxZ},{a.maxX,a.minY,a.maxZ},{a.maxX,a.maxY,a.maxZ}}};
             for(double[][] face:faces){double cx=0,cy=0,cz=0;for(double[] v:face){cx+=v[0]/4;cy+=v[1]/4;cz+=v[2]/4;}
