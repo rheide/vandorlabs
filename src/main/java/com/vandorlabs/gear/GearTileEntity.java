@@ -164,6 +164,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         }
         if (firstServerTick) {
             firstServerTick = false;
+            rebuildMemberCache();
             requestNearbyRebuild(world, pos);
         }
         if (rebuildDelay >= 0 && --rebuildDelay < 0) rebuild();
@@ -303,7 +304,9 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private void rebuildMemberCache() {
         members.clear();
         if (assembly == null) return;
-        for(BlockPos column:columns)for(int i=0;i<assembly.columnHeight();i++){BlockPos at=pos.add(column).down(i);if(world!=null&&world.getBlockState(at).getBlock() instanceof GearBlock)members.addAll(((GearBlock)world.getBlockState(at).getBlock()).componentCells(world,at));else members.add(at);}
+        // setWorld/readFromNBT can run before the loading chunk is published.
+        // Looking up a state there must never recursively request that chunk.
+        for(BlockPos column:columns)for(int i=0;i<assembly.columnHeight();i++){BlockPos at=pos.add(column).down(i);if(world!=null&&GearAssembly.loaded(world,at)&&world.getBlockState(at).getBlock() instanceof GearBlock)members.addAll(((GearBlock)world.getBlockState(at).getBlock()).componentCells(world,at));else members.add(at);}
         for (GearTopology.Cell foot : assembly.feet()) members.add(pos.add(foot.x, foot.y, foot.z));
     }
 

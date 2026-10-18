@@ -34,6 +34,7 @@ final class ModularWheelRuntimeChecks {
             player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setPositionAndUpdate(start.x,start.y-player.getEyeHeight(),start.z);player.rotationYaw=-90;player.rotationPitch=0;RayTraceResult aimed=GearInteractions.trace(world,player.getPositionEyes(1),player.getPositionEyes(1).add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(5.5)));require(aimed!=null&&aimed.getBlockPos().equals(hit.getBlockPos()),"server aim agrees with visible wheel "+large+" "+swing+" "+facing+" h="+height+" expected="+hit+" actual="+aimed+" eye="+player.getPositionEyes(1));GearInteractions.use(player,hit.getBlockPos());require(root.target(),"server manual click on stowed wheel deploys "+large+" "+swing+" "+facing+" h="+height+" dead="+player.isDead+" spectator="+player.isSpectator());
             player.setPositionAndUpdate(old.x,old.y,old.z);for(int n=0;n<32;n++)root.update();require(root.fullyDeployed(),"redeploy wheel");
             GearTileEntity copy=(GearTileEntity)net.minecraft.tileentity.TileEntity.create(world,root.writeToNBT(new NBTTagCompound()));copy.setWorld(world);require(copy.assembly().kind()==GearTopology.FootKind.WHEEL&&copy.members().size()==root.members().size(),"save complete wheel footprint "+large+" "+swing+" "+facing+" h="+height+" copy="+copy.members().size()+" root="+root.members().size());
+            if(large&&swing&&facing==EnumFacing.NORTH&&height==1)unloadedCache(world,root);
             List<VehicleStructure.Cell> cells=new ArrayList<>();for(BlockPos p:root.members())cells.add(new VehicleStructure.Cell(p.subtract(at.add(-4,-4,-4)),world.getBlockState(p),world.getTileEntity(p).writeToNBT(new NBTTagCompound())));require(!VehicleStructure.display(cells).hasNonWheeledGear,"wheel arms permit Taxi classification");
             if(large){GearBlock arm=(GearBlock)world.getBlockState(at).getBlock();List<BlockPos> footprint=arm.componentCells(world,at);BlockPos helper=footprint.get(3);world.destroyBlock(helper,false);for(BlockPos cell:footprint)require(world.getBlockState(cell).getBlock()!=arm,"all companion cells removed");require(world.getBlockState(at).getBlock()!=arm,"root removed when helper mined");}
         }
@@ -41,6 +42,12 @@ final class ModularWheelRuntimeChecks {
         taxi(world,player);
         }finally{clear(world,at);player.setHeldItem(EnumHand.MAIN_HAND,held);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPositionAndUpdate(old.x,old.y,old.z);}
         System.out.println("[vandorlabs][reprolab] modular-wheels PASS 32 size/arm/facing/height combinations placement stow manual picking redeploy persistence Taxi footprint cleanup");
+    }
+    private static void unloadedCache(WorldServer world,GearTileEntity root){
+        BlockPos far=new BlockPos(6400,150,6400);require(!world.isBlockLoaded(far,false),"cache fixture must begin unloaded");
+        NBTTagCompound data=root.writeToNBT(new NBTTagCompound());data.setInteger("x",far.getX());data.setInteger("y",far.getY());data.setInteger("z",far.getZ());
+        GearTileEntity pending=new GearTileEntity();pending.readFromNBT(data);pending.setWorld(world);pending.readFromNBT(data);pending.onLoad();
+        try{require(!world.isBlockLoaded(far,false),"loading a saved gear cache must not request its unpublished chunk");}finally{pending.invalidate();}
     }
     private static String obstruction(GearTileEntity root){double next=com.vandorlabs.gear.core.GearMotion.advance(root.progress(),false,1,GearTileEntity.ANIMATION_TICKS);List<AxisAlignedBB> before=GearGeometry.boxes(root,root.progress()),after=GearGeometry.boxes(root,next);for(int i=0;i<after.size();i++){if(before.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;AxisAlignedBB sweep=GearGeometry.swept(root,i,before.get(i),after.get(i),root.progress(),next);List<AxisAlignedBB> foreign=GearGeometry.foreign(root.getWorld(),root,sweep);if(!foreign.isEmpty())return "piece="+i+" sweep="+sweep+" obstacle="+foreign;}return "no block obstruction";}
     private static void taxi(WorldServer world,EntityPlayerMP player)throws Exception{
