@@ -22,7 +22,7 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityConstructor();}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
-            if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(width+" x 3 base, four corner pillars to height "+height+", and roof rim: use Programmable Matter Blocks; keep the interior empty."),true);
+            if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(width+" x 3 x "+height+" frame: "+tile.assemblyProblem()),true);
         }return true;
     }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityConstructor)((TileEntityConstructor)tile).dismantle(state);super.breakBlock(world,pos,state);}
