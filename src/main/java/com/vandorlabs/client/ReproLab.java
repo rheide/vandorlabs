@@ -446,6 +446,9 @@ public class ReproLab {
                 SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
+        SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
+        SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
+        SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));
         SHOTS.add(new Shot("utility22_waterlogged",143,24,116,0,24));
         SHOTS.add(new Shot("utility22_layouts",264,28,113,0,35));
         for(int mode=0;mode<3;mode++)SHOTS.add(new Shot("utility22_vertical_join_"+mode,297+mode*8,25,114,-25,mode==2?35:30));
@@ -839,7 +842,7 @@ public class ReproLab {
                 } else beginShot(mc,firstShot,true);
                 state = 3;
                 holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly") || Boolean.getBoolean("vandorlabs.storageChecksOnly")
-                        || SHOTS.get(shotIndex).name.startsWith("utility22_") || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
+                        || SHOTS.get(shotIndex).name.startsWith("utility22_") || SHOTS.get(shotIndex).name.startsWith("turntable_") || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
                 break;
             case 3:
                 if(pendingGallery!=null) {
@@ -860,6 +863,7 @@ public class ReproLab {
                 // Never save the previous camera's framebuffer under this shot's name.
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.startsWith("turntable_")&&!TurntableDialogRuntimeChecks.ready(mc)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Turntable chunks/snapshot did not arrive");break;}
                 if(s.name.equals("utility22_blocks"))UtilityItemRuntimeChecks.checkTankRenderState(mc);
                 if(s.name.startsWith("gallery_acceptance_") && !ConnectionAcceptance.ready(mc.world,s.name,GALLERY_X,GALLERY_Y)) {
                     if(++pendingGalleryTicks>400)throw new IllegalStateException("Acceptance fixture did not synchronize: "+s.name);
@@ -891,6 +895,7 @@ public class ReproLab {
                 if(s.name.equals("gallery_distant_geometry"))checkDistantGeometry(mc);
                 save(mc, s);
                 if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
+                if(s.name.equals("turntable_floor"))try{TurntableDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("turntable dialog",failure);}
                 if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1) {
                     state=999;mc.shutdown();return;
                 }
@@ -898,7 +903,7 @@ public class ReproLab {
                 if (shotIndex < SHOTS.size()) {
                     Shot next = SHOTS.get(shotIndex);
                     beginShot(mc, next, false);
-                    holdTicks = next.name.startsWith("utility22_") || next.name.equals("gallery_v12_gear_four") ? 100
+                    holdTicks = next.name.startsWith("utility22_") || next.name.startsWith("turntable_") || next.name.equals("gallery_v12_gear_four") ? 100
                             : next.name.endsWith("opening_mid") ? 4
                             : Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly") ? 4
                             : next.name.startsWith("gallery_") ? 60
@@ -2088,6 +2093,7 @@ public class ReproLab {
                 MatterInfuserRuntimeChecks.run(world);
                 UtilityStorageRuntimeChecks.run(world);
                 ConstructorRuntimeChecks.run(world);
+                try{TurntableRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable runtime",failure);}
                 TextureLayoutRuntimeChecks.run(world,serverPlayer);
                 WaterloggedRuntimeChecks.run(world);
                 try{CockpitRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("cockpit integration",failure);}
@@ -2100,6 +2106,7 @@ public class ReproLab {
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
                 ControllerRuntimeChecks.buildFixture(world, serverPlayer);
+                try{TurntableRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable fixtures",failure);}
             }).get();
         } catch (Exception exception) {
             throw new IllegalStateException("Controller server-thread contracts failed",exception);

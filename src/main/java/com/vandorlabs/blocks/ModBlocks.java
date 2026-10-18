@@ -180,6 +180,8 @@ public class ModBlocks {
         }
         // Hand-maintained custom blocks with bespoke assets in
         // src/main/resources.
+        add(new BlockTurntableController());
+        add(new BlockTurntableSurface());
         add(new BlockNonWheeledLandingGear("ski_landing_gear",true,false));
         add(new BlockNonWheeledLandingGear("landing_strut",false,false));
         add(new BlockNonWheeledLandingGear("angled_landing_strut",false,true));

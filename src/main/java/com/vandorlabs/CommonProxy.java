@@ -9,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    public void turntablePacket(com.vandorlabs.network.MessageTurntableSnapshot packet) { }
     public double materialAspect(int choice){return 1;}
     public void vehiclePacket(com.vandorlabs.vehicle.VehicleNetwork.Packet packet) { }
     public String customTexture(int choice){return "vandorlabs:blocks/dark_wall_panel";}

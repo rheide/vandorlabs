@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Add Turntable Controller and directional Surface blocks for square floor, wall and ceiling displays, with configurable capture height, direction, speed and independent redstone/channel inputs. Preserve captured block inventories and entities, and share illuminated surface artwork across the full square.
+
 - Rename Programmable Ramp to Ramp Controller while preserving existing blocks, items and recipes.
 
 - Add the sunlight-powered Programmable Matter Infuser with redstone fuel, iron input, hopper automation, and a creative-only Infuser Core. Remove direct ingot crafting.

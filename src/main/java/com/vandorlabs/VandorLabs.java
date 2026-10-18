@@ -43,6 +43,9 @@ public class VandorLabs {
         com.vandorlabs.tiles.FilesystemTextures.initialize(event.getModConfigurationDirectory().toPath().resolve("vandorlabs/textures"));
         proxy.preInit(event);
         com.vandorlabs.tiles.DeferredTileLoad.install();
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableController.class,"vandorlabs:turntable_controller");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableSurface.class,"vandorlabs:turntable_surface");
+        EntityRegistry.registerModEntity(new ResourceLocation(MODID,"turntable_display"),com.vandorlabs.turntable.EntityTurntable.class,"turntable_display",3,instance,128,1,false);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityAutopilot.class,"vandorlabs:autopilot");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWaypoint.class,"vandorlabs:waypoint");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityPilotSeat.class,"vandorlabs:pilot_seat");

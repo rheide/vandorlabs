@@ -35,9 +35,15 @@ public final class VehicleStructure {
     private final Cell controller;
     public final List<Cell> liftCells,exhaustCells;
     public final boolean hasThruster,hasNonWheeledGear;
+    public final boolean displayOnly;
 
     public VehicleStructure(List<Cell> cells,BlockPos seat,EnumFacing facing,int gearCount) {
-        if(cells.isEmpty()||cells.size()>MAX_BLOCKS||!facing.getAxis().isHorizontal()||gearCount<1)
+        this(cells,seat,facing,gearCount,false);
+    }
+    /** An inert display snapshot shares block/tile preservation without vehicle requirements. */
+    public static VehicleStructure display(List<Cell> cells){return new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,0,true);}
+    private VehicleStructure(List<Cell> cells,BlockPos seat,EnumFacing facing,int gearCount,boolean displayOnly) {
+        if(cells.isEmpty()&&!displayOnly||cells.size()>MAX_BLOCKS||!facing.getAxis().isHorizontal()||gearCount<1&&!displayOnly)
             throw new IllegalArgumentException("Invalid vehicle structure");
         Map<BlockPos,Cell> positions=new LinkedHashMap<>();
         List<BlockPos> seats=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>();boolean thruster=false,nonWheeled=false;Cell control=null;
@@ -56,11 +62,11 @@ public final class VehicleStructure {
             else if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
         }
         if(control==null)for(Cell cell:cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit){control=cell;break;}
-        if(!positions.containsKey(seat)||!(positions.get(seat).state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat))
+        if(!displayOnly && (!positions.containsKey(seat)||!(positions.get(seat).state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat)))
             throw new IllegalArgumentException("Missing pilot seat");
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);
         this.pilotSeats=Collections.unmodifiableList(seats);this.controller=control;this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;
-        this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);
+        this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);this.displayOnly=displayOnly;
     }
     public Cell at(BlockPos pos){return byPosition.get(pos);}
     public List<BlockPos> pilotSeats(){
@@ -107,6 +113,7 @@ public final class VehicleStructure {
     }
     public NBTTagCompound write() {
         NBTTagCompound out=new NBTTagCompound();out.setInteger("Schema",SCHEMA);
+        if(displayOnly)out.setBoolean("DisplayOnly",true);
         out.setLong("Seat",seat.toLong());out.setInteger("Facing",facing.getHorizontalIndex());out.setInteger("GearCount",gearCount);
         Map<IBlockState,Integer> palette=new LinkedHashMap<>();NBTTagList states=new NBTTagList(), blocks=new NBTTagList();
         for(Cell cell:cells) {
@@ -118,9 +125,14 @@ public final class VehicleStructure {
         out.setTag("Palette",states);out.setTag("Blocks",blocks);return out;
     }
     public static VehicleStructure read(NBTTagCompound tag) {
+        return read(tag,false);
+    }
+    public static VehicleStructure readDisplay(NBTTagCompound tag){return read(tag,true);}
+    private static VehicleStructure read(NBTTagCompound tag,boolean displayOnly) {
+        if(tag.getBoolean("DisplayOnly")!=displayOnly)throw new IllegalArgumentException("Incompatible structure kind");
         if(tag.getInteger("Schema")!=SCHEMA)throw new IllegalArgumentException("Unsupported vehicle schema");
         NBTTagList palette=tag.getTagList("Palette",10),blocks=tag.getTagList("Blocks",10);
-        if(blocks.tagCount()>MAX_BLOCKS||palette.tagCount()>MAX_BLOCKS||palette.tagCount()==0)
+        if(blocks.tagCount()>MAX_BLOCKS||palette.tagCount()>MAX_BLOCKS||palette.tagCount()==0 && (!displayOnly || blocks.tagCount()!=0))
             throw new IllegalArgumentException("Oversize vehicle data");
         List<Cell> cells=new ArrayList<>();
         for(int i=0;i<blocks.tagCount();i++) {
@@ -139,7 +151,7 @@ public final class VehicleStructure {
             cells.add(new Cell(BlockPos.fromLong(b.getLong("Pos")),parsed,b.hasKey("Tile",10)?b.getCompoundTag("Tile"):null));
         }
         int facing=tag.getInteger("Facing");if(facing<0||facing>3)throw new IllegalArgumentException("Invalid vehicle facing");
-        return new VehicleStructure(cells,BlockPos.fromLong(tag.getLong("Seat")),EnumFacing.getHorizontal(facing),tag.getInteger("GearCount"));
+        return new VehicleStructure(cells,BlockPos.fromLong(tag.getLong("Seat")),EnumFacing.getHorizontal(facing),tag.getInteger("GearCount"),displayOnly);
     }
     public byte[] encode() throws IOException {
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();

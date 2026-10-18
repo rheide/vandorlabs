@@ -552,3 +552,6 @@ tile.cockpit_a.name=Cockpit A
 tile.cockpit_b.name=Cockpit B
 tile.chair_siderests.name=Pilot Chair with Side Controls
 tile.yoke_screen.name=Yoke and Screen
+
+tile.vandorlabs.turntable_controller.name=Turntable Controller
+tile.vandorlabs.turntable_surface.name=Turntable Surface

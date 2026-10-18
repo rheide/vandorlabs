@@ -1,0 +1,68 @@
+{
+  "variants": {
+    "active=false,clockwise=false,facing=north": {
+      "model": "vandorlabs:turntable_controller_ccw_off",
+      "y": 0
+    },
+    "active=false,clockwise=false,facing=east": {
+      "model": "vandorlabs:turntable_controller_ccw_off",
+      "y": 90
+    },
+    "active=false,clockwise=false,facing=south": {
+      "model": "vandorlabs:turntable_controller_ccw_off",
+      "y": 180
+    },
+    "active=false,clockwise=false,facing=west": {
+      "model": "vandorlabs:turntable_controller_ccw_off",
+      "y": 270
+    },
+    "active=true,clockwise=false,facing=north": {
+      "model": "vandorlabs:turntable_controller_ccw_on",
+      "y": 0
+    },
+    "active=true,clockwise=false,facing=east": {
+      "model": "vandorlabs:turntable_controller_ccw_on",
+      "y": 90
+    },
+    "active=true,clockwise=false,facing=south": {
+      "model": "vandorlabs:turntable_controller_ccw_on",
+      "y": 180
+    },
+    "active=true,clockwise=false,facing=west": {
+      "model": "vandorlabs:turntable_controller_ccw_on",
+      "y": 270
+    },
+    "active=false,clockwise=true,facing=north": {
+      "model": "vandorlabs:turntable_controller_cw_off",
+      "y": 0
+    },
+    "active=false,clockwise=true,facing=east": {
+      "model": "vandorlabs:turntable_controller_cw_off",
+      "y": 90
+    },
+    "active=false,clockwise=true,facing=south": {
+      "model": "vandorlabs:turntable_controller_cw_off",
+      "y": 180
+    },
+    "active=false,clockwise=true,facing=west": {
+      "model": "vandorlabs:turntable_controller_cw_off",
+      "y": 270
+    },
+    "active=true,clockwise=true,facing=north": {
+      "model": "vandorlabs:turntable_controller_cw_on",
+      "y": 0
+    },
+    "active=true,clockwise=true,facing=east": {
+      "model": "vandorlabs:turntable_controller_cw_on",
+      "y": 90
+    },
+    "active=true,clockwise=true,facing=south": {
+      "model": "vandorlabs:turntable_controller_cw_on",
+      "y": 180
+    },
+    "active=true,clockwise=true,facing=west": {
+      "model": "vandorlabs:turntable_controller_cw_on",
+      "y": 270
+    }
+  }
+}

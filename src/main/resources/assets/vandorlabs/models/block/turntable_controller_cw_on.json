@@ -1,0 +1,70 @@
+{
+  "textures": {
+    "north": "vandorlabs:blocks/turntable/turntable_controller_front_cw_on",
+    "south": "vandorlabs:blocks/turntable/turntable_controller_back",
+    "west": "vandorlabs:blocks/turntable/turntable_controller_left",
+    "east": "vandorlabs:blocks/turntable/turntable_controller_right",
+    "up": "vandorlabs:blocks/turntable/turntable_controller_top_on",
+    "down": "vandorlabs:blocks/turntable/turntable_controller_bottom",
+    "particle": "vandorlabs:blocks/turntable/turntable_controller_back"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south"
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west"
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east"
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#down",
+          "cullface": "down"
+        }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  }
+}

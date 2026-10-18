@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void turntablePacket(com.vandorlabs.network.MessageTurntableSnapshot packet){net.minecraft.client.Minecraft mc=net.minecraft.client.Minecraft.getMinecraft();mc.addScheduledTask(()->{if(mc.world==null)return;net.minecraft.entity.Entity raw=mc.world.getEntityByID(packet.entity);if(raw instanceof com.vandorlabs.turntable.EntityTurntable)try{((com.vandorlabs.turntable.EntityTurntable)raw).receive(packet.total,packet.offset,packet.data);}catch(Exception invalid){com.vandorlabs.VandorLabs.logger.warn("Invalid turntable snapshot",invalid);}});}
     @Override public void vehiclePacket(com.vandorlabs.vehicle.VehicleNetwork.Packet packet){com.vandorlabs.client.VehicleClient.receive(packet);}
     @Override public String customTexture(int choice){return com.vandorlabs.client.CustomBlockTextures.texture(choice);}
     @Override public double materialAspect(int choice){return com.vandorlabs.client.UnifiedTextureSprites.aspect(net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice)));}
@@ -30,6 +31,7 @@ public class ClientProxy extends CommonProxy {
         com.vandorlabs.client.constructors.UniversalConstructorModelCache.preInit();
         RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.vehicle.EntityGroundVehicle.class, com.vandorlabs.client.RenderGroundVehicle::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class, RenderChairSeat::new);
+        RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.turntable.EntityTurntable.class,com.vandorlabs.client.RenderTurntable::new);
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.DiagonalWallMeshCache.Events());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorTextures.Events());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ProgrammableArmorItemModels());
@@ -77,6 +79,7 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         super.init(event);
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCockpit.class,new com.vandorlabs.client.TECockpit());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTurntableSurface.class,new com.vandorlabs.client.TETurntableSurface());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.VehicleClient());
         ((net.minecraft.client.resources.IReloadableResourceManager)net.minecraft.client.Minecraft.getMinecraft().getResourceManager())
                 .registerReloadListener(manager->{com.vandorlabs.client.RenderGroundVehicle.reload();TEAnimatedScreenSelector.clearCache();});

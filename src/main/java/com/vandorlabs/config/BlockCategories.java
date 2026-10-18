@@ -11,7 +11,7 @@ public final class BlockCategories {
         if(id.contains("canopy")||id.startsWith("space_visor")||id.startsWith("angled_front"))return "canopies";
         if(id.contains("glass"))return "glass";
         if(id.contains("door"))return "doors";
-        if(id.contains("ramp"))return "ramps";
+        if(id.contains("ramp")||id.startsWith("turntable_"))return "ramps";
         if(id.startsWith("cockpit_")||id.equals("chair_siderests")||id.equals("yoke_screen")||id.equals("vehicle_controller")||id.equals("pilot_seat")||id.contains("landing_gear")||id.contains("landing_strut")||id.startsWith("wheel_"))return "vehicle_controls";
         if(id.contains("chair")||id.contains("seat"))return "seating";
         if(id.startsWith("rocket_thruster")||id.startsWith("ion_drive")||id.startsWith("plasma_vent")
