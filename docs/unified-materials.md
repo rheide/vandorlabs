@@ -24,9 +24,9 @@ Shift-right-click in Creative mode, or open the block's menu with the Configuriz
 
 For screens, inputs and consoles, open **Surface textures** to choose a static front surface. Consoles also have a second surface choice. **Use screen / animation** restores the original configured screen or control panel. The native screen/control lists now use the same categorized thumbnail presentation, containing their original options. They still select the original animated screen or control family: Off/Static/Animated, speed and frame controls retain their behavior. Selecting a native option restores that surface from a static override. Housing lists use the shared material catalog.
 
-Door presets retain the existing frame, motion and hardware options. Selecting a different material replaces the door's front/back leaf artwork while keeping the native edge textures and hinge hardware. **Face texture: Fit/Tile** fits a block image once over the complete leaf or repeats it at one-block scale; door artwork retains its upper/lower mapping. The layout survives saving, configured items and Duplifier copying. Ordinary programmable blocks use the lower square half of built-in door artwork, avoiding a stretched two-high image. Trapdoors offer **Texture: Tile / mirror** and **Fit**. Tile repeats one-block-wide, two-block-long door artwork, mirroring alternating columns; Fit maps one image across the complete group. Single-row door surfaces use the lower half. Custom `BlockDoor` artwork retains its upper/lower atlas sprites. The standard programmable door’s metal side artwork covers the four thin leaf edges in either layout.
+Door presets retain the existing frame, motion and hardware options. Selecting a different material replaces the door's front/back leaf artwork while keeping the native edge textures and hinge hardware. **Face texture** offers Stretch, Tile and Fit (aspect); door artwork retains its upper/lower mapping. The layout survives saving, configured items and Duplifier copying. Ordinary programmable blocks use the lower square half of built-in door artwork, avoiding a stretched two-high image. Trapdoors offer the same three layouts. Tile repeats one-block-wide, two-block-long door artwork, mirroring alternating columns; Stretch maps one image across the complete group. Single-row door surfaces use the lower half. Custom `BlockDoor` artwork retains its upper/lower atlas sprites. The standard programmable door’s metal side artwork covers the four thin leaf edges in either layout.
 
-Canopy and both front-window sizes put all settings beside the same large categorized list, without settings pages or separate glass/material lists. **Glass** combines the three original shades and sixteen dye colors. Selecting a normal material replaces the glazing; **Texture layout: Fit/Tile** shows complete artwork on each panel or repeats it at one-block surface scale. See [canopy settings and examples](canopies.md).
+Canopy and both front-window sizes put all settings beside the same large categorized list, without settings pages or separate glass/material lists. **Glass** combines the three original shades and sixteen dye colors. Selecting a normal material replaces the glazing; **Texture layout** offers Stretch, Tile and Fit (aspect), with the same aspect-ratio rules as block housings. See [canopy settings and examples](canopies.md).
 
 ## Custom block and door artwork
 
@@ -38,9 +38,15 @@ Custom choices survive saves, configured items and Duplifier copies. A client mi
 
 To import PNG files instead, see [filesystem texture categories](filesystem-textures.md). Clients and servers may have different filesystem catalogs.
 
-## Housing Fit/Tile
+## Texture layouts
 
-Slabs, stairs and lights keep their side-layout controls. Screens, half/full inputs and consoles offer **Sides: Fit/Tile** directly in their main dialogs and inside **Surface textures**. Programmable Half-Input labels its main control **Wall texture: Tile/Fit**. Fit scales the complete housing image onto each shortened housing face; Tile retains the original pixel-space UV layout. Existing screen/input/console saves retain Tile until changed. The choice is saved and copied by the Duplifier.
+Blocks, slabs, stairs, walls, glass, lights, doors, trapdoors, canopies and display housings offer three texture layouts:
+
+- **Stretch** scales the complete image to the face, allowing distortion. This is the old Fit behavior.
+- **Tile** repeats the image at block scale while preserving its aspect ratio.
+- **Fit (aspect)** stretches the complete image only when its aspect ratio matches the surface; otherwise it uses Tile.
+
+Existing saves preserve their previous Fit or Tile behavior. The choice is saved on configured items and copied by the Duplifier. Connected wall/glass artwork shares a stable origin across horizontal and vertical rows, including diagonal folds.
 
 ## Transparency assessment
 
@@ -65,7 +71,7 @@ Shift-right-click a world block face with armor to copy the displayed artwork in
 Programmable armor also offers all fifteen light designs as separate static **On** and **Off** textures under **Lights**. These choices change artwork without emitting light. Use a Configurizer on an armor stand to edit a mounted piece directly.
 
 The armor picker includes **Custom...** with the same non-consuming block/door inventory sampler as Programmable Blocks. These selections persist on the armor and copy unchanged through the Duplifier. Native armor role designs adapt to the destination armor piece instead.
-# Runtime texture resolution
+## Runtime texture resolution
 
 Built-in single-block artwork uses a maximum of 128 pixels per block edge.
 Two-block doors use 128 by 256 pixels; square double-door artwork may use

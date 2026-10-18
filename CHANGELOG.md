@@ -10,8 +10,13 @@
 - Allow independent ON and OFF artwork on Programmable Lights.
 - Expand filesystem texture subfolders as nested picker categories.
 - Add water-filled variants of Programmable Slabs and Stairs using water and empty buckets.
+- Add two multiblock cockpits, a chair with side controls, and a yoke/screen assembly with configurable seats, independent displays, touch controls, throttle outputs and vehicle support.
+- Standardize ordinary artwork at up to 128 pixels per block, retaining native pixel art, model atlases and animation sheets. Remove resolution choices from material dialogs while preserving old saved selections.
+- Add Stretch, Tile and Fit (aspect) texture layouts with saved settings and Duplifier copying. Fit stretches matching aspect ratios and otherwise tiles without distortion.
+- Join diagonal wall/glass artwork across connected vertical rows and folds using a stable texture origin.
+- Detect constructor frames from any bottom Core corner along either horizontal axis, regardless of the placed Core facing. Report a mismatched cell when assembly fails.
 
-See [matter and storage](docs/matter-and-storage.md) and [Universal Constructors](docs/universal-constructors.md).
+See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), and [material settings](docs/unified-materials.md).
 
 ## 2.1
 
