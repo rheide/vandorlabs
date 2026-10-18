@@ -166,7 +166,7 @@ public class GuiRampController extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xFF304858);
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
-        fontRenderer.drawString("Programmable Ramp",14,10,0xFFFFFF);
+        fontRenderer.drawString("Ramp Controller",14,10,0xFFFFFF);
         fontRenderer.drawString("Tread px",164,132,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawString(travelAxis==0?"Positive = up; negative = down. Footprint: 8x16.":
                 "Positive = right; negative = left. Footprint: 8x16.",14,175,0xADBECA);

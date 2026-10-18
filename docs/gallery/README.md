@@ -30,7 +30,7 @@ at full size to inspect its texture and model.
 - [Programmable Trapdoor](programmable-trapdoor.md)
 - [Programmable Diagonal Trapdoor](programmable-diagonal-trapdoor.md)
 - [Rocket Thruster, Ion Drive, Plasma Vent, and Impulse Engine](propulsion.md)
-- [Programmable Ramp](ramp-controller.md)
+- [Ramp Controller](ramp-controller.md)
 - [Lights](lights.md)
 - [Buttons, switches, and levers](controls.md)
 - [Chairs and connected seats](chairs.md)

@@ -22,7 +22,7 @@ Edit the generated file rather than replacing it with this partial example. The 
 | `diagonals` | All diagonal variants, including diagonal glass, screens, consoles and trapdoors |
 | `glass` | Regular programmable glass |
 | `doors` | Programmable doors and regular trapdoors |
-| `ramps` | Programmable Ramp and its generated segments |
+| `ramps` | Ramp Controller and its generated segments |
 | `lighting` | Programmable lights, frames and light slabs |
 | `seating` | Programmable chairs and connected seats |
 | `vehicle_controls` | Pilot Seat and landing gear |

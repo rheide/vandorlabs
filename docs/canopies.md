@@ -20,7 +20,7 @@ Click a wall to mount an angled nose or Canopy with its rear against that wall. 
 
 Placement checks the complete owned footprint and editing permissions before writing blocks. Breaking an owned cell removes its component and returns one configured item in survival. Joined Canopies lose only the broken constituent and reconnect the survivors where possible. Pistons cannot move these assemblies. Aim at the constituent you want to remove; picking follows that column even when the shared shell is open.
 
-Removing an open Front Canopy Glass or Large Front Canopy Glass releases its closed placement cells as well as its moved collision surfaces. Unrelated blocks and Programmable Ramp sections remain intact. Older orphan canopy cells become removable targets, and loaded followers with a missing owner are cleared within twenty world ticks. A remaining `controlled_ramp` cell belongs to a Programmable Ramp: retract or remove its controller to restore that platform.
+Removing an open Front Canopy Glass or Large Front Canopy Glass releases its closed placement cells as well as its moved collision surfaces. Unrelated blocks and Ramp Controller sections remain intact. Older orphan canopy cells become removable targets, and loaded followers with a missing owner are cleared within twenty world ticks. A remaining `controlled_ramp` cell belongs to a Ramp Controller: retract or remove its controller to restore that platform.
 
 Canopy and Canopy Glass can share their open lower space with a Pilot Seat's backrest in either placement order. Hold the canopy item and click the seat's upper backrest area to place the shell; the seat passes that click through instead of boarding or opening its settings.
 

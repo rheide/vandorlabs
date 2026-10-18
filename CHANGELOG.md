@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Rename Programmable Ramp to Ramp Controller while preserving existing blocks, items and recipes.
+
 - Add the sunlight-powered Programmable Matter Infuser with redstone fuel, iron input, hopper automation, and a creative-only Infuser Core. Remove direct ingot crafting.
 - Add connecting Ski Landing Gear and straight/angled Landing Struts, with Small and 2x2 sizes, shared extension controls, and Hover-only vehicle conversion.
 - Add Programmable Matter Blocks with reversible nine-ingot packing.

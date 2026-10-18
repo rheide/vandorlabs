@@ -19,7 +19,7 @@ is available in the `vandorlabs` creative tab. See the [quick player introductio
 
 **[Explore Vandor Labs 2.0: features and live animations](docs/gallery/version-2.0.md).** Drive a ground craft with Taxi Mode; build single, double or triple Canopies with forward/backward sliding or rear hinges; mount adjustable Front Canopy Glass (3 × 3) and Large Front Canopy Glass (5 × 5) on any face. One-screen dialogs combine Glass and normal materials in a large texture list, with Fit/Tile layout and redstone/channel controls. See the [canopy guide](docs/canopies.md) and [Pilot Seat settings](docs/pilot-seat-taxi.md).
 
-Programmable Ramp also offers redstone-controlled **Escalator Up/Down** modes: the stairs stay extended, carry riders, and sleep when players leave the area. See the [settings and live animations](docs/gallery/ramp-controller.md#escalators).
+Ramp Controller also offers redstone-controlled **Escalator Up/Down** modes: the stairs stay extended, carry riders, and sleep when players leave the area. See the [settings and live animations](docs/gallery/ramp-controller.md#escalators).
 
 **1.8-alpha:** Add connected cockpit canopy components. See the [canopy guide](docs/canopies.md).
 

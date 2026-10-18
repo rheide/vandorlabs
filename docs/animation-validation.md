@@ -7,7 +7,7 @@ The original **50 motion GIFs** passed the live-capture geometry and encoding ch
 | Programmable Door | 4 | 2.6 seconds |
 | Normal trapdoors, offset mounts and neighbor clearance | 7 | 2.6 seconds |
 | Diagonal trapdoors, all shapes/motions and group layouts | 31 | 2.6 seconds |
-| Programmable Ramp modes and slope/tread examples | 8 | 4.6 seconds |
+| Ramp Controller modes and slope/tread examples | 8 | 4.6 seconds |
 | Signal-level controls with connected consumers | 2 | 6 seconds |
 
 The motion clips use a 50 ms timeline with the nearest actual captured pose. Capture medians range from **49.92 to 50.06 ms**; the largest frame gap across the selected clips is **63.42 ms**. The earlier pilot had gaps of roughly 0.6 seconds. Buffering PNG work outside motion, using G1 for this capture client and reducing the software-rendered view distance removed those long gaps in the final clips. Animation clocks and gameplay speeds remain unchanged.

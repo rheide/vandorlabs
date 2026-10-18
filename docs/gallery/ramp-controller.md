@@ -1,9 +1,9 @@
-# Programmable Ramp
+# Ramp Controller
 
 Version 1.1 seals transparent controller texture edges. See the
 [controller close-up](version-1.1.md#placement-and-compatibility-fixes).
 
-The Programmable Ramp controls a platform of matching slabs or solid blocks. It can form a slope, fill the space beneath that slope, lift the whole platform, or extend it into a solid run. The clips show each mode deploying and returning to its off position.
+The Ramp Controller controls a platform of matching slabs or solid blocks. It can form a slope, fill the space beneath that slope, lift the whole platform, or extend it into a solid run. The clips show each mode deploying and returning to its off position.
 
 | Mode | Deploying and retracting |
 | --- | --- |
@@ -29,7 +29,7 @@ The platform can be up to **8 blocks wide and 16 blocks long**. Its length follo
 
 Creative shift-right-click the controller to open its settings, or use the Configurizer. Valid changes apply immediately.
 
-![Programmable Ramp settings](../images/gallery/v1.1/ramp-matching-config.png)
+![Ramp Controller settings](../images/gallery/v1.1/ramp-matching-config.png)
 
 1. Choose **Ramp**, **Filled Ramp**, **Lift**, or **Extend**.
 2. Choose **Up/Down** or **Left/Right** travel. Left and right are relative to the selected ramp direction.
@@ -89,4 +89,4 @@ clearance, obstruction handling and save/load behavior.
 
 The source and travel space must be clear, loaded, and within world height. Clearance accounts for slab thickness: top slabs can move down `2.5` blocks to meet the ground without overlapping it; bottom slabs can likewise meet a ceiling after moving up `2.5` blocks. Chests, machines, unbreakable blocks, and non-cuboid shapes cannot be selected. An obstruction stops motion without replacing the obstructing block. Remove it, then change a setting or toggle the signal to retry. The dialog retains validation errors. Breaking the controller restores its saved source blocks.
 
-For exact selection, timing, rider, and persistence rules, see the [Programmable Ramp reference](../landing-ramps.md).
+For exact selection, timing, rider, and persistence rules, see the [Ramp Controller reference](../landing-ramps.md).

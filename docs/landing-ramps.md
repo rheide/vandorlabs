@@ -1,6 +1,6 @@
-# Programmable Ramp
+# Ramp Controller
 
-The standalone Landing Ramp items have been removed. Use **Programmable Ramp**
+The standalone Landing Ramp items have been removed. Use **Ramp Controller**
 beside a horizontal platform made of matching slabs or ordinary
 solid blocks. Look toward the platform while placing the controller: its top
 arrow points to the seed block it will select.
