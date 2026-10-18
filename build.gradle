@@ -714,3 +714,10 @@ task testTextureLayouts(type: JavaExec) {
     main = 'com.vandorlabs.render.TextureLayoutModeTest'
 }
 check.dependsOn testTextureLayouts
+
+task testTurntableGeometry(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.turntable.TurntableGeometryTest'
+}
+check.dependsOn testTurntableGeometry
