@@ -18,7 +18,7 @@ import java.util.UUID;
 public final class TileEntityTurntableController extends TileEntity implements ITickable {
     public UUID key=UUID.randomUUID(),captureId,actor;
     public TurntableSurfaceLayout layout;
-    public int height=4,scanMode,rotationMode=1,axis;
+    public int height=4,scanMode,rotationMode=0,axis;
     public double rpm=1;
     public boolean clockwise=true,reverse,enabled=true;
     public ChannelList scanChannels=ChannelList.EMPTY,rotationChannels=ChannelList.EMPTY;
@@ -29,7 +29,8 @@ public final class TileEntityTurntableController extends TileEntity implements I
     public EntityTurntable display(){if(world==null||captureId==null)return null;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(entity instanceof EntityTurntable && captureId.equals(entity.getUniqueID())&&!entity.isDead)return (EntityTurntable)entity;return null;}
     private boolean signal(ChannelList channels){return channels.isEmpty()?world.isBlockPowered(pos):RedstoneChannels.allPowered(world,channels);}
     private boolean matches(int mode,ChannelList channels){return mode!=0 && (mode==1)==signal(channels);}
-    public boolean running(){return enabled&&layout!=null&&layout.loaded(world)&&(rotationMode==0||matches(rotationMode,rotationChannels));}
+    public boolean legacyCapture(){return layout!=null&&world!=null&&world.isBlockLoaded(layout.root)&&world.getBlockState(layout.root).getBlock() instanceof BlockTurntableSurface&&world.getBlockState(layout.root).getValue(BlockTurntableSurface.FACING)!=layout.normal;}
+    public boolean running(){return enabled&&!legacyCapture()&&layout!=null&&layout.loaded(world)&&(rotationMode==0||matches(rotationMode,rotationChannels));}
     public double angle(float partial){EntityTurntable entity=display();if(entity!=null)return entity.angle(partial);return TurntableGeometry.wrap(previous+(((angle-previous+540)%360)-180)*partial);}
     public void status(String text){if(!text.equals(message)){message=text;changed();}}
     public void scan(EntityPlayerMP player)throws Exception {
@@ -37,7 +38,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
         if(!(world instanceof WorldServer))return;
         TurntableSurfaceLayout found=TurntableSurfaceLayout.scan(world,pos.offset(world.getBlockState(pos).getValue(BlockVandorDirectional.FACING)));
         if(axis!=0 && found.basis.axis()!=axis-1)throw new IllegalArgumentException("Selected axis does not match the Surface face; choose Auto or its perpendicular axis");
-        if(reverse)found=found.reversed();
+        if(reverse)throw new IllegalArgumentException("Restore the old opposite-face capture first; new scans use the textured Surface face");
         for(BlockPos cell:found.cells){TileEntity raw=world.getTileEntity(cell);if(!(raw instanceof TileEntityTurntableSurface))throw new IllegalArgumentException("Missing surface data");TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;
             if(surface.owner!=null && (!pos.equals(surface.owner)||!key.equals(surface.ownerKey)))throw new IllegalArgumentException("Surface is claimed by another controller; remove that controller first");
             com.vandorlabs.vehicle.VehicleService.permission(player,cell);
@@ -55,8 +56,8 @@ public final class TileEntityTurntableController extends TileEntity implements I
         ChannelList scan=ChannelList.parse(tag.getString("ScanChannels")),rotate=ChannelList.parse(tag.getString("RotationChannels"));
         TurntableGeometry.degreesPerTick(speed);
         if(h<1||h>16||sm<0||sm>2||rm<0||rm>2||a<0||a>3||scan==null||rotate==null)throw new IllegalArgumentException("Invalid turntable settings");
-        if(captureId!=null&&(h!=height||a!=axis||tag.getBoolean("Reverse")!=reverse))throw new IllegalArgumentException("Restore before changing the scan volume or axis");
-        height=h;scanMode=sm;rotationMode=rm;axis=a;rpm=speed;scanChannels=scan;rotationChannels=rotate;clockwise=tag.getBoolean("Clockwise");reverse=tag.getBoolean("Reverse");enabled=tag.getBoolean("Enabled");changed();
+        if(captureId!=null&&(h!=height||a!=axis))throw new IllegalArgumentException("Restore before changing the scan volume or axis");
+        height=h;scanMode=sm;rotationMode=rm;axis=a;rpm=speed;scanChannels=scan;rotationChannels=rotate;clockwise=tag.getBoolean("Clockwise");reverse=false;enabled=tag.getBoolean("Enabled");changed();
     }
     @Override public void update(){
         previous=angle;if(world.isRemote){if(display()==null&&running())angle=TurntableGeometry.wrap(angle+(clockwise?1:-1)*TurntableGeometry.degreesPerTick(rpm));return;}

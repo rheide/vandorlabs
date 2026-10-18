@@ -91,10 +91,12 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
                 if(blocked || !carry(before,rate)){rate=0;owner.status("Rotation blocked; clear the moving contents and riders");}
             }
             if(rate!=0){angle=next;worldBoxes=after;boxesAt=angle;owner.status("Rotating");}
-        }else owner.status("Captured; stopped");
+        }else owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Captured; stopped");
         dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,(float)rate);updateBounds();
     }
     private boolean carry(List<AxisAlignedBB> before,double delta){
+        before=new ArrayList<>(before);
+        if(snapshot.layout.normal==EnumFacing.UP)for(BlockPos cell:snapshot.layout.cells)before.add(new AxisAlignedBB(cell));
         List<Entity> riders=new ArrayList<>();List<Vec3d> targets=new ArrayList<>();
         for(Entity rider:world.getEntitiesWithinAABBExcludingEntity(this,getEntityBoundingBox().grow(1))){
             if(rider instanceof EntityTurntable || rider.isDead || rider.isRiding() || rider instanceof EntityPlayer && ((EntityPlayer)rider).capabilities.isFlying)continue;
@@ -118,7 +120,9 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         if(hand!=EnumHand.MAIN_HAND)return false;
         if(!world.isRemote && player instanceof EntityPlayerMP)try{TurntableTransfer.restore((WorldServer)world,this,(EntityPlayerMP)player);}catch(Exception blocked){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(blocked.getMessage()),true);}return true;
     }
-    @Override public boolean canBeCollidedWith(){return !isDead;}
+    // Precise physical collision is supplied by TurntableEvents. The broad
+    // entity bounds must never intercept block picking or breaking nearby.
+    @Override public boolean canBeCollidedWith(){return false;}
     @Override public boolean canBePushed(){return false;}
     @Override public AxisAlignedBB getCollisionBoundingBox(){return null;}
     @Override public boolean attackEntityFrom(DamageSource source,float amount){return false;}

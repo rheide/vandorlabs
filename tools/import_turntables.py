@@ -56,7 +56,7 @@ def main():
     for formed in (False, True):
         name = 'turntable_surface' + ('_formed' if formed else '')
         textures = {side: prefix + 'turntable_block_' + texture for side, texture in {
-            'north': 'front', 'south': 'back', 'west': 'left', 'east': 'right',
+            'north': 'bottom', 'south': 'bottom', 'west': 'bottom', 'east': 'bottom',
             'up': 'top_low', 'down': 'bottom', 'particle': 'front'}.items()}
         model(name, textures, formed)
         for facing, rotation in {'up': (0, 0), 'down': (180, 0), 'north': (90, 0), 'east': (90, 90), 'south': (90, 180), 'west': (90, 270)}.items():

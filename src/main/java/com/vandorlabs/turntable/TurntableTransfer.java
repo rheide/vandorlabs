@@ -68,7 +68,7 @@ public final class TurntableTransfer {
         try{
             VehicleTransfer.blocks(world,snapshot.blocks,snapshot.origin,true);
             if(!replaced.isEmpty()&&MinecraftForge.EVENT_BUS.post(new BlockEvent.MultiPlaceEvent(replaced,world.getBlockState(snapshot.origin.down()),player,net.minecraft.util.EnumHand.MAIN_HAND)))throw new IOException("A protection rule prevented restoring the contents");
-            spawn(world,snapshot,prepared);world.removeEntityDangerously(entity);TileEntityTurntableController owner=entity.owner();if(owner!=null){owner.captureId=null;owner.status("Restored to the original scan positions");owner.changed();}
+            spawn(world,snapshot,prepared);world.removeEntityDangerously(entity);TileEntityTurntableController owner=entity.owner();if(owner!=null){owner.captureId=null;owner.reverse=false;owner.release();owner.status("Restored to the original scan positions");owner.changed();}
             flush(world);Files.delete(file(world,entity.getUniqueID()));
         }catch(Exception failure){try{rollback(world,read(file(world,entity.getUniqueID())));flush(world);Files.delete(file(world,entity.getUniqueID()));}catch(Exception recovery){failure.addSuppressed(recovery);}throw failure;}
     }
@@ -82,7 +82,7 @@ public final class TurntableTransfer {
         if(current!=null&&!(current instanceof EntityTurntable))throw new IOException("Recovery entity UUID conflict");
         if(captured){VehicleTransfer.blocks(world,snapshot.blocks,snapshot.origin,false);removeEntities(world,snapshot);if(current==null&&!world.spawnEntity(saved))throw new IOException("Recovery spawn denied");}
         else{List<Entity> prepared=prepare(world,snapshot);VehicleTransfer.blocks(world,snapshot.blocks,snapshot.origin,true);if(current!=null)world.removeEntityDangerously(current);spawn(world,snapshot,prepared);}
-        TileEntityTurntableController owner=saved.owner();if(owner!=null){owner.captureId=captured?saved.getUniqueID():null;owner.changed();}
+        TileEntityTurntableController owner=saved.owner();if(owner!=null){owner.captureId=captured?saved.getUniqueID():null;if(captured){owner.layout=snapshot.layout;for(BlockPos cell:snapshot.layout.cells){net.minecraft.tileentity.TileEntity part=world.getTileEntity(cell);if(part instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)part).bind(owner);}}else owner.release();owner.changed();}
     }
     public static void recover(WorldServer world){
         Path folder=directory(world);if(!Files.isDirectory(folder))return;

@@ -18,7 +18,7 @@ public final class BlockTurntableSurface extends BlockVandor {
     @Override protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING,FORMED);}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,EnumFacing.getFront(Math.floorMod(meta,6)));}
     @Override public int getMetaFromState(IBlockState state){return state.getValue(FACING).getIndex();}
-    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,face);}
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){IBlockState adjacent=world.getBlockState(pos.offset(face.getOpposite()));if(adjacent.getBlock()==this&&adjacent.getValue(FACING).getAxis()!=face.getAxis())face=adjacent.getValue(FACING);return getDefaultState().withProperty(FACING,face);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityTurntableSurface();}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){

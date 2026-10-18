@@ -1,9 +1,9 @@
 {
   "textures": {
-    "north": "vandorlabs:blocks/turntable/turntable_block_front",
-    "south": "vandorlabs:blocks/turntable/turntable_block_back",
-    "west": "vandorlabs:blocks/turntable/turntable_block_left",
-    "east": "vandorlabs:blocks/turntable/turntable_block_right",
+    "north": "vandorlabs:blocks/turntable/turntable_block_bottom",
+    "south": "vandorlabs:blocks/turntable/turntable_block_bottom",
+    "west": "vandorlabs:blocks/turntable/turntable_block_bottom",
+    "east": "vandorlabs:blocks/turntable/turntable_block_bottom",
     "up": "vandorlabs:blocks/turntable/turntable_block_top_low",
     "down": "vandorlabs:blocks/turntable/turntable_block_bottom",
     "particle": "vandorlabs:blocks/turntable/turntable_block_front"

@@ -37,7 +37,15 @@ final class TurntableRuntimeChecks {
             tile.rotationMode=1;require(!tile.running(),"ON gate unpowered");tile.rotationMode=2;require(tile.running(),"OFF gate unpowered");world.setBlockState(ownerPos.down(),Blocks.REDSTONE_BLOCK.getDefaultState());require(!tile.running(),"OFF gate powered");tile.rotationMode=1;require(tile.running(),"ON gate powered");world.setBlockToAir(ownerPos.down());tile.rotationMode=0;
             TurntableSnapshot copied=TurntableSnapshot.decode(display.snapshot.encode());require(copied.blocks.cells.size()==2&&copied.entities.stream().anyMatch(e->e.id.equals(itemId)),"snapshot codec");
             try{VehicleStructure.read(copied.blocks.write());throw new AssertionError("Vehicle decoder accepted inert display");}catch(IllegalArgumentException expected){}
+            require(!display.canBeCollidedWith(),"display broad bounds never intercept block selection");
             display.onUpdate();require(display.angle()>0&&display.angle()<1,"clockwise rotation "+normal);double before=display.angle();tile.enabled=false;display.onUpdate();require(display.angle()==before,"disabled stops");tile.enabled=true;tile.clockwise=false;display.onUpdate();require(Math.abs(display.angle())<.001,"counterclockwise rotation");
+            if(normal==EnumFacing.UP){
+                boolean flying=player.capabilities.isFlying;double px=player.posX,py=player.posY,pz=player.posZ;
+                EntityItem rider=new EntityItem(world,found.pivot.x+.7,seed.getY()+1,found.pivot.z+.3,new ItemStack(Items.IRON_INGOT));rider.setInfinitePickupDelay();world.spawnEntity(rider);
+                try{player.capabilities.isFlying=false;player.setPositionAndUpdate(found.pivot.x-.7,seed.getY()+1,found.pivot.z-.3);double oldZ=player.posZ,oldItemZ=rider.posZ;display.onUpdate();
+                    require(Math.abs(player.posZ-oldZ)>.0001&&Math.abs(rider.posZ-oldItemZ)>.0001,"player and dropped item ride the bare surface after scanning");
+                }finally{world.removeEntityDangerously(rider);player.capabilities.isFlying=flying;player.setPositionAndUpdate(px,py,pz);display.setAngle(0);}
+            }
             EntityTurntable loaded=new EntityTurntable(world);loaded.readFromNBT(display.writeToNBT(new NBTTagCompound()));require(loaded.snapshot.blocks.cells.size()==2&&loaded.controllerKey.equals(tile.key),"entity persistence");
             if(normal==EnumFacing.UP){DenyRestore deny=new DenyRestore();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(deny);try{tile.restore(player);throw new AssertionError("Protection cancellation ignored");}catch(java.io.IOException expected){}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(deny);}require(world.isAirBlock(chestPos)&&!display.isDead&&tile.captureId.equals(display.getUniqueID()),"cancelled restore rolls back to captured state");require(!TurntableTransfer.pending(display),"successful rollback retires journal");}
             TurntableSurfaceLayout reversed=TurntableSurfaceLayout.read(found.reversed().write());require(reversed.normal==normal.getOpposite()&&reversed.size==3,"opposite capture side persists");
@@ -52,6 +60,20 @@ final class TurntableRuntimeChecks {
             }
             TileEntityTurntableSurface stale=(TileEntityTurntableSurface)world.getTileEntity(found.root);tile.release();stale.bind(tile);require(stale.controller()==null,"a retired layout cannot retain a live surface claim");stale.release();clear(world,seed);
         }
+        BlockPos fullSeed=new BlockPos(490,205,170),fullOwner=fullSeed.west();
+        for(int x=-16;x<=16;x+=16)for(int z=-16;z<=16;z+=16)world.getChunkFromBlockCoords(fullSeed.add(x,0,z));
+        for(int x=0;x<5;x++)for(int z=0;z<5;z++){BlockPos at=fullSeed.add(x,0,z);world.setBlockState(at,surface.getDefaultState());world.setBlockState(at.up(),Blocks.BRICK_BLOCK.getDefaultState());}
+        world.setBlockState(fullOwner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));TileEntityTurntableController full=(TileEntityTurntableController)world.getTileEntity(fullOwner);
+        full.rpm=3;require(full.rotationMode==0,"new turntable rotates manually without an external signal");full.scan(player);EntityTurntable moving=full.display();
+        for(int tick=0;tick<100;tick++)moving.onUpdate();require(Math.abs(moving.angle()-90)<.001,"full five-by-five captured layer rotates through ninety degrees");
+        full.restore(player);
+        // Reproduce a saved pre-fix floor capture of terrain behind the active face.
+        TurntableSurfaceLayout legacy=TurntableSurfaceLayout.scan(world,fullSeed).reversed();for(BlockPos cell:legacy.cells)for(int depth=1;depth<=4;depth++)world.setBlockState(cell.down(depth),Blocks.CONCRETE.getDefaultState());
+        full.layout=legacy;full.reverse=true;for(BlockPos cell:legacy.cells)((TileEntityTurntableSurface)world.getTileEntity(cell)).bind(full);
+        TurntableTransfer.capture(world,full,TurntableSnapshot.capture(world,legacy,4,player),player);require(full.display().snapshot.blocks.cells.size()==100&&!full.running(),"legacy terrain capture retained and prevented from rotating");
+        full.display().onUpdate();require(full.display().angle()==0&&full.message.contains("Restore"),"legacy recovery instruction");full.restore(player);require(full.layout==null&&!full.reverse,"restoring legacy contents releases reversed surface claims");
+        for(BlockPos cell:legacy.cells)for(int depth=1;depth<=4;depth++){require(world.getBlockState(cell.down(depth)).getBlock()==Blocks.CONCRETE,"legacy terrain restored exactly");world.setBlockToAir(cell.down(depth));}
+        world.setBlockToAir(fullOwner);for(int x=0;x<5;x++)for(int z=0;z<5;z++){world.setBlockToAir(fullSeed.add(x,1,z));world.setBlockToAir(fullSeed.add(x,0,z));}
         require(VehicleStructure.readDisplay(VehicleStructure.display(Collections.emptyList()).write()).cells.isEmpty(),"empty display round trip");
         System.out.println("[vandorlabs][reprolab] turntable PASS six normals square holes rotation stop persistence inventory/entity round trip blocked restore and vehicle isolation");
     }
