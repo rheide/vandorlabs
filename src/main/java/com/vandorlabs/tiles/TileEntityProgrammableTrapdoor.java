@@ -26,9 +26,9 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     private boolean tileTexture=true;
     private int textureLayout=-1;
     public int getTextureLayout(){return textureLayout<0?(tileTexture?1:0):textureLayout;}
-    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");setTileTexture(mode==1);textureLayout=mode;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
+    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");if(getTextureLayout()==mode)return;tileTexture=mode==1;textureLayout=mode;sync();}
     public boolean isTileTexture(){return tileTexture;}
-    public void setTileTexture(boolean value){textureLayout=-1;tileTexture=value;sync();}
+    public void setTileTexture(boolean value){if(tileTexture==value)return;textureLayout=-1;tileTexture=value;sync();}
     protected BlockPos partner,squareOrigin;
     // Immutable membership can be shared by loaded leaves after exact validation.
     protected java.util.List<BlockPos> assembly=java.util.Collections.emptyList();

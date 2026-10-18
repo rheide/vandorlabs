@@ -56,7 +56,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
         if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1;
-        if(world!=null && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
+        if(world!=null && getMainTextureLayout()==0 && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab)) return false;
@@ -204,15 +204,15 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int getMainTextureLayout(){return mainTextureLayout<0?(slabTileSides?1:0):mainTextureLayout;}
     public int getSurfaceTextureLayout(){return surfaceTextureLayout<0?(surfaceTileSides?1:0):surfaceTextureLayout;}
     public int getGlassTextureLayout(){return glassTextureLayout<0?(glassStretch?0:1):glassTextureLayout;}
-    public void setMainTextureLayout(int mode){checkLayout(mode);setSlabTileSides(mode==1);mainTextureLayout=mode;layoutChanged();}
-    public void setSurfaceTextureLayout(int mode){checkLayout(mode);setSurfaceTileSides(mode==1);surfaceTextureLayout=mode;layoutChanged();}
-    public void setGlassTextureLayout(int mode){checkLayout(mode);setGlassLayout(mode!=1,glassTextureJoin);glassTextureLayout=mode;layoutChanged();}
+    public void setMainTextureLayout(int mode){checkLayout(mode);if(getMainTextureLayout()==mode)return;slabTileSides=mode==1;mainTextureLayout=mode;layoutChanged();}
+    public void setSurfaceTextureLayout(int mode){checkLayout(mode);if(getSurfaceTextureLayout()==mode)return;surfaceTileSides=mode==1;surfaceTextureLayout=mode;layoutChanged();}
+    public void setGlassTextureLayout(int mode){checkLayout(mode);if(getGlassTextureLayout()==mode)return;glassStretch=mode!=1;glassTextureLayout=mode;layoutChanged();}
     private static void checkLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");}
     private static int layoutValue(net.minecraft.nbt.NBTTagCompound tag,String key){int value=tag.getInteger(key);return tag.hasKey(key,3) && com.vandorlabs.render.TextureLayoutMode.valid(value)?value:-1;}
     private void layoutChanged(){settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     private boolean surfaceTileSides=true;
     public boolean isSurfaceTileSides(){return surfaceTileSides;}
-    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value && surfaceTextureLayout<0)return;surfaceTextureLayout=-1;surfaceTileSides=value;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
+    public void setSurfaceTileSides(boolean value){if(surfaceTileSides==value)return;surfaceTextureLayout=-1;surfaceTileSides=value;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
     private boolean diagonalFullWidth;
     private boolean diagonalHalfHeight;
     private int diagonalFill;
@@ -222,7 +222,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean glassStretch,glassTextureJoin=true;
     public boolean isGlassStretch(){return glassStretch;}
     public boolean isGlassTextureJoin(){return glassTextureJoin;}
-    public void setGlassLayout(boolean stretch,boolean join){if(glassStretch==stretch && glassTextureJoin==join && glassTextureLayout<0)return;glassTextureLayout=-1;glassStretch=stretch;glassTextureJoin=join;settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setGlassLayout(boolean stretch,boolean join){if(glassStretch==stretch && glassTextureJoin==join)return;glassTextureLayout=-1;glassStretch=stretch;glassTextureJoin=join;settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public int getGlassMaterial(){return glassMaterial;}
     public void setGlassMaterial(int value){if(GlassMaterials.valid(value) && glassMaterial!=value){glassMaterial=value;settingsChanged();}}
     private boolean glassFramed=true;
@@ -329,7 +329,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 world.getBlockState(pos), 3);
     }
     public void setSlabTileSides(boolean tileSides) {
-        if (slabTileSides == tileSides && mainTextureLayout<0) return;
+        if (slabTileSides == tileSides) return;
         mainTextureLayout=-1;
         slabTileSides = tileSides;
         settingsChanged();

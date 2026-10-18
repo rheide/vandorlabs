@@ -51,6 +51,7 @@ final class DiagonalJoinMatrixChecks {
             TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.setShade(id);
             TileEntityProgrammableGlass restored=new TileEntityProgrammableGlass();restored.readFromNBT(tile.getUpdateTag());require(restored.getShade()==id,"glass finish did not persist");
         }
+        VerticalMaterialJoinChecks.run();
         mixed(blocks);
         flatFrames();
         actualPlanes();

@@ -28,6 +28,8 @@ public final class DiagonalWallState {
         if(!diagonal(state.getBlock()))return false;
         TileEntity raw=world.getTileEntity(pos);
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
+        // Group-dependent layouts use the cached world-surface renderer rather than legacy chunk UVs.
+        if(tile!=null && tile.getMainTextureLayout()!=0)return false;
         return baked(state.getBlock(),pos,state.getBlock().getMetaFromState(state),
                 tile!=null && tile.isDiagonalHalfHeight(),tile!=null && tile.isDiagonalFullWidth());
     }

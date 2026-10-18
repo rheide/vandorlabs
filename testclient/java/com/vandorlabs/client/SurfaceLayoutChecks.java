@@ -8,6 +8,7 @@ import net.minecraft.util.math.BlockPos;
 
 final class SurfaceLayoutChecks {
     static void run() {
+        TextureLayoutMeshChecks.run();
         for(ScreenHousingMesh mesh:new ScreenHousingMesh[]{ScreenHousingMesh.console(),ScreenHousingMesh.halfConsole()}) {
             ScreenHousingMesh fitted=mesh.sideLayout(false);
             require(mesh.sideLayout(true)==mesh && mesh.sideLayout(false)==fitted,"cached layouts");

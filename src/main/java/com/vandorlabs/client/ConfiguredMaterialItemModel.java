@@ -32,12 +32,17 @@ public final class ConfiguredMaterialItemModel implements IBakedModel {
                 TextureAtlasSprite main=com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)
                         ?atlas.getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice,true)):null;
                 TextureAtlasSprite side=atlas.getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tag.getInteger("SideTexture")));
-                return new RetexturedItemModel(base,main,side,slab,porthole);
+                return layout(new RetexturedItemModel(base,main,side,slab,porthole),block,tag);
             }
-            if(light && !tag.hasKey("LightFaceTexture",3) || !light && !com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return original;
-            if(choice<0)return original;
+            if(light && !tag.hasKey("LightFaceTexture",3) || !light && !com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return layout(base,block,tag);
+            if(choice<0)return layout(base,block,tag);
             TextureAtlasSprite next=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice,true));
-            return new RetexturedItemModel(base,next,light);
+            return layout(new RetexturedItemModel(base,next,light),block,tag);
         }
     };}
+    private IBakedModel layout(IBakedModel model,net.minecraft.block.Block block,NBTTagCompound tag){
+        if(light || !(block instanceof com.vandorlabs.blocks.BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableBlock))return model;
+        int mode=tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):!tag.hasKey("SlabTileSides",1) || tag.getBoolean("SlabTileSides")?1:0;
+        return new TextureLayoutItemModel(model,mode);
+    }
 }

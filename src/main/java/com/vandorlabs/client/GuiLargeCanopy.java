@@ -35,7 +35,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
             buttonList.add(new GuiSlider(1,layout.controlsX,guiTop+y,154,20,"Inner size: ","%",10,100,scale,false,true,slider->sliderChanged(1,slider)));y+=22;
         }
         buttonList.add(layout.control(2,y,"Tint: "+GlassTextures.tintLabel(tint)));y+=22;
-        buttonList.add(layout.control(12,y,"Texture layout: "+(draft.tileMaterial?"Tile":"Fit")));y+=22;
+        buttonList.add(layout.control(12,y,"Texture layout: "+com.vandorlabs.render.TextureLayoutMode.label(draft.textureLayout())));y+=22;
         if(tile.block().opening()){
             buttonList.add(layout.control(3,y,"Opening: "+(draft.motion==0?"Sliding":"Rear hinge")));y+=22;
             if(draft.motion==0){buttonList.add(layout.control(11,y,"Slide: "+(draft.slideForward?"Forward":"Backward")));y+=22;}
@@ -67,7 +67,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         switch(button.id){
             case 2:tint=GuiOptionCycle.next(tint,3);break;
             case 3:draft.motion=GuiOptionCycle.next(draft.motion,2);break;
-            case 12:draft.tileMaterial=!draft.tileMaterial;break;
+            case 12:draft.textureLayout(GuiOptionCycle.next(draft.textureLayout(),3));break;
             case 11:draft.slideForward=!draft.slideForward;break;
             case 4:draft.angle=GuiOptionCycle.next(draft.angle,tile.block().length==3?4:3);break;
             case 5:draft.openable=!draft.openable;break;

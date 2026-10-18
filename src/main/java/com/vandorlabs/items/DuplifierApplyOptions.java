@@ -146,6 +146,7 @@ public final class DuplifierApplyOptions {
         if (!selected.hasKey(ProgrammableSettings.DOOR_SLIDING)) { selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_INTO_WALL); selected.removeTag(ProgrammableSettings.TRAPDOOR_SLIDE_OVER_SURFACE); }
         if (!selected.hasKey(ProgrammableSettings.DIAGONAL_GEOMETRY)) selected.removeTag(ProgrammableSettings.DIAGONAL_FULL_WIDTH);
         if(!selected.hasKey(ProgrammableSettings.SLAB_TILE_SIDES))selected.removeTag(ProgrammableSettings.TEXTURE_LAYOUT);
+        if(!selected.hasKey(ProgrammableSettings.LIGHT_FACE_TEXTURE))selected.removeTag(ProgrammableSettings.LIGHT_OFF_FACE_TEXTURE);
         if(!selected.hasKey(ProgrammableSettings.DOOR_TILE_TEXTURE))selected.removeTag(ProgrammableSettings.DOOR_TEXTURE_LAYOUT);
         if(!selected.hasKey(ProgrammableSettings.TRAPDOOR_TILE_TEXTURE))selected.removeTag(ProgrammableSettings.TRAPDOOR_TEXTURE_LAYOUT);
         if (!selected.hasKey(ProgrammableSettings.GLASS_MATERIAL)) selected.removeTag(ProgrammableSettings.GLASS_LAYOUT);

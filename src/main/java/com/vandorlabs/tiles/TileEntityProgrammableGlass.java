@@ -16,9 +16,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     private boolean stretch;
     private int textureLayout=-1;
     public int getTextureLayout(){return textureLayout<0?(stretch?0:1):textureLayout;}
-    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");setStretch(mode!=1);textureLayout=mode;markDirty();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");if(getTextureLayout()==mode)return;stretch=mode!=1;textureLayout=mode;markDirty();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public boolean isStretch(){return stretch;}
-    public void setStretch(boolean value){if(stretch==value && textureLayout<0)return;textureLayout=-1;stretch=value;markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setStretch(boolean value){if(stretch==value)return;textureLayout=-1;stretch=value;markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public int getMaterial(){return material;}
     public void setMaterial(int value){
         if(!GlassMaterials.valid(value) || material==value)return;

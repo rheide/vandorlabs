@@ -68,6 +68,7 @@ public final class ProgrammableSettings {
     public static final String SMALL_INPUT = "small_input";
     public static final String WALL_POSITION = "wall_position";
     public static final String LIGHT_FACE_TEXTURE="light_face_texture";
+    public static final String LIGHT_OFF_FACE_TEXTURE="light_off_face_texture";
     public static final String LIGHT_LEVEL = "light_level";
     public static final String CHAIR_STYLE = "chair_style";
     public static final String CHAIR_HEIGHT = "chair_height";
@@ -150,7 +151,7 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
             out.setInteger(GLASS_SHADE,canopy.large.shade);out.setInteger(GLASS_TINT,canopy.large.tint);
             out.setInteger(GLASS_MATERIAL,canopy.large.material);
-            NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Tile",canopy.large.tileMaterial);out.setTag(GLASS_LAYOUT,layout);
+            NBTTagCompound layout=new NBTTagCompound();layout.setBoolean("Tile",canopy.large.tileMaterial);layout.setInteger("Mode",canopy.large.textureLayout());out.setTag(GLASS_LAYOUT,layout);
             NBTTagCompound configuration=new NBTTagCompound();
             if(canopy.resizable()) {configuration.setInteger("CanopyDepth",canopy.large.depth);configuration.setInteger("CanopyScale",canopy.large.scale);configuration.setInteger("CanopyHinge",canopy.large.hinge);configuration.setBoolean("CanopyOpenable",canopy.large.openable);}
             if(canopy.block().opening()){configuration.setInteger("CanopyMotion",canopy.large.motion);configuration.setBoolean("CanopySlideForward",canopy.large.slideForward);configuration.setInteger("CanopyAngle",canopy.large.angle);}
@@ -176,6 +177,7 @@ public final class ProgrammableSettings {
             out.setString(PRIMARY_KIND, "light");
             out.setInteger(PRIMARY_TEXTURE, light.getTexture());
             out.setInteger(LIGHT_FACE_TEXTURE,light.getFaceTexture());
+            out.setInteger(LIGHT_OFF_FACE_TEXTURE,light.getOffFaceTexture());
             out.setInteger(LIGHT_LEVEL, light.getConfiguredLightLevel());
             NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("Brightness",light.isSignalBrightness());signal.setInteger("Offset",light.getLightOffset());out.setTag(SIGNAL_SETTINGS,signal);
             out.setBoolean(SMALL_INPUT,light.isSmallInput());out.setBoolean(SLAB_TILE_SIDES,light.isSlabTileSides());out.setInteger(TEXTURE_LAYOUT,light.getMainTextureLayout());
@@ -380,7 +382,8 @@ public final class ProgrammableSettings {
             }
             com.vandorlabs.canopy.LargeCanopySettings next=new com.vandorlabs.canopy.LargeCanopySettings();next.read(settings);
             next.shade=number(values,GLASS_SHADE,next.shade);next.tint=number(values,GLASS_TINT,next.tint);next.material=number(values,GLASS_MATERIAL,next.material);
-            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Tile",1))next.tileMaterial=values.getCompoundTag(GLASS_LAYOUT).getBoolean("Tile");
+            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Tile",1))next.textureLayout(values.getCompoundTag(GLASS_LAYOUT).getBoolean("Tile")?1:0);
+            if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Mode",3))next.textureLayout(values.getCompoundTag(GLASS_LAYOUT).getInteger("Mode"));
             if(configurable){if(values.hasKey(TRIGGER,3)){int trigger=values.getInteger(TRIGGER);if(trigger<0 || trigger>2)return false;next.redstone=trigger!=0;next.activateOnPower=trigger!=2;}if(values.hasKey(CHANNEL))next.channels=ChannelData.read(values,CHANNEL,next.channels);}
             if(!com.vandorlabs.canopy.LargeCanopySettings.valid(next.depth,next.scale,next.shade,next.tint))return false;
             if(world==null){next.write(settings);canopy.large.read(settings);return true;}
@@ -399,7 +402,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             boolean diagonal=hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
-            applicable=values.hasKey(TRAPDOOR_COVER_FACING,3) || values.hasKey(TRAPDOOR_TILE_TEXTURE,1) || values.hasKey(TRAPDOOR_COVER,1) || values.hasKey(WALL_TEXTURE,3) || (diagonal?values.hasKey(DIAGONAL_GEOMETRY,10):values.hasKey(TRAPDOOR_POSITION,3))
+            applicable=values.hasKey(TRAPDOOR_TEXTURE_LAYOUT,3) || values.hasKey(TRAPDOOR_COVER_FACING,3) || values.hasKey(TRAPDOOR_TILE_TEXTURE,1) || values.hasKey(TRAPDOOR_COVER,1) || values.hasKey(WALL_TEXTURE,3) || (diagonal?values.hasKey(DIAGONAL_GEOMETRY,10):values.hasKey(TRAPDOOR_POSITION,3))
                     || values.hasKey(DOOR_SLIDING,1) || values.hasKey(TRIGGER,3) || values.hasKey(CHANNEL);
             if(applicable) {
                 java.util.List<com.vandorlabs.tiles.TileEntityProgrammableTrapdoor> leaves=world==null
@@ -455,6 +458,7 @@ public final class ProgrammableSettings {
             int trigger = number(values, TRIGGER, light.getTrigger());
             if (!SpaceDoorData.validTrigger(trigger)) trigger = light.getTrigger();
             if(values.hasKey(LIGHT_FACE_TEXTURE,3))light.setFaceTexture(values.getInteger(LIGHT_FACE_TEXTURE));
+            if(values.hasKey(LIGHT_OFF_FACE_TEXTURE,3))light.setOffFaceTexture(values.getInteger(LIGHT_OFF_FACE_TEXTURE));
             int primary = light.getTexture();
             if ("light".equals(values.getString(PRIMARY_KIND))
                     && values.hasKey(PRIMARY_TEXTURE, 3))
@@ -467,7 +471,7 @@ public final class ProgrammableSettings {
                     channels(values,light),
                     number(values, WALL_TEXTURE, light.getHousingTexture()), trigger);
             if (values.hasKey(ACTIVE, 1)) light.setOn(values.getBoolean(ACTIVE));
-            applicable = values.hasKey(JOIN) || values.hasKey(CHANNEL)
+            applicable = values.hasKey(TEXTURE_LAYOUT) || values.hasKey(SLAB_TILE_SIDES) || values.hasKey(SMALL_INPUT) || values.hasKey(LIGHT_FACE_TEXTURE) || values.hasKey(LIGHT_OFF_FACE_TEXTURE) || values.hasKey(JOIN) || values.hasKey(CHANNEL)
                     || values.hasKey(TRIGGER) || values.hasKey(WALL_TEXTURE)
                     || values.hasKey(LIGHT_LEVEL) || values.hasKey(SIGNAL_SETTINGS) || values.hasKey(ACTIVE)
                     || "light".equals(values.getString(PRIMARY_KIND));

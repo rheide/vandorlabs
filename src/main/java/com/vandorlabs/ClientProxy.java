@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 public class ClientProxy extends CommonProxy {
     @Override public void vehiclePacket(com.vandorlabs.vehicle.VehicleNetwork.Packet packet){com.vandorlabs.client.VehicleClient.receive(packet);}
     @Override public String customTexture(int choice){return com.vandorlabs.client.CustomBlockTextures.texture(choice);}
+    @Override public double materialAspect(int choice){return com.vandorlabs.client.UnifiedTextureSprites.aspect(net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice)));}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
         com.vandorlabs.client.cockpits.CockpitModels.install();

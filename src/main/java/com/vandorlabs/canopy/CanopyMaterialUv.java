@@ -5,6 +5,16 @@ import net.minecraft.util.math.Vec3d;
 
 /** Panel-local UVs; tiled artwork is clipped inside its atlas sprite before drawing. */
 public final class CanopyMaterialUv {
+    public static boolean fits(CanopyMesh.Face face,int mode,double aspect){
+        double[][] uv=coordinates(face,true);double minU=Double.POSITIVE_INFINITY,minV=minU,maxU=-minU,maxV=maxU;
+        for(double[] p:uv){minU=Math.min(minU,p[0]);maxU=Math.max(maxU,p[0]);minV=Math.min(minV,p[1]);maxV=Math.max(maxV,p[1]);}
+        return com.vandorlabs.render.TextureLayoutMode.fit(mode,maxU-minU,maxV-minV,aspect);
+    }
+    public static double[][] coordinates(CanopyMesh.Face face,int mode,double aspect){
+        boolean fit=fits(face,mode,aspect);double[][] uv=coordinates(face,!fit);
+        if(!fit)for(double[] p:uv){p[0]=com.vandorlabs.render.TextureLayoutMode.tileU(p[0],aspect);p[1]=com.vandorlabs.render.TextureLayoutMode.tileV(p[1],aspect);}
+        return uv;
+    }
     public static double[][] coordinates(CanopyMesh.Face face,boolean tile) {
         Vec3d normal=Vec3d.ZERO;
         for(int i=1;i<face.vertices.length-1;i++){

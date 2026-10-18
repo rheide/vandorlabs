@@ -33,6 +33,7 @@ final class DiagonalChunkChecks {
                 world.setBlockState(pos,state,2);
                 TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);
                 tile.setDiagonalGeometry(mode,fill);
+                tile.setMainTextureLayout(2);require(!DiagonalWallState.baked(state,cache,pos) && tile.shouldRenderInPass(0),"aspect layout bypassed grouped renderer");tile.setMainTextureLayout(0);
                 if(neighbor==1)world.setBlockState(pos.offset(facing),Blocks.STONE.getDefaultState(),2);
                 if(neighbor==2)world.setBlockState(pos.up(),Blocks.STONE.getDefaultState(),2);
                 if(neighbor>=3 && neighbor<=5) {

@@ -31,11 +31,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public List<CanopyMesh.Face> baseFaces(){
         if(block()==null)return Collections.emptyList();
         int connections=mask(),width=width();String model=model();
-        String key=model+":"+large.key()+":"+centeredPlacement+":"+width+":"+connections+":"+(block().kind.equals("regular_canopy_glass")?roofMask():connections);
+        double aspect=large.material<0 || com.vandorlabs.VandorLabs.proxy==null?1:com.vandorlabs.VandorLabs.proxy.materialAspect(large.material);
+        String key=model+":"+large.key()+":"+aspect+":"+centeredPlacement+":"+width+":"+connections+":"+(block().kind.equals("regular_canopy_glass")?roofMask():connections);
         if(!key.equals(baseKey)){
             List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
             if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,block().length,Math.min(block().length==3?3:2,large.angle),(connections&8)!=0);
-            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.tileMaterial);baseKey=key;
+            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.textureLayout(),aspect);baseKey=key;
         }
         return baseFaces;
     }

@@ -228,14 +228,17 @@ public class TEAnimatedScreenSelector
                 && tile.isDiagonalHalfHeight();
         EnumFacing up = shallow ? facing.getOpposite() : EnumFacing.UP;
         int extraBorder = state.getBlock() instanceof BlockProgrammablePortholeBlock ? 1 : 0;
-        int minimum = axis(tile.getPos(), right), maximum = minimum;
-        int minY = axis(tile.getPos(), up), maxY = minY;
         Set<BlockPos> members = tile.isJoinPortholes()
                 ? (((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
                         ? collectDiagonalPortholes(world,tile.getPos())
                         : LoadedPlaneConnections.collect(tile.getPos(),PanelPlane.of(facing),
                                 world::isBlockLoaded,next -> compatiblePorthole(world,tile.getPos(),next)))
                 : java.util.Collections.singleton(tile.getPos());
+        // Every member must select the same basis, including opposite-facing shallow rows.
+        BlockPos first=java.util.Collections.min(members);
+        facing=world.getBlockState(first).getValue(BlockProgrammableWall.FACING);
+        right=facing.rotateY();up=shallow?facing.getOpposite():EnumFacing.UP;
+        int minimum=axis(first,right),maximum=minimum,minY=axis(first,up),maxY=minY;
         for (BlockPos member : members) {
             int coordinate = axis(member, right);
             minimum = Math.min(minimum, coordinate); maximum = Math.max(maximum, coordinate);

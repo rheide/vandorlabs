@@ -193,9 +193,10 @@ final class CommonRenderChecks {
     }
     private static void settings() {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos p=new BlockPos(10,100,10);
-        for(IBlockState state:new IBlockState[]{ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState()}) {
+        for(IBlockState state:new IBlockState[]{ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState()})for(int layout=0;layout<3;layout++) {
             put(world,p,state);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
             tile.setDiagonalGeometry(2,3);tile.setHousingTexture(4);tile.setCeilingPosition(1);tile.setWallPosition(1);
+            tile.setMainTextureLayout(layout);
             NBTTagCompound copy=ProgrammableSettings.capture(world,p);
             long revision=tile.getSettingsRevision();world.updates=world.dirty=world.renderUpdates=world.lightChecks=0;
             require(ProgrammableSettings.apply(world,p,copy),"identical settings no longer applicable");

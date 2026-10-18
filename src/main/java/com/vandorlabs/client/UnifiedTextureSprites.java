@@ -36,7 +36,7 @@ public final class UnifiedTextureSprites {
     }
     static int contentWidth(TextureAtlasSprite sprite){return sprite instanceof Sprite?Math.round(sprite.getIconWidth()*((Sprite)sprite).usedU):sprite.getIconWidth();}
     static int contentHeight(TextureAtlasSprite sprite){return sprite instanceof Sprite?Math.round(sprite.getIconHeight()*((Sprite)sprite).usedV):sprite.getIconHeight();}
-    static float aspect(TextureAtlasSprite sprite){return sprite instanceof Sprite?((Sprite)sprite).usedU/((Sprite)sprite).usedV:(float)sprite.getIconWidth()/sprite.getIconHeight();}
+    public static float aspect(TextureAtlasSprite sprite){return sprite instanceof Sprite?((Sprite)sprite).usedU/((Sprite)sprite).usedV:(float)sprite.getIconWidth()/sprite.getIconHeight();}
     private static final class Sprite extends TextureAtlasSprite {
         private final ResourceLocation source;
         private final String diskSource;
