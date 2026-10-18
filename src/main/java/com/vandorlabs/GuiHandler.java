@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
+    public static final int GUI_TURNTABLE_CONTROLLER=19;
     public static final int GUI_COCKPIT=18;
     public static final int GUI_MATTER_INFUSER=17;
 
@@ -129,6 +130,11 @@ public class GuiHandler implements IGuiHandler {
             if (te instanceof com.vandorlabs.tiles.TileEntityRampController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
                 return new com.vandorlabs.container.ContainerRampController((com.vandorlabs.tiles.TileEntityRampController)te);
         }
+        if (ID == GUI_TURNTABLE_CONTROLLER) {
+            TileEntity te=world.getTileEntity(new BlockPos(x,y,z));
+            if (te instanceof com.vandorlabs.tiles.TileEntityTurntableController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
+                return new com.vandorlabs.container.ContainerTurntableController((com.vandorlabs.tiles.TileEntityTurntableController)te);
+        }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
             if (te instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage
@@ -213,6 +219,11 @@ public class GuiHandler implements IGuiHandler {
             TileEntity te=world.getTileEntity(new BlockPos(x,y,z));
             if (te instanceof com.vandorlabs.tiles.TileEntityRampController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
                 return new com.vandorlabs.client.GuiRampController((com.vandorlabs.tiles.TileEntityRampController)te);
+        }
+        if (ID == GUI_TURNTABLE_CONTROLLER) {
+            TileEntity te=world.getTileEntity(new BlockPos(x,y,z));
+            if (te instanceof com.vandorlabs.tiles.TileEntityTurntableController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
+                return new com.vandorlabs.client.GuiTurntableController((com.vandorlabs.tiles.TileEntityTurntableController)te);
         }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));

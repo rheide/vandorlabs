@@ -3,6 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.items.*;
 import com.vandorlabs.tiles.*;
+import com.vandorlabs.turntable.TurntableGeometry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
@@ -38,6 +39,7 @@ public final class NonRenderingChecks {
         placement();
         contiguous();
         rampClearance();
+        turntables();
         TrapdoorChecks.run();
         DiagonalTrapdoorChecks.run();
         DiagonalAlignmentChecks.run();
@@ -209,6 +211,142 @@ public final class NonRenderingChecks {
             }
         }
         System.out.println("PASS: 2.5-block slab clearance in Ramp, Lift and Extend; ground/ceiling contact and real obstructions");
+    }
+
+    private static void turntables() {
+        ModBlocks.TURNTABLE=new BlockTurntable();
+        ModBlocks.TURNTABLE_CONTROLLER=new BlockTurntableController();
+
+        // A floor 3x3 platform turns the 3x3 volume resting on top of it.
+        MemoryWorld world=new MemoryWorld(false);
+        BlockPos control=new BlockPos(10,100,10);
+        controllerAt(world,control);
+        List<BlockPos> floor=floorPlatform(control.north());
+        layPlatform(world,floor,EnumFacing.UP);
+        for(BlockPos cell:floor)world.setBlockState(cell.up(),Blocks.STONE.getDefaultState(),2);
+        TileEntityTurntableController controller=(TileEntityTurntableController)world.getTileEntity(control);
+        controller.height=1;
+        controller.speed=90;
+        controller.rotationDirection=TurntableGeometry.CLOCKWISE;
+
+        require(controller.scan(),"3x3 floor turntable rejected: "+controller.status);
+        require(controller.isValidTurntable()&&controller.size()==3,"3x3 floor platform size");
+        require(controller.axis()==TurntableGeometry.AXIS_Y,"floor turntable turns about Y");
+        require(controller.request(true),"3x3 floor turntable failed to engage");
+        require(controller.isCaptured()&&controller.isActive(),"floor turntable did not engage");
+        require(controller.payloadSize()==9,"floor turntable payload was "+controller.payloadSize());
+        for(BlockPos cell:floor)require(isAir(world,cell.up()),"captured floor block left in the world");
+        world.time+=20;
+        require(Math.abs(controller.angle(0F)-270D)<1e-9,"clockwise angle was "+controller.angle(0F));
+        require(Math.abs(controller.angle(.5F)-267.75D)<1e-9,"frame fraction ignored");
+        require(controller.request(false),"3x3 floor turntable failed to release");
+        require(!controller.isActive()&&!controller.isCaptured()&&controller.payloadSize()==0,
+                "floor turntable left engaged");
+        for(BlockPos cell:floor)require(world.getBlockState(cell.up()).getBlock()==Blocks.STONE,
+                "floor payload block not restored");
+        controller.rotationDirection=TurntableGeometry.COUNTER_CLOCKWISE;
+        require(controller.request(true),"counter-clockwise turntable failed to engage");
+        world.time+=20;
+        require(Math.abs(controller.angle(0F)-90D)<1e-9,"counter-clockwise angle was "+controller.angle(0F));
+        controller.request(false);
+        world.clear();
+
+        // A rectangle and a hollow square are rejected with a readable message.
+        MemoryWorld rectangle=new MemoryWorld(false);
+        BlockPos rectangleControl=new BlockPos(10,100,10);
+        controllerAt(rectangle,rectangleControl);
+        List<BlockPos> wide=new ArrayList<>();
+        for(int dx=-1;dx<=1;dx++)for(int dz=0;dz<4;dz++)wide.add(rectangleControl.north().add(dx,0,-dz));
+        layPlatform(rectangle,wide,EnumFacing.UP);
+        TileEntityTurntableController rectangleTile=(TileEntityTurntableController)rectangle.getTileEntity(rectangleControl);
+        require(!rectangleTile.scan(),"3x4 platform accepted");
+        require(rectangleTile.error&&rectangleTile.status.contains("square"),
+                "3x4 platform message was "+rectangleTile.status);
+        rectangle.clear();
+
+        MemoryWorld hollow=new MemoryWorld(false);
+        BlockPos hollowControl=new BlockPos(10,100,10);
+        controllerAt(hollow,hollowControl);
+        List<BlockPos> shell=floorPlatform(hollowControl.north());
+        shell.remove(hollowControl.north().add(0,0,-1));
+        layPlatform(hollow,shell,EnumFacing.UP);
+        TileEntityTurntableController hollowTile=(TileEntityTurntableController)hollow.getTileEntity(hollowControl);
+        require(!hollowTile.scan(),"hollow 3x3 platform accepted");
+        require(hollowTile.error&&hollowTile.status.contains("filled"),"hollow platform message was "+hollowTile.status);
+        hollow.clear();
+
+        // A ceiling platform points down, and a wall platform turns about Z.
+        MemoryWorld ceiling=new MemoryWorld(false);
+        BlockPos ceilingControl=new BlockPos(10,100,10);
+        controllerAt(ceiling,ceilingControl);
+        List<BlockPos> ceilingCells=floorPlatform(ceilingControl.north());
+        layPlatform(ceiling,ceilingCells,EnumFacing.DOWN);
+        for(BlockPos cell:ceilingCells)ceiling.setBlockState(cell.down(),Blocks.STONE.getDefaultState(),2);
+        TileEntityTurntableController ceilingTile=(TileEntityTurntableController)ceiling.getTileEntity(ceilingControl);
+        ceilingTile.height=1;
+        require(ceilingTile.request(true),"ceiling turntable failed to engage");
+        require(ceilingTile.axis()==TurntableGeometry.AXIS_Y,"ceiling turntable axis was "+ceilingTile.axis());
+        require(ceilingTile.payloadSize()==9,"ceiling payload was "+ceilingTile.payloadSize());
+        for(BlockPos cell:ceilingCells)require(isAir(ceiling,cell.down()),"captured ceiling block left in the world");
+        ceiling.clear();
+
+        MemoryWorld wall=new MemoryWorld(false);
+        BlockPos wallControl=new BlockPos(10,100,10);
+        controllerAt(wall,wallControl);
+        List<BlockPos> wallCells=new ArrayList<>();
+        for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)wallCells.add(wallControl.north().add(dx,dy,0));
+        layPlatform(wall,wallCells,EnumFacing.NORTH);
+        for(BlockPos cell:wallCells)wall.setBlockState(cell.north(),Blocks.STONE.getDefaultState(),2);
+        TileEntityTurntableController wallTile=(TileEntityTurntableController)wall.getTileEntity(wallControl);
+        wallTile.height=1;
+        require(wallTile.request(true),"wall turntable failed to engage");
+        require(wallTile.axis()==TurntableGeometry.AXIS_Z,"wall turntable axis was "+wallTile.axis());
+        require(wallTile.payloadSize()==9,"wall payload was "+wallTile.payloadSize());
+        for(BlockPos cell:wallCells)require(isAir(wall,cell.north()),"captured wall block left in the world");
+        wall.clear();
+
+        // Losing a platform block drops the captured volume and flags the error.
+        MemoryWorld removal=new MemoryWorld(false);
+        BlockPos removalControl=new BlockPos(10,100,10);
+        controllerAt(removal,removalControl);
+        List<BlockPos> removalCells=floorPlatform(removalControl.north());
+        layPlatform(removal,removalCells,EnumFacing.UP);
+        for(BlockPos cell:removalCells)removal.setBlockState(cell.up(),Blocks.STONE.getDefaultState(),2);
+        TileEntityTurntableController removalTile=(TileEntityTurntableController)removal.getTileEntity(removalControl);
+        removalTile.height=1;
+        require(removalTile.request(true),"removal turntable failed to engage");
+        BlockPos removedPart=removalCells.get(0);
+        removal.setBlockToAir(removedPart);
+        removalTile.onPartRemoved(removedPart);
+        require(!removalTile.isActive()&&!removalTile.isCaptured(),"removal left the turntable engaged");
+        require(removalTile.error&&removalTile.status.contains("removed"),"removal status was "+removalTile.status);
+        require(!removalTile.isValidTurntable(),"removal left the platform valid");
+        require(removal.loadedEntityList.size()==9,"removal dropped "+removal.loadedEntityList.size()+" items");
+        removal.clear();
+
+        System.out.println("PASS: turntable scanning, capture/restore, axis by facing and part removal");
+    }
+
+    private static void controllerAt(MemoryWorld world,BlockPos pos) {
+        world.setBlockState(pos,ModBlocks.TURNTABLE_CONTROLLER.getDefaultState()
+                .withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH),2);
+    }
+
+    /** The 3x3 platform square that sits against the controller's front face. */
+    private static List<BlockPos> floorPlatform(BlockPos front) {
+        List<BlockPos> cells=new ArrayList<>();
+        for(int dx=-1;dx<=1;dx++)for(int dz=0;dz<3;dz++)cells.add(front.add(dx,0,-dz));
+        return cells;
+    }
+
+    private static void layPlatform(MemoryWorld world,List<BlockPos> cells,EnumFacing facing) {
+        for(BlockPos cell:cells)world.setBlockState(cell,ModBlocks.TURNTABLE.getDefaultState()
+                .withProperty(BlockTurntable.FACING,facing),2);
+    }
+
+    private static boolean isAir(MemoryWorld world,BlockPos pos) {
+        IBlockState state=world.getBlockState(pos);
+        return state.getBlock().isAir(state,world,pos);
     }
 
     static final class MemoryWorld extends World {

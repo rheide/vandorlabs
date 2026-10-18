@@ -244,6 +244,11 @@ task testRamps(type: JavaExec) {
     classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.ramp.ControllerPlatformTest'
 }
+task testTurntables(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.turntable.TurntableGeometryTest'
+}
 task testMoatGeometry(type: JavaExec) {
     dependsOn compilePortableTests
     classpath = files("$buildDir/portable-tests")
@@ -297,6 +302,7 @@ task testControllerTexturePixels(type: JavaExec) {
 }
 check.dependsOn testControllerTexturePixels
 check.dependsOn testRamps
+check.dependsOn testTurntables
 check.dependsOn testCompactAnimation
 check.dependsOn testSaveSchema
 check.dependsOn testScreenData

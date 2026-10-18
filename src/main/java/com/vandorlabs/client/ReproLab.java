@@ -685,6 +685,12 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("wheel motion live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.turntableChecksOnly")) {
+            mc.displayGuiScreen(null);mc.setIngameFocus();
+            try {if(!vehicleStatusStarted){TurntableRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(TurntableRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("turntable live checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.vehicleStatusChecksOnly")) {
             mc.displayGuiScreen(null);mc.setIngameFocus();
             try {if(!vehicleStatusStarted){VehicleStatusClientRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(VehicleStatusClientRuntimeChecks.tick(mc,outDir))mc.shutdown();}

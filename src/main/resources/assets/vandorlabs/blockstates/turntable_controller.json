@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "active=false,facing=north": {
+      "model": "vandorlabs:turntable_controller"
+    },
+    "active=false,facing=east": {
+      "model": "vandorlabs:turntable_controller",
+      "y": 90
+    },
+    "active=false,facing=south": {
+      "model": "vandorlabs:turntable_controller",
+      "y": 180
+    },
+    "active=false,facing=west": {
+      "model": "vandorlabs:turntable_controller",
+      "y": 270
+    },
+    "active=true,facing=north": {
+      "model": "vandorlabs:turntable_controller"
+    },
+    "active=true,facing=east": {
+      "model": "vandorlabs:turntable_controller",
+      "y": 90
+    },
+    "active=true,facing=south": {
+      "model": "vandorlabs:turntable_controller",
+      "y": 180
+    },
+    "active=true,facing=west": {
+      "model": "vandorlabs:turntable_controller",
+      "y": 270
+    }
+  }
+}

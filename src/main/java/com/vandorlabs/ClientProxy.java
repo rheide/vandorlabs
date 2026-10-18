@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
     @Override public void vehiclePacket(com.vandorlabs.vehicle.VehicleNetwork.Packet packet){com.vandorlabs.client.VehicleClient.receive(packet);}
+    @Override public void turntablePayload(com.vandorlabs.network.MessageTurntablePayload message){com.vandorlabs.client.TurntableClient.receive(message);}
     @Override public String customTexture(int choice){return com.vandorlabs.client.CustomBlockTextures.texture(choice);}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
@@ -103,6 +104,10 @@ public class ClientProxy extends CommonProxy {
                 new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableLight.class,
                 new TEAnimatedScreenSelector());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTurntableController.class,
+                new com.vandorlabs.client.TETurntableController());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTurntable.class,
+                new com.vandorlabs.client.TETurntable());
         if (System.getProperty("vandorlabs.reprolab") != null) {
             MinecraftForge.EVENT_BUS.register(new ReproLab());
         }

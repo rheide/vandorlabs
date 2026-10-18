@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "vandorlabs:block/turntable_controller",
+    "down": "vandorlabs:block/turntable_controller",
+    "up": "vandorlabs:block/turntable_controller_top",
+    "north": "vandorlabs:block/turntable_controller_face",
+    "south": "vandorlabs:block/turntable_controller",
+    "east": "vandorlabs:block/turntable_controller",
+    "west": "vandorlabs:block/turntable_controller"
+  }
+}

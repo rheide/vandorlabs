@@ -59,6 +59,8 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_FULL_INPUT;
     public static Block CONTROLLED_RAMP;
     public static Block PROGRAMMABLE_RAMP;
+    public static Block TURNTABLE_CONTROLLER;
+    public static Block TURNTABLE;
     public static Block AUTOPILOT, WAYPOINT;
     public static final List<Block> BLOCKS = new ArrayList<>();
     /** Ids of every "display" (animated screen) block, sorted. Populated
@@ -233,6 +235,8 @@ public class ModBlocks {
         PROGRAMMABLE_FULL_INPUT = new BlockProgrammableFullInput();
         add(PROGRAMMABLE_FULL_INPUT);
         PROGRAMMABLE_RAMP = add(new BlockRampController());
+        TURNTABLE_CONTROLLER = add(new BlockTurntableController());
+        TURNTABLE = add(new BlockTurntable());
         AUTOPILOT = add(new BlockAutopilot(false));
         WAYPOINT = add(new BlockAutopilot(true));
         CONTROLLED_RAMP = new BlockControlledRamp();

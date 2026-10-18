@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:turntable"
+    },
+    "facing=south": {
+      "model": "vandorlabs:turntable",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "vandorlabs:turntable",
+      "y": 270
+    },
+    "facing=west": {
+      "model": "vandorlabs:turntable",
+      "y": 90
+    },
+    "facing=up": {
+      "model": "vandorlabs:turntable",
+      "x": 90
+    },
+    "facing=down": {
+      "model": "vandorlabs:turntable",
+      "x": 270
+    }
+  }
+}

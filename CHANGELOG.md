@@ -10,6 +10,7 @@
 - Allow independent ON and OFF artwork on Programmable Lights.
 - Expand filesystem texture subfolders as nested picker categories.
 - Add water-filled variants of Programmable Slabs and Stairs using water and empty buckets.
+- Add Turntable Controllers and Turntable Blocks: a square platform of Turntable Blocks turns the blocks above, below or beside it while a redstone trigger is asserted, with configurable height, speed, direction and channels. The controller shows a sensor lens on the scanning face with a top arrow pointing at the platform, each Turntable Block carries an arrow on the scanned face, and a deliberately asymmetric hand spins on the platform in step with the turning payload.
 
 See [matter and storage](docs/matter-and-storage.md) and [Universal Constructors](docs/universal-constructors.md).
 

@@ -13,6 +13,7 @@ public class CommonProxy {
     public String customTexture(int choice){return "vandorlabs:blocks/dark_wall_panel";}
     public boolean customDoor(int choice){return false;}
     public void platformMotion(com.vandorlabs.network.MessagePlatformMotion message) { }
+    public void turntablePayload(com.vandorlabs.network.MessageTurntablePayload message) { }
     public void preInit(FMLPreInitializationEvent event) { }
     public void spawnThrusterParticle(World world, BlockPos pos, EnumFacing facing,
             int color, int style, float speed) { }

@@ -44,5 +44,7 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageCockpit.Handler.class,MessageCockpit.class,id++,Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.vehicle.VehicleNetwork.Server.class, com.vandorlabs.vehicle.VehicleNetwork.Packet.class, id, Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.vehicle.VehicleNetwork.Client.class, com.vandorlabs.vehicle.VehicleNetwork.Packet.class, id++, Side.CLIENT);
+        INSTANCE.registerMessage(MessageTurntableController.Handler.class, MessageTurntableController.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageTurntablePayload.Handler.class, MessageTurntablePayload.class, id++, Side.CLIENT);
     }
 }

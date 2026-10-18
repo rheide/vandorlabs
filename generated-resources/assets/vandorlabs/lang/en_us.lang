@@ -532,6 +532,8 @@ tile.vandorlabs.wheel_large.name=Large Wheel
 tile.vandorlabs.autopilot.name=Autopilot
 tile.vandorlabs.waypoint.name=Waypoint Block
 tile.vandorlabs.vehicle_controller.name=Vehicle Controller
+tile.vandorlabs.turntable_controller.name=Turntable Controller
+tile.vandorlabs.turntable.name=Turntable Block
 
 tile.vandorlabs.programmable_matter_infuser.name=Programmable Matter Infuser
 tile.vandorlabs.programmable_matter_block.name=Programmable Matter Block

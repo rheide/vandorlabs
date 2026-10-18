@@ -80,6 +80,8 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructor.class,"vandorlabs:constructor");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructorPart.class,"vandorlabs:constructor_part");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySkiLandingGear.class,"vandorlabs:ski_landing_gear");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableController.class,"vandorlabs:turntable_controller");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntable.class,"vandorlabs:turntable");
         PacketHandler.register();
         logger.info("Vandor Labs pre-initialization: engaging warp drive...");
     }
