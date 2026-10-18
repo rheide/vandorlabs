@@ -721,3 +721,10 @@ task testTurntableGeometry(type: JavaExec) {
     main = 'com.vandorlabs.turntable.TurntableGeometryTest'
 }
 check.dependsOn testTurntableGeometry
+
+task testModularGear(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.gear.core.GearCoreTests'
+}
+check.dependsOn testModularGear
