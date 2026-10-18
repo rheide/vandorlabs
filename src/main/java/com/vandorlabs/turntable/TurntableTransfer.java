@@ -33,7 +33,12 @@ public final class TurntableTransfer {
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setBoolean("Captured",captured);tag.setTag("Display",entity.writeToNBT(new NBTTagCompound()));save(file(world,entity.getUniqueID()),tag);
     }
     private static EntityPlayerMP actor(WorldServer world,EntityTurntable entity,EntityPlayerMP player){if(player!=null)return player;if(entity.actor==null)throw new IllegalArgumentException("Missing turntable owner");return FakePlayerFactory.get(world,new com.mojang.authlib.GameProfile(entity.actor,"Turntable"));}
-    private static boolean loaded(WorldServer world,TurntableSnapshot snapshot){return snapshot.layout.loaded(world)&&world.isAreaLoaded(snapshot.origin,snapshot.origin.add(Math.max(1,(int)snapshot.blocks.bounds.maxX),Math.max(1,(int)snapshot.blocks.bounds.maxY),Math.max(1,(int)snapshot.blocks.bounds.maxZ)),false);}
+    private static boolean loaded(WorldServer world,TurntableSnapshot snapshot){
+        BlockPos a=snapshot.layout.cell(0,0,1),b=snapshot.layout.cell(snapshot.layout.size-1,snapshot.layout.size-1,snapshot.height);
+        BlockPos min=new BlockPos(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ()));
+        BlockPos max=new BlockPos(Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()));
+        return snapshot.layout.loaded(world)&&world.isAreaLoaded(min,max,false);
+    }
     private static Map<UUID,Entity> entities(WorldServer world){Map<UUID,Entity> result=new HashMap<>();for(Entity e:world.loadedEntityList)if(!e.isDead)result.put(e.getUniqueID(),e);return result;}
     private static void removeEntities(WorldServer world,TurntableSnapshot snapshot){Map<UUID,Entity> live=entities(world);for(TurntableSnapshot.FrozenEntity frozen:snapshot.entities){Entity e=live.get(frozen.id);if(e!=null){e.dismountRidingEntity();e.removePassengers();world.removeEntityDangerously(e);}}}
     private static List<Entity> prepare(WorldServer world,TurntableSnapshot snapshot){List<Entity> result=new ArrayList<>();for(TurntableSnapshot.FrozenEntity frozen:snapshot.entities){Entity e=EntityList.createEntityFromNBT(frozen.data(),world);if(e==null)throw new IllegalArgumentException("A captured entity type is unavailable; contents retained");if(!e.getUniqueID().equals(frozen.id))throw new IllegalArgumentException("Captured entity identity mismatch");result.add(e);}return result;}

@@ -45,7 +45,12 @@ final class TurntableRuntimeChecks {
             tile.restore(player);require(display.isDead&&tile.captureId==null,"restore consumes display");TileEntityChest chest=(TileEntityChest)world.getTileEntity(chestPos);require(chest.getStackInSlot(0).getCount()==23&&chest.getStackInSlot(0).getItem()==Items.DIAMOND,"inventory restored");
             int count=0;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(!entity.isDead&&entity.getUniqueID().equals(itemId)){require(((EntityItem)entity).getItem().getCount()==7,"entity stack restored");count++;entity.setDead();}require(count==1,"entity UUID restored once");
             count=0;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(!entity.isDead&&entity.getUniqueID().equals(standId)){require(entity.getName().equals("Turntable boundary fixture"),"entity NBT restored");count++;entity.setDead();}require(count==1,"boundary entity restored once");
-            tile.release();clear(world,seed);
+            if(normal==EnumFacing.EAST){
+                ((TileEntityChest)world.getTileEntity(chestPos)).clear();world.setBlockToAir(chestPos);world.setBlockToAir(stone);BlockPos far=found.cell(1,1,16);world.getChunkFromBlockCoords(far);
+                EntityArmorStand only=new EntityArmorStand(world,far.getX()+.5,far.getY()+.5,far.getZ()+.5);only.setNoGravity(true);require(world.spawnEntity(only),"entity-only far edge fixture");UUID onlyId=only.getUniqueID();tile.height=16;tile.scan(player);require(tile.display().snapshot.blocks.cells.isEmpty()&&tile.display().snapshot.entities.size()==1,"entity-only sixteen-block capture");tile.restore(player);
+                count=0;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(!entity.isDead&&entity.getUniqueID().equals(onlyId)){count++;entity.setDead();}require(count==1,"entity-only far edge restored once");
+            }
+            TileEntityTurntableSurface stale=(TileEntityTurntableSurface)world.getTileEntity(found.root);tile.release();stale.bind(tile);require(stale.controller()==null,"a retired layout cannot retain a live surface claim");stale.release();clear(world,seed);
         }
         require(VehicleStructure.readDisplay(VehicleStructure.display(Collections.emptyList()).write()).cells.isEmpty(),"empty display round trip");
         System.out.println("[vandorlabs][reprolab] turntable PASS six normals square holes rotation stop persistence inventory/entity round trip blocked restore and vehicle isolation");

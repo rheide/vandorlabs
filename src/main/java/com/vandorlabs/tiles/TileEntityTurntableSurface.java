@@ -16,7 +16,9 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public TileEntityTurntableController controller(){
         if(world==null || owner==null || !world.isBlockLoaded(owner))return null;
         TileEntity raw=world.getTileEntity(owner);
-        return raw instanceof TileEntityTurntableController && ((TileEntityTurntableController)raw).key.equals(ownerKey)?(TileEntityTurntableController)raw:null;
+        if(!(raw instanceof TileEntityTurntableController))return null;
+        TileEntityTurntableController controller=(TileEntityTurntableController)raw;
+        return controller.key.equals(ownerKey)&&controller.layout!=null&&controller.layout.cells.contains(pos)?controller:null;
     }
     public void bind(TileEntityTurntableController controller){owner=controller.getPos().toImmutable();ownerKey=controller.key;changed();}
     public void release(){owner=null;ownerKey=null;changed();}
