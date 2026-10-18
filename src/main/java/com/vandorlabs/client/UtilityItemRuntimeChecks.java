@@ -11,9 +11,20 @@ import java.io.File;
 /** Actual inventory rendering, including depth/rotation, with padding on every side. */
 final class UtilityItemRuntimeChecks {
     private static final int BACK=0x203040;
-    private static final String[] IDS={"programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel"};
-    static ItemStack stack(int i){return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+IDS[i])));}
+    private static final String[] IDS={"programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","data_card:0","data_card:1","data_card:2","data_card:3","data_card:4","data_card:5","data_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
+    static ItemStack stack(int i){String[] id=IDS[i].split(":");return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id[0])),1,id.length==1?0:Integer.parseInt(id[1]));}
     static void run(Minecraft mc,File output)throws Exception{
+        for(Item token:new Item[]{com.vandorlabs.items.ModItems.DATA_CARD,com.vandorlabs.items.ModItems.DATA_CHIP}){
+        net.minecraft.util.NonNullList<ItemStack> cards=net.minecraft.util.NonNullList.create();
+        token.getSubItems(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,cards);
+        if(cards.size()!=7||token instanceof ItemBlock)throw new IllegalStateException("Seven non-placeable variants required: "+token.getRegistryName()+"");
+        for(int i=0;i<7;i++){
+            ItemStack card=cards.get(i);if(card.getMetadata()!=i)throw new IllegalStateException("Card creative metadata");
+            net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(card,mc.world,mc.player);
+            if(model==mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel()||model.getQuads(null,null,0).size()<2)throw new IllegalStateException("Missing card/chip image model: "+i);
+            if(!net.minecraft.client.resources.I18n.hasKey(card.getUnlocalizedName()+".name"))throw new IllegalStateException("Card translation missing: "+i);
+        }
+        }
         GuiScreen previous=mc.currentScreen;Icons icons=new Icons();try{
             mc.displayGuiScreen(icons);mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();icons.drawScreen(0,0,0);
             BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());int scale=new ScaledResolution(mc).getScaleFactor(),size=16*scale;
@@ -24,7 +35,7 @@ final class UtilityItemRuntimeChecks {
             }
             javax.imageio.ImageIO.write(shot,"png",new File(output,"shot_utility22_items.png"));
         }finally{GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.displayGuiScreen(previous);}
-        System.out.println("[vandorlabs][reprolab] utility-item-padding PASS all eighteen inventory variants actual rotated pixels");
+        System.out.println("[vandorlabs][reprolab] utility-item-padding PASS all inventory variants including seven cards and seven chips actual rotated pixels");
     }
     static void checkTankRenderState(Minecraft mc){
         net.minecraft.util.math.BlockPos pos=new net.minecraft.util.math.BlockPos(146,21,120);
@@ -41,7 +52,7 @@ final class UtilityItemRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] utility-render-state PASS color and lightmap restored");
     }
     private static final class Icons extends GuiScreen{
-        int x(int i){return width/2+(i%7-3)*30;}int y(int i){return height/2-24+(i/7)*32;}public boolean doesGuiPauseGame(){return false;}
-        public void drawScreen(int mouseX,int mouseY,float partial){GlStateManager.disableLighting();drawRect(0,0,width,height,0xff101820);drawCenteredString(fontRenderer,"Matter, machinery and modular landing gear",width/2,30,0xffffff);for(int i=0;i<IDS.length;i++){drawRect(x(i)-1,y(i)-1,x(i)+17,y(i)+17,0xff708090);drawRect(x(i),y(i),x(i)+16,y(i)+16,0xff000000|BACK);}RenderHelper.enableGUIStandardItemLighting();for(int i=0;i<IDS.length;i++)itemRender.renderItemAndEffectIntoGUI(stack(i),x(i),y(i));RenderHelper.disableStandardItemLighting();}
+        int x(int i){return width/2+(i%7-3)*30;}int y(int i){return height/2-48+(i/7)*32;}public boolean doesGuiPauseGame(){return false;}
+        public void drawScreen(int mouseX,int mouseY,float partial){GlStateManager.disableLighting();drawRect(0,0,width,height,0xff101820);drawCenteredString(fontRenderer,"Matter, machinery, landing gear, cards and chips",width/2,30,0xffffff);for(int i=0;i<IDS.length;i++){drawRect(x(i)-1,y(i)-1,x(i)+17,y(i)+17,0xff708090);drawRect(x(i),y(i),x(i)+16,y(i)+16,0xff000000|BACK);}RenderHelper.enableGUIStandardItemLighting();for(int i=0;i<IDS.length;i++)itemRender.renderItemAndEffectIntoGUI(stack(i),x(i),y(i));RenderHelper.disableStandardItemLighting();}
     }
 }

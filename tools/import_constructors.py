@@ -5,7 +5,7 @@ from zipfile import ZipFile
 from PIL import Image,ImageDraw
 ROOT=Path(__file__).resolve().parents[1];ASSETS=ROOT/'src/main/resources/assets/vandorlabs';TEX=ROOT/'texture-packs/additional/assets/vandorlabs/textures'
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('archive',type=Path);args=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('archive',type=Path);p.add_argument('--assets-only',action='store_true',help='Preserve integrated Java renderers, core icons and blockstates');args=p.parse_args()
  with ZipFile(args.archive) as z:
   for name in z.namelist():
    if '/resources/assets/mctrek/' in name:
@@ -15,9 +15,10 @@ def main():
      target.parent.mkdir(parents=True,exist_ok=True);data=z.read(name)
      if name.endswith(('.obj','.mtl')):data=data.replace(b'mctrek:',b'vandorlabs:')
      target.write_bytes(data)
-   if name.endswith('UniversalConstructorModelCache.java') or name.endswith('UniversalConstructorFastTESR.java'):
+   if not args.assets_only and (name.endswith('UniversalConstructorModelCache.java') or name.endswith('UniversalConstructorFastTESR.java')):
     target=ROOT/'src/main/java/com/vandorlabs/client/constructors'/Path(name).name;target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(z.read(name).decode().replace('package mctrek.client.model;','package com.vandorlabs.client.constructors;').replace('"mctrek"','"vandorlabs"'))
+ if args.assets_only:return
  for index,id in enumerate(['assembly_press','synthesis_tower','enclosed_gantry']):
   tex=TEX/'blocks/matter'/(id+'_core.png');tex.parent.mkdir(parents=True,exist_ok=True)
   image=Image.new('RGB',(64,64),(39,48,60));d=ImageDraw.Draw(image);color=[(82,207,222),(168,115,228),(233,168,74)][index]

@@ -14,6 +14,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @Mod.EventBusSubscriber(modid = VandorLabs.MODID)
 public final class ModItems {
+    public static final Item DATA_CARD = new ItemDesignToken("data_card");
+    public static final Item DATA_CHIP = new ItemDesignToken("data_chip");
     public static final Item PROGRAMMABLE_MATTER_INGOT = new Item()
             .setRegistryName(VandorLabs.MODID, "programmable_matter_ingot")
             .setUnlocalizedName("vandorlabs.programmable_matter_ingot")
@@ -35,6 +37,8 @@ public final class ModItems {
 
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
+        event.getRegistry().register(DATA_CARD);
+        event.getRegistry().register(DATA_CHIP);
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
         event.getRegistry().register(INFUSER_CORE);
@@ -50,6 +54,9 @@ public final class ModItems {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void registerModels(ModelRegistryEvent event) {
+        for(Item token:new Item[]{DATA_CARD,DATA_CHIP})for(int i=0;i<ItemDesignToken.DESIGNS.length;i++)
+            ModelLoader.setCustomModelResourceLocation(token,i,new ModelResourceLocation(
+                    new ResourceLocation(VandorLabs.MODID,token.getRegistryName().getResourcePath()+"_"+ItemDesignToken.DESIGNS[i]),"inventory"));
         ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_MATTER_INGOT, 0,
                 new ModelResourceLocation(PROGRAMMABLE_MATTER_INGOT.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(INDUSTRIAL_ALLOY_INGOT, 0,
