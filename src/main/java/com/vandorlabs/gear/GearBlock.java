@@ -144,6 +144,21 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
         return FULL_BLOCK_AABB;
     }
 
+    @Override public net.minecraft.util.math.RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.Vec3d start,net.minecraft.util.math.Vec3d end){
+        // The legacy superclass has an empty model-parts list for modular gear.
+        // Trace the modular pose instead, clipped to this reserved source cell.
+        TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
+        if(root!=null&&root.isOperational()){
+            net.minecraft.util.math.RayTraceResult nearest=null;AxisAlignedBB cell=new AxisAlignedBB(pos);
+            for(AxisAlignedBB box:root.collisionBoxes())if(box.intersects(cell)){
+                net.minecraft.util.math.RayTraceResult hit=box.intersect(cell).calculateIntercept(start,end);
+                if(hit!=null&&(nearest==null||start.squareDistanceTo(hit.hitVec)<start.squareDistanceTo(nearest.hitVec)))nearest=new net.minecraft.util.math.RayTraceResult(hit.hitVec,hit.sideHit,pos);
+            }
+            return nearest;
+        }
+        return rayTrace(pos,start,end,getBoundingBox(state,world,pos));
+    }
+
     private boolean collidable(IBlockAccess world, BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
         return !(tile instanceof GearTileEntity) || ((GearTileEntity) tile).isPartCollidable();

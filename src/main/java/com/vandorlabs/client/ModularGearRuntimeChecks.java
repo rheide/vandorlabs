@@ -22,6 +22,13 @@ final class ModularGearRuntimeChecks {
         GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);require(tile.rebuild(),"formation: "+tile.error());return tile.loadedController();
     }
     static void run(WorldServer world,EntityPlayerMP player)throws Exception{
+        BlockPos placement=new BlockPos(475,215,180);world.setBlockState(placement,GearRegistry.LANDING_PLATE.getDefaultState());
+        require(GearRegistry.LANDING_PLATE.collisionRayTrace(world.getBlockState(placement),world,placement,new Vec3d(475.5,217,180.5),new Vec3d(475.5,214,180.5))!=null,"unformed plate can be selected");
+        ItemStack held=player.getHeldItemMainhand();try{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(GearRegistry.GEAR_EXTENDER));
+            require(!GearRegistry.LANDING_PLATE.onBlockActivated(world,placement,world.getBlockState(placement),player,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.1F,.5F),"plate permits strut placement");
+            require(player.getHeldItemMainhand().onItemUse(player,world,placement,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.1F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS&&world.getBlockState(placement.up()).getBlock()==GearRegistry.GEAR_EXTENDER,"actual extender item placement on plate");
+            require(GearRegistry.GEAR_EXTENDER.collisionRayTrace(world.getBlockState(placement.up()),world,placement.up(),new Vec3d(475.5,218,180.5),new Vec3d(475.5,214,180.5))!=null,"unformed extender can be selected");
+        }finally{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);world.setBlockToAir(placement.up());world.setBlockToAir(placement);}
         recipes(world);
         NBTTagCompound unformed=new GearTileEntity().writeToNBT(new NBTTagCompound()),cycled=unformed.copy();for(int i=0;i<4;i++)GearData.rotate(cycled,1);require(unformed.equals(cycled),"unformed gear rotation preserves absent fields");
         BlockPos base=new BlockPos(390,205,205);Vec3d playerBefore=player.getPositionVector();

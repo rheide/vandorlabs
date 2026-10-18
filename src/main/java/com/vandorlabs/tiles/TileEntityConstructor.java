@@ -40,7 +40,7 @@ public final class TileEntityConstructor extends TileEntity implements ITickable
                     BlockPos p=candidateCell(x,y,z,direction,cornerX,cornerZ);if(p.equals(pos))continue;
                     boolean loaded=world.isBlockLoaded(p);
                     if(!loaded || (frame(x,y,z)?world.getBlockState(p).getBlock()!=matter:!world.isAirBlock(p))){
-                        if(errors++==0)first=(loaded?(frame(x,y,z)?"Matter Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();
+                        if(errors++==0)first=(loaded?(frame(x,y,z)?world.getBlockState(p).getBlock() instanceof BlockConstructorCore?"Use a Matter Block, not another Core":"Matter Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();
                     }
                 }
                 if(errors<best){best=errors;assemblyProblem=first+" ("+errors+" mismatched cells in closest frame).";}
@@ -74,7 +74,7 @@ public final class TileEntityConstructor extends TileEntity implements ITickable
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();
         }finally{changing=false;}
     }
-    @Override public void update(){if(world.isRemote || ++ticks%20!=0 || changing)return;if(!formed())assemble();}
+    @Override public void update(){/* Formation is an explicit Core interaction. */}
     @Override public AxisAlignedBB getRenderBoundingBox(){BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin,origin.add(turn?3:core().width,core().height,turn?core().width:3));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){return true;}

@@ -33,5 +33,4 @@ def main():
   write('models/item/'+family+'.json',{'parent':'vandorlabs:item/'+family+'_small'})
   write('models/block/'+family+'_empty.json',{'textures':{'particle':'vandorlabs:blocks/matter/casing'}})
   write('blockstates/'+family+'.json',{'variants':{'extended='+str(extended).lower()+',facing='+f+',lower='+str(lower).lower():{'model':'vandorlabs:'+family+'_empty'} for extended in [False,True] for f in ['north','east','south','west'] for lower in [False,True]}})
-  write('recipes/'+family+'.json',{'type':'minecraft:crafting_shaped','pattern':['IMI',' P ','IWI' if family=='ski_landing_gear' else 'I I' if family=='angled_landing_strut' else 'III'],'key':{'I':{'item':'minecraft:iron_ingot'},'M':{'item':'vandorlabs:programmable_matter_ingot'},'P':{'item':'minecraft:piston'},**({'W':{'item':'minecraft:wooden_slab','data':0}} if family=='ski_landing_gear' else {})},'result':{'item':'vandorlabs:'+family}})
 if __name__=='__main__':main()

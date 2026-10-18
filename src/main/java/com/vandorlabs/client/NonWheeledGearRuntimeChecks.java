@@ -19,6 +19,7 @@ final class NonWheeledGearRuntimeChecks {
         BlockPos pos=new BlockPos(300,200,160);
         for(String name:new String[]{"ski_landing_gear","landing_strut","angled_landing_strut"}){
             BlockNonWheeledLandingGear block=(BlockNonWheeledLandingGear)Block.getBlockFromName("vandorlabs:"+name);
+            require(block.getCreativeTabToDisplayOn()==null,"retired gear hidden from creative catalog");
             for(int size:new int[]{0,4})for(EnumFacing facing:EnumFacing.HORIZONTALS){
                 world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing));
                 try{

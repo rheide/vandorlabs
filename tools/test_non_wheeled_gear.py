@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]/'src/main/resources/assets/vandorlabs'
 recipes=set()
 for family in ['ski_landing_gear','landing_strut','angled_landing_strut']:
- recipe=json.loads((ROOT/('recipes/'+family+'.json')).read_text());key=json.dumps((recipe['pattern'],recipe['key']),sort_keys=True);assert key not in recipes,'ambiguous gear recipes';recipes.add(key)
+ assert not (ROOT/('recipes/'+family+'.json')).exists(), 'retired gear must not have a crafting recipe'
  for size in ['small','medium','large','extra_large']:
   model=json.loads((ROOT/('models/block/'+family+'_'+size+'_retracted.json')).read_text());item=json.loads((ROOT/('models/item/'+family+'_'+size+'.json')).read_text());gui=item['display']['gui'];points=[]
   for e in model['elements']:
@@ -23,4 +23,4 @@ for family in ['ski_landing_gear','landing_strut','angled_landing_strut']:
   assert max(map(abs,bounds))<7,(family,size,bounds)
   for group in ['fixed','wheel','piston','nose_front','nose_rear']:assert (ROOT/('models/item/'+family+'_'+size+'_'+group+'.json')).is_file()
   print(family,size,'PASS padded projected bounds',[round(v,2) for v in bounds])
-print('PASS all 12 generated gear variants, explicit UVs, motion groups and distinct recipes')
+print('PASS all 12 generated gear variants, explicit UVs, motion groups and retired recipes')

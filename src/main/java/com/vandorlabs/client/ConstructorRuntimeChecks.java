@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 /** Independent world-space frames: every core corner, frame axis and placed facing. */
 final class ConstructorRuntimeChecks {
     private static String scenario;
-    static void run(World world){
+    static void run(World world,net.minecraft.entity.player.EntityPlayer player){
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
         BlockPos minimum=new BlockPos(150,225,150);int count=0;
         for(String id:new String[]{"assembly_press","synthesis_tower","enclosed_gantry"})for(boolean turned:new boolean[]{false,true})for(int corner=0;corner<4;corner++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
@@ -42,7 +42,10 @@ final class ConstructorRuntimeChecks {
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.onDataPacket(null,tile.getUpdatePacket());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed(),"manual dismantling");checkRestored(world,original,matter);
-                require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");world.setBlockToAir(root);checkRestored(world,original,matter);count++;
+                for(int tick=0;tick<40;tick++)tile.update();require(!tile.formed(),"dismantled frame never automatically reforms");
+                require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");
+                net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");for(int tick=0;tick<40;tick++)tile.update();require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");
+                world.setBlockState(missing,matter.getDefaultState());require(tile.assemble(),"explicit repair and reassembly");world.setBlockToAir(root);checkRestored(world,original,matter);count++;
             }finally{
                 world.setBlockToAir(root);for(BlockPos p:original.keySet())world.setBlockToAir(p);
             }
