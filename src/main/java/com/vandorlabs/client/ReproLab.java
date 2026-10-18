@@ -446,6 +446,7 @@ public class ReproLab {
                 SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
+        SHOTS.add(new Shot("utility22_blocks_tanks",155,24,115,0,25));
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
         SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));
@@ -896,6 +897,7 @@ public class ReproLab {
                 if(s.name.contains("opposing_next_"))TrapdoorGallery.checkOpposing(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.equals("gallery_distant_geometry"))checkDistantGeometry(mc);
                 save(mc, s);
+                if(s.name.equals("utility22_blocks"))try{StorageStatusVisualChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("storage meters",failure);}
                 if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
                 if(s.name.equals("turntable_floor"))try{TurntableDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("turntable dialog",failure);}
                 if(s.name.equals("modular_gear_0_deployed"))try{ModularGearDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular gear dialog",failure);}

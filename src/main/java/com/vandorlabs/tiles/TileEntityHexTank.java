@@ -17,13 +17,15 @@ public final class TileEntityHexTank extends TileEntityAnimatedScreenSelector im
     private void syncContents(){markDirty();if(world!=null && !world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     private List<TileEntityHexTank> members(){
         if(world==null)return Collections.singletonList(this);
+        EnumFacing axis=world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
+        EnumFacing step=EnumFacing.getFacingFromAxis(EnumFacing.AxisDirection.POSITIVE,axis.getAxis());
         List<TileEntityHexTank> result=new ArrayList<>();BlockPos bottom=pos;
-        while(bottom.getY()>0 && world.isBlockLoaded(bottom.down()) && world.getTileEntity(bottom.down()) instanceof TileEntityHexTank)bottom=bottom.down();
-        for(BlockPos p=bottom;p.getY()<world.getHeight() && world.isBlockLoaded(p);p=p.up()){
-            TileEntity raw=world.getTileEntity(p);if(!(raw instanceof TileEntityHexTank))break;result.add((TileEntityHexTank)raw);
-        }
+        for(int i=0;i<255&&same(bottom.offset(step.getOpposite()),axis);i++)bottom=bottom.offset(step.getOpposite());
+        for(BlockPos p=bottom;result.size()<256&&same(p,axis);p=p.offset(step))result.add((TileEntityHexTank)world.getTileEntity(p));
         return result;
     }
+    private boolean same(BlockPos at,EnumFacing facing){return world.isBlockLoaded(at)&&world.getTileEntity(at) instanceof TileEntityHexTank&&world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING).getAxis()==facing.getAxis();}
+    private EnumFacing.Axis portAxis(){return world==null?EnumFacing.Axis.Y:world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING).getAxis();}
     @Override public IFluidTankProperties[] getTankProperties(){
         List<TileEntityHexTank> group=members();FluidStack fluid=null;boolean mixed=false;int amount=0;
         for(TileEntityHexTank cell:group){FluidStack f=cell.tank.getFluid();if(f!=null){if(fluid==null)fluid=f.copy();else if(!fluid.isFluidEqual(f))mixed=true;amount+=f.amount;}}
@@ -46,6 +48,6 @@ public final class TileEntityHexTank extends TileEntityAnimatedScreenSelector im
     @Override public FluidStack drain(int max,boolean commit){if(max<=0)return null;for(TileEntityHexTank cell:members())if(cell.tank.getFluid()!=null){FluidStack request=cell.tank.getFluid().copy();request.amount=max;return drain(request,commit);}return null;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setTag("Tank",tank.writeToNBT(new NBTTagCompound()));return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);tank.setFluid(null);if(tag.hasKey("Tank",10))tank.readFromNBT(tag.getCompoundTag("Tank"));}
-    @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY?(side==null || side.getAxis()==EnumFacing.Axis.Y):super.hasCapability(cap,side);}
+    @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY?(side==null || side.getAxis()==portAxis()):super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)return hasCapability(cap,side)?CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this):null;return super.getCapability(cap,side);}
 }

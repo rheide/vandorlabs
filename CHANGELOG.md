@@ -2,6 +2,11 @@
 
 ## 2.2
 
+- Apply turntable settings immediately, use a height slider and capture only from the textured face. Carry players and loose items on bare floor surfaces and prevent captured displays from blocking nearby block selection.
+- Restore modular landing gear selection and placement; retire the older standalone skis and straight/angled struts from crafting and the creative catalog, retaining saved blocks.
+- Add live RF/fluid fullness dialogs, axial tank placement/connections, recessed fluid windows and centered fuel/battery port artwork. Restyle Matter Blocks with iron, redstone and gold.
+- Assemble constructors only by interacting with their Core. Dismantled frames stay dismantled; mining a reserved cell removes it.
+
 - Add modular landing plates and skis, extendable columns and level-foot swing arms. Connected feet and matching struts share controls, collision, animation and saved ownership, with Hover capture and cardinal restoration support.
 
 - Add Turntable Controller and directional Surface blocks for square floor, wall and ceiling displays, with configurable capture height, direction, speed and independent redstone/channel inputs. Preserve captured block inventories and entities, and share illuminated surface artwork across the full square.

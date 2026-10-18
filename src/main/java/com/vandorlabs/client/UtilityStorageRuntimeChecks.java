@@ -24,7 +24,7 @@ final class UtilityStorageRuntimeChecks {
             require(!first.hasCapability(CapabilityEnergy.ENERGY,EnumFacing.UP),"side insulation");first.update();
             require(in.getEnergyStored()==0 && second.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1000,"neighbor energy transfer conserves charge");
             TileEntityBattery restored=new TileEntityBattery();restored.readFromNBT(second.writeToNBT(new NBTTagCompound()));require(restored.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1000,"energy persists");
-            world.setBlockToAir(pos);world.setBlockToAir(pos.south());world.setBlockState(pos,tank.getDefaultState());world.setBlockState(pos.up(),tank.getDefaultState());
+            world.setBlockToAir(pos);world.setBlockToAir(pos.south());world.setBlockState(pos,tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,EnumFacing.UP));world.setBlockState(pos.up(),tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,EnumFacing.UP));
             TileEntityHexTank bottom=(TileEntityHexTank)world.getTileEntity(pos),top=(TileEntityHexTank)world.getTileEntity(pos.up());
             require(top.fill(new FluidStack(FluidRegistry.WATER,24000),false)==24000 && bottom.tank.getFluidAmount()==0,"simulated stack fill");
             require(top.fill(new FluidStack(FluidRegistry.WATER,24000),true)==24000 && bottom.tank.getFluidAmount()==16000 && top.tank.getFluidAmount()==8000,"pooled stack fill bottom first");
@@ -36,6 +36,17 @@ final class UtilityStorageRuntimeChecks {
             world.setBlockToAir(pos);require(top.getTankProperties()[0].getCapacity()==16000 && top.tank.getFluidAmount()==8000,"stack split preserves remaining fluid");
             require(top.drain(new FluidStack(FluidRegistry.WATER,9000),true).amount==8000 && top.tank.getFluidAmount()==0,"drain clips to stored amount");
             require(top.fill(new FluidStack(FluidRegistry.LAVA,1000),true)==1000,"empty tank accepts another liquid");
+            world.setBlockToAir(pos.up());
+            for(EnumFacing face:EnumFacing.values()){
+                net.minecraft.block.state.IBlockState placed=tank.getStateForPlacement(world,pos,face,.5F,.5F,.5F,0,null);
+                require(placed.getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING)==face,"tank clicked-face orientation "+face);
+                world.setBlockState(pos,placed);world.setBlockState(pos.offset(face),placed);
+                TileEntityHexTank one=(TileEntityHexTank)world.getTileEntity(pos);
+                require(one.fill(new FluidStack(FluidRegistry.WATER,20000),true)==20000&&one.getTankProperties()[0].getCapacity()==32000,"connected tank capacity on "+face);
+                require(one.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,face)&&!one.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,face.getAxis()==EnumFacing.Axis.Y?EnumFacing.NORTH:EnumFacing.UP),"axial ports "+face);
+                com.vandorlabs.container.ContainerStorageStatus meter=new com.vandorlabs.container.ContainerStorageStatus(one);require(meter.values[0]==20000&&meter.values[1]==32000,"live combined fluid meter");
+                world.setBlockToAir(pos);world.setBlockToAir(pos.offset(face));
+            }
             System.out.println("[vandorlabs][reprolab] utility-storage PASS sided energy simulation transfer persistence pooled-fluid split no-mixing");
         }finally{world.setBlockToAir(pos);world.setBlockToAir(pos.up());world.setBlockToAir(pos.south());}
     }

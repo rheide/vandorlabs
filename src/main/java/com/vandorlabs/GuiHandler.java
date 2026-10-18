@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
+    public static final int GUI_STORAGE_STATUS=21;
     public static final int GUI_TURNTABLE=19;
     public static final int GUI_MODULAR_GEAR=20;
     public static final int GUI_COCKPIT=18;
@@ -61,6 +62,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_STORAGE_STATUS){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityHexTank?new com.vandorlabs.container.ContainerStorageStatus(tile):null;}
         if(ID==GUI_TURNTABLE)return com.vandorlabs.container.ContainerTurntable.resolve(player,world,x,y,z);
         if(ID==GUI_MODULAR_GEAR)return com.vandorlabs.container.ContainerModularGear.resolve(player,world,x,y,z);
         if(ID==GUI_COCKPIT)return com.vandorlabs.container.ContainerCockpit.resolve(player,world,x,y,z);
@@ -146,6 +148,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_STORAGE_STATUS){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityHexTank?new com.vandorlabs.client.GuiStorageStatus(new com.vandorlabs.container.ContainerStorageStatus(tile)):null;}
         if(ID==GUI_TURNTABLE){com.vandorlabs.container.ContainerTurntable container=com.vandorlabs.container.ContainerTurntable.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiTurntable(container);}
         if(ID==GUI_MODULAR_GEAR){com.vandorlabs.container.ContainerModularGear container=com.vandorlabs.container.ContainerModularGear.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiModularGear(container);}
         if(ID==GUI_COCKPIT){com.vandorlabs.container.ContainerCockpit container=com.vandorlabs.container.ContainerCockpit.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiCockpit(container);}

@@ -25,9 +25,19 @@ def main():
     d.ellipse((32-r,32-r,31+r,31+r),fill=c)
    d.line((22,22,28,16),fill=(230,255,255),width=2)
   if name=='matter':
-   for y in range(14,54,10):
-    for x in range(14,54,10):
-     d.rectangle((x,y,x+4,y+4),fill=(79,176,188));d.line((x+4,y+2,x+10,y+2),fill=(46,103,118))
+   # Iron body, gold terminals and redstone traces echo the Matter Ingot.
+   d.rectangle((0,0,63,63),fill=(141,148,158))
+   d.rectangle((1,1,62,62),outline=(60,67,80),width=2)
+   d.rectangle((4,4,59,59),outline=(224,230,237),width=2)
+   for yy in range(9,59,12):d.line((8,yy,55,yy),fill=(165,173,184),width=2)
+   for xx in (12,44):
+    d.rectangle((xx,6,xx+7,57),fill=(153,102,30))
+    d.rectangle((xx,6,xx+5,57),fill=(246,201,99))
+    d.line((xx,7,xx+5,7),fill=(255,240,181),width=2)
+   d.rectangle((6,27,57,36),fill=(92,7,12))
+   d.rectangle((6,29,57,33),fill=(225,26,39))
+   d.line((6,29,57,29),fill=(255,121,126),width=2)
+   d.rectangle((28,23,35,40),outline=(252,216,121),width=2)
   if name=='core':
    image=image.convert('RGBA');image.putalpha(Image.new('L',(64,64),0));d=ImageDraw.Draw(image);d.rounded_rectangle((8,8,55,55),radius=14,fill=(46,65,78,255),outline=(142,175,185,255),width=3)
    d.ellipse((18,18,45,45),fill=(49,151,185,255),outline=(165,237,244,255),width=3)

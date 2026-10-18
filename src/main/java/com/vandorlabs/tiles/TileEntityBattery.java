@@ -28,6 +28,9 @@ public final class TileEntityBattery extends TileEntity implements ITickable {
         IEnergyStorage target=neighbor.getCapability(CapabilityEnergy.ENERGY,side.getOpposite());
         if(target!=null && target.canReceive())output.extractEnergy(target.receiveEnergy(Math.min(RATE,energy),false),false);
     }
+    @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
+    @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}
+    @Override public void onDataPacket(net.minecraft.network.NetworkManager manager,net.minecraft.network.play.server.SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("Energy",energy);return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);energy=Math.max(0,Math.min(CAPACITY,tag.getInteger("Energy")));}
     @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityEnergy.ENERGY?(side==null || side==inputSide() || side==inputSide().getOpposite()):super.hasCapability(cap,side);}

@@ -6,14 +6,20 @@ ROOT=Path(__file__).resolve().parents[1];ASSETS=ROOT/'src/main/resources/assets/
 def write(p,v):p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,indent=2)+'\n')
 def main():
  TEX.mkdir(parents=True,exist_ok=True)
- for name,color in [('port',(120,145,160)),('energy_in',(75,190,104)),('energy_out',(231,149,49))]:
-  im=Image.new('RGB',(64,64),(36,45,55));d=ImageDraw.Draw(im)
-  d.rectangle((2,2,61,61),outline=(132,148,158),width=3);d.ellipse((13,13,50,50),fill=(16,24,31),outline=color,width=4)
-  if name=='port':d.ellipse((24,24,39,39),outline=color,width=3)
-  else:
-   x=32;d.polygon([(x-13,25),(x+2,25),(x+2,18),(x+15,32),(x+2,46),(x+2,39),(x-13,39)],fill=color)
-   if name=='energy_out':im=im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+ source=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/imported'
+ # Keep the round fuel port centered on an end cap; map the image once over the hexagon.
+ Image.open(source/'fuel/fuel_port_round.png').convert('RGB').crop((14,7,126,119)).resize((128,128),Image.Resampling.NEAREST).save(TEX/'port.png')
+ dock=Image.open(source/'power/battery_charging_dock.png').convert('RGB').crop((23,38,117,132)).resize((128,128),Image.Resampling.NEAREST)
+ for name,color in [('energy_in',(75,220,110)),('energy_out',(255,167,53))]:
+  im=dock.copy();d=ImageDraw.Draw(im)
+  d.rectangle((3,3,124,124),outline=color,width=3)
+  d.rectangle((48,106,79,114),fill=color)
+  d.text((52,90),'IN' if name=='energy_in' else 'OUT',fill=color)
   im.save(TEX/(name+'.png'),optimize=True)
+ im=Image.new('RGB',(32,32),(15,23,28));d=ImageDraw.Draw(im)
+ d.rectangle((1,1,30,30),outline=(51,64,71),width=2)
+ for yy in range(5,30,6):d.line((4,yy,27,yy),fill=(22,32,38))
+ im.save(TEX/'tank_empty.png')
  textures={k:'vandorlabs:blocks/matter/'+v for k,v in {'particle':'casing','north':'energy_in','south':'energy_out','up':'casing','down':'casing','east':'casing','west':'casing'}.items()}
  textures['east']=textures['west']='vandorlabs:blocks/imported/power/battery_cell_bank'
  write(ASSETS/'models/block/battery_block.json',{'parent':'block/cube','textures':textures,'elements':[{'from':[0,0,0],'to':[16,16,16],'faces':{f:{'texture':'#'+f,'cullface':f} for f in ['up','down','north','south','east','west']}}]})

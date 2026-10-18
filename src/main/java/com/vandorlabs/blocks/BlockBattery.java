@@ -20,6 +20,7 @@ public final class BlockBattery extends BlockVandorDirectional {
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,net.minecraft.item.ItemStack tool){spawnAsEntity(world,pos,drop(tile));}
     @Override public net.minecraft.item.ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){return drop(world.getTileEntity(pos));}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
-        if(!world.isRemote){TileEntityBattery tile=(TileEntityBattery)world.getTileEntity(pos);net.minecraftforge.energy.IEnergyStorage energy=tile.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,null);player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(energy.getEnergyStored()+" / "+energy.getMaxEnergyStored()+" FE (front IN, rear OUT)"),true);}return true;
+        if(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;
+        if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_STORAGE_STATUS,world,pos.getX(),pos.getY(),pos.getZ());return true;
     }
 }
