@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    {
+      "item": "minecraft:slime_ball"
+    },
+    {
+      "item": "minecraft:iron_ingot"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:landing_wheel"
+  }
+}

@@ -453,7 +453,8 @@ public class ReproLab {
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
         SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));
-        for(String pose:new String[]{"deployed","stowed"})for(int i=0;i<3;i++)SHOTS.add(new Shot("modular_gear_"+i+"_"+pose,391+i*10,32,113,0,12));
+        for(String pose:new String[]{"deployed","stowed"})for(int i=0;i<7;i++)SHOTS.add(new Shot("modular_gear_"+i+"_"+pose,391+i*10,32,113,0,12));
+        SHOTS.add(new Shot("modular_gear_7_underside",460.5,30.5,117,0,-20));
         SHOTS.add(new Shot("utility22_waterlogged",143,24,116,0,24));
         SHOTS.add(new Shot("utility22_layouts",264,28,113,0,35));
         for(int mode=0;mode<3;mode++)SHOTS.add(new Shot("utility22_vertical_join_"+mode,297+mode*8,25,114,-25,mode==2?35:30));

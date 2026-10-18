@@ -17,7 +17,7 @@ public final class ModularGearVehicles {
             if(!craft.world.isRemote)gear.input();double next=GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);if(!craft.hover&&next<before)next=before;
             if(next==before){gear.captureProgress(before);continue;}
             if(!craft.world.isRemote){List<AxisAlignedBB> old=GearGeometry.boxes(gear,before),after=GearGeometry.boxes(gear,next);boolean blocked=false;
-                for(int i=0;i<after.size()&&!blocked;i++){if(old.get(i).equals(after.get(i)))continue;AxisAlignedBB swept=old.get(i).union(after.get(i)).shrink(.0001);
+                for(int i=0;i<after.size()&&!blocked;i++){if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;AxisAlignedBB swept=GearGeometry.swept(gear,i,old.get(i),after.get(i),before,next);
                     if(!GearGeometry.foreign(craft.view,gear,swept).isEmpty()){blocked=true;break;}
                     AxisAlignedBB at=pose.world(swept,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
                     if(!craft.world.isAreaLoaded(new BlockPos(at.minX,at.minY,at.minZ),new BlockPos(at.maxX,at.maxY,at.maxZ),false)||!craft.world.getCollisionBoxes(craft,at).isEmpty())blocked=true;

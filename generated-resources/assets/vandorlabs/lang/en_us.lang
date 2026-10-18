@@ -563,3 +563,8 @@ tile.vandorlabs.landing_ski.name=Landing Gear Ski
 tile.vandorlabs.gear_extender.name=Landing Gear Extender
 
 tile.vandorlabs.gear_swing_arm.name=Landing Gear Swing Arm
+
+tile.vandorlabs.landing_wheel.name=Landing Gear Wheel
+tile.vandorlabs.large_landing_wheel.name=Large Landing Gear Wheel
+tile.vandorlabs.large_gear_extender.name=Large Landing Gear Extender
+tile.vandorlabs.large_gear_swing_arm.name=Large Landing Gear Swing Arm

@@ -32,7 +32,7 @@ final class GearCollision {
             List<AxisAlignedBB> upper = new ArrayList<AxisAlignedBB>();
             List<AxisAlignedBB> lower = new ArrayList<AxisAlignedBB>();
             for (AxisAlignedBB raw : nativeBars) {
-                AxisAlignedBB box = yaw(raw, turns);
+                AxisAlignedBB box = yaw(raw, turns + 2);
                 clipY(box, 0, 1, 0, upper);
                 clipY(box, -1, 0, 1, lower);
             }

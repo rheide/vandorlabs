@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:landing_wheel"
+    },
+    {
+      "item": "vandorlabs:landing_wheel"
+    },
+    {
+      "item": "vandorlabs:landing_wheel"
+    },
+    {
+      "item": "vandorlabs:landing_wheel"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:large_landing_wheel"
+  }
+}

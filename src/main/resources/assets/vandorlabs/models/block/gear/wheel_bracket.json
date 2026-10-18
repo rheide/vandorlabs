@@ -1,0 +1,223 @@
+{
+  "credit": "MCTrek landing gear \u2014 integer voxel grid",
+  "parent": "block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "metal": "vandorlabs:blocks/landing_gear/metal",
+    "strut": "vandorlabs:blocks/landing_gear/strut",
+    "rubber": "vandorlabs:blocks/landing_gear/rubber",
+    "hub": "vandorlabs:blocks/landing_gear/hub",
+    "panel": "vandorlabs:blocks/landing_gear/panel",
+    "particle": "vandorlabs:blocks/landing_gear/metal",
+    "arm": "vandorlabs:blocks/programmable_glass/metal_side"
+  },
+  "elements": [
+    {
+      "name": "fork_bridge",
+      "from": [
+        3.384615384615384,
+        11.076923076923077,
+        6.153846153846153
+      ],
+      "to": [
+        12.615384615384617,
+        12.0,
+        9.846153846153847
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            3,
+            13,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            3,
+            3,
+            13,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            6,
+            3,
+            10,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            6,
+            3,
+            10,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            3,
+            6,
+            13,
+            10
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            3,
+            6,
+            13,
+            10
+          ],
+          "texture": "#metal"
+        }
+      }
+    },
+    {
+      "name": "fork_left",
+      "from": [
+        3.384615384615384,
+        4.615384615384616,
+        6.153846153846153
+      ],
+      "to": [
+        5.230769230769231,
+        11.076923076923077,
+        9.846153846153847
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            11,
+            4,
+            13,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            3,
+            4,
+            5,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            10,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            10,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            3,
+            6,
+            5,
+            10
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            3,
+            6,
+            5,
+            10
+          ],
+          "texture": "#metal"
+        }
+      }
+    },
+    {
+      "name": "fork_right",
+      "from": [
+        10.76923076923077,
+        4.615384615384616,
+        6.153846153846153
+      ],
+      "to": [
+        12.615384615384617,
+        11.076923076923077,
+        9.846153846153847
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            3,
+            4,
+            5,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            11,
+            4,
+            13,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            10,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            10,
+            11
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            11,
+            6,
+            13,
+            10
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            11,
+            6,
+            13,
+            10
+          ],
+          "texture": "#metal"
+        }
+      }
+    }
+  ]
+}

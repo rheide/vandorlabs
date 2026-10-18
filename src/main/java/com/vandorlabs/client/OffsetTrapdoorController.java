@@ -22,6 +22,11 @@ final class OffsetTrapdoorController extends PlayerControllerMP {
             net.minecraft.client.entity.EntityPlayerSP player,net.minecraft.client.multiplayer.WorldClient world,
             net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side,
             net.minecraft.util.math.Vec3d hit,net.minecraft.util.EnumHand hand) {
+        net.minecraft.tileentity.TileEntity gear=world.getTileEntity(pos);
+        if(hand==net.minecraft.util.EnumHand.MAIN_HAND&&gear instanceof com.vandorlabs.gear.GearTileEntity){
+            com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)gear).loadedController();
+            if(root!=null&&!root.fullyDeployed()){super.updateController();com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageModularGearUse(pos));return net.minecraft.util.EnumActionResult.SUCCESS;}
+        }
         com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,pos);
         if(tile!=null && player.getDistanceSqToCenter(tile.owner().getPos())>49){
             super.updateController();

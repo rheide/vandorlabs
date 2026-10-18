@@ -79,6 +79,10 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     public GearMotion.Direction direction() { return direction; }
     @Nullable public BlockPos owner() { return owner; }
 
+    public double armShiftX(){return armShift().getX()*.5;}
+    public double armShiftZ(){return armShift().getZ()*.5;}
+    private BlockPos armShift(){return armWidth()==2?LargeGearBlock.offset(world.getBlockState(pos).getValue(GearBlock.FACING),1,1):BlockPos.ORIGIN;}
+    public int armWidth(){return world!=null&&world.getBlockState(pos).getBlock() instanceof GearBlock?((GearBlock)world.getBlockState(pos).getBlock()).width():1;}
     public boolean isSwingArmController() {
         return world != null && GearAssembly.loaded(world, pos) && GearAssembly.isSwingArm(world.getBlockState(pos));
     }
@@ -110,8 +114,10 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         return root == null || !root.operational || root.fullyDeployed();
     }
 
+    @Override public void setWorld(World world){super.setWorld(world);rebuildMemberCache();boxesAt=Double.NaN;}
+
     @Override
-    public void onLoad() { firstServerTick = true;GearGeometry.register(this); }
+    public void onLoad() { firstServerTick = true;rebuildMemberCache();GearGeometry.register(this); }
     @Override public void invalidate(){GearGeometry.remove(this);super.invalidate();}
     @Override public void onChunkUnload(){GearGeometry.remove(this);super.onChunkUnload();}
 
@@ -198,14 +204,13 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         for (BlockPos member : members) {
             if (!GearAssembly.loaded(world, member)) return false;
             IBlockState state = world.getBlockState(member);
-            boolean column=false;for(BlockPos offset:columns)if(member.getX()==pos.getX()+offset.getX()&&member.getZ()==pos.getZ()+offset.getZ()&&member.getY()<=pos.getY()&&member.getY()>pos.getY()-assembly.columnHeight())column=true;
-            if (column) {
-                if (!GearAssembly.isExtender(state) || state.getBlock() != rootState.getBlock()) return false;
-            } else {
-                if (state.getBlock() != (assembly.kind() == GearTopology.FootKind.PLATE
-                        ? GearRegistry.LANDING_PLATE : GearRegistry.LANDING_SKI)) return false;
-                if (assembly.kind() == GearTopology.FootKind.SKI
-                        && state.getValue(GearBlock.FACING) != footFacing) return false;
+            if(GearAssembly.isExtender(state)){
+                if(state.getBlock()!=rootState.getBlock())return false;
+                GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(member,state)))return false;
+            }else{
+                if(!GearAssembly.isFoot(state)||!((GearBlock)state.getBlock()).kind().name().equals(assembly.kind().name()))return false;
+                if(assembly.kind()!=GearTopology.FootKind.PLATE&&state.getValue(GearBlock.FACING)!=footFacing)return false;
+                GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(member,state)))return false;
             }
             TileEntity tile = world.getTileEntity(member);
             if (!(tile instanceof GearTileEntity) || !pos.equals(((GearTileEntity) tile).owner)) return false;
@@ -242,7 +247,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         GearMotion.Mode previousMode = mode;
         if (isSwingArmController()) {
             if (mode != GearMotion.Mode.ROTATE_LEVEL&&!configured) {
-                // A newly placed arm bends opposite its initial fold. Match
+                // A newly placed arm bows toward its fold. Match
                 // the visible static block's yaw on its first formation.
                 direction = GearMotion.Direction.valueOf(world.getBlockState(pos)
                         .getValue(GearBlock.FACING).name());
@@ -298,7 +303,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private void rebuildMemberCache() {
         members.clear();
         if (assembly == null) return;
-        for(BlockPos column:columns)for(int i=0;i<assembly.columnHeight();i++)members.add(pos.add(column).down(i));
+        for(BlockPos column:columns)for(int i=0;i<assembly.columnHeight();i++){BlockPos at=pos.add(column).down(i);if(world!=null&&world.getBlockState(at).getBlock() instanceof GearBlock)members.addAll(((GearBlock)world.getBlockState(at).getBlock()).componentCells(world,at));else members.add(at);}
         for (GearTopology.Cell foot : assembly.feet()) members.add(pos.add(foot.x, foot.y, foot.z));
     }
 
@@ -366,7 +371,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         com.vandorlabs.redstone.ChannelList values=com.vandorlabs.redstone.ChannelList.parse(tag.getString("Channels"));
         if(trigger<0||trigger>2||dir<0||dir>3||values==null)throw new IllegalArgumentException("Invalid gear settings");
         if(dir!=direction.ordinal()&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
-        configured=true;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];if(triggerMode==0)deployedTarget=tag.getBoolean("Deployed");input();sync();
+        configured=true;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=tag.getBoolean("Deployed");input();sync();
     }
 
     public void sync() {
@@ -473,6 +478,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         if (assembly == null) {
+            if(armWidth()==2&&world!=null){AxisAlignedBB extent=new AxisAlignedBB(pos);GearBlock block=(GearBlock)world.getBlockState(pos).getBlock();for(BlockPos cell:block.componentCells(world,pos))extent=extent.union(new AxisAlignedBB(cell));return isSwingArmController()?extent.union(extent.offset(0,-1,0)):extent;}
             // The unformed swing arm already reaches into the foot cell.
             return isSwingArmController()
                     ? new AxisAlignedBB(pos.getX(), pos.getY() - 1, pos.getZ(),

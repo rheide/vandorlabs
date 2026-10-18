@@ -11,7 +11,7 @@ import java.io.File;
 /** Actual inventory rendering, including depth/rotation, with padding on every side. */
 final class UtilityItemRuntimeChecks {
     private static final int BACK=0x203040;
-    private static final String[] IDS={"programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm"};
+    private static final String[] IDS={"programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel"};
     static ItemStack stack(int i){return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+IDS[i])));}
     static void run(Minecraft mc,File output)throws Exception{
         GuiScreen previous=mc.currentScreen;Icons icons=new Icons();try{
@@ -24,7 +24,7 @@ final class UtilityItemRuntimeChecks {
             }
             javax.imageio.ImageIO.write(shot,"png",new File(output,"shot_utility22_items.png"));
         }finally{GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.displayGuiScreen(previous);}
-        System.out.println("[vandorlabs][reprolab] utility-item-padding PASS all fourteen inventory variants actual rotated pixels");
+        System.out.println("[vandorlabs][reprolab] utility-item-padding PASS all eighteen inventory variants actual rotated pixels");
     }
     static void checkTankRenderState(Minecraft mc){
         net.minecraft.util.math.BlockPos pos=new net.minecraft.util.math.BlockPos(146,21,120);

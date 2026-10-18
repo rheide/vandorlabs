@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:large_gear_swing_arm"
+  }
+}

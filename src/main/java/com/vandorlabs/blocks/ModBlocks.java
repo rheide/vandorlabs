@@ -185,6 +185,10 @@ public class ModBlocks {
         add(com.vandorlabs.gear.GearRegistry.LANDING_PLATE);
         add(com.vandorlabs.gear.GearRegistry.LANDING_SKI);
         add(com.vandorlabs.gear.GearRegistry.GEAR_EXTENDER);
+        add(com.vandorlabs.gear.GearRegistry.LARGE_GEAR_EXTENDER);
+        add(com.vandorlabs.gear.GearRegistry.LARGE_GEAR_SWING_ARM);
+        add(com.vandorlabs.gear.GearRegistry.LANDING_WHEEL);
+        add(com.vandorlabs.gear.GearRegistry.LARGE_LANDING_WHEEL);
         add(com.vandorlabs.gear.GearRegistry.GEAR_SWING_ARM);
         add(new BlockNonWheeledLandingGear("ski_landing_gear",true,false).setCreativeTab(null));
         add(new BlockNonWheeledLandingGear("landing_strut",false,false).setCreativeTab(null));
@@ -456,7 +460,7 @@ public class ModBlocks {
                         : block instanceof BlockLargeProgrammableDoor ? new com.vandorlabs.items.ItemLargeProgrammableDoor((BlockLargeProgrammableDoor)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
-                        ? new ItemDiagonalWall((BlockProgrammableWall) block) : new ItemBlock(block);
+                        ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : new ItemBlock(block);
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));
             }
         }

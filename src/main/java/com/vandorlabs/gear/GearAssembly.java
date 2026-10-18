@@ -53,22 +53,22 @@ public final class GearAssembly {
     }
 
     public static boolean isExtender(IBlockState state) {
-        return state.getBlock() == GearRegistry.GEAR_EXTENDER || isSwingArm(state);
+        return state.getBlock() instanceof GearBlock && (((GearBlock)state.getBlock()).kind()==GearBlock.Kind.EXTENDER || isSwingArm(state));
     }
 
     public static boolean isSwingArm(IBlockState state) {
-        return state.getBlock() == GearRegistry.GEAR_SWING_ARM;
+        return state.getBlock() instanceof GearBlock && ((GearBlock)state.getBlock()).kind()==GearBlock.Kind.SWING_ARM;
     }
 
     public static boolean isFoot(IBlockState state) {
-        return state.getBlock() == GearRegistry.LANDING_PLATE || state.getBlock() == GearRegistry.LANDING_SKI;
+        return state.getBlock() instanceof GearBlock && !isExtender(state);
     }
 
     /** Returns null for an unloaded or oversized column. */
     @Nullable
     public static BlockPos topOfColumn(World world, BlockPos start) {
         if (!loaded(world, start) || !isExtender(world.getBlockState(start))) return null;
-        BlockPos top = start;
+        BlockPos top = ((GearBlock)world.getBlockState(start).getBlock()).componentRoot(start,world.getBlockState(start));
         int count = 1;
         while (true) {
             BlockPos above = top.up();
@@ -91,16 +91,17 @@ public final class GearAssembly {
         int height=0;BlockPos first=top;
         while(loaded(world,first)&&isExtender(world.getBlockState(first))){
             if(world.getBlockState(first).getBlock()!=topState.getBlock())return fail("Do not mix straight extenders and swing arms in a column.");
-            if(++height>GearTopology.MAX_COLUMN_HEIGHT||swing&&height>1)return fail(swing?"Use exactly one swing arm per column.":"A strut column may contain at most eight extenders.");
+            if(++height>GearTopology.MAX_COLUMN_HEIGHT)return fail("A strut column may contain at most eight sections.");
             first=first.down();
         }
         if(!loaded(world,first))return unavailable("Load the feet and their boundary first.");
         IBlockState footState=world.getBlockState(first);
-        if(!isFoot(footState))return fail("Place a landing plate or ski beneath the strut.");
+        if(!isFoot(footState))return fail("Place a landing plate, ski or wheel beneath the strut.");
         EnumFacing facing=footState.getValue(GearBlock.FACING);
         Set<BlockPos> feet=new HashSet<>(),columns=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(first);feet.add(first);
         while(!queue.isEmpty()){
             BlockPos foot=queue.removeFirst();
+            if(!((GearBlock)footState.getBlock()).componentIntact(world,((GearBlock)footState.getBlock()).componentRoot(foot,world.getBlockState(foot))))return fail("Incomplete wheel footprint.");
             if(!(world.getTileEntity(foot) instanceof GearTileEntity))return unavailable("A foot tile is still loading.");
             BlockPos above=foot.up();if(!loaded(world,above))return unavailable("Load every mounting column.");
             if(isExtender(world.getBlockState(above))){
@@ -109,20 +110,22 @@ public final class GearAssembly {
                 for(int n=0;n<height;n++){
                     BlockPos cell=column.down(n);IBlockState state=world.getBlockState(cell);
                     if(state.getBlock()!=topState.getBlock()||!(world.getTileEntity(cell) instanceof GearTileEntity))return fail("Incomplete or mixed strut column.");
-                    if(swing&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");
+                    if(!((GearBlock)state.getBlock()).componentIntact(world,cell))return fail("Incomplete 2x2 arm footprint.");
+                    if((swing||((GearBlock)topState.getBlock()).width()==2)&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");
                 }
                 BlockPos support=column.up();if(!loaded(world,support))return unavailable("Load all mounting blocks.");
                 IBlockState mount=world.getBlockState(support);if(mount.getBlock() instanceof GearBlock||!mount.isSideSolid(world,support,EnumFacing.DOWN))return fail("Each strut must attach below a block with a solid underside.");
+                for(BlockPos mountCell:((GearBlock)topState.getBlock()).componentCells(world,column)){BlockPos at=mountCell.up();if(!loaded(world,at))return unavailable("Load all 2x2 mounting blocks.");if(world.getBlockState(at).getBlock() instanceof GearBlock||!world.getBlockState(at).isSideSolid(world,at,EnumFacing.DOWN))return fail("Support the full 2x2 mounting cap.");}
                 columns.add(column);
             }
             for(EnumFacing side:HORIZONTAL){BlockPos next=foot.offset(side);if(!loaded(world,next))return unavailable("The entire foot group and boundary must be loaded.");IBlockState state=world.getBlockState(next);if(!isFoot(state))continue;
-                if(state.getBlock()!=footState.getBlock()||footState.getBlock()==GearRegistry.LANDING_SKI&&state.getValue(GearBlock.FACING)!=facing)return fail("Use one foot type and align connected skis.");
+                if(state.getBlock()!=footState.getBlock()||((GearBlock)footState.getBlock()).kind()!=GearBlock.Kind.PLATE&&state.getValue(GearBlock.FACING)!=facing)return fail("Use one foot type and align connected skis.");
                 if(feet.add(next)){if(feet.size()>GearTopology.MAX_FEET)return fail("A connected group can contain at most 64 feet.");queue.addLast(next);}
             }
         }
         java.util.List<BlockPos> ordered=new java.util.ArrayList<>(columns);java.util.Collections.sort(ordered);BlockPos primary=ordered.get(0);
         java.util.List<GearTopology.Cell> offsets=new java.util.ArrayList<>();for(BlockPos foot:feet)offsets.add(new GearTopology.Cell(foot.getX()-primary.getX(),-height,foot.getZ()-primary.getZ()));
-        GearTopology.Result result=GearTopology.validate(height,footState.getBlock()==GearRegistry.LANDING_PLATE?GearTopology.FootKind.PLATE:GearTopology.FootKind.SKI,offsets);
+        GearTopology.Result result=GearTopology.validate(height,GearTopology.FootKind.valueOf(((GearBlock)footState.getBlock()).kind().name()),offsets);
         return result.isValid()?new Scan(result.assembly(),facing,ordered):fail(result.error());
     }
 

@@ -21,15 +21,18 @@ public class BlockLandingGear extends BlockVandorDirectional {
         setLightOpacity(0);
         if(loadModel)parts.addAll(loadParts("block/" + name + "_small_retracted"));
     }
-    protected static List<AxisAlignedBB> loadParts(String model) {
+    protected static List<AxisAlignedBB> loadParts(String model) {return loadParts(model,1);}
+    protected static List<AxisAlignedBB> loadParts(String model,int slices) {
         List<AxisAlignedBB> result = new ArrayList<>();
         try {
             for (JsonElement raw : modelElements("vandorlabs:"+model,0)) {
                 JsonObject e = raw.getAsJsonObject(); JsonArray a = e.getAsJsonArray("from"), b = e.getAsJsonArray("to");
                 AxisAlignedBB bounds=new AxisAlignedBB(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16,
                         b.get(0).getAsDouble()/16,b.get(1).getAsDouble()/16,b.get(2).getAsDouble()/16);
-                if(e.has("rotation"))bounds=rotatedBounds(bounds,e.getAsJsonObject("rotation"));
-                result.add(bounds);
+                if(e.has("rotation")){
+                    int count=Math.max(1,slices);double step=(bounds.maxY-bounds.minY)/count;
+                    for(int n=0;n<count;n++)result.add(rotatedBounds(new AxisAlignedBB(bounds.minX,bounds.minY+n*step,bounds.minZ,bounds.maxX,bounds.minY+(n+1)*step,bounds.maxZ),e.getAsJsonObject("rotation")));
+                }else result.add(bounds);
             }
         } catch (IOException e) { throw new IllegalStateException("Cannot load gear geometry " + model, e); }
         return result;

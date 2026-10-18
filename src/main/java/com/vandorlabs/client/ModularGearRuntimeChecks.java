@@ -29,7 +29,23 @@ final class ModularGearRuntimeChecks {
             require(player.getHeldItemMainhand().onItemUse(player,world,placement,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.1F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS&&world.getBlockState(placement.up()).getBlock()==GearRegistry.GEAR_EXTENDER,"actual extender item placement on plate");
             require(GearRegistry.GEAR_EXTENDER.collisionRayTrace(world.getBlockState(placement.up()),world,placement.up(),new Vec3d(475.5,218,180.5),new Vec3d(475.5,214,180.5))!=null,"unformed extender can be selected");
         }finally{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);world.setBlockToAir(placement.up());world.setBlockToAir(placement);}
+        BlockPos clearanceRoot=new BlockPos(475,215,220);
+        try{for(boolean ski:new boolean[]{false,true})for(EnumFacing fold:EnumFacing.HORIZONTALS){
+            clear(world,clearanceRoot);GearTileEntity arm=build(world,clearanceRoot,ski,true,fold,1,1,1);
+            for(EnumFacing adjacent:new EnumFacing[]{fold.rotateY(),fold.rotateYCCW(),fold.getOpposite()})for(int y=-1;y<=0;y++)world.setBlockState(clearanceRoot.offset(adjacent).add(0,y,0),Blocks.STONE.getDefaultState());
+            arm.target(false);for(int tick=0;tick<32;tick++)arm.update();require(arm.progress()==0,"side and rear neighbors outside swing path permit stow "+fold+" ski="+ski);
+            arm.target(true);for(int tick=0;tick<32;tick++)arm.update();require(arm.fullyDeployed(),"side neighbors permit deployment");
+            BlockPos blocked=clearanceRoot.down().offset(fold);world.setBlockState(blocked,Blocks.STONE.getDefaultState());arm.target(false);for(int tick=0;tick<32;tick++)arm.update();require(arm.progress()>0,"a real block in the swing path still stops movement");world.setBlockToAir(blocked);
+        }}finally{clear(world,clearanceRoot);}
+        ModularWheelRuntimeChecks.run(world,player);
         recipes(world);
+        BlockPos skiRoot=new BlockPos(475,215,200);ItemStack oldHeld=player.getHeldItemMainhand();float oldYaw=player.rotationYaw;
+        try{for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            clear(world,skiRoot);GearTileEntity gear=build(world,skiRoot,true,false,facing,2,1,1);BlockPos clicked=skiRoot.down(2);player.rotationYaw=facing.getHorizontalAngle();player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(GearRegistry.LANDING_SKI));
+            require(player.getHeldItemMainhand().onItemUse(player,world,clicked,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.EAST,.9F,.1F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"actual neighboring ski placement");
+            require(world.getBlockState(clicked.east()).getValue(GearBlock.FACING)==facing,"neighbor ski inherits clicked rotation despite opposing player orientation");
+            require(gear.rebuild()&&gear.loadedController().assembly().feet().size()==2,"extender stays connected after extending ski row");
+        }}finally{player.rotationYaw=oldYaw;player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,oldHeld);clear(world,skiRoot);}
         NBTTagCompound unformed=new GearTileEntity().writeToNBT(new NBTTagCompound()),cycled=unformed.copy();for(int i=0;i<4;i++)GearData.rotate(cycled,1);require(unformed.equals(cycled),"unformed gear rotation preserves absent fields");
         BlockPos base=new BlockPos(390,205,205);Vec3d playerBefore=player.getPositionVector();
         try{for(boolean ski:new boolean[]{false,true})for(boolean swing:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS){
@@ -41,7 +57,10 @@ final class ModularGearRuntimeChecks {
             NBTTagCompound tag=root.writeToNBT(new NBTTagCompound()),rotated=tag.copy();for(int t=0;t<4;t++)GearData.rotate(rotated,1);require(tag.equals(rotated),"cardinal group NBT round trip");
             require(!root.collisionBoxes().isEmpty(),"assembled collision");
             root.target(false);for(int tick=0;tick<32;tick++)root.update();require(root.progress()==0,"complete retraction "+ski+" "+swing+" "+facing+" progress="+root.progress());
-            if(swing){GearMotion.Pose pose=GearMotion.pose(root.mode(),root.direction(),1,root.progress());GearMotion.Vec a=pose.transformFootVertex(0,-1,0),b=pose.transformFootVertex(2,-1,1);require(Math.abs(a.y-b.y)<1e-9,"shared feet remain level");}
+            if(swing){GearMotion.Pose pose=GearMotion.pose(root.mode(),root.direction(),1,root.progress());GearMotion.Vec a=pose.transformFootVertex(0,-1,0),b=pose.transformFootVertex(2,-1,1);require(Math.abs(a.y-b.y)<1e-9,"shared feet remain level");
+                AxisAlignedBB nativeElbow=GearBlock.modelParts("swing_linkage").get(2);nativeElbow=com.vandorlabs.blocks.PanelPlacement.rotateFromNorth(nativeElbow,new EnumFacing[]{EnumFacing.NORTH,EnumFacing.EAST,EnumFacing.SOUTH,EnumFacing.WEST}[root.direction().ordinal()]);
+                for(int sample=0;sample<=24;sample++){GearMotion.Pose at=GearMotion.pose(root.mode(),root.direction(),1,sample/24D);GearMotion.Bounds elbow=at.transformRigidBounds(new GearMotion.Bounds(nativeElbow.minX,nativeElbow.minY,nativeElbow.minZ,nativeElbow.maxX,nativeElbow.maxY,nativeElbow.maxZ));require(elbow.minY>at.transformFootVertex(.5,-1+3/16D,.5).y+.01,"native elbow clears plate throughout stroke "+facing+" sample="+sample);}
+            }
             root.target(true);for(int tick=0;tick<32;tick++)root.update();require(root.fullyDeployed(),"complete deployment");
             BlockPos obstruction=root.getPos().add(1,-height+1,1);if(swing)switch(root.direction()){case NORTH:obstruction=root.getPos().add(1,-1,-1);break;case SOUTH:obstruction=root.getPos().add(1,-1,2);break;case EAST:obstruction=root.getPos().add(3,-1,1);break;case WEST:obstruction=root.getPos().add(-1,-1,1);break;default:break;}world.setBlockState(obstruction,Blocks.STONE.getDefaultState());root.target(false);for(int tick=0;tick<32;tick++)root.update();require(root.progress()>0,"obstruction prevents complete stroke");world.setBlockToAir(obstruction);for(int tick=0;tick<32;tick++)root.update();require(root.progress()==0,"motion resumes after obstacle removed");
             root.target(true);for(int tick=0;tick<32;tick++)root.update();
@@ -73,11 +92,16 @@ final class ModularGearRuntimeChecks {
             require(found!=null&&found.columns().size()==3&&found.assembly().feet().size()==9,"rotated group restored");require(found.rebuild(),"restored group rebuild");GearTileEntity actual=found.loadedController();require(actual!=null&&actual.getRedstoneChannels().contains(65003),"canonical controller change retains settings");
         }finally{if(craft!=null&&!craft.isDead)VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);clear(world,base);}
     }
-    static void fixture(WorldServer world){for(int i=0;i<3;i++){BlockPos base=new BlockPos(390+i*10,32,120);clear(world,base);build(world,base,i==1,i==2,EnumFacing.NORTH,i==2?1:3,3,2);}}
-    static void pose(WorldServer world,boolean stowed){for(int i=0;i<3;i++){TileEntity raw=world.getTileEntity(new BlockPos(390+i*10,32,120));if(raw instanceof GearTileEntity){GearTileEntity root=((GearTileEntity)raw).loadedController();if(root!=null){root.target(!stowed);root.captureProgress(stowed?0:1);root.sync();}}}}
+    static void fixture(WorldServer world){for(int i=0;i<3;i++){BlockPos base=new BlockPos(390+i*10,32,120);clear(world,base);build(world,base,i==1,i==2,EnumFacing.NORTH,i==2?1:3,3,2);}for(int i=3;i<7;i++){BlockPos base=new BlockPos(390+i*10,32,120);clear(world,base);ModularWheelRuntimeChecks.build(world,world.getMinecraftServer().getPlayerList().getPlayers().get(0),base,i>=5,i==4||i==6,EnumFacing.NORTH,i==4||i==6?1:3);}BlockPos bare=new BlockPos(460,32,120);clear(world,bare);world.setBlockState(bare.up(),Blocks.IRON_BLOCK.getDefaultState());world.setBlockState(bare,GearRegistry.GEAR_SWING_ARM.getDefaultState());}
+    static void pose(WorldServer world,boolean stowed){for(int i=0;i<7;i++){TileEntity raw=world.getTileEntity(new BlockPos(390+i*10,32,120));if(raw instanceof GearTileEntity){GearTileEntity root=((GearTileEntity)raw).loadedController();if(root!=null){root.target(!stowed);root.captureProgress(stowed?0:1);root.sync();}}}}
     private static void clear(WorldServer world,BlockPos base){for(BlockPos p:BlockPos.getAllInBox(base.add(-5,-6,-5),base.add(7,4,6)))if(!world.isAirBlock(p))world.setBlockToAir(p);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("modular gear: "+message);}
     private static void recipes(WorldServer world){
+        for(String id:new String[]{"landing_wheel","large_landing_wheel","large_gear_extender","large_gear_swing_arm"}){
+            net.minecraft.item.crafting.IRecipe recipe=net.minecraft.item.crafting.CraftingManager.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:"+id));require(recipe!=null,"new gear recipe registered "+id);
+            net.minecraft.inventory.InventoryCrafting grid=new net.minecraft.inventory.InventoryCrafting(new net.minecraft.inventory.Container(){public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer player){return true;}},3,3);for(int i=0;i<recipe.getIngredients().size();i++)grid.setInventorySlotContents(i,recipe.getIngredients().get(i).getMatchingStacks()[0].copy());require(ItemStack.areItemsEqual(net.minecraft.item.crafting.CraftingManager.findMatchingResult(grid,world),recipe.getRecipeOutput()),"new gear recipe resolves without conflicts "+id);
+        }
+
         for(String id:new String[]{"landing_plate","landing_ski","gear_extender","gear_swing_arm","turntable_controller","turntable_surface","programmable_diagonal_half_console"}){
             net.minecraft.item.crafting.IRecipe recipe=net.minecraft.item.crafting.CraftingManager.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:"+id));require(recipe instanceof net.minecraftforge.common.crafting.IShapedRecipe,"registered shaped recipe "+id);
             net.minecraftforge.common.crafting.IShapedRecipe shape=(net.minecraftforge.common.crafting.IShapedRecipe)recipe;net.minecraft.inventory.InventoryCrafting grid=new net.minecraft.inventory.InventoryCrafting(new net.minecraft.inventory.Container(){public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer player){return true;}},3,3);

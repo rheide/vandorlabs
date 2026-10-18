@@ -29,8 +29,8 @@ import net.minecraft.world.World;
  * World cells stay at their construction positions. Formed cells suppress
  * their static baked model; the controller's FastTESR renders the one group.
  */
-public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements ITileEntityProvider {
-    public enum Kind { EXTENDER, SWING_ARM, PLATE, SKI }
+public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements ITileEntityProvider {
+    public enum Kind { EXTENDER, SWING_ARM, PLATE, SKI, WHEEL }
 
     public static final PropertyDirection FACING = com.vandorlabs.blocks.BlockVandorDirectional.FACING;
     public static final PropertyBool ASSEMBLED = PropertyBool.create("assembled");
@@ -50,6 +50,12 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
     }
 
     public Kind kind() { return kind; }
+    public int width(){return 1;}
+    public BlockPos componentRoot(BlockPos pos,IBlockState state){return pos;}
+    public java.util.List<BlockPos> componentCells(World world,BlockPos pos){return java.util.Collections.singletonList(pos);}
+    public boolean componentIntact(World world,BlockPos pos){return true;}
+    public String wheelModel(){return width()==2?"wheel_large":"wheel";}
+
 
     @Override
     protected BlockStateContainer createBlockState() {
@@ -71,7 +77,13 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
                                             float hitX, float hitY, float hitZ, int meta,
                                             EntityLivingBase placer, EnumHand hand) {
-        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+        return getStateForPlacement(world,pos,side,hitX,hitY,hitZ,meta,placer);
+    }
+
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){
+        IBlockState clicked=world.getBlockState(pos.offset(side.getOpposite()));
+        EnumFacing facing=(kind==Kind.SKI||kind==Kind.WHEEL)&&clicked.getBlock()==this?clicked.getValue(FACING):placer.getHorizontalFacing().getOpposite();
+        return getDefaultState().withProperty(FACING,facing);
     }
 
     @Override
@@ -123,7 +135,7 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
                                      EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
         if(hand!=EnumHand.MAIN_HAND)return false;
         boolean configure=player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER;
-        if(!configure&&(kind==Kind.PLATE||kind==Kind.SKI||!player.getHeldItem(hand).isEmpty()))return false;
+        if(!configure&&!player.getHeldItem(hand).isEmpty())return false;
         if(!world.isRemote){
             TileEntity tile=world.getTileEntity(pos);
             if(tile instanceof GearTileEntity){
@@ -139,6 +151,7 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        if(kind==Kind.WHEEL)return new AxisAlignedBB(.15,0,.15,.85,.75,.85);
         if (kind == Kind.PLATE) return new AxisAlignedBB(0, 0, 0, 1, 3.0 / 16, 1);
         if (kind == Kind.SKI) return new AxisAlignedBB(0, 0, 0, 1, 5.0 / 16, 1);
         return FULL_BLOCK_AABB;
@@ -183,7 +196,7 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
         TileEntity part=world.getTileEntity(pos);
         GearTileEntity root=part instanceof GearTileEntity?((GearTileEntity)part).loadedController():null;
         if(root!=null&&root.isOperational()){
-            if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&part==root&&!GearGeometry.excluded(root))for(AxisAlignedBB box:root.collisionBoxes())if(box.intersects(entityBox))boxes.add(box);
+            if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&part==root&&!GearGeometry.excluded(root))for(AxisAlignedBB box:root.collisionBoxes())if(box.getAverageEdgeLength()>0&&box.intersects(entityBox))boxes.add(box);
             return;
         }
         if (!collidable(world, pos)) {
@@ -197,7 +210,8 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
             }
             return;
         }
-        if (kind == Kind.PLATE) {
+        if(kind==Kind.WHEEL){addCollisionBoxToList(pos,entityBox,boxes,getBoundingBox(state,world,pos));
+        } else if (kind == Kind.PLATE) {
             addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(0, 0, 0, 1, 3.0 / 16, 1));
         } else if (kind == Kind.SKI) {
             boolean alongZ = state.getValue(FACING).getAxis() == EnumFacing.Axis.Z;
@@ -254,6 +268,7 @@ public final class GearBlock extends com.vandorlabs.blocks.BlockLandingGear impl
                     new AxisAlignedBB(5.0 / 16, 5.0 / 16, 5.0 / 16, 11.0 / 16, 1, 11.0 / 16));
         }
     }
+    public static java.util.List<AxisAlignedBB> movingArmParts(){return loadParts("block/gear/swing_linkage",8);}
     public static java.util.List<AxisAlignedBB> modelParts(String name){return loadParts("block/gear/"+name);}
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){
         net.minecraft.stats.StatBase stat=net.minecraft.stats.StatList.getBlockStats(this);if(stat!=null)player.addStat(stat);player.addExhaustion(.005F);

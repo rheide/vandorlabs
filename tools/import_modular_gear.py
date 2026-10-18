@@ -1,10 +1,32 @@
 #!/usr/bin/env python3
 """Import native modular gear geometry and pixel textures into the existing mod."""
-import argparse, json, zipfile
+import argparse, copy, json, zipfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 IDS=('landing_plate','landing_ski','gear_extender','gear_swing_arm')
+
+def correct_swing_model(data):
+    # Native bars bow south; folding north would push the elbow into the level
+    # foot. Turn just the moving linkage around its Y axis, keeping the housing.
+    for element in data.get('elements', []):
+        if element.get('name') == 'lower_swivel_housing':
+            element['faces']['down'] = copy.deepcopy(element['faces']['up'])
+        if element.get('name') not in ('upper_arm', 'lower_arm', 'elbow_cover'):
+            continue
+        lo, hi = element['from'][:], element['to'][:]
+        for axis in (0, 2):
+            element['from'][axis], element['to'][axis] = 16-hi[axis], 16-lo[axis]
+        rotation = element.get('rotation')
+        if rotation:
+            for axis in (0, 2): rotation['origin'][axis] = 16-rotation['origin'][axis]
+            if rotation['axis'] in ('x', 'z'): rotation['angle'] = -rotation['angle']
+        opposite = {'north':'south', 'south':'north', 'east':'west', 'west':'east'}
+        element['faces'] = {opposite.get(face,face): value for face,value in element['faces'].items()}
+        for face in ('up','down'):
+            if face in element['faces']:
+                entry=element['faces'][face]; entry['rotation']=(entry.get('rotation',0)+180)%360
+    return data
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('archive',type=Path);args=parser.parse_args()
@@ -18,6 +40,7 @@ def main():
                 path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(archive.read(name))
             elif rel.startswith('models/block/gear/') or rel in tuple(f'{kind}/{block}.json' for kind in ('blockstates','models/item') for block in IDS):
                 data=json.loads(archive.read(name).decode('utf-8').replace('mctrekgear:','vandorlabs:'))
+                if rel in ('models/block/gear/swing_linkage.json','models/block/gear/swing_arm.json','models/block/gear/swivel.json'): correct_swing_model(data)
                 if rel.startswith('models/item/'):
                     block=Path(rel).stem
                     data.setdefault('display',{})['gui']={'rotation':[30,225,0],'translation':[0,3,0] if block=='gear_swing_arm' else [0,0,0],'scale':[.30]*3 if block=='gear_swing_arm' else [.48]*3}

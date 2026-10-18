@@ -1,0 +1,282 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "top_mount",
+      "from": [
+        -8,
+        14,
+        -8
+      ],
+      "to": [
+        24,
+        16,
+        24
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#steel_top"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            4
+          ],
+          "texture": "#indicator"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "outer_sleeve",
+      "from": [
+        -2,
+        7,
+        -2
+      ],
+      "to": [
+        18,
+        14,
+        18
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "down": {
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "north": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        },
+        "south": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        },
+        "west": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        },
+        "east": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        }
+      }
+    },
+    {
+      "name": "lower_collar",
+      "from": [
+        0,
+        6,
+        0
+      ],
+      "to": [
+        16,
+        7,
+        16
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "sliding_pillar",
+      "from": [
+        2,
+        0,
+        2
+      ],
+      "to": [
+        14,
+        8,
+        14
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            5,
+            5,
+            11,
+            11
+          ],
+          "texture": "#piston"
+        },
+        "down": {
+          "uv": [
+            5,
+            5,
+            11,
+            11
+          ],
+          "texture": "#piston"
+        },
+        "north": {
+          "uv": [
+            5,
+            8,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        },
+        "south": {
+          "uv": [
+            5,
+            8,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        },
+        "west": {
+          "uv": [
+            5,
+            8,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        },
+        "east": {
+          "uv": [
+            5,
+            8,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        }
+      }
+    }
+  ]
+}

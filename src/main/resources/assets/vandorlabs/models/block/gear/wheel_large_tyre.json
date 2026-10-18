@@ -1,0 +1,637 @@
+{
+  "credit": "MCTrek landing gear \u2014 integer voxel grid",
+  "parent": "block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "metal": "vandorlabs:blocks/landing_gear/metal",
+    "strut": "vandorlabs:blocks/landing_gear/strut",
+    "rubber": "vandorlabs:blocks/landing_gear/rubber",
+    "hub": "vandorlabs:blocks/landing_gear/hub",
+    "panel": "vandorlabs:blocks/landing_gear/panel",
+    "particle": "vandorlabs:blocks/landing_gear/metal",
+    "arm": "vandorlabs:blocks/programmable_glass/metal_side"
+  },
+  "elements": [
+    {
+      "name": "wheel_band_1",
+      "from": [
+        8.8,
+        0.0,
+        14.4
+      ],
+      "to": [
+        23.2,
+        0.8,
+        17.6
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            15,
+            11,
+            16
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            15,
+            11,
+            16
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            6,
+            15,
+            10,
+            16
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            6,
+            15,
+            10,
+            16
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            6,
+            11,
+            10
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            6,
+            11,
+            10
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "wheel_band_2",
+      "from": [
+        8.8,
+        0.8,
+        12.8
+      ],
+      "to": [
+        23.2,
+        1.6,
+        19.2
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            14,
+            11,
+            15
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            14,
+            11,
+            15
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            4,
+            14,
+            12,
+            15
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            4,
+            14,
+            12,
+            15
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            4,
+            11,
+            12
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            4,
+            11,
+            12
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "wheel_band_3",
+      "from": [
+        8.8,
+        1.6,
+        11.2
+      ],
+      "to": [
+        23.2,
+        3.2,
+        20.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            12,
+            11,
+            14
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            12,
+            11,
+            14
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            3,
+            12,
+            13,
+            14
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            3,
+            12,
+            13,
+            14
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            3,
+            11,
+            13
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            3,
+            11,
+            13
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "wheel_band_4",
+      "from": [
+        8.8,
+        3.2,
+        10.399999999999999
+      ],
+      "to": [
+        23.2,
+        8.0,
+        21.6
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            8,
+            11,
+            12
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            8,
+            11,
+            12
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            2,
+            8,
+            14,
+            12
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            2,
+            8,
+            14,
+            12
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            2,
+            11,
+            14
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            2,
+            11,
+            14
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "wheel_band_5",
+      "from": [
+        8.8,
+        8.0,
+        11.2
+      ],
+      "to": [
+        23.2,
+        9.600000000000001,
+        20.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            6,
+            11,
+            8
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            6,
+            11,
+            8
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            3,
+            6,
+            13,
+            8
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            3,
+            6,
+            13,
+            8
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            3,
+            11,
+            13
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            3,
+            11,
+            13
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "wheel_band_6",
+      "from": [
+        8.8,
+        9.600000000000001,
+        12.8
+      ],
+      "to": [
+        23.2,
+        10.4,
+        19.2
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            5,
+            11,
+            6
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            5,
+            11,
+            6
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            4,
+            5,
+            12,
+            6
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            4,
+            5,
+            12,
+            6
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            4,
+            11,
+            12
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            4,
+            11,
+            12
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "wheel_band_7",
+      "from": [
+        8.8,
+        10.4,
+        14.4
+      ],
+      "to": [
+        23.2,
+        11.200000000000001,
+        17.6
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            5,
+            4,
+            11,
+            5
+          ],
+          "texture": "#rubber"
+        },
+        "south": {
+          "uv": [
+            5,
+            4,
+            11,
+            5
+          ],
+          "texture": "#rubber"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            10,
+            5
+          ],
+          "texture": "#rubber"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            10,
+            5
+          ],
+          "texture": "#rubber"
+        },
+        "up": {
+          "uv": [
+            5,
+            6,
+            11,
+            10
+          ],
+          "texture": "#rubber"
+        },
+        "down": {
+          "uv": [
+            5,
+            6,
+            11,
+            10
+          ],
+          "texture": "#rubber"
+        }
+      }
+    },
+    {
+      "name": "axle_cap_left",
+      "from": [
+        1.5999999999999996,
+        4.800000000000001,
+        15.2
+      ],
+      "to": [
+        5.199999999999999,
+        6.4,
+        16.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13,
+            9,
+            14,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "south": {
+          "uv": [
+            2,
+            9,
+            3,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "east": {
+          "uv": [
+            7,
+            9,
+            9,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "west": {
+          "uv": [
+            7,
+            9,
+            9,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "up": {
+          "uv": [
+            2,
+            7,
+            3,
+            9
+          ],
+          "texture": "#hub"
+        },
+        "down": {
+          "uv": [
+            2,
+            7,
+            3,
+            9
+          ],
+          "texture": "#hub"
+        }
+      }
+    },
+    {
+      "name": "axle_cap_right",
+      "from": [
+        26.8,
+        4.800000000000001,
+        15.2
+      ],
+      "to": [
+        30.4,
+        6.4,
+        16.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            9,
+            3,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "south": {
+          "uv": [
+            13,
+            9,
+            14,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "east": {
+          "uv": [
+            7,
+            9,
+            9,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "west": {
+          "uv": [
+            7,
+            9,
+            9,
+            11
+          ],
+          "texture": "#hub"
+        },
+        "up": {
+          "uv": [
+            13,
+            7,
+            14,
+            9
+          ],
+          "texture": "#hub"
+        },
+        "down": {
+          "uv": [
+            13,
+            7,
+            14,
+            9
+          ],
+          "texture": "#hub"
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,10 @@
 
 ## 2.2
 
+- Add 2x2 Large Extenders and Swing Arms, stackable swing-arm columns, and separate standard/wide Wheel feet for either arm. Reserve full footprints, carry wheel gear through vehicle conversion, and animate tires in Taxi mode. Select visible retracted feet to operate their gear and permit adjacent blocks outside the swing path.
+
+- Apply modular landing gear settings immediately. Orient the swing-arm elbow toward its fold direction to clear the level plate, and close the unmounted swivel underside. New skis inherit the clicked ski's rotation without disconnecting their extender.
+
 - Keep fuel tank hexagonal caps upright in every connection direction and place small glass windows on the side seam between the upper and lower halves, exposing a modeled interior and fluid volume at its actual height.
 
 - Apply turntable settings immediately, use a height slider and capture only from the textured face. Carry players and loose items on bare floor surfaces and prevent captured displays from blocking nearby block selection.

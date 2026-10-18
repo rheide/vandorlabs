@@ -1,12 +1,12 @@
 # Modular landing gear
 
 **Landing Gear Extender** and **Landing Gear Swing Arm** are mounting struts.
-**Landing Gear Plate** and **Landing Gear Ski** form their connected feet. These
+**Landing Gear Plate**, **Landing Gear Ski** and **Landing Gear Wheel** form their connected feet. These
 parts supplement the existing telescopic gear, skis and struts; saved older
 blocks keep their identities.
 
 Build a vertical column of one to eight Extenders beneath a block with a solid
-underside. Place a Plate or Ski directly below the column, then connect more
+underside. Place a Plate, Ski or Wheel directly below the column, then connect more
 matching feet horizontally. A group can contain up to 64 feet within a 16×16
 footprint. Align all connected skis in the same direction.
 
@@ -16,12 +16,12 @@ group shares one controller, target and animation. Fully deploy it before
 changing its topology. Replacing the controlling mount during a valid rebuild
 retains the group's settings.
 
-Swing Arms use exactly one arm per column. Align connected arms in the same
+Swing Arms stack from one to eight sections per column, like Extenders. Align connected arms in the same
 direction. The arms hinge upward while the lower swivels keep the entire foot
 group horizontal. Straight Extenders retract the feet vertically. Fixed mounting
 caps and sleeves stay attached to the hull.
 
-Right click a strut with an empty hand to deploy or stow it. Use the Configurizer
+Right click a strut or its visible foot with an empty hand to deploy or stow it. Use the Configurizer
 on a member to open the shared dialog. Select Manual, ON deploys or OFF deploys,
 and enter channels as comma-separated positive numbers. Zero uses local redstone;
 configured lists require all channels to be powered. Fold direction can be
@@ -47,3 +47,27 @@ transforms to leave visible padding around the rendered icon.
 
 Five Programmable Matter Ingots in a U shape craft two Plates. This recipe is
 distinct from the existing Diagonal Half Console recipe.
+
+Controls apply immediately as you change them. The fold direction describes the
+foot movement; the elbow bows toward that direction to remain above the level
+foot while stowed. The lower swivel has a closed, textured underside even when
+no foot is mounted.
+
+Extend a ski row by clicking an existing ski: the new ski inherits its facing,
+including when the clicked ski belongs to an assembled extender group.
+
+Large Extenders and Large Swing Arms reserve a 2x2 horizontal footprint per
+section. Their complete mounting cap needs a solid underside. Place one Large
+part per layer; its other three cells are reserved automatically. Mining any
+cell removes that one part. Placement fails without changing other blocks if
+any cell in the footprint is occupied. Large parts rotate with captured craft.
+
+Separate Wheel feet reuse the tires, hubs and brackets from the telescopic
+Landing Gear. The standard wheel fits one-block arms; the wide Large Wheel
+reserves a 2x2 footprint for Large arms. Align adjacent wheels as for skis.
+Wheels work under both Extenders and Swing Arms, retract with their arm, and
+allow Taxi mode when all supports use wheels. Tires roll with vehicle travel.
+
+Craft a Large Extender or Large Swing Arm from four matching standard arms.
+Craft a Wheel from three Programmable Matter Ingots, one Slimeball and one Iron
+Ingot. Four Wheels craft one Large Wheel. These recipes are shapeless.
