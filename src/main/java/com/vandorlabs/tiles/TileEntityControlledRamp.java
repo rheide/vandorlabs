@@ -307,25 +307,27 @@ public class TileEntityControlledRamp extends TileEntity {
         FaceTextures faces=new FaceTextures(saved.getBoolean("FaceTexturesEnabled"),saved.getIntArray("FaceTextures"));
         EnumFacing facing=source.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                 ?sourceState(origin).getValue(net.minecraft.block.BlockStairs.FACING):source.getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
+        int layout=saved.hasKey("MainTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(saved.getInteger("MainTextureLayout"))?saved.getInteger("MainTextureLayout"):-1;
         if(source.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableStairs)
             return new SourceMaterial(main,faces,(facing.getOpposite().getHorizontalIndex()+2)&3,
-                    saved.hasKey("SideTexture",3)?saved.getInteger("SideTexture"):-1,true,saved.getBoolean("SlabTileSides"));
-        return new SourceMaterial(main,faces,((int)(180-facing.getHorizontalAngle())/90)&3);
+                    saved.hasKey("SideTexture",3)?saved.getInteger("SideTexture"):-1,true,layout<0?(saved.getBoolean("SlabTileSides")?1:0):layout);
+        return new SourceMaterial(main,faces,((int)(180-facing.getHorizontalAngle())/90)&3,-1,false,layout);
     }
 
     /** A per-draw snapshot, never retained across edits to the saved source tags. */
     public static final class SourceMaterial {
         private static final SourceMaterial NONE=new SourceMaterial(-1,FaceTextures.DEFAULT,0);
         private final int main,rotation;
-        private final int side;private final boolean stairs,tileSides;
+        private final int side,layout;private final boolean stairs;
         private final FaceTextures faces;
         private SourceMaterial(int main,FaceTextures faces,int rotation) {
-            this(main,faces,rotation,-1,false,true);
+            this(main,faces,rotation,-1,false,-1);
         }
-        private SourceMaterial(int main,FaceTextures faces,int rotation,int side,boolean stairs,boolean tileSides){
-            this.main=main;this.faces=faces;this.rotation=rotation;this.side=side;this.stairs=stairs;this.tileSides=tileSides;
+        private SourceMaterial(int main,FaceTextures faces,int rotation,int side,boolean stairs,int layout){
+            this.main=main;this.faces=faces;this.rotation=rotation;this.side=side;this.stairs=stairs;this.layout=layout;
         }
-        public boolean stretchSides(){return stairs&&!tileSides;}
+        public boolean stretchSides(){return stairs&&layout==0;}
+        public int textureLayout(){return layout;}
         public int texture(EnumFacing face) {
             EnumFacing local=face;
             if (local.getAxis()!=EnumFacing.Axis.Y) for (int i=0;i<rotation;i++) local=stairs?local.rotateYCCW():local.rotateY();

@@ -14,6 +14,16 @@ final class RampMaterialChecks {
     static void run() {
         Random random=new Random(0x52414d50);int checks=0;
         TileEntityControlledRamp tile=new TileEntityControlledRamp();
+        for(int mode=0;mode<3;mode++){
+            tile.source=ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState();NBTTagCompound saved=new NBTTagCompound();saved.setInteger("housingTexture",4);saved.setInteger("MainTextureLayout",mode);tile.sourceTileTags.put(BlockPos.ORIGIN,saved);
+            if(tile.sourceMaterial(BlockPos.ORIGIN).textureLayout()!=mode)throw new AssertionError("captured ramp lost texture layout");tile.sourceTileTags.clear();
+        }
+        net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=new net.minecraft.client.renderer.texture.TextureAtlasSprite("ramp_aspect"){};sprite.setIconWidth(32);sprite.setIconHeight(16);sprite.initSprite(64,64,0,0,false);
+        RampGeometry.Box square=new RampGeometry.Box(0,0,0,1,1,1),wide=new RampGeometry.Box(0,0,0,1,.5,1);
+        if(TEControlledRamp.layoutU(1,0,square,EnumFacing.NORTH,sprite,2)!=.5 || TEControlledRamp.layoutU(1,0,wide,EnumFacing.NORTH,sprite,2)!=1)throw new AssertionError("moving ramp aspect fit policy");
+        java.util.List<double[]> repeated=TEControlledRamp.repeatQuads(java.util.Arrays.asList(new double[]{0,0,0,-.25,0},new double[]{0,1,0,-.25,2},new double[]{1,1,0,1.25,2},new double[]{1,0,0,1.25,0}),1);
+        double area=0;for(int i=0;i<repeated.size();i+=4){double[] a=repeated.get(i),b=repeated.get(i+1),c=repeated.get(i+2);area+=Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))/2;for(int j=0;j<4;j++){double[] p=repeated.get(i+j);if(p[3]<0 || p[3]>1 || p[4]<0 || p[4]>1)throw new AssertionError("ramp UV escaped atlas slot");}}
+        if(Math.abs(area-1)>1e-8)throw new AssertionError("ramp repeat clipping changed area");
         for(int sample=0;sample<512;sample++) {
             tile.setPos(new BlockPos(random.nextInt(32)-16,60,random.nextInt(32)-16));
             tile.source=ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,

@@ -90,10 +90,10 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
                 java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(te.source,face,0);int housing=material.texture(face);TextureAtlasSprite sprite=housing>=0?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(housing)):quads.isEmpty()?model.getParticleTexture():quads.get(0).getSprite();
                 int tint=!quads.isEmpty()&&quads.get(0).hasTintIndex()?Minecraft.getMinecraft().getBlockColors().colorMultiplier(te.source,te.getWorld(),te.getPos(),quads.get(0).getTintIndex()):0xFFFFFF;
                 java.util.List<double[]> vertices=new java.util.ArrayList<>();
-                CuboidMesh.emitFace(shape,MESH_FACES[face.ordinal()],material.stretchSides()?(original.maxY-shape.minY)/(original.maxY-original.minY):1-shape.minY,material.stretchSides()?(original.maxY-shape.maxY)/(original.maxY-original.minY):1-shape.maxY,(vx,vy,vz,u,v)->{double[] point=moatVertex(te,direction,hinge,partial,origin.getY(),com.vandorlabs.ramp.MoatGeometry.step(direction,shape,te.treadPixels),origin.getX()+vx,origin.getY()+vy,origin.getZ()+vz);vertices.add(new double[]{point[0],point[1],point[2],u,v});});
+                CuboidMesh.emitFace(shape,MESH_FACES[face.ordinal()],material.stretchSides()?(original.maxY-shape.minY)/(original.maxY-original.minY):1-shape.minY,material.stretchSides()?(original.maxY-shape.maxY)/(original.maxY-original.minY):1-shape.maxY,(vx,vy,vz,u,v)->{double[] point=moatVertex(te,direction,hinge,partial,origin.getY(),com.vandorlabs.ramp.MoatGeometry.step(direction,shape,te.treadPixels),origin.getX()+vx,origin.getY()+vy,origin.getZ()+vz);vertices.add(new double[]{point[0],point[1],point[2],layoutU(u,0,original,face,sprite,material.textureLayout()),layoutV(v,0,original,face,sprite,material.textureLayout(),1-original.minY,1-original.maxY)});});
                 double[] center=moatVertex(te,direction,hinge,partial,origin.getY(),com.vandorlabs.ramp.MoatGeometry.step(direction,shape,te.treadPixels),origin.getX(),origin.getY(),origin.getZ()),normal=moatVertex(te,direction,hinge,partial,origin.getY(),com.vandorlabs.ramp.MoatGeometry.step(direction,shape,te.treadPixels),origin.getX()+face.getFrontOffsetX(),origin.getY()+face.getFrontOffsetY(),origin.getZ()+face.getFrontOffsetZ());
                 float nx=(float)(normal[0]-center[0]),ny=(float)(normal[1]-center[1]),nz=(float)(normal[2]-center[2]),shade=.6F+.4F*Math.max(0,ny);
-                for(double[] v:com.vandorlabs.render.DiagonalMeshClip.quads(clip,vertices.toArray(new double[vertices.size()][])))b.pos(v[0]-te.getPos().getX(),v[1]-te.getPos().getY(),v[2]-te.getPos().getZ()).color((tint>>16&255)/255F*shade,(tint>>8&255)/255F*shade,(tint&255)/255F*shade,1).tex(sprite.getInterpolatedU(v[3]*16),sprite.getInterpolatedV(v[4]*16)).lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX).normal(nx,ny,nz).endVertex();
+                for(double[] v:repeatQuads(com.vandorlabs.render.DiagonalMeshClip.quads(clip,vertices.toArray(new double[vertices.size()][])),material.textureLayout()))b.pos(v[0]-te.getPos().getX(),v[1]-te.getPos().getY(),v[2]-te.getPos().getZ()).color((tint>>16&255)/255F*shade,(tint>>8&255)/255F*shade,(tint&255)/255F*shade,1).tex(sprite.getInterpolatedU(v[3]*16),sprite.getInterpolatedV(v[4]*16)).lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX).normal(nx,ny,nz).endVertex();
             }
         }
         Tessellator.getInstance().draw();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldX,oldY);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
@@ -129,7 +129,7 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
             int tint=faces.tints[face.ordinal()];
             double uShift=face==EnumFacing.WEST||face==EnumFacing.EAST?shift[1]:shift[0];
             double vShift=face==EnumFacing.UP||face==EnumFacing.DOWN?shift[1]:0;
-            emitter.emit(a,face,sprite,material.stretchSides()?1:vBottom,material.stretchSides()?0:vTop,uShift,vShift,tint);
+            emitter.emit(a,face,sprite,material.stretchSides()?1:vBottom,material.stretchSides()?0:vTop,uShift,vShift,tint,material.textureLayout());
         }
     }
 
@@ -139,25 +139,69 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
         new FaceEmitter(b).emit(a,face,sprite,vBottom,vTop,uShift,vShift,tint);
     }
 
+    private static boolean aspectFits(RampGeometry.Box box,EnumFacing face,TextureAtlasSprite sprite){
+        double width=face.getAxis()==EnumFacing.Axis.X?box.maxZ-box.minZ:box.maxX-box.minX;
+        double height=face.getAxis()==EnumFacing.Axis.Y?box.maxZ-box.minZ:box.maxY-box.minY;
+        return com.vandorlabs.render.TextureLayoutMode.fit(2,width,height,UnifiedTextureSprites.aspect(sprite));
+    }
+    /** Split repeats before atlas conversion, including transformed and clipped ramp faces. */
+    static java.util.List<double[]> repeatQuads(java.util.List<double[]> input,int mode){
+        if(mode<1)return input;
+        java.util.List<double[]> output=new java.util.ArrayList<>();
+        for(int q=0;q<input.size();q+=4){
+            java.util.List<double[]> face=new java.util.ArrayList<>(input.subList(q,q+4));
+            double minU=Double.POSITIVE_INFINITY,minV=minU,maxU=Double.NEGATIVE_INFINITY,maxV=maxU;
+            for(double[] p:face){minU=Math.min(minU,p[3]);maxU=Math.max(maxU,p[3]);minV=Math.min(minV,p[4]);maxV=Math.max(maxV,p[4]);}
+            for(int u=(int)Math.floor(minU);u<=Math.max((int)Math.floor(minU),(int)Math.ceil(maxU-1e-8)-1);u++)for(int v=(int)Math.floor(minV);v<=Math.max((int)Math.floor(minV),(int)Math.ceil(maxV-1e-8)-1);v++){
+                java.util.List<double[]> clipped=TrapdoorSurfaceMesh.clip(TrapdoorSurfaceMesh.clip(TrapdoorSurfaceMesh.clip(TrapdoorSurfaceMesh.clip(face,3,u,true),3,u+1,false),4,v,true),4,v+1,false);
+                for(int i=1;i+1<clipped.size();i++)for(double[] p:new double[][]{clipped.get(0),clipped.get(i),clipped.get(i+1),clipped.get(i+1)}){double[] copy=p.clone();copy[3]=Math.max(0,Math.min(1,p[3]-u));copy[4]=Math.max(0,Math.min(1,p[4]-v));output.add(copy);}
+            }
+        }
+        return output;
+    }
+    static double layoutU(double value,double shift,RampGeometry.Box box,EnumFacing face,TextureAtlasSprite sprite,int mode){
+        if(mode<1)return value+shift;
+        if(mode==2 && aspectFits(box,face,sprite)){double low=face.getAxis()==EnumFacing.Axis.X?box.minZ:box.minX,high=face.getAxis()==EnumFacing.Axis.X?box.maxZ:box.maxX;return (value-low)/Math.max(1e-12,high-low);}
+        return com.vandorlabs.render.TextureLayoutMode.tileU(value+shift,UnifiedTextureSprites.aspect(sprite));
+    }
+    static double layoutV(double value,double shift,RampGeometry.Box box,EnumFacing face,TextureAtlasSprite sprite,int mode,double bottom,double top){
+        if(mode<1)return value+shift;
+        if(mode==2 && aspectFits(box,face,sprite)){double low=face.getAxis()==EnumFacing.Axis.Y?box.minZ:Math.min(bottom,top),high=face.getAxis()==EnumFacing.Axis.Y?box.maxZ:Math.max(bottom,top);return (value-low)/Math.max(1e-12,high-low);}
+        return com.vandorlabs.render.TextureLayoutMode.tileV(value+shift,UnifiedTextureSprites.aspect(sprite));
+    }
     /** One consumer per rendered cell, shared by all slice faces. */
     static final class FaceEmitter implements CuboidMesh.VertexConsumer {
         private final BufferBuilder buffer;
         private TextureAtlasSprite sprite;
         private EnumFacing face;
         private double uShift,vShift;
+        private int layout;private RampGeometry.Box box;private double bottom,top;
         private float red,green,blue;
         FaceEmitter(BufferBuilder buffer) { this.buffer=buffer; }
         void emit(RampGeometry.Box box,EnumFacing face,TextureAtlasSprite sprite,
                 double vBottom,double vTop,double uShift,double vShift,int tint) {
+            emit(box,face,sprite,vBottom,vTop,uShift,vShift,tint,-1);
+        }
+        void emit(RampGeometry.Box box,EnumFacing face,TextureAtlasSprite sprite,
+                double vBottom,double vTop,double uShift,double vShift,int tint,int layout) {
+            this.box=box;this.layout=layout;bottom=vBottom;top=vTop;
             this.face=face;this.sprite=sprite;this.uShift=uShift;this.vShift=vShift;
             float shade=face==EnumFacing.UP?1:face==EnumFacing.DOWN?.5F:face.getAxis()==EnumFacing.Axis.X?.6F:.8F;
             red=((tint>>16)&255)/255F*shade;green=((tint>>8)&255)/255F*shade;blue=(tint&255)/255F*shade;
-            CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,this);
+            if(layout<1)CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,this);
+            else {
+                java.util.List<double[]> vertices=new java.util.ArrayList<>();
+                CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,(x,y,z,u,v)->vertices.add(new double[]{x,y,z,layoutU(u,uShift,box,face,sprite,layout),layoutV(v,vShift,box,face,sprite,layout,bottom,top)}));
+                for(double[] p:repeatQuads(vertices,layout))write(p[0],p[1],p[2],p[3],p[4]);
+            }
         }
         @Override public void vertex(double x,double y,double z,double u,double v) {
+            write(x,y,z,layoutU(u,uShift,box,face,sprite,layout),layoutV(v,vShift,box,face,sprite,layout,bottom,top));
+        }
+        private void write(double x,double y,double z,double u,double v){
             // Attribute order must match BlockSurfaceFormat: position, color, UV, lightmap, normal.
             buffer.pos(x,y,z).color(red,green,blue,1)
-                    .tex(sprite.getInterpolatedU((u+uShift)*16),sprite.getInterpolatedV((v+vShift)*16))
+                    .tex(sprite.getInterpolatedU(u*16),sprite.getInterpolatedV(v*16))
                     .lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX)
                     .normal(face.getFrontOffsetX(),face.getFrontOffsetY(),face.getFrontOffsetZ()).endVertex();
         }
