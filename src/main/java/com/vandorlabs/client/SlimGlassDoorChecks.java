@@ -19,7 +19,7 @@ final class SlimGlassDoorChecks {
             require(model!=mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel(),"missing Slim Glass item");
             ItemTransformVec3f gui=model.getItemCameraTransforms().gui;int faces=0;boolean nativeTexture=false;
             for(EnumFacing side:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad quad:model.getQuads(null,side,0)){
-                faces++;nativeTexture|=quad.getSprite().getIconName().equals("vandorlabs:blocks/glass_doors/"+(detail==0?"low":"medium")+"/slim_glass");
+                faces++;nativeTexture|=quad.getSprite().getIconName().equals("vandorlabs:blocks/glass_doors/"+com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[detail]+"/slim_glass");
                 int[] data=quad.getVertexData();int stride=data.length/4;
                 for(int v=0;v<4;v++){
                     double x=(Float.intBitsToFloat(data[v*stride])-.5)*gui.scale.x,y=(Float.intBitsToFloat(data[v*stride+1])-.5)*gui.scale.y,z=(Float.intBitsToFloat(data[v*stride+2])-.5)*gui.scale.z;

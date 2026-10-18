@@ -447,13 +447,15 @@ public class ReproLab {
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
         SHOTS.add(new Shot("utility22_waterlogged",143,24,116,0,24));
+        SHOTS.add(new Shot("utility22_layouts",264,28,113,0,35));
+        for(int mode=0;mode<3;mode++)SHOTS.add(new Shot("utility22_vertical_join_"+mode,297+mode*8,25,114,-25,mode==2?35:30));
         for(int i=0;i<3;i++)SHOTS.add(new Shot("utility22_constructor_"+i,137+i*10,25,127,-35,20));
         for(String pose:new String[]{"retracted","extended"}){
             SHOTS.add(new Shot("utility22_gear_small_"+pose,194,32,112,0,22));
             SHOTS.add(new Shot("utility22_gear_large_"+pose,194,33,117,0,24));
         }
         SHOTS.add(new Shot("utility22_gear_joined",214,33,112,40,20));
-        for(int i=0;i<4;i++)SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,33,124,145,20));
+        for(int i=0;i<4;i++)SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,32,125,-145,30));
         SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
                 GALLERY_Y+3D,-98D,0,2));
 
@@ -888,6 +890,7 @@ public class ReproLab {
                 if(s.name.contains("opposing_next_"))TrapdoorGallery.checkOpposing(mc.world,GALLERY_X,GALLERY_Y);
                 if(s.name.equals("gallery_distant_geometry"))checkDistantGeometry(mc);
                 save(mc, s);
+                if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
                 if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1) {
                     state=999;mc.shutdown();return;
                 }
@@ -1278,6 +1281,7 @@ public class ReproLab {
                     doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(11,0,0,"Size"));
                 for (int i=0;i<3;i++)
                     doorScreen.actionPerformed(new net.minecraft.client.gui.GuiButton(12,0,0,"Frame"));
+                doorScreen.initGui();
                 state=12;
                 holdTicks=GUI_SETTLE_TICKS;
                 break;
@@ -2084,10 +2088,12 @@ public class ReproLab {
                 MatterInfuserRuntimeChecks.run(world);
                 UtilityStorageRuntimeChecks.run(world);
                 ConstructorRuntimeChecks.run(world);
+                TextureLayoutRuntimeChecks.run(world,serverPlayer);
                 WaterloggedRuntimeChecks.run(world);
                 try{CockpitRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("cockpit integration",failure);}
                 try{NonWheeledGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("non-wheeled landing gear",failure); }
                 UtilityVisualFixtures.build(world);
+                TextureLayoutVisualFixtures.build(world);
                 GearVisualFixtures.build(world);
                 CockpitVisualFixtures.build(world);
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
@@ -3016,10 +3022,15 @@ public class ReproLab {
         EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()
                 .getPlayerByUsername(p.getName());
         if (serverPlayer != null) {
+            serverPlayer.capabilities.allowFlying = true;
+            serverPlayer.capabilities.isFlying = true;
+            serverPlayer.sendPlayerAbilities();
             serverPlayer.connection.setPlayerLocation(
                     s.x, s.y, s.z, s.yaw, s.pitch);
         }
         p.setLocationAndAngles(s.x, s.y, s.z, s.yaw, s.pitch);
+        p.capabilities.allowFlying = true;
+        p.capabilities.isFlying = true;
         p.setPositionAndUpdate(s.x, s.y, s.z);
         p.motionX = 0.0D;
         p.motionY = 0.0D;
@@ -3177,6 +3188,8 @@ public class ReproLab {
     }
 
     private void save(Minecraft mc, Shot s) {
+        if (s.name.startsWith("utility22_") && SHOTS.contains(s) && (Math.abs(mc.player.posX-s.x)>.1 || Math.abs(mc.player.posY-s.y)>.1 || Math.abs(mc.player.posZ-s.z)>.1))
+            throw new IllegalStateException("Capture camera drifted: "+s.name+" actual="+mc.player.getPositionVector()+" flying="+mc.player.capabilities.isFlying);
         if(s.name.startsWith("gallery_acceptance_")) {
             EntityPlayer p=mc.player;
             if(Math.abs(p.posX-s.x)>.01 || Math.abs(p.posY-s.y)>.01 || Math.abs(p.posZ-s.z)>.01

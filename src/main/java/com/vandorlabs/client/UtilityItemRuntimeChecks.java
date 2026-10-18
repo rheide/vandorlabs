@@ -35,7 +35,7 @@ final class UtilityItemRuntimeChecks {
         try{
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,80,160);GlStateManager.color(1,1,1,1);renderer.render(tank,0,0,0,0,-1,1);
             if(OpenGlHelper.lastBrightnessX!=80 || OpenGlHelper.lastBrightnessY!=160)throw new IllegalStateException("Tank leaked lightmap state");
-            java.nio.FloatBuffer color=org.lwjgl.BufferUtils.createFloatBuffer(4);org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_CURRENT_COLOR,color);
+        java.nio.FloatBuffer color=org.lwjgl.BufferUtils.createFloatBuffer(16);org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_CURRENT_COLOR,color);
             for(int i=0;i<4;i++)if(Math.abs(color.get(i)-1)>.001)throw new IllegalStateException("Tank leaked vertex color");
         }finally{OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.color(1,1,1,1);}
         System.out.println("[vandorlabs][reprolab] utility-render-state PASS color and lightmap restored");

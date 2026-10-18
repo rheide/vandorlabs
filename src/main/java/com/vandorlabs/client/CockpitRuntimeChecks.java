@@ -34,8 +34,18 @@ final class CockpitRuntimeChecks {
                 TileEntityCockpit copy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.design().equals(id) && copy.displays.size()==tile.displays.size() && copy.controls.size()==tile.controls.size(),"saved surface identities");
                 for(int i=0;i<copy.displays.size();i++)require(copy.displays.get(i).texture==tile.displays.get(i).texture && copy.displays.get(i).speed==3,"independent screen persistence");
                 ItemStack picked=block.getPickBlock(world.getBlockState(ROOT),null,world,ROOT,player);require(picked.getSubCompound("BlockEntityTag").getString("CockpitDesign").equals(id),"configured item");
+                com.vandorlabs.container.ContainerCockpit dialog=new com.vandorlabs.container.ContainerCockpit(tile,null);
+                require(dialog.canInteractWith(player),"fresh reachable dialog");
+                if(!tile.displays.isEmpty()){
+                    NBTTagCompound settings=tile.displays.get(0).write();settings.setInteger("Display",0);settings.setInteger("Speed",5);dialog.update(player,0,settings);
+                    require(tile.displays.get(0).speed==5,"reachable display edit applied");
+                    NBTTagCompound invalid=settings.copy();invalid.setInteger("Display",tile.displays.size());dialog.update(player,0,invalid);
+                    Vec3d near=player.getPositionVector();player.setPositionAndUpdate(ROOT.getX()+20,ROOT.getY(),ROOT.getZ());require(!dialog.canInteractWith(player),"distant dialog rejected");
+                    NBTTagCompound snapshot=tile.writeToNBT(new NBTTagCompound());dialog.update(player,0,settings);require(snapshot.equals(tile.writeToNBT(new NBTTagCompound())),"distant edit mutated cockpit");player.setPositionAndUpdate(near.x,near.y,near.z);
+                }
                 BlockPos ghost=null;for(BlockPos p:tile.data().cells(ROOT,facing))if(!p.equals(ROOT)){ghost=p;break;}
                 world.destroyBlock(ghost==null?ROOT:ghost,false);require(world.isAirBlock(ROOT),"part removes anchor");for(BlockPos p:tile.data().cells(ROOT,facing))require(world.isAirBlock(p),"reservation cleanup");
+                require(!dialog.canInteractWith(player),"stale dialog rejected after removal");
             }
             roundTrip(world,player);
         }finally{clear(world);player.setPositionAndUpdate(before.x,before.y,before.z);}

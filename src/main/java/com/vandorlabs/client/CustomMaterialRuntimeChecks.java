@@ -60,7 +60,7 @@ final class CustomMaterialRuntimeChecks {
         require(model.getParticleTexture().getIconName().equals("minecraft:blocks/stone"),"custom configured inventory artwork");
         require(CustomBlockMaterials.choice(configured)==stoneId,"sampling configured programmable material");
         tag.setInteger("housingTexture",ScreenHousingTextures.doorIndex(0,1));
-        require(CustomBlockMaterials.choice(configured)==ScreenHousingTextures.doorIndex(0,1),"sampling configured built-in material");
+        require(CustomBlockMaterials.choice(configured)==ScreenHousingTextures.canonicalChoice(ScreenHousingTextures.doorIndex(0,1)),"sampling configured built-in material preserves canonical artwork");
         int doorChoice=ScreenHousingTextures.doorIndex(0,1);
         net.minecraft.client.renderer.texture.TextureAtlasSprite full=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(doorChoice));
         net.minecraft.client.renderer.texture.TextureAtlasSprite half=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(doorChoice));
