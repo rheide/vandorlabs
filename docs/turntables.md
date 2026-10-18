@@ -17,11 +17,11 @@ boundary before scanning.
 require the corresponding surface orientation. Capture always extends away from
 the textured face. For a ceiling, place downward-facing Surface blocks; for a
 wall, face them toward the display. Restore before changing height or axis.
-Settings apply immediately; only Scan captures blocks.
+Settings apply immediately. Scan captures blocks initially; later activation can recapture the previously scanned platform after an automatic restore.
 
 **Scan** can also trigger when its input changes to ON or OFF. Disabled keeps
-scanning manual. **Rotate** supports ON, OFF or Manual; the separate rotation
-enable switch stops either mode. New controllers default to Manual rotation. Each input has its own comma-separated channel
+scanning manual. **Rotate** uses ON or OFF redstone activation, like a Ramp
+Controller. New controllers default to ON. Each input has its own comma-separated channel
 list. Zero uses local redstone; configured channels require all listed channels
 to be powered. Set speed from 0.1 to 30 RPM and choose clockwise or
 counterclockwise as viewed from outside the active face.
@@ -32,12 +32,15 @@ contents, surrounded by a fixed square housing. Joined surfaces use the supplied
 The controller front shows the chosen direction; illuminated artwork indicates
 the enabled input state. Obstructions can stop movement while the input stays on.
 
-Click **Restore** in the controller to return its blocks and
-entities to their original scan positions. Rotation does not rewrite their
-original orientations. Clear those positions first: restoration refuses to
-overwrite blocks. The entire assembly and return volume must be loaded. Remove
-the controller after restoring its contents. Damaging a surface stops rotation;
-the captured display retains its contents until they can be restored.
+Stopping rotation automatically restores the captured blocks and entities at the
+nearest 90-degree heading, matching vehicle parking. **Restore** also does this
+immediately. Block directions, supported tile data and entity headings follow
+the displayed pose. Clear the return positions first: restoration refuses to
+overwrite blocks and keeps the captured contents if blocked. The entire assembly
+and return volume must be loaded. Sideways platforms can restore ordinary blocks
+at cardinal headings; blocks whose orientation cannot be represented and sideways
+tile entities require a supported heading before restoring. Remove the controller
+after restoring its contents. Damaging a surface stops rotation.
 
 The controller reports holes, non-square surfaces, conflicting owners, unloaded
 boundaries and incomplete native multiblocks. Capture and restoration respect
@@ -58,7 +61,9 @@ Vandor Labs by rheide under CC BY 4.0. Both illumination states and the complete
 square surface composition are retained.
 
 Players and loose items standing on a scanned floor turntable move with its
-surface, including empty parts of the platform. Flying players remain free.
+circular surface, including empty parts of the disc. Players can walk and jump
+while being carried. The square corners stay stationary and are excluded from
+new captures. Flying players remain free.
 Captured displays do not intercept block selection around the platform.
 
 For an older opposite-face capture, stop rotation and use Restore before scanning

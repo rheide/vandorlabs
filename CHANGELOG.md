@@ -2,6 +2,12 @@
 
 ## 2.2
 
+- Prevent recursive chunk loads while rebuilding saved landing-gear membership.
+- Add seven Data Cards and seven matching Data Chips using the supplied item artwork: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
+- Update the three constructor meshes and company artwork, and replace Programmable Matter block/ingot textures with the supplied designs at standard resolution.
+- Add an instant Hexagon/Block tank shape setting, preserving fluid, capacity and axial connections in both hollow shapes.
+- Restrict turntable movement and capture to the circular disc. Preserve walking input while carrying players, use tighter rotated collision footprints, restore blocks automatically at the nearest quarter turn on stopping, and use redstone ON/OFF activation.
+
 - Add 2x2 Large Extenders and Swing Arms, stackable swing-arm columns, and separate standard/wide Wheel feet for either arm. Reserve full footprints, carry wheel gear through vehicle conversion, and animate tires in Taxi mode. Select visible retracted feet to operate their gear and permit adjacent blocks outside the swing path.
 
 - Apply modular landing gear settings immediately. Orient the swing-arm elbow toward its fold direction to clear the level plate, and close the unmounted swivel underside. New skis inherit the clicked ski's rotation without disconnecting their extender.

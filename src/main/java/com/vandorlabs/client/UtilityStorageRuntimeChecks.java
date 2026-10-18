@@ -44,6 +44,11 @@ final class UtilityStorageRuntimeChecks {
                 TileEntityHexTank one=(TileEntityHexTank)world.getTileEntity(pos);
                 require(one.fill(new FluidStack(FluidRegistry.WATER,20000),true)==20000&&one.getTankProperties()[0].getCapacity()==32000,"connected tank capacity on "+face);
                 require(one.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,face)&&!one.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,face.getAxis()==EnumFacing.Axis.Y?EnumFacing.NORTH:EnumFacing.UP),"axial ports "+face);
+                for(boolean block:new boolean[]{true,false}){
+                    one.setBlockShape(block);require(one.isBlockShape()==block&&one.getTankProperties()[0].getContents().amount==20000,"shape change retains connected fluid "+face);
+                    TileEntityHexTank saved=new TileEntityHexTank();saved.readFromNBT(one.writeToNBT(new NBTTagCompound()));require(saved.isBlockShape()==block&&saved.tank.getFluidAmount()==one.tank.getFluidAmount(),"shape and fluid survive NBT "+face);
+                    require(one.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,face),"shape retains axial port "+face);
+                }
                 com.vandorlabs.container.ContainerStorageStatus meter=new com.vandorlabs.container.ContainerStorageStatus(one);require(meter.values[0]==20000&&meter.values[1]==32000,"live combined fluid meter");
                 world.setBlockToAir(pos);world.setBlockToAir(pos.offset(face));
             }

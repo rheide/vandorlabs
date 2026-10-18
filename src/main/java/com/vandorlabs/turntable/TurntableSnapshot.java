@@ -38,9 +38,10 @@ public final class TurntableSnapshot {
         if(min.getY()<0 || max.getY()>=world.getHeight() || !world.getWorldBorder().contains(min) || !world.getWorldBorder().contains(max) || !world.isAreaLoaded(min,max,false))
             throw new IllegalArgumentException("The entire scan volume must be inside the loaded world");
         List<VehicleStructure.Cell> cells=new ArrayList<>();
-        TurntableBoundaries boundaries=new TurntableBoundaries(world,min,max);
+        boolean circular=world.getBlockState(layout.root).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(layout.root).getValue(com.vandorlabs.blocks.BlockTurntableSurface.FACING)==layout.normal;
+        TurntableBoundaries boundaries=new TurntableBoundaries(world,min,max,circular?layout:null);
         for(BlockPos mutable:BlockPos.getAllInBox(min,max)){
-            BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos))continue;
+            BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos)||circular&&!layout.onDisc(pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5))continue;
             VehicleService.permission(actor,pos);
             if(MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
             TileEntity tile=world.getTileEntity(pos);
@@ -53,7 +54,7 @@ public final class TurntableSnapshot {
         AxisAlignedBB volume=new AxisAlignedBB(min,max.add(1,1,1));
         List<Entity> selected=new ArrayList<>();Set<UUID> ids=new HashSet<>();
         for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,volume)){
-            if(entity.isDead || entity instanceof EntityPlayer || entity.posX<volume.minX||entity.posX>=volume.maxX||entity.posY<volume.minY||entity.posY>=volume.maxY||entity.posZ<volume.minZ||entity.posZ>=volume.maxZ)continue;
+            if(entity.isDead || entity instanceof EntityPlayer ||circular&&!layout.onDisc(entity.posX,entity.posY,entity.posZ)|| entity.posX<volume.minX||entity.posX>=volume.maxX||entity.posY<volume.minY||entity.posY>=volume.maxY||entity.posZ<volume.minZ||entity.posZ>=volume.maxZ)continue;
             if(entity instanceof EntityTurntable)throw new IllegalArgumentException("Restore the other captured turntable before scanning");
             selected.add(entity);ids.add(entity.getUniqueID());
         }
@@ -67,6 +68,37 @@ public final class TurntableSnapshot {
             tag.removeTag("Passengers");tag.removeTag("Riding");frozen.add(new FrozenEntity(entity.getUniqueID(),parent==null?null:parent.getUniqueID(),tag));
         }
         TurntableSnapshot snapshot=new TurntableSnapshot(layout,min,VehicleStructure.display(cells),frozen,height);snapshot.encode();return snapshot;
+    }
+    /** Block mode uses the nearest representable quarter turn, as vehicle parking does. */
+    public TurntableSnapshot rotated(double angle,VehicleWorld view){
+        int quarter=Math.floorMod((int)Math.round(TurntableGeometry.wrap(angle)/90),4);if(quarter==0)return this;double snapped=quarter*90;List<VehicleStructure.Cell> moved=new ArrayList<>();BlockPos targetOrigin=origin;VehicleStructure turned;
+        if(layout.normal.getAxis()==net.minecraft.util.EnumFacing.Axis.Y){
+            turned=VehicleRotation.rotate(blocks,view,Math.floorMod(quarter*layout.normal.getFrontOffsetY(),4));
+            if(!blocks.cells.isEmpty()){BlockPos desired=rotatedCell(origin.add(blocks.cells.get(0).pos),snapped);targetOrigin=desired.subtract(turned.cells.get(0).pos);}
+        }else{
+            List<BlockPos> positions=new ArrayList<>();int minX=Integer.MAX_VALUE,minY=minX,minZ=minX;
+            for(VehicleStructure.Cell cell:blocks.cells){BlockPos at=rotatedCell(origin.add(cell.pos),snapped);positions.add(at);minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());}
+            if(!positions.isEmpty())targetOrigin=new BlockPos(minX,minY,minZ);
+            for(int i=0;i<blocks.cells.size();i++){VehicleStructure.Cell cell=blocks.cells.get(i);if(cell.hasTileData())throw new IllegalArgumentException("This component cannot face sideways in block mode; rotate back to a supported heading before restoring");net.minecraft.block.state.IBlockState state=sideways(cell.state,snapped,quarter);moved.add(new VehicleStructure.Cell(positions.get(i).subtract(targetOrigin),state,null));}
+            turned=VehicleStructure.display(moved);
+        }
+        List<FrozenEntity> rotatedEntities=new ArrayList<>();
+        for(FrozenEntity frozen:entities){NBTTagCompound data=frozen.data();NBTTagList pos=data.getTagList("Pos",6);double[] r=TurntableGeometry.rotate(pos.getDoubleAt(0)-layout.pivot.x,pos.getDoubleAt(1)-layout.pivot.y,pos.getDoubleAt(2)-layout.pivot.z,layout.basis,snapped);NBTTagList updated=new NBTTagList();updated.appendTag(new NBTTagDouble(r[0]+layout.pivot.x));updated.appendTag(new NBTTagDouble(r[1]+layout.pivot.y));updated.appendTag(new NBTTagDouble(r[2]+layout.pivot.z));data.setTag("Pos",updated);
+            NBTTagList rotation=data.getTagList("Rotation",5);float yaw=rotation.getFloatAt(0),pitch=rotation.getFloatAt(1);Vec3d look=Vec3d.fromPitchYaw(pitch,yaw);double[] direction=TurntableGeometry.rotate(look.x,look.y,look.z,layout.basis,snapped);updated=new NBTTagList();updated.appendTag(new NBTTagFloat((float)Math.toDegrees(Math.atan2(-direction[0],direction[2]))));updated.appendTag(new NBTTagFloat((float)-Math.toDegrees(Math.asin(Math.max(-1,Math.min(1,direction[1]))))));data.setTag("Rotation",updated);
+            NBTTagList motion=data.getTagList("Motion",6);r=TurntableGeometry.rotate(motion.getDoubleAt(0),motion.getDoubleAt(1),motion.getDoubleAt(2),layout.basis,snapped);updated=new NBTTagList();for(double v:r)updated.appendTag(new NBTTagDouble(v));data.setTag("Motion",updated);rotatedEntities.add(new FrozenEntity(frozen.id,frozen.parent,data));
+        }
+        return new TurntableSnapshot(layout,targetOrigin,turned,rotatedEntities,height);
+    }
+    private BlockPos rotatedCell(BlockPos cell,double angle){double[] r=TurntableGeometry.rotate(cell.getX()+.5-layout.pivot.x,cell.getY()+.5-layout.pivot.y,cell.getZ()+.5-layout.pivot.z,layout.basis,angle);return new BlockPos(Math.round(r[0]+layout.pivot.x-.5),Math.round(r[1]+layout.pivot.y-.5),Math.round(r[2]+layout.pivot.z-.5));}
+    @SuppressWarnings({"rawtypes","unchecked"}) private net.minecraft.block.state.IBlockState sideways(net.minecraft.block.state.IBlockState state,double angle,int quarter){
+        if(state.getBlock() instanceof net.minecraft.block.BlockDoor||state.getBlock() instanceof net.minecraft.block.BlockBed||state.getBlock() instanceof net.minecraft.block.BlockDoublePlant)throw new IllegalArgumentException("This multi-part block cannot face sideways; rotate back to a supported heading before restoring");
+        for(net.minecraft.block.properties.IProperty property:state.getPropertyKeys()){
+            Comparable value=state.getValue(property);
+            if(value instanceof net.minecraft.util.EnumFacing){net.minecraft.util.EnumFacing facing=(net.minecraft.util.EnumFacing)value;double[] r=TurntableGeometry.rotate(facing.getFrontOffsetX(),facing.getFrontOffsetY(),facing.getFrontOffsetZ(),layout.basis,angle);net.minecraft.util.EnumFacing next=net.minecraft.util.EnumFacing.getFacingFromVector((float)r[0],(float)r[1],(float)r[2]);if(!property.getAllowedValues().contains(next))throw new IllegalArgumentException("This block cannot face sideways; rotate back to a supported heading before restoring");state=state.withProperty(property,next);}
+            else if(value instanceof net.minecraft.util.EnumFacing.Axis){net.minecraft.util.EnumFacing.Axis axis=(net.minecraft.util.EnumFacing.Axis)value;double[] r=TurntableGeometry.rotate(axis==net.minecraft.util.EnumFacing.Axis.X?1:0,axis==net.minecraft.util.EnumFacing.Axis.Y?1:0,axis==net.minecraft.util.EnumFacing.Axis.Z?1:0,layout.basis,angle);state=state.withProperty(property,net.minecraft.util.EnumFacing.getFacingFromVector((float)r[0],(float)r[1],(float)r[2]).getAxis());}
+            else if(property.getName().equals("half")){if((quarter&1)!=0)throw new IllegalArgumentException("This half-block cannot face sideways; rotate back to a supported heading before restoring");String old=property.getName(value);String opposite=old.equals("top")?"bottom":old.equals("bottom")?"top":old.equals("upper")?"lower":"upper";for(Object allowed:property.getAllowedValues())if(property.getName((Comparable)allowed).equals(opposite))state=state.withProperty(property,(Comparable)allowed);}
+        }
+        return state;
     }
     public NBTTagCompound write(){
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Surface",layout.write());tag.setLong("Origin",origin.toLong());tag.setInteger("Height",height);tag.setTag("Blocks",blocks.write());

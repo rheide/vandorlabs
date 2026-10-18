@@ -12,6 +12,9 @@ import net.minecraftforge.fluids.capability.*;
 /** Per-cell storage avoids loss when a vertical stack is split or a chunk unloads. */
 public final class TileEntityHexTank extends TileEntityAnimatedScreenSelector implements IFluidHandler {
     public static final int CAPACITY=16000;
+    private boolean blockShape;
+    public boolean isBlockShape(){return blockShape;}
+    public void setBlockShape(boolean block){if(blockShape!=block){blockShape=block;syncContents();}}
     public final FluidTank tank=new FluidTank(CAPACITY){@Override protected void onContentsChanged(){syncContents();}};
     @Override protected void finishLoading(){} // No redstone subscriptions.
     private void syncContents(){markDirty();if(world!=null && !world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
@@ -46,8 +49,8 @@ public final class TileEntityHexTank extends TileEntityAnimatedScreenSelector im
         }return result;
     }
     @Override public FluidStack drain(int max,boolean commit){if(max<=0)return null;for(TileEntityHexTank cell:members())if(cell.tank.getFluid()!=null){FluidStack request=cell.tank.getFluid().copy();request.amount=max;return drain(request,commit);}return null;}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setTag("Tank",tank.writeToNBT(new NBTTagCompound()));return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);tank.setFluid(null);if(tag.hasKey("Tank",10))tank.readFromNBT(tag.getCompoundTag("Tank"));}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("BlockShape",blockShape);tag.setTag("Tank",tank.writeToNBT(new NBTTagCompound()));return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);blockShape=tag.getBoolean("BlockShape");tank.setFluid(null);if(tag.hasKey("Tank",10))tank.readFromNBT(tag.getCompoundTag("Tank"));}
     @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY?(side==null || side.getAxis()==portAxis()):super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)return hasCapability(cap,side)?CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this):null;return super.getCapability(cap,side);}
 }

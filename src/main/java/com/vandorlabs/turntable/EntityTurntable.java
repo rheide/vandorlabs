@@ -24,6 +24,8 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     public UUID controllerKey,actor;
     private NBTTagCompound unavailable;
     private double angle,previous;
+    private boolean wasRunning;
+    private int lastRestore=-100;
     private float observedAngle;
     private List<AxisAlignedBB> localBoxes=Collections.emptyList(),worldBoxes=Collections.emptyList();
     private double boxesAt=Double.NaN;
@@ -59,10 +61,12 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     }
     private List<AxisAlignedBB> boxes(double at){List<AxisAlignedBB> result=new ArrayList<>(localBoxes.size());for(AxisAlignedBB box:localBoxes)result.add(transformed(box,at));return result;}
     public List<AxisAlignedBB> collisionBoxes(){if(snapshot==null)return Collections.emptyList();if(boxesAt!=angle){worldBoxes=boxes(angle);boxesAt=angle;}return worldBoxes;}
+    public List<AxisAlignedBB> collisionBoxes(AxisAlignedBB query){List<AxisAlignedBB> out=new ArrayList<>();if(snapshot==null)return out;Vec3d pivot=new Vec3d(posX,posY,posZ);for(AxisAlignedBB box:localBoxes)if(transformed(box,angle).intersects(query))out.addAll(TurntableCollision.boxes(box.offset(snapshot.origin),pivot,snapshot.layout.basis,angle,query));return out;}
+    private boolean sweepIntersects(int index,AxisAlignedBB obstacle,double delta){int samples=Math.max(1,(int)Math.ceil(Math.abs(delta)));double extra=(snapshot.layout.size+snapshot.height)*(1-Math.cos(Math.toRadians(Math.abs(delta)/samples/2)));AxisAlignedBB query=obstacle.grow(extra).shrink(.0001);for(int n=0;n<=samples;n++)if(!TurntableCollision.boxes(localBoxes.get(index).offset(snapshot.origin),new Vec3d(posX,posY,posZ),snapshot.layout.basis,angle+delta*n/samples,query).isEmpty())return true;return false;}
     private void updateBounds(){
         if(snapshot==null){setEntityBoundingBox(new AxisAlignedBB(posX-32,posY-32,posZ-32,posX+32,posY+32,posZ+32));return;}
         AxisAlignedBB bounds=transformed(localExtent,angle);
-        setEntityBoundingBox(bounds.grow(2));
+        for(BlockPos cell:snapshot.layout.cells)bounds=bounds.union(new AxisAlignedBB(cell));setEntityBoundingBox(bounds.grow(2));
     }
     @Override public void onUpdate(){
         super.onUpdate();motionX=motionY=motionZ=0;previous=angle;
@@ -74,9 +78,12 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         }
         if(snapshot==null||TurntableTransfer.pending(this)){dataManager.set(RATE,0F);TileEntityTurntableController controller=owner();if(controller!=null)controller.status(snapshot==null?"Captured component unavailable; saved contents retained":"Transfer waiting for recovery; contents retained");return;}
         TileEntityTurntableController owner=owner();
-        if(owner==null){dataManager.set(RATE,0F);if(world.isBlockLoaded(controller) && ticksExisted%20==0)try{TurntableTransfer.restore((WorldServer)world,this,null);}catch(Exception blocked){/* Retain the complete display until its return space is available. */}return;}
+        if(owner==null){dataManager.set(RATE,0F);if(world.isBlockLoaded(controller) && ticksExisted%20==0)TurntableEvents.restoreAfterTick(this);return;}
         if(!getUniqueID().equals(owner.captureId)){dataManager.set(RATE,0F);return;}
-        double rate=owner.running()?(owner.clockwise?1:-1)*TurntableGeometry.degreesPerTick(owner.rpm):0;
+        boolean running=owner.running();
+        if(!running&&wasRunning&&!owner.legacyCapture()&&(lastRestore<0||ticksExisted-lastRestore>=20)){lastRestore=ticksExisted;dataManager.set(RATE,0F);TurntableEvents.restoreAfterTick(this);return;}
+        if(running)wasRunning=true;
+        double rate=running?(owner.clockwise?1:-1)*TurntableGeometry.degreesPerTick(owner.rpm):0;
         if(rate!=0){
             double next=TurntableGeometry.wrap(angle+rate);List<AxisAlignedBB> before=collisionBoxes(),after=boxes(next);
             AxisAlignedBB swept=getEntityBoundingBox().union(transformed(localExtent,next));
@@ -86,35 +93,29 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
                 double radius=snapshot.layout.size+snapshot.height,extra=radius*(1-Math.cos(Math.toRadians(Math.abs(rate)/2)));
                 for(int i=0;i<after.size() && !blocked;i++){
                     AxisAlignedBB sweep=after.get(i).union(before.get(i)).grow(snapshot.layout.normal.getFrontOffsetX()==0?extra:0,snapshot.layout.normal.getFrontOffsetY()==0?extra:0,snapshot.layout.normal.getFrontOffsetZ()==0?extra:0).shrink(.0001);
-                    for(AxisAlignedBB obstacle:obstacles)if(obstacle.intersects(sweep)){blocked=true;break;}
+                    for(AxisAlignedBB obstacle:obstacles)if(obstacle.intersects(sweep)&&sweepIntersects(i,obstacle,rate)){blocked=true;break;}
                 }
-                if(blocked || !carry(before,rate)){rate=0;owner.status("Rotation blocked; clear the moving contents and riders");}
+                if(blocked){rate=0;owner.status("Rotation blocked; clear the moving contents");}else carry(rate);
             }
             if(rate!=0){angle=next;worldBoxes=after;boxesAt=angle;owner.status("Rotating");}
-        }else owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Captured; stopped");
+        }else if(!wasRunning)owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Captured; stopped");
         dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,(float)rate);updateBounds();
     }
-    private boolean carry(List<AxisAlignedBB> before,double delta){
-        before=new ArrayList<>(before);
-        if(snapshot.layout.normal==EnumFacing.UP)for(BlockPos cell:snapshot.layout.cells)before.add(new AxisAlignedBB(cell));
-        List<Entity> riders=new ArrayList<>();List<Vec3d> targets=new ArrayList<>();
+    private void carry(double delta){
         for(Entity rider:world.getEntitiesWithinAABBExcludingEntity(this,getEntityBoundingBox().grow(1))){
-            if(rider instanceof EntityTurntable || rider.isDead || rider.isRiding() || rider instanceof EntityPlayer && ((EntityPlayer)rider).capabilities.isFlying)continue;
+            if(rider instanceof EntityTurntable||rider.isDead||rider.isRiding()||rider instanceof EntityPlayer&&((EntityPlayer)rider).capabilities.isFlying)continue;
             AxisAlignedBB body=rider.getEntityBoundingBox();boolean supported=false;
-            for(AxisAlignedBB box:before)if(Math.abs(body.minY-box.maxY)<.12 && body.maxX>box.minX+.001 && body.minX<box.maxX-.001 && body.maxZ>box.minZ+.001 && body.minZ<box.maxZ-.001){supported=true;break;}
+            for(AxisAlignedBB box:collisionBoxes(body.grow(.001,.13,.001)))if(Math.abs(body.minY-box.maxY)<.12&&body.maxX>box.minX+.001&&body.minX<box.maxX-.001&&body.maxZ>box.minZ+.001&&body.minZ<box.maxZ-.001){supported=true;break;}
+            if(!supported&&snapshot.layout.normal==EnumFacing.UP&&Math.abs(body.minY-snapshot.layout.pivot.y)<.12){supported=snapshot.layout.onDisc(rider.posX,rider.posY,rider.posZ);}
             if(!supported)continue;
-            double[] p=TurntableGeometry.rotate(rider.posX-posX,rider.posY-posY,rider.posZ-posZ,snapshot.layout.basis,delta);
-            Vec3d target=new Vec3d(posX+p[0],posY+p[1],posZ+p[2]);AxisAlignedBB moved=body.offset(target.x-rider.posX,target.y-rider.posY,target.z-rider.posZ);
-            if(!TurntableEvents.foreignObstacles(world,this,rider,moved.shrink(.0001)).isEmpty())return false;
-            riders.add(rider);targets.add(target);
-        }
-        for(int i=0;i<riders.size();i++){
-            Entity rider=riders.get(i);Vec3d target=targets.get(i);float yaw=rider.rotationYaw+(float)(delta*snapshot.layout.normal.getFrontOffsetY());
-            if(rider instanceof EntityPlayerMP)((EntityPlayerMP)rider).connection.setPlayerLocation(target.x,target.y,target.z,yaw,rider.rotationPitch);
-            else{rider.setPositionAndUpdate(target.x,target.y,target.z);rider.rotationYaw=yaw;}
+            double[] p=TurntableGeometry.rotate(rider.posX-posX,rider.posY-posY,rider.posZ-posZ,snapshot.layout.basis,delta);double dx=posX+p[0]-rider.posX,dy=posY+p[1]-rider.posY,dz=posZ+p[2]-rider.posZ;
+            List<AxisAlignedBB> obstacles=TurntableEvents.foreignObstacles(world,this,rider,body.union(body.offset(dx,dy,dz)).grow(.001));
+            for(AxisAlignedBB box:obstacles)dy=box.calculateYOffset(body,dy);AxisAlignedBB moved=body.offset(0,dy,0);for(AxisAlignedBB box:obstacles)dx=box.calculateXOffset(moved,dx);moved=moved.offset(dx,0,0);for(AxisAlignedBB box:obstacles)dz=box.calculateZOffset(moved,dz);
+            float yaw=(float)(delta*snapshot.layout.normal.getFrontOffsetY());
+            if(rider instanceof EntityPlayerMP){rider.setPosition(rider.posX+dx,rider.posY+dy,rider.posZ+dz);rider.rotationYaw+=yaw;com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(new com.vandorlabs.network.MessageTurntableCarry(world.provider.getDimension(),getEntityId(),dx,dy,dz,yaw),(EntityPlayerMP)rider);}
+            else{rider.setPositionAndUpdate(rider.posX+dx,rider.posY+dy,rider.posZ+dz);rider.rotationYaw+=yaw;}
             rider.fallDistance=0;rider.onGround=true;
         }
-        return true;
     }
     @Override public boolean processInitialInteract(EntityPlayer player,EnumHand hand){
         if(hand!=EnumHand.MAIN_HAND)return false;
@@ -128,11 +129,11 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     @Override public boolean attackEntityFrom(DamageSource source,float amount){return false;}
     @Override public void setPortal(BlockPos pos){}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
-        tag.setLong("Controller",controller.toLong());if(controllerKey!=null)tag.setUniqueId("ControllerKey",controllerKey);if(actor!=null)tag.setUniqueId("Actor",actor);tag.setDouble("Angle",angle);
+        tag.setLong("Controller",controller.toLong());if(controllerKey!=null)tag.setUniqueId("ControllerKey",controllerKey);if(actor!=null)tag.setUniqueId("Actor",actor);tag.setDouble("Angle",angle);tag.setBoolean("WasRunning",wasRunning);
         if(snapshot!=null)tag.setTag("Snapshot",snapshot.write());else if(unavailable!=null)tag.setTag("Snapshot",unavailable.copy());
     }
     @Override protected void readEntityFromNBT(NBTTagCompound tag){
-        controller=BlockPos.fromLong(tag.getLong("Controller"));controllerKey=tag.hasUniqueId("ControllerKey")?tag.getUniqueId("ControllerKey"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;
+        wasRunning=tag.getBoolean("WasRunning");controller=BlockPos.fromLong(tag.getLong("Controller"));controllerKey=tag.hasUniqueId("ControllerKey")?tag.getUniqueId("ControllerKey"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;
         angle=previous=Double.isFinite(tag.getDouble("Angle"))?TurntableGeometry.wrap(tag.getDouble("Angle")):0;
         if(tag.hasKey("Snapshot",10)){unavailable=tag.getCompoundTag("Snapshot").copy();try{install(TurntableSnapshot.read(unavailable));}catch(RuntimeException missing){com.vandorlabs.VandorLabs.logger.warn("Turntable snapshot retained pending unavailable components",missing);}}
         dataManager.set(ANGLE,(float)angle);

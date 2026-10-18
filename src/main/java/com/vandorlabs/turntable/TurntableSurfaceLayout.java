@@ -60,6 +60,8 @@ public final class TurntableSurfaceLayout {
         }
         return new TurntableSurfaceLayout(members,normal);
     }
+    public static final double DISC_RADIUS=.43;
+    public boolean onDisc(double x,double y,double z){double dx=x-pivot.x,dy=y-pivot.y,dz=z-pivot.z,u=dx*basis.ux+dy*basis.uy+dz*basis.uz,v=dx*basis.vx+dy*basis.vy+dz*basis.vz,r=size*DISC_RADIUS;return u*u+v*v<=r*r+1e-8;}
     public boolean loaded(World world){for(BlockPos cell:cells)if(!world.isBlockLoaded(cell))return false;return true;}
     public NBTTagCompound write(){
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Normal",normal.getIndex());

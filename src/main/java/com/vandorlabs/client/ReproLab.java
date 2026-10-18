@@ -447,9 +447,12 @@ public class ReproLab {
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
         SHOTS.add(new Shot("utility22_blocks_tanks",155,24,115,0,25));
+        SHOTS.add(new Shot("utility22_blocks_tanks_block",155,24,115,0,25));
+        SHOTS.add(new Shot("utility22_blocks_tanks_hexagon",155,24,115,0,25));
         SHOTS.add(new Shot("utility22_blocks_tank_quarter",152.5,21.93,119.65,0,15));
         SHOTS.add(new Shot("utility22_blocks_tank_half",154.5,21.93,119.65,0,5));
         SHOTS.add(new Shot("utility22_blocks_tank_full",158.5,21.93,119.65,0,5));
+        for(String kind:new String[]{"card","chip"})for(int i=0;i<7;i++)SHOTS.add(new Shot("utility22_data_"+kind+"_"+i,143,24,114,0,15));
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
         SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));
@@ -536,7 +539,7 @@ public class ReproLab {
             }
             String prefix=System.getProperty("vandorlabs.reproShotPrefix","");
             if(Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_join_") && !shot.name.startsWith("gallery_glass_finishes_"));
-            if(!prefix.isEmpty())SHOTS.removeIf(shot->!shot.name.startsWith(prefix));
+            if(!prefix.isEmpty()){java.util.List<String> prefixes=java.util.Arrays.asList(prefix.split(","));SHOTS.removeIf(shot->prefixes.stream().noneMatch(shot.name::startsWith));}
             if(Boolean.getBoolean("vandorlabs.trapdoorChecksOnly"))SHOTS.removeIf(shot->!shot.name.startsWith("gallery_trapdoor_followup_") && !shot.name.startsWith("gallery_trapdoor_stagger_halfwidth_") && !shot.name.startsWith("gallery_trapdoor_stagger_shallow_") && !shot.name.startsWith("gallery_trapdoor_patch_"));
             String start=System.getProperty("vandorlabs.reproStartShot","");
             if(!start.isEmpty()){
@@ -870,6 +873,9 @@ public class ReproLab {
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
                 if(s.name.startsWith("turntable_")&&!TurntableDialogRuntimeChecks.ready(mc)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Turntable chunks/snapshot did not arrive");break;}
+                if(s.name.equals("turntable_floor")&&!TurntableMovementRuntimeChecks.done()){
+                    try{if(TurntableMovementRuntimeChecks.step(mc)){beginShot(mc,s,false);holdTicks=100;}}catch(Exception failure){throw new IllegalStateException("Turntable normal movement",failure);}break;
+                }
                 if(s.name.startsWith("modular_gear_")&&!ModularGearDialogRuntimeChecks.ready(mc,s.name)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Modular gear chunks/assembly did not arrive");break;}
                 if(s.name.equals("utility22_blocks"))UtilityItemRuntimeChecks.checkTankRenderState(mc);
                 if(s.name.startsWith("gallery_acceptance_") && !ConnectionAcceptance.ready(mc.world,s.name,GALLERY_X,GALLERY_Y)) {
@@ -3028,6 +3034,17 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        if(s.name.startsWith("utility22_")||s.name.startsWith("turntable_"))mc.gameSettings.hideGUI=!s.name.startsWith("utility22_data_");
+        if(s.name.startsWith("utility22_data_")){
+            int design=Integer.parseInt(s.name.substring(s.name.lastIndexOf('_')+1));
+            ItemStack card=new ItemStack(s.name.startsWith("utility22_data_chip_")?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.DATA_CARD,1,design);
+            mc.player.setHeldItem(EnumHand.MAIN_HAND,card.copy());
+            onServer(mc,()->mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName()).setHeldItem(EnumHand.MAIN_HAND,card.copy()));
+        }
+        if(s.name.equals("utility22_blocks_tanks_block")||s.name.equals("utility22_blocks_tanks_hexagon"))onServer(mc,()->{
+            net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
+            for(BlockPos pos:BlockPos.getAllInBox(new BlockPos(145,21,119),new BlockPos(161,24,124))){net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof com.vandorlabs.tiles.TileEntityHexTank)((com.vandorlabs.tiles.TileEntityHexTank)raw).setBlockShape(s.name.endsWith("_block"));}
+        });
         if(s.name.startsWith("modular_gear_"))onServer(mc,()->ModularGearRuntimeChecks.pose(mc.getIntegratedServer().getWorld(0),s.name.endsWith("stowed")));
         if(s.name.equals("gallery_distant_geometry"))mc.gameSettings.renderDistanceChunks=12;
         if(s.name.startsWith("utility22_gear_"))onServer(mc,()->GearVisualFixtures.pose(mc.getIntegratedServer().getWorld(0),s.name.endsWith("extended")));

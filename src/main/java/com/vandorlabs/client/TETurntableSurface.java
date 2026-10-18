@@ -31,7 +31,7 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();double r=layout.size*.5;
             buffer.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);vertex(buffer,face,sprite,-r,-r,0,0,.002);vertex(buffer,face,sprite,r,-r,1,0,.002);vertex(buffer,face,sprite,r,r,1,1,.002);vertex(buffer,face,sprite,-r,r,0,1,.002);Tessellator.getInstance().draw();
             GlStateManager.rotate((float)-controller.angle(partial),face.x,face.y,face.z);buffer.begin(GL11.GL_TRIANGLE_FAN,DefaultVertexFormats.POSITION_TEX);vertex(buffer,face,sprite,0,0,.5,.5,.003);
-            for(int i=0;i<=128;i++){double a=2*Math.PI*i/128,cu=Math.cos(a)*.49,cv=Math.sin(a)*.49;vertex(buffer,face,sprite,cu*layout.size,cv*layout.size,.5+cu,.5+cv,.003);}Tessellator.getInstance().draw();
+            for(int i=0;i<=128;i++){double a=2*Math.PI*i/128,cu=Math.cos(a)*TurntableSurfaceLayout.DISC_RADIUS,cv=Math.sin(a)*TurntableSurfaceLayout.DISC_RADIUS;vertex(buffer,face,sprite,cu*layout.size,cv*layout.size,.5+cu,.5+cv,.003);}Tessellator.getInstance().draw();
         }finally{GlStateManager.popMatrix();}
     }
     private static void vertex(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double u,double v,double tu,double tv,double depth){double[] p=face.point(u,v,depth);buffer.pos(p[0],p[1],p[2]).tex(sprite.getInterpolatedU(tu*16),sprite.getInterpolatedV(tv*16)).endVertex();}
