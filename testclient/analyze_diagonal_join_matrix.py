@@ -11,8 +11,11 @@ thumbs = []
 for path in pairs:
     reverse = path.with_name(path.name.replace('_forward', '_reverse'))
     assert reverse.exists(), reverse.name
-    a = Image.open(path).convert('RGB').crop((120,200,1160,510))
-    b = Image.open(reverse).convert('RGB').crop((120,200,1160,510))
+    # Compare the fixtures, excluding the independently loaded distant horizon.
+    a = Image.open(path).convert('RGB').crop((260,260,1040,480))
+    b = Image.open(reverse).convert('RGB').crop((260,260,1040,480))
+    assert sum(blue > green*.85 and blue > red*.85 and max(red,green,blue)>30
+               for red,green,blue in a.getdata()) > 100, f'Missing join fixtures: {path.name}'
     channels=ImageChops.difference(a,b).split()
     difference=ImageChops.lighter(ImageChops.lighter(channels[0],channels[1]),channels[2])
     histogram=difference.histogram()

@@ -6,7 +6,9 @@ import numpy as np
 from PIL import Image
 
 root=Path(sys.argv[1])
-box=(350,70,850,270)
+# Keep the collapsed assemblies and exclude the distant chunk horizon, which
+# can finish loading differently in independent capture clients.
+box=(350,70,850,235)
 def pixels(name):
     return np.asarray(Image.open(root/f'shot_gallery_v12_{name}.png').convert('RGB').crop(box),dtype=np.int16)
 closed=pixels('gear')
