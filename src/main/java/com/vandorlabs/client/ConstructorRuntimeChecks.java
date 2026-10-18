@@ -11,11 +11,13 @@ import net.minecraft.world.World;
 
 /** Independent world-space frames: every core corner, frame axis and placed facing. */
 final class ConstructorRuntimeChecks {
+    private static String scenario;
     static void run(World world){
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
         BlockPos minimum=new BlockPos(150,225,150);int count=0;
         for(String id:new String[]{"assembly_press","synthesis_tower","enclosed_gantry"})for(boolean turned:new boolean[]{false,true})for(int corner=0;corner<4;corner++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
             BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id+"_core"));
+            scenario=id+" facing="+facing+" corner="+corner+" turned="+turned;
             int width=turned?3:block.width,depth=turned?block.width:3;
             BlockPos root=minimum.add((corner&1)==0?0:width-1,0,(corner&2)==0?0:depth-1);
             java.util.Map<BlockPos,Boolean> original=new java.util.HashMap<>();
@@ -40,13 +42,13 @@ final class ConstructorRuntimeChecks {
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.onDataPacket(null,tile.getUpdatePacket());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed(),"manual dismantling");checkRestored(world,original,matter);
-                require(tile.assemble(),"reassembly from non-default corner");world.setBlockToAir(root);checkRestored(world,original,matter);count++;
+                require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");world.setBlockToAir(root);checkRestored(world,original,matter);count++;
             }finally{
                 world.setBlockToAir(root);for(BlockPos p:original.keySet())world.setBlockToAir(p);
             }
         }
         System.out.println("[vandorlabs][reprolab] constructors PASS "+count+" independent frames all corners axes facings diagnostics persistence sync dismantling bounds");
     }
-    private static void checkRestored(World world,java.util.Map<BlockPos,Boolean> original,Block matter){for(java.util.Map.Entry<BlockPos,Boolean> entry:original.entrySet())require(entry.getValue()?world.getBlockState(entry.getKey()).getBlock()==matter:world.isAirBlock(entry.getKey()),"restored frame without matter loss");}
+    private static void checkRestored(World world,java.util.Map<BlockPos,Boolean> original,Block matter){for(java.util.Map.Entry<BlockPos,Boolean> entry:original.entrySet())require(entry.getValue()?world.getBlockState(entry.getKey()).getBlock()==matter:world.isAirBlock(entry.getKey()),"restore "+scenario+" at "+entry.getKey()+" expected="+(entry.getValue()?"matter":"air")+" actual="+world.getBlockState(entry.getKey()));}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
 }

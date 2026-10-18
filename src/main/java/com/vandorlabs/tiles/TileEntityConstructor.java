@@ -15,6 +15,8 @@ public final class TileEntityConstructor extends TileEntity implements ITickable
     private boolean changing;private int ticks;private IBlockState removedState;
     private int coreX,coreZ;
     private String assemblyProblem="";
+    /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
+    @Override public boolean shouldRefresh(net.minecraft.world.World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
     public BlockConstructorCore core(){return (BlockConstructorCore)(removedState==null?getBlockType():removedState.getBlock());}
     public EnumFacing facing(){return (removedState==null?world.getBlockState(pos):removedState).getValue(BlockVandorDirectional.FACING);}
     public boolean formed(){return removedState!=null?removedState.getValue(BlockConstructorCore.FORMED):world!=null && world.getBlockState(pos).getBlock() instanceof BlockConstructorCore && world.getBlockState(pos).getValue(BlockConstructorCore.FORMED);}
