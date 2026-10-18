@@ -38,10 +38,11 @@ for side in ('east','west'):
             return r>20 and b>20 and g<min(r,b)*.65
         pixels=image.load()
         for y in range(int(h*.15),int(h*.85)):
-            # The open leaf occupies the far left of hinge-side views. This
-            # window contains the full jamb silhouette but excludes that leaf
-            # and its legitimate clearance gap beside the frame.
-            row=[is_backing(pixels[x,y]) for x in range(int(w*.38),int(w*.65))]
+            # Close camera collision moves the two jambs to opposite sides of
+            # the image. Keep the complete jamb, excluding the open west/front
+            # leaf and its legitimate clearance gap at the far left.
+            window=(.6,1) if side=='east' else ((.16,.5) if edge=='front' else (0,.5))
+            row=[is_backing(pixels[x,y]) for x in range(int(w*window[0]),int(w*window[1]))]
             solid=[x for x,pink in enumerate(row) if not pink]
             assert solid and solid[-1]-solid[0]>w*.15,f'{name}: missing jamb at row {y}'
             assert not any(row[solid[0]+2:solid[-1]-1]),f'{name}: see-through gap at row {y}'

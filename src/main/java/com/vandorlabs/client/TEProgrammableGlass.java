@@ -7,7 +7,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityProgrammableGlass> {
@@ -55,8 +54,9 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
         if(FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
-        net.minecraft.client.renderer.texture.TextureAtlasSprite material=tile.getMaterial()<0?null:net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tile.getMaterial()));
-        bindTexture(material==null?new ResourceLocation(com.vandorlabs.tiles.GlassTextures.fullTexture(tile.getShade(),size,tile.getTint())):net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
+        net.minecraft.client.renderer.texture.TextureAtlasSprite material=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
+                com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),size,tile.getTint()));
+        bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();
@@ -81,7 +81,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         double inset=tile.getMaterial()<0?0:.0001;
-        if(material==null){pane(b,PANE_NEAR+inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));pane(b,PANE_FAR-inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));}
+        if(tile.getMaterial()<0){pane(b,PANE_NEAR+inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));pane(b,PANE_FAR-inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));}
         else{GlStateManager.scale(1F/16,1F/16,1F/16);GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()).drawColored(b,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);}
         Tessellator.getInstance().draw();
         GlStateManager.enableCull();
