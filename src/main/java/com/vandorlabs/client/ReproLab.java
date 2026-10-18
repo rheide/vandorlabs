@@ -3022,11 +3022,13 @@ public class ReproLab {
         EntityPlayerMP serverPlayer = mc.getIntegratedServer().getPlayerList()
                 .getPlayerByUsername(p.getName());
         if (serverPlayer != null) {
+            onServer(mc,()->{
             serverPlayer.capabilities.allowFlying = true;
             serverPlayer.capabilities.isFlying = true;
             serverPlayer.sendPlayerAbilities();
             serverPlayer.connection.setPlayerLocation(
                     s.x, s.y, s.z, s.yaw, s.pitch);
+            });
         }
         p.setLocationAndAngles(s.x, s.y, s.z, s.yaw, s.pitch);
         p.capabilities.allowFlying = true;
@@ -3049,7 +3051,7 @@ public class ReproLab {
             // Runtime checks mutate nearby blocks. In a reused integrated
             // world their client updates can arrive after platform setup, so
             // restore this fixture on both sides immediately before capture.
-            rebuildWidePair(mc.getIntegratedServer().getWorld(0));
+            onServer(mc,()->rebuildWidePair(mc.getIntegratedServer().getWorld(0)));
             rebuildWidePair(mc.world);
         }
         if (s.animationFrame >= 0) {
@@ -3058,15 +3060,12 @@ public class ReproLab {
             int phase = Math.floorMod(s.animationFrame, 6);
             long startTime = 120000L + phase * 20L - CAPTURE_SETTLE_TICKS;
             mc.world.setWorldTime(startTime);
-            World serverWorld = mc.getIntegratedServer().getWorld(0);
-            serverWorld.setWorldTime(startTime);
             configureAnimation(mc.world.getTileEntity(SELECTOR));
-            configureAnimation(serverWorld.getTileEntity(SELECTOR));
+            onServer(mc,()->{World serverWorld=mc.getIntegratedServer().getWorld(0);serverWorld.setWorldTime(startTime);configureAnimation(serverWorld.getTileEntity(SELECTOR));});
         }
         if (s.inputPanel != null) {
             configureInput(mc.world.getTileEntity(CONSOLE), s.inputPanel);
-            configureInput(mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE),
-                    s.inputPanel);
+            onServer(mc,()->configureInput(mc.getIntegratedServer().getWorld(0).getTileEntity(CONSOLE),s.inputPanel));
         }
         if (s.name.startsWith("input_surface_")) {
             int mode = s.name.equals("input_surface_off")
@@ -3076,18 +3075,20 @@ public class ReproLab {
                             : TileEntityAnimatedScreenSelector.MODE_ANIMATED);
             World serverWorld = mc.getIntegratedServer().getWorld(0);
             configureInputMode(mc.world.getTileEntity(INPUT_KEYBOARD), mode);
-            configureInputMode(serverWorld.getTileEntity(INPUT_KEYBOARD), mode);
+            onServer(mc,()->configureInputMode(serverWorld.getTileEntity(INPUT_KEYBOARD), mode));
         }
         if (s.name.startsWith("controller_")) {
+            onServer(mc,()->{
             World sw=mc.getIntegratedServer().getWorld(0);
             int group=Integer.parseInt(s.name.split("_")[1]);
             BlockPos root=ControllerRuntimeChecks.FIXTURE.add(group*8,0,0);
             com.vandorlabs.tiles.TileEntityRampController controller=(com.vandorlabs.tiles.TileEntityRampController)sw.getTileEntity(root);
-            if (s.name.endsWith("opening_mid")) {
+            if (s.name.endsWith("opening_mid") || s.name.endsWith("_open")) {
                 sw.setBlockState(root.north(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
                 controller.updatePower();
-                ControllerRuntimeChecks.elapsed(controller,controller.durationTicks()/2);
-            } else if (s.name.endsWith("_open")) ControllerRuntimeChecks.elapsed(controller,controller.durationTicks()+1);
+                ControllerRuntimeChecks.elapsed(controller,s.name.endsWith("opening_mid")?controller.durationTicks()/2:controller.durationTicks()+1);
+            }
+            });
         }
         System.out.println("[vandorlabs][reprolab] " + (first ? "first " : "") + "shot "
                 + s.name + " cam=" + s.cam());
