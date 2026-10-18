@@ -1,0 +1,144 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "outer_sleeve",
+      "from": [
+        3,
+        7,
+        3
+      ],
+      "to": [
+        13,
+        14,
+        13
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "down": {
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "north": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        },
+        "south": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        },
+        "west": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        },
+        "east": {
+          "uv": [
+            3,
+            2,
+            13,
+            9
+          ],
+          "texture": "#housing"
+        }
+      }
+    },
+    {
+      "name": "lower_collar",
+      "from": [
+        4,
+        6,
+        4
+      ],
+      "to": [
+        12,
+        7,
+        12
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            4,
+            9,
+            12,
+            10
+          ],
+          "texture": "#steel"
+        }
+      }
+    }
+  ]
+}

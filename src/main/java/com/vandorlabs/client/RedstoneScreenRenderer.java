@@ -12,6 +12,8 @@ import org.lwjgl.BufferUtils;
 
 /** Text and buttons share an affine 128-pixel display plane with hit testing. */
 final class RedstoneScreenRenderer {
+    /** Display lists can change driver bindings without updating Minecraft's texture cache. */
+    private static void bindWhite(){GlStateManager.enableLighting();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.bindTexture(0);Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());}
     private static final java.util.Map<ScreenSurface.Quad,FloatBuffer> MATRICES=new java.util.IdentityHashMap<>();
     private static FloatBuffer matrix(ScreenSurface.Quad q,int height){
         FloatBuffer b=BufferUtils.createFloatBuffer(16);
@@ -32,8 +34,7 @@ final class RedstoneScreenRenderer {
         // Submit every solid panel together, before the font pass. Small depth
         // layers prevent coplanar text/background flicker at oblique angles.
         GlStateManager.enableTexture2D();
-        Minecraft.getMinecraft().getTextureManager().bindTexture(
-                RenderIdentifierCache.white());
+        bindWhite();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         rect(buffer,0,0,128,height,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
@@ -74,7 +75,7 @@ final class RedstoneScreenRenderer {
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
-        Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());
+        bindWhite();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         rect(buffer,0,0,128,height,0,craft==null?0xFF362B19:hover?0xFF152D48:0xFF153A29);
         rect(buffer,6,top,122,top+10,.01,on?0xFF37D8AD:0xFF495C69);

@@ -12,6 +12,7 @@ public final class VehicleLandingGear {
     private static final Map<EntityGroundVehicle,Map<BlockPos,Float>> corrections=new WeakHashMap<>();
     static void correct(EntityGroundVehicle craft,BlockPos pos,float progress){corrections.computeIfAbsent(craft,k->new LinkedHashMap<>()).put(pos,progress);}
     public static boolean extended(EntityGroundVehicle craft){
+        if(!ModularGearVehicles.extended(craft))return false;
         if(craft.view==null)return false;
         for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){TileEntityLandingGear tile=(TileEntityLandingGear)raw;
             if(tile.isRoot()&&(!craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED)||Math.abs(tile.progress-tile.getExtensionPixels()/16F)>.0001F))return false;}
@@ -34,6 +35,7 @@ public final class VehicleLandingGear {
         }
     }
     public static void tick(EntityGroundVehicle craft){
+        ModularGearVehicles.tick(craft);
         if(craft.view==null||craft.ownershipBlocked||craft.transferInProgress)return;
         Map<BlockPos,Float> desired=new LinkedHashMap<>();
         if(craft.world.isRemote){Map<BlockPos,Float> pending=corrections.get(craft);if(pending!=null)desired.putAll(pending);}

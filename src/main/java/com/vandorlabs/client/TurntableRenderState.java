@@ -5,12 +5,14 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
 /** Restore both the driver state and Minecraft's cached state after nested renderers. */
-final class TurntableRenderState implements AutoCloseable {
+public final class TurntableRenderState implements AutoCloseable {
     private final boolean lighting=GL11.glIsEnabled(GL11.GL_LIGHTING),cull=GL11.glIsEnabled(GL11.GL_CULL_FACE),blend=GL11.glIsEnabled(GL11.GL_BLEND),alpha=GL11.glIsEnabled(GL11.GL_ALPHA_TEST),depth=GL11.glIsEnabled(GL11.GL_DEPTH_TEST),mask=GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
     private final int texture=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D),src=GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB),dst=GL11.glGetInteger(GL14.GL_BLEND_DST_RGB),srcA=GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA),dstA=GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
     private final float u=OpenGlHelper.lastBrightnessX,v=OpenGlHelper.lastBrightnessY;
-    TurntableRenderState(){GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);}
+    private final int activeTexture=GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE);
+    public TurntableRenderState(){GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);}
     @Override public void close(){GL11.glPopAttrib();
+        GlStateManager.setActiveTexture(activeTexture==OpenGlHelper.defaultTexUnit?OpenGlHelper.lightmapTexUnit:OpenGlHelper.defaultTexUnit);GlStateManager.setActiveTexture(activeTexture);
         if(lighting){GlStateManager.disableLighting();GlStateManager.enableLighting();}else{GlStateManager.enableLighting();GlStateManager.disableLighting();}
         if(cull){GlStateManager.disableCull();GlStateManager.enableCull();}else{GlStateManager.enableCull();GlStateManager.disableCull();}
         if(blend){GlStateManager.disableBlend();GlStateManager.enableBlend();}else{GlStateManager.enableBlend();GlStateManager.disableBlend();}

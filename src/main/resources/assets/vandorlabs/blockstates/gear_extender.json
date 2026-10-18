@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "assembled=false,facing=north": {
+      "model": "vandorlabs:gear/extender"
+    },
+    "assembled=false,facing=east": {
+      "model": "vandorlabs:gear/extender",
+      "y": 90
+    },
+    "assembled=false,facing=south": {
+      "model": "vandorlabs:gear/extender",
+      "y": 180
+    },
+    "assembled=false,facing=west": {
+      "model": "vandorlabs:gear/extender",
+      "y": 270
+    },
+    "assembled=true,facing=north": {
+      "model": "vandorlabs:gear/empty"
+    },
+    "assembled=true,facing=east": {
+      "model": "vandorlabs:gear/empty",
+      "y": 90
+    },
+    "assembled=true,facing=south": {
+      "model": "vandorlabs:gear/empty",
+      "y": 180
+    },
+    "assembled=true,facing=west": {
+      "model": "vandorlabs:gear/empty",
+      "y": 270
+    }
+  }
+}

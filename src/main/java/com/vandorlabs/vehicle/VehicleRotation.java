@@ -150,6 +150,7 @@ public final class VehicleRotation {
                 data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());
                 String domain=before.state.getBlock().getRegistryName().getResourceDomain();
                 if(domain.equals("vandorlabs")) {
+                    if(data.getString("id").equals("vandorlabs:modular_gear"))com.vandorlabs.gear.GearData.rotate(data,turns);
                     for(String key:new String[]{"Anchor","Pair","TrapdoorPartner","TrapdoorSquare","RampJournalOrigin"})if(data.hasKey(key,4)) {
                         BlockPos link=BlockPos.fromLong(data.getLong(key));
                         if(key.equals("TrapdoorSquare") && !(view.getTileEntity(before.pos) instanceof TileEntityProgrammableDiagonalTrapdoor)) {

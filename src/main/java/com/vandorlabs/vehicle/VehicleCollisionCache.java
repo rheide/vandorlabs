@@ -60,6 +60,7 @@ public final class VehicleCollisionCache {
     private static boolean knownSource(Block source){String name=source.getClass().getName();return name.startsWith("net.minecraft.block.")||name.startsWith("com.vandorlabs.blocks.")&&SAFE_OWN.contains(source.getClass().getSimpleName());}
     private static boolean supported(VehicleWorld view,VehicleStructure.Cell cell,TileEntity tile){
         Block block=cell.state.getBlock();if(block.getRegistryName()==null)return false;
+        if(block instanceof com.vandorlabs.gear.GearBlock)return tile instanceof com.vandorlabs.gear.GearTileEntity;
         String name=block.getClass().getName();
         if(name.startsWith("net.minecraft.block."))return tile==null&&!block.hasTileEntity(cell.state);
         if(!name.startsWith("com.vandorlabs.blocks.")||!SAFE_OWN.contains(block.getClass().getSimpleName()))return false;
@@ -93,6 +94,7 @@ public final class VehicleCollisionCache {
                     if(canopy.draws()&&canopy.opening()){poses.add(Float.floatToIntBits(canopy.progress));owner=canopy.getPos();movingOwners++;}
                 }
                 if(tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot()){normalized.removeTag("Progress");normalized.removeTag("LastSignal");poses.add(Float.floatToIntBits(((TileEntityLandingGear)tile).progress));entry.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),cell.state.withProperty(com.vandorlabs.blocks.BlockTelescopicLandingGear.EXTENDED,true)));}
+                if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isController()){normalized.removeTag("GearProgress");normalized.removeTag("GearBlocked");normalized.removeTag("GearTargetDeployed");poses.add(Float.floatToIntBits((float)((com.vandorlabs.gear.GearTileEntity)tile).progress()));}
                 entry.setTag("Tile",normalized);
             }
             blocks.appendTag(entry);
@@ -128,10 +130,10 @@ public final class VehicleCollisionCache {
     private static List<TileEntityCanopy> openingOwners(VehicleWorld view){List<TileEntityCanopy> result=new ArrayList<>();for(VehicleStructure.Cell cell:view.structure.cells){TileEntity tile=view.getTileEntity(cell.pos);if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=(TileEntityCanopy)tile;if(canopy.draws()&&canopy.opening())result.add(canopy);}}return result;}
     private static List<TileEntity> animatedOwners(VehicleWorld view){
         List<TileEntity> result=new ArrayList<>();for(VehicleStructure.Cell cell:view.structure.cells){TileEntity tile=view.getTileEntity(cell.pos);
-            if(tile instanceof TileEntityCanopy&&((TileEntityCanopy)tile).draws()&&((TileEntityCanopy)tile).opening()||tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot())result.add(tile);}
+            if(tile instanceof TileEntityCanopy&&((TileEntityCanopy)tile).draws()&&((TileEntityCanopy)tile).opening()||tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot()||tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isController())result.add(tile);}
         return result;
     }
-    private static float progress(TileEntity tile){return tile instanceof TileEntityCanopy?((TileEntityCanopy)tile).progress:((TileEntityLandingGear)tile).progress;}
+    private static float progress(TileEntity tile){return tile instanceof TileEntityCanopy?((TileEntityCanopy)tile).progress:tile instanceof com.vandorlabs.gear.GearTileEntity?(float)((com.vandorlabs.gear.GearTileEntity)tile).progress():((TileEntityLandingGear)tile).progress;}
     private static Pose pose(VehicleWorld view,Map<BlockPos,Float> desired){List<Integer> values=new ArrayList<>();for(TileEntity tile:animatedOwners(view))values.add(Float.floatToIntBits(desired.getOrDefault(tile.getPos(),progress(tile))));return new Pose(values);}
     /** Keep the last exact physical pose until the next pose is prepared. */
     public boolean readyForCanopyStep(VehicleWorld view){
@@ -160,7 +162,7 @@ public final class VehicleCollisionCache {
         if(pending!=null||WORKER.getQueue().remainingCapacity()==0)return;
         if(warmView==null){long cloned=VehicleAnimationDiagnostics.start(view.craft);warmView=new VehicleWorld(view.parent,description.snapshot);warmView.hover=view.hover;VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-view-create",cloned);}
         long configured=VehicleAnimationDiagnostics.start(view.craft);List<TileEntity> owners=animatedOwners(warmView);if(owners.size()!=pose.values.length){fail("canopy owner count changed");return;}
-        for(int i=0;i<owners.size();i++){TileEntity tile=owners.get(i);float value=Float.intBitsToFloat(pose.values[i]);if(tile instanceof TileEntityCanopy)((TileEntityCanopy)tile).progress=value;else ((TileEntityLandingGear)tile).progress=value;}
+        for(int i=0;i<owners.size();i++){TileEntity tile=owners.get(i);float value=Float.intBitsToFloat(pose.values[i]);if(tile instanceof TileEntityCanopy)((TileEntityCanopy)tile).progress=value;else if(tile instanceof com.vandorlabs.gear.GearTileEntity)((com.vandorlabs.gear.GearTileEntity)tile).captureProgress(value);else ((TileEntityLandingGear)tile).progress=value;}
         VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-owner-configure",configured);
         long started=VehicleAnimationDiagnostics.start(view.craft);
         VehicleCollision.DeferredRaw raw=VehicleCollision.defer(warmView,MAX_RAW_BOXES);sample(view,"cache-mainthread-collect",started==0?0:System.nanoTime()-started);

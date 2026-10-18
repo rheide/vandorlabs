@@ -49,5 +49,5 @@ public final class BlockNonWheeledLandingGear extends BlockTelescopicLandingGear
         com.vandorlabs.tiles.TileEntityLandingGear other=super.root(world,next);
         return other!=null && other.getSize()==tile.getSize() && world.getBlockState(next).getValue(FACING).getAxis()==facing.getAxis() && Math.abs(other.progress-tile.progress)<.001;
     }
-    public static boolean forbidsTaxi(net.minecraft.block.Block block){return block instanceof BlockNonWheeledLandingGear;}
+    public static boolean forbidsTaxi(net.minecraft.block.Block block){return block instanceof BlockNonWheeledLandingGear||block instanceof com.vandorlabs.gear.GearBlock;}
 }

@@ -203,7 +203,7 @@ public final class VehicleSignals {
     }
     static void save(EntityGroundVehicle craft,BlockPos pos,NBTTagCompound data,IBlockState state){
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(pos)?new VehicleStructure.Cell(pos,state,data):cell);
-        boolean geometry=craft.structure.at(pos).state!=state || craft.view.getTileEntity(pos) instanceof TileEntityLandingGear;
+        boolean geometry=craft.structure.at(pos).state!=state || craft.view.getTileEntity(pos) instanceof TileEntityLandingGear||craft.view.getTileEntity(pos) instanceof com.vandorlabs.gear.GearTileEntity;
         VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
         if(craft.view.getTileEntity(pos) instanceof TileEntityPilotSeat)craft.updateSettings(next);else craft.updateCanopies(next,geometry);
     }

@@ -1,0 +1,237 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "wear_runner",
+      "from": [
+        4,
+        0,
+        0
+      ],
+      "to": [
+        12,
+        1,
+        16
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            4,
+            0,
+            12,
+            16
+          ],
+          "texture": "#sole"
+        },
+        "north": {
+          "uv": [
+            4,
+            15,
+            12,
+            16
+          ],
+          "texture": "#sole"
+        },
+        "west": {
+          "uv": [
+            0,
+            15,
+            16,
+            16
+          ],
+          "texture": "#sole"
+        },
+        "east": {
+          "uv": [
+            0,
+            15,
+            16,
+            16
+          ],
+          "texture": "#sole"
+        }
+      }
+    },
+    {
+      "name": "runner",
+      "from": [
+        4,
+        1,
+        0
+      ],
+      "to": [
+        12,
+        3,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4,
+            0,
+            12,
+            16
+          ],
+          "texture": "#steel_top"
+        },
+        "north": {
+          "uv": [
+            4,
+            13,
+            12,
+            15
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            13,
+            16,
+            15
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            13,
+            16,
+            15
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "raised_front_toe",
+      "from": [
+        4,
+        3,
+        0
+      ],
+      "to": [
+        12,
+        5,
+        2
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4,
+            0,
+            12,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            4,
+            11,
+            12,
+            13
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            4,
+            11,
+            12,
+            13
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            11,
+            2,
+            13
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            14,
+            11,
+            16,
+            13
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "shared_crossbeam",
+      "from": [
+        0,
+        3,
+        6
+      ],
+      "to": [
+        13,
+        5,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            6,
+            13,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            0,
+            6,
+            13,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            3,
+            11,
+            16,
+            13
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            11,
+            13,
+            13
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            6,
+            11,
+            10,
+            13
+          ],
+          "texture": "#steel"
+        }
+      }
+    }
+  ]
+}

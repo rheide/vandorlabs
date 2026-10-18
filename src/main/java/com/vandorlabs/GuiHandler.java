@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
     public static final int GUI_TURNTABLE=19;
+    public static final int GUI_MODULAR_GEAR=20;
     public static final int GUI_COCKPIT=18;
     public static final int GUI_MATTER_INFUSER=17;
 
@@ -61,6 +62,7 @@ public class GuiHandler implements IGuiHandler {
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if(ID==GUI_TURNTABLE)return com.vandorlabs.container.ContainerTurntable.resolve(player,world,x,y,z);
+        if(ID==GUI_MODULAR_GEAR)return com.vandorlabs.container.ContainerModularGear.resolve(player,world,x,y,z);
         if(ID==GUI_COCKPIT)return com.vandorlabs.container.ContainerCockpit.resolve(player,world,x,y,z);
         if(ID==GUI_MATTER_INFUSER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityMatterInfuser?new com.vandorlabs.container.ContainerMatterInfuser(player.inventory,(com.vandorlabs.tiles.TileEntityMatterInfuser)tile):null;}
         if(ID==GUI_PILOT_MODES){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))return new ContainerRedstoneChannel((com.vandorlabs.tiles.TileEntityPilotSeat)tile);return null;}
@@ -145,6 +147,7 @@ public class GuiHandler implements IGuiHandler {
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if(ID==GUI_TURNTABLE){com.vandorlabs.container.ContainerTurntable container=com.vandorlabs.container.ContainerTurntable.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiTurntable(container);}
+        if(ID==GUI_MODULAR_GEAR){com.vandorlabs.container.ContainerModularGear container=com.vandorlabs.container.ContainerModularGear.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiModularGear(container);}
         if(ID==GUI_COCKPIT){com.vandorlabs.container.ContainerCockpit container=com.vandorlabs.container.ContainerCockpit.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiCockpit(container);}
         if(ID==GUI_MATTER_INFUSER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityMatterInfuser?new com.vandorlabs.client.GuiMatterInfuser(player.inventory,(com.vandorlabs.tiles.TileEntityMatterInfuser)tile):null;}
         if(ID==GUI_PILOT_MODES){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(tile instanceof com.vandorlabs.tiles.TileEntityVehicleController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))return new com.vandorlabs.client.GuiPilotModes((com.vandorlabs.tiles.TileEntityPilotSeat)tile);return null;}

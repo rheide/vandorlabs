@@ -23,6 +23,7 @@ final class TurntableBoundaries {
         if(block instanceof BlockPistonBase&&state.getValue(BlockPistonBase.EXTENDED))includes(p.offset(state.getValue(BlockPistonBase.FACING)));
         if(block instanceof BlockPistonExtension)includes(p.offset(state.getValue(BlockPistonExtension.FACING).getOpposite()));
         if(block.hasTileEntity(state)&&tile==null)throw new IllegalArgumentException("Missing block data at "+p);
+        if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(root==null)throw new IllegalArgumentException("Complete the modular landing gear before scanning");for(BlockPos cell:root.members())includes(cell);}
         if(tile instanceof TileEntityCockpit){TileEntityCockpit c=(TileEntityCockpit)tile;for(BlockPos cell:c.data().cells(p,c.facing()))includes(cell);}
         if(tile instanceof TileEntityCockpitPart)includes(((TileEntityCockpitPart)tile).anchor);
         if(tile instanceof TileEntityCanopy){TileEntityCanopy c=((TileEntityCanopy)tile).constituent();for(BlockPos cell:c.reservedCells())includes(cell);if(c.pair!=null)includes(c.pair);}

@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Add modular landing plates and skis, extendable columns and level-foot swing arms. Connected feet and matching struts share controls, collision, animation and saved ownership, with Hover capture and cardinal restoration support.
+
 - Add Turntable Controller and directional Surface blocks for square floor, wall and ceiling displays, with configurable capture height, direction, speed and independent redstone/channel inputs. Preserve captured block inventories and entities, and share illuminated surface artwork across the full square.
 
 - Rename Programmable Ramp to Ramp Controller while preserving existing blocks, items and recipes.

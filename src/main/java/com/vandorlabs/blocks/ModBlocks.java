@@ -182,6 +182,10 @@ public class ModBlocks {
         // src/main/resources.
         add(new BlockTurntableController());
         add(new BlockTurntableSurface());
+        add(com.vandorlabs.gear.GearRegistry.LANDING_PLATE);
+        add(com.vandorlabs.gear.GearRegistry.LANDING_SKI);
+        add(com.vandorlabs.gear.GearRegistry.GEAR_EXTENDER);
+        add(com.vandorlabs.gear.GearRegistry.GEAR_SWING_ARM);
         add(new BlockNonWheeledLandingGear("ski_landing_gear",true,false));
         add(new BlockNonWheeledLandingGear("landing_strut",false,false));
         add(new BlockNonWheeledLandingGear("angled_landing_strut",false,true));

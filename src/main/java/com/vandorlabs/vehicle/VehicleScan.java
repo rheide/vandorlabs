@@ -81,6 +81,8 @@ public final class VehicleScan {
                 require(!state.getMaterial().isLiquid() && block!=net.minecraft.init.Blocks.BEDROCK
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
                 TileEntity tile=world.getTileEntity(p);
+                if(tile instanceof TileEntityTurntableController)require(((TileEntityTurntableController)tile).captureId==null&&((TileEntityTurntableController)tile).layout==null,"Restore the turntable contents and detach its controller before vehicle assembly.");
+                if(tile instanceof TileEntityTurntableSurface)require(((TileEntityTurntableSurface)tile).owner==null,"Detach the turntable surface before vehicle assembly.");
                 if(block instanceof BlockVehicleController)require(++controllers<=1,"A craft can contain at most one Vehicle Controller.");
                 if(tile instanceof TileEntityAutopilot && !(tile instanceof TileEntityWaypoint))require(++autopilots<=1,"A craft can contain at most one Autopilot block.");
                 require(block.getRegistryName()!=null, "Unregistered block at "+p);
@@ -146,6 +148,12 @@ public final class VehicleScan {
                         if(data.hasKey(key,4))linked(BlockPos.fromLong(data.getLong(key)),block);
                     net.minecraft.nbt.NBTTagList assembly=data.getTagList("TrapdoorAssembly",4);
                     for(int n=0;n<assembly.tagCount();n++)linked(BlockPos.fromLong(((net.minecraft.nbt.NBTTagLong)assembly.get(n)).getLong()),block);
+                }
+                if(block instanceof com.vandorlabs.gear.GearBlock){
+                    com.vandorlabs.gear.GearTileEntity gear=tile instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)tile).loadedController():null;
+                    require(gear!=null&&gear.isOperational()&&gear.fullyDeployed(),"Complete and deploy the modular landing gear before assembly.");
+                    for(BlockPos column:gear.columns()){BlockPos at=gear.getPos().add(column);if(gears.add(at))support((BlockLandingGear)world.getBlockState(at).getBlock(),at);}
+                    for(BlockPos member:gear.members()){require(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock,"Incomplete modular gear.");enqueue(member);}continue;
                 }
                 if(block instanceof BlockWheel){
                     BlockWheel wheel=(BlockWheel)block;BlockPos root=wheel.root(p,state);

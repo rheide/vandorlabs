@@ -45,6 +45,10 @@ preserves interrupted transfers until their affected chunks and components are
 available. Keep the world data and mod installed when moving a save containing
 captured displays.
 
+Restore and detach an attached turntable before assembling its supporting blocks
+as a vehicle. The vehicle scanner refuses active surface claims and captured
+turntable contents.
+
 Craft a controller with eight Programmable Matter Ingots around redstone. Four
 ingots in a 2×2 grid craft four Surface blocks.
 

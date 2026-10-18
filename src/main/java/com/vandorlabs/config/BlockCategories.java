@@ -7,6 +7,7 @@ public final class BlockCategories {
             "canopies","redstone_controls","decoration"};
     private BlockCategories() {}
     public static String of(String id) {
+        if(id.equals("landing_plate")||id.equals("landing_ski")||id.equals("gear_extender")||id.equals("gear_swing_arm"))return "vehicle_controls";
         if(id.contains("diagonal"))return "diagonals";
         if(id.contains("canopy")||id.startsWith("space_visor")||id.startsWith("angled_front"))return "canopies";
         if(id.contains("glass"))return "glass";

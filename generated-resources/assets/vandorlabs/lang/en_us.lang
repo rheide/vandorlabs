@@ -555,3 +555,11 @@ tile.yoke_screen.name=Yoke and Screen
 
 tile.vandorlabs.turntable_controller.name=Turntable Controller
 tile.vandorlabs.turntable_surface.name=Turntable Surface
+
+tile.vandorlabs.landing_plate.name=Landing Gear Plate
+
+tile.vandorlabs.landing_ski.name=Landing Gear Ski
+
+tile.vandorlabs.gear_extender.name=Landing Gear Extender
+
+tile.vandorlabs.gear_swing_arm.name=Landing Gear Swing Arm

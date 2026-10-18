@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " M ",
+    " R ",
+    " M "
+  ],
+  "key": {
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:gear_extender",
+    "count": 1
+  }
+}

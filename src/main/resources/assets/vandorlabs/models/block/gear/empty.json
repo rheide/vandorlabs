@@ -1,0 +1,14 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": []
+}

@@ -1,0 +1,84 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "sliding_pillar",
+      "from": [
+        5,
+        0,
+        5
+      ],
+      "to": [
+        11,
+        16,
+        11
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            5,
+            5,
+            11,
+            11
+          ],
+          "texture": "#piston"
+        },
+        "down": {
+          "uv": [
+            5,
+            5,
+            11,
+            11
+          ],
+          "texture": "#piston"
+        },
+        "north": {
+          "uv": [
+            5,
+            0,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        },
+        "south": {
+          "uv": [
+            5,
+            0,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        },
+        "west": {
+          "uv": [
+            5,
+            0,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        },
+        "east": {
+          "uv": [
+            5,
+            0,
+            11,
+            16
+          ],
+          "texture": "#piston"
+        }
+      }
+    }
+  ]
+}

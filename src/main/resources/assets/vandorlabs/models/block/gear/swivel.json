@@ -1,0 +1,144 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "lower_swivel_housing",
+      "from": [
+        4,
+        3,
+        5
+      ],
+      "to": [
+        12,
+        7,
+        11
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4,
+            5,
+            12,
+            11
+          ],
+          "texture": "#housing"
+        },
+        "north": {
+          "uv": [
+            4,
+            9,
+            12,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "south": {
+          "uv": [
+            4,
+            9,
+            12,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "west": {
+          "uv": [
+            5,
+            9,
+            11,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "east": {
+          "uv": [
+            5,
+            9,
+            11,
+            13
+          ],
+          "texture": "#housing"
+        }
+      }
+    },
+    {
+      "name": "swivel_axle",
+      "from": [
+        3,
+        4,
+        6
+      ],
+      "to": [
+        13,
+        6,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            6,
+            13,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            3,
+            6,
+            13,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            3,
+            10,
+            13,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            3,
+            10,
+            13,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            6,
+            10,
+            10,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            6,
+            10,
+            10,
+            12
+          ],
+          "texture": "#steel"
+        }
+      }
+    }
+  ]
+}

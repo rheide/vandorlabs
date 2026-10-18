@@ -1,0 +1,75 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "foot_socket",
+      "from": [
+        4,
+        3,
+        4
+      ],
+      "to": [
+        12,
+        5,
+        12
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#housing"
+        },
+        "north": {
+          "uv": [
+            4,
+            11,
+            12,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "south": {
+          "uv": [
+            4,
+            11,
+            12,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "west": {
+          "uv": [
+            4,
+            11,
+            12,
+            13
+          ],
+          "texture": "#housing"
+        },
+        "east": {
+          "uv": [
+            4,
+            11,
+            12,
+            13
+          ],
+          "texture": "#housing"
+        }
+      }
+    }
+  ]
+}
