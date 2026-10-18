@@ -3010,6 +3010,7 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        if(s.name.equals("gallery_distant_geometry"))mc.gameSettings.renderDistanceChunks=12;
         if(s.name.startsWith("utility22_gear_"))onServer(mc,()->GearVisualFixtures.pose(mc.getIntegratedServer().getWorld(0),s.name.endsWith("extended")));
         if(s.name.startsWith("gallery_acceptance_")) {
             mc.setIngameNotInFocus();
