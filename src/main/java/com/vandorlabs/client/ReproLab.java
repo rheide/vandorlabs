@@ -447,6 +447,9 @@ public class ReproLab {
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
         SHOTS.add(new Shot("utility22_blocks_tanks",155,24,115,0,25));
+        SHOTS.add(new Shot("utility22_blocks_tank_quarter",152.5,21.93,119.65,0,15));
+        SHOTS.add(new Shot("utility22_blocks_tank_half",154.5,21.93,119.65,0,5));
+        SHOTS.add(new Shot("utility22_blocks_tank_full",158.5,21.93,119.65,0,5));
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
         SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));

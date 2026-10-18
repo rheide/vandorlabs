@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Keep fuel tank hexagonal caps upright in every connection direction and place small glass windows on the side seam between the upper and lower halves, exposing a modeled interior and fluid volume at its actual height.
+
 - Apply turntable settings immediately, use a height slider and capture only from the textured face. Carry players and loose items on bare floor surfaces and prevent captured displays from blocking nearby block selection.
 - Restore modular landing gear selection and placement; retire the older standalone skis and straight/angled struts from crafting and the creative catalog, retaining saved blocks.
 - Add live RF/fluid fullness dialogs, axial tank placement/connections, recessed fluid windows and centered fuel/battery port artwork. Restyle Matter Blocks with iron, redstone and gold.
