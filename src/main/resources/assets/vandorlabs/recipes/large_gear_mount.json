@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "item": "vandorlabs:gear_mount"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:large_gear_mount"
+  }
+}

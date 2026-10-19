@@ -10,6 +10,12 @@ import net.minecraft.world.World;
 /** Validate the complete oriented footprint before changing any cell or consuming an item. */
 public final class ItemLargeGear extends ItemBlock {
     public ItemLargeGear(LargeGearBlock block){super(block);}
+    @Override public EnumActionResult onItemUse(EntityPlayer player,World world,BlockPos pos,EnumHand hand,EnumFacing side,float x,float y,float z){
+        IBlockState clicked=world.getBlockState(pos);
+        if(side.getAxis()==EnumFacing.Axis.Y && clicked.getBlock() instanceof LargeGearBlock)
+            pos=((LargeGearBlock)clicked.getBlock()).componentRoot(pos,clicked);
+        return super.onItemUse(player,world,pos,hand,side,x,y,z);
+    }
     @Override public boolean placeBlockAt(ItemStack stack,EntityPlayer player,World world,BlockPos pos,EnumFacing side,float x,float y,float z,IBlockState state){
         EnumFacing facing=state.getValue(GearBlock.FACING);
         for(int n=0;n<4;n++){

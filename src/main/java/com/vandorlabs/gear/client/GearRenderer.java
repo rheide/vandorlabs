@@ -42,7 +42,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             // A member with an unloaded/missing root must never become an
             // invisible block. Draw its ordinary part until ownership heals.
             GearBlock.Kind kind = ((GearBlock) state.getBlock()).kind();
-            String model = kind == GearBlock.Kind.EXTENDER ? "extender"
+            String model = kind == GearBlock.Kind.MOUNT ? "fixed_mount" : kind == GearBlock.Kind.EXTENDER ? "extender"
                     : kind == GearBlock.Kind.SWING_ARM ? "swing_arm"
                     : kind == GearBlock.Kind.PLATE ? "plate_0" : kind==GearBlock.Kind.WHEEL?part.wheelModel():"ski_0";
             if(part.width()==2&&kind==GearBlock.Kind.SWING_ARM){Affine yaw=Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING))),fixedSize=Affine.scaleXZ(2),barSize=Affine.translation(1,0,1).compose(Affine.scaleXZ(2,1).compose(Affine.translation(-.5,0,-.5)));GearModels.draw("mount",yaw.compose(fixedSize),x,y,z,light,buffer);GearModels.draw("sleeve",yaw.compose(fixedSize),x,y,z,light,buffer);GearModels.draw("swing_linkage",yaw.compose(barSize),x,y,z,light,buffer);GearModels.draw("swivel",yaw.compose(fixedSize.compose(Affine.translation(0,-1,0))),x,y,z,light,buffer);return;}
@@ -58,21 +58,26 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
 
         for(net.minecraft.util.math.BlockPos column:tile.columns()){
             int width=tile.armWidth();double shift=(width-1)*.5;
+            IBlockState columnState=tile.getWorld().getBlockState(tile.getPos().add(column));
+            if(!(columnState.getBlock() instanceof GearBlock))continue;
+            Affine columnFixed=Affine.quarterTurn(quarterTurns(columnState.getValue(GearBlock.FACING)));
             Affine offset=Affine.translation(column.getX(),column.getY(),column.getZ());
             Affine size=Affine.translation(-shift,0,-shift).compose(Affine.scaleXZ(width));
             Affine barSize=tile.isSwingArmController()?Affine.scaleXZ(tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1):Affine.scaleXZ(width);
             barSize=Affine.translation(.5,0,.5).compose(barSize.compose(Affine.translation(-.5,0,-.5)));
-            Affine armPose=Affine.translation(tile.armShiftX(),0,tile.armShiftZ()).compose(moving.compose(barSize));
-            Affine footPose=Affine.translation(tile.armShiftX(),0,tile.armShiftZ()).compose(feet.compose(size));
-            GearModels.draw("mount",offset.compose(fixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
-            GearModels.draw("sleeve",offset.compose(fixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
+            Affine armPose=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(moving.compose(barSize));
+            Affine footPose=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(feet.compose(size));
+            GearModels.draw(tile.isFixedMount()?"fixed_mount":"mount",offset.compose(columnFixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
+            if(!tile.isFixedMount())GearModels.draw("sleeve",offset.compose(columnFixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());
                 GearModels.draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()).compose(hingeYaw))),x,y,z,light,buffer);
                 GearModels.draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight(),0).compose(hingeYaw))),x,y,z,light,buffer);
             }else{
                 GearModels.draw("rod",offset.compose(armPose.compose(Affine.scaleY(pose.rodTopY()-pose.rodBottomY()-tile.footMountOffset(),pose.rodBottomY()+tile.footMountOffset()))),x,y,z,light,buffer);
-                GearModels.draw("socket",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0))),x,y,z,light,buffer);
+                // Bury the caps slightly into the rod and foot instead of sharing
+                // their exact horizontal planes (notably the ski crossbeam).
+                GearModels.draw("socket",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0).compose(Affine.scaleY(1.25,-1/16D)))),x,y,z,light,buffer);
             }
         }
 
@@ -86,7 +91,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
                 if(craft!=null)transform=transform.compose(Affine.yaw(wheel.width()*.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));
                 GearModels.draw(wheel.wheelModel()+"_bracket",at.compose(transform),x,y,z,light,buffer);
-                if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?.35:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(wheel.width()*.5,wheel.width()==2?.35:4.5/13,angle));}
+                if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?14/16D:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(wheel.width()*.5,wheel.width()==2?-2/16D:4.5/13,angle));}
                 GearModels.draw(wheel.wheelModel()+"_tyre",at.compose(transform),x,y,z,light,buffer);continue;
             }
             // Connectivity is measured in world directions. Convert that

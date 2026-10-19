@@ -39,6 +39,8 @@ final class ModularGearRuntimeChecks {
         }}finally{clear(world,clearanceRoot);}
         ModularWheelRuntimeChecks.run(world,player);
         ModularGearFollowupRuntimeChecks.run(world,player);
+        largePlates(world,player);
+        FixedGearRuntimeChecks.run(world,player);
         recipes(world);
         BlockPos skiRoot=new BlockPos(475,215,200);ItemStack oldHeld=player.getHeldItemMainhand();float oldYaw=player.rotationYaw;
         try{for(EnumFacing facing:EnumFacing.HORIZONTALS){
@@ -58,6 +60,11 @@ final class ModularGearRuntimeChecks {
             NBTTagCompound tag=root.writeToNBT(new NBTTagCompound()),rotated=tag.copy();for(int t=0;t<4;t++)GearData.rotate(rotated,1);require(tag.equals(rotated),"cardinal group NBT round trip");
             require(!root.collisionBoxes().isEmpty(),"assembled collision");
             root.target(false);for(int tick=0;tick<32;tick++)root.update();require(root.progress()==0,"complete retraction "+ski+" "+swing+" "+facing+" progress="+root.progress());
+            if(!swing){
+                require(root.pose(0).footY()+3/16D<6/16D-.005,"retracted runner clears sleeve underside");
+                AxisAlignedBB socket=GearBlock.modelParts("socket").get(0);
+                require(socket.minX>.25 && socket.maxX<.75 && socket.minZ>.25 && socket.maxZ<.75,"socket sides inset from collar");
+            }
             if(swing){GearMotion.Pose pose=GearMotion.pose(root.mode(),root.direction(),1,root.progress());GearMotion.Vec a=pose.transformFootVertex(0,-1,0),b=pose.transformFootVertex(2,-1,1);require(Math.abs(a.y-b.y)<1e-9,"shared feet remain level");
                 AxisAlignedBB nativeElbow=GearBlock.modelParts("swing_linkage").get(2);nativeElbow=com.vandorlabs.blocks.PanelPlacement.rotateFromNorth(nativeElbow,new EnumFacing[]{EnumFacing.NORTH,EnumFacing.EAST,EnumFacing.SOUTH,EnumFacing.WEST}[root.direction().ordinal()]);
                 for(int sample=0;sample<=24;sample++){GearMotion.Pose at=GearMotion.pose(root.mode(),root.direction(),1,sample/24D);GearMotion.Bounds elbow=at.transformRigidBounds(new GearMotion.Bounds(nativeElbow.minX,nativeElbow.minY,nativeElbow.minZ,nativeElbow.maxX,nativeElbow.maxY,nativeElbow.maxZ));require(elbow.minY>at.transformFootVertex(.5,-1+3/16D,.5).y+.01,"native elbow clears plate throughout stroke "+facing+" sample="+sample);}
@@ -97,13 +104,43 @@ final class ModularGearRuntimeChecks {
     static void pose(WorldServer world,boolean stowed){for(int i=0;i<7;i++){TileEntity raw=world.getTileEntity(new BlockPos(390+i*10,32,120));if(raw instanceof GearTileEntity){GearTileEntity root=((GearTileEntity)raw).loadedController();if(root!=null){root.target(!stowed);root.captureProgress(stowed?0:1);root.sync();}}}}
     private static void clear(WorldServer world,BlockPos base){for(BlockPos p:BlockPos.getAllInBox(base.add(-5,-6,-5),base.add(7,4,6)))if(!world.isAirBlock(p))world.setBlockToAir(p);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("modular gear: "+message);}
+    private static void largePlates(WorldServer world,EntityPlayerMP player){
+        BlockPos root=new BlockPos(510,210,180);ItemStack held=player.getHeldItemMainhand();float yaw=player.rotationYaw;
+        try{for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int height:new int[]{1,3}){
+            clear(world,root);GearBlock arm=GearRegistry.LARGE_GEAR_EXTENDER;
+            world.setBlockState(root.down(height),GearRegistry.LANDING_PLATE.getDefaultState());
+            for(int y=0;y<height;y++){
+                net.minecraft.block.state.IBlockState state=arm.getDefaultState().withProperty(GearBlock.FACING,facing);
+                require(((net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(arm)).placeBlockAt(new ItemStack(arm),player,world,root.down(y),EnumFacing.UP,.5F,.5F,.5F,state),"large plate arm placement");
+            }
+            world.setBlockState(root.up(),Blocks.IRON_BLOCK.getDefaultState());
+            GearTileEntity single=(GearTileEntity)world.getTileEntity(root);require(single.rebuild(),"single Plate and one mounting support: "+single.error());
+            single.target(false);for(int i=0;i<32;i++)single.update();require(single.progress()==0,"single Plate retracts on stacked Large Extenders");single.target(true);for(int i=0;i<32;i++)single.update();
+        }
+        clear(world,root);
+        // Opposite construction corners on a shared eight-plate foot.
+        for(int x=0;x<4;x++)for(int z=0;z<2;z++)world.setBlockState(root.add(x,-3,z),GearRegistry.LANDING_PLATE.getDefaultState());
+        for(int column=0;column<2;column++){
+            BlockPos at=column==0?root:root.add(3,0,1);EnumFacing facing=column==0?EnumFacing.NORTH:EnumFacing.SOUTH;
+            for(int y=0;y<3;y++){
+                GearBlock arm=GearRegistry.LARGE_GEAR_EXTENDER;
+                require(((net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(arm)).placeBlockAt(new ItemStack(arm),player,world,at.down(y),EnumFacing.UP,.5F,.5F,.5F,arm.getDefaultState().withProperty(GearBlock.FACING,facing)),"mixed-facing large plate columns");
+            }
+            world.setBlockState(at.up(),Blocks.IRON_BLOCK.getDefaultState());
+        }
+        GearTileEntity group=(GearTileEntity)world.getTileEntity(root);require(group.rebuild()&&group.loadedController().columns().size()==2&&group.loadedController().assembly().feet().size()==8,"opposite-facing Large Extenders share plates: "+group.error());
+        group=group.loadedController();group.target(false);for(int i=0;i<32;i++)group.update();require(group.progress()==0,"shared plate group fully retracts");
+        GearTileEntity copy=(GearTileEntity)TileEntity.create(world,group.writeToNBT(new NBTTagCompound()));require(copy.columns().size()==2&&copy.assembly().feet().size()==8,"large plate group persistence");
+        }finally{clear(world,root);player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);player.rotationYaw=yaw;}
+        System.out.println("[vandorlabs][reprolab] large-extender-plates PASS single plates stacked columns partial mounts mixed facings shared group stow and persistence");
+    }
     private static void recipes(WorldServer world){
-        for(String id:new String[]{"landing_wheel","large_landing_wheel","large_gear_extender","large_gear_swing_arm"}){
+        for(String id:new String[]{"landing_wheel","large_landing_wheel","large_gear_extender","large_gear_swing_arm","large_gear_mount"}){
             net.minecraft.item.crafting.IRecipe recipe=net.minecraft.item.crafting.CraftingManager.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:"+id));require(recipe!=null,"new gear recipe registered "+id);
             net.minecraft.inventory.InventoryCrafting grid=new net.minecraft.inventory.InventoryCrafting(new net.minecraft.inventory.Container(){public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer player){return true;}},3,3);for(int i=0;i<recipe.getIngredients().size();i++)grid.setInventorySlotContents(i,recipe.getIngredients().get(i).getMatchingStacks()[0].copy());require(ItemStack.areItemsEqual(net.minecraft.item.crafting.CraftingManager.findMatchingResult(grid,world),recipe.getRecipeOutput()),"new gear recipe resolves without conflicts "+id);
         }
 
-        for(String id:new String[]{"landing_plate","landing_ski","gear_extender","gear_swing_arm","turntable_controller","turntable_surface","programmable_diagonal_half_console"}){
+        for(String id:new String[]{"gear_mount","landing_plate","landing_ski","gear_extender","gear_swing_arm","turntable_controller","turntable_surface","programmable_diagonal_half_console"}){
             net.minecraft.item.crafting.IRecipe recipe=net.minecraft.item.crafting.CraftingManager.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:"+id));require(recipe instanceof net.minecraftforge.common.crafting.IShapedRecipe,"registered shaped recipe "+id);
             net.minecraftforge.common.crafting.IShapedRecipe shape=(net.minecraftforge.common.crafting.IShapedRecipe)recipe;net.minecraft.inventory.InventoryCrafting grid=new net.minecraft.inventory.InventoryCrafting(new net.minecraft.inventory.Container(){public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer player){return true;}},3,3);
             for(int y=0;y<shape.getRecipeHeight();y++)for(int x=0;x<shape.getRecipeWidth();x++){ItemStack[] choices=recipe.getIngredients().get(x+y*shape.getRecipeWidth()).getMatchingStacks();if(choices.length>0)grid.setInventorySlotContents(x+y*3,choices[0].copy());}

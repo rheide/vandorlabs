@@ -11,7 +11,7 @@ import java.io.File;
 /** Actual inventory rendering, including depth/rotation, with padding on every side. */
 final class UtilityItemRuntimeChecks {
     private static final int BACK=0x203040;
-    private static final String[] IDS={"programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","data_card:0","data_card:1","data_card:2","data_card:3","data_card:4","data_card:5","data_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
+    private static final String[] IDS={"programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","data_card:0","data_card:1","data_card:2","data_card:3","data_card:4","data_card:5","data_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
     static ItemStack stack(int i){String[] id=IDS[i].split(":");return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id[0])),1,id.length==1?0:Integer.parseInt(id[1]));}
     static void run(Minecraft mc,File output)throws Exception{
         for(Item token:new Item[]{com.vandorlabs.items.ModItems.DATA_CARD,com.vandorlabs.items.ModItems.DATA_CHIP}){
@@ -28,9 +28,13 @@ final class UtilityItemRuntimeChecks {
         GuiScreen previous=mc.currentScreen;Icons icons=new Icons();try{
             mc.displayGuiScreen(icons);mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();icons.drawScreen(0,0,0);
             BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());int scale=new ScaledResolution(mc).getScaleFactor(),size=16*scale;
+            int regularWheelSpan=0;
             for(int i=0;i<IDS.length;i++){
-                int x=icons.x(i)*scale,y=icons.y(i)*scale,changed=0;
-                for(int a=0;a<size;a++)for(int b=0;b<size;b++){boolean ink=(shot.getRGB(x+a,y+b)&0xffffff)!=BACK;if(ink)changed++;if(ink && (a==0 || b==0 || a==size-1 || b==size-1))throw new IllegalStateException("Inventory icon touches slot edge: "+IDS[i]);}
+                int x=icons.x(i)*scale,y=icons.y(i)*scale,changed=0,minX=size,maxX=0,minY=size,maxY=0;
+                for(int a=0;a<size;a++)for(int b=0;b<size;b++){boolean ink=(shot.getRGB(x+a,y+b)&0xffffff)!=BACK;if(ink){changed++;minX=Math.min(minX,a);maxX=Math.max(maxX,a);minY=Math.min(minY,b);maxY=Math.max(maxY,b);}if(ink && (a==0 || b==0 || a==size-1 || b==size-1))throw new IllegalStateException("Inventory icon touches slot edge: "+IDS[i]);}
+                int span=Math.max(maxX-minX+1,maxY-minY+1);
+                if(IDS[i].equals("landing_wheel"))regularWheelSpan=span;
+                if(IDS[i].equals("large_landing_wheel") && span<=regularWheelSpan)throw new IllegalStateException("Large wheel icon must exceed regular wheel");
                 if(changed<10 || changed>size*size*.85)throw new IllegalStateException("Inventory icon coverage: "+IDS[i]+" pixels="+changed);
             }
             javax.imageio.ImageIO.write(shot,"png",new File(output,"shot_utility22_items.png"));

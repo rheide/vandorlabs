@@ -28,7 +28,7 @@ final class GearModels {
     static void reload() {
         MESHES.clear();
         List<String> names = new ArrayList<String>();
-        for (String name : new String[] { "mount", "sleeve", "rod", "socket", "extender",
+        for (String name : new String[] { "mount", "fixed_mount", "sleeve", "rod", "socket", "extender",
                 "swing_linkage", "swivel", "swing_arm", "wheel", "wheel_large", "wheel_bracket", "wheel_tyre", "wheel_large_bracket", "wheel_large_tyre" }) names.add(name);
         for (int mask = 0; mask < 16; mask++) {
             names.add("plate_" + mask);

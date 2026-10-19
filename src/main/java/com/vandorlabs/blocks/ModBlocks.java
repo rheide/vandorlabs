@@ -186,6 +186,8 @@ public class ModBlocks {
         add(com.vandorlabs.gear.GearRegistry.LANDING_SKI);
         add(com.vandorlabs.gear.GearRegistry.GEAR_EXTENDER);
         add(com.vandorlabs.gear.GearRegistry.LARGE_GEAR_EXTENDER);
+        add(com.vandorlabs.gear.GearRegistry.GEAR_MOUNT);
+        add(com.vandorlabs.gear.GearRegistry.LARGE_GEAR_MOUNT);
         add(com.vandorlabs.gear.GearRegistry.LARGE_GEAR_SWING_ARM);
         add(com.vandorlabs.gear.GearRegistry.LANDING_WHEEL);
         add(com.vandorlabs.gear.GearRegistry.LARGE_LANDING_WHEEL);

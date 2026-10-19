@@ -14,6 +14,7 @@ public final class GearMotion {
     public static final double ROD_TOP_Y = 9.0 / 16.0;
 
     public enum Mode {
+        STATIC,
         EXTEND,
         ROTATE,
         /** A rigid swinging arm with a counter-rotating lower foot swivel. */
@@ -100,6 +101,7 @@ public final class GearMotion {
         private final double deployProgress;
         private final double easedDeployProgress;
         private final double offsetY;
+        private final double pivotX,pivotY,pivotZ,hingeDrop;
         private final double angleDegrees;
         private final double sine;
         private final double cosine;
@@ -107,7 +109,13 @@ public final class GearMotion {
         private final double levelOffsetY;
         private final double levelOffsetZ;
 
-        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY) {
+        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop) {
+            // A diagonal hinge offset lowers the folded foot by twice the drop
+            // while preserving its final horizontal reach and deployed pose.
+            this.hingeDrop=hingeDrop;
+            this.pivotX=PIVOT_X+direction.axisZ()*hingeDrop;
+            this.pivotY=PIVOT_Y-hingeDrop;
+            this.pivotZ=PIVOT_Z-direction.axisX()*hingeDrop;
             this.mode = mode;
             this.direction = direction;
             this.columnHeight = height;
@@ -115,7 +123,7 @@ public final class GearMotion {
             this.easedDeployProgress = smoothstep(progress);
             double stowed = 1.0 - easedDeployProgress;
             this.offsetY = mode == Mode.EXTEND ? (height + stowedFootY) * stowed : 0.0;
-            this.angleDegrees = mode != Mode.EXTEND ? 90.0 * stowed : 0.0;
+            this.angleDegrees = mode == Mode.ROTATE || mode == Mode.ROTATE_LEVEL ? 90.0 * stowed : 0.0;
             // Exact endpoints avoid tiny residual sideways translations in
             // fully deployed/stowed states and make joined faces coincide.
             this.sine = angleDegrees == 90.0 ? 1.0 : Math.sin(Math.toRadians(angleDegrees));
@@ -223,17 +231,18 @@ public final class GearMotion {
             requireFinite(x, "x");
             requireFinite(y, "y");
             requireFinite(z, "z");
-            double dx = x - PIVOT_X;
-            double dy = y - PIVOT_Y;
-            double dz = z - PIVOT_Z;
+            double dx = x - pivotX;
+            double dy = y - pivotY;
+            double dz = z - pivotZ;
             // Rodrigues' rotation formula; the axis is one of +/-X or +/-Z.
             double ax = direction.axisX();
             double az = direction.axisZ();
             double dot = ax * dx + az * dz;
             double oneMinusCosine = 1.0 - cosine;
-            return new Vec(PIVOT_X + dx * cosine - az * dy * sine + ax * dot * oneMinusCosine,
-                    PIVOT_Y + dy * cosine + (az * dx - ax * dz) * sine,
-                    PIVOT_Z + dz * cosine + ax * dy * sine + az * dot * oneMinusCosine);
+            return new Vec(pivotX + dx * cosine - az * dy * sine + ax * dot * oneMinusCosine,
+                    pivotY + dy * cosine + (az * dx - ax * dz) * sine
+                            + hingeDrop*sine*cosine,
+                    pivotZ + dz * cosine + ax * dy * sine + az * dot * oneMinusCosine);
         }
     }
 
@@ -247,6 +256,12 @@ public final class GearMotion {
     }
     public static Pose pose(Mode mode, Direction direction, int columnHeight,
                             double deployProgress,double stowedFootY) {
+        return pose(mode,direction,columnHeight,deployProgress,stowedFootY,0);
+    }
+    public static Pose pose(Mode mode, Direction direction, int columnHeight,
+                            double deployProgress,double stowedFootY,double hingeDrop) {
+        requireFinite(hingeDrop,"hingeDrop");
+        if(hingeDrop<0 || hingeDrop>1/8D)throw new IllegalArgumentException("Hinge drop must be between zero and one eighth block.");
         requireFinite(stowedFootY,"stowedFootY");
         if (mode == null || direction == null) {
             throw new IllegalArgumentException("Animation mode and direction are required.");
@@ -254,7 +269,7 @@ public final class GearMotion {
         if (columnHeight < 1 || columnHeight > GearTopology.MAX_COLUMN_HEIGHT) {
             throw new IllegalArgumentException("Column height must be between 1 and 8.");
         }
-        return new Pose(mode, direction, columnHeight, clampUnit(deployProgress),stowedFootY);
+        return new Pose(mode, direction, columnHeight, clampUnit(deployProgress),stowedFootY,hingeDrop);
     }
 
     /** Ease a raw position; finite overshoot is clamped to the end states. */

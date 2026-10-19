@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " M ",
+    "MIM",
+    " M "
+  ],
+  "key": {
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:gear_mount"
+  }
+}

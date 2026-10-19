@@ -53,7 +53,7 @@ public final class GearAssembly {
     }
 
     public static boolean isExtender(IBlockState state) {
-        return state.getBlock() instanceof GearBlock && (((GearBlock)state.getBlock()).kind()==GearBlock.Kind.EXTENDER || isSwingArm(state));
+        return state.getBlock() instanceof GearBlock && (((GearBlock)state.getBlock()).kind()==GearBlock.Kind.EXTENDER || ((GearBlock)state.getBlock()).kind()==GearBlock.Kind.MOUNT || isSwingArm(state));
     }
 
     public static boolean isSwingArm(IBlockState state) {
@@ -97,6 +97,8 @@ public final class GearAssembly {
         if(!loaded(world,first))return unavailable("Load the feet and their boundary first.");
         IBlockState footState=world.getBlockState(first);
         if(!isFoot(footState))return fail("Place a landing plate, ski or wheel beneath the strut.");
+        GearBlock footBlock=(GearBlock)footState.getBlock(),armBlock=(GearBlock)topState.getBlock();
+        if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.width()!=armBlock.width())return fail("Wheel and mounting arm sizes must match.");
         EnumFacing facing=footState.getValue(GearBlock.FACING);
         Set<BlockPos> feet=new HashSet<>(),columns=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(first);feet.add(first);
         while(!queue.isEmpty()){
@@ -111,11 +113,20 @@ public final class GearAssembly {
                     BlockPos cell=column.down(n);IBlockState state=world.getBlockState(cell);
                     if(state.getBlock()!=topState.getBlock()||!(world.getTileEntity(cell) instanceof GearTileEntity))return fail("Incomplete or mixed strut column.");
                     if(!((GearBlock)state.getBlock()).componentIntact(world,cell))return fail("Incomplete 2x2 arm footprint.");
-                    if((swing||((GearBlock)topState.getBlock()).width()==2)&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");
+                    if(swing&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");
                 }
-                BlockPos support=column.up();if(!loaded(world,support))return unavailable("Load all mounting blocks.");
-                IBlockState mount=world.getBlockState(support);if(mount.getBlock() instanceof GearBlock||!mount.isSideSolid(world,support,EnumFacing.DOWN))return fail("Each strut must attach below a block with a solid underside.");
-                for(BlockPos mountCell:((GearBlock)topState.getBlock()).componentCells(world,column)){BlockPos at=mountCell.up();if(!loaded(world,at))return unavailable("Load all 2x2 mounting blocks.");if(world.getBlockState(at).getBlock() instanceof GearBlock||!world.getBlockState(at).isSideSolid(world,at,EnumFacing.DOWN))return fail("Support the full 2x2 mounting cap.");}
+                if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.width()==2){
+                    BlockPos anchor=column.down(height);IBlockState wheel=world.getBlockState(anchor);
+                    if(wheel.getBlock()!=footBlock || !footBlock.componentRoot(anchor,wheel).equals(anchor) || wheel.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))
+                        return fail("Align the complete Large Wheel footprint beneath its Large arm.");
+                }
+                boolean supported=false;
+                for(BlockPos mountCell:((GearBlock)topState.getBlock()).componentCells(world,column)){
+                    BlockPos at=mountCell.up();if(!loaded(world,at))return unavailable("Load the mounting blocks.");
+                    IBlockState mount=world.getBlockState(at);
+                    supported|=!(mount.getBlock() instanceof GearBlock)&&mount.isSideSolid(world,at,EnumFacing.DOWN);
+                }
+                if(!supported)return fail("Attach the strut below a block with a solid underside.");
                 columns.add(column);
             }
             for(EnumFacing side:HORIZONTAL){BlockPos next=foot.offset(side);if(!loaded(world,next))return unavailable("The entire foot group and boundary must be loaded.");IBlockState state=world.getBlockState(next);if(!isFoot(state))continue;

@@ -18,11 +18,25 @@ public final class GearGeometry {
     private static final ThreadLocal<GearTileEntity> EXCLUDED=new ThreadLocal<>();
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
-    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));if(tile.isController())roots.add(tile);else roots.remove(tile);}
+    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));if(tile.isController()||!looseWheelBoxes(tile).isEmpty())roots.add(tile);else roots.remove(tile);}
     public static void remove(GearTileEntity tile){Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null)roots.remove(tile);}
     @SubscribeEvent public static void unload(WorldEvent.Unload event){ROOTS.remove(event.getWorld());}
     public static java.util.List<GearTileEntity> roots(World world){Set<GearTileEntity> found=ROOTS.get(world);return found==null?Collections.emptyList():new ArrayList<>(found);}
+    /** A full-size loose wheel reaches below its four reserved source cells. */
+    public static List<AxisAlignedBB> looseWheelBoxes(GearTileEntity tile){
+        World world=tile.getWorld();BlockPos pos=tile.getPos();
+        if(world==null||tile.isInvalid()||!world.isBlockLoaded(pos))return Collections.emptyList();
+        net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
+        if(!(state.getBlock() instanceof LargeGearBlock)||((GearBlock)state.getBlock()).kind()!=GearBlock.Kind.WHEEL
+            ||!((GearBlock)state.getBlock()).componentRoot(pos,state).equals(pos))return Collections.emptyList();
+        GearTileEntity owner=tile.loadedController();if(owner!=null && owner.isOperational())return Collections.emptyList();
+        int turns=GearCollision.quarterTurns(state.getValue(GearBlock.FACING));List<AxisAlignedBB> result=new ArrayList<>();
+        for(AxisAlignedBB box:MODELS.computeIfAbsent("wheel_large",GearBlock::modelParts))result.add(yaw(box,turns).offset(pos));
+        return result;
+    }
     @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;Set<GearTileEntity> roots=ROOTS.get(event.getWorld());if(roots==null)return;
+        for(GearTileEntity root:new ArrayList<>(roots))if(!root.isInvalid()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root)
+            for(AxisAlignedBB box:looseWheelBoxes(root))if(box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
         for(GearTileEntity root:new ArrayList<>(roots))if(root!=EXCLUDED.get()&&!root.isInvalid()&&root.isOperational()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root&&root.getRenderBoundingBox().intersects(event.getAabb()))for(AxisAlignedBB box:root.collisionBoxes())if(box.getAverageEdgeLength()>0&&box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
     }
     private static GearMotion.Bounds bounds(AxisAlignedBB box){return new GearMotion.Bounds(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);}
@@ -32,11 +46,11 @@ public final class GearGeometry {
     public static List<AxisAlignedBB> boxes(GearTileEntity tile,double progress){
         if(tile.assembly()==null)return Collections.emptyList();GearTopology.Assembly group=tile.assembly();GearMotion.Pose pose=tile.pose(progress);List<AxisAlignedBB> out=new ArrayList<>();BlockPos root=tile.getPos();
         for(BlockPos column:tile.columns()){
-            BlockPos at=root.add(column);int width=tile.armWidth();double shift=(width-1)*.5;
-            out.add(new AxisAlignedBB(.5-width*.5,14/16D,.5-width*.5,.5+width*.5,1,.5+width*.5).offset(tile.armShiftX(),0,tile.armShiftZ()).offset(at));out.add(new AxisAlignedBB(.5-5/16D*width,6/16D,.5-5/16D*width,.5+5/16D*width,14/16D,.5+5/16D*width).offset(tile.armShiftX(),0,tile.armShiftZ()).offset(at));
-            if(tile.isSwingArmController())for(AxisAlignedBB arm:armParts())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(),tile.armShiftZ());
-            else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY()+tile.footMountOffset(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(),tile.armShiftZ());
-            addArm(out,new AxisAlignedBB(.25,-group.columnHeight()+3/16D+tile.footMountOffset(),.3125,.75,-group.columnHeight()+7/16D+tile.footMountOffset(),.6875),pose,true,at,width,width,tile.armShiftX(),tile.armShiftZ());
+            BlockPos at=root.add(column);if(!(tile.getWorld().getBlockState(at).getBlock() instanceof GearBlock))continue;int width=tile.armWidth();double shift=(width-1)*.5;
+            out.add(new AxisAlignedBB(.5-width*.5,14/16D,.5-width*.5,.5+width*.5,1,.5+width*.5).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));out.add(new AxisAlignedBB(.5-5/16D*width,tile.isFixedMount()?0:6/16D,.5-5/16D*width,.5+5/16D*width,14/16D,.5+5/16D*width).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));
+            if(tile.isSwingArmController())for(AxisAlignedBB arm:armParts())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+            else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY()+tile.footMountOffset(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
+            addArm(out,new AxisAlignedBB(.25,-group.columnHeight()+3/16D+tile.footMountOffset(),.3125,.75,-group.columnHeight()+7/16D+tile.footMountOffset(),.6875),pose,true,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
         }
         int turns=tile.footFacing()==EnumFacing.EAST?1:tile.footFacing()==EnumFacing.SOUTH?2:tile.footFacing()==EnumFacing.WEST?3:0;
         for(GearTopology.Cell foot:group.feet()){

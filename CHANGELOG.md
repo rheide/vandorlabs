@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Prevent a cockpit destruction crash when the renderer queries a removed or replaced cockpit tile's bounds.
+- Update both cockpit consoles with continuous shells, tilted screen banks and center touch keyboards. Use tighter collision shapes around the angled footwell walls and preserve existing per-surface settings.
+- Add standard and Large fixed Landing Gear Mounts for Plates, Skis and matching-size Wheels. Permit partial mounting-cap support and mixed-facing straight Large Extender columns sharing plates.
+- Restore the legacy Extra Large wheel proportions, enforce matching wheel/arm sizes, and align large-part placement to the clicked footprint. Include the enlarged tyre in collision, selection and Taxi wheel animation.
+- Prevent retracted Extender sockets and skis from sharing visible faces with the fixed sleeve collar. Enlarge and center the Large Wheel inventory icon while retaining slot padding.
+
 ## 2.2
 
 - Capture the complete square build above a turntable, including overhangs above its fixed housing corners, so scan boundaries do not leave pieces that immediately obstruct rotation.

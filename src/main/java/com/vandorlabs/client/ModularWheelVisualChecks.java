@@ -53,7 +53,7 @@ final class ModularWheelVisualChecks {
     private static int difference(BufferedImage a,BufferedImage b){int changed=0;for(int y=0;y<SIZE;y++)for(int x=0;x<SIZE;x++)if(a.getRGB(x,y)!=b.getRGB(x,y))changed++;return changed;}
     private static BufferedImage draw(Minecraft mc,EntityGroundVehicle craft,GearTileEntity root){
         Framebuffer target=new Framebuffer(SIZE,SIZE,true);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-2.7,2.7,-2.7,2.7,-20,20);
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-3.4,3.4,-3.4,3.4,-20,20);
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try{
             target.bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clearColor(0,0,0,1);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);

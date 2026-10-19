@@ -41,6 +41,12 @@ def main():
             elif rel.startswith('models/block/gear/') or rel in tuple(f'{kind}/{block}.json' for kind in ('blockstates','models/item') for block in IDS):
                 data=json.loads(archive.read(name).decode('utf-8').replace('mctrekgear:','vandorlabs:'))
                 if rel in ('models/block/gear/swing_linkage.json','models/block/gear/swing_arm.json','models/block/gear/swivel.json'): correct_swing_model(data)
+                if rel=='models/block/gear/socket.json':
+                    # Keep the moving socket's side faces inside the sleeve collar.
+                    for element in data['elements']:
+                        for axis in (0,2):
+                            element['from'][axis] += .25
+                            element['to'][axis] -= .25
                 if rel.startswith('models/item/'):
                     block=Path(rel).stem
                     data.setdefault('display',{})['gui']={'rotation':[30,225,0],'translation':[0,3,0] if block=='gear_swing_arm' else [0,0,0],'scale':[.30]*3 if block=='gear_swing_arm' else [.48]*3}

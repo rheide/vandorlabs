@@ -30,7 +30,7 @@ import net.minecraft.world.World;
  * their static baked model; the controller's FastTESR renders the one group.
  */
 public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements ITileEntityProvider {
-    public enum Kind { EXTENDER, SWING_ARM, PLATE, SKI, WHEEL }
+    public enum Kind { EXTENDER, SWING_ARM, MOUNT, PLATE, SKI, WHEEL }
 
     public static final PropertyDirection FACING = com.vandorlabs.blocks.BlockVandorDirectional.FACING;
     public static final PropertyBool ASSEMBLED = PropertyBool.create("assembled");
@@ -82,7 +82,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
 
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){
         IBlockState clicked=world.getBlockState(pos.offset(side.getOpposite()));
-        EnumFacing facing=(kind==Kind.SKI||kind==Kind.WHEEL)&&clicked.getBlock()==this?clicked.getValue(FACING):placer.getHorizontalFacing().getOpposite();
+        EnumFacing facing=((kind==Kind.SKI||kind==Kind.WHEEL)&&clicked.getBlock()==this || width()==2 && clicked.getBlock() instanceof GearBlock && ((GearBlock)clicked.getBlock()).width()==2)?clicked.getValue(FACING):placer.getHorizontalFacing().getOpposite();
         return getDefaultState().withProperty(FACING,facing);
     }
 
@@ -183,7 +183,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         TileEntity member=world.getTileEntity(pos);GearTileEntity active=member instanceof GearTileEntity?((GearTileEntity)member).loadedController():null;if(active!=null&&active.isOperational())return NULL_AABB;
         if (collidable(world, pos)) return getBoundingBox(state, world, pos);
         TileEntity raw = world.getTileEntity(pos);
-        if ((kind == Kind.EXTENDER || kind == Kind.SWING_ARM)
+        if ((kind == Kind.EXTENDER || kind == Kind.SWING_ARM || kind == Kind.MOUNT)
                 && raw instanceof GearTileEntity && ((GearTileEntity) raw).isController()) {
             return new AxisAlignedBB(0, 6.0 / 16, 0, 1, 1, 1);
         }
@@ -201,7 +201,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         }
         if (!collidable(world, pos)) {
             TileEntity raw = world.getTileEntity(pos);
-            if ((kind == Kind.EXTENDER || kind == Kind.SWING_ARM)
+            if ((kind == Kind.EXTENDER || kind == Kind.SWING_ARM || kind == Kind.MOUNT)
                     && raw instanceof GearTileEntity && ((GearTileEntity) raw).isController()) {
                 addCollisionBoxToList(pos, entityBox, boxes,
                         new AxisAlignedBB(0, 14.0 / 16, 0, 1, 1, 1));
@@ -277,7 +277,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     @Override public IBlockState withRotation(IBlockState state,net.minecraft.util.Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}
     @Override public IBlockState withMirror(IBlockState state,net.minecraft.util.Mirror mirror){return state.withProperty(FACING,mirror.mirror(state.getValue(FACING)));}
 
-    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight():pos.getY();}
+    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight()-(root.armWidth()==2 && root.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL?1:0):pos.getY()-(kind==Kind.WHEEL && width()==2?1:0);}
 
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());return stack;}
     @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());drops.add(stack);}

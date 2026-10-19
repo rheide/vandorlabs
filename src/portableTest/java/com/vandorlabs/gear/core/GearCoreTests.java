@@ -33,6 +33,12 @@ public final class GearCoreTests {
         levelFootRotationAndLowerHinge();
         boundsContainTransformedGeometry();
         progressAndReversal();
+        for(Direction direction:Direction.values())for(int sample=0;sample<=24;sample++){
+            Pose fixed=GearMotion.pose(Mode.STATIC,direction,2,sample/24D);
+            Vec p=fixed.transformFootVertex(.2,-2,.8);check(Math.abs(p.x-.2)<1e-9&&Math.abs(p.y+2)<1e-9&&Math.abs(p.z-.8)<1e-9,"Static mount pose is immutable");
+            Pose large=GearMotion.pose(Mode.ROTATE_LEVEL,direction,1,sample/24D,GearMotion.RETRACTED_FOOT_Y,9/128D);
+            Vec bottom=large.transformFootVertex(.5,-2,.5);check(bottom.y>=-2-1e-9,"Large wheel never dips into the ground during folding");
+        }
         numericSafety();
         System.out.println("PASS: " + checks + " core assertions; topology, masks, limits, "
                 + "attachments, four fold directions, level-foot swivel, bounds, reversal, and numeric safety.");

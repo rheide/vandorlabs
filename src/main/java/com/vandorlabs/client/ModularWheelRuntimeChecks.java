@@ -40,9 +40,36 @@ final class ModularWheelRuntimeChecks {
             if(large){GearBlock arm=(GearBlock)world.getBlockState(at).getBlock();List<BlockPos> footprint=arm.componentCells(world,at);BlockPos helper=footprint.get(3);world.destroyBlock(helper,false);for(BlockPos cell:footprint)require(world.getBlockState(cell).getBlock()!=arm,"all companion cells removed");require(world.getBlockState(at).getBlock()!=arm,"root removed when helper mined");}
         }
         clear(world,at);world.setBlockState(at.east(),Blocks.OBSIDIAN.getDefaultState());ItemBlock item=(ItemBlock)Item.getItemFromBlock(GearRegistry.LARGE_GEAR_EXTENDER);require(!item.placeBlockAt(new ItemStack(GearRegistry.LARGE_GEAR_EXTENDER),player,world,at,EnumFacing.UP,.5F,.5F,.5F,GearRegistry.LARGE_GEAR_EXTENDER.getDefaultState()),"blocked 2x2 placement refused");require(world.isAirBlock(at)&&world.getBlockState(at.east()).getBlock()==Blocks.OBSIDIAN,"failed placement preserves world");
+        compatibility(world,player,at);
         taxi(world,player);
         }finally{clear(world,at);player.setHeldItem(EnumHand.MAIN_HAND,held);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPositionAndUpdate(old.x,old.y,old.z);}
         System.out.println("[vandorlabs][reprolab] modular-wheels PASS 32 size/arm/facing/height combinations placement stow manual picking redeploy persistence Taxi footprint cleanup");
+    }
+    private static void compatibility(WorldServer world,EntityPlayerMP player,BlockPos at){
+        for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            clear(world,at);place(world,player,at.down(),GearRegistry.LARGE_LANDING_WHEEL,facing);
+            GearTileEntity loose=(GearTileEntity)world.getTileEntity(at.down());
+            require(!GearGeometry.looseWheelBoxes(loose).isEmpty(),"loose large wheel collision below source cells");
+            place(world,player,at,GearRegistry.GEAR_EXTENDER,facing);world.setBlockState(at.up(),Blocks.IRON_BLOCK.getDefaultState());
+            require(!((GearTileEntity)world.getTileEntity(at)).rebuild(),"Large Wheel rejects small Extender");
+            world.setBlockToAir(at);place(world,player,at,GearRegistry.GEAR_SWING_ARM,facing);
+            require(!((GearTileEntity)world.getTileEntity(at)).rebuild(),"Large Wheel rejects small Swing Arm");
+            clear(world,at);
+            // Click a non-root wheel quadrant while facing the opposite way.
+            place(world,player,at.down(),GearRegistry.LARGE_LANDING_WHEEL,facing);
+            BlockPos clicked=GearRegistry.LARGE_LANDING_WHEEL.componentCells(world,at.down()).get(3);
+            player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(GearRegistry.LARGE_GEAR_SWING_ARM));
+            player.rotationYaw=facing.getHorizontalAngle();
+            require(((ItemBlock)Item.getItemFromBlock(GearRegistry.LARGE_GEAR_SWING_ARM)).onItemUse(player,world,clicked,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"large arm placement on wheel companion");
+            require(world.getBlockState(at).getBlock()==GearRegistry.LARGE_GEAR_SWING_ARM && world.getBlockState(at).getValue(GearBlock.FACING)==facing,"large arm inherits wheel anchor and orientation");
+            for(BlockPos p:GearRegistry.LARGE_GEAR_SWING_ARM.componentCells(world,at))world.setBlockState(p.up(),Blocks.IRON_BLOCK.getDefaultState());
+            require(((GearTileEntity)world.getTileEntity(at)).rebuild(),"aligned Large Swing Arm and wheel form");
+        }
+        net.minecraft.util.NonNullList<ItemStack> catalog=net.minecraft.util.NonNullList.create();GearRegistry.LARGE_GEAR_EXTENDER.getSubBlocks(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,catalog);
+        require(catalog.size()==1 && catalog.get(0).getItem()==Item.getItemFromBlock(GearRegistry.LARGE_GEAR_EXTENDER),"Large Extender creative catalog entry");
+        List<AxisAlignedBB> tyre=GearBlock.modelParts("wheel_large_tyre");AxisAlignedBB bounds=tyre.stream().reduce(AxisAlignedBB::union).get();
+        require(Math.abs(bounds.maxY-bounds.minY-28/16D)<1e-6 && Math.abs(bounds.maxZ-bounds.minZ-28/16D)<1e-6,"legacy Extra Large tyre diameter and round proportions");
+        clear(world,at);
     }
     private static void unloadedCache(WorldServer world,GearTileEntity root){
         BlockPos far=new BlockPos(6400,150,6400);require(!world.isBlockLoaded(far,false),"cache fixture must begin unloaded");
@@ -56,7 +83,7 @@ final class ModularWheelRuntimeChecks {
         try{for(boolean large:new boolean[]{false,true})for(boolean swing:new boolean[]{false,true}){
             for(BlockPos p:BlockPos.getAllInBox(at.add(-2,-6,-2),at.add(10,4,10)))if(!world.isAirBlock(p))world.setBlockToAir(p);
             int height=swing?1:3;
-            for(int x=0;x<8;x++)for(int z=0;z<8;z++){world.setBlockState(at.add(x,-height-1,z),Blocks.STONE.getDefaultState());world.setBlockState(at.add(x,1,z),Blocks.IRON_BLOCK.getDefaultState());}
+            for(int x=0;x<8;x++)for(int z=0;z<8;z++){world.setBlockState(at.add(x,-height-1-(large?1:0),z),Blocks.STONE.getDefaultState());world.setBlockState(at.add(x,1,z),Blocks.IRON_BLOCK.getDefaultState());}
             for(BlockPos root:new BlockPos[]{at,at.east(4),at.south(4)})build(world,player,root,large,swing,EnumFacing.NORTH,height);
             BlockPos cover=at.down(height).west();com.vandorlabs.blocks.BlockProgrammableTrapdoor coverBlock=(com.vandorlabs.blocks.BlockProgrammableTrapdoor)net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_trapdoor");world.setBlockState(cover,coverBlock.getDefaultState().withProperty(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING,EnumFacing.EAST));com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)world.getTileEntity(cover);hatch.configure(0,0,false,1,0);hatch.setCover(true);
             BlockPos seat=at.add(2,2,2);net.minecraft.block.Block pilot=net.minecraft.block.Block.getBlockFromName("vandorlabs:pilot_seat");world.setBlockState(seat,pilot.getDefaultState());pilot.onBlockPlacedBy(world,seat,world.getBlockState(seat),player,new ItemStack(pilot));world.setBlockState(at.add(3,2,2),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());

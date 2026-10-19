@@ -583,3 +583,6 @@ item.vandorlabs.data_chip.paladyne.name=Paladyne Data Chip
 item.vandorlabs.data_chip.vektor.name=Vektor Data Chip
 item.vandorlabs.data_chip.seyr.name=Seyr Data Chip
 item.vandorlabs.data_chip.vandor.name=Vandor Data Chip
+
+tile.vandorlabs.gear_mount.name=Landing Gear Mount
+tile.vandorlabs.large_gear_mount.name=Large Landing Gear Mount

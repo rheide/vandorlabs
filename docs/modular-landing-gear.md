@@ -1,6 +1,10 @@
 # Modular landing gear
 
 **Landing Gear Extender** and **Landing Gear Swing Arm** are mounting struts.
+**Landing Gear Mount** is the fixed alternative, available in standard and Large sizes.
+Attach a Plate, Ski or matching-size Wheel below it; it stays deployed under
+manual clicks and redstone. Fixed mounts remain valid Taxi/Hover supports.
+
 **Landing Gear Plate**, **Landing Gear Ski** and **Landing Gear Wheel** form their connected feet. These
 parts replace the integrated wheel gear for new construction. Saved integrated
 wheel gear can migrate to these parts; older skis and struts remain readable.
@@ -85,3 +89,10 @@ Legacy integrated Landing Gear is removed from crafting and creative/search cata
 A manual deployment override on modular gear lasts until its configured redstone input changes, including across saves and migration.
 
 Extender-mounted wheels retain clearance beneath the fixed casing when fully retracted. The wheel bracket, socket and rod use the same adjusted pose for rendering and collision.
+
+Large Extenders and Large Swing Arms each reserve a 2?2 horizontal footprint.
+The Large Wheel has the legacy Extra Large tyre diameter (1.75 blocks), reaches
+one block below its source cells, and requires a matching large Mount, Extender or Swing Arm. Standard
+wheels require standard arms. Click any quadrant of a large part to align a new
+large arm or wheel with its anchor and orientation. At least one mounting-cap cell must touch a solid underside; a full 2?2 hull
+patch is optional. Connected straight Large Extenders may face different ways.

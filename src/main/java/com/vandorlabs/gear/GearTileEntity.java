@@ -41,8 +41,14 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private boolean deployedTarget = true;
     private boolean signalKnown,lastSignal,legacyAnyChannels;
     public boolean usesLegacyInput(){return legacyAnyChannels;}
-    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL&&mode==GearMotion.Mode.EXTEND?9/16D:0;}
-    public GearMotion.Pose pose(double progress){return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,footMountOffset()>0?-25/64D:GearMotion.RETRACTED_FOOT_Y);}
+    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL&&(mode==GearMotion.Mode.EXTEND||mode==GearMotion.Mode.STATIC)?(armWidth()==2?11/16D:9/16D):0;}
+    public GearMotion.Pose pose(double progress){
+        double stowed=GearMotion.RETRACTED_FOOT_Y;
+        // Leave daylight beneath the collar instead of coincident runner faces.
+        if(mode==GearMotion.Mode.EXTEND)stowed=footMountOffset()>0?6/16D-1/64D-(3/16D+footMountOffset()):stowed-1/64D;
+        double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armWidth()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?9/128D:0;
+        return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop);
+    }
 
     private double progress = 1.0;
     private double previousProgress = 1.0;
@@ -52,7 +58,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private double boxesAt=Double.NaN;
     private java.util.List<AxisAlignedBB> cachedBoxes=java.util.Collections.emptyList();
     public java.util.List<AxisAlignedBB> collisionBoxes(){if(!isOperational())return java.util.Collections.emptyList();if(boxesAt!=progress){cachedBoxes=GearGeometry.boxes(this,progress);boxesAt=progress;}return cachedBoxes;}
-    public void captureProgress(double next){previousProgress=progress;progress=Math.max(0,Math.min(1,next));boxesAt=Double.NaN;}
+    public void captureProgress(double next){previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,next));boxesAt=Double.NaN;}
 
     private int rebuildDelay = -1;
     private boolean retryUnavailable;
@@ -64,7 +70,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     public java.util.Set<BlockPos> members(){return java.util.Collections.unmodifiableSet(members);}
     public java.util.List<BlockPos> columns(){return java.util.Collections.unmodifiableList(columns);}
     public double progress(){return progress;}
-    public boolean target(){return deployedTarget;}
+    public boolean target(){return isFixedMount()||deployedTarget;}
     public net.minecraft.tileentity.TileEntity channelTile(){return this;}
     public int getRedstoneChannel(){return channels.first();}
     public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return channels;}
@@ -72,7 +78,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList value){if(!channels.equals(value))signalKnown=false;channels=value;sync();}
     public boolean hasLocalRedstoneSignal(){return false;}
     public void setChannelSignal(boolean powered){}
-    public void target(boolean value){if(deployedTarget==value)return;deployedTarget=value;sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}
+    public void target(boolean value){if(isFixedMount())return;if(deployedTarget==value)return;deployedTarget=value;sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}
     private boolean localPower(){
         java.util.List<BlockPos> roots=columns.isEmpty()?java.util.Collections.singletonList(BlockPos.ORIGIN):columns;
         for(BlockPos column:roots){BlockPos at=pos.add(column);if(!GearAssembly.loaded(world,at))continue;net.minecraft.block.state.IBlockState state=world.getBlockState(at);
@@ -98,6 +104,9 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
 
     public double armShiftX(){return armShift().getX()*.5;}
     public double armShiftZ(){return armShift().getZ()*.5;}
+    public double armShiftX(BlockPos column){return columnShift(column).getX()*.5;}
+    public double armShiftZ(BlockPos column){return columnShift(column).getZ()*.5;}
+    private BlockPos columnShift(BlockPos column){IBlockState state=world.getBlockState(pos.add(column));return armWidth()==2 && state.getBlock() instanceof GearBlock?LargeGearBlock.offset(state.getValue(GearBlock.FACING),1,1):BlockPos.ORIGIN;}
     private BlockPos armShift(){return armWidth()==2?LargeGearBlock.offset(world.getBlockState(pos).getValue(GearBlock.FACING),1,1):BlockPos.ORIGIN;}
     public int armWidth(){return world!=null&&world.getBlockState(pos).getBlock() instanceof GearBlock?((GearBlock)world.getBlockState(pos).getBlock()).width():1;}
     public boolean isSwingArmController() {
@@ -108,7 +117,8 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         return GearMotion.interpolate(previousProgress, progress, partialTicks);
     }
 
-    public boolean fullyDeployed() { return deployedTarget && progress >= 1.0; }
+    public boolean fullyDeployed() { return isFixedMount() || deployedTarget && progress >= 1.0; }
+    public boolean isFixedMount(){return mode==GearMotion.Mode.STATIC;}
 
     @Nullable
     public GearTileEntity loadedController() {
@@ -174,6 +184,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override
     public void update() {
         if (world == null) return;
+        if(isFixedMount()){deployedTarget=true;progress=1;}
         previousProgress = progress;
         if (world.isRemote) {
             if (isOperational()&&!motionBlocked) progress = GearMotion.advance(progress, deployedTarget, 1, ANIMATION_TICKS);
@@ -228,6 +239,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             }else{
                 if(!GearAssembly.isFoot(state)||!((GearBlock)state.getBlock()).kind().name().equals(assembly.kind().name()))return false;
                 if(assembly.kind()!=GearTopology.FootKind.PLATE&&state.getValue(GearBlock.FACING)!=footFacing)return false;
+                if(assembly.kind()==GearTopology.FootKind.WHEEL && ((GearBlock)state.getBlock()).width()!=armWidth())return false;
                 GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(member,state)))return false;
             }
             TileEntity tile = world.getTileEntity(member);
@@ -272,7 +284,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             }
             mode = GearMotion.Mode.ROTATE_LEVEL;
         }
-        else if (mode == GearMotion.Mode.ROTATE_LEVEL) mode = GearMotion.Mode.EXTEND;
+        else mode = world.getBlockState(pos).getBlock() instanceof GearBlock && ((GearBlock)world.getBlockState(pos).getBlock()).kind()==GearBlock.Kind.MOUNT?GearMotion.Mode.STATIC:GearMotion.Mode.EXTEND;
         boolean unchanged = assembly != null && assembly.columnHeight() == scan.assembly.columnHeight()
                 && assembly.kind() == scan.assembly.kind() && footFacing == scan.footFacing
                 && assembly.feet().equals(scan.assembly.feet()) && columns.equals(relativeColumns(scan.columns));
@@ -292,6 +304,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             deployedTarget = configured?desiredTarget:true;
         }
         for(BlockPos column:scan.columns){TileEntity raw=world.getTileEntity(column);if(raw instanceof GearTileEntity&&raw!=this&&((GearTileEntity)raw).assembly!=null)((GearTileEntity)raw).releaseAssembly();}
+        if(isFixedMount()){deployedTarget=true;progress=previousProgress=1;}
         assembly = scan.assembly;
         columns.clear();columns.addAll(relativeColumns(scan.columns));
         operational = true;
@@ -371,6 +384,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
 
     private void clearBinding() {
         owner = null;
+        GearGeometry.register(this);
         setAssembled(false);
         sync();
     }
@@ -391,7 +405,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         com.vandorlabs.redstone.ChannelList values=com.vandorlabs.redstone.ChannelList.parse(tag.getString("Channels"));
         if(trigger<0||trigger>2||dir<0||dir>3||values==null)throw new IllegalArgumentException("Invalid gear settings");
         if(dir!=direction.ordinal()&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
-        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=tag.getBoolean("Deployed");input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
+        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
     }
 
     public void sync() {
@@ -498,7 +512,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         if (assembly == null) {
-            if(armWidth()==2&&world!=null){AxisAlignedBB extent=new AxisAlignedBB(pos);GearBlock block=(GearBlock)world.getBlockState(pos).getBlock();for(BlockPos cell:block.componentCells(world,pos))extent=extent.union(new AxisAlignedBB(cell));return isSwingArmController()?extent.union(extent.offset(0,-1,0)):extent;}
+            if(armWidth()==2&&world!=null){AxisAlignedBB extent=new AxisAlignedBB(pos);GearBlock block=(GearBlock)world.getBlockState(pos).getBlock();for(BlockPos cell:block.componentCells(world,pos))extent=extent.union(new AxisAlignedBB(cell));return isSwingArmController()||block.kind()==GearBlock.Kind.WHEEL?extent.union(extent.offset(0,-1,0)):extent;}
             // The unformed swing arm already reaches into the foot cell.
             return isSwingArmController()
                     ? new AxisAlignedBB(pos.getX(), pos.getY() - 1, pos.getZ(),

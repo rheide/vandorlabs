@@ -28,7 +28,25 @@ public final class LargeGearBlock extends GearBlock {
     @Override public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side){return canPlaceBlockAt(world,pos);}
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack){if(!world.isRemote){for(BlockPos p:componentCells(world,pos))if(!p.equals(pos)&&(!GearAssembly.loaded(world,p)||!world.getBlockState(p).getBlock().isReplaceable(world,p))){world.destroyBlock(pos,true);return;}List<BlockPos> cells=componentCells(world,pos);for(int n=1;n<4;n++)world.setBlockState(cells.get(n),state.withProperty(PART,n),2);}super.onBlockPlacedBy(world,pos,state,placer,stack);}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){super.breakBlock(world,pos,state);if(world.isRemote||Boolean.TRUE.equals(REMOVING.get()))return;REMOVING.set(true);try{BlockPos root=componentRoot(pos,state);for(BlockPos p:cells(root,state.getValue(FACING)))if(!p.equals(pos)&&world.getBlockState(p).getBlock()==this&&componentRoot(p,world.getBlockState(p)).equals(root))world.setBlockState(p,net.minecraft.init.Blocks.AIR.getDefaultState(),2);}finally{REMOVING.remove();}}
-    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){if(kind()!=Kind.WHEEL)return FULL_BLOCK_AABB;return new AxisAlignedBB(0,0,0,1,.95,1);}
+    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){if(kind()!=Kind.WHEEL)return FULL_BLOCK_AABB;return new AxisAlignedBB(0,-1,0,1,14/16D,1);}
+    @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return kind()==Kind.WHEEL?null:super.getCollisionBoundingBox(state,world,pos);}
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,List<AxisAlignedBB> boxes,Entity entity,boolean actual){
+        // The global geometry provider includes the loose wheel below its source cells.
+        if(kind()!=Kind.WHEEL)super.addCollisionBoxToList(state,world,pos,query,boxes,entity,actual);
+    }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
+        if(kind()!=Kind.WHEEL)return super.collisionRayTrace(state,world,pos,start,end);
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(componentRoot(pos,state));
+        if(!(tile instanceof GearTileEntity))return null;
+        GearTileEntity gear=(GearTileEntity)tile;
+        if(gear.hasLoadedController())return super.collisionRayTrace(state,world,pos,start,end);
+        RayTraceResult nearest=null;
+        for(AxisAlignedBB box:GearGeometry.looseWheelBoxes(gear)){
+            RayTraceResult hit=box.calculateIntercept(start,end);
+            if(hit!=null && (nearest==null || start.squareDistanceTo(hit.hitVec)<start.squareDistanceTo(nearest.hitVec)))nearest=new RayTraceResult(hit.hitVec,hit.sideHit,gear.getPos());
+        }
+        return nearest;
+    }
     public static BlockPos offset(EnumFacing facing,int x,int z){switch(facing){case EAST:return new BlockPos(-z,0,x);case SOUTH:return new BlockPos(-x,0,-z);case WEST:return new BlockPos(z,0,-x);default:return new BlockPos(x,0,z);}}
     @Override public IBlockState withRotation(IBlockState state,Rotation rotation){return super.withRotation(state,rotation);}
 }
