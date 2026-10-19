@@ -55,8 +55,8 @@ def main():
                 faces.update({'north':{'texture':'#art','uv':[end/8,y/8,x/8,bottom/8]},'south':{'texture':'#art','uv':uv}})
                 elements.append({'from':[x/8,16-bottom/8,7],'to':[end/8,16-y/8,9],'faces':faces})
         display={'gui':{'rotation':[0,0,0],'translation':[0,0,0],'scale':[1,1,1]},
-                 'firstperson_righthand':{'rotation':[0,-30,0],'translation':[-3,6,0],'scale':[.6,.6,.6]},
-                 'firstperson_lefthand':{'rotation':[0,30,0],'translation':[3,6,0],'scale':[.6,.6,.6]},
+                 'firstperson_righthand':{'rotation':[0,-90,25],'translation':[1.13,3.2,1.13],'scale':[.68,.68,.68]},
+                 'firstperson_lefthand':{'rotation':[0,90,-25],'translation':[1.13,3.2,1.13],'scale':[.68,.68,.68]},
                  'thirdperson_righthand':{'rotation':[0,0,0],'translation':[0,2,0],'scale':[.5,.5,.5]},
                  'thirdperson_lefthand':{'rotation':[0,0,0],'translation':[0,2,0],'scale':[.5,.5,.5]},
                  'ground':{'rotation':[0,0,0],'translation':[0,2,0],'scale':[.5,.5,.5]},

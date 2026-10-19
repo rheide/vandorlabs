@@ -49,14 +49,15 @@ final class WheelItemRuntimeChecks {
         }finally{GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.displayGuiScreen(previousGui);}
         System.out.println("[vandorlabs][reprolab] wheel-item-sizes PASS small-medium-large projected-size actual-pixel-size every-edge-padding reduced-first-third-person held-screenshots");
     }
-    static BufferedImage held(Minecraft mc,ItemStack stack){
+    static BufferedImage held(Minecraft mc,ItemStack stack){return held(mc,stack,false);}
+    static BufferedImage held(Minecraft mc,ItemStack stack,boolean left){
         Framebuffer target=new Framebuffer(640,360,true);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();org.lwjgl.util.glu.Project.gluPerspective(70,640F/360,.05F,100);
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();GlStateManager.loadIdentity();
         try{
             target.bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);GlStateManager.enableDepth();GlStateManager.disableBlend();GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);RenderHelper.enableStandardItemLighting();
             // Vanilla's resting right-hand placement before the item's authored transform.
-            GlStateManager.translate(.56F,-.52F,-.72F);mc.getRenderItem().renderItem(stack,mc.player,ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND,false);
+            GlStateManager.translate(left?-.56F:.56F,-.52F,-.72F);mc.getRenderItem().renderItem(stack,mc.player,left?ItemCameraTransforms.TransformType.FIRST_PERSON_LEFT_HAND:ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND,left);
             GL11.glFinish();return ScreenShotHelper.createScreenshot(640,360,target);
         }finally{RenderHelper.disableStandardItemLighting();GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);target.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
     }

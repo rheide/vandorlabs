@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Use the standard first-person held-item pose for every data card and chip, keeping them beside the screen edge in either hand.
+
 - Preserve tinted wall windows and canopy glazing on captured turntable structures, with separate opaque and glass rendering passes.
 
 - Keep diagonal wall end caps visible through adjoining glass, preventing views into the wall interior while preserving glass-frame joins.

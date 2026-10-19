@@ -464,6 +464,7 @@ public class ReproLab {
         SHOTS.add(new Shot("utility22_tank_thruster_x",171,24.5,127,-45,15));
         SHOTS.add(new Shot("utility22_tank_thruster_y",172,25,132,-35,15));
         for(String kind:new String[]{"card","chip"})for(int i=0;i<7;i++)SHOTS.add(new Shot("utility22_data_"+kind+"_"+i,143,24,114,0,15));
+        for(String kind:new String[]{"card","chip"})for(int i=0;i<7;i++)SHOTS.add(new Shot("utility22_data_"+kind+"_left_"+i,143,24,114,0,15));
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
         SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));
@@ -3083,8 +3084,9 @@ public class ReproLab {
         if(s.name.startsWith("utility22_data_")){
             int design=Integer.parseInt(s.name.substring(s.name.lastIndexOf('_')+1));
             ItemStack card=new ItemStack(s.name.startsWith("utility22_data_chip_")?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.DATA_CARD,1,design);
-            mc.player.setHeldItem(EnumHand.MAIN_HAND,card.copy());
-            onServer(mc,()->mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName()).setHeldItem(EnumHand.MAIN_HAND,card.copy()));
+            EnumHand hand=s.name.contains("_left_")?EnumHand.OFF_HAND:EnumHand.MAIN_HAND;
+            mc.player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);mc.player.setHeldItem(EnumHand.OFF_HAND,ItemStack.EMPTY);mc.player.setHeldItem(hand,card.copy());
+            onServer(mc,()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setHeldItem(EnumHand.OFF_HAND,ItemStack.EMPTY);player.setHeldItem(hand,card.copy());});
         }
         if(s.name.equals("utility22_blocks_tanks_block")||s.name.equals("utility22_blocks_tanks_hexagon"))onServer(mc,()->{
             net.minecraft.world.World world=mc.getIntegratedServer().getWorld(0);
