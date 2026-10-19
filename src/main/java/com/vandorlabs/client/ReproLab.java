@@ -717,6 +717,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.existingWorldChecks")) {
             mc.displayGuiScreen(null);
             holdTicks++;
+            if(Boolean.getBoolean("vandorlabs.checkTurntableRotation"))try{if(!ExistingTurntableRuntimeChecks.tick(mc,holdTicks,outDir))return;}catch(Exception failure){throw new IllegalStateException("existing-world turntable checks",failure);}
             if(Boolean.getBoolean("vandorlabs.checkAutopilotStart"))try{if(!ExistingAutopilotStartChecks.tick(mc))return;}catch(Exception failure){throw new IllegalStateException("existing autopilot start checks",failure);}
             if(holdTicks==1&&Boolean.getBoolean("vandorlabs.checkCanopyGlassOrder"))try{CanopyGlassOrderRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("canopy glass order checks",failure);}
             if(Boolean.getBoolean("vandorlabs.checkCanopyCollisionQueries"))try{if(!CanopyCollisionQueryRuntimeChecks.tick(mc,outDir))return;}catch(Exception failure){throw new IllegalStateException("canopy collision query checks",failure);}

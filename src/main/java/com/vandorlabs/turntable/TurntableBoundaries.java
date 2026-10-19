@@ -12,9 +12,9 @@ import net.minecraft.world.World;
 
 /** Native reserved cells must move together; a prism never silently crops an assembly. */
 final class TurntableBoundaries {
-    private final World world;private final BlockPos min,max;private final TurntableSurfaceLayout circle;
-    TurntableBoundaries(World world,BlockPos min,BlockPos max,TurntableSurfaceLayout circle){this.world=world;this.min=min;this.max=max;this.circle=circle;}
-    private void includes(BlockPos p){if(p.getX()<min.getX()||p.getY()<min.getY()||p.getZ()<min.getZ()||p.getX()>max.getX()||p.getY()>max.getY()||p.getZ()>max.getZ()||circle!=null&&!circle.onDisc(p.getX()+.5,p.getY()+.5,p.getZ()+.5))throw new IllegalArgumentException("Scan volume cuts a multiblock at "+p+"; include its complete assembly");if(!world.isBlockLoaded(p))throw new IllegalArgumentException("Load all assembly cells first");}
+    private final World world;private final BlockPos min,max;
+    TurntableBoundaries(World world,BlockPos min,BlockPos max){this.world=world;this.min=min;this.max=max;}
+    private void includes(BlockPos p){if(p.getX()<min.getX()||p.getY()<min.getY()||p.getZ()<min.getZ()||p.getX()>max.getX()||p.getY()>max.getY()||p.getZ()>max.getZ())throw new IllegalArgumentException("Scan volume cuts a multiblock at "+p+"; include its complete assembly");if(!world.isBlockLoaded(p))throw new IllegalArgumentException("Load all assembly cells first");}
     void check(BlockPos p,IBlockState state,TileEntity tile){
         Block block=state.getBlock();if(state.getBlockHardness(world,p)<0)throw new IllegalArgumentException("Unbreakable blocks cannot be captured");
         if(tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Wait for pistons to stop before scanning");

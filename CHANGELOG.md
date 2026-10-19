@@ -2,6 +2,7 @@
 
 ## 2.2
 
+- Capture the complete square build above a turntable, including overhangs above its fixed housing corners, so scan boundaries do not leave pieces that immediately obstruct rotation.
 - Keep remaining turntable surfaces visible after a member is removed, use exact terrain collision tests, and report obstruction coordinates.
 - Prevent a wheel-removal render crash; keep retracted extender wheels clear of their casing and carry contacted entities through landing-gear motion.
 - Unify tank settings and contents into one dialog. Align horizontal hexagonal tanks with their axial ports, keep flat top/bottom faces and broad diagonal windows, and render level fluid with accurate partial volume.
@@ -15,7 +16,7 @@
 - Add seven Data Cards and seven matching Data Chips using the supplied item artwork: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
 - Update the three constructor meshes and company artwork, and replace Programmable Matter block/ingot textures with the supplied designs at standard resolution.
 - Add an instant Hexagon/Block tank shape setting, preserving fluid, capacity and axial connections in both hollow shapes.
-- Restrict turntable movement and capture to the circular disc. Preserve walking input while carrying players, use tighter rotated collision footprints, restore blocks automatically at the nearest quarter turn on stopping, and use redstone ON/OFF activation.
+- Rotate only the circular surface disc while its square housing corners remain fixed. Preserve walking input while carrying players, use tighter rotated collision footprints, restore blocks automatically at the nearest quarter turn on stopping, and use redstone ON/OFF activation.
 
 - Add 2x2 Large Extenders and Swing Arms, stackable swing-arm columns, and separate standard/wide Wheel feet for either arm. Reserve full footprints, carry wheel gear through vehicle conversion, and animate tires in Taxi mode. Select visible retracted feet to operate their gear and permit adjacent blocks outside the swing path.
 

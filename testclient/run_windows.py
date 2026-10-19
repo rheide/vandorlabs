@@ -37,6 +37,7 @@ def main():
     parser.add_argument('--compat-mods', type=Path)
     parser.add_argument('--jar', type=Path)
     parser.add_argument('--world-copy', type=Path, help='Test a workspace copy of an existing save')
+    parser.add_argument('--turntable-position', help='Exercise a controller at x,y,z in a disposable --world-copy save')
     parser.add_argument('--client-options', type=Path, help='Use supplied graphics and input settings in the isolated client')
     parser.add_argument('--max-heap', default='3G', help='Maximum heap for the isolated client, such as 3G or 4096M')
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
@@ -185,6 +186,10 @@ def main():
         properties.append('-Dvandorlabs.foreignVehicleChecks=true')
     if args.world_copy:
         properties.append('-Dvandorlabs.existingWorldChecks=true')
+    if args.turntable_position:
+        if not args.world_copy or not re.fullmatch(r'-?\d+,-?\d+,-?\d+',args.turntable_position):
+            parser.error('--turntable-position requires --world-copy and x,y,z coordinates')
+        properties += ['-Dvandorlabs.checkTurntableRotation=true','-Dvandorlabs.turntableTestPosition='+args.turntable_position]
     if args.trace_chunks:
         properties.append('-Dvandorlabs.traceChunkTiles=true')
     if args.focus:
@@ -246,6 +251,8 @@ def main():
         raise SystemExit('Asynchronous gameplay exception; inspect '+str(output/'client.log'))
     if args.world_copy and 'existing-world-load PASS' not in (output/'client.log').read_text(errors='replace'):
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
+    if args.turntable_position and 'existing-turntable PASS' not in client_log:
+        raise SystemExit('Existing turntable did not complete its rotation/return check: '+str(output/'client.log'))
     if args.focus:
         marker = {'canopy-animations':'documentation-animation PASS', 'connection-acceptance':'connection-acceptance PASS', 'large-canopy':'large-canopy-live PASS', 'armor':'role-armor PASS', 'regular-dialog':'regular-dialog-client PASS', 'vehicle-controller':'vehicle-controller-live PASS', 'pilot-inspection':'pilot-inspection PASS', 'pilot-seat':'pilot-seat-live PASS', 'vehicles':'vehicle-live PASS', 'vehicle-render':'vehicle-render-live PASS', 'vehicle-taxi':'vehicle-taxi PASS', 'followups':'followups-client PASS', 'pulse-screen':'screen-mode-client PASS', 'moat':'moat-client PASS', 'wheel-motion':'wheel-motion-client PASS', 'hover-controls':'hover-client-controls PASS', 'vehicle-status':'vehicle-status-client PASS', 'vehicle-motion':'vehicle-motion PASS', 'vehicle-network':'vehicle-network PASS', 'canopies':'canopy-live PASS', 'diagonal-joins':'diagonal-joins-live PASS', 'glass-appearance':'glass-render-live PASS', 'machinery':'machinery-render-live PASS', 'block-categories':'block-categories-live PASS', 'doors':'programmable-doors-live PASS', 'redstone-inversion':'redstone-inversion-live PASS', 'ramps':'escalator-live PASS'}[args.focus]
         validate_completion(client_log, marker, args.focus == 'armor'

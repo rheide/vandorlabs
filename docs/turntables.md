@@ -8,7 +8,7 @@ clicking it or using the Configurizer.
 
 Use the **Height** slider to set the number of blocks to capture away from the active face
 (1–16), and click **Scan**. The contents become an inert rotating display;
-they do not need a pilot seat, landing gear or propulsion. Block inventories,
+the full square footprint above the surface is captured, including parts that overhang the disc. They do not need a pilot seat, landing gear or propulsion. Block inventories,
 tile data and non-player entities are preserved. Captured machines stop ticking.
 Players remain in the world. Dismount players or mounts that cross the scan
 boundary before scanning.
@@ -62,8 +62,7 @@ square surface composition are retained.
 
 Players and loose items standing on a scanned floor turntable move with its
 circular surface, including empty parts of the disc. Players can walk and jump
-while being carried. The square corners stay stationary and are excluded from
-new captures. Flying players remain free.
+while being carried. The square surface corners stay stationary. Builds above those corners are included in the scan so connected overhangs move together; keep the surrounding rotation path clear. Flying players remain free.
 Captured displays do not intercept block selection around the platform.
 
 For an older opposite-face capture, stop rotation and use Restore before scanning

@@ -79,15 +79,15 @@ final class TurntableRuntimeChecks {
         for(int x=0;x<5;x++)for(int z=0;z<5;z++){BlockPos at=fullSeed.add(x,0,z);world.setBlockState(at,surface.getDefaultState());world.setBlockState(at.up(),Blocks.BRICK_BLOCK.getDefaultState());}
         world.setBlockState(fullOwner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));TileEntityTurntableController full=(TileEntityTurntableController)world.getTileEntity(fullOwner);
         full.rpm=3;require(full.rotationMode==1&&!full.running(),"new turntable waits for redstone ON");full.rotationMode=2;full.scan(player);EntityTurntable moving=full.display();
-        require(moving.snapshot.blocks.cells.size()==13,"only circular platform cells captured");
-        for(int x=0;x<5;x++)for(int z=0;z<5;z++){BlockPos at=fullSeed.add(x,1,z);if(!moving.snapshot.layout.onDisc(at.getX()+.5,at.getY()+.5,at.getZ()+.5)){require(world.getBlockState(at).getBlock()==Blocks.BRICK_BLOCK,"stationary corner retained");world.setBlockToAir(at);}}
+        require(moving.snapshot.blocks.cells.size()==25,"full square build captured above the fixed surface corners");
+
         for(int tick=0;tick<100;tick++)moving.onUpdate();require(Math.abs(moving.angle()-90)<.001,"full five-by-five captured layer rotates through ninety degrees");
         full.rotationMode=1;moving.onUpdate();require(!moving.isDead&&full.captureId!=null,"restore must wait until the entity loop finishes");TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"stopping automatically restores displayed right-angle pose");
         require(full.layout!=null,"normal surface layout retained for next activation");
         full.update();BlockPos power=fullOwner.west();BlockIndustrialLever lever=(BlockIndustrialLever)Block.getBlockFromName("vandorlabs:small_power_lever");
         world.setBlockState(power.down(),Blocks.STONE.getDefaultState());world.setBlockState(power,lever.getDefaultState().withProperty(BlockIndustrialLever.FLOOR,true));DeferredTileLoad.flush(world);
         lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);full.update();
-        moving=full.display();require(moving!=null&&moving.snapshot.blocks.cells.size()==13,"new redstone activation recaptures the prior circular platform");
+        moving=full.display();require(moving!=null&&moving.snapshot.blocks.cells.size()==25,"new redstone activation recaptures the whole prior build");
         for(int tick=0;tick<200;tick++){full.update();moving.onUpdate();TurntableEvents.finishTransfers(world);require(!moving.isDead&&full.running(),"continuous redstone activation never stops after its initial tick");}
         moving.onUpdate();lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);moving.onUpdate();TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"lever removal automatically restores the next cycle");world.setBlockToAir(power);world.setBlockToAir(power.down());
         // Reproduce a saved pre-fix floor capture of terrain behind the active face.

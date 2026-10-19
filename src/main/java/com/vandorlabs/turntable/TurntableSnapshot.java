@@ -38,10 +38,9 @@ public final class TurntableSnapshot {
         if(min.getY()<0 || max.getY()>=world.getHeight() || !world.getWorldBorder().contains(min) || !world.getWorldBorder().contains(max) || !world.isAreaLoaded(min,max,false))
             throw new IllegalArgumentException("The entire scan volume must be inside the loaded world");
         List<VehicleStructure.Cell> cells=new ArrayList<>();
-        boolean circular=world.getBlockState(layout.root).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(layout.root).getValue(com.vandorlabs.blocks.BlockTurntableSurface.FACING)==layout.normal;
-        TurntableBoundaries boundaries=new TurntableBoundaries(world,min,max,circular?layout:null);
+        TurntableBoundaries boundaries=new TurntableBoundaries(world,min,max);
         for(BlockPos mutable:BlockPos.getAllInBox(min,max)){
-            BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos)||circular&&!layout.onDisc(pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5))continue;
+            BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos))continue;
             VehicleService.permission(actor,pos);
             if(MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
             TileEntity tile=world.getTileEntity(pos);
@@ -54,7 +53,7 @@ public final class TurntableSnapshot {
         AxisAlignedBB volume=new AxisAlignedBB(min,max.add(1,1,1));
         List<Entity> selected=new ArrayList<>();Set<UUID> ids=new HashSet<>();
         for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,volume)){
-            if(entity.isDead || entity instanceof EntityPlayer ||circular&&!layout.onDisc(entity.posX,entity.posY,entity.posZ)|| entity.posX<volume.minX||entity.posX>=volume.maxX||entity.posY<volume.minY||entity.posY>=volume.maxY||entity.posZ<volume.minZ||entity.posZ>=volume.maxZ)continue;
+            if(entity.isDead || entity instanceof EntityPlayer || entity.posX<volume.minX||entity.posX>=volume.maxX||entity.posY<volume.minY||entity.posY>=volume.maxY||entity.posZ<volume.minZ||entity.posZ>=volume.maxZ)continue;
             if(entity instanceof EntityTurntable)throw new IllegalArgumentException("Restore the other captured turntable before scanning");
             selected.add(entity);ids.add(entity.getUniqueID());
         }
