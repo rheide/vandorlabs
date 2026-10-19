@@ -24,6 +24,9 @@ final class GuiOptionCycleRuntimeChecks {
         else if(gui instanceof GuiRedstoneScreen)ids=new int[]{7,8,9};
         else if(gui instanceof GuiAnimatedScreenSelector || gui instanceof GuiProgrammableInput || gui instanceof GuiProgrammableHalfConsole)ids=new int[]{0,4,32};
         else if(gui instanceof GuiConnectedSeat)ids=new int[]{1};
+        else if(gui instanceof GuiModularGear)ids=new int[]{0,1,2};
+        else if(gui instanceof GuiTurntable)ids=new int[]{0,2,3,4};
+        else if(gui instanceof GuiStorageStatus)ids=new int[]{1,2};
         else if(gui instanceof GuiLandingGear)ids=new int[]{0,4};
         else if(gui instanceof GuiProgrammableChair)ids=new int[]{11};
         else if(gui instanceof GuiProgrammableGlass)ids=new int[]{0,3,4,5,6};

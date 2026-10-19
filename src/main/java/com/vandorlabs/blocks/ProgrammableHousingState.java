@@ -27,6 +27,9 @@ public final class ProgrammableHousingState {
                 public String valueToString(com.vandorlabs.tiles.FaceTextures value) { return value.toString(); }
             };
 
+    public static final IUnlistedProperty<HousingFaceLayouts> JOINED=new IUnlistedProperty<HousingFaceLayouts>(){
+        public String getName(){return "housing_joined_faces";}public boolean isValid(HousingFaceLayouts value){return value!=null;}public Class<HousingFaceLayouts> getType(){return HousingFaceLayouts.class;}public String valueToString(HousingFaceLayouts value){return value.toString();}
+    };
     private static final EnumFacing[] DIRECTIONS=EnumFacing.values();
 
     private ProgrammableHousingState() { }
@@ -67,9 +70,14 @@ public final class ProgrammableHousingState {
             }
             if (hide) visible &= ~(1 << side.getIndex());
         }
-        return HousingBlockState.sample((IExtendedBlockState)state,finish,tile==null?-1:tile.getSideTexture(),
+        IExtendedBlockState sampled=HousingBlockState.sample((IExtendedBlockState)state,finish,tile==null?-1:tile.getSideTexture(),
                 tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures(),
                 tileSides,visible,neighborLight(world,pos));
+        if(tile!=null&&tile.getWorld()!=null&&tile.getWorld().isRemote&&state.getBlock().getClass()==BlockProgrammableBlock.class&&tileSides!=1){
+            HousingFaceLayouts joined=com.vandorlabs.client.JoinedHousingFaces.sample(tile,visible);
+            if(joined!=HousingFaceLayouts.NONE)sampled=sampled.withProperty(JOINED,joined);
+        }
+        return sampled;
     }
 
     public static int light(IBlockState state, IBlockAccess world, BlockPos pos) {

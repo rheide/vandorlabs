@@ -261,7 +261,7 @@ public final class GearMotion {
     public static Pose pose(Mode mode, Direction direction, int columnHeight,
                             double deployProgress,double stowedFootY,double hingeDrop) {
         requireFinite(hingeDrop,"hingeDrop");
-        if(hingeDrop<0 || hingeDrop>1/8D)throw new IllegalArgumentException("Hinge drop must be between zero and one eighth block.");
+        if(hingeDrop<0 || hingeDrop>3/16D)throw new IllegalArgumentException("Hinge drop must be between zero and three sixteenths of a block.");
         requireFinite(stowedFootY,"stowedFootY");
         if (mode == null || direction == null) {
             throw new IllegalArgumentException("Animation mode and direction are required.");

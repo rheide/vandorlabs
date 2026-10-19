@@ -504,5 +504,161 @@
       35,
       0
     ]
+  },
+  {
+    "id": "gear-small-extender-plate",
+    "shot": "gallery_gear_small_extender_plate",
+    "kind": "gear",
+    "output": "landing-gear/gear-small-extender-plate.gif",
+    "camera": [
+      165.3,
+      9.1,
+      -25,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-small-extender-ski",
+    "shot": "gallery_gear_small_extender_ski",
+    "kind": "gear",
+    "output": "landing-gear/gear-small-extender-ski.gif",
+    "camera": [
+      165.3,
+      9.1,
+      -25,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-small-extender-wheel",
+    "shot": "gallery_gear_small_extender_wheel",
+    "kind": "gear",
+    "output": "landing-gear/gear-small-extender-wheel.gif",
+    "camera": [
+      165.3,
+      9.1,
+      -25,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-small-swing-plate",
+    "shot": "gallery_gear_small_swing_plate",
+    "kind": "gear",
+    "output": "landing-gear/gear-small-swing-plate.gif",
+    "camera": [
+      165.3,
+      9.1,
+      -25,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-small-swing-ski",
+    "shot": "gallery_gear_small_swing_ski",
+    "kind": "gear",
+    "output": "landing-gear/gear-small-swing-ski.gif",
+    "camera": [
+      165.3,
+      9.1,
+      -25,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-small-swing-wheel",
+    "shot": "gallery_gear_small_swing_wheel",
+    "kind": "gear",
+    "output": "landing-gear/gear-small-swing-wheel.gif",
+    "camera": [
+      165.3,
+      9.1,
+      -25,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-large-extender-plate",
+    "shot": "gallery_gear_large_extender_plate",
+    "kind": "gear",
+    "output": "landing-gear/gear-large-extender-plate.gif",
+    "camera": [
+      167,
+      10,
+      -27,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-large-extender-ski",
+    "shot": "gallery_gear_large_extender_ski",
+    "kind": "gear",
+    "output": "landing-gear/gear-large-extender-ski.gif",
+    "camera": [
+      167,
+      10,
+      -27,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-large-extender-wheel",
+    "shot": "gallery_gear_large_extender_wheel",
+    "kind": "gear",
+    "output": "landing-gear/gear-large-extender-wheel.gif",
+    "camera": [
+      167,
+      10,
+      -27,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-large-swing-plate",
+    "shot": "gallery_gear_large_swing_plate",
+    "kind": "gear",
+    "output": "landing-gear/gear-large-swing-plate.gif",
+    "camera": [
+      167,
+      10,
+      -27,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-large-swing-ski",
+    "shot": "gallery_gear_large_swing_ski",
+    "kind": "gear",
+    "output": "landing-gear/gear-large-swing-ski.gif",
+    "camera": [
+      167,
+      10,
+      -27,
+      35,
+      18
+    ]
+  },
+  {
+    "id": "gear-large-swing-wheel",
+    "shot": "gallery_gear_large_swing_wheel",
+    "kind": "gear",
+    "output": "landing-gear/gear-large-swing-wheel.gif",
+    "camera": [
+      167,
+      10,
+      -27,
+      35,
+      18
+    ]
   }
 ]

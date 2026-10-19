@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 final class CustomMaterialRuntimeChecks {
     static void run(net.minecraft.entity.player.EntityPlayer player) {
         Minecraft mc=Minecraft.getMinecraft();
+        try{SharedTextureResources.check(mc);}catch(java.io.IOException error){throw new IllegalStateException("Shared texture resource lookup",error);}
         int imported=0;java.util.Set<String> categories=new java.util.HashSet<>();
         for(int i=ScreenHousingTextures.LEGACY_COUNT;i<ScreenHousingTextures.BUILTIN_COUNT;i++)if(ScreenHousingTextures.IDS[i].startsWith("imported_")) {
             net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(i));
@@ -21,6 +22,7 @@ final class CustomMaterialRuntimeChecks {
         require(imported==41 && categories.equals(new java.util.HashSet<>(java.util.Arrays.asList("Tech","Hull","Trapdoors","Windows"))),"imported category/texture coverage");
         checkMenu(mc);
         checkCorp(mc);
+        JoinedHousingRuntimeChecks.run(mc);
         int hatchNames=0;
         for(int i=ScreenHousingTextures.LEGACY_COUNT;i<ScreenHousingTextures.BUILTIN_COUNT;i++)
             if("Trapdoors".equals(ScreenHousingTextures.category(i))) {

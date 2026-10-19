@@ -48,14 +48,21 @@ final class GearModels {
     }
 
     static void draw(String name, GearRenderer.Affine transform, double x, double y, double z,
-                     int light, BufferBuilder buffer) {
+                     int light, BufferBuilder buffer, boolean cache) {
         Mesh mesh = MESHES.get(name);
-        if (mesh != null) mesh.draw(transform, x, y, z, light, buffer);
+        if (mesh != null) mesh.draw(transform, x, y, z, light, buffer, cache);
     }
+
+    static long cachedVertexBytes(){long bytes=0;for(Mesh mesh:MESHES.values())for(double[] data:mesh.transformed.values())bytes+=data.length*8L;return bytes;}
 
     private static final class Mesh {
         private final List<Quad> quads = new ArrayList<Quad>();
 
+        // Bounded per mesh, shared by identical assemblies. World positions and light
+        // remain dynamic; resource reload drops all transformed data.
+        private final java.util.LinkedHashMap<GearRenderer.Affine,double[]> transformed=new java.util.LinkedHashMap<GearRenderer.Affine,double[]>(16,.75f,true){
+            @Override protected boolean removeEldestEntry(Map.Entry<GearRenderer.Affine,double[]> entry){return size()>64;}
+        };
         Mesh(IBakedModel model) {
             for (BakedQuad quad : model.getQuads(null, null, 0L)) quads.add(new Quad(quad));
             for (EnumFacing face : EnumFacing.values()) {
@@ -63,7 +70,13 @@ final class GearModels {
             }
         }
 
-        void draw(GearRenderer.Affine transform, double x, double y, double z, int light, BufferBuilder buffer) {
+        void draw(GearRenderer.Affine transform, double x, double y, double z, int light, BufferBuilder buffer,boolean cache) {
+            if(cache){
+                double[] data=transformed.get(transform);
+                if(data==null){data=transformedVertices(transform);transformed.put(transform,data);}
+                for(int i=0;i<data.length;i+=9)buffer.pos(x+data[i],y+data[i+1],z+data[i+2]).color((float)data[i+3],(float)data[i+4],(float)data[i+5],(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(light>>16&65535,light&65535).endVertex();
+                return;
+            }
             int sky = light >> 16 & 65535;
             int block = light & 65535;
             for (Quad quad : quads) {
@@ -83,7 +96,21 @@ final class GearModels {
                 }
             }
         }
+        private double[] transformedVertices(GearRenderer.Affine t){
+            double[] data=new double[quads.size()*4*9];int i=0;
+            for(Quad q:quads){
+                double nx=t.xx*q.nx+t.xy*q.ny+t.xz*q.nz,ny=t.yx*q.nx+t.yy*q.ny+t.yz*q.nz,nz=t.zx*q.nx+t.zy*q.ny+t.zz*q.nz;
+                double length=nx*nx+ny*ny+nz*nz;
+                float shade=!q.diffuse||length<1e-12?1f:(float)((nx*nx*.6+ny*ny*(ny>0?1:.5)+nz*nz*.8)/length);
+                for(Vertex v:q.vertices){
+                    data[i++]=t.xx*v.x+t.xy*v.y+t.xz*v.z+t.tx;data[i++]=t.yx*v.x+t.yy*v.y+t.yz*v.z+t.ty;data[i++]=t.zx*v.x+t.zy*v.y+t.zz*v.z+t.tz;
+                    data[i++]=v.r*shade;data[i++]=v.g*shade;data[i++]=v.b*shade;data[i++]=v.a;data[i++]=v.u;data[i++]=v.v;
+                }
+            }return data;
+        }
     }
+
+
 
     private static final class Quad {
         final Vertex[] vertices = new Vertex[4];

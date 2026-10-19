@@ -45,9 +45,9 @@ final class ConstructorRuntimeChecks {
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.onDataPacket(null,tile.getUpdatePacket());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
-                for(int tick=0;tick<40;tick++)tile.update();require(!tile.formed(),"dismantled frame never automatically reforms");
+                require(!((Object)tile instanceof ITickable),"constructors have no automatic tick callback");require(!tile.formed(),"dismantled frame never automatically reforms");
                 require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");
-                net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");for(int tick=0;tick<40;tick++)tile.update();require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");
+                net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");require(!((Object)tile instanceof ITickable),"constructors have no automatic tick callback");require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");
                 world.setBlockState(missing,matter.getDefaultState());require(tile.assemble(),"explicit repair and reassembly");world.setBlockToAir(root);checkRestored(world,original,matter);count++;
             }finally{
                 world.setBlockToAir(root);for(BlockPos p:original.keySet())world.setBlockToAir(p);

@@ -21,9 +21,9 @@ public final class TileEntityTurntableController extends TileEntity implements I
     public int height=4,scanMode,rotationMode=1,axis;
     public double rpm=1;
     public boolean clockwise=true,reverse,enabled=true;
-    public ChannelList scanChannels=ChannelList.EMPTY,rotationChannels=ChannelList.EMPTY;
+    public ChannelList scanChannels=ChannelList.EMPTY,rotationChannels=ChannelList.EMPTY,directionChannels=ChannelList.EMPTY;
     public String message="Place a square of Surface blocks in front, then Scan";
-    private boolean trigger,rotationTrigger;
+    private boolean trigger,rotationTrigger,directionHigh,directionKnown;
     private int ticks;
     private double angle,previous;
     public EntityTurntable display(){if(world==null||captureId==null)return null;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(entity instanceof EntityTurntable && captureId.equals(entity.getUniqueID())&&!entity.isDead)return (EntityTurntable)entity;return null;}
@@ -55,7 +55,8 @@ public final class TileEntityTurntableController extends TileEntity implements I
         enabled=false;
         // Keep the capture layout for recovery, but return every remaining face
         // to its ordinary block model if the shared renderer loses a member.
-        if(layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){
+        // Retain capture claims until Restore, so damaged platforms remain protected.
+        if(captureId==null&&layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){
             TileEntity raw=world.getTileEntity(cell);
             if(raw instanceof TileEntityTurntableSurface&&pos.equals(((TileEntityTurntableSurface)raw).owner)&&key.equals(((TileEntityTurntableSurface)raw).ownerKey))((TileEntityTurntableSurface)raw).release();
         }
@@ -64,14 +65,18 @@ public final class TileEntityTurntableController extends TileEntity implements I
     public void release(){if(layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){TileEntity tile=world.getTileEntity(cell);if(tile instanceof TileEntityTurntableSurface && pos.equals(((TileEntityTurntableSurface)tile).owner)&&key.equals(((TileEntityTurntableSurface)tile).ownerKey))((TileEntityTurntableSurface)tile).release();}layout=null;changed();}
     public void settings(NBTTagCompound tag){
         int h=tag.getInteger("Height"),sm=tag.getInteger("ScanMode"),rm=tag.getInteger("RotationMode"),a=tag.getInteger("Axis");double speed=tag.getDouble("RPM");
-        ChannelList scan=ChannelList.parse(tag.getString("ScanChannels")),rotate=ChannelList.parse(tag.getString("RotationChannels"));
+        ChannelList scan=ChannelList.parse(tag.getString("ScanChannels")),rotate=ChannelList.parse(tag.getString("RotationChannels")),direction=ChannelList.parse(tag.hasKey("DirectionChannels")?tag.getString("DirectionChannels"):"0");
         TurntableGeometry.degreesPerTick(speed);
-        if(h<1||h>16||sm<0||sm>2||rm<1||rm>2||a<0||a>3||scan==null||rotate==null)throw new IllegalArgumentException("Invalid turntable settings");
+        if(h<1||h>16||sm<0||sm>2||rm<1||rm>2||a<0||a>3||scan==null||rotate==null||direction==null)throw new IllegalArgumentException("Invalid turntable settings");
         if(captureId!=null&&(h!=height||a!=axis))throw new IllegalArgumentException("Restore before changing the scan volume or axis");
+        if(!directionChannels.equals(direction)){directionKnown=false;directionChannels=direction;}
         height=h;scanMode=sm;rotationMode=rm;axis=a;rpm=speed;scanChannels=scan;rotationChannels=rotate;clockwise=tag.getBoolean("Clockwise");reverse=false;changed();
     }
     @Override public void update(){
         previous=angle;if(world.isRemote){return;}
+        boolean pulse=!directionChannels.isEmpty()&&RedstoneChannels.allPowered(world,directionChannels);
+        if(directionKnown&&pulse&&!directionHigh){clockwise=!clockwise;changed();}
+        directionHigh=pulse;directionKnown=true;
         ticks++;boolean next=matches(scanMode,scanChannels);
         if(next&&!trigger&&captureId==null&&actor!=null)try{scan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){status(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         trigger=next;boolean rotation=matches(Math.max(1,rotationMode),rotationChannels);
@@ -83,8 +88,8 @@ public final class TileEntityTurntableController extends TileEntity implements I
     }
     public void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}
     @Override public boolean shouldRefresh(World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setUniqueId("Key",key);if(captureId!=null)tag.setUniqueId("Capture",captureId);if(actor!=null)tag.setUniqueId("Actor",actor);if(layout!=null)tag.setTag("Surface",layout.write());tag.setInteger("Height",height);tag.setInteger("ScanMode",scanMode);tag.setInteger("RotationMode",rotationMode);tag.setInteger("Axis",axis);tag.setDouble("RPM",rpm);tag.setBoolean("Clockwise",clockwise);tag.setBoolean("Reverse",reverse);tag.setBoolean("Enabled",enabled);tag.setString("ScanChannels",scanChannels.toString());tag.setString("RotationChannels",rotationChannels.toString());tag.setString("Status",message);tag.setDouble("Angle",angle);tag.setBoolean("Trigger",trigger);tag.setBoolean("RotationTrigger",rotationTrigger);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);key=tag.hasUniqueId("Key")?tag.getUniqueId("Key"):UUID.randomUUID();captureId=tag.hasUniqueId("Capture")?tag.getUniqueId("Capture"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;layout=tag.hasKey("Surface",10)?TurntableSurfaceLayout.read(tag.getCompoundTag("Surface")):null;height=Math.max(1,Math.min(16,tag.getInteger("Height")));scanMode=Math.max(0,Math.min(2,tag.getInteger("ScanMode")));rotationMode=Math.max(1,Math.min(2,tag.getInteger("RotationMode")));axis=Math.max(0,Math.min(3,tag.getInteger("Axis")));double saved=tag.getDouble("RPM");rpm=Double.isFinite(saved)?Math.max(.1,Math.min(30,saved)):1;clockwise=tag.getBoolean("Clockwise");reverse=tag.getBoolean("Reverse");enabled=tag.getBoolean("Enabled");ChannelList s=ChannelList.parse(tag.getString("ScanChannels")),r=ChannelList.parse(tag.getString("RotationChannels"));scanChannels=s==null?ChannelList.EMPTY:s;rotationChannels=r==null?ChannelList.EMPTY:r;message=tag.getString("Status");double savedAngle=tag.getDouble("Angle");angle=previous=Double.isFinite(savedAngle)?TurntableGeometry.wrap(savedAngle):0;trigger=tag.getBoolean("Trigger");rotationTrigger=tag.getBoolean("RotationTrigger");}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setUniqueId("Key",key);if(captureId!=null)tag.setUniqueId("Capture",captureId);if(actor!=null)tag.setUniqueId("Actor",actor);if(layout!=null)tag.setTag("Surface",layout.write());tag.setInteger("Height",height);tag.setInteger("ScanMode",scanMode);tag.setInteger("RotationMode",rotationMode);tag.setInteger("Axis",axis);tag.setDouble("RPM",rpm);tag.setBoolean("Clockwise",clockwise);tag.setBoolean("Reverse",reverse);tag.setBoolean("Enabled",enabled);tag.setString("ScanChannels",scanChannels.toString());tag.setString("RotationChannels",rotationChannels.toString());tag.setString("DirectionChannels",directionChannels.toString());tag.setBoolean("DirectionHigh",directionHigh);tag.setBoolean("DirectionKnown",directionKnown);tag.setString("Status",message);tag.setDouble("Angle",angle);tag.setBoolean("Trigger",trigger);tag.setBoolean("RotationTrigger",rotationTrigger);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);key=tag.hasUniqueId("Key")?tag.getUniqueId("Key"):UUID.randomUUID();captureId=tag.hasUniqueId("Capture")?tag.getUniqueId("Capture"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;layout=tag.hasKey("Surface",10)?TurntableSurfaceLayout.read(tag.getCompoundTag("Surface")):null;height=Math.max(1,Math.min(16,tag.getInteger("Height")));scanMode=Math.max(0,Math.min(2,tag.getInteger("ScanMode")));rotationMode=Math.max(1,Math.min(2,tag.getInteger("RotationMode")));axis=Math.max(0,Math.min(3,tag.getInteger("Axis")));double saved=tag.getDouble("RPM");rpm=Double.isFinite(saved)?Math.max(.1,Math.min(30,saved)):1;clockwise=tag.getBoolean("Clockwise");reverse=tag.getBoolean("Reverse");enabled=tag.getBoolean("Enabled");ChannelList s=ChannelList.parse(tag.getString("ScanChannels")),r=ChannelList.parse(tag.getString("RotationChannels"));scanChannels=s==null?ChannelList.EMPTY:s;rotationChannels=r==null?ChannelList.EMPTY:r;ChannelList d=ChannelList.parse(tag.getString("DirectionChannels"));directionChannels=d==null?ChannelList.EMPTY:d;directionHigh=tag.getBoolean("DirectionHigh");directionKnown=tag.getBoolean("DirectionKnown");message=tag.getString("Status");double savedAngle=tag.getDouble("Angle");angle=previous=Double.isFinite(savedAngle)?TurntableGeometry.wrap(savedAngle):0;trigger=tag.getBoolean("Trigger");rotationTrigger=tag.getBoolean("RotationTrigger");}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,1,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}

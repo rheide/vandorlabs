@@ -156,10 +156,10 @@ public final class ItemDuplifier extends Item {
                         "Matching group exceeds 4096 block cells; no settings applied"), true);
             else
                 player.sendStatusMessage(new TextComponentString(count > 0
-                        ? "Duplifier applied settings to " + count + " blocks"
+                        ? "Duplifier applied settings to " + count + (count==1?" block":" blocks")
                         : "No copied settings apply here"), true);
         } else if (applyTo(world, pos, tool, player))
-            player.sendStatusMessage(new TextComponentString("Duplifier applied settings"), true);
+            player.sendStatusMessage(new TextComponentString("Duplifier applied settings to 1 block"), true);
         else
             player.sendStatusMessage(new TextComponentString("No copied settings apply here"), true);
     }

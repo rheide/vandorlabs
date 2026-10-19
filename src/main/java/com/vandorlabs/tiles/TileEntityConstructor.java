@@ -11,8 +11,8 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 
 /** Validate first, then reserve a footprint; reconstruction restores the consumed frame. */
-public final class TileEntityConstructor extends TileEntity implements ITickable {
-    private boolean changing;private int ticks;private IBlockState removedState;
+public final class TileEntityConstructor extends TileEntity {
+    private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
     private String assemblyProblem="";
     /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
@@ -74,7 +74,6 @@ public final class TileEntityConstructor extends TileEntity implements ITickable
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();
         }finally{changing=false;}
     }
-    @Override public void update(){/* Formation is an explicit Core interaction. */}
     @Override public AxisAlignedBB getRenderBoundingBox(){BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin,origin.add(turn?3:core().width,core().height,turn?core().width:3));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){return true;}

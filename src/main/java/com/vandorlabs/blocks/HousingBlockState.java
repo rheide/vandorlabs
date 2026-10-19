@@ -65,7 +65,7 @@ public final class HousingBlockState extends ExtendedBlockState {
     }
 
     private static boolean commonSchema(ImmutableMap<IUnlistedProperty<?>,Optional<?>> schema) {
-        return (schema.size()==4 || schema.size()==6
+        return (schema.size()==4 || (schema.size()==6 || schema.size()==7&&schema.containsKey(ProgrammableHousingState.JOINED))
                 && schema.containsKey(ProgrammableHousingState.VISIBLE) && schema.containsKey(ProgrammableHousingState.LIGHT))
                 && schema.containsKey(ProgrammableHousingState.FINISH) && schema.containsKey(ProgrammableHousingState.SIDE_FINISH)
                 && schema.containsKey(ProgrammableHousingState.FACES) && schema.containsKey(ProgrammableHousingState.TILE_SIDES);
@@ -82,7 +82,7 @@ public final class HousingBlockState extends ExtendedBlockState {
                 int finish,int side,FaceTextures faces,int tileSides,int visible,int light) {
             super(source,schema);
             this.schema=schema;this.finish=finish;this.side=side;this.faces=faces;
-            this.tileSides=tileSides;this.visible=visible;this.light=light;lighting=schema.size()==6;
+            this.tileSides=tileSides;this.visible=visible;this.light=light;lighting=schema.size()>=6;
         }
         private DirectSnapshot(DirectSnapshot source) {
             super(source,source.schema);
@@ -100,6 +100,7 @@ public final class HousingBlockState extends ExtendedBlockState {
             if(property==ProgrammableHousingState.TILE_SIDES)return property.getType().cast(tileSides);
             if(lighting && property==ProgrammableHousingState.VISIBLE)return property.getType().cast(visible);
             if(lighting && property==ProgrammableHousingState.LIGHT)return property.getType().cast(light);
+            if(property==ProgrammableHousingState.JOINED)return property.getType().cast(com.vandorlabs.blocks.HousingFaceLayouts.NONE);
             return full().getValue(property);
         }
         @Override public ImmutableMap<IUnlistedProperty<?>,Optional<?>> getUnlistedProperties() {

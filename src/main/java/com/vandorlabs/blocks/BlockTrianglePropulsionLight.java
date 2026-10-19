@@ -7,6 +7,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -21,6 +22,17 @@ public class BlockTrianglePropulsionLight extends BlockPropulsionLight {
     public BlockTrianglePropulsionLight(String name, String baseId) {
         super(name, false, 1.0F);
         this.baseId = baseId;
+    }
+
+    /** Vertical nozzles retain their normal under yaw, but their corner mesh must turn. */
+    @Override public IBlockState withRotation(IBlockState state,Rotation rotation){
+        EnumFacing facing=state.getValue(FACING);
+        if(facing.getAxis()!=EnumFacing.Axis.Y)return super.withRotation(state,rotation);
+        String id=getRegistryName().getResourcePath();boolean right=id.endsWith("_right"),top=id.contains("_top_");
+        for(int i=0;i<rotation.ordinal();i++){boolean before=right;right=facing==EnumFacing.UP?!top:top;top=facing==EnumFacing.UP?before:!before;}
+        String target=baseId+(top?(right?"_top_right":"_top_left"):(right?"_bottom_right":""));
+        Block sibling=Block.getBlockFromName("vandorlabs:"+target);
+        return sibling.getDefaultState().withProperty(FACING,facing).withProperty(POWERED,state.getValue(POWERED));
     }
 
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,

@@ -32,7 +32,7 @@ final class DocumentationAnimationCapture {
     DocumentationAnimationCapture(File root,JsonObject spec) {
         this.spec=spec;output=new File(root,spec.get("id").getAsString());
         if(!output.mkdirs() && !output.isDirectory())throw new IllegalStateException("Capture directory unavailable");
-        motionMs=kind().equals("ramp")?2000:1000;
+        motionMs=kind().equals("ramp")?2000:kind().equals("gear")?1800:1000;
         signalCapture=kind().equals("signal")?new SignalControlAnimationCapture(output,spec):null;
     }
     String kind(){return spec.get("kind").getAsString();}
@@ -60,7 +60,8 @@ final class DocumentationAnimationCapture {
                     && world.getBlockState(tile.getPos()).getValue(BlockVandorDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.LOWER
                     || kind().equals("trapdoor") && tile instanceof TileEntityProgrammableTrapdoor
                     || kind().equals("ramp") && tile instanceof TileEntityRampController
-                    || kind().equals("canopy") && tile instanceof TileEntityCanopy && ((TileEntityCanopy)tile).draws())result.add(tile);
+                    || kind().equals("canopy") && tile instanceof TileEntityCanopy && ((TileEntityCanopy)tile).draws()
+                    || kind().equals("gear") && tile instanceof com.vandorlabs.gear.GearTileEntity && ((com.vandorlabs.gear.GearTileEntity)tile).isController())result.add(tile);
         }
         if(result.isEmpty())throw new IllegalStateException("Documentation fixture has no "+kind()+" tiles: "+spec.get("id"));
         return result;
@@ -74,6 +75,7 @@ final class DocumentationAnimationCapture {
             if(spec.has("intoWall"))leaf.setSlideIntoWall(spec.get("intoWall").getAsBoolean());
         }
         toggle(world,false);
+        if(kind().equals("gear"))for(TileEntity member:members(world))((com.vandorlabs.gear.GearTileEntity)member).captureProgress(0);
         if(kind().equals("ramp"))for(TileEntity member:members(world)) {
             TileEntityRampController controller=(TileEntityRampController)member;
             ControllerRuntimeChecks.elapsed(controller,controller.durationTicks()+1);
@@ -91,6 +93,7 @@ final class DocumentationAnimationCapture {
                 for(TileEntityProgrammableTrapdoor other:leaf.group())visited.add(other.getPos());
                 leaf.requestOpen(open);
             } else if(member instanceof TileEntityCanopy){TileEntityCanopy canopy=((TileEntityCanopy)member).owner();if(visited.add(canopy.getPos()) && canopy.targetOpen!=open)canopy.toggle();
+            } else if(member instanceof com.vandorlabs.gear.GearTileEntity){((com.vandorlabs.gear.GearTileEntity)member).target(open);
             } else {
                 TileEntityRampController controller=(TileEntityRampController)member;
                 BlockPos power=controller.getPos().north();
@@ -103,7 +106,7 @@ final class DocumentationAnimationCapture {
     private boolean active(World world) {
         boolean any=false,all=true;
         for(TileEntity member:members(world)) {
-            boolean value=member instanceof TileEntityCanopy?((TileEntityCanopy)member).owner().targetOpen:member instanceof TileEntityRampController?(((TileEntityRampController)member).escalator!=0?((TileEntityRampController)member).isEscalatorRequested():((TileEntityRampController)member).isOpen())
+            boolean value=member instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)member).target():member instanceof TileEntityCanopy?((TileEntityCanopy)member).owner().targetOpen:member instanceof TileEntityRampController?(((TileEntityRampController)member).escalator!=0?((TileEntityRampController)member).isEscalatorRequested():((TileEntityRampController)member).isOpen())
                     :world.getBlockState(member.getPos()).getValue(member instanceof TileEntityProgrammableTrapdoor?BlockTrapDoor.OPEN:BlockVandorDoor.OPEN);
             any|=value;all&=value;
         }
@@ -137,6 +140,7 @@ final class DocumentationAnimationCapture {
         if(frames.size()<25 || active(mc.world))throw new IllegalStateException("Incomplete documentation cycle: frames="+frames.size()+", active="+active(mc.world));
         if(kind().equals("ramp"))for(TileEntity tile:members(mc.world))
             if(((TileEntityRampController)tile).isMoving() || ((TileEntityRampController)tile).isEscalatorRunning())throw new IllegalStateException("Ramp did not finish retracting");
+        if(kind().equals("gear"))for(TileEntity tile:members(mc.world))if(((com.vandorlabs.gear.GearTileEntity)tile).progress()>1e-6)throw new IllegalStateException("Gear did not finish retracting");
         JsonObject metadata=new JsonParser().parse(spec.toString()).getAsJsonObject();metadata.addProperty("duration_ms",duration);
         metadata.addProperty("width",frames.get(0).getWidth());metadata.addProperty("height",frames.get(0).getHeight());
         try {

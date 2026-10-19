@@ -34,6 +34,8 @@ final class TurntableRuntimeChecks {
             EntityItem item=new EntityItem(world,chestPos.getX()+.5,chestPos.getY()+.5,chestPos.getZ()+.5,new ItemStack(Items.GOLD_INGOT,7));item.setInfinitePickupDelay();require(world.spawnEntity(item),"source entity");UUID itemId=item.getUniqueID();
             TurntableSnapshot probe=TurntableSnapshot.capture(world,found,2,player);EntityArmorStand stand=new EntityArmorStand(world,chestPos.getX()+.5,normal.getAxis()==EnumFacing.Axis.Y?probe.origin.getY():chestPos.getY()+.5,chestPos.getZ()+.5);stand.setCustomNameTag("Turntable boundary fixture");stand.setNoGravity(true);require(world.spawnEntity(stand),"source entity on lower scan boundary");UUID standId=stand.getUniqueID();
             tile.scan(player);EntityTurntable display=tile.display();require(display!=null&&world.isAirBlock(chestPos)&&item.isDead&&stand.isDead,"scan transfers source exactly once");require(display.snapshot.entities.size()==2,"entities frozen including exact lower boundary");
+            require(!surface.removedByPlayer(world.getBlockState(hole),world,hole,player,false)&&BlockTurntableSurface.locked(world,hole),"captured surface resists creative mining "+normal);
+            require(!display.preventEntitySpawning&&world.checkNoEntityCollision(new AxisAlignedBB(found.root.offset(normal.getOpposite()))),"empty space behind surface is not reserved by display bounds");
             tile.rotationMode=1;require(!tile.running(),"ON gate unpowered");tile.rotationMode=2;require(tile.running(),"OFF gate unpowered");world.setBlockState(ownerPos.down(),Blocks.REDSTONE_BLOCK.getDefaultState());require(!tile.running(),"OFF gate powered");tile.rotationMode=1;require(tile.running(),"ON gate powered");world.setBlockToAir(ownerPos.down());tile.rotationMode=2;
             TurntableSnapshot copied=TurntableSnapshot.decode(display.snapshot.encode());require(copied.blocks.cells.size()==2&&copied.entities.stream().anyMatch(e->e.id.equals(itemId)),"snapshot codec");
             try{VehicleStructure.read(copied.blocks.write());throw new AssertionError("Vehicle decoder accepted inert display");}catch(IllegalArgumentException expected){}
@@ -67,7 +69,7 @@ final class TurntableRuntimeChecks {
                 for(int tick=0;tick<40;tick++)tile.update();
                 for(BlockPos cell:found.cells)if(!cell.equals(removed)){
                     TileEntityTurntableSurface remaining=(TileEntityTurntableSurface)world.getTileEntity(cell);
-                    require(remaining.owner==null&&remaining.controller()==null&&!surface.getActualState(world.getBlockState(cell),world,cell).getValue(BlockTurntableSurface.FORMED),"root/member removal restores opaque standalone surface models "+normal);
+                    require(remaining.locked()&&remaining.controller()==null&&!surface.getActualState(world.getBlockState(cell),world,cell).getValue(BlockTurntableSurface.FORMED),"forced root/member removal retains protection and opaque standalone surface models "+normal);
                 }
                 retained.setAngle(0);tile.restore(player);require(tile.layout==null&&tile.captureId==null,"damaged platform still restores captured contents");
                 world.setBlockState(removed,surface.getDefaultState().withProperty(BlockTurntableSurface.FACING,normal));
@@ -109,6 +111,7 @@ final class TurntableRuntimeChecks {
         require(narrow.size()>16,"rotated stair footprint uses narrow strips");for(AxisAlignedBB strip:narrow)require(strip.minY==0&&strip.maxY==.5,"lower stair step height preserved");
         AxisAlignedBB upper=new AxisAlignedBB(0,.5,.5,1,1,1);for(AxisAlignedBB strip:TurntableCollision.boxes(upper,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(-1,-1,-1,2,2,2)))require(strip.minY==.5&&strip.maxY==1,"upper stair step height preserved");
         TurntableVehicleRuntimeChecks.run(world,player);
+        TurntableFollowupRuntimeChecks.run(world,player);
         System.out.println("[vandorlabs][reprolab] turntable PASS six normals square holes rotation stop persistence inventory/entity round trip blocked restore and vehicle isolation");
     }
     private static void clear(WorldServer world,BlockPos seed){for(BlockPos p:BlockPos.getAllInBox(seed.add(-5,-5,-5),seed.add(5,5,5)))if(!world.isAirBlock(p))world.setBlockToAir(p);}

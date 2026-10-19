@@ -112,6 +112,8 @@ public final class UniversalConstructorModelCache {
      */
     public static final class Mesh {
         private final Face[] faces;
+        private final double[][] oriented=new double[4][];
+        private double cachedWidth=Double.NaN,cachedDepth=Double.NaN;
 
         private Mesh(Face[] faces) { this.faces = faces; }
 
@@ -158,6 +160,27 @@ public final class UniversalConstructorModelCache {
         public void emit(BufferBuilder buffer, double originX, double originY, double originZ,
                          EnumFacing facing, double width, double depth,
                          double offsetX, double offsetY, double offsetZ, int packedLight) {
+            if (facing.getAxis().isVertical()) throw new IllegalArgumentException("Horizontal facing required");
+            if(offsetX!=0||offsetY!=0||offsetZ!=0){emitUncached(buffer,originX,originY,originZ,facing,width,depth,offsetX,offsetY,offsetZ,packedLight);return;}
+            if(cachedWidth!=width||cachedDepth!=depth){java.util.Arrays.fill(oriented,null);cachedWidth=width;cachedDepth=depth;}
+            int index=facing.getHorizontalIndex();double[] data=oriented[index];
+            if(data==null){data=prepare(facing,width,depth);oriented[index]=data;}
+            for(int i=0;i<data.length;i+=9)buffer.pos(originX+data[i],originY+data[i+1],originZ+data[i+2]).color((float)data[i+3],(float)data[i+4],(float)data[i+5],(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(packedLight&65535,packedLight>>>16&65535).endVertex();
+        }
+
+        private double[] prepare(EnumFacing facing,double width,double depth){
+            double[] data=new double[faces.length*36];int i=0;
+            for(Face face:faces){float shade=face.diffuse?LightUtil.diffuseLight(rotate(face.side,facing)):1f;
+                for(int v=0;v<4;v++){int p=v*9;double x=face.data[p],z=face.data[p+2],rx,rz;
+                    switch(facing){case EAST:rx=depth-z;rz=x;break;case SOUTH:rx=width-x;rz=depth-z;break;case WEST:rx=z;rz=width-x;break;default:rx=x;rz=z;}
+                    data[i++]=rx;data[i++]=face.data[p+1];data[i++]=rz;
+                    data[i++]=face.data[p+3]*shade;data[i++]=face.data[p+4]*shade;data[i++]=face.data[p+5]*shade;data[i++]=face.data[p+6];data[i++]=face.data[p+7];data[i++]=face.data[p+8];
+                }
+            }return data;
+        }
+
+        /** Baseline path also handles optional animated part offsets. */
+        public void emitUncached(BufferBuilder buffer,double originX,double originY,double originZ,EnumFacing facing,double width,double depth,double offsetX,double offsetY,double offsetZ,int packedLight){
             if (facing.getAxis().isVertical()) throw new IllegalArgumentException("Horizontal facing required");
             int blockLight = packedLight & 0xFFFF;
             int skyLight = (packedLight >>> 16) & 0xFFFF;

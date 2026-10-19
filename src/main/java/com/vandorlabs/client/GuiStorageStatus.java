@@ -24,7 +24,7 @@ public final class GuiStorageStatus extends GuiMaterialPicker {
         buttonList.add(new GuiButton(0,guiLeft+controls,guiTop+ySize-32,xSize-controls-12,20,"Done"));
     }
     private void choose(int casing){TileEntityHexTank tank=(TileEntityHexTank)status.tile;tank.setHousingTexture(casing);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTankShape(status.windowId,tank.isBlockShape()).withCasing(casing));}
-    @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException{if(textures!=null){int before=textures.selected();if(textures.click(x,y,button)){if(before!=textures.selected())choose(textures.selected());return;}}super.mouseClicked(x,y,button);}
+    @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2))return;if(textures!=null){int before=textures.selected();if(textures.click(x,y,button)){if(before!=textures.selected())choose(textures.selected());return;}}super.mouseClicked(x,y,button);}
     private String layoutLabel(){return "Texture: "+(((TileEntityHexTank)status.tile).getMainTextureLayout()==1?"Tile":"Fit");}
     private String shapeLabel(){return "Shape: "+((battery?((TileEntityBattery)status.tile).isBlockShape():((TileEntityHexTank)status.tile).isBlockShape())?"Block":"Hexagon");}
     @Override public void updateScreen(){super.updateScreen();for(GuiButton b:buttonList)if(b.id==1)b.displayString=shapeLabel();else if(b.id==2)b.displayString=layoutLabel();}

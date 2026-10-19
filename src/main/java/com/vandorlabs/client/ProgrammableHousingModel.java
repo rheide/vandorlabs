@@ -33,6 +33,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
     private final boolean storage;
     private final java.util.function.Function<String,TextureAtlasSprite> sprites;
     private final Map<Long, BakedQuad> variants = new ConcurrentHashMap<>();
+    private final com.google.common.cache.Cache<String,BakedQuad> joinedFaces=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
     static final int MAX_FACE_LISTS=1024;
     private final com.google.common.cache.Cache<Long,List<BakedQuad>> faceLists=
             com.google.common.cache.CacheBuilder.newBuilder().maximumSize(MAX_FACE_LISTS).build();
@@ -59,6 +60,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
         if (side != null) return Collections.emptyList();
         int finish = 0, sideFinish=-1, visible = 63, tileSides = 0;
         com.vandorlabs.tiles.FaceTextures faces = com.vandorlabs.tiles.FaceTextures.DEFAULT;
+        com.vandorlabs.blocks.HousingFaceLayouts joined=com.vandorlabs.blocks.HousingFaceLayouts.NONE;
         if (state instanceof IExtendedBlockState) {
             IExtendedBlockState extended = (IExtendedBlockState)state;
             if (extended.getValue(ProgrammableHousingState.FACES) != null)
@@ -71,12 +73,15 @@ public final class ProgrammableHousingModel implements IBakedModel {
             if (f != null) finish = ScreenHousingTextures.clamp(f);
             if (v != null) visible = v;
             if (t != null) tileSides = t;
+            if(extended.getUnlistedNames().contains(ProgrammableHousingState.JOINED)){
+                com.vandorlabs.blocks.HousingFaceLayouts value=extended.getValue(ProgrammableHousingState.JOINED);if(value!=null)joined=value;
+            }
         }
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
         boolean upper = slab && state.getValue(BlockProgrammableSlab.HALF)
                 == BlockSlab.EnumBlockHalf.TOP;
         if((visible&63)==0)return Collections.emptyList();
-        boolean uniform=!faces.enabled && (!slab || sideFinish<0 || sideFinish==finish);
+        boolean uniform=joined==com.vandorlabs.blocks.HousingFaceLayouts.NONE&&!faces.enabled && (!slab || sideFinish<0 || sideFinish==finish);
         long listKey=(((((long)finish*6+facing.getIndex())*2+(upper?1:0))*3+tileSides)*64)+(visible&63);
         if(uniform) {
             List<BakedQuad> cached=faceLists.getIfPresent(listKey);
@@ -88,13 +93,34 @@ public final class ProgrammableHousingModel implements IBakedModel {
             if ((visible & (1 << worldFace.getIndex())) == 0) continue;
             int texture = faces.texture(FACE[local].getIndex(), slab && FACE[local].getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish);
             final boolean storageSet = storage && !(faces.enabled && faces.choice(FACE[local].getIndex()) >= 0);
-            result.add(face(texture,facing,upper,tileSides,local,storageSet));
+            com.vandorlabs.blocks.HousingFaceLayouts.Plane plane=joined.face(worldFace);
+            BakedQuad quad=face(texture,facing,upper,plane==null?tileSides:0,local,storageSet);
+            if(plane!=null){String key=texture+":"+facing+":"+local+":"+tileSides+":"+plane;BakedQuad mapped=joinedFaces.getIfPresent(key);if(mapped==null){mapped=mapJoined(quad,plane,tileSides);joinedFaces.put(key,mapped);}quad=mapped;}
+            result.add(quad);
         }
         if(uniform) {
             result=Collections.unmodifiableList(result);
             faceLists.put(listKey,result);
         }
         return result;
+    }
+
+    /** Keep positions and lighting unchanged; only the shared face's atlas coordinates vary. */
+    static BakedQuad mapJoined(BakedQuad quad,com.vandorlabs.blocks.HousingFaceLayouts.Plane plane,int layout){
+        int[] data=quad.getVertexData().clone();TextureAtlasSprite sprite=quad.getSprite();int[] axes=new int[2];double[] signs=new double[2];
+        for(int uv=0;uv<2;uv++)for(int vertex=1;vertex<4;vertex++){
+            double delta=Float.intBitsToFloat(data[vertex*7+4+uv])-Float.intBitsToFloat(data[4+uv]);
+            double other=Float.intBitsToFloat(data[vertex*7+5-uv])-Float.intBitsToFloat(data[5-uv]);
+            if(Math.abs(delta)<1e-8||Math.abs(other)>1e-8)continue;
+            for(int axis=0;axis<3;axis++){double change=Float.intBitsToFloat(data[vertex*7+axis])-Float.intBitsToFloat(data[axis]);if(Math.abs(change)>.5){axes[uv]=axis;signs[uv]=delta/change;}}
+        }
+        double aspect=UnifiedTextureSprites.aspect(sprite),surface=plane.size(axes[0])/(double)plane.size(axes[1]);
+        for(int vertex=0;vertex<4;vertex++)for(int uv=0;uv<2;uv++){
+            double value=(Float.intBitsToFloat(data[vertex*7+axes[uv]])-plane.min(axes[uv]))/plane.size(axes[uv]);if(signs[uv]<0)value=1-value;
+            if(layout==2){double fraction=uv==0?Math.min(1,surface/aspect):Math.min(1,aspect/surface);value=.5+(value-.5)*fraction;}
+            data[vertex*7+4+uv]=Float.floatToRawIntBits(uv==0?sprite.getInterpolatedU(value*16):sprite.getInterpolatedV(value*16));
+        }
+        return new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat());
     }
 
     private BakedQuad face(int texture,EnumFacing facing,boolean upper,int layout,int local,boolean storageSet) {

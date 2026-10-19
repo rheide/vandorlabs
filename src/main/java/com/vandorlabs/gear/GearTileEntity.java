@@ -46,7 +46,8 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         double stowed=GearMotion.RETRACTED_FOOT_Y;
         // Leave daylight beneath the collar instead of coincident runner faces.
         if(mode==GearMotion.Mode.EXTEND)stowed=footMountOffset()>0?6/16D-1/64D-(3/16D+footMountOffset()):stowed-1/64D;
-        double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armWidth()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?9/128D:0;
+        // Clear the fork bridge as well as the tyre beneath the mounting cap.
+        double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armWidth()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?17/128D:0;
         return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop);
     }
 

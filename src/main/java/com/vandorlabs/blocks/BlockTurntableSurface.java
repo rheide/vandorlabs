@@ -21,6 +21,15 @@ public final class BlockTurntableSurface extends BlockVandor {
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){IBlockState adjacent=world.getBlockState(pos.offset(face.getOpposite()));if(adjacent.getBlock()==this&&adjacent.getValue(FACING).getAxis()!=face.getAxis())face=adjacent.getValue(FACING);return getDefaultState().withProperty(FACING,face);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityTurntableSurface();}
+    public static boolean locked(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);return raw instanceof TileEntityTurntableSurface&&((TileEntityTurntableSurface)raw).locked();}
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,net.minecraft.entity.player.EntityPlayer player,boolean harvest){
+        if(locked(world,pos)){if(!world.isRemote)player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Restore the turntable contents before removing its Surface blocks"),true);return false;}
+        return super.removedByPlayer(state,world,pos,player,harvest);
+    }
+    @Override public float getPlayerRelativeBlockHardness(IBlockState state,net.minecraft.entity.player.EntityPlayer player,World world,BlockPos pos){return locked(world,pos)?0:super.getPlayerRelativeBlockHardness(state,player,world,pos);}
+    @Override public boolean canEntityDestroy(IBlockState state,IBlockAccess world,BlockPos pos,net.minecraft.entity.Entity entity){return !locked(world,pos)&&super.canEntityDestroy(state,world,pos,entity);}
+    @Override public float getExplosionResistance(World world,BlockPos pos,net.minecraft.entity.Entity entity,net.minecraft.world.Explosion explosion){return locked(world,pos)?6000000:super.getExplosionResistance(world,pos,entity,explosion);}
+    @Override public net.minecraft.block.material.EnumPushReaction getMobilityFlag(IBlockState state){return net.minecraft.block.material.EnumPushReaction.BLOCK;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntity raw=world.getTileEntity(pos);
         if(raw instanceof TileEntityTurntableSurface){

@@ -445,6 +445,11 @@ public class ReproLab {
             for (String pose : new String[]{"off", "on"})
                 SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
+        for(boolean large:new boolean[]{false,true})for(String foot:new String[]{"plate","ski","wheel"})SHOTS.add(new Shot("gallery_gear_"+(large?"large":"small")+"_mount_"+foot,large?165:163.2,large?8.8:8,large?-24.5:-22,35,18));
+        SHOTS.add(new Shot("joined_texture_modes",559,34,107,0,8));
+        SHOTS.add(new Shot("joined_texture_stretch",551,32.4,115,0,7));
+        SHOTS.add(new Shot("joined_texture_tile",559,32.4,115,0,7));
+        SHOTS.add(new Shot("joined_texture_fit",567,32.4,115,0,7));
         SHOTS.add(new Shot("utility22_battery_hex",197.5,32,105,0,23));
         SHOTS.add(new Shot("utility22_battery_block",197.5,32,109,0,23));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
@@ -880,6 +885,7 @@ public class ReproLab {
                 // Never save the previous camera's framebuffer under this shot's name.
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.startsWith("joined_texture_")&&!(mc.world.getTileEntity(new BlockPos(550,32,120)) instanceof TileEntityAnimatedScreenSelector)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Joined texture fixture did not arrive");break;}
                 if(s.name.startsWith("turntable_")&&!TurntableDialogRuntimeChecks.ready(mc)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Turntable chunks/snapshot did not arrive");break;}
                 if(s.name.equals("turntable_floor")&&!TurntableMovementRuntimeChecks.done()){
                     try{if(TurntableMovementRuntimeChecks.step(mc)){beginShot(mc,s,false);holdTicks=100;}}catch(Exception failure){throw new IllegalStateException("Turntable normal movement",failure);}break;
@@ -965,7 +971,7 @@ public class ReproLab {
                 if(documentationCapture.isFinished()) {
                     if(++documentationIndex<documentationScenes.size())beginDocumentationScene(mc);
                     else {
-                        if(Boolean.getBoolean("vandorlabs.rampChecksOnly") || Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly")){state=999;mc.shutdown();break;}
+                        if(Boolean.getBoolean("vandorlabs.rampChecksOnly") || (Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly") || Boolean.getBoolean("vandorlabs.gearAnimationChecksOnly"))){state=999;mc.shutdown();break;}
                         beginShot(mc,new Shot("documentation_item_camera",GALLERY_X+.7,GALLERY_Y+1D-1.62D+.75,-19.8,12,29),false);
                         mc.getIntegratedServer().addScheduledTask(()->buildGalleryStage(mc.getIntegratedServer().getWorld(0),"gallery_close_display_diagonal_up"));
                         mc.gameSettings.hideGUI=false;
@@ -1852,7 +1858,7 @@ public class ReproLab {
         }
         World world = mc.getIntegratedServer().getWorld(0);
         if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly"))return;
-        if(Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly"))return;
+        if((Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly") || Boolean.getBoolean("vandorlabs.gearAnimationChecksOnly")))return;
         if(Boolean.getBoolean("vandorlabs.doorChecksOnly")){onServer(mc,()->{EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());DoorRuntimeChecks.run(world,owner);LargeDoorRuntimeChecks.run(world,owner);RedstoneChannelRuntimeChecks.run(world,owner);System.out.println("[vandorlabs] programmable-doors-live PASS");});return;}
         if(Boolean.getBoolean("vandorlabs.redstoneInversionChecksOnly")){onServer(mc,()->RedstoneInversionRuntimeChecks.run(world));return;}
         if(Boolean.getBoolean("vandorlabs.rampChecksOnly")) {
@@ -2146,6 +2152,7 @@ public class ReproLab {
         ScreenRuntimeChecks.checkClientPlacement(mc);
         try{UtilityItemRuntimeChecks.run(mc,outDir);GearItemRuntimeChecks.run(mc,outDir);CockpitItemRuntimeChecks.run(mc,outDir);DataTokenRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
         CustomMaterialRuntimeChecks.run(mc.player);
+        DeviceRenderBenchmark.run(mc,outDir);
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{
         // Rebuild programmable fixtures after destructive runtime contracts.
@@ -2320,7 +2327,7 @@ public class ReproLab {
         // Documentation lives in its own empty chunk so the ordinary compact
         // regression fixtures never appear behind the catalog.
         for (Entity entity : new ArrayList<Entity>(world.loadedEntityList)) {
-            if (!(entity instanceof EntityPlayer)) entity.setDead();
+            if (!(entity instanceof EntityPlayer) && entity.getEntityBoundingBox().intersects(new net.minecraft.util.math.AxisAlignedBB(GALLERY_X-20,0,-32,GALLERY_X+20,32,0))) entity.setDead();
         }
         if(Boolean.getBoolean("vandorlabs.documentationDoorGif") || Boolean.getBoolean("vandorlabs.documentationAnimations")) {
             // A clean backdrop also removes leftovers from earlier gallery runs.
@@ -2348,6 +2355,7 @@ public class ReproLab {
                 .forEach(pos -> world.setBlockState(pos,
                         Blocks.GRASS.getDefaultState(), 2));
         world.getGameRules().setOrCreateGameRule("doTileDrops",Boolean.toString(tileDrops));
+        if(shot.startsWith("gallery_gear_")){if(shot.contains("_mount_"))GearDocumentationScenes.build(world,shot);return;}
         if(shot.startsWith("gallery_canopy_motion_")){CanopyDocumentationScenes.build(world,shot);
         } else if(shot.startsWith("gallery_acceptance_")) {
             BlockPos.getAllInBox(new BlockPos(GALLERY_X-14,GALLERY_Y,-23),
@@ -3022,12 +3030,21 @@ public class ReproLab {
             camera=new Shot("documentation_camera",GALLERY_X-3,GALLERY_Y+6.5D-1.62D,-27,-18,16);
         else if(kind.equals("ramp"))
             camera=new Shot("documentation_camera",GALLERY_X+8,GALLERY_Y+6-1.62D,-27,40,18);
+        else if(kind.equals("gear")){
+            boolean large=name.contains("_large_");
+            camera=new Shot("documentation_camera",large?165:163.2,large?8.8:8,large?-24.5:-22,35,18);
+            com.google.gson.JsonArray actual=new com.google.gson.JsonArray();
+            for(double value:new double[]{camera.x,camera.y,camera.z,camera.yaw,camera.pitch})actual.add(value);
+            spec.add("camera",actual);
+        }
         beginShot(mc,camera,documentationIndex==0);
         documentationCapture=new DocumentationAnimationCapture(outDir,spec);
         DocumentationAnimationCapture current=documentationCapture;
         mc.getIntegratedServer().addScheduledTask(()-> {
             World world=mc.getIntegratedServer().getWorld(0);
-            buildGalleryStage(world,name);current.prepare(world);
+            buildGalleryStage(world,name);
+            if(kind.equals("gear"))GearDocumentationScenes.build(world,name);
+            current.prepare(world);
             if(kind.equals("ramp") && !name.contains("_mode_"))
                 BlockPos.getAllInBox(new BlockPos(GALLERY_X-10,0,-32),new BlockPos(GALLERY_X+10,0,0))
                         .forEach(p->world.setBlockState(p,Blocks.STONEBRICK.getDefaultState(),2));
@@ -3044,6 +3061,8 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        if(s.name.startsWith("joined_texture_"))onServer(mc,()->TextureLayoutVisualFixtures.build(mc.getIntegratedServer().getWorld(0)));
+        if(s.name.startsWith("joined_texture_")||s.name.startsWith("fixed_gear_")||s.name.startsWith("gallery_gear_")){mc.world.setWorldTime(6000);mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getWorld(0).setWorldTime(6000));}
         if(s.name.startsWith("utility22_")||s.name.startsWith("turntable_"))mc.gameSettings.hideGUI=!s.name.startsWith("utility22_data_");
         if(s.name.startsWith("utility22_data_")){
             int design=Integer.parseInt(s.name.substring(s.name.lastIndexOf('_')+1));

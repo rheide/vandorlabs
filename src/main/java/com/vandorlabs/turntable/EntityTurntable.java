@@ -33,7 +33,9 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     private int received,nextRequest;
     private final Map<UUID,Integer> requestTicks=new HashMap<>();
     public boolean allowSnapshotRequest(EntityPlayerMP player){Integer tick=requestTicks.put(player.getUniqueID(),ticksExisted);if(requestTicks.size()>256)requestTicks.entrySet().removeIf(e->ticksExisted-e.getValue()>200);return tick==null||tick<ticksExisted;}
-    public EntityTurntable(World world){super(world);setSize(.1F,.1F);setNoGravity(true);preventEntitySpawning=true;}
+    // The broad render/query bounds include empty space below and beside the disc.
+    // They must not forbid placing blocks in that empty space.
+    public EntityTurntable(World world){super(world);setSize(.1F,.1F);setNoGravity(true);preventEntitySpawning=false;}
     @Override protected void entityInit(){dataManager.register(ANGLE,0F);dataManager.register(RATE,0F);}
     public void install(TurntableSnapshot snapshot){
         this.snapshot=snapshot;unavailable=null;wire=null;incoming=null;

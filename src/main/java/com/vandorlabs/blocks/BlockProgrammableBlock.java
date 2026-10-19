@@ -22,7 +22,7 @@ public class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
         return new HousingBlockState(this, new IProperty<?>[]{FACING},
                 new IUnlistedProperty<?>[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH, ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES, ProgrammableHousingState.VISIBLE,
-                        ProgrammableHousingState.LIGHT});
+                        ProgrammableHousingState.LIGHT,ProgrammableHousingState.JOINED});
     }
 
     @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
